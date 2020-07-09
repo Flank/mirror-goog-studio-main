@@ -19,13 +19,16 @@
 package com.android.build.gradle.internal.tasks.featuresplit
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.IntegerOption
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -34,11 +37,8 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.tooling.BuildException
-import java.io.File
 import java.io.FileNotFoundException
-import java.io.Serializable
 import java.util.regex.Pattern
-import javax.inject.Inject
 
 /** Task to write the FeatureSetMetadata file.  */
 @CacheableTask
@@ -61,32 +61,29 @@ abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
         internal set
 
     public override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                FeatureSetRunnable::class.java,
-                Params(inputFiles.asFileTree.files,
-                    minSdkVersion,
-                    maxNumberOfFeaturesBeforeOreo,
-                    outputFile.get().asFile
-                )
-            )
+        workerExecutor.noIsolation().submit(FeatureSetRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.featureFiles.from(inputFiles)
+            it.minSdkVersion.set(minSdkVersion)
+            it.maxNumberOfFeaturesBeforeOreo.set(maxNumberOfFeaturesBeforeOreo)
+            it.outputFile.set(outputFile)
         }
     }
 
-    private data class Params(
-        val featureFiles: Set<File>,
-        val minSdkVersion: Int,
-        val maxNumberOfFeaturesBeforeOreo: Int,
-        val outputFile: File
-    ) : Serializable
+    abstract class Params : ProfileAwareWorkAction.Parameters() {
+        abstract val featureFiles: ConfigurableFileCollection
+        abstract val minSdkVersion: Property<Int>
+        abstract val maxNumberOfFeaturesBeforeOreo: Property<Int>
+        abstract val outputFile: RegularFileProperty
+    }
 
-    private class FeatureSetRunnable @Inject constructor(private val params: Params): Runnable {
+    abstract class FeatureSetRunnable : ProfileAwareWorkAction<Params>() {
         override fun run() {
             val features = mutableListOf<FeatureSplitDeclaration>()
 
-            val featureMetadata = FeatureSetMetadata(params.maxNumberOfFeaturesBeforeOreo)
+            val featureMetadata = FeatureSetMetadata(parameters.maxNumberOfFeaturesBeforeOreo.get())
 
-            for (file in params.featureFiles) {
+            for (file in parameters.featureFiles.asFileTree.files) {
                 try {
                     features.add(FeatureSplitDeclaration.load(file))
                 } catch (e: FileNotFoundException) {
@@ -98,7 +95,7 @@ abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
 
             for (feature in features) {
                 featureMetadata.addFeatureSplit(
-                    params.minSdkVersion,
+                    parameters.minSdkVersion.get(),
                     feature.modulePath,
                     featureNameMap[feature.modulePath]!!,
                     feature.applicationId
@@ -106,7 +103,7 @@ abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
             }
 
             // save the list.
-            featureMetadata.save(params.outputFile)
+            featureMetadata.save(parameters.outputFile.asFile.get())
         }
     }
 

@@ -21,6 +21,7 @@
 #include "tools/base/bazel/native/matryoshka/doll.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/utils.h"
+#include "tools/base/deploy/installer/binary_extract.h"
 #include "tools/base/deploy/installer/server/install_client.h"
 #include "tools/base/deploy/installer/server/install_server.h"
 
@@ -48,69 +49,6 @@ void OverlayIdPushCommand::ParseParameters(int argc, char** argv) {
   }
 
   ready_to_run_ = true;
-}
-
-bool OverlayIdPushCommand::ExtractBinaries(
-    const std::string& target_dir,
-    const std::vector<std::string>& files_to_extract) const {
-  Phase p("ExtractBinaries");
-
-  std::vector<std::unique_ptr<matryoshka::Doll>> dolls;
-  for (const std::string& file : files_to_extract) {
-    const std::string tmp_path = target_dir + file;
-
-    // If we've already extracted the file, we don't need to re-extract.
-    if (access(tmp_path.c_str(), F_OK) == 0) {
-      continue;
-    }
-
-    // Open the matryoshka if we haven't already done so.
-    if (dolls.empty() && !matryoshka::Open(dolls)) {
-      ErrEvent("Installer binary does not contain any other binaries.");
-      return false;
-    }
-
-    // Find the binary that corresponds to this file and write it to disk.
-    matryoshka::Doll* doll = matryoshka::FindByName(dolls, file);
-    if (!doll) {
-      continue;
-    }
-
-    if (!WriteArrayToDisk(doll->content, doll->content_len,
-                          target_dir + file)) {
-      ErrEvent("Failed writing to disk");
-      return false;
-    }
-  }
-
-  return true;
-}
-
-bool OverlayIdPushCommand::WriteArrayToDisk(const unsigned char* array,
-                                            uint64_t array_len,
-                                            const std::string& dst_path) const
-    noexcept {
-  Phase p("WriteArrayToDisk");
-  std::string real_path = workspace_.GetRoot() + dst_path;
-  int fd = open(real_path.c_str(), O_WRONLY | O_CREAT, kRwFileMode);
-  if (fd == -1) {
-    ErrEvent("WriteArrayToDisk, open: "_s + strerror(errno));
-    return false;
-  }
-  int written = write(fd, array, array_len);
-  if (written == -1) {
-    ErrEvent("WriteArrayToDisk, write: "_s + strerror(errno));
-    return false;
-  }
-
-  int close_result = close(fd);
-  if (close_result == -1) {
-    ErrEvent("WriteArrayToDisk, close: "_s + strerror(errno));
-    return false;
-  }
-
-  chmod(real_path.c_str(), kRxFileMode);
-  return true;
 }
 
 void OverlayIdPushCommand::Run(proto::InstallerResponse* response) {

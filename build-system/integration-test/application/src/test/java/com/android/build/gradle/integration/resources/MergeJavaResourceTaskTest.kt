@@ -18,8 +18,11 @@ package com.android.build.gradle.integration.resources
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.testutils.MavenRepoGenerator
+import com.android.testutils.TestInputsGenerator.jarWithTextEntries
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
@@ -32,10 +35,41 @@ import java.io.File
  */
 class MergeJavaResourceTaskTest {
 
+    private val mavenRepo = MavenRepoGenerator(
+        listOf(
+            MavenRepoGenerator.Library(
+                "com.example:lib1:0.1",
+                jarWithTextEntries("conflict_res" to "a")
+            ),
+            MavenRepoGenerator.Library(
+                "com.example:lib2:0.1",
+                jarWithTextEntries("conflict_res" to "b")
+            )
+        )
+    )
+
     @Rule
     @JvmField
     val project = GradleTestProject.builder().fromTestApp(
-        MinimalSubProject.app("com.example.test")).create()
+        MinimalSubProject.app("com.example.test")
+    )
+        .withAdditionalMavenRepo(mavenRepo)
+        .create()
+
+    @Test
+    fun ensureHelpfulErrorMessageOnConflict() {
+        TestFileUtils.appendToFile(
+            project.buildFile, """
+            dependencies {
+                implementation 'com.example:lib1:0.1'
+                implementation 'com.example:lib2:0.1'
+            }
+        """
+        )
+        val failure = project.executor().expectFailure().run("assembleDebug")
+        // Ensure that the inputs are included in the stderr output.
+        assertThat(failure.stderr).contains("2 files found with path 'conflict_res' from inputs:\n - ")
+    }
 
     @Test
     fun ensureNoJavacDependencyIfNoAnnotationProcessor() {

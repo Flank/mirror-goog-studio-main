@@ -46,3 +46,24 @@ maven_pom(
     group = "com.android.tools",
     source = "//tools/buildSrc/base:base_version",
 )
+
+# managed by go/iml_to_build [unb]
+iml_module(
+    name = "unb.studio.android.sdktools.dvlib",
+    srcs = ["dvlib/src/main/java"],
+    iml_files = ["dvlib/android.sdktools.dvlib.iml"],
+    lint_baseline = "lint_baseline.xml",
+    resources = ["dvlib/src/main/resources"],
+    tags = [
+        "manual",
+        "unb",
+    ],
+    visibility = ["//visibility:public"],
+    exports = ["//tools/base/common:unb.studio.android.sdktools.common"],
+    # do not sort: must match IML order
+    deps = [
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
+        "//tools/base/common:unb.studio.android.sdktools.common[module]",
+        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
+    ],
+)

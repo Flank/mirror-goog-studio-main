@@ -96,3 +96,38 @@ java_proto_library(
     protoc_version = "3.4.0",
     visibility = ["//visibility:public"],
 )
+
+# managed by go/iml_to_build [unb]
+iml_module(
+    name = "unb.studio.android.sdktools.ddmlib",
+    srcs = ["src/main/java"],
+    iml_files = ["android.sdktools.ddmlib.iml"],
+    lint_baseline = "lint_baseline.xml",
+    tags = [
+        "manual",
+        "unb",
+    ],
+    test_data = ["//prebuilts/studio/sdk:platform-tools"],
+    test_resources = ["src/test/resources"],
+    test_srcs = ["src/test/java"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    exports = [
+        "//tools/base/common:unb.studio.android.sdktools.common",
+        "//tools/adt/idea/.idea/libraries:unb.kxml2",
+    ],
+    # do not sort: must match IML order
+    deps = [
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
+        "//tools/base/common:unb.studio.android.sdktools.common[module]",
+        "//tools/adt/idea/.idea/libraries:unb.kxml2",
+        "//tools/adt/idea/.idea/libraries:unb.easymock[test]",
+        "//tools/base/testutils:unb.studio.android.sdktools.testutils[module, test]",
+        "//tools/adt/idea/.idea/libraries:unb.mockito[test]",
+        "//tools/adt/idea/.idea/libraries:unb.truth[test]",
+        "//tools/base/fakeadbserver:unb.studio.android.sdktools.fakeadbserver[module, test]",
+        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
+        "//tools/adt/idea/.idea/libraries:unb.protobuf",
+        "//tools/adt/idea/.idea/libraries:unb.libam-instrumentation-data-proto",
+    ],
+)

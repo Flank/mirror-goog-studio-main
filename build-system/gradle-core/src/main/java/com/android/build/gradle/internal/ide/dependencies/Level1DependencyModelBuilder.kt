@@ -17,8 +17,6 @@
 package com.android.build.gradle.internal.ide.dependencies
 
 import com.android.build.gradle.internal.ide.DependenciesImpl
-import com.android.build.gradle.internal.services.getBuildService
-import com.android.builder.model.MavenCoordinates
 import com.google.common.collect.ImmutableList
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.services.BuildServiceRegistry
@@ -30,9 +28,6 @@ class Level1DependencyModelBuilder(
     private val artifactHandler: Level1ArtifactHandler = Level1ArtifactHandler(buildServiceRegistry)
 
     private var runtimeClasspath = ImmutableList.of<File>()
-
-    private val mavenCoordinatesCache =
-        getBuildService(buildServiceRegistry, MavenCoordinatesCacheBuildService::class.java).get()
 
     override fun createModel(): DependenciesImpl = DependenciesImpl(
         artifactHandler.androidLibraries,
@@ -47,6 +42,10 @@ class Level1DependencyModelBuilder(
         lintJarMap: Map<ComponentIdentifier, File>?,
         type: DependencyModelBuilder.ClasspathType
     ) {
+        // there's not need to check the return value of this handler as the handler itself
+        // accumulate the result.
+        // This is because unlike the newer dependency model, this model accumulate the different
+        // types into separate list, so it's better handler by the artifact handler.
         artifactHandler.handleArtifact(
             artifact,
             isProvided,
@@ -62,7 +61,4 @@ class Level1DependencyModelBuilder(
     override fun setRuntimeOnlyClasspath(files: ImmutableList<File>) {
         runtimeClasspath = files
     }
-
-    override fun computeMavenCoordinates(artifact: ResolvedArtifact): MavenCoordinates =
-        mavenCoordinatesCache.getMavenCoordinates(artifact)
 }

@@ -86,12 +86,6 @@ class BaseSwapCommand : public Command {
 
   void Swap(const proto::SwapRequest& request, proto::SwapResponse* response);
 
-  bool ExtractBinaries(const std::string& target_dir,
-                       const std::vector<std::string>& files_to_extract) const;
-
-  bool WriteArrayToDisk(const unsigned char* array, uint64_t array_len,
-                        const std::string& dst_path) const noexcept;
-
   // Filter non-app process ids by removing all pids with uids outside of the
   // range [FIRST_APPLICATION_UID, LAST_APPLICATION_UID] in android.os.Process.
   void FilterProcessIds(std::vector<int>* process_ids);

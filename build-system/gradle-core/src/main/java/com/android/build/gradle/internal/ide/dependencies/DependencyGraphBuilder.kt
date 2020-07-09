@@ -16,41 +16,18 @@
 
 package com.android.build.gradle.internal.ide.dependencies
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.ide.DependenciesImpl
 import com.android.builder.errors.IssueReporter
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.level2.DependencyGraphs
 import com.google.common.collect.ImmutableMap
 
 interface DependencyGraphBuilder {
 
     fun createDependencies(
-        handler: DependencyModelBuilder<*>,
-        componentProperties: ComponentPropertiesImpl,
+        modelBuilder: DependencyModelBuilder<*>,
+        artifactCollectionsProvider: ArtifactCollectionsInputs,
         withFullDependency: Boolean,
         buildMapping: ImmutableMap<String, String>,
         issueReporter: IssueReporter
     )
-
-    /** Create a level 1 dependency list.  */
-    fun createDependencies(
-        componentProperties: ComponentPropertiesImpl,
-        buildMapping: ImmutableMap<String, String>,
-        issueReporter: IssueReporter
-    ): DependenciesImpl
-
-    /**
-     * Create a level 4 dependency graph.
-     *
-     * @see AndroidProject#MODEL_LEVEL_4_NEW_DEP_MODEL
-     */
-    fun createLevel4DependencyGraph(
-        componentProperties: ComponentPropertiesImpl,
-        withFullDependency: Boolean,
-        buildMapping: ImmutableMap<String, String>,
-        issueReporter: IssueReporter
-    ): DependencyGraphs
 }
 
 fun getDependencyGraphBuilder(): DependencyGraphBuilder {

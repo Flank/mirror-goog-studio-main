@@ -31,6 +31,15 @@ public class ModelCache {
                 }
             };
     @NonNull private final Map<Object, Object> myData = new HashMap<>();
+    @NonNull private final Map<String, String> myStrings;
+
+    public ModelCache(@NonNull Map<String, String> strings) {
+        myStrings = strings;
+    }
+
+    public ModelCache() {
+        myStrings = new HashMap<>();
+    }
 
     /**
      * Conceptually the same as {@link Map#computeIfAbsent(Object, Function)} except that this
@@ -60,6 +69,12 @@ public class ModelCache {
             myData.put(key, result);
             return result;
         }
+    }
+
+    @NonNull
+    public String deduplicateString(@NonNull String s) {
+        String old = myStrings.putIfAbsent(s, s);
+        return old != null ? old : s;
     }
 
     @NonNull

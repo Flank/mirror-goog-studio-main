@@ -186,6 +186,7 @@ class CoreLibraryDesugarTest {
             .hasMethodThatInvokes("getText", "Lj$/util/stream/Stream;->findFirst()Lj$/util/Optional;")
         val desugarLibDex = getDexWithSpecificClass(usedDesugarClass, apk.allDexes)!!
         assertThat(getAllStartLocals(desugarLibDex)).named("debug locals info").isNotEmpty()
+        assertThat(getAllDexWithJDollarTypes(apk.allDexes)).named("all dex files with desugar jdk lib classes").hasSize(1)
     }
 
     @Test
@@ -305,6 +306,8 @@ class CoreLibraryDesugarTest {
         DexSubject.assertThat(desugarLibDex).containsClass(unObfuscatedClass)
         assertThat(getAllStartLocals(desugarLibDex)).named("debug locals info").isEmpty()
         DexSubject.assertThat(desugarLibDex).doesNotContainClasses(obfuscatedClass)
+        assertThat(getAllDexWithJDollarTypes(apk.allDexes)).named("all dex files with desugar jdk lib classes")
+            .hasSize(1)
     }
 
     @Test
@@ -618,6 +621,12 @@ class CoreLibraryDesugarTest {
             }
         }
     }
+
+    private fun getAllDexWithJDollarTypes(dexes: Collection<Dex>): List<Dex> =
+        dexes.filter {
+            it.classes.keys.any { it.startsWith("Lj$/") }
+        }
+
 
     // http://b/149978740 - disable dependency info in apks in order to run with configuration caching
     private fun executor() = project.executor().with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)

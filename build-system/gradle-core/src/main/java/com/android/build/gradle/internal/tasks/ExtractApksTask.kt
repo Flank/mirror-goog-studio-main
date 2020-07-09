@@ -20,6 +20,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -43,9 +44,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.io.Serializable
 import java.nio.file.Files
-import javax.inject.Inject
 
 /**
  * Task that extract APKs from the apk zip (created with [BundleToApkTask] into a folder. a Device
@@ -88,68 +87,66 @@ abstract class ExtractApksTask : NonIncrementalTask() {
         private set
 
     override fun doTaskAction() {
-
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                BundleToolRunnable::class.java,
-                Params(
-                    apkSetArchive.get().asFile,
-                    deviceConfig
-                            ?: throw RuntimeException("Calling ExtractApk with no device config"),
-                    outputDir.get().asFile,
-                    extractInstant,
-                    apksFromBundleIdeModel.get().asFile,
-                    applicationId.get(),
-                    variantName,
-                    dynamicModulesToInstall.getOrElse(listOf())
-                )
+        workerExecutor.noIsolation().submit(BundleToolRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.apkSetArchive.set(apkSetArchive)
+            it.deviceConfig.set(
+                deviceConfig
+                    ?: throw RuntimeException("Calling ExtractApk with no device config")
             )
+            it.outputDir.set(outputDir)
+            it.extractInstant.set(extractInstant)
+            it.apksFromBundleIdeModel.set(apksFromBundleIdeModel)
+            it.applicationId.set(applicationId)
+            it.variantName.set(variantName)
+            it.optionalListOfDynamicModulesToInstall.set(dynamicModulesToInstall.orElse(listOf()))
         }
     }
 
-    private data class Params(
-        val apkSetArchive: File,
-        val deviceConfig: File,
-        val outputDir: File,
-        val extractInstant: Boolean,
-        val apksFromBundleIdeModel: File,
-        val applicationId: String,
-        val variantName: String,
-        val optionalListOfDynamicModulesToInstall: List<String>
-    ) : Serializable
+    abstract class Params : ProfileAwareWorkAction.Parameters() {
+        abstract val apkSetArchive: RegularFileProperty
+        abstract val deviceConfig: Property<File>
+        abstract val outputDir: DirectoryProperty
+        abstract val extractInstant: Property<Boolean>
+        abstract val apksFromBundleIdeModel: RegularFileProperty
+        abstract val applicationId: Property<String>
+        abstract val variantName: Property<String>
+        abstract val optionalListOfDynamicModulesToInstall: ListProperty<String>
+    }
 
-    private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
+    abstract class BundleToolRunnable : ProfileAwareWorkAction<Params>() {
         override fun run() {
-            FileUtils.cleanOutputDir(params.outputDir)
+            FileUtils.cleanOutputDir(parameters.outputDir.asFile.get())
 
             val builder: DeviceSpec.Builder = DeviceSpec.newBuilder()
 
-            Files.newBufferedReader(params.deviceConfig.toPath(), Charsets.UTF_8).use {
+            Files.newBufferedReader(parameters.deviceConfig.get().toPath(), Charsets.UTF_8).use {
                 JsonFormat.parser().merge(it, builder)
             }
 
             val command = ExtractApksCommand
                 .builder()
-                .setApksArchivePath(params.apkSetArchive.toPath())
+                .setApksArchivePath(parameters.apkSetArchive.asFile.get().toPath())
                 .setDeviceSpec(builder.build())
-                .setOutputDirectory(params.outputDir.toPath())
-                .setInstant(params.extractInstant)
+                .setOutputDirectory(parameters.outputDir.asFile.get().toPath())
+                .setInstant(parameters.extractInstant.get())
                 .also {
-                    if (params.optionalListOfDynamicModulesToInstall.isNotEmpty())
+                    if (parameters.optionalListOfDynamicModulesToInstall.get().isNotEmpty())
                         it.setModules(
-                            params.optionalListOfDynamicModulesToInstall.toImmutableSet())
+                            parameters.optionalListOfDynamicModulesToInstall.get().toImmutableSet()
+                        )
                 }
 
             command.build().execute()
 
             BuiltArtifactsImpl(
                 artifactType = InternalArtifactType.EXTRACTED_APKS,
-                applicationId = params.applicationId,
-                variantName = params.variantName,
+                applicationId = parameters.applicationId.get(),
+                variantName = parameters.variantName.get(),
                 elements = listOf(
-                    BuiltArtifactImpl.make(outputFile = params.outputDir.absolutePath)
+                    BuiltArtifactImpl.make(outputFile = parameters.outputDir.asFile.get().absolutePath)
                 )
-            ).saveToFile(params.apksFromBundleIdeModel)
+            ).saveToFile(parameters.apksFromBundleIdeModel.asFile.get())
         }
     }
 

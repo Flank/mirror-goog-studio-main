@@ -1,13 +1,13 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <com.google.android.gms>
   <auth-api-impl versions="11.6.0"/>
   <oss-licenses-plugin versions="0.10.2"/>
   <play-services versions="11.8.0,12.0.1"/>
-  <play-services-ads versions="18.3.0,19.1.0"/>
-  <play-services-ads-base versions="18.3.0,19.1.0"/>
+  <play-services-ads versions="18.3.0,19.2.0"/>
+  <play-services-ads-base versions="18.3.0,19.2.0"/>
   <play-services-ads-identifier versions="16.0.0,17.0.0"/>
   <play-services-ads-license versions="11.8.0,12.0.1"/>
-  <play-services-ads-lite versions="18.3.0,19.1.0"/>
+  <play-services-ads-lite versions="18.3.0,19.2.0"/>
   <play-services-ads-lite-license versions="11.8.0,12.0.1"/>
   <play-services-afs-native versions="17.0.0,18.0.0"/>
   <play-services-all-wear versions="12.0.1,15.0.1"/>
@@ -48,7 +48,7 @@
   <play-services-flags versions="16.0.1,17.0.0"/>
   <play-services-games versions="18.0.1,19.0.0"/>
   <play-services-games-license versions="11.8.0,12.0.1"/>
-  <play-services-gass versions="18.3.0,19.1.0"/>
+  <play-services-gass versions="18.3.0,19.2.0"/>
   <play-services-gass-license versions="11.8.0,12.0.1"/>
   <play-services-gcm versions="16.1.0,17.0.0"/>
   <play-services-gcm-license versions="11.8.0,12.0.1"/>

@@ -26,10 +26,15 @@ import java.nio.file.attribute.FileTime
 /** Utility to write tests for incremental tasks. */
 class IncrementalTestHelper(
     private val project: GradleTestProject,
-    private val cleanTask: String = "clean",
-    private val buildTask: String = "assembleDebug",
+    private val buildTasks: List<String>,
     private val filesToTrackChanges: Set<File> = emptySet()
 ) {
+
+    constructor(
+        project: GradleTestProject,
+        buildTask: String,
+        filesToTrackChanges: Set<File> = emptySet()
+    ) : this(project, listOf(buildTask), filesToTrackChanges)
 
     // Record the timestamps and contents of files in the first (full) build
     private lateinit var fileTimestamps: Map<File, FileTime>
@@ -58,7 +63,7 @@ class IncrementalTestHelper(
     fun runFullBuild(): IncrementalTestHelperAfterFullBuild {
         project.executor()
             .run(executorSetter ?: { it })
-            .run(cleanTask, buildTask)
+            .run(listOf("clean") + buildTasks)
 
         // Record timestamps and contents
         val timestamps = mutableMapOf<File, FileTime>()
@@ -98,7 +103,7 @@ class IncrementalTestHelper(
             with(incrementalTestHelper) {
                 val result = project.executor()
                     .run(executorSetter ?: { it })
-                    .run(buildTask)
+                    .run(buildTasks)
 
                 // Record changed files
                 filesWithChangedTimestamps = fileTimestamps.filter { (file, previousTimestamp) ->
@@ -191,8 +196,7 @@ class IncrementalTestHelper(
             filesWithChangedTimestampsAndContents
                 .subtract(actualFilesWithChangedTimestampsAndContents).let {
                     assert(it.isEmpty()) {
-                        "The following files are expected to have changed timestamps and contents," +
-                                " but their contents have not changed:\n" +
+                        "The following files do not have expected state ${ChangeType.CHANGED.name}:\n" +
                                 it.joinToString("\n")
                     }
                 }
@@ -200,8 +204,7 @@ class IncrementalTestHelper(
             filesWithChangedTimestampsButNotContents
                 .subtract(actualFilesWithChangedTimestampsButNotContents).let {
                     assert(it.isEmpty()) {
-                        "The following files are expected to have changed timestamps and unchanged contents," +
-                                " but either their timestamps have not changed or their contents have changed:\n" +
+                        "The following files do not have expected state ${ChangeType.CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS}:\n" +
                                 it.joinToString("\n")
                     }
                 }
@@ -209,8 +212,7 @@ class IncrementalTestHelper(
             filesWithUnchangedTimestampsAndContents
                 .subtract(actualFilesWithUnchangedTimestampsAndContents).let {
                     assert(it.isEmpty()) {
-                        "The following files are expected to have unchanged timestamps and contents," +
-                                " but their timestamps have changed:\n" +
+                        "The following files do not have expected state ${ChangeType.UNCHANGED}:\n" +
                                 it.joinToString("\n")
                     }
                 }

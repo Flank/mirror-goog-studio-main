@@ -17,7 +17,6 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.NewClass
 import com.android.build.gradle.internal.transforms.testdata.SomeClass
 import com.android.build.gradle.internal.transforms.testdata.SomeOtherClass
@@ -25,7 +24,6 @@ import com.android.testutils.TestInputsGenerator
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.util.Arrays
 import kotlin.test.assertEquals
 
 class DependenciesAnalyzerTest {
@@ -46,16 +44,19 @@ class DependenciesAnalyzerTest {
         TestInputsGenerator.pathWithClasses(input.toPath(), classes)
 
         expectedOutput.addAll(
-            Arrays.asList(
+                arrayOf(
                 "com/android/build/gradle/internal/transforms/testdata/YetAnotherClass.class",
                 "com/android/build/gradle/internal/transforms/testdata/SomeInterface.class",
                 "com/android/build/gradle/internal/transforms/testdata/CarbonForm.class",
+                "com/android/build/gradle/internal/transforms/testdata/EnumClass.class",
                 "com/android/build/gradle/internal/transforms/testdata/SomeClass.class",
                 "com/android/build/gradle/internal/transforms/testdata/Animal.class",
                 "com/android/build/gradle/internal/transforms/testdata/Dog.class",
                 "com/android/build/gradle/internal/transforms/testdata/Cat.class",
+                "kotlin/jvm/internal/Intrinsics.class",
+                "org/jetbrains/annotations/NotNull.class",
                 "java/util/List.class"
-            )
+                )
         )
 
         val analyzer = DependenciesAnalyzer()
@@ -77,11 +78,12 @@ class DependenciesAnalyzerTest {
         TestInputsGenerator.pathWithClasses(input.toPath(), classes)
 
         expectedOutput.addAll(
-            Arrays.asList(
+                arrayOf(
                 "com/android/build/gradle/internal/transforms/testdata/YetAnotherClass.class",
                 "com/android/build/gradle/internal/transforms/testdata/SomeOtherClass.class",
                 "com/android/build/gradle/internal/transforms/testdata/CarbonForm.class",
                 "com/android/build/gradle/internal/transforms/testdata/SomeClass.class",
+                "com/android/build/gradle/internal/transforms/testdata/EnumClass.class",
                 "com/android/build/gradle/internal/transforms/testdata/NewClass.class",
                 "com/android/build/gradle/internal/transforms/testdata/Animal.class",
                 "com/android/build/gradle/internal/transforms/testdata/Tiger.class",
@@ -94,7 +96,7 @@ class DependenciesAnalyzerTest {
                 "java/lang/Exception.class",
                 "java/io/IOException.class",
                 "java/util/Map.class"
-            )
+                )
         )
 
         val analyzer = DependenciesAnalyzer()
@@ -116,7 +118,7 @@ class DependenciesAnalyzerTest {
         TestInputsGenerator.pathWithClasses(input.toPath(), classes)
 
         expectedOutput.addAll(
-            Arrays.asList(
+                arrayOf(
                 "com/android/build/gradle/internal/transforms/testdata/NewClass\$Companion.class",
                 "com/android/build/gradle/internal/transforms/testdata/YetAnotherClass.class",
                 "com/android/build/gradle/internal/transforms/testdata/SomeClassKt.class",
@@ -126,7 +128,7 @@ class DependenciesAnalyzerTest {
                 "org/jetbrains/annotations/NotNull.class",
                 "kotlin/jvm/internal/Intrinsics.class",
                 "java/lang/String.class"
-            )
+                )
         )
 
         val analyzer = DependenciesAnalyzer()

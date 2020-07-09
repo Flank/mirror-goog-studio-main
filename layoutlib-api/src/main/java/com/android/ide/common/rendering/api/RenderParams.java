@@ -35,8 +35,11 @@ public abstract class RenderParams {
     private final LayoutlibCallback mLayoutlibCallback;
     private final int mMinSdkVersion;
     private final int mTargetSdkVersion;
+    /** The configuration uiMode, see {@link android.content.res.Configuration#uiMode}. */
+    private int mUiMode = 0;
+
     private float mFontScale = 1f;
-    private final LayoutLog mLog;
+    private final ILayoutLog mLog;
 
     private boolean mSetTransparentBackground;
     private long mTimeout;
@@ -62,8 +65,8 @@ public abstract class RenderParams {
      * @param projectKey An Object identifying the project. This is used for the cache mechanism.
      * @param hardwareConfig the {@link HardwareConfig}.
      * @param renderResources a {@link RenderResources} object providing access to the resources.
-     * @param layoutlibCallback The {@link LayoutlibCallback} object to get information from
-     * the project.
+     * @param layoutlibCallback The {@link LayoutlibCallback} object to get information from the
+     *     project.
      * @param minSdkVersion the minSdkVersion of the project
      * @param targetSdkVersion the targetSdkVersion of the project
      * @param log the object responsible for displaying warning/errors to the user.
@@ -73,8 +76,9 @@ public abstract class RenderParams {
             HardwareConfig hardwareConfig,
             RenderResources renderResources,
             LayoutlibCallback layoutlibCallback,
-            int minSdkVersion, int targetSdkVersion,
-            LayoutLog log) {
+            int minSdkVersion,
+            int targetSdkVersion,
+            ILayoutLog log) {
         mProjectKey = projectKey;
         mHardwareConfig = hardwareConfig;
         mRenderResources = renderResources;
@@ -97,6 +101,7 @@ public abstract class RenderParams {
         mLayoutlibCallback = params.mLayoutlibCallback;
         mMinSdkVersion = params.mMinSdkVersion;
         mTargetSdkVersion = params.mTargetSdkVersion;
+        mUiMode = params.mUiMode;
         mLog = params.mLog;
         mSetTransparentBackground = params.mSetTransparentBackground;
         mTimeout = params.mTimeout;
@@ -183,6 +188,16 @@ public abstract class RenderParams {
         return mFontScale;
     }
 
+    /** Sets the uiMode. See {@link android.content.res.Configuration#uiMode} */
+    public void setUiMode(int uiMode) {
+        mUiMode = uiMode;
+    }
+
+    /** Returns the uiMode. See {@link android.content.res.Configuration#uiMode} */
+    public int getUiMode() {
+        return mUiMode;
+    }
+
     public Object getProjectKey() {
         return mProjectKey;
     }
@@ -251,7 +266,7 @@ public abstract class RenderParams {
         return mLayoutlibCallback;
     }
 
-    public LayoutLog getLog() {
+    public ILayoutLog getLog() {
         return mLog;
     }
 

@@ -52,7 +52,6 @@ java_library(
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
         "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
-        "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT:jar",
     ],
 )
 
@@ -62,14 +61,12 @@ java_library(
         ":common-srcs",
         ":echo-sample-srcs",
         ":perfa-srcs",
-        "//tools/base/app-inspection/agent:srcs",
     ],
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
         "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
         # TODO(b/77923456): Track version changes and revisit.
         "//prebuilts/tools/common/m2/repository/com/google/android/gms/play-services-location/11.8.0:jar",
-        "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT:jar",
     ],
 )
 
@@ -87,6 +84,7 @@ dex_library(
     jars = [
         ":perfa_java",
         "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT:jar",
+        "//tools/base/app-inspection/agent",
     ],
 )
 

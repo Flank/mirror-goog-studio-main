@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.errors.SyncIssueReporter;
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
+import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputs;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilder;
 import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilderKt;
@@ -826,50 +827,35 @@ public class ModelBuilder<Extension extends BaseExtension>
             // can't use ProjectOptions as this is likely to change from the initialization of
             // ProjectOptions due to how lint dynamically add/remove this property.
 
-            // DEBUG: switch flag on to run tests before deleting old codepath.
-            boolean newCodePath = true;
-
             if (modelLevel >= AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL) {
-                if (newCodePath) {
-                    Level2DependencyModelBuilder modelBuilder =
-                            new Level2DependencyModelBuilder(
-                                    componentProperties.getServices().getBuildServiceRegistry());
-                    graphBuilder.createDependencies(
-                            modelBuilder,
-                            componentProperties,
-                            modelWithFullDependency,
-                            buildMapping,
-                            syncIssueReporter);
-                    result = Pair.of(DependenciesImpl.EMPTY, modelBuilder.createModel());
-                } else {
-                    result =
-                            Pair.of(
-                                    DependenciesImpl.EMPTY,
-                                    graphBuilder.createLevel4DependencyGraph(
-                                            componentProperties,
-                                            modelWithFullDependency,
-                                            buildMapping,
-                                            syncIssueReporter));
-                }
+                Level2DependencyModelBuilder modelBuilder =
+                        new Level2DependencyModelBuilder(
+                                componentProperties.getServices().getBuildServiceRegistry());
+                ArtifactCollectionsInputs artifactCollectionsInputs =
+                        new ArtifactCollectionsInputs(
+                                componentProperties, ArtifactCollectionsInputs.RuntimeType.FULL);
+                graphBuilder.createDependencies(
+                        modelBuilder,
+                        artifactCollectionsInputs,
+                        modelWithFullDependency,
+                        buildMapping,
+                        syncIssueReporter);
+                result = Pair.of(DependenciesImpl.EMPTY, modelBuilder.createModel());
             } else {
-                if (newCodePath) {
-                    Level1DependencyModelBuilder modelBuilder =
-                            new Level1DependencyModelBuilder(
-                                    componentProperties.getServices().getBuildServiceRegistry());
-                    graphBuilder.createDependencies(
-                            modelBuilder,
-                            componentProperties,
-                            modelWithFullDependency,
-                            buildMapping,
-                            syncIssueReporter);
-                    result = Pair.of(modelBuilder.createModel(), EmptyDependencyGraphs.EMPTY);
-                } else {
-                    result =
-                            Pair.of(
-                                    graphBuilder.createDependencies(
-                                            componentProperties, buildMapping, syncIssueReporter),
-                                    EmptyDependencyGraphs.EMPTY);
-                }
+                Level1DependencyModelBuilder modelBuilder =
+                        new Level1DependencyModelBuilder(
+                                componentProperties.getServices().getBuildServiceRegistry());
+                ArtifactCollectionsInputs artifactCollectionsInputs =
+                        new ArtifactCollectionsInputs(
+                                componentProperties, ArtifactCollectionsInputs.RuntimeType.PARTIAL);
+
+                graphBuilder.createDependencies(
+                        modelBuilder,
+                        artifactCollectionsInputs,
+                        modelWithFullDependency,
+                        buildMapping,
+                        syncIssueReporter);
+                result = Pair.of(modelBuilder.createModel(), EmptyDependencyGraphs.EMPTY);
             }
         }
 

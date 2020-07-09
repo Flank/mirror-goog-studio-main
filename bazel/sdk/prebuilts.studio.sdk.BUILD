@@ -172,6 +172,7 @@ java_import(
     jars = sdk_path(["platforms/android-29/android.jar"]),
     neverlink = 1,
     visibility = [
+        "//tools/base/app-inspection/agent:__pkg__",
         "//tools/base/deploy/agent/instrumentation:__pkg__",
         "//tools/base/profiler/app:__pkg__",
         "//tools/base/dynamic-layout-inspector:__pkg__",

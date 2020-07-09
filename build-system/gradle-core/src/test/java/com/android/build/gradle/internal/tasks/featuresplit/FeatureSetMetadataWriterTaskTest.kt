@@ -16,26 +16,18 @@
 
 package com.android.build.gradle.internal.tasks.featuresplit
 
-import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.sdklib.AndroidVersion
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth.assertThat
-import org.gradle.api.Project
-import org.gradle.api.file.FileCollection
-import org.gradle.api.file.FileTree
-import org.gradle.testfixtures.ProjectBuilder
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import org.mockito.Mock
-import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 import java.io.File
 import java.io.IOException
-import java.util.Arrays
 
 /** Tests for the [FeatureSetMetadataWriterTask] class  */
 @RunWith(Parameterized::class)
@@ -43,40 +35,15 @@ class FeatureSetMetadataWriterTaskTest(val minSdkVersion: Int) {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
-    lateinit var project: Project
-    lateinit var task: FeatureSetMetadataWriterTask
-
-    @Mock lateinit var fileCollection: FileCollection
-    @Mock lateinit var fileTree: FileTree
-    val files = mutableSetOf<File>()
-
     companion object {
         @JvmStatic
         @Parameterized.Parameters(name = "minSdkVersion={0}")
         fun getParameters(): Collection<Array<Any>> {
-            return Arrays.asList(
+            return listOf(
                 arrayOf<Any>(AndroidVersion.VersionCodes.LOLLIPOP),
                 arrayOf<Any>(AndroidVersion.VersionCodes.O)
             )
         }
-    }
-
-    @Before
-    @Throws(IOException::class)
-    fun setUp() {
-        MockitoAnnotations.initMocks(this)
-        val testDir = temporaryFolder.newFolder()
-
-        project = ProjectBuilder.builder().withProjectDir(testDir).build()
-
-        task = project.tasks.create("test", FeatureSetMetadataWriterTask::class.java)
-        task.outputFile.set(File(temporaryFolder.newFolder(), FeatureSetMetadata.OUTPUT_FILE_NAME))
-        task.inputFiles = fileCollection
-        task.minSdkVersion = minSdkVersion
-        task.enableGradleWorkers.setDisallowChanges(false)
-
-        `when`(fileCollection.asFileTree).thenReturn(fileTree)
-        `when`(fileTree.files).thenReturn(files)
     }
 
     @Test
@@ -86,16 +53,34 @@ class FeatureSetMetadataWriterTaskTest(val minSdkVersion: Int) {
         for (i in 0..4) {
             inputDirs.add(generateInputDir("id_$i", "foo.bar.baz$i"))
         }
-        files.addAll(inputDirs.build())
+        val inputFiles = inputDirs.build()
 
-        task.doTaskAction()
+        val outputLocation = File(temporaryFolder.newFolder(), FeatureSetMetadata.OUTPUT_FILE_NAME)
+        object : FeatureSetMetadataWriterTask.FeatureSetRunnable() {
+            override fun getParameters(): FeatureSetMetadataWriterTask.Params {
+                return object : FeatureSetMetadataWriterTask.Params() {
+                    override val featureFiles =
+                        FakeObjectFactory.factory.fileCollection().from(inputFiles)
+                    override val minSdkVersion =
+                        FakeGradleProperty(this@FeatureSetMetadataWriterTaskTest.minSdkVersion)
+                    override val maxNumberOfFeaturesBeforeOreo =
+                        FakeGradleProperty(FeatureSetMetadata.MAX_NUMBER_OF_SPLITS_BEFORE_O)
+                    override val outputFile =
+                        FakeObjectFactory.factory.fileProperty().fileValue(outputLocation)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("task")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
-        val loaded = FeatureSetMetadata.load(task.outputFile.get().asFile)
+        val loaded = FeatureSetMetadata.load(outputLocation)
         for (i in 0..4) {
             assertThat(loaded.getResOffsetFor("id_$i")).isEqualTo(
                 if (minSdkVersion < AndroidVersion.VersionCodes.O)
-                        FeatureSetMetadata.BASE_ID - i - 1 else
-                        FeatureSetMetadata.BASE_ID + i + 1)
+                    FeatureSetMetadata.BASE_ID - i - 1 else
+                    FeatureSetMetadata.BASE_ID + i + 1
+            )
         }
     }
 

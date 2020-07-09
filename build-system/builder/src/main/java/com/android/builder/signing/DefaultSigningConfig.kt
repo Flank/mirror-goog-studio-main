@@ -53,23 +53,17 @@ open class DefaultSigningConfig(private val mName: String) : SigningConfig {
 
     override var isV1SigningEnabled = true
         set(value) {
-            isV1SigningConfigured = true
+            enableV1Signing = value
             field = value
         }
     override var isV2SigningEnabled = true
         set(value) {
-            isV2SigningConfigured = true
+            enableV2Signing = value
             field = value
         }
 
-    /** Returns whether v1SigningEnabled is configured by the user through DSL. */
-    var isV1SigningConfigured = false
-        private set
-
-    /** Returns whether v2SigningEnabled is configured by the user through DSL. */
-    var isV2SigningConfigured = false
-        private set
-
+    var enableV1Signing: Boolean? = null
+    var enableV2Signing: Boolean? = null
     var enableV3Signing: Boolean? = null
     var enableV4Signing: Boolean? = null
 
@@ -106,20 +100,6 @@ open class DefaultSigningConfig(private val mName: String) : SigningConfig {
         return this
     }
 
-    /** Note: this function is only used by AGP internally, not by users. */
-    protected fun internalSetV1SigningEnabled(enabled: Boolean) {
-        val isV1SigningConfigured = this.isV1SigningConfigured
-        isV1SigningEnabled = enabled
-        this.isV1SigningConfigured = isV1SigningConfigured
-    }
-
-    /** Note: this function is only used by AGP internally, not by users. */
-    protected fun internalSetV2SigningEnabled(enabled: Boolean) {
-        val isV2SigningConfigured = this.isV2SigningConfigured
-        isV2SigningEnabled = enabled
-        this.isV2SigningConfigured = isV2SigningConfigured
-    }
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class.java != other::class.java) return false
@@ -147,8 +127,10 @@ open class DefaultSigningConfig(private val mName: String) : SigningConfig {
         }
         if (isV1SigningEnabled != that.isV1SigningEnabled) return false
         if (isV2SigningEnabled != that.isV2SigningEnabled) return false
-        if (isV1SigningConfigured != that.isV1SigningConfigured) return false
-        if (isV2SigningConfigured != that.isV2SigningConfigured) return false
+        if (enableV1Signing != that.enableV1Signing) return false
+        if (enableV2Signing != that.enableV2Signing) return false
+        if (enableV3Signing != that.enableV3Signing) return false
+        if (enableV4Signing != that.enableV4Signing) return false
 
         return true
     }
@@ -162,8 +144,10 @@ open class DefaultSigningConfig(private val mName: String) : SigningConfig {
         result = 31 * result + (storeType?.hashCode() ?: 0)
         result = 31 * result + (if (isV1SigningEnabled) 17 else 0)
         result = 31 * result + (if (isV2SigningEnabled) 17 else 0)
-        result = 31 * result + (if (isV1SigningConfigured) 17 else 0)
-        result = 31 * result + (if (isV2SigningConfigured) 17 else 0)
+        result = 31 * result + (enableV1Signing?.hashCode() ?: 0)
+        result = 31 * result + (enableV2Signing?.hashCode() ?: 0)
+        result = 31 * result + (enableV3Signing?.hashCode() ?: 0)
+        result = 31 * result + (enableV4Signing?.hashCode() ?: 0)
         return result
     }
 
@@ -176,8 +160,10 @@ open class DefaultSigningConfig(private val mName: String) : SigningConfig {
             .add("storeType", storeType)
             .add("v1SigningEnabled", isV1SigningEnabled)
             .add("v2SigningEnabled", isV2SigningEnabled)
-            .add("v1SigningConfigured", isV1SigningConfigured)
-            .add("v2SigningConfigured", isV2SigningConfigured)
+            .add("enableV1Signing", enableV1Signing)
+            .add("enableV2Signing", enableV2Signing)
+            .add("enableV3Signing", enableV3Signing)
+            .add("enableV4Signing", enableV4Signing)
             .toString()
     }
 }

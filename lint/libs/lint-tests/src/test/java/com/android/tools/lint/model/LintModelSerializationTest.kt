@@ -381,14 +381,6 @@ class LintModelSerializationTest {
                 <dependencies>
                 </dependencies>
                 """,
-                "dependencies-betaDebug-testArtifact" to """
-                <dependencies>
-                </dependencies>
-                """,
-                "dependencies-betaDebug-androidTestArtifact" to """
-                <dependencies>
-                </dependencies>
-                """,
                 "library_table-freeBetaDebug-mainArtifact" to """
                 <libraries>
                   <library
@@ -1069,7 +1061,7 @@ class LintModelSerializationTest {
         val pathVariables: MutableList<Pair<String, File>> = mutableListOf()
         pathVariables.add(Pair("SDK", folder1))
         pathVariables.add(Pair("GRADLE", folder2))
-        val adapter = LintModelSerializationFileAdapter(moduleFile, pathVariables)
+        val adapter = LintModelSerializationFileAdapter(root, pathVariables)
 
         assertEquals("module.xml", adapter.toPathString(moduleFile, root).cleanup())
         assertEquals("\$SDK/file1", adapter.toPathString(file1, root))
@@ -1122,6 +1114,7 @@ class LintModelSerializationTest {
         for ((_, s) in xml) {
             assertValidXml(s)
         }
+        val remainingExpectedXml = expectedXml.toMutableMap()
 
         for (fileType in TargetFile.values()) {
             for (variant in module.variants) {
@@ -1133,11 +1126,12 @@ class LintModelSerializationTest {
                     val mapKey = getMapKey(fileType, variant.name, artifactName)
                     val writtenXml: String = xml[mapKey] ?: continue
                     assertValidXml(writtenXml)
-                    val expected = expectedXml[mapKey] ?: continue
+                    val expected = remainingExpectedXml.remove(mapKey)?: continue
                     assertThat(writtenXml.cleanup()).isEqualTo(expected.trimIndent().trim())
                 }
             }
         }
+        assertThat(remainingExpectedXml).isEmpty()
 
         val newModule =
             LintModelSerialization.readModule(LintModelSerializationStringAdapter(reader = { target, variantName, artifact ->

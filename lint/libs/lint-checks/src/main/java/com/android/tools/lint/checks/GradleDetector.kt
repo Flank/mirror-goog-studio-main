@@ -54,7 +54,9 @@ import com.android.tools.lint.detector.api.guessGradleLocation
 import com.android.tools.lint.detector.api.isNumberString
 import com.android.tools.lint.detector.api.readUrlData
 import com.android.tools.lint.detector.api.readUrlDataAsString
+import com.android.tools.lint.model.LintModelAndroidLibrary
 import com.android.tools.lint.model.LintModelDependency
+import com.android.tools.lint.model.LintModelExternalLibrary
 import com.android.tools.lint.model.LintModelLibrary
 import com.android.tools.lint.model.LintModelMavenName
 import com.android.tools.lint.model.LintModelModuleType
@@ -1326,7 +1328,7 @@ open class GradleDetector : Detector(), GradleScanner {
     ) {
         checkConsistentLibraries(context, cookie, SUPPORT_LIB_GROUP_ID, null)
 
-        val androidLibraries = getAllLibraries(context.project)
+        val androidLibraries = getAllLibraries(context.project).filterIsInstance<LintModelExternalLibrary>()
         var usesOldSupportLib: LintModelMavenName? = null
         var usesAndroidX: LintModelMavenName? = null
         for (library in androidLibraries) {
@@ -1377,7 +1379,7 @@ open class GradleDetector : Detector(), GradleScanner {
         }
         val supportVersions = HashSet<String>()
         val wearableVersions = HashSet<String>()
-        for (library in getAllLibraries(project)) {
+        for (library in getAllLibraries(project).filterIsInstance<LintModelExternalLibrary>()) {
             val coordinates = library.resolvedCoordinates
             if (WEARABLE_ARTIFACT_ID == coordinates.artifactId &&
                 GOOGLE_SUPPORT_GROUP_ID == coordinates.groupId
@@ -1469,7 +1471,7 @@ open class GradleDetector : Detector(), GradleScanner {
 
         val project = context.mainProject
         val versionToCoordinate = ArrayListMultimap.create<String, LintModelMavenName>()
-        val allLibraries = getAllLibraries(project)
+        val allLibraries = getAllLibraries(project).filterIsInstance<LintModelExternalLibrary>()
         for (library in allLibraries) {
             val coordinates = library.resolvedCoordinates
             if ((coordinates.groupId == groupId || coordinates.groupId == groupId2) &&
@@ -1535,13 +1537,13 @@ open class GradleDetector : Detector(), GradleScanner {
                 if (library.artifactName == "com.android.databinding:library") {
                     for (dep in library.dependencies) {
                         if (dep.artifactName == "com.android.support:support-v4" &&
-                            sortedVersions[0] != dep.findLibrary()?.resolvedCoordinates?.version
+                            sortedVersions[0] != (dep.findLibrary() as? LintModelExternalLibrary)?.resolvedCoordinates?.version
                         ) {
                             message += ". Note that this project is using data binding " +
                                     "(com.android.databinding:library:" +
-                                    library.findLibrary()?.resolvedCoordinates?.version +
+                                    (library.findLibrary() as? LintModelExternalLibrary)?.resolvedCoordinates?.version +
                                     ") which pulls in com.android.support:support-v4:" +
-                                    dep.findLibrary()?.resolvedCoordinates?.version +
+                                    (dep.findLibrary() as? LintModelExternalLibrary)?.resolvedCoordinates?.version +
                                     ". You can try to work around this " +
                                     "by adding an explicit dependency on " +
                                     "com.android.support:support-v4:" +
@@ -1841,17 +1843,19 @@ open class GradleDetector : Detector(), GradleScanner {
                     else -> variant.mainArtifact
                 } ?: return null
             for (library in artifact.dependencies.getAll()) {
-                val mc = library.resolvedCoordinates
-                if (mc.groupId == gc.groupId &&
-                    mc.artifactId == gc.artifactId
-                ) {
-                    val revisions = GradleCoordinate.parseRevisionNumber(mc.version)
-                    if (revisions.isNotEmpty()) {
-                        return GradleCoordinate(
-                            mc.groupId, mc.artifactId, revisions, null
-                        )
+                if (library is LintModelExternalLibrary) {
+                    val mc = library.resolvedCoordinates
+                    if (mc.groupId == gc.groupId &&
+                        mc.artifactId == gc.artifactId
+                    ) {
+                        val revisions = GradleCoordinate.parseRevisionNumber(mc.version)
+                        if (revisions.isNotEmpty()) {
+                            return GradleCoordinate(
+                                mc.groupId, mc.artifactId, revisions, null
+                            )
+                        }
+                        break
                     }
-                    break
                 }
             }
         }

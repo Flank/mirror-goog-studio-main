@@ -19,9 +19,9 @@
 package com.android.build.gradle.internal.ide.dependencies
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.ide.DependencyFailureHandler
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.getBuildService
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableMultimap
@@ -30,12 +30,126 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 
-/** This holder class exists to allow lint to depend on the artifact collections. */
-class ArtifactCollections(
-    componentProperties: ComponentPropertiesImpl,
-    consumedConfigType: AndroidArtifacts.ConsumedConfigType
+/**
+ * This holder class exists to allow lint to depend on the artifact collections.
+ *
+ * It is used as a [org.gradle.api.tasks.Nested] input to the lint model generation task.
+ */
+class ArtifactCollectionsInputs constructor(
+    variantDependencies: VariantDependencies,
+    @get:Input val projectPath: String,
+    @get:Input val variantName: String,
+    @get:Input val runtimeType: RuntimeType,
+    @get:Internal internal val mavenCoordinatesCache: Provider<MavenCoordinatesCacheBuildService>
 ) {
+    enum class RuntimeType { FULL, PARTIAL }
+
+    constructor(componentProperties: ComponentPropertiesImpl, runtimeType: RuntimeType) : this(
+        componentProperties.variantDependencies,
+        componentProperties.globalScope.project.path,
+        componentProperties.name,
+        runtimeType,
+        getBuildService(componentProperties.services.buildServiceRegistry)
+    )
+
+    @get:Nested
+    val compileClasspath: ArtifactCollections = ArtifactCollections(
+        variantDependencies,
+        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
+    )
+
+    /** The full runtime graphs for more complex dependency models */
+    @get:Nested
+    @get:Optional
+    val runtimeClasspath: ArtifactCollections? = if (runtimeType == RuntimeType.FULL) {
+        ArtifactCollections(
+            variantDependencies,
+            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
+        )
+    } else null
+
+    /** The partial graphs for level 1 dependencies */
+    @get:Nested
+    val level1RuntimeArtifactCollections: Level1RuntimeArtifactCollections = Level1RuntimeArtifactCollections(variantDependencies)
+
+    @get:Internal
+    // This contains the list of all the lint jar provided by the dependencies.
+    // We'll match this to the component identifier of each artifact to find the lint.jar
+    // that is coming via AARs. (Always is runtime classpath scoped)
+    val lintJars: ArtifactCollection =
+        variantDependencies.getArtifactCollectionForToolingModel(
+            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+            AndroidArtifacts.ArtifactScope.ALL,
+            AndroidArtifacts.ArtifactType.LINT
+        )
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    val dependenciesLintJarsFileCollection: FileCollection
+        get() = lintJars.artifactFiles
+}
+
+// This is the partial set of file collections used by the Level1 model builder
+class Level1RuntimeArtifactCollections(variantDependencies: VariantDependencies) {
+    @get:Internal
+    val runtimeArtifacts: ArtifactCollection =
+        variantDependencies.getArtifactCollectionForToolingModel(
+            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+            AndroidArtifacts.ArtifactScope.ALL, AndroidArtifacts.ArtifactType.AAR_OR_JAR
+        )
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    val runtimeArtifactsFileCollection: FileCollection
+        get() = runtimeArtifacts.artifactFiles
+
+    // Don't query jetified jars on project classes as for java libraries the artifact
+    // might not exist yet.
+    @get:Internal
+    val runtimeProjectJars = variantDependencies.getArtifactCollectionForToolingModel(
+        AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+        AndroidArtifacts.ArtifactScope.PROJECT, AndroidArtifacts.ArtifactType.JAR
+    )
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    val runtimeProjectJarsFileCollection: FileCollection
+        get() = runtimeProjectJars.artifactFiles
+
+    @get:Internal
+    val runtimeExternalJars = variantDependencies.getArtifactCollectionForToolingModel(
+        AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+        AndroidArtifacts.ArtifactScope.EXTERNAL, AndroidArtifacts.ArtifactType.PROCESSED_JAR
+    )
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    val runtimeExternalJarsFileCollection: FileCollection
+        get() = runtimeExternalJars.artifactFiles
+}
+
+class ArtifactCollections(
+    variantDependencies: VariantDependencies,
+    @get:Internal
+    val consumedConfigType: AndroidArtifacts.ConsumedConfigType
+) {
+    constructor(
+        componentProperties: ComponentPropertiesImpl,
+        consumedConfigType: AndroidArtifacts.ConsumedConfigType
+    ) : this(
+        componentProperties.variantDependencies, consumedConfigType
+    )
+
     /**
      * A collection containing 'all' artifacts, i.e. jar and AARs from subprojects, repositories
      * and files.
@@ -58,17 +172,29 @@ class ArtifactCollections(
      *
      * This captures dependencies without transforming them using `AttributeCompatibilityRule`s.
      **/
-    val all: ArtifactCollection = componentProperties.variantDependencies.getArtifactCollectionForToolingModel(
+    @get:Internal
+    val all: ArtifactCollection = variantDependencies.getArtifactCollectionForToolingModel(
         consumedConfigType,
         AndroidArtifacts.ArtifactScope.ALL,
         AndroidArtifacts.ArtifactType.AAR_OR_JAR
     )
 
-    val manifests: ArtifactCollection = componentProperties.variantDependencies.getArtifactCollectionForToolingModel(
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    val allFileCollection: FileCollection
+        get() = all.artifactFiles
+
+    @get:Internal
+    val manifests: ArtifactCollection = variantDependencies.getArtifactCollectionForToolingModel(
         consumedConfigType,
         AndroidArtifacts.ArtifactScope.ALL,
         AndroidArtifacts.ArtifactType.MANIFEST
     )
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    val manifestsFileCollection: FileCollection
+        get() = manifests.artifactFiles
 
     // We still need to understand wrapped jars and aars. The former is difficult (TBD), but
     // the latter can be done by querying for EXPLODED_AAR. If a sub-project is in this list,
@@ -76,20 +202,33 @@ class ArtifactCollections(
     // This is why we query for Scope.ALL
     // But we also simply need the exploded AARs for external Android dependencies so that
     // Studio can access the content.
-    val explodedAars: ArtifactCollection = componentProperties.variantDependencies.getArtifactCollectionForToolingModel(
+    @get:Internal
+    val explodedAars: ArtifactCollection = variantDependencies.getArtifactCollectionForToolingModel(
         consumedConfigType,
         AndroidArtifacts.ArtifactScope.ALL,
         AndroidArtifacts.ArtifactType.EXPLODED_AAR
     )
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    val explodedAarFileCollection: FileCollection
+        get() = explodedAars.artifactFiles
+
     // Note: Query for JAR instead of PROCESSED_JAR for project dependencies due to b/110054209
     // With a solution to that projectJars and externalJars could be merged.
-    val projectJars: ArtifactCollection = componentProperties.variantDependencies.getArtifactCollectionForToolingModel(
+    @get:Internal
+    val projectJars: ArtifactCollection = variantDependencies.getArtifactCollectionForToolingModel(
         consumedConfigType,
         AndroidArtifacts.ArtifactScope.PROJECT,
         AndroidArtifacts.ArtifactType.JAR
     )
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    val projectJarsFileCollection: FileCollection
+        get() = projectJars.artifactFiles
+
+    @get:Internal
     val allCollections: Collection<ArtifactCollection>
         get() = listOf(
             all,
@@ -114,13 +253,56 @@ fun getAllArtifacts(
     dependencyFailureHandler: DependencyFailureHandler?,
     buildMapping: ImmutableMap<String, String>
 ): Set<ResolvedArtifact> {
+    val collections = ArtifactCollections(componentProperties, consumedConfigType)
+    val mavenCoordinatesCache =
+        getBuildService<MavenCoordinatesCacheBuildService>(
+            componentProperties.services.buildServiceRegistry
+        ).get()
+    return getAllArtifacts(
+        collections,
+        dependencyFailureHandler,
+        buildMapping,
+        componentProperties.globalScope.project.path,
+        componentProperties.name,
+        mavenCoordinatesCache
+    )
+}
+
+fun getAllArtifacts(
+    inputs: ArtifactCollectionsInputs,
+    consumedConfigType: AndroidArtifacts.ConsumedConfigType,
+    dependencyFailureHandler: DependencyFailureHandler?,
+    buildMapping: ImmutableMap<String, String>
+): Set<ResolvedArtifact> {
+    val collections = if (consumedConfigType == AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH) {
+        inputs.compileClasspath
+    } else {
+        inputs.runtimeClasspath!!
+    }
+    return getAllArtifacts(
+        collections,
+        dependencyFailureHandler,
+        buildMapping,
+        inputs.projectPath,
+        inputs.variantName,
+        inputs.mavenCoordinatesCache.get()
+    )
+}
+
+fun getAllArtifacts(
+    collections: ArtifactCollections,
+    dependencyFailureHandler: DependencyFailureHandler?,
+    buildMapping: ImmutableMap<String, String>,
+    projectPath: String,
+    variantName: String,
+    mavenCoordinatesCache: MavenCoordinatesCacheBuildService
+): Set<ResolvedArtifact> {
+
     // FIXME change the way we compare dependencies b/64387392
 
     // we need to figure out the following:
     // - Is it an external dependency or a sub-project?
     // - Is it an android or a java dependency
-
-    val collections = ArtifactCollections(componentProperties, consumedConfigType)
 
     // All artifacts: see comment on collections.all
     val incomingArtifacts = collections.all
@@ -140,11 +322,11 @@ fun getAllArtifacts(
         val failures = incomingArtifacts.failures
         // compute the name of the configuration
         dependencyFailureHandler.addErrors(
-            componentProperties.globalScope.project.path
+            projectPath
                     + "@"
-                    + componentProperties.name
+                    + variantName
                     + "/"
-                    + consumedConfigType.getName(),
+                    + collections.consumedConfigType.getName(),
             failures
         )
     }
@@ -208,17 +390,14 @@ fun getAllArtifacts(
 
         check(mainArtifacts.isNotEmpty()) {
             """Internal Error: No artifact found for artifactType '$componentIdentifier'
-            | context: ${componentProperties.globalScope.project.path} ${componentProperties.name}
+            | context: $projectPath ${variantName}
             | manifests = $manifests
             | explodedAars = $explodedAars
             | projectJars = $projectJars
         """.trimMargin()
         }
 
-        val mavenCoordinatesCache =
-            getBuildService<MavenCoordinatesCacheBuildService>(
-                componentProperties.services.buildServiceRegistry
-            ).get()
+
         for (mainArtifact in mainArtifacts) {
             artifacts.add(
                 ResolvedArtifact(

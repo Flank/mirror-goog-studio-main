@@ -17,8 +17,11 @@
 package com.android.tools.lint;
 
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
+import static com.android.tools.lint.checks.ApiLookup.SDK_DATABASE_MIN_VERSION;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.sdklib.IAndroidTarget;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Project;
 import com.google.common.collect.Lists;
@@ -56,7 +59,7 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
         return roots;
     }
 
-    public void updateAnnotationRoots(@NonNull LintClient client) {
+    public void updateAnnotationRoots(@NonNull LintClient client, @Nullable IAndroidTarget target) {
         Collection<Project> projects = client.getKnownProjects();
         if (Project.isAospBuildEnvironment()) {
             for (Project project : projects) {
@@ -68,27 +71,51 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
             }
         }
 
-        List<File> files = client.getExternalAnnotations(projects);
+        File sdkAnnotations = findSdkAnnotations(client, target);
+        List<File> libraryAnnotations = client.getExternalAnnotations(projects);
+        updateAnnotationRoots(sdkAnnotations, libraryAnnotations);
+    }
 
-        File sdkAnnotations = client.findResource(SDK_ANNOTATIONS_PATH);
-        if (sdkAnnotations == null) {
-            // Until the SDK annotations are bundled in platform tools, provide
-            // a fallback for Gradle builds to point to a locally installed version
-            String path = System.getenv("SDK_ANNOTATIONS");
-            if (path != null) {
-                sdkAnnotations = new File(path);
-                if (!sdkAnnotations.exists()) {
-                    sdkAnnotations = null;
-                }
+    @Nullable
+    private static File findSdkAnnotations(
+            @NonNull LintClient client, @Nullable IAndroidTarget target) {
+        // Until the SDK annotations are bundled in platform tools, provide
+        // a fallback for Gradle builds to point to a locally installed version.
+        // This is also done first to allow build setups to hardcode exactly where
+        // lint looks instead of relying on the SDK (this is used by lint when running
+        // in Android platform builds for example).
+        String path = System.getenv("SDK_ANNOTATIONS");
+        if (path != null) {
+            File sdkAnnotations = new File(path);
+            if (sdkAnnotations.exists()) {
+                return sdkAnnotations;
             }
         }
+
+        if (target != null
+                && target.isPlatform()
+                && target.getVersion().getFeatureLevel() >= SDK_DATABASE_MIN_VERSION) {
+            File file = new File(target.getFile(IAndroidTarget.DATA), SDK_ANNOTATIONS_PATH);
+            if (file.isFile()) {
+                return file;
+            }
+        }
+
+        return client.findResource(SDK_ANNOTATIONS_PATH);
+    }
+
+    private void updateAnnotationRoots(
+            @Nullable File sdkAnnotations, @NonNull List<File> libraryAnnotations) {
+        List<File> files;
         if (sdkAnnotations != null) {
-            if (files.isEmpty()) {
+            if (libraryAnnotations.isEmpty()) {
                 files = Collections.singletonList(sdkAnnotations);
             } else {
-                files = Lists.newArrayList(files);
+                files = new ArrayList<>(libraryAnnotations);
                 files.add(sdkAnnotations);
             }
+        } else {
+            files = libraryAnnotations;
         }
 
         List<VirtualFile> newRoots = new ArrayList<>(files.size());

@@ -21,8 +21,10 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.TransformException
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.crash.PluginCrashReporter
+import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfiguration
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
@@ -43,10 +45,12 @@ import com.android.ide.common.blame.parser.ToolOutputParser
 import com.android.ide.common.process.ProcessException
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Throwables
+import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -60,10 +64,8 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.InputChanges
 import java.io.File
-import java.io.Serializable
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
 
 /**
  * Dex merging task. This task will merge all specified dex files, using the specified parameters.
@@ -142,22 +144,18 @@ abstract class DexMergingTask : NewIncrementalTask() {
             }
         val dexRoots = dexDirs + dexJars
 
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                DexMergingTaskRunnable::class.java,
-                DexMergingParams(
-                    dexingType.get(),
-                    errorFormatMode.get(),
-                    dexMerger.get(),
-                    minSdkVersion.get(),
-                    debuggable.get(),
-                    mergingThreshold.get(),
-                    mainDexListFile.orNull?.asFile,
-                    DexArchiveEntryBucket(dexRoots),
-                    dexRoots,
-                    outputDir.get().asFile
-                )
-            )
+        workerExecutor.noIsolation().submit(DexMergingTaskRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.dexingType.set(dexingType)
+            it.errorFormatMode.set(errorFormatMode)
+            it.dexMerger.set(dexMerger)
+            it.minSdkVersion.set(minSdkVersion)
+            it.debuggable.set(debuggable)
+            it.mergingThreshold.set(mergingThreshold)
+            it.mainDexListFile.set(mainDexListFile)
+            it.dexArchiveEntryBucket.set(DexArchiveEntryBucket(dexRoots))
+            it.dexRootsForDx.set(dexRoots)
+            it.outputDir.set(outputDir)
         }
         if (dexMerger.get() == DexMergerTool.DX) {
             dxStateBuildService.get().clearStateAfterBuild()
@@ -258,11 +256,22 @@ abstract class DexMergingTask : NewIncrementalTask() {
                     }
                     DexMergingAction.MERGE_LIBRARY_PROJECTS -> {
                         return if (dexingUsingArtifactTransforms) {
+                            // For incremental dexing, when requesting DEX we will need to indicate
+                            // a preference for CLASSES_DIR over CLASSES_JAR, otherwise Gradle will
+                            // select CLASSES_JAR by default. We do that by adding the
+                            // LibraryElements.CLASSES attribute to the query.
+                            val classesLibraryElements = component.named(
+                                LibraryElements::class.java,
+                                LibraryElements.CLASSES
+                            )
+                            check(attributes.libraryElementsAttribute == null)
+                            val updatedAttributes = AndroidAttributes(
+                                    attributes.stringAttributes, classesLibraryElements)
                             component.variantDependencies.getArtifactFileCollection(
                                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                                 AndroidArtifacts.ArtifactScope.PROJECT,
                                 AndroidArtifacts.ArtifactType.DEX,
-                                attributes
+                                updatedAttributes
                             )
                         } else {
                             component.services.fileCollection(
@@ -364,14 +373,12 @@ enum class DexMergingAction {
 
 /** Delegate for [DexMergingTask]. It contains all logic for merging dex files. */
 @VisibleForTesting
-class DexMergingTaskRunnable @Inject constructor(
-    private val params: DexMergingParams
-) : Runnable {
+abstract class DexMergingTaskRunnable : ProfileAwareWorkAction<DexMergingParams>() {
 
     override fun run() {
-        val dexArchiveEntries = params.dexArchiveEntryBucket.getDexArchiveEntries()
-        if (dexArchiveEntries.size >= params.mergingThreshold) {
-            merge(dexArchiveEntries, params.dexRootsForDx)
+        val dexArchiveEntries = parameters.dexArchiveEntryBucket.get().getDexArchiveEntries()
+        if (dexArchiveEntries.size >= parameters.mergingThreshold.get()) {
+            merge(dexArchiveEntries, parameters.dexRootsForDx.get())
         } else if (dexArchiveEntries.isNotEmpty()) {
             copy(dexArchiveEntries)
         }
@@ -380,7 +387,7 @@ class DexMergingTaskRunnable @Inject constructor(
     private fun merge(dexArchiveEntries: List<DexArchiveEntry>, dexRootsForDx: List<File>) {
         val logger = LoggerWrapper.getLogger(DexMergingTaskRunnable::class.java)
         val messageReceiver = MessageReceiverImpl(
-            params.errorFormatMode,
+            parameters.errorFormatMode.get(),
             Logging.getLogger(DexMergingTask::class.java)
         )
         val forkJoinPool = ForkJoinPool()
@@ -395,16 +402,16 @@ class DexMergingTaskRunnable @Inject constructor(
         try {
             DexMergerTransformCallable(
                 messageReceiver,
-                params.dexingType,
+                parameters.dexingType.get(),
                 processOutput,
-                params.outputDir,
+                parameters.outputDir.asFile.get(),
                 dexArchiveEntries,
                 dexRootsForDx.map(File::toPath),
-                params.mainDexListFile?.toPath(),
+                parameters.mainDexListFile.asFile.orNull?.toPath(),
                 forkJoinPool,
-                params.dexMerger,
-                params.minSdkVersion,
-                params.isDebuggable
+                parameters.dexMerger.get(),
+                parameters.minSdkVersion.get(),
+                parameters.debuggable.get()
             ).call()
         } catch (e: Exception) {
             PluginCrashReporter.maybeReportException(e)
@@ -424,27 +431,22 @@ class DexMergingTaskRunnable @Inject constructor(
 
     private fun copy(dexArchiveEntries: List<DexArchiveEntry>) {
         for ((index, dexArchiveEntry) in dexArchiveEntries.withIndex()) {
-            val outputFile = params.outputDir.resolve("classes_$index.${SdkConstants.EXT_DEX}")
+            val outputFile = parameters.outputDir.asFile.get().resolve("classes_$index.${SdkConstants.EXT_DEX}")
             outputFile.writeBytes(dexArchiveEntry.dexFileContent)
         }
     }
 }
 
 @VisibleForTesting
-data class DexMergingParams(
-    val dexingType: DexingType,
-    val errorFormatMode: SyncOptions.ErrorFormatMode,
-    val dexMerger: DexMergerTool,
-    val minSdkVersion: Int,
-    val isDebuggable: Boolean,
-    val mergingThreshold: Int,
-    val mainDexListFile: File?,
-    val dexArchiveEntryBucket: DexArchiveEntryBucket,
-    val dexRootsForDx: List<File>,
-    val outputDir: File
-) : Serializable {
-
-    companion object {
-        private const val serialVersionUID = 1L
-    }
+abstract class DexMergingParams : ProfileAwareWorkAction.Parameters() {
+    abstract val dexingType: Property<DexingType>
+    abstract val errorFormatMode: Property<SyncOptions.ErrorFormatMode>
+    abstract val dexMerger: Property<DexMergerTool>
+    abstract val minSdkVersion: Property<Int>
+    abstract val debuggable: Property<Boolean>
+    abstract val mergingThreshold: Property<Int>
+    abstract val mainDexListFile: RegularFileProperty
+    abstract val dexArchiveEntryBucket: Property<DexArchiveEntryBucket>
+    abstract val dexRootsForDx: ListProperty<File>
+    abstract val outputDir: DirectoryProperty
 }

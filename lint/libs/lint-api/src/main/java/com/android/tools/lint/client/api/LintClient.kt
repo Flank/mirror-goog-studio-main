@@ -57,6 +57,7 @@ import com.android.tools.lint.detector.api.endsWith
 import com.android.tools.lint.detector.api.getLanguageLevel
 import com.android.tools.lint.detector.api.isManifestFolder
 import com.android.tools.lint.model.LintModelAndroidLibrary
+import com.android.tools.lint.model.LintModelExternalLibrary
 import com.android.tools.lint.model.LintModelLibrary
 import com.android.tools.lint.model.LintModelModuleLibrary
 import com.android.utils.CharSequences
@@ -1266,35 +1267,39 @@ abstract class LintClient {
         library: LintModelLibrary
     ) {
         val lintJar = library.lintJar
-        val folder = library.folder
         if (lintJar != null && lintJar.exists()) {
             lintJars.add(lintJar)
-        } else if (library is LintModelModuleLibrary && folder != null) {
-            // Local project: might have locally packaged lint jar
-            // Kept for backward compatibility, see b/66166521
-            val buildDir = folder.path.substringBefore("intermediates")
-            val lintPaths = arrayOf(
-                Paths.get(buildDir, "intermediates", "lint", SdkConstants.FN_LINT_JAR),
-                Paths.get(
-                    buildDir,
-                    "intermediates",
-                    "lint_publish_jar",
-                    "global",
-                    SdkConstants.FN_LINT_JAR
-                ),
-                Paths.get(
-                    buildDir,
-                    "intermediates",
-                    "lint_publish_jar",
-                    "global",
-                    "prepareLintJarForPublish",
-                    SdkConstants.FN_LINT_JAR
+        }
+
+        if (library is LintModelAndroidLibrary) {
+            val folder = library.folder
+            if (folder.isDirectory) {
+                // Local project: might have locally packaged lint jar
+                // Kept for backward compatibility, see b/66166521
+                val buildDir = folder.path.substringBefore("intermediates")
+                val lintPaths = arrayOf(
+                    Paths.get(buildDir, "intermediates", "lint", SdkConstants.FN_LINT_JAR),
+                    Paths.get(
+                        buildDir,
+                        "intermediates",
+                        "lint_publish_jar",
+                        "global",
+                        SdkConstants.FN_LINT_JAR
+                    ),
+                    Paths.get(
+                        buildDir,
+                        "intermediates",
+                        "lint_publish_jar",
+                        "global",
+                        "prepareLintJarForPublish",
+                        SdkConstants.FN_LINT_JAR
+                    )
                 )
-            )
-            for (lintPath in lintPaths) {
-                val manualLintJar = lintPath.toFile()
-                if (manualLintJar.exists()) {
-                    lintJars.add(manualLintJar)
+                for (lintPath in lintPaths) {
+                    val manualLintJar = lintPath.toFile()
+                    if (manualLintJar.exists()) {
+                        lintJars.add(manualLintJar)
+                    }
                 }
             }
         }

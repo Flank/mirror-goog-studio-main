@@ -166,7 +166,7 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
 
         LintModelSerialization.writeModule(
             module = module,
-            destination = outputDirectory.file("modules.xml").get().asFile,
+            destination = outputDirectory.get().asFile,
             writeVariants = variantInputs.get().map {
                 it.convertToLintModelVariant(
                     module,
@@ -179,6 +179,9 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
         )
     }
 
+    /**
+     * Inputs for a given variants. The task has a list of these with a [Nested] annotation
+     */
     abstract class VariantInput @Inject constructor(
         @get:Input
         val name: String,
@@ -310,6 +313,9 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
             )
     }
 
+    /**
+     * Inputs for an SdkVersion. This is used by [VariantInput] for min/target SDK Version
+     */
     abstract class SdkVersion {
         @get:Input
         abstract val apiLevel: Property<Int>
@@ -319,7 +325,11 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
         abstract val codeName: Property<String?>
     }
 
-    abstract class AndroidArtifactInput(): ArtifactInput() {
+    /**
+     * Inputs for an Android Artifact. This is used by [VariantInput] for the main and AndroidTest
+     * artifacts.
+     */
+    abstract class AndroidArtifactInput: ArtifactInput() {
         @get:Input
         abstract val applicationId: Property<String>
 
@@ -330,9 +340,14 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
         abstract val generatedResourceFolders: ListProperty<File>
     }
 
-    abstract class JavaArtifactInput : ArtifactInput() {
-    }
+    /**
+     * Inputs for a Java Artifact. This is used by [VariantInput] for the unit test artifact.
+     */
+    abstract class JavaArtifactInput : ArtifactInput()
 
+    /**
+     * Base Inputs for Android/Java artifacts
+     */
     abstract class ArtifactInput {
         @get:Input
         abstract val javacOutFolder: Property<File>

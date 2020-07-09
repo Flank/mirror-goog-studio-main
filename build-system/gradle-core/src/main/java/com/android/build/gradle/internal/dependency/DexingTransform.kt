@@ -374,8 +374,30 @@ data class DexingArtifactConfiguration(
                 }
                 parameters.incrementalDexingTransform.set(incrementalDexingTransform)
             }
-            // Put this behind a flag as we need to monitor the performance impact
-            if (incrementalDexingTransform) {
+
+            // There are 2 transform flows for DEX:
+            //   1. CLASSES_DIR -> CLASSES -> DEX
+            //   2. CLASSES_JAR -> CLASSES -> DEX
+            //
+            // For incremental dexing, when requesting DEX the consumer will indicate a preference
+            // for CLASSES_DIR over CLASSES_JAR (see DexMergingTask), otherwise Gradle will select
+            // CLASSES_JAR by default.
+            //
+            // However, there could be an issue if CLASSES_DIR is selected: For Java libraries using
+            // Kotlin, CLASSES_DIR has two separate directories: one for compiled Java classes and
+            // one for compiled Kotlin classes. Classes in one directory may reference classes in
+            // the other directory, but each directory is transformed to DEX independently.
+            // Therefore, if dexing requires a classpath (desugaring is enabled and minSdk < 24),
+            // desugaring may not work correctly.
+            //
+            // Android libraries do not have this issue, as their CLASSES_DIR is one directory
+            // containing both Java and Kotlin classes.
+            //
+            // Therefore, to ensure correctness in all cases, we transform CLASSES to DEX only when
+            // dexing does not require a classpath (and incremental dexing transform is enabled).
+            // Otherwise, we transform CLASSES_JAR to DEX directly so that CLASSES_DIR will not be
+            // selected.
+            if (incrementalDexingTransform && !needsClasspath) {
                 spec.from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.CLASSES.type)
             } else {
                 spec.from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.CLASSES_JAR.type)
@@ -389,9 +411,9 @@ data class DexingArtifactConfiguration(
                 spec.to.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.DEX.type)
             }
 
-            getAttributes().forEach { (attribute, value) ->
-                spec.from.attribute(attribute, value)
-                spec.to.attribute(attribute, value)
+            getAttributes().apply {
+                addAttributesToContainer(spec.from)
+                addAttributesToContainer(spec.to)
             }
         }
     }
@@ -404,12 +426,14 @@ data class DexingArtifactConfiguration(
         }
     }
 
-    fun getAttributes(): Map<Attribute<String>, String> {
-        return mapOf(
-            ATTR_MIN_SDK to minSdk.toString(),
-            ATTR_IS_DEBUGGABLE to isDebuggable.toString(),
-            ATTR_ENABLE_DESUGARING to enableDesugaring.toString(),
-            ATTR_INCREMENTAL_DEXING_TRANSFORM to incrementalDexingTransform.toString()
+    fun getAttributes(): AndroidAttributes {
+        return AndroidAttributes(
+            mapOf(
+                ATTR_MIN_SDK to minSdk.toString(),
+                ATTR_IS_DEBUGGABLE to isDebuggable.toString(),
+                ATTR_ENABLE_DESUGARING to enableDesugaring.toString(),
+                ATTR_INCREMENTAL_DEXING_TRANSFORM to incrementalDexingTransform.toString()
+            )
         )
     }
 }

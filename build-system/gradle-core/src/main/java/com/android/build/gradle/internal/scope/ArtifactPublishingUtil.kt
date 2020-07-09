@@ -17,34 +17,33 @@
 @file:JvmName("ArtifactPublishingUtil")
 package com.android.build.gradle.internal.scope
 
+import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationVariant
-import org.gradle.api.attributes.Attribute
 
 /**
  * Publish an artifact to a configuration.
  *
  * @param configuration The configuration to which the artifact is published.
  * @param file The artifact file published, typically a File or Provider<File>.
- * @param builtBy The object which created this artifact, typically a Task or BuildableArtifact.
  * @param artifactType The ArtifactType of the artifact.
- * @param attributeMap Other optional Configuration Attributes.
+ * @param attributes Other optional Configuration Attributes.
  */
 @JvmOverloads
 fun publishArtifactToConfiguration(
     configuration: Configuration,
     file: Any,
     artifactType: AndroidArtifacts.ArtifactType,
-    attributeMap: Map<Attribute<String>, String>? = null
+    attributes: AndroidAttributes? = null
 ) {
     val type = artifactType.type
     configuration
         .outgoing
         .variants { variants: NamedDomainObjectContainer<ConfigurationVariant> ->
             variants.create(
-                getConfigurationVariantName(artifactType, attributeMap)
+                getConfigurationVariantName(artifactType, attributes)
             ) { variant ->
                 variant.artifact(
                     file
@@ -52,9 +51,7 @@ fun publishArtifactToConfiguration(
                     artifact.type = type
                 }
                 variant.attributes.let { container ->
-                    attributeMap?.keys?.forEach { key ->
-                        attributeMap[key]?.let { container.attribute(key, it) }
-                    }
+                    attributes?.addAttributesToContainer(container)
                 }
             }
         }
@@ -77,7 +74,6 @@ fun publishArtifactToDefaultVariant(
     }
 }
 
-
 /**
  * This method creates a unique ConfigurationVariant name based on the artifactType and
  * attributeMap, which is important because all items in a NamedDomainObjectContainer must have
@@ -85,13 +81,8 @@ fun publishArtifactToDefaultVariant(
  */
 private fun getConfigurationVariantName(
     artifactType: AndroidArtifacts.ArtifactType,
-    attributeMap: Map<Attribute<String>, String>?
-) : String {
-    val suffix: String? =
-        attributeMap
-            ?.entries
-            ?.sortedBy {it.key.name}
-            ?.fold("-") { it, entry -> "$it-${entry.key.name}-${entry.value}"}
-    return "${artifactType.type}${suffix?:""}"
+    attributes: AndroidAttributes?
+): String {
+    return artifactType.type + (attributes?.toAttributeMapString() ?: "")
 }
 

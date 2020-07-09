@@ -31,14 +31,6 @@ class OverlayIdPushCommand : public Command {
 
  private:
   proto::OverlayIdPush request_;
-
-  // TODO: Share this with base_swap.h
-  bool ExtractBinaries(const std::string& target_dir,
-                       const std::vector<std::string>& files_to_extract) const;
-
-  bool WriteArrayToDisk(const unsigned char* array, uint64_t array_len,
-                        const std::string& dst_path) const noexcept;
-
   const std::string kInstallServer = "install_server";
 };
 

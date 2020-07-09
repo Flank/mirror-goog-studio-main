@@ -23,7 +23,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
-import com.android.ide.common.rendering.api.LayoutLog;
+import com.android.ide.common.rendering.api.ILayoutLog;
 import com.android.ide.common.rendering.api.RenderResources;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceReference;
@@ -86,7 +86,7 @@ public class ResourceResolver extends RenderResources {
     /** The resources should be searched in all the themes in the list in order. */
     @NonNull private final List<StyleResourceValue> mThemes;
 
-    private LayoutLog mLogger;
+    private ILayoutLog mLogger;
 
     /** Contains the default parent for DeviceDefault styles (e.g. for API 18, "Holo") */
     private String mDeviceDefaultParent;
@@ -286,9 +286,8 @@ public class ResourceResolver extends RenderResources {
 
     // ---- RenderResources Methods
 
-
     @Override
-    public void setLogger(LayoutLog logger) {
+    public void setLogger(ILayoutLog logger) {
         mLogger = logger;
     }
 
@@ -368,7 +367,7 @@ public class ResourceResolver extends RenderResources {
 
         if (mLogger != null) {
             mLogger.error(
-                    LayoutLog.TAG_BROKEN,
+                    ILayoutLog.TAG_BROKEN,
                     String.format(
                             "Cyclic style parent definitions: %1$s",
                             computeCyclicStyleChain(style)),
@@ -486,7 +485,7 @@ public class ResourceResolver extends RenderResources {
             // Didn't find the resource anywhere.
             if (mLogger != null) {
                 mLogger.warning(
-                        LayoutLog.TAG_RESOURCES_RESOLVE,
+                        ILayoutLog.TAG_RESOURCES_RESOLVE,
                         "Couldn't resolve resource " + reference.getResourceUrl(),
                         null,
                         reference);
@@ -539,7 +538,7 @@ public class ResourceResolver extends RenderResources {
                     ? "Infinite cycle trying to resolve '%s': Render may not be accurate."
                     : "Potential infinite cycle trying to resolve '%s': Render may not be accurate.";
             mLogger.error(
-                    LayoutLog.TAG_BROKEN,
+                    ILayoutLog.TAG_BROKEN,
                     String.format(msg, resValue.getValue()),
                     null,
                     null,
@@ -607,7 +606,7 @@ public class ResourceResolver extends RenderResources {
 
                 if (mLogger != null) {
                     mLogger.error(
-                            LayoutLog.TAG_RESOURCES_RESOLVE,
+                            ILayoutLog.TAG_RESOURCES_RESOLVE,
                             String.format(
                                     "Unable to resolve parent style name: %s",
                                     style.getParentStyleName()),
@@ -721,7 +720,7 @@ public class ResourceResolver extends RenderResources {
 
             if (mLogger != null) {
                 mLogger.error(
-                        LayoutLog.TAG_BROKEN,
+                        ILayoutLog.TAG_BROKEN,
                         String.format(
                                 "Cyclic style parent definitions: %1$s",
                                 computeCyclicStyleChain(styleValue)),

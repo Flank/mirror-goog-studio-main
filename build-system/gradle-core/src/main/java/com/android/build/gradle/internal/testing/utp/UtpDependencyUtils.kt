@@ -16,8 +16,13 @@
 
 package com.android.build.gradle.internal.testing.utp
 
+import org.gradle.api.NonExtensible
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 
 private const val NITROGEN_MAVEN_GROUP_ID = "com.google.test.platform"
 private const val NITROGEN_DEFAULT_VERSION = "0.0.2-dev"
@@ -58,6 +63,31 @@ enum class UtpDependency(
      * Returns a maven coordinate string to download dependencies from the Maven repository.
      */
     fun mavenCoordinate(): String = "${groupId}:${artifactId}:${version}"
+}
+
+@NonExtensible
+abstract class UtpDependencies {
+    @get:Optional
+    @get:Classpath
+    abstract val launcher: ConfigurableFileCollection
+    @get:Optional
+    @get:Classpath
+    abstract val core: ConfigurableFileCollection
+    @get:Optional
+    @get:Classpath
+    abstract val deviceProviderLocal: ConfigurableFileCollection
+    @get:Optional
+    @get:Classpath
+    abstract val deviceControllerAdb: ConfigurableFileCollection
+    @get:Optional
+    @get:Classpath
+    abstract val driverInstrumentation: ConfigurableFileCollection
+    @get:Optional
+    @get:Classpath
+    abstract val testPlugin: ConfigurableFileCollection
+    @get:Optional
+    @get:Classpath
+    abstract val testPluginHostRetention: ConfigurableFileCollection
 }
 
 /**

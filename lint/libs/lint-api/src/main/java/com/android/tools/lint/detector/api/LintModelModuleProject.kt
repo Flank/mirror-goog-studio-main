@@ -356,9 +356,6 @@ open class LintModelModuleProject(
  * libraries if requested
  */
 fun LintModelExternalLibrary.addJars(list: MutableList<File>, skipProvided: Boolean) {
-    if (skipped) {
-        return
-    }
     if (skipProvided && provided) {
         return
     }

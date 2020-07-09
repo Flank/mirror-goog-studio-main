@@ -29,23 +29,19 @@ import org.gradle.api.Action
  * [com.android.build.api.variant.VariantProperties]
  */
 class VariantOperations<VariantObjectT> where VariantObjectT: ActionableComponentObject, VariantObjectT: ComponentIdentity {
-    val actions= mutableListOf<Action<VariantObjectT>>()
-    private val filteredActions= mutableListOf<FilteredComponentAction<VariantObjectT>>()
+    val actions = mutableListOf<Action<VariantObjectT>>()
 
     fun addFilteredAction(action: FilteredComponentAction<out VariantObjectT>) {
         @Suppress("UNCHECKED_CAST")
-        filteredActions.add(action as FilteredComponentAction<VariantObjectT>)
+        actions.add(Action { variant ->
+            if (action.specificType.isInstance(variant)) {
+                val castedVariant = action.specificType.cast(variant)
+                (action as FilteredComponentAction<VariantObjectT>).executeFor(castedVariant)
+            }
+        })
     }
 
     fun executeActions(variant: VariantObjectT) {
         actions.forEach { action -> action.execute(variant) }
-
-        filteredActions.forEach {
-            if (it.specificType.isInstance(variant)) {
-                val castedVariant = it.specificType.cast(variant)
-                it.executeFor(castedVariant)
-            }
-        }
     }
 }
-

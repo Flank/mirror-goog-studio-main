@@ -144,14 +144,13 @@ object LintModelSerialization : LintModelModuleLoader {
 
     /** Default implementation of [LintModelSerializationAdapter] which uses files */
     class LintModelSerializationFileAdapter(
-        private val moduleFile: File,
+        override val root: File,
         override val pathVariables: LintModelPathVariables = emptyList()
     ) : LintModelSerializationAdapter {
-        override val root: File = moduleFile.parentFile
 
         override fun file(target: TargetFile, variantName: String, artifactName: String): File {
             return when (target) {
-                TargetFile.MODULE -> moduleFile
+                TargetFile.MODULE -> File(root, "module.xml")
                 TargetFile.VARIANT -> File(root, getVariantFileName(variantName))
                 TargetFile.DEPENDENCIES -> File(
                     root,
@@ -183,26 +182,28 @@ object LintModelSerialization : LintModelModuleLoader {
         }
     }
 
-    override fun getModule(file: File): LintModelModule = readModule(file)
+    override fun getModule(folder: File): LintModelModule = readModule(folder)
 
-    /** Reads in the dependencies. If an (optional) library resolver is provided, merge
+    /**
+     * Reads in the dependencies. If an (optional) library resolver is provided, merge
      * in any libraries found into that resolver such that it can be used to resolve
      * libraries. If not provided, a local library resolver will be created and associated
      * with the dependencies, available via [LintModelDependencies#getLibraryResolver].
+     * The [source] is the folder containing the serialized model.
      */
     fun readDependencies(
-        xmlFile: File,
+        source: File,
         resolver: DefaultLintModelLibraryResolver? = null,
         variantName: String? = null,
         artifactName: String? = null,
         pathVariables: LintModelPathVariables = emptyList()
     ): LintModelDependencies {
         return LintModelDependenciesReader(
-            adapter = LintModelSerializationFileAdapter(xmlFile, pathVariables),
+            adapter = LintModelSerializationFileAdapter(source, pathVariables),
             libraryResolver = resolver,
             variantName = variantName ?: "",
             artifactName = artifactName ?: "",
-            reader = xmlFile.bufferedReader()
+            reader = source.bufferedReader()
         ).readDependencies()
     }
 
@@ -210,36 +211,38 @@ object LintModelSerialization : LintModelModuleLoader {
      * in any libraries found into that resolver such that it can be used to resolve
      * libraries. If not provided, a local library resolver will be created and associated
      * with the dependencies, available via [LintModelDependencies#getLibraryResolver].
+     * The [source] is the folder containing the serialized model.
      */
     fun readLibraries(
-        xmlFile: File,
+        source: File,
         resolver: DefaultLintModelLibraryResolver? = null,
         variantName: String? = null,
         artifactName: String? = null,
         pathVariables: LintModelPathVariables = emptyList()
     ): LintModelLibraryResolver {
         return LintModelLibrariesReader(
-            adapter = LintModelSerializationFileAdapter(xmlFile, pathVariables),
+            adapter = LintModelSerializationFileAdapter(source, pathVariables),
             libraryResolver = resolver,
             variantName = variantName ?: "",
             artifactName = artifactName ?: "",
-            reader = xmlFile.bufferedReader()
+            reader = source.bufferedReader()
         ).readLibraries()
     }
 
     /**
-     * Reads an XML descriptor from the given [xmlFile] and returns a lint model.
+     * Reads an XML descriptor from the given [source] and returns a lint model.
      * The [pathVariables] must include any path variables passed into [writeModule]
      * when the module was written.
+     * The [source] is the folder containing the serialized model.
      */
     fun readModule(
-        xmlFile: File,
+        source: File,
         variantNames: List<String>? = null,
         readDependencies: Boolean = true,
         pathVariables: LintModelPathVariables = emptyList()
     ): LintModelModule {
         return readModule(
-            adapter = LintModelSerializationFileAdapter(xmlFile, pathVariables),
+            adapter = LintModelSerializationFileAdapter(source, pathVariables),
             variantNames = variantNames,
             readDependencies = readDependencies
         )
@@ -342,7 +345,7 @@ object LintModelSerialization : LintModelModuleLoader {
     }
 
     /**
-     * Writes a lint [dependencies] model to the given [destination] file
+     * Writes a lint [dependencies] model to the given [destination] folder
      */
     fun writeDependencies(
         dependencies: LintModelDependencies,
@@ -400,7 +403,7 @@ object LintModelSerialization : LintModelModuleLoader {
     }
 
     /**
-     * Writes a lint [module] to the given [destination]. If [writeVariants] is not null,
+     * Writes a lint [module] to the given [destination] folder. If [writeVariants] is not null,
      * it will also write the given variants into files next to the module file. By
      * default this includes all module variants. If [writeDependencies] is set, the dependencies
      * and library files are written as well. The [pathVariables] list lets you
@@ -408,7 +411,7 @@ object LintModelSerialization : LintModelModuleLoader {
      * XML file instead. The [readModule] call needs to define the same variable names.
      * This allows the XML files to be relocatable.
      *
-     * If applicable, you can also record which tool wrote this file (in the case of lint
+     * If applicable, you can also record which tool wrote these files (in the case of lint
      * for example, use LintClient.getClientDisplayRevision()) via the [createdBy] string.
      */
     fun writeModule(
@@ -429,7 +432,7 @@ object LintModelSerialization : LintModelModuleLoader {
     }
 
     /**
-     * Writes a lint [variant] to the given [destination]. If applicable, you can also
+     * Writes a lint [variant] to the given [destination] folder. If applicable, you can also
      * record which tool wrote this file (in the case of lint for example, use
      * LintClient.getClientDisplayRevision()).
      */
@@ -1047,9 +1050,6 @@ private class LintModelLibrariesWriter(
         }
         if (library.provided) {
             printer.printAttribute("provided", VALUE_TRUE, indent)
-        }
-        if (library.skipped) {
-            printer.printAttribute("skipped", VALUE_TRUE, indent)
         }
         if (library is LintModelAndroidLibrary) {
             printer.printFile("folder", library.folder, indent)
@@ -1854,7 +1854,6 @@ private class LintModelLibrariesReader(
         val project = getOptionalAttribute("project")
         val resolved = getOptionalAttribute("resolved")?.toMavenCoordinate()
         val provided = getOptionalBoolean("provided", false)
-        val skipped = getOptionalBoolean("skipped", false)
 
         // Android library?
 
@@ -1887,11 +1886,8 @@ private class LintModelLibrariesReader(
             project != null -> DefaultLintModelModuleLibrary(
                 projectPath = project,
                 artifactAddress = artifactAddress,
-                resolvedCoordinates = resolved!!,
-                folder = folder,
                 lintJar = lintJar,
-                provided = provided,
-                skipped = skipped
+                provided = provided
             )
             android -> DefaultLintModelAndroidLibrary(
                 artifactAddress = artifactAddress,
@@ -1906,15 +1902,12 @@ private class LintModelLibrariesReader(
                 externalAnnotations = externalAnnotations!!,
                 proguardRules = proguardRules!!,
                 provided = provided,
-                skipped = skipped,
                 resolvedCoordinates = resolved!!
             )
             else -> DefaultLintModelJavaLibrary(
                 artifactAddress = artifactAddress,
-                folder = folder,
                 jarFiles = jars,
                 provided = provided,
-                skipped = skipped,
                 resolvedCoordinates = resolved!!
             )
         }

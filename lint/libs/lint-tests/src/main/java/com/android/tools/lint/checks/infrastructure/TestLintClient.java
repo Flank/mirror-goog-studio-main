@@ -83,6 +83,7 @@ import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
+import com.android.tools.lint.model.LintModelExternalLibrary;
 import com.android.tools.lint.model.LintModelFactory;
 import com.android.tools.lint.model.LintModelLibrary;
 import com.android.tools.lint.model.LintModelMavenName;
@@ -1334,7 +1335,11 @@ public class TestLintClient extends LintCliClient {
         }
 
         private static boolean libraryMatches(@NonNull String artifact, LintModelLibrary lib) {
-            LintModelMavenName coordinates = lib.getResolvedCoordinates();
+            if (!(lib instanceof LintModelExternalLibrary)) {
+                return false;
+            }
+            LintModelMavenName coordinates =
+                    ((LintModelExternalLibrary) lib).getResolvedCoordinates();
             String c = coordinates.getGroupId() + ':' + coordinates.getArtifactId();
             c = AndroidxNameUtils.getCoordinateMapping(c);
             return artifact.equals(c);

@@ -43,4 +43,7 @@ public enum ValueType {
     INTERPOLATOR,
     DIMENSION,
     DIMENSION_FLOAT,
+    DIMENSION_DP,
+    DIMENSION_SP,
+    DIMENSION_EM,
 }

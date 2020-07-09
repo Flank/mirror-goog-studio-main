@@ -16,7 +16,7 @@ kotlin_test(
         "windows": [],
         "mac": [":libjni-test.dylib"],
         "//conditions:default": [":libjni-test.so"],
-    }) + ["//tools/base/dynamic-layout-inspector/src/testData"],
+    }),
     jvm_flags = [
         "-Dtest.suite.jar=agent_tests.jar",
         "-Djava.library.path=tools/base/dynamic-layout-inspector",
@@ -184,10 +184,7 @@ cc_library(
 
 cc_library(
     name = "native_test_support",
-    srcs = [
-        "src/test/native/testing/component_tree_test_java_jni.cc",
-        "src/test/native/testing/properties_test_java_jni.cc",
-    ],
+    srcs = ["src/test/native/testing/component_tree_test_java_jni.cc"],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native/agent",
         "-Itools/base/transport/native",

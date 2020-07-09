@@ -28,6 +28,20 @@ test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable,-pe
 
 config_options="--config=dynamic"
 
+# Verify test targets using the bazel 'flaky' attribute matches
+# approved_flaky_targets.txt
+QUERY_FLAKY_TESTS="${script_dir}/bazel query attr(flaky, 1, //tools/...)"
+# Output approved flaky targets, excluding lines prefixed with '#'
+APPROVED_FLAKY_TESTS="sed /^#.*/d ${script_dir}/approved_flaky_targets.txt"
+UNAPPROVED_FLAKES=$(diff <($QUERY_FLAKY_TESTS | sort) <($APPROVED_FLAKY_TESTS) | grep '<')
+if [[ $? -eq 0 ]];
+then
+  echo -e "Unapproved use of 'flaky' test attribute in the following targets:\n" \
+    "$UNAPPROVED_FLAKES" \
+    "Please contact android-devtools-infra@"
+  exit 1
+fi
+
 # Generate a UUID for use as the bazel test invocation id
 readonly invocation_id="$(uuidgen)"
 

@@ -62,8 +62,6 @@ import java.util.function.Predicate;
  * {@link #build()} method for information on which parameters are mandatory.
  */
 public class IncrementalPackagerBuilder {
-    // The lowest API with v2 signing support
-    private static final int MIN_V2_SDK = 24;
 
     /**
      * Type of build that invokes the instance of IncrementalPackagerBuilder
@@ -156,80 +154,13 @@ public class IncrementalPackagerBuilder {
      * Sets the signing configuration information for the incremental packager.
      *
      * @param signingConfig the signing config; if {@code null} then the APK will not be signed
-     * @return {@code this} for use with fluent-style notation
-     */
-    @NonNull
-    public IncrementalPackagerBuilder withSigning(@Nullable SigningConfigData signingConfig) {
-        return withSigning(signingConfig, 1);
-    }
-
-    /**
-     * Sets the signing configuration information for the incremental packager.
-     *
-     * @param signingConfig the signing config; if {@code null} then the APK will not be signed
      * @param minSdk the minimum SDK
      * @return {@code this} for use with fluent-style notation
      */
     @NonNull
     public IncrementalPackagerBuilder withSigning(
-            @Nullable SigningConfigData signingConfig, int minSdk) {
-        return withSigning(signingConfig, minSdk, null, null);
-    }
-
-    /**
-     * This method has a decision logic on whether to sign with v1 signature or not.
-     *
-     * @param v1Enabled if v1 signature is enabled by default or by the user
-     * @param v1Configured if v1 signature is configured by the user
-     * @param minSdk the minimum SDK
-     * @param targetApi optional injected target Api
-     * @return if we actually sign with v1 signature
-     */
-    @VisibleForTesting
-    static boolean enableV1Signing(
-            boolean v1Enabled, boolean v1Configured, int minSdk, @Nullable Integer targetApi) {
-        // we do optimization (disable signing) only if there is no user input
-        if (v1Configured) {
-            return v1Enabled;
-        }
-        return v1Enabled && (targetApi == null || targetApi < MIN_V2_SDK) && minSdk < MIN_V2_SDK;
-    }
-
-    /**
-     * This method has a decision logic on whether to sign with v2 signature or not.
-     *
-     * @param v2Enabled if v2 signature is enabled by default or by the user
-     * @param v2Configured if v2 signature is configured by the user
-     * @param targetApi optional injected target Api
-     * @param v3Signed if the package will be signed with v3 signing
-     * @return if we actually sign with v2 signature
-     */
-    @VisibleForTesting
-    static boolean enableV2Signing(
-            boolean v2Enabled,
-            boolean v2Configured,
-            @Nullable Integer targetApi,
-            boolean v3Signed) {
-        // we do optimization (disable signing) only if there is no user input
-        if (v2Configured) {
-            return v2Enabled;
-        }
-        return v2Enabled && !v3Signed && (targetApi == null || targetApi >= MIN_V2_SDK);
-    }
-
-    /**
-     * Sets the signing configuration information for the incremental packager.
-     *
-     * @param signingConfig the signing config; if {@code null} then the APK will not be signed
-     * @param minSdk the minimum SDK
-     * @param targetApi optional injected target Api
-     * @return {@code this} for use with fluent-style notation
-     */
-    @NonNull
-    public IncrementalPackagerBuilder withSigning( //TODO change it to use dsl signingConfig class?
             @Nullable SigningConfigData signingConfig,
             int minSdk,
-            @Nullable Integer targetApi,
             @Nullable byte[] sdkDependencyData) {
         if (signingConfig == null) {
             return this;
@@ -251,22 +182,10 @@ public class IncrementalPackagerBuilder {
                             Preconditions.checkNotNull(
                                     signingConfig.getKeyAlias(), error, "keyAlias"));
 
-            enableV4Signing = signingConfig.getEnableV4Signing();
+            boolean enableV1Signing = signingConfig.getEnableV1Signing();
+            boolean enableV2Signing = signingConfig.getEnableV2Signing();
             enableV3Signing = signingConfig.getEnableV3Signing();
-
-            boolean enableV2Signing =
-                    enableV2Signing(
-                            signingConfig.getV2SigningEnabled(),
-                            signingConfig.getV2SigningConfigured(),
-                            targetApi,
-                            enableV3Signing);
-
-            boolean enableV1Signing =
-                    enableV1Signing(
-                            signingConfig.getV1SigningEnabled(),
-                            signingConfig.getV1SigningConfigured(),
-                            minSdk,
-                            targetApi);
+            enableV4Signing = signingConfig.getEnableV4Signing();
 
             // Check that v2 or v3 signing is enabled if v4 signing is enabled.
             if (enableV4Signing) {

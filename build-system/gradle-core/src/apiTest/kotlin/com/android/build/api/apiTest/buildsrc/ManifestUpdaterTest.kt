@@ -63,7 +63,7 @@ class ManifestUpdaterTest: BuildSrcScriptApiTest() {
                                 .wiredWithFiles(
                                     ManifestTransformerTask::mergedManifest,
                                     ManifestTransformerTask::updatedManifest)
-                                .toTransform(ArtifactType.MERGED_MANIFEST)
+                                .toTransform(ArtifactType.APPLICATION_MANIFEST)
                 
                             project.tasks.register(name + "Verifier", VerifyManifestTask::class.java) {
                                 it.apkFolder.set(artifacts.get(ArtifactType.APK))

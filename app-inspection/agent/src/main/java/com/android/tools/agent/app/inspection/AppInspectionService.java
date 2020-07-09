@@ -16,10 +16,8 @@
 
 package com.android.tools.agent.app.inspection;
 
-import static com.android.tools.agent.app.inspection.InspectorContext.*;
-import static com.android.tools.agent.app.inspection.NativeTransport.sendCrashEvent;
-import static com.android.tools.agent.app.inspection.NativeTransport.sendServiceResponseError;
-import static com.android.tools.agent.app.inspection.NativeTransport.sendServiceResponseSuccess;
+import static com.android.tools.agent.app.inspection.InspectorContext.CrashListener;
+import static com.android.tools.agent.app.inspection.NativeTransport.*;
 
 import androidx.inspection.InspectorEnvironment;
 import androidx.inspection.InspectorEnvironment.EntryHook;
@@ -92,22 +90,28 @@ public class AppInspectionService {
      * @param inspectorId the unique id of the inspector being launched
      * @param dexPath the path to the .dex file of the inspector
      * @param projectName the name of the studio project that is trying to launch the inspector
+     * @param force if true, create the inspector even if one is already running
      * @param commandId unique id of this command in the context of app inspection service
      */
     public void createInspector(
-            String inspectorId, String dexPath, String projectName, int commandId) {
+            String inspectorId, String dexPath, String projectName, boolean force, int commandId) {
         if (failNull("inspectorId", inspectorId, commandId)) {
             return;
         }
         if (mInspectorBridges.containsKey(inspectorId)) {
-            String alreadyLaunchedProjectName = mInspectorBridges.get(inspectorId).getProject();
-            sendServiceResponseError(
-                    commandId,
-                    "Inspector with the given id "
-                            + inspectorId
-                            + " already exists. It was launched by project: "
-                            + alreadyLaunchedProjectName);
-            return;
+            if (!force) {
+                String alreadyLaunchedProjectName = mInspectorBridges.get(inspectorId).getProject();
+                sendServiceResponseError(
+                        commandId,
+                        "Inspector with the given id "
+                                + inspectorId
+                                + " already exists. It was launched by project: "
+                                + alreadyLaunchedProjectName
+                                + "\n\nThis could happen if you launched the same inspector from two different projects at the same time, or if a previous run of the current project crashed unexpectedly and didn't shut down properly.");
+                return;
+            }
+
+            disposeInspector(inspectorId, commandId);
         }
 
         if (!new File(dexPath).exists()) {

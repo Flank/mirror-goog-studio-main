@@ -53,6 +53,8 @@ message LaunchMetadata {
   // Name of the entity that sent this launch command. Ex: Name of the Android
   // Studio project.
   string launched_by_name = 1;
+  // If true, force launching the inspector, even if one is already running.
+  bool force = 2;
 }
 
 // A command to dispose the inspector.

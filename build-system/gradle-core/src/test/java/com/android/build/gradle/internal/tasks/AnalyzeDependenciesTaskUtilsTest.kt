@@ -114,7 +114,7 @@ class AnalyzeDependenciesTaskUtilsTest {
                 FakeResolvedArtifactResult(fooDependencySources, FakeComponentIdentifier(fooPackage)),
                 FakeResolvedArtifactResult(barDependencySources, FakeComponentIdentifier(barPackage))))
 
-        val finder = ClassFinder(classesArtifacts)
+        val finder = ClassFinder(listOf(classesArtifacts))
 
         assertThat(fooPackage).isEqualTo(finder.find(getClassName(class1)))
         assertThat(fooPackage).isEqualTo(finder.find(getClassName(class2)))
@@ -351,7 +351,7 @@ class AnalyzeDependenciesTaskUtilsTest {
 
         val variantClasses = VariantClassesHolder(projectClassesArtifact.artifactFiles)
 
-        val classFinder = ClassFinder(externalArtifactCollection)
+        val classFinder = ClassFinder(listOf(externalArtifactCollection))
         val dependencyUsageFinder = DependencyUsageFinder(
             classFinder,
             variantClasses,
@@ -422,7 +422,7 @@ class AnalyzeDependenciesTaskUtilsTest {
                     FakeComponentIdentifier("project"))))
 
         val variantClasses = VariantClassesHolder(projectClassesArtifact.artifactFiles)
-        val classFinder = ClassFinder(externalArtifactCollection)
+        val classFinder = ClassFinder(listOf(externalArtifactCollection))
         val dependencyUsageFinder = DependencyUsageFinder(
             classFinder,
             variantClasses,

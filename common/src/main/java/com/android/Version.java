@@ -44,7 +44,7 @@ public final class Version {
             throw new UncheckedIOException(e);
         }
         ANDROID_GRADLE_PLUGIN_VERSION = properties.getProperty("buildVersion");
-        TOOLS_VERSION = properties.getProperty("buildVersion");
+        TOOLS_VERSION = properties.getProperty("cmdlineToolsVersion");
         ANDROID_TOOLS_BASE_VERSION = properties.getProperty("baseVersion");
         BUILDER_MODEL_API_VERSION = Integer.parseInt(properties.getProperty("apiVersion"));
         BUILDER_NATIVE_MODEL_API_VERSION =

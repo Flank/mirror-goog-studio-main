@@ -9,3 +9,21 @@ iml_module(
     visibility = ["//visibility:public"],
     deps = ["//tools/idea/.idea/libraries:kotlin-stdlib-jdk8"],
 )
+
+# managed by go/iml_to_build [unb]
+iml_module(
+    name = "unb.studio.android.sdktools.chunkio",
+    srcs = ["src/main/java"],
+    iml_files = ["android.sdktools.chunkio.iml"],
+    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
+    tags = [
+        "manual",
+        "unb",
+    ],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
+        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
+    ],
+)

@@ -75,15 +75,14 @@ public class SessionParams extends RenderParams {
     private final int mSimulatedPlatformVersion;
 
     /**
-     *
      * @param layoutDescription the {@link ILayoutPullParser} letting the LayoutLib Bridge visit the
-     * layout file.
+     *     layout file.
      * @param renderingMode The rendering mode.
      * @param projectKey An Object identifying the project. This is used for the cache mechanism.
      * @param hardwareConfig the {@link HardwareConfig}.
      * @param renderResources a {@link RenderResources} object providing access to the resources.
-     * @param layoutlibCallback The {@link LayoutlibCallback} object to get information from
-     * the project.
+     * @param layoutlibCallback The {@link LayoutlibCallback} object to get information from the
+     *     project.
      * @param minSdkVersion the minSdkVersion of the project
      * @param targetSdkVersion the targetSdkVersion of the project
      * @param log the object responsible for displaying warning/errors to the user.
@@ -95,22 +94,22 @@ public class SessionParams extends RenderParams {
             HardwareConfig hardwareConfig,
             RenderResources renderResources,
             LayoutlibCallback layoutlibCallback,
-            int minSdkVersion, int targetSdkVersion,
-            LayoutLog log) {
+            int minSdkVersion,
+            int targetSdkVersion,
+            ILayoutLog log) {
         this(layoutDescription, renderingMode, projectKey, hardwareConfig,
                 renderResources, layoutlibCallback, minSdkVersion, targetSdkVersion, log, 0);
     }
 
     /**
-     *
      * @param layoutDescription the {@link ILayoutPullParser} letting the LayoutLib Bridge visit the
-     * layout file.
+     *     layout file.
      * @param renderingMode The rendering mode.
      * @param projectKey An Object identifying the project. This is used for the cache mechanism.
      * @param hardwareConfig the {@link HardwareConfig}.
      * @param renderResources a {@link RenderResources} object providing access to the resources.
-     * @param projectCallback The {@link LayoutlibCallback} object to get information from
-     * the project.
+     * @param projectCallback The {@link LayoutlibCallback} object to get information from the
+     *     project.
      * @param minSdkVersion the minSdkVersion of the project
      * @param targetSdkVersion the targetSdkVersion of the project
      * @param log the object responsible for displaying warning/errors to the user.
@@ -123,8 +122,10 @@ public class SessionParams extends RenderParams {
             HardwareConfig hardwareConfig,
             RenderResources renderResources,
             LayoutlibCallback projectCallback,
-            int minSdkVersion, int targetSdkVersion,
-            LayoutLog log, int simulatedPlatformVersion) {
+            int minSdkVersion,
+            int targetSdkVersion,
+            ILayoutLog log,
+            int simulatedPlatformVersion) {
         super(projectKey, hardwareConfig, renderResources, projectCallback,
                 minSdkVersion, targetSdkVersion, log);
 

@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.dexing.DxDexParameters
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
@@ -69,9 +70,7 @@ import org.gradle.work.FileChange
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import java.io.File
-import java.io.Serializable
 import java.nio.file.Path
-import javax.inject.Inject
 
 /**
  * Task that converts CLASS files to dex archives, [com.android.builder.dexing.DexArchive].
@@ -227,15 +226,11 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             ).isNotEmpty()
         ) {
             // If non-incremental run (with files), or any of the dex files changed, copy them again.
-            getWorkerFacadeWithWorkers().use {
-                it.submit(
-                    CopyDexOutput::class.java,
-                    CopyDexOutput.Params(
-                        externalLibDexFiles.files,
-                        externalLibsFromAritfactTransformsDex.get().asFile,
-                        externalLibsFromAritfactTransformsKeepRules.asFile.orNull
-                    )
-                )
+            workerExecutor.noIsolation().submit(CopyDexOutput::class.java) {
+                it.initializeFromAndroidVariantTask(this)
+                it.inputDirs.from(externalLibDexFiles.files)
+                it.outputDexDir.set(externalLibsFromAritfactTransformsDex)
+                it.outputKeepRules.set(externalLibsFromAritfactTransformsKeepRules)
             }
         }
 
@@ -716,19 +711,21 @@ abstract class DexingExternalLibArtifactTransform: BaseDexingTransform<DexingExt
  * to the final output locations. Originating files are output of [DexingExternalLibArtifactTransform]
  * transform.
  */
-class CopyDexOutput @Inject constructor(private val params: Params) : Runnable {
-    class Params(val inputDirs: Collection<File>, val outputDexDir: File, val outputKeepRules: File?) :
-        Serializable
-
+abstract class CopyDexOutput : ProfileAwareWorkAction<CopyDexOutput.Params>() {
+    abstract class Params : ProfileAwareWorkAction.Parameters() {
+        abstract val inputDirs: ConfigurableFileCollection
+        abstract val outputDexDir: DirectoryProperty
+        abstract val outputKeepRules: DirectoryProperty
+    }
     override fun run() {
-        FileUtils.cleanOutputDir(params.outputDexDir)
+        FileUtils.cleanOutputDir(parameters.outputDexDir.asFile.get())
         var dexId = 0
         var keepRulesId = 0
-        params.inputDirs.forEach { inputDir ->
+        parameters.inputDirs.files.forEach { inputDir ->
             inputDir.walk().filter { it.extension == SdkConstants.EXT_DEX }.forEach { dexFile ->
-                dexFile.copyTo(params.outputDexDir.resolve("classes_ext_${dexId++}.dex"))
+                dexFile.copyTo(parameters.outputDexDir.asFile.get().resolve("classes_ext_${dexId++}.dex"))
             }
-            params.outputKeepRules?.let {
+            parameters.outputKeepRules.asFile.orNull?.let {
                 inputDir.resolve(KEEP_RULES_FILE_NAME).let {rules ->
                     if (rules.isFile) rules.copyTo(it.resolve("core_lib_keep_rules_${keepRulesId++}.txt"))
                 }

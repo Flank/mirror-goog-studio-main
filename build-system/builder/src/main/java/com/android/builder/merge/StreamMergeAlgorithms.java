@@ -72,25 +72,8 @@ public final class StreamMergeAlgorithms {
             Preconditions.checkArgument(!from.isEmpty(), "from.isEmpty()");
             from.forEach(closer::register);
             if (from.size() > 1) {
-                StringBuilder messageBuilder = new StringBuilder();
-                messageBuilder.append("More than one file was found with OS independent path '");
-                messageBuilder.append(path);
-                messageBuilder.append("'.");
-                if (path.endsWith(".so")) {
-                    messageBuilder.append(
-                            " If you are using jniLibs and CMake IMPORTED targets, see ");
-                    messageBuilder.append(
-                            "https://developer.android.com/r/tools/jniLibs-vs-imported-targets");
-                } else {
-                    messageBuilder.append(
-                            " Adding a packagingOptions block may help, please refer to ");
-                    messageBuilder.append(
-                            "https://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.PackagingOptions.html");
-                    messageBuilder.append(" for more information");
-                }
-                throw new DuplicateRelativeFileException(messageBuilder.toString());
+                throw new DuplicateRelativeFileException(path, from.size());
             }
-
             return from.get(0);
         };
     }

@@ -22,6 +22,8 @@ import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.reflect.ClassPath
 import com.google.common.reflect.TypeToken
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.gradle.api.Task
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.CompileClasspath
@@ -43,6 +45,7 @@ import org.gradle.api.tasks.SkipWhenEmpty
 import org.junit.Test
 import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Field
+import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.util.function.Supplier
 
@@ -117,13 +120,7 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.tasks.AndroidVariantTask::setVariantName",
                 "com.android.build.gradle.internal.tasks.DependencyReportTask::setTestComponents",
                 "com.android.build.gradle.internal.tasks.DependencyReportTask::setVariants",
-                "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setCoverageDir",
-                "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setDeviceProvider",
-                "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setFlavorName",
                 "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setIgnoreFailures",
-                "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setInstallOptions",
-                "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setReportsDir",
-                "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setTestData",
                 "com.android.build.gradle.internal.tasks.IncrementalTask::setIncrementalFolder",
                 "com.android.build.gradle.internal.tasks.InstallVariantTask::setInstallOptions",
                 "com.android.build.gradle.internal.tasks.InstallVariantTask::setTimeOutInMs",
@@ -177,11 +174,21 @@ class TaskMethodModifiersAndAnnotationsTest {
                             && !it.name.contains('$')
                             && Modifier.isPublic(it.modifiers)
                 }
+
+        val publicSettersAsStrings = publicSetters
                 .map { "${it.declaringClass.toString().substringAfter(" ")}::${it.name}" }
 
-        Truth.assertThat(publicSetters)
+        assertThat(publicSettersAsStrings)
             .named("Task public setters")
             .containsExactlyElementsIn(currentPublicSetters)
+
+        // Check for getters and setters that have different types than can upset gradle's instansiator.
+        val mismatchingGetters = publicSetters.filter { setter ->
+            val matchingGetter = getMatchingGetter(setter)
+            matchingGetter != null && setter.parameters.size == 1 && setter.parameters[0].type != matchingGetter.returnType
+        }
+        assertWithMessage("Getters and setter types don't match")
+            .that(mismatchingGetters.map { "${getMatchingGetter(it)}  -  $it" }).isEmpty()
     }
 
     @Test
@@ -201,7 +208,16 @@ class TaskMethodModifiersAndAnnotationsTest {
 
     @Test
     fun checkSupplierIsNotAField() {
-        Truth.assertThat(findTaskFieldsOfType(Supplier::class.java)).isEmpty()
+        assertThat(findTaskFieldsOfType(Supplier::class.java)).isEmpty()
+    }
+
+    private fun getMatchingGetter(setter: Method) : Method? {
+        val name = setter.name.removePrefix("set")
+        val nameWithGet = "get$name"
+        val nameWithIs = "is$name"
+        return setter.declaringClass.declaredMethods.firstOrNull {
+            it.name == nameWithGet || it.name == nameWithIs
+        }
     }
 
     private fun findTaskFieldsOfType(ofType: Class<*>): List<Field> {

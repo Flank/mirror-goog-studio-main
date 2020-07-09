@@ -189,7 +189,9 @@ public class DesugarAppTest {
         Assume.assumeTrue(java8LangSupport != VariantScope.Java8LangSupport.R8);
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                "dependencies {\n"
+                "android.compileOptions.sourceCompatibility 1.7\n"
+                        + "android.compileOptions.targetCompatibility 1.7\n"
+                        + "dependencies {\n"
                         + "    compile fileTree(dir: 'libs', include: ['*.jar'])\n"
                         + "}");
         createLibToDesugarAndGetClasses();

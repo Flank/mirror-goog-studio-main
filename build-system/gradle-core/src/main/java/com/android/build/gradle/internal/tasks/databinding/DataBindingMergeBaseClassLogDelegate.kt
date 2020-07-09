@@ -17,83 +17,91 @@
 package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.DataBindingBuilder
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
+import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.ide.common.resources.FileStatus
-import com.android.ide.common.workers.WorkerExecutorFacade
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.IOFileFilter
 import org.apache.commons.io.filefilter.TrueFileFilter
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.workers.WorkerExecutor
 import java.io.File
-import java.io.Serializable
-import javax.inject.Inject
 
 private fun isClassListFile(listFile: String) =
     listFile.endsWith(DataBindingBuilder.BINDING_CLASS_LIST_SUFFIX)
 
-class DataBindingMergeBaseClassLogDelegate(
+open class DataBindingMergeBaseClassLogDelegate(
+    private val initiator: AndroidVariantTask,
     private val moduleClassLog: FileCollection,
     private val externalClassLog: FileCollection,
     private val outFolder: Provider<Directory>
 ) {
 
     fun doIncrementalRun(
-        workers: WorkerExecutorFacade,
+        workers: WorkerExecutor,
         changedInputs: Map<File, FileStatus>) {
-        workers.use { facade ->
-            changedInputs.forEach {
-                facade.submit(
-                    DataBindingMergeBaseClassLogRunnable::class.java,
-                    DataBindingMergeBaseClassLogRunnable.Params(it.key, outFolder.get().asFile, it.value)
-                )
-            }
+        changedInputs.forEach { changedInput ->
+            submit(workers, changedInput.key, changedInput.value)
         }
     }
 
-    fun doFullRun(workers: WorkerExecutorFacade) {
+    fun doFullRun(workers: WorkerExecutor) {
         com.android.utils.FileUtils.cleanOutputDir(outFolder.get().asFile)
 
-        workers.use { facade ->
-            moduleClassLog
-                .union(externalClassLog)
-                .filter { it.exists() }
-                .forEach { folder ->
-                    FileUtils.listFiles(
-                        folder,
-                        object : IOFileFilter {
-                            override fun accept(file: File): Boolean {
-                                return isClassListFile(file.name)
-                            }
+        moduleClassLog
+            .union(externalClassLog)
+            .filter { it.exists() }
+            .forEach { folder ->
+                FileUtils.listFiles(
+                    folder,
+                    object : IOFileFilter {
+                        override fun accept(file: File): Boolean {
+                            return isClassListFile(file.name)
+                        }
 
-                            override fun accept(dir: File, name: String): Boolean {
-                                return isClassListFile(name)
-                            }
-                        },
-                        TrueFileFilter.INSTANCE
-                    ).forEach {
-                        facade.submit(
-                            DataBindingMergeBaseClassLogRunnable::class.java,
-                            DataBindingMergeBaseClassLogRunnable.Params(it, outFolder.get().asFile, FileStatus.NEW)
-                        )
-                    }
+                        override fun accept(dir: File, name: String): Boolean {
+                            return isClassListFile(name)
+                        }
+                    },
+                    TrueFileFilter.INSTANCE
+                ).forEach { file ->
+                    submit(workers, file, FileStatus.NEW)
                 }
+            }
+    }
+
+    open fun submit(workers: WorkerExecutor, file: File, status: FileStatus) {
+        workers.noIsolation().submit(DataBindingMergeBaseClassLogRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(initiator)
+            it.file.set(file)
+            it.outFolder.set(outFolder)
+            it.status.set(status)
         }
     }
 }
 
-class DataBindingMergeBaseClassLogRunnable @Inject constructor(private val params: Params) : Runnable {
+abstract class DataBindingMergeBaseClassLogRunnable
+    : ProfileAwareWorkAction<DataBindingMergeBaseClassLogRunnable.Params>() {
 
-    data class Params(val file: File, val outFolder: File, val status: FileStatus) : Serializable
+    abstract class Params: ProfileAwareWorkAction.Parameters() {
+        abstract val file: RegularFileProperty
+        abstract val outFolder: DirectoryProperty
+        abstract val status: Property<FileStatus>
+    }
 
     override fun run() {
-        if (isClassListFile(params.file.name)) {
-            when (params.status) {
+        if (isClassListFile(parameters.file.get().asFile.name)) {
+            val outFile = File(parameters.outFolder.get().asFile, parameters.file.get().asFile.name)
+            when (parameters.status.get()) {
                 FileStatus.NEW, FileStatus.CHANGED ->
-                    FileUtils.copyFile(params.file, File(params.outFolder, params.file.name))
+                    FileUtils.copyFile(parameters.file.get().asFile, outFile)
 
                 FileStatus.REMOVED -> {
-                    val outFile = File(params.outFolder, params.file.name)
                     if (outFile.exists()) {
                         FileUtils.forceDelete(outFile)
                     }

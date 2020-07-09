@@ -628,4 +628,43 @@ public class SigningTest {
         assertThat(verificationResult.isVerifiedUsingV3Scheme()).isTrue();
         assertThat(verificationResult.isVerifiedUsingV4Scheme()).isTrue();
     }
+
+    @Test
+    public void signingWithEnableV1SigningFalse() throws Exception {
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(),
+                "customDebug {",
+                ""
+                        + "customDebug {\n"
+                        + "    enableV1Signing false\n");
+        project.executor().run("assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+
+        assertThat(apk).doesNotContain("META-INF/" + certEntryName);
+        assertThat(apk).doesNotContain("META-INF/CERT.SF");
+        assertThat(apk).containsApkSigningBlock();
+        ApkVerifier.Result verificationResult =
+                assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 24));
+        assertThat(verificationResult.isVerifiedUsingV1Scheme()).isFalse();
+        assertThat(verificationResult.isVerifiedUsingV2Scheme()).isTrue();
+    }
+
+    @Test
+    public void signingWithEnableV2SigningFalse() throws Exception {
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(),
+                "customDebug {",
+                ""
+                        + "customDebug {\n"
+                        + "    enableV2Signing false\n");
+        project.executor().run("assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+
+        assertThat(apk).contains("META-INF/" + certEntryName);
+        assertThat(apk).contains("META-INF/CERT.SF");
+        assertThat(apk).doesNotContainApkSigningBlock();
+        ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion);
+        assertThat(verificationResult.isVerifiedUsingV1Scheme()).isTrue();
+        assertThat(verificationResult.isVerifiedUsingV2Scheme()).isFalse();
+    }
 }

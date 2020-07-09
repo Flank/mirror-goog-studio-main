@@ -44,7 +44,7 @@ public class ViewNodeTest {
         node.readProperties(textView);
 
         Map<String, Property> viewProperties = asMap(node.getViewProperties());
-        assertThat(viewProperties.get("focused").getValue()).isEqualTo(1);
+        assertThat(viewProperties.get("focused").getValue()).isEqualTo(true);
         assertThat(viewProperties.get("byte").getValue()).isEqualTo((byte) 7);
         assertThat(viewProperties.get("char").getValue()).isEqualTo('g');
         assertThat(viewProperties.get("double").getValue()).isEqualTo(3.75);

@@ -15,31 +15,28 @@
  */
 package com.android.ide.common.repository;
 
-import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidLibrary;
-import com.android.builder.model.Variant;
+import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
+import com.android.ide.common.gradle.model.IdeVariant;
+import com.android.ide.common.gradle.model.level2.IdeLibrary;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Class which provides information about whether Android resources for a given library are
@@ -144,37 +141,41 @@ public abstract class ResourceVisibilityLookup {
 
     /**
      * Creates a {@link ResourceVisibilityLookup} for a given library.
-     * <p>
-     * NOTE: The {@link Provider} class can be used to share/cache {@link ResourceVisibilityLookup}
-     * instances, e.g. when you have library1 and library2 each referencing libraryBase, the {@link
-     * Provider} will ensure that a the libraryBase data is shared.
+     *
+     * <p>NOTE: The {@link Provider} class can be used to share/cache {@link
+     * ResourceVisibilityLookup} instances, e.g. when you have library1 and library2 each
+     * referencing libraryBase, the {@link Provider} will ensure that a the libraryBase data is
+     * shared.
      *
      * @param library the library
      * @return a corresponding {@link ResourceVisibilityLookup}
      */
     @NonNull
-    public static ResourceVisibilityLookup create(@NonNull AndroidLibrary library) {
+    public static ResourceVisibilityLookup create(@NonNull IdeLibrary library) {
         return new AndroidLibraryResourceVisibility(library, new SymbolProvider());
     }
 
     /**
      * Creates a {@link ResourceVisibilityLookup} for the set of libraries.
-     * <p>
-     * NOTE: The {@link Provider} class can be used to share/cache {@link ResourceVisibilityLookup}
-     * instances, e.g. when you have library1 and library2 each referencing libraryBase, the {@link
-     * Provider} will ensure that a the libraryBase data is shared.
+     *
+     * <p>NOTE: The {@link Provider} class can be used to share/cache {@link
+     * ResourceVisibilityLookup} instances, e.g. when you have library1 and library2 each
+     * referencing libraryBase, the {@link Provider} will ensure that a the libraryBase data is
+     * shared.
      *
      * @param libraries the list of libraries
-     * @param provider  an optional manager instance for caching of individual libraries, if any
+     * @param provider an optional manager instance for caching of individual libraries, if any
      * @return a corresponding {@link ResourceVisibilityLookup}
      */
     @NonNull
-    public static ResourceVisibilityLookup create(@NonNull List<AndroidLibrary> libraries,
-            @Nullable Provider provider) {
+    public static ResourceVisibilityLookup create(
+            @NonNull List<IdeLibrary> libraries, @Nullable Provider provider) {
         List<ResourceVisibilityLookup> list = Lists.newArrayListWithExpectedSize(libraries.size());
-        for (AndroidLibrary library : libraries) {
-            ResourceVisibilityLookup v = provider != null ? provider.get(library)
-                : new AndroidLibraryResourceVisibility(library, new SymbolProvider());
+        for (IdeLibrary library : libraries) {
+            ResourceVisibilityLookup v =
+                    provider != null
+                            ? provider.get(library)
+                            : new AndroidLibraryResourceVisibility(library, new SymbolProvider());
             if (!v.isEmpty()) {
                 list.add(v);
             }
@@ -211,67 +212,24 @@ public abstract class ResourceVisibilityLookup {
     };
 
     /**
-     * Create a key that can be used to identify a library for a specific version.
-     * We can't use {@link AndroidLibrary} directly,
-     * because (due to a lot of magic in the Gradle model) we end up with separate instances
-     * of {@link AndroidLibrary} when a single
-     * library appears more than once, such as a downstream dependency reachable from multiple
-     * upstream libraries.
+     * Create a key that can be used to identify a library for a specific version. We can't use
+     * {@link AndroidLibrary} directly, because (due to a lot of magic in the Gradle model) we end
+     * up with separate instances of {@link AndroidLibrary} when a single library appears more than
+     * once, such as a downstream dependency reachable from multiple upstream libraries.
      *
      * @param library the library to produce a map key for
      * @return a suitable key to use with {@link Map}
      */
-    private static String getMapKey(@NonNull AndroidLibrary library) {
-        com.android.builder.model.MavenCoordinates c = library.getResolvedCoordinates();
-        // Builder model marks @NonNull but has been observed not to be, perhaps after
-        // failed sync
-        //noinspection ConstantConditions
-        if (c != null) {
-            return c.getGroupId() + ':' + c.getArtifactId() + ':' + c.getVersion();
-        } else {
-            return library.getBundle().getPath();
-        }
+    private static String getMapKey(@NonNull IdeLibrary library) {
+        return library.getArtifactAddress();
     }
 
-
-    private static String getMapKey(@NonNull AndroidArtifact artifact) {
+    private static String getMapKey(@NonNull IdeAndroidArtifact artifact) {
         return artifact.getApplicationId();
     }
 
-    private static String getMapKey(@NonNull Variant variant) {
+    private static String getMapKey(@NonNull IdeVariant variant) {
         return getMapKey(variant.getMainArtifact()) + '-' + variant.getName();
-    }
-
-    /**
-     * Given a library, return all the libraries it depends on, transitively, with each library
-     * appearing only once
-     *
-     * @param library the library to compute transitive dependencies for
-     * @return the list of libraries the given library depends on
-     */
-    private static List<AndroidLibrary> getTransitiveDependencies(
-          @NonNull AndroidLibrary library) {
-        List<AndroidLibrary> result = Lists.newArrayList();
-        for (AndroidLibrary dependency : library.getLibraryDependencies()) {
-            addLibraries(result, new HashSet<>(), dependency);
-        }
-
-        return result;
-    }
-
-    /** Adds unique libraries the given library depends on into the given result */
-    private static void addLibraries(@NonNull List<AndroidLibrary> result,
-                                     @NonNull Set<String> seen, @NonNull AndroidLibrary library) {
-        String key = getMapKey(library);
-        if (seen.contains(key)) {
-            return;
-        }
-        seen.add(key);
-        result.add(library);
-
-        for (AndroidLibrary dependency : library.getLibraryDependencies()) {
-            addLibraries(result, seen, dependency);
-        }
     }
 
     /** Searches multiple libraries */
@@ -376,28 +334,13 @@ public abstract class ResourceVisibilityLookup {
          * @return the corresponding {@link ResourceVisibilityLookup}
          */
         @NonNull
-        public ResourceVisibilityLookup get(@NonNull AndroidLibrary library) {
+        public ResourceVisibilityLookup get(@NonNull IdeLibrary library) {
             String key = getMapKey(library);
             ResourceVisibilityLookup visibility = mInstances.get(key);
             if (visibility == null) {
                 visibility = new AndroidLibraryResourceVisibility(library, mSymbols);
                 if (visibility.isEmpty()) {
                     visibility = NONE;
-                }
-                List<? extends AndroidLibrary> dependsOn = library.getLibraryDependencies();
-                if (!dependsOn.isEmpty()) {
-                    List<ResourceVisibilityLookup> list =
-                            Lists.newArrayListWithExpectedSize(dependsOn.size() + 1);
-                    list.add(visibility);
-                    for (AndroidLibrary d : dependsOn) {
-                        ResourceVisibilityLookup v = get(d);
-                        if (!v.isEmpty()) {
-                            list.add(v);
-                        }
-                    }
-                    if (list.size() > 1) {
-                        visibility = new MultipleLibraryResourceVisibility(list);
-                    }
                 }
                 mInstances.put(key, visibility);
             }
@@ -412,14 +355,22 @@ public abstract class ResourceVisibilityLookup {
          * @return the corresponding {@link ResourceVisibilityLookup}
          */
         @NonNull
-        public ResourceVisibilityLookup get(@NonNull AndroidArtifact artifact) {
+        public ResourceVisibilityLookup get(@NonNull IdeAndroidArtifact artifact) {
             String key = getMapKey(artifact);
             ResourceVisibilityLookup visibility = mInstances.get(key);
             if (visibility == null) {
-                Collection<AndroidLibrary> dependsOn = artifact.getDependencies().getLibraries();
+                Iterable<IdeLibrary> dependsOn =
+                        Iterables.concat(
+                                artifact.getLevel2Dependencies().getModuleDependencies(),
+                                artifact.getLevel2Dependencies().getAndroidLibraries());
                 List<ResourceVisibilityLookup> list =
-                        Lists.newArrayListWithExpectedSize(dependsOn.size() + 1);
-                for (AndroidLibrary d : dependsOn) {
+                        Lists.newArrayListWithExpectedSize(
+                                artifact.getLevel2Dependencies().getModuleDependencies().size()
+                                        + artifact.getLevel2Dependencies()
+                                                .getAndroidLibraries()
+                                                .size()
+                                        + 1);
+                for (IdeLibrary d : dependsOn) {
                     ResourceVisibilityLookup v = get(d);
                     if (!v.isEmpty()) {
                         list.add(v);
@@ -456,12 +407,12 @@ public abstract class ResourceVisibilityLookup {
          */
         @NonNull
         public ResourceVisibilityLookup get(
-                @NonNull IdeAndroidProject project, @NonNull Variant variant) {
+                @NonNull IdeAndroidProject project, @NonNull IdeVariant variant) {
             String key = getMapKey(variant);
             ResourceVisibilityLookup visibility = mInstances.get(key);
             if (visibility == null) {
                 if (isVisibilityAwareModel(project)) {
-                    AndroidArtifact artifact = variant.getMainArtifact();
+                    IdeAndroidArtifact artifact = variant.getMainArtifact();
                     visibility = get(artifact);
                 } else {
                     visibility = NONE;
@@ -475,7 +426,6 @@ public abstract class ResourceVisibilityLookup {
 
     /** Visibility data for a single library */
     private static class LibraryResourceVisibility extends ResourceVisibilityLookup {
-//        @Nullable private final AndroidLibrary mLibrary;
         private final String mMapKey;
 
         /**
@@ -625,10 +575,10 @@ public abstract class ResourceVisibilityLookup {
 
     /** Visibility data for a single library */
     private static class AndroidLibraryResourceVisibility extends LibraryResourceVisibility {
-        @NonNull private final AndroidLibrary mLibrary;
+        @NonNull private final IdeLibrary mLibrary;
 
         private AndroidLibraryResourceVisibility(
-                @NonNull AndroidLibrary library,
+                @NonNull IdeLibrary library,
                 @Nullable Multimap<String, ResourceType> publicResources,
                 @NonNull SymbolProvider symbols) {
             //noinspection VariableNotUsedInsideIf
@@ -638,8 +588,8 @@ public abstract class ResourceVisibilityLookup {
         }
 
         private AndroidLibraryResourceVisibility(
-                @NonNull AndroidLibrary library, @NonNull SymbolProvider symbols) {
-            this(library, computeVisibilityMap(library.getPublicResources()), symbols);
+                @NonNull IdeLibrary library, @NonNull SymbolProvider symbols) {
+            this(library, computeVisibilityMap(new File(library.getPublicResources())), symbols);
         }
 
         @Override
@@ -650,17 +600,7 @@ public abstract class ResourceVisibilityLookup {
         @Nullable
         @Override
         protected String getLibraryName() {
-            String libraryName = mLibrary.getProject();
-            if (libraryName != null) {
-                return libraryName;
-            }
-            com.android.builder.model.MavenCoordinates coordinates = mLibrary.getResolvedCoordinates();
-            //noinspection ConstantConditions
-            if (coordinates != null) {
-                return coordinates.getGroupId() + ':' + coordinates.getArtifactId();
-            }
-
-            return super.getLibraryName();
+            return mLibrary.getArtifactAddress();
         }
     }
 
@@ -679,33 +619,26 @@ public abstract class ResourceVisibilityLookup {
 
         /**
          * Returns a map from name to resource types for all resources known to this library.
-         * Note that this will *exclude* any resources that are also declared by a dependency
-         * of this library; this means that at the end we'll hopefully only list the actual
-         * resources declared locally in this library.
          *
          * @return a map from name to resource type for all resources in this library
          */
         @VisibleForTesting
         @NonNull
-        Multimap<String, ResourceType> getSymbols(@NonNull AndroidLibrary library) {
+        Multimap<String, ResourceType> getSymbols(@NonNull IdeLibrary library) {
+            if (library.getType() != IdeLibrary.LibraryType.LIBRARY_ANDROID) {
+                return ImmutableListMultimap.of();
+            }
+
             String mapKey = getMapKey(library);
             Multimap<String, ResourceType> map = mCache.get(mapKey);
             if (map != null) {
                 return map;
             }
 
-            File symbolFile;
-            try {
-                symbolFile = library.getSymbolFile();
-            } catch (Exception e) {
-                // Old Gradle models, IdeAndroidLibrary, etc
-                File dir = library.getPublicResources().getParentFile();
-                symbolFile = new File(dir, FN_RESOURCE_TEXT);
-            }
+            File symbolFile = new File(library.getSymbolFile());
             // getSymbolFile is marked @NonNull but b/157590682 shows that it can
             // be null in some scenarios, possibly from loader older cached models
-            //noinspection ConstantConditions
-            if (symbolFile == null || !symbolFile.exists()) {
+            if (!symbolFile.exists()) {
                 Multimap<String, ResourceType> empty = ImmutableListMultimap.of();
                 mCache.put(mapKey, empty);
                 return empty;
@@ -713,18 +646,6 @@ public abstract class ResourceVisibilityLookup {
 
             try {
                 Multimap<String, ResourceType> result = readSymbolFile(symbolFile);
-                if (!result.isEmpty()) {
-                    // Subtract out symbols from any dependencies; we don't want to double
-                    // count those
-                    for (AndroidLibrary dependency : getTransitiveDependencies(library)) {
-                        Multimap<String, ResourceType> imported = getSymbols(dependency);
-                        if (!imported.isEmpty()) {
-                            for (Map.Entry<String, ResourceType> entry : imported.entries()) {
-                                result.remove(entry.getKey(), entry.getValue());
-                            }
-                        }
-                    }
-                }
 
                 mCache.put(mapKey, result);
                 return result;

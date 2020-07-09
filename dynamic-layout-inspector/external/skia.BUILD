@@ -17,6 +17,7 @@ cc_library(
     name = "libskia",
     srcs = glob([
         "src/**/*.h",
+        "src/**/*.inc",
         "src/c/*.cpp",
         "src/core/*.cpp",
         "src/codec/*.cpp",
@@ -30,6 +31,8 @@ cc_library(
         "src/ports/SkFontHost*.cpp",
         "src/ports/SkImageEncoder*.cpp",
         "src/sfnt/*.cpp",
+        "src/sksl/*.cpp",
+        "src/sksl/ir/*.cpp",
         "src/shaders/*.cpp",
         "src/shaders/gradients/*.cpp",
         "src/utils/*.cpp",
@@ -91,6 +94,7 @@ cc_library(
         "-DSKIA_IMPLEMENTATION=1",
         "-DSK_PRINT_CODEC_MESSAGES",
         "-DFORTIFY_SOURCE=1",
+        "-DSK_USER_CONFIG_HEADER=\\\"StudioConfig.h\\\"",
     ] + select({
         "windows": ["/DSK_BUILD_FOR_WIN"],  # TODO: anything else needed here?
         "mac": ["-DSK_BUILD_FOR_MAC"],  # TODO: anything else needed here?
@@ -104,7 +108,7 @@ cc_library(
             "-Wno-unused-variable",
             "-fvisibility=hidden",
             "-fexceptions",
-            "-std=c++14",
+            "-std=c++17",
         ],
     }),
     linkopts = select({"mac": [

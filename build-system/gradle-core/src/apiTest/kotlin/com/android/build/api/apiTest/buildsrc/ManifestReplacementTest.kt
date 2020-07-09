@@ -60,7 +60,7 @@ class ManifestReplacementTest: BuildSrcScriptApiTest() {
                                 }
                             artifacts.use(manifestProducer)
                                 .wiredWith(ManifestProducerTask::outputManifest)
-                                .toCreate(ArtifactType.MERGED_MANIFEST)
+                                .toCreate(ArtifactType.APPLICATION_MANIFEST)
 
                             project.tasks.register(name + "Verifier", VerifyManifestTask::class.java) {
                                 it.apkFolder.set(artifacts.get(ArtifactType.APK))

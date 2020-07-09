@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.ide.dependencies.DependencyModelBuilder
 import com.android.build.gradle.internal.ide.level2.FullDependencyGraphsImpl
 import com.android.build.gradle.internal.ide.level2.GraphItemImpl
 import com.android.build.gradle.internal.services.getBuildService
-import com.android.builder.model.MavenCoordinates
 import com.android.builder.model.level2.DependencyGraphs
 import com.android.builder.model.level2.GraphItem
 import com.google.common.collect.ImmutableList
@@ -78,9 +77,5 @@ class Level2DependencyModelBuilder(buildServiceRegistry: BuildServiceRegistry) :
 
     override fun setRuntimeOnlyClasspath(files: ImmutableList<File>) {
         throw RuntimeException("Level2 does not support runtimeOnlyClasspath")
-    }
-
-    override fun computeMavenCoordinates(artifact: ResolvedArtifact): MavenCoordinates {
-        throw RuntimeException("Level2 should not use MavenCoordinates")
     }
 }

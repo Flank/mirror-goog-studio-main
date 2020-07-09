@@ -19,10 +19,13 @@ package com.android.build.gradle.internal.testing
 import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.sdklib.AndroidVersion
 import com.android.utils.ILogger
-import com.google.common.collect.ImmutableList
 import java.io.File
 
-data class StaticTestData (
+/**
+ * Final values for the [TestData] that can be passed to test runners. This should not be used as
+ * task input.
+ */
+data class StaticTestData(
     val applicationId: String,
 
     val testedApplicationId: String?,
@@ -45,5 +48,9 @@ data class StaticTestData (
 
     val testDirectories: List<File?>,
 
-    val testedApks: (deviceConfigProvider: DeviceConfigProvider, logger: ILogger) -> List<File>
+    /**
+     * Returns APK files to install based on given density and abis. If none match,
+     * empty list is returned.
+     */
+    val testedApkFinder: (DeviceConfigProvider, ILogger) -> List<File>
 )

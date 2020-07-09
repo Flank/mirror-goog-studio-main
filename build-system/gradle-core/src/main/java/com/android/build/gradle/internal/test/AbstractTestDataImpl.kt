@@ -15,50 +15,49 @@
  */
 package com.android.build.gradle.internal.test
 
-import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.component.TestCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.build.gradle.internal.testing.TestData
-import com.android.builder.testing.api.DeviceConfigProvider
-import com.android.sdklib.AndroidVersion
-import com.android.utils.ILogger
-import com.google.common.base.Joiner
-import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import java.io.File
+import java.util.concurrent.Callable
 
 /**
  * Common implementation of [TestData] for embedded test projects (in androidTest folder)
  * and separate module test projects.
  */
 abstract class AbstractTestDataImpl(
-    private val creationConfig: TestCreationConfig,
-    private val variantSources: VariantSources,
-    val testApkDir: Provider<Directory>,
+    creationConfig: TestCreationConfig,
+    variantSources: VariantSources,
+    override val testApkDir: Provider<Directory>,
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Optional
     val testedApksDir: FileCollection?
 ) : TestData {
     private var extraInstrumentationTestRunnerArgs: Map<String, String> = mutableMapOf()
 
-    override val applicationId: Provider<String>
-        get() = creationConfig.applicationId
+    override val applicationId = creationConfig.applicationId
 
-    override val testedApplicationId: Provider<String>
-        get() = creationConfig.testedApplicationId
+    override val testedApplicationId = creationConfig.testedApplicationId
 
-    override val instrumentationRunner: Provider<String>
-        get() = creationConfig.instrumentationRunner
+    override val instrumentationRunner = creationConfig.instrumentationRunner
 
-    override val instrumentationRunnerArguments: Map<String, String>
-        get() {
-            return ImmutableMap.builder<String, String>()
-                .putAll(creationConfig.instrumentationRunnerArguments)
-                .putAll(extraInstrumentationTestRunnerArgs)
-                .build()
-        }
+    override val instrumentationRunnerArguments: Map<String, String> by lazy {
+        ImmutableMap.builder<String, String>()
+            .putAll(creationConfig.instrumentationRunnerArguments)
+            .putAll(extraInstrumentationTestRunnerArgs)
+            .build()
+    }
 
     fun setExtraInstrumentationTestRunnerArgs(
         extraInstrumentationTestRunnerArgs: Map<String, String>
@@ -69,65 +68,37 @@ abstract class AbstractTestDataImpl(
             )
     }
 
-    override var animationsDisabled: Boolean = false
+    override var animationsDisabled = creationConfig.services.provider { false }
 
-    override val isTestCoverageEnabled: Boolean
-        get() = creationConfig.isTestCoverageEnabled
+    override val testCoverageEnabled =
+        creationConfig.services.provider { creationConfig.isTestCoverageEnabled }
 
-    override val minSdkVersion: AndroidVersion
-        get() = creationConfig.minSdkVersion
+    override val minSdkVersion = creationConfig.services.provider { creationConfig.minSdkVersion }
 
-    override val flavorName: String
-        get() = creationConfig.name
+    override val flavorName = creationConfig.services.provider { creationConfig.flavorName }
 
-    open fun getTestedApksFromBundle(): FileCollection? = null
-
-    override val testDirectories: List<File>
-        get() {
+    override val testDirectories: ConfigurableFileCollection =
+        creationConfig.services.fileCollection().from(Callable<List<File>> {
             // For now we check if there are any test sources. We could inspect the test classes and
             // apply JUnit logic to see if there's something to run, but that would not catch the case
             // where user makes a typo in a test name or forgets to inherit from a JUnit class
-            val javaDirectories =
-                ImmutableList.builder<File>()
-            for (sourceProvider in variantSources.sortedSourceProviders) {
-                javaDirectories.addAll(sourceProvider.javaDirectories)
-            }
-            return javaDirectories.build()
-        }
+            variantSources.sortedSourceProviders.flatMap { it.javaDirectories }
+        })
 
-    override val testApk: File
-        get() {
-            val testApkOutputs = BuiltArtifactsLoaderImpl().load(testApkDir.get())
-                ?: throw RuntimeException("No test APK in provided directory, file a bug")
-            if (testApkOutputs.elements.size != 1) {
-                throw RuntimeException(
-                    "Unexpected number of main APKs, expected 1, got  "
-                            + testApkOutputs.elements.size
-                            + ":"
-                            + Joiner.on(",").join(testApkOutputs.elements)
-                )
-            }
-            return File(testApkOutputs.elements.iterator().next().outputFile)
-        }
-
-    abstract override fun getTestedApks(
-        deviceConfigProvider: DeviceConfigProvider,
-        logger: ILogger): List<File>
-
-    override fun get(): StaticTestData {
+    override fun getAsStaticData(): StaticTestData {
         return StaticTestData(
             applicationId.get(),
             testedApplicationId.orNull,
             instrumentationRunner.get(),
             instrumentationRunnerArguments,
-            animationsDisabled,
-            isTestCoverageEnabled,
-            minSdkVersion,
-            isLibrary,
-            flavorName,
-            testApk,
-            testDirectories,
-            this::getTestedApks
+            animationsDisabled.get(),
+            testCoverageEnabled.get(),
+            minSdkVersion.get(),
+            libraryType.get(),
+            flavorName.get(),
+            getTestApk().get(),
+            testDirectories.files.toList(),
+            this::findTestedApks
         )
     }
 }

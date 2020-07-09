@@ -36,12 +36,10 @@ import com.android.ide.common.gradle.model.IdeLintOptions
 import com.android.ide.common.gradle.model.IdeMavenCoordinates
 import com.android.ide.common.gradle.model.IdeVariant
 import com.android.ide.common.gradle.model.level2.IdeLibrary
-import com.android.ide.common.gradle.model.level2.IdeLibrary.LIBRARY_MODULE
 import com.android.ide.common.repository.GradleVersion
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import java.io.File
-import com.android.builder.model.level2.Library as LibraryL2
 
 /**
  * Converter from the builder model library to lint's own model.
@@ -63,10 +61,10 @@ class LintModelFactory : LintModelModuleLoader {
     var kotlinSourceFolderLookup: ((variantName: String) -> List<File>)? = null
 
     /**
-     * Factory from an XML file to a [LintModelModule].
-     * The file was previously saved by [LintModelSerialization.writeModule].
+     * Factory from an XML folder to a [LintModelModule].
+     * The files were previously saved by [LintModelSerialization.writeModule].
      */
-    fun create(xmlFile: File): LintModelModule = LintModelSerialization.readModule(xmlFile)
+    fun create(source: File): LintModelModule = LintModelSerialization.readModule(source)
 
     /**
      * Converter from the builder model library to lint's own model.
@@ -145,7 +143,7 @@ class LintModelFactory : LintModelModuleLoader {
 
     private fun getLibrary(library: IdeLibrary): LintModelLibrary {
         return when (library.type) {
-            LibraryL2.LIBRARY_ANDROID -> {
+            IdeLibrary.LibraryType.LIBRARY_ANDROID -> {
                 // TODO: Construct file objects lazily!
                 DefaultLintModelAndroidLibrary(
                     artifactAddress = library.getMavenArtifactAddress(),
@@ -160,32 +158,26 @@ class LintModelFactory : LintModelModuleLoader {
                     symbolFile = File(library.symbolFile),
                     externalAnnotations = File(library.externalAnnotations),
                     provided = library.isProvided,
-                    skipped = false,
                     resolvedCoordinates = library.getMavenName(),
                     proguardRules = File(library.proguardRules)
                 )
             }
-            LibraryL2.LIBRARY_JAVA -> {
+            IdeLibrary.LibraryType.LIBRARY_JAVA -> {
                 DefaultLintModelJavaLibrary(
                     artifactAddress = library.getMavenArtifactAddress(),
                     // TODO - expose compile jar vs impl jar?
-                    folder = library.folder,
                     jarFiles = listOf(library.artifact),
                     provided = library.isProvided,
-                    skipped = false,
                     resolvedCoordinates = library.getMavenName()
                 )
             }
-            LibraryL2.LIBRARY_MODULE -> {
+            IdeLibrary.LibraryType.LIBRARY_MODULE -> {
                 val projectPath = library.projectPath ?: "unknown:unknown:unknown"
                 DefaultLintModelModuleLibrary(
                     artifactAddress = library.getMavenArtifactAddress(),
                     projectPath = projectPath,
-                    resolvedCoordinates = DefaultLintModelMavenName("artifacts:", projectPath, "unspecified"),
-                    folder = library.folder,
                     lintJar = library.lintJar?.let(::File),
-                    provided = library.isProvided,
-                    skipped = false
+                    provided = library.isProvided
                 )
             }
             else -> {
@@ -196,7 +188,7 @@ class LintModelFactory : LintModelModuleLoader {
 
     private fun IdeLibrary.getArtifactName(): String {
         return when (type) {
-            LIBRARY_MODULE -> "artifacts:$projectPath"
+            IdeLibrary.LibraryType.LIBRARY_MODULE -> "artifacts:$projectPath"
             else -> getMavenName().let { mavenName -> "${mavenName.groupId}:${mavenName.artifactId}" }
         }
     }
@@ -207,7 +199,7 @@ class LintModelFactory : LintModelModuleLoader {
 
     private fun IdeLibrary.getMavenArtifactAddress(): String {
         return when (type) {
-            LIBRARY_MODULE -> "artifacts:${projectPath}:unspecified" // TODO(b/158346611): Review artifact names for modules.
+            IdeLibrary.LibraryType.LIBRARY_MODULE -> "artifacts:${projectPath}:unspecified" // TODO(b/158346611): Review artifact names for modules.
             else -> artifactAddress.substringBefore("@")
         }
     }

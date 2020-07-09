@@ -42,6 +42,16 @@ void saveResource(Resource *resource, jint namespace_, jint type, jint name) {
   resource->set_name(name);
 }
 
+Property *addProperty(jlong jevent, jlong jproperty) {
+  if (jproperty != 0L) {
+    Property *property = (Property *)jproperty;
+    return property->add_element();
+  } else {
+    PropertyEvent *event = (PropertyEvent *)jevent;
+    return event->add_property();
+  }
+}
+
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_Properties_allocatePropertyEvent(
     JNIEnv *env, jclass clazz) {
@@ -111,10 +121,9 @@ Java_com_android_tools_agent_layoutinspector_Properties_addResolution(
 
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_Properties_addIntProperty(
-    JNIEnv *env, jclass clazz, jlong jevent, jint name, jboolean is_layout,
-    jint type, jint value) {
-  PropertyEvent *event = (PropertyEvent *)jevent;
-  auto *property = event->add_property();
+    JNIEnv *env, jclass clazz, jlong jevent, jlong jproperty, jint name,
+    jboolean is_layout, jint type, jint value) {
+  auto *property = addProperty(jevent, jproperty);
   property->set_name(name);
   property->set_is_layout(is_layout);
   property->set_type(static_cast<Property_Type>(type));
@@ -124,10 +133,9 @@ Java_com_android_tools_agent_layoutinspector_Properties_addIntProperty(
 
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_Properties_addLongProperty(
-    JNIEnv *env, jclass clazz, jlong jevent, jint name, jboolean is_layout,
-    jint type, jlong value) {
-  PropertyEvent *event = (PropertyEvent *)jevent;
-  auto *property = event->add_property();
+    JNIEnv *env, jclass clazz, jlong jevent, jlong jproperty, jint name,
+    jboolean is_layout, jint type, jlong value) {
+  auto *property = addProperty(jevent, jproperty);
   property->set_name(name);
   property->set_is_layout(is_layout);
   property->set_type(static_cast<Property_Type>(type));
@@ -137,10 +145,9 @@ Java_com_android_tools_agent_layoutinspector_Properties_addLongProperty(
 
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_Properties_addDoubleProperty(
-    JNIEnv *env, jclass clazz, jlong jevent, jint name, jboolean is_layout,
-    jint type, jdouble value) {
-  PropertyEvent *event = (PropertyEvent *)jevent;
-  auto *property = event->add_property();
+    JNIEnv *env, jclass clazz, jlong jevent, jlong jproperty, jint name,
+    jboolean is_layout, jint type, jdouble value) {
+  auto *property = addProperty(jevent, jproperty);
   property->set_name(name);
   property->set_is_layout(is_layout);
   property->set_type(static_cast<Property_Type>(type));
@@ -150,10 +157,9 @@ Java_com_android_tools_agent_layoutinspector_Properties_addDoubleProperty(
 
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_Properties_addFloatProperty(
-    JNIEnv *env, jclass clazz, jlong jevent, jint name, jboolean is_layout,
-    jint type, jfloat value) {
-  PropertyEvent *event = (PropertyEvent *)jevent;
-  auto *property = event->add_property();
+    JNIEnv *env, jclass clazz, jlong jevent, jlong jproperty, jint name,
+    jboolean is_layout, jint type, jfloat value) {
+  auto *property = addProperty(jevent, jproperty);
   property->set_name(name);
   property->set_is_layout(is_layout);
   property->set_type(static_cast<Property_Type>(type));
@@ -163,11 +169,10 @@ Java_com_android_tools_agent_layoutinspector_Properties_addFloatProperty(
 
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_Properties_addResourceProperty(
-    JNIEnv *env, jclass clazz, jlong jevent, jint name, jboolean is_layout,
-    jint type, jint resource_namespace, jint resource_type,
+    JNIEnv *env, jclass clazz, jlong jevent, jlong jproperty, jint name,
+    jboolean is_layout, jint type, jint resource_namespace, jint resource_type,
     jint resource_name) {
-  PropertyEvent *event = (PropertyEvent *)jevent;
-  auto *property = event->add_property();
+  auto *property = addProperty(jevent, jproperty);
   property->set_name(name);
   property->set_is_layout(is_layout);
   property->set_type(static_cast<Property_Type>(type));
@@ -186,10 +191,9 @@ Java_com_android_tools_agent_layoutinspector_Properties_addLayoutResource(
 
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_Properties_addFlagProperty(
-    JNIEnv *env, jclass clazz, jlong jevent, jint name, jboolean is_layout,
-    jint type) {
-  PropertyEvent *event = (PropertyEvent *)jevent;
-  auto *property = event->add_property();
+    JNIEnv *env, jclass clazz, jlong jevent, jlong jproperty, jint name,
+    jboolean is_layout, jint type) {
+  auto *property = addProperty(jevent, jproperty);
   property->set_name(name);
   property->set_is_layout(is_layout);
   property->set_type(static_cast<Property_Type>(type));

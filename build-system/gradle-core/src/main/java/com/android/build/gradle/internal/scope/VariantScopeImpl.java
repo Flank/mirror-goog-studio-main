@@ -48,6 +48,7 @@ import com.android.build.gradle.internal.ProguardFileType;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.PostProcessingOptions;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.dependency.AndroidAttributes;
 import com.android.build.gradle.internal.dependency.ProvidedClasspath;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
@@ -79,6 +80,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -91,6 +93,8 @@ import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.SelfResolvingDependency;
+import org.gradle.api.attributes.Attribute;
+import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
@@ -184,12 +188,14 @@ public class VariantScopeImpl implements VariantScope {
      * @param artifact Provider of File or FileSystemLocation to be published.
      * @param artifactType the artifact type.
      * @param configTypes the PublishedConfigType. (e.g. api, runtime, etc)
+     * @param libraryElements the artifact's library elements
      */
     @Override
     public void publishIntermediateArtifact(
             @NonNull Provider<?> artifact,
             @NonNull ArtifactType artifactType,
-            @NonNull Collection<PublishedConfigType> configTypes) {
+            @NonNull Collection<PublishedConfigType> configTypes,
+            @Nullable LibraryElements libraryElements) {
 
         Preconditions.checkState(!configTypes.isEmpty());
 
@@ -207,7 +213,7 @@ public class VariantScopeImpl implements VariantScope {
                     }
                     publishArtifactToDefaultVariant(config, artifact, artifactType, classifier);
                 } else {
-                    publishArtifactToConfiguration(config, artifact, artifactType);
+                    publishArtifactToConfiguration(config, artifact, artifactType, new AndroidAttributes(null, libraryElements));
                 }
             }
         }

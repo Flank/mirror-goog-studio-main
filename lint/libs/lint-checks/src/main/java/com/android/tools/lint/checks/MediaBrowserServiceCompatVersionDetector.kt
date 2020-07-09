@@ -12,6 +12,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.guessGradleLocation
+import com.android.tools.lint.model.LintModelExternalLibrary
 import org.jetbrains.uast.UClass
 
 /**
@@ -63,7 +64,7 @@ class MediaBrowserServiceCompatVersionDetector : Detector(), SourceCodeScanner {
         }
 
         val library = context.project.buildVariant?.mainArtifact
-            ?.findCompileDependency(SUPPORT_LIB_ARTIFACT) ?: return
+            ?.findCompileDependency(SUPPORT_LIB_ARTIFACT) as? LintModelExternalLibrary ?: return
         val mc = library.resolvedCoordinates
         if (mc.version.isNotBlank()) {
             val libVersion = GradleCoordinate.parseVersionOnly(mc.version)

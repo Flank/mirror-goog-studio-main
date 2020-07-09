@@ -100,7 +100,7 @@ cc_toolchain_config(
         "/usr/include/x86_64-linux-gnu/c++/8.0.1",
         "/usr/include/c++/8.0.1/backward",
     ],
-    cxx_flags = ["-std=c++14"],
+    cxx_flags = ["-std=c++17"],
     dbg_compile_flags = ["-g"],
     host_system_name = "local",
     link_flags = [
@@ -158,15 +158,16 @@ cc_toolchain_config(
         clang_latest_darwin + "/lib64/clang/9.0.4/include",
         "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/",
         "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks",
+        "/usr/include",
     ],
     tool_paths = {
         "ar": "studio-extra/wrapped_ar.darwin",
-        "compat-ld": clang_latest_darwin + "/bin/ld64.lld",
+        "compat-ld": "/usr/bin/ld/",
         "cpp": clang_latest_darwin + "/bin/clang++",
         "dwp": "/bin/false",
         "gcc": clang_latest_darwin + "/bin/clang",
         "gcov": clang_latest_darwin + "/bin/llvm-cov",
-        "ld": clang_latest_darwin + "/bin/ld.lld",
+        "ld": "/usr/bin/ld",
         "nm": clang_latest_darwin + "/bin/llvm-nm",
         "objcopy": clang_latest_darwin + "/bin/llvm-objcopy",
         "objdump": clang_latest_darwin + "/bin/llvm-objdump",
@@ -189,7 +190,7 @@ cc_toolchain_config(
         "-ffunction-sections",
         "-fdata-sections",
     ],
-    cxx_flags = ["-std=c++14"],
+    cxx_flags = ["-std=c++17"],
     link_flags = [
         "-lc++",
         "-framework",
@@ -199,6 +200,8 @@ cc_toolchain_config(
         "/usr/bin/",
         "-headerpad_max_install_names",
         "-no-canonical-prefixes",
+        "-undefined",
+        "dynamic_lookup",
     ],
     link_libs = [],  # ?
     opt_link_flags = [],  # ?
@@ -222,14 +225,14 @@ cc_toolchain_config(
     compiler = "clang-cl",
     cpu = "x64_windows",
     cxx_builtin_include_directories = [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\INCLUDE",
-        "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.10240.0\\ucrt",
-        "C:\\Program Files (x86)\\Windows Kits\\8.1\\include\\shared",
-        "C:\\Program Files (x86)\\Windows Kits\\8.1\\include\\um",
-        "C:\\Program Files (x86)\\Windows Kits\\8.1\\include\\winrt",
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.26.28801\\include",
+        "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\ucrt",
+        "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\um",
+        "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\shared",
+        "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\winrt",
         "C:\\botcode\\w",
     ],
-    cxx_flags = ["/std:c++14"],
+    cxx_flags = ["/std:c++17"],
     link_flags = ["/MACHINE:X64"],
     compile_flags = [
         "/DCOMPILER_MSVC",
@@ -247,9 +250,9 @@ cc_toolchain_config(
     ],
     host_system_name = "local",
     link_libs = [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\LIB\\amd64",
-        "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.10240.0\\ucrt\\x64",
-        "C:\\Program Files (x86)\\Windows Kits\\8.1\\lib\\winv6.3\\um\\x64",
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.26.28801\\lib\\x64",
+        "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.18362.0\\ucrt\\x64",
+        "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.18362.0\\um\\x64",
     ],
     tmp_path = "C:\\Users\\ContainerAdministrator\\AppData\\Local\\Temp",
     target_libc = "msvcrt",
@@ -265,7 +268,7 @@ cc_toolchain_config(
         "objcopy": "wrapper/bin/msvc_nop.bat",
         "objdump": "wrapper/bin/msvc_nop.bat",
         "strip": "wrapper/bin/msvc_nop.bat",
-        "ml": "c:/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/VC/Tools/MSVC/14.16.27023/bin/HostX64/x64/ml64.exe",
+        "ml": "c:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/VC/Tools/MSVC/14.26.28801/bin/HostX64/x64/ml64.exe",
     },
     toolchain_identifier = "local_windows",
 )
@@ -281,7 +284,7 @@ toolchain(
         "@platforms//os:osx",
     ],
     toolchain = ":cc-compiler-darwin",
-    toolchain_type = ":toolchain_type",
+    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
 )
 
 toolchain(

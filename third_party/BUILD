@@ -431,31 +431,39 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.sun.istack_istack-commons-runtime",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/istack/istack-commons-runtime/3.0.7:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/istack/istack-commons-runtime/3.0.8:jar",
     visibility = ["//visibility:public"],
-    exports = [],
+    exports = [":jakarta.activation_jakarta.activation-api"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.sun.istack_istack-commons-tools",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/istack/istack-commons-tools/2.21:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/istack/istack-commons-tools/3.0.8:jar",
     visibility = ["//visibility:public"],
     exports = [":org.apache.ant_ant"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
-    name = "com.sun.xml.bind.external_rngom",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/xml/bind/external/rngom/2.2.11:jar",
+    name = "com.sun.xml.bind.external_relaxng-datatype",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/xml/bind/external/relaxng-datatype/2.3.2:jar",
     visibility = ["//visibility:public"],
-    exports = [":relaxngDatatype_relaxngDatatype"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "com.sun.xml.bind.external_rngom",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/xml/bind/external/rngom/2.3.2:jar",
+    visibility = ["//visibility:public"],
+    exports = [":com.sun.xml.bind.external_relaxng-datatype"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.sun.xml.dtd-parser_dtd-parser",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/xml/dtd-parser/dtd-parser/1.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/xml/dtd-parser/dtd-parser/1.4.1:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -463,17 +471,9 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.sun.xml.fastinfoset_FastInfoset",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/xml/fastinfoset/FastInfoset/1.2.15:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/xml/fastinfoset/FastInfoset/1.2.16:jar",
     visibility = ["//visibility:public"],
     exports = [],
-)
-
-# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
-maven_java_library(
-    name = "com.sun.xsom_xsom",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/xsom/xsom/20140925:jar",
-    visibility = ["//visibility:public"],
-    exports = [":relaxngDatatype_relaxngDatatype"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
@@ -818,10 +818,18 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
-    name = "javax.activation_javax.activation-api",
-    export_artifact = "//prebuilts/tools/common/m2/repository/javax/activation/javax.activation-api/1.2.0:jar",
+    name = "jakarta.activation_jakarta.activation-api",
+    export_artifact = "//prebuilts/tools/common/m2/repository/jakarta/activation/jakarta.activation-api/1.2.1:jar",
     visibility = ["//visibility:public"],
     exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "jakarta.xml.bind_jakarta.xml.bind-api",
+    export_artifact = "//prebuilts/tools/common/m2/repository/jakarta/xml/bind/jakarta.xml.bind-api/2.3.2:jar",
+    visibility = ["//visibility:public"],
+    exports = [":jakarta.activation_jakarta.activation-api"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
@@ -830,14 +838,6 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2/repository/javax/inject/javax.inject/1:jar",
     visibility = ["//visibility:public"],
     exports = [],
-)
-
-# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
-maven_java_library(
-    name = "javax.xml.bind_jaxb-api",
-    export_artifact = "//prebuilts/tools/common/m2/repository/javax/xml/bind/jaxb-api/2.3.1:jar",
-    visibility = ["//visibility:public"],
-    exports = [":javax.activation_javax.activation-api"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
@@ -942,7 +942,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.ant_ant",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/ant/ant/1.7.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/ant/ant/1.10.5:jar",
     visibility = ["//visibility:public"],
     exports = [":org.apache.ant_ant-launcher"],
 )
@@ -950,7 +950,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.ant_ant-launcher",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/ant/ant-launcher/1.7.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/ant/ant-launcher/1.10.5:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -1252,33 +1252,21 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.glassfish.jaxb_codemodel",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/codemodel/2.2.11:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/codemodel/2.3.2:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
-    name = "org.glassfish.jaxb_jaxb-core",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/jaxb-core/2.2.11:jar",
-    visibility = ["//visibility:public"],
-    exports = [
-        ":com.sun.istack_istack-commons-runtime",
-        ":javax.xml.bind_jaxb-api",
-        ":org.glassfish.jaxb_txw2",
-    ],
-)
-
-# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
-maven_java_library(
     name = "org.glassfish.jaxb_jaxb-runtime",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/jaxb-runtime/2.3.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/jaxb-runtime/2.3.2:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.sun.istack_istack-commons-runtime",
         ":com.sun.xml.fastinfoset_FastInfoset",
-        ":javax.activation_javax.activation-api",
-        ":javax.xml.bind_jaxb-api",
+        ":jakarta.activation_jakarta.activation-api",
+        ":jakarta.xml.bind_jakarta.xml.bind-api",
         ":org.glassfish.jaxb_txw2",
         ":org.jvnet.staxex_stax-ex",
     ],
@@ -1287,24 +1275,34 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.glassfish.jaxb_jaxb-xjc",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/jaxb-xjc/2.2.11:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/jaxb-xjc/2.3.2:jar",
     visibility = ["//visibility:public"],
     exports = [
+        ":com.sun.istack_istack-commons-runtime",
         ":com.sun.istack_istack-commons-tools",
+        ":com.sun.xml.bind.external_relaxng-datatype",
         ":com.sun.xml.bind.external_rngom",
         ":com.sun.xml.dtd-parser_dtd-parser",
-        ":com.sun.xsom_xsom",
         ":org.glassfish.jaxb_codemodel",
-        ":org.glassfish.jaxb_jaxb-core",
+        ":org.glassfish.jaxb_jaxb-runtime",
+        ":org.glassfish.jaxb_xsom",
     ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.glassfish.jaxb_txw2",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/txw2/2.3.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/txw2/2.3.2:jar",
     visibility = ["//visibility:public"],
     exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "org.glassfish.jaxb_xsom",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/xsom/2.3.2:jar",
+    visibility = ["//visibility:public"],
+    exports = [":com.sun.xml.bind.external_relaxng-datatype"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
@@ -1747,9 +1745,12 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jvnet.staxex_stax-ex",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jvnet/staxex/stax-ex/1.8:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jvnet/staxex/stax-ex/1.8.1:jar",
     visibility = ["//visibility:public"],
-    exports = [],
+    exports = [
+        ":jakarta.activation_jakarta.activation-api",
+        ":jakarta.xml.bind_jakarta.xml.bind-api",
+    ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
@@ -1890,12 +1891,4 @@ maven_java_library(
         ":com.google.flatbuffers_flatbuffers-java",
         ":org.checkerframework_checker-qual",
     ],
-)
-
-# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
-maven_java_library(
-    name = "relaxngDatatype_relaxngDatatype",
-    export_artifact = "//prebuilts/tools/common/m2/repository/relaxngDatatype/relaxngDatatype/20020414:jar",
-    visibility = ["//visibility:public"],
-    exports = [],
 )

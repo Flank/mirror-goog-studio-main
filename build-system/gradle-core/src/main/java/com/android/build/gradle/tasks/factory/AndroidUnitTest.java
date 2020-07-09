@@ -40,10 +40,13 @@ import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.builder.core.VariantType;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.io.Serializable;
 import java.util.concurrent.Callable;
+import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.reporting.ConfigurableReport;
+import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
@@ -159,7 +162,10 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                             "AndroidUnitTest task is not yet cacheable"
                                     + " when includeAndroidResources=true"
                                     + " and android.testConfig.useRelativePath=false",
-                            (thisTask) -> includeAndroidResources && !useRelativePathInTestConfig);
+                            (Spec<? super Task> & Serializable)
+                                    ((thisTask) ->
+                                            includeAndroidResources
+                                                    && !useRelativePathInTestConfig));
         }
 
         @NonNull

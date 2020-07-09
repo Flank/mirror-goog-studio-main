@@ -70,7 +70,7 @@ class LintModuleLoader(
                 val model = modelBuilder.buildAll(modelName, project) as AndroidProject
                 val factory = IdeDependenciesFactory()
                 // Sync issues are not used in lint.
-                IdeAndroidProjectImpl.create(model, factory, model.variants, emptyList())
+                IdeAndroidProjectImpl.create(model, HashMap(), factory, model.variants, emptyList())
             } finally {
                 ext[AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED] = null
             }

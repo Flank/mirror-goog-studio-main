@@ -33,7 +33,8 @@ public class ComponentTreeTest {
         System.loadLibrary("jni-test");
         long event = allocateEvent();
 
-        ComponentTree treeBuilder = new ComponentTree(false);
+        Properties properties = new Properties();
+        ComponentTree treeBuilder = new ComponentTree(properties, false);
         treeBuilder.writeTree(event, StandardView.createLinearLayoutWithTextView());
 
         ComponentTreeEvent proto = ComponentTreeEvent.parseFrom(toByteArray(event));

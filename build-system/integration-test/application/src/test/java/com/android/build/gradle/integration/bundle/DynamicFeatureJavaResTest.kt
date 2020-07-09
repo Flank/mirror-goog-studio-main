@@ -113,9 +113,7 @@ class DynamicFeatureJavaResTest {
     @Test
     fun `test duplicate java res from feature library dependency throws exception`() {
         val result = project.executor().expectFailure().run("assembleMinified")
-        assertThat(result.failureMessage).contains(
-            "More than one file was found with OS independent path 'foo.txt'"
-        )
+        assertThat(result.failureMessage).contains("2 files found with path 'foo.txt'")
     }
 
     @Test

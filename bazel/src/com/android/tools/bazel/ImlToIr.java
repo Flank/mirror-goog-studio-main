@@ -19,6 +19,7 @@ package com.android.tools.bazel;
 import com.android.tools.bazel.ir.IrLibrary;
 import com.android.tools.bazel.ir.IrModule;
 import com.android.tools.bazel.ir.IrProject;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import java.io.File;
@@ -56,6 +57,7 @@ import org.jetbrains.jps.model.module.JpsLibraryDependency;
 import org.jetbrains.jps.model.module.JpsModule;
 import org.jetbrains.jps.model.module.JpsModuleDependency;
 import org.jetbrains.jps.model.module.JpsModuleSourceRoot;
+import org.jetbrains.jps.model.module.JpsSdkDependency;
 import org.jetbrains.jps.model.module.JpsTestModuleProperties;
 import org.jetbrains.jps.model.serialization.JpsModelSerializationDataService;
 import org.jetbrains.jps.model.serialization.JpsProjectLoader;
@@ -84,12 +86,16 @@ public class ImlToIr {
     public static final ImmutableSet<JpsJavaDependencyScope> RUNTIME_TEST_COMPILE_SCOPE = ImmutableSet
             .of(JpsJavaDependencyScope.TEST, JpsJavaDependencyScope.COMPILE, JpsJavaDependencyScope.RUNTIME);
 
+    public static final ImmutableMap<String, String> PROJECT_IDS =
+            ImmutableMap.of("tools/adt/idea", "unb");
+
     // This is the public API of ImlToIr, keeping it an instance method in case we ever need to
     // mock it or write another implementation.
     @SuppressWarnings("MethodMayBeStatic")
     public IrProject convert(
             Path workspace, String projectPath, String imlGraph, BazelToolsLogger logger)
             throws IOException {
+        String id = PROJECT_IDS.getOrDefault(projectPath, "");
         projectPath = workspace.resolve(projectPath).toString();
         // Depending on class initialization order this property will be read, so it needs to be set.
         System.setProperty("idea.home.path", projectPath);
@@ -104,7 +110,7 @@ public class ImlToIr {
                 "Loaded project %s with %d modules.",
                 project.getName(), project.getModules().size());
 
-        IrProject irProject = new IrProject(workspace.toFile());
+        IrProject irProject = new IrProject(workspace.toFile(), projectPath, id);
 
         JpsCompilerExcludes excludes = JpsJavaExtensionService.getInstance()
                 .getOrCreateCompilerConfiguration(project).getCompilerExcludes();
@@ -250,6 +256,13 @@ public class ImlToIr {
                         if (irDep != jpsModule) {
                             module.addDependency(irDep, isExported, scope);
                         }
+                    }
+                } else if (dependency instanceof JpsSdkDependency) {
+                    JpsSdkDependency sdk = (JpsSdkDependency) dependency;
+                    String sdkName = sdk.getSdkReference().getSdkName();
+                    if (sdkName.equals("Android Studio")) {
+                        IrLibrary irSdk = new IrLibrary("studio-sdk", null);
+                        module.addDependency(irSdk, false, IrModule.Scope.COMPILE);
                     }
                 }
             }

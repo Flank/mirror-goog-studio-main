@@ -146,3 +146,56 @@ coverage_java_test(
         "//tools/idea/.idea/libraries:studio-proto",
     ],
 )
+
+# managed by go/iml_to_build [unb]
+iml_module(
+    name = "unb.studio.android.sdktools.deployer",
+    srcs = ["src/main/java"],
+    bundle_data = [
+        "//tools/base/deploy/installer:android-installer",
+    ],
+    iml_files = ["android.sdktools.deployer.iml"],
+    lint_baseline = "lint_baseline.xml",
+    tags = [
+        "manual",
+        "no_mac",
+        "unb",
+    ],
+    test_data = glob(["src/test/resource/**"]) + select({
+        "//tools/base/bazel:windows": [],
+        "//conditions:default": [
+            "//tools/base/deploy/installer:test-installer",
+            "//tools/base/deploy/installer/tests:artifacts",
+        ],
+    }),
+    test_resources = ["src/test/resource"],
+    test_srcs = ["src/test/java"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    exports = [
+        "//tools/base/deploy/proto:deploy_java_proto",
+        "//tools/adt/idea/.idea/libraries:unb.protobuf",
+    ],
+    # do not sort: must match IML order
+    deps = [
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
+        "//tools/base/common:unb.studio.android.sdktools.common[module]",
+        "//tools/base/ddmlib:unb.studio.android.sdktools.ddmlib[module]",
+        "//tools/base/testutils:unb.studio.android.sdktools.testutils[module, test]",
+        "//tools/base/apkparser:unb.studio.android.sdktools.binary-resources[module]",
+        "//tools/adt/idea/.idea/libraries:unb.Guava",
+        "//tools/base/deploy/proto:deploy_java_proto",
+        "//tools/adt/idea/.idea/libraries:unb.protobuf",
+        "//prebuilts/r8:unb.r8",
+        "//tools/base/deploy/deployer:java_version",
+        "//tools/adt/idea/.idea/libraries:unb.sqlite",
+        "//tools/adt/idea/.idea/libraries:unb.mockito[test]",
+        "//tools/base/tracer:unb.studio.android.sdktools.tracer[module]",
+        "//tools/base/fakeadbserver:unb.studio.android.sdktools.fakeadbserver[module, test]",
+        "//tools/adt/idea/.idea/libraries:unb.studio-proto",
+        "//tools/base/perf-logger:unb.studio.perf-logger[module, test]",
+        "//tools/base/deploy/installer/tests:fake_device_proto[test]",
+        "//tools/adt/idea/.idea/libraries:unb.studio-grpc[test]",
+        "//tools/base/zipflinger:unb.studio.android.sdktools.zipflinger[module]",
+    ],
+)

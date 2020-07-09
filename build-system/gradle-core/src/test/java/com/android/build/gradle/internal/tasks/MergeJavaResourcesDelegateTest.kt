@@ -53,6 +53,7 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.util.zip.Deflater
 import java.util.zip.ZipFile
+import kotlin.test.assertFailsWith
 
 /** Test cases for [MergeJavaResourcesDelegate].  */
 class MergeJavaResourcesDelegateTest {
@@ -380,11 +381,11 @@ class MergeJavaResourcesDelegateTest {
         // Create jar files from base module and feature with duplicate resources
         val jarFile1 = File(tmpDir.root, "jarFile1.jar")
         ZFile(jarFile1).use { it.add("duplicate", ByteArrayInputStream(ByteArray(0))) }
-        val input1 = createIncrementalFilerMergerInputFromJar(jarFile1)
+        val input1 = createIncrementalFilerMergerInputFromJar(jarFile1, "jarFile1 name")
 
         val jarFile2 = File(tmpDir.root, "jarFile2.jar")
         ZFile(jarFile2).use { it.add("duplicate", ByteArrayInputStream(ByteArray(0))) }
-        val input2 = createIncrementalFilerMergerInputFromJar(jarFile2)
+        val input2 = createIncrementalFilerMergerInputFromJar(jarFile2, "jarFile2 name")
 
         val contentMap = mutableMapOf(
             Pair(input1, createQualifiedContent(jarFile1, PROJECT, RESOURCES)),
@@ -402,18 +403,26 @@ class MergeJavaResourcesDelegateTest {
             noCompress = listOf()
         )
 
-        try {
-            delegate.run()
-        }
-        catch (e: DuplicateRelativeFileException) {
-            assertThat(e.message).contains("Adding a packagingOptions block may help")
-        }
+        val e = assertFailsWith<DuplicateRelativeFileException> { delegate.run() }
+        assertThat(e.message).isEqualTo(
+            """
+                2 files found with path 'duplicate' from inputs:
+                 - jarFile1 name
+                 - jarFile2 name
+                Adding a packagingOptions block may help, please refer to
+                https://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.PackagingOptions.html
+                for more information
+            """.trimIndent()
+        )
     }
 
-    private fun createIncrementalFilerMergerInputFromJar(jar: File): IncrementalFileMergerInput {
+    private fun createIncrementalFilerMergerInputFromJar(
+        jar: File,
+        name: String = jar.absolutePath
+    ): IncrementalFileMergerInput {
         assertThat(jar).isFile()
         return LazyIncrementalFileMergerInput(
-            jar.absolutePath,
+            name,
             CachedSupplier { IncrementalRelativeFileSets.fromZip(jar) },
             CachedSupplier { RelativeFiles.fromZip(ZipCentralDirectory(jar)) }
         )

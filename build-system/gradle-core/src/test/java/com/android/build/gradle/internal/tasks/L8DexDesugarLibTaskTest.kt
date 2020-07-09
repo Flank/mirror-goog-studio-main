@@ -16,15 +16,15 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.DexSubject
+import org.gradle.api.file.DirectoryProperty
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.io.BufferedReader
-import java.io.File
-import java.io.InputStreamReader
-import java.util.jar.JarFile
 
 class L8DexDesugarLibTaskTest {
 
@@ -48,17 +48,28 @@ class L8DexDesugarLibTaskTest {
             }
         }
 
-        val params = L8DexParams(
-            desugarJar,
-            output,
-            desugarConfig,
-            bootClasspath,
-            20,
-            setOf(keepRulesFile1, keepRulesFile2),
-            null,
-            true
-        )
-        L8DexRunnable(params).run()
+        object: L8DexWorkAction() {
+            override fun getParameters(): Params {
+                return object: Params() {
+                    override val desugarLibJar = FakeConfigurableFileCollection(desugarJar)
+                    override val desugarLibDex =
+                        FakeObjectFactory.factory.directoryProperty().fileValue(output)
+                    override val libConfiguration = FakeGradleProperty(desugarConfig)
+                    override val androidJar =
+                        FakeObjectFactory.factory.fileProperty().fileValue(bootClasspath)
+                    override val minSdkVersion = FakeGradleProperty(20)
+                    override val keepRulesFiles =
+                        FakeConfigurableFileCollection(setOf(keepRulesFile1, keepRulesFile2))
+                    override val keepRulesConfigurations =
+                        FakeObjectFactory.factory.listProperty(String::class.java)
+                    override val debuggable = FakeGradleProperty(true)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
+
 
         val dexFile = output.resolve("classes1000.dex")
         DexSubject.assertThatDex(dexFile).containsClass("Lj$/util/stream/Stream;")

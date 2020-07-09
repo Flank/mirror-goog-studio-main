@@ -15,13 +15,9 @@
  */
 package com.android.build.gradle.internal.test
 
-import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
-import com.android.build.gradle.internal.component.TestCreationConfig
-import com.android.build.gradle.internal.core.VariantSources
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.test.BuiltArtifactsSplitOutputMatcher.computeBestOutput
 import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.utils.ILogger
@@ -29,13 +25,14 @@ import com.google.common.collect.ImmutableList
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Input
 import java.io.File
 
 /**
  * Implementation of [TestData] on top of a [AndroidTestCreationConfig]
  */
 class TestDataImpl(
-    private val testConfig:  AndroidTestCreationConfig,
+    testConfig: AndroidTestCreationConfig,
     testApkDir: Provider<Directory>,
     testedApksDir: FileCollection?
 ) : AbstractTestDataImpl(
@@ -46,41 +43,29 @@ class TestDataImpl(
 ) {
 
     init {
-        if (testConfig
-                .outputs
-                .getSplitsByType(
-                    VariantOutputConfiguration.OutputType.ONE_OF_MANY
-                )
-                .isNotEmpty()
+        if (testConfig.outputs.getSplitsByType(
+                VariantOutputConfiguration.OutputType.ONE_OF_MANY
+            ).isNotEmpty()
         ) {
             throw RuntimeException("Multi-output in test variant not yet supported")
         }
     }
 
-    override val isLibrary: Boolean
-        get() = testConfig.testedConfig.variantType.isAar
+    override val libraryType =
+        testConfig.services.provider { testConfig.testedConfig.variantType.isAar }
 
-    override fun getTestedApks(
+    @get:Input
+    val supportedAbis: Set<String> = testConfig.testedConfig.variantDslInfo.supportedAbis
+
+    override fun findTestedApks(
         deviceConfigProvider: DeviceConfigProvider, logger: ILogger
-    ): ImmutableList<File> {
-        val testedConfig = testConfig.testedConfig
-        val apks =
-            ImmutableList.builder<File>()
-        val builtArtifacts = BuiltArtifactsLoaderImpl()
-            .load(
-                testedConfig
-                    .artifacts
-                    .get(ArtifactType.APK)
-                    .get()
-            )
+    ): List<File> {
+        testedApksDir ?: return emptyList()
+        val apks = ImmutableList.builder<File>()
+        val builtArtifacts = BuiltArtifactsLoaderImpl().load(testedApksDir)
             ?: return ImmutableList.of()
-        apks.addAll(
-            computeBestOutput(
-                deviceConfigProvider,
-                builtArtifacts,
-                testedConfig.variantDslInfo.supportedAbis
-            )
-        )
+        apks.addAll(computeBestOutput(deviceConfigProvider, builtArtifacts, supportedAbis))
         return apks.build()
     }
+
 }

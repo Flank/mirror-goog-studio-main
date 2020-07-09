@@ -22,7 +22,7 @@ import static com.android.ide.common.resources.ResourceResolver.MAX_RESOURCE_IND
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
-import com.android.ide.common.rendering.api.LayoutLog;
+import com.android.ide.common.rendering.api.ILayoutLog;
 import com.android.ide.common.rendering.api.RenderResources;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceReference;
@@ -41,7 +41,7 @@ import java.util.List;
  */
 public class ResourceItemResolver extends RenderResources {
     private final FolderConfiguration myConfiguration;
-    private final LayoutLog myLogger;
+    private final ILayoutLog myLogger;
     private final ResourceProvider myResourceProvider;
     private ResourceResolver myResolver;
     private ResourceRepository myFrameworkResources;
@@ -51,7 +51,7 @@ public class ResourceItemResolver extends RenderResources {
     public ResourceItemResolver(
             @NonNull FolderConfiguration configuration,
             @NonNull ResourceProvider resourceProvider,
-            @Nullable LayoutLog logger) {
+            @Nullable ILayoutLog logger) {
         myConfiguration = configuration;
         myResourceProvider = resourceProvider;
         myLogger = logger;
@@ -62,7 +62,7 @@ public class ResourceItemResolver extends RenderResources {
             @NonNull FolderConfiguration configuration,
             @NonNull ResourceRepository frameworkResources,
             @NonNull ResourceRepository appResources,
-            @Nullable LayoutLog logger) {
+            @Nullable ILayoutLog logger) {
         myConfiguration = configuration;
         myResourceProvider = null;
         myLogger = logger;
@@ -113,7 +113,7 @@ public class ResourceItemResolver extends RenderResources {
                          ? "Infinite cycle trying to resolve '%s': Render may not be accurate."
                          : "Potential infinite cycle trying to resolve '%s': Render may not be accurate.";
             myLogger.error(
-                    LayoutLog.TAG_BROKEN,
+                    ILayoutLog.TAG_BROKEN,
                     String.format(msg, resValue.getValue()),
                     null,
                     null,
@@ -206,7 +206,10 @@ public class ResourceItemResolver extends RenderResources {
         // Didn't find the resource anywhere.
         if (myLogger != null) {
             myLogger.warning(
-                    LayoutLog.TAG_RESOURCES_RESOLVE, "Couldn't resolve resource " + url, null, url);
+                    ILayoutLog.TAG_RESOURCES_RESOLVE,
+                    "Couldn't resolve resource " + url,
+                    null,
+                    url);
         }
         return null;
     }

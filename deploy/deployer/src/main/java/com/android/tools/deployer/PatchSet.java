@@ -27,9 +27,10 @@ public class PatchSet {
         SizeThresholdExceeded // The patchSet would have been bigger than MAX_PATCHSET_SIZE.
     }
 
-    public static PatchSet NO_CHANGES = new PatchSet(Status.NoChanges);
-    public static PatchSet SIZE_THRESHOLD_EXCEEDED = new PatchSet(Status.SizeThresholdExceeded);
-    public static PatchSet INVALID = new PatchSet(Status.Invalid);
+    public static final PatchSet NO_CHANGES = new PatchSet(Status.NoChanges);
+    public static final PatchSet SIZE_THRESHOLD_EXCEEDED =
+            new PatchSet(Status.SizeThresholdExceeded);
+    public static final PatchSet INVALID = new PatchSet(Status.Invalid);
 
     private final Status status;
     private final List<Deploy.PatchInstruction> patches;

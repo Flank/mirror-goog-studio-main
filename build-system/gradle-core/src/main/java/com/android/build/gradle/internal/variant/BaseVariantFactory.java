@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.variant;
 
-import static com.android.build.gradle.tasks.factory.AbstractCompilesUtil.ANDROID_APT_PLUGIN_NAME;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
@@ -63,6 +61,8 @@ public abstract class BaseVariantFactory<
                 VariantT extends VariantImpl<VariantPropertiesT>,
                 VariantPropertiesT extends VariantPropertiesImpl>
         implements VariantFactory<VariantT, VariantPropertiesT> {
+
+    private static final String ANDROID_APT_PLUGIN_NAME = "com.neenbedankt.android-apt";
 
     @NonNull protected final ProjectServices projectServices;
     @NonNull protected final GlobalScope globalScope;

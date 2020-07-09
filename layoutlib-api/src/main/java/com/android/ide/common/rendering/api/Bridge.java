@@ -41,7 +41,7 @@ public abstract class Bridge {
      * @param icuDataPath the location of the ICU data used natively.
      * @param enumValueMap map attrName ⇒ { map enumFlagName ⇒ Integer value }. This is typically
      *     read from attrs.xml in the SDK target.
-     * @param log a {@link LayoutLog} object. Can be null.
+     * @param log a {@link ILayoutLog} object. Can be null.
      * @return true if success.
      */
     public boolean init(
@@ -50,7 +50,7 @@ public abstract class Bridge {
             String nativeLibDirPath,
             String icuDataPath,
             Map<String, Map<String, Integer>> enumValueMap,
-            LayoutLog log) {
+            ILayoutLog log) {
         return false;
     }
 

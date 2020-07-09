@@ -17,6 +17,7 @@ package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.BaseArtifact;
+import com.android.builder.model.Dependencies;
 import com.android.ide.common.gradle.model.level2.IdeDependencies;
 import java.io.File;
 import java.io.Serializable;
@@ -30,7 +31,9 @@ public interface IdeBaseArtifact extends Serializable, BaseArtifact {
     @Override
     @Deprecated
     @NonNull
-    com.android.ide.common.gradle.model.IdeDependencies getDependencies();
+    default Dependencies getDependencies() {
+        throw new UnsupportedOperationException();
+    }
 
     // See: http://b/71706169
     void addGeneratedSourceFolder(@NonNull File generatedSourceFolder);

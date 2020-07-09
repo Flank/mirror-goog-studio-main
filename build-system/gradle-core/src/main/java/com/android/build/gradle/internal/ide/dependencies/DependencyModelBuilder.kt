@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.ide.dependencies
 
-import com.android.builder.model.MavenCoordinates
 import com.google.common.collect.ImmutableList
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import java.io.File
@@ -60,6 +59,4 @@ interface DependencyModelBuilder<DependencyModelT> {
     )
 
     fun setRuntimeOnlyClasspath(files: ImmutableList<File>)
-
-    fun computeMavenCoordinates(artifact: ResolvedArtifact): MavenCoordinates
 }

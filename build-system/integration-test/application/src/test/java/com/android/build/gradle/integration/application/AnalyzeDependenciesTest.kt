@@ -1,5 +1,6 @@
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.application.testData.EnumClass
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
@@ -7,13 +8,18 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.tasks.DependenciesUsageReport
 import com.android.testutils.MavenRepoGenerator
+import com.android.testutils.TestInputsGenerator
 import com.android.testutils.generateAarWithContent
 import com.android.utils.usLocaleCapitalize
 import com.google.common.io.Resources
 import com.google.common.truth.Truth.assertThat
 import com.google.gson.Gson
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import sun.tools.jar.resources.jar
+import java.io.File
 import java.nio.charset.Charset
 
 /**
@@ -60,6 +66,8 @@ class AnalyzeDependenciesTest {
                 implementation 'com.analyzedependenciesTest:usedClassAar:1'
                 implementation 'com.analyzedependenciesTest:unUsedResAar:1'
                 implementation 'com.analyzedependenciesTest:usedResAar:1'
+                implementation 'com.analyzedependenciesTest:usedJar:1'
+                implementation 'com.analyzedependenciesTest:unusedJar:1'
                  }
             """.trimIndent()
             ).withFile(
@@ -85,9 +93,11 @@ class AnalyzeDependenciesTest {
                 """package com.example.app;
                 
                 import com.android.build.gradle.integration.application.AnalyzeDependenciesTest.UsedClass;
+                import com.android.build.gradle.integration.application.testData.EnumClass;
                 import com.example.usedclasslocallib.UsedClassLocalLib;
                 
                 public class MyClass {
+                    public static final EnumClass enumClass = EnumClass.ONE;
                     void testUsedAarClass() {
                         UsedClass usedClass = new UsedClass();
                         usedClass.getTrue();
@@ -154,6 +164,9 @@ class AnalyzeDependenciesTest {
                         android:layout_height="wrap_content" />
                 </LinearLayout>""".trimIndent())
 
+    private val usedJar = TestInputsGenerator.jarWithClasses(listOf(EnumClass::class.java))
+    private val emptyJar = TestInputsGenerator.jarWithClasses(emptyList())
+
     private val mavenRepo = MavenRepoGenerator(
             listOf(
                     MavenRepoGenerator.Library(
@@ -163,7 +176,9 @@ class AnalyzeDependenciesTest {
                     MavenRepoGenerator.Library(
                             "com.analyzedependenciesTest:usedResAar:1", "aar", usedResourceAar),
                     MavenRepoGenerator.Library(
-                            "com.analyzedependenciesTest:unUsedResAar:1", "aar", unUsedResourceAar)
+                            "com.analyzedependenciesTest:unUsedResAar:1", "aar", unUsedResourceAar),
+                    MavenRepoGenerator.Library("com.analyzedependenciesTest:usedJar:1", usedJar),
+                    MavenRepoGenerator.Library("com.analyzedependenciesTest:unusedJar:1", emptyJar)
             )
     )
 
@@ -175,6 +190,9 @@ class AnalyzeDependenciesTest {
                     .dependency(app, usedClassLocalLib)
                     .dependency(app, unUsedLocalLib)
                     .build()
+
+    @get:Rule
+    val temporaryFolder = TemporaryFolder()
 
     @get:Rule
     val project = GradleTestProject.builder()
@@ -206,7 +224,8 @@ class AnalyzeDependenciesTest {
 
         assertThat(parsedJson.remove).containsExactly(
             "com.analyzedependenciesTest:emptyAar:1",
-            "com.analyzedependenciesTest:unUsedResAar:1"
+            "com.analyzedependenciesTest:unUsedResAar:1",
+            "com.analyzedependenciesTest:unusedJar:1"
         )
         assertThat(parsedJson.add.size).isEqualTo(0)
     }

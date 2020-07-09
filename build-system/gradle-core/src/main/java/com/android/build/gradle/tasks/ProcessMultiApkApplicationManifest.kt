@@ -48,7 +48,7 @@ import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
 /**
- * Task that consumes [ArtifactType.MERGED_MANIFEST] single merged manifest and create several
+ * Task that consumes [ArtifactType.APPLICATION_MANIFEST] single merged manifest and create several
  * versions that are each suitable for all [VariantOutputImpl] for this variant.
  */
 @CacheableTask
@@ -191,7 +191,7 @@ abstract class ProcessMultiApkApplicationManifest: ManifestProcessorTask() {
             creationConfig
                 .artifacts
                 .setTaskInputToFinalProduct(
-                    ArtifactType.MERGED_MANIFEST,
+                    ArtifactType.APPLICATION_MANIFEST,
                     task.mainMergedManifest
                 )
 

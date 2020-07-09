@@ -399,10 +399,8 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
             """)
         )
 
-        // http://b/158283797
-        val executor = project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         // Run a full build with shrinkResources enabled
-        var result = executor.with(OptionalBooleanOption.ENABLE_R8, false)
+        var result = project.executor().with(OptionalBooleanOption.ENABLE_R8, false)
             .run(":app:clean", ":app:assembleDebug")
         assertThat(result.getTask(":app:mergeDebugResources")).didWork()
         val apkSizeWithShrinkResources =
@@ -413,7 +411,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         TestFileUtils.searchAndReplace(
             appBuildFile, "shrinkResources true", "shrinkResources false"
         )
-        result = executor
+        result = project.executor()
             .with(OptionalBooleanOption.ENABLE_R8, false)
             .run(":app:assembleDebug")
         assertThat(result.getTask(":app:mergeDebugResources")).didWork()
@@ -426,7 +424,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         TestFileUtils.searchAndReplace(
             appBuildFile, "shrinkResources false", "shrinkResources true"
         )
-        result = executor
+        result = project.executor()
             .with(OptionalBooleanOption.ENABLE_R8, false)
             .run(":app:assembleDebug")
         assertThat(result.getTask(":app:mergeDebugResources")).didWork()

@@ -67,3 +67,17 @@ iml_module(
     lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
     visibility = ["//visibility:public"],
 )
+
+# managed by go/iml_to_build [unb]
+iml_module(
+    name = "unb.studio.android.sdktools.tracer",
+    srcs = ["src"],
+    iml_files = ["android.sdktools.tracer.iml"],
+    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
+    tags = [
+        "manual",
+        "unb",
+    ],
+    visibility = ["//visibility:public"],
+    deps = ["//prebuilts/studio/intellij-sdk:studio-sdk"],
+)

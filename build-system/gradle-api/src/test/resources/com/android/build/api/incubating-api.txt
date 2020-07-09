@@ -36,9 +36,9 @@ com.android.build.api.artifact.ArtifactTransformationRequest.submit: void (TaskT
 com.android.build.api.artifact.ArtifactType extends com.android.build.api.artifact.Artifact$SingleArtifact
 com.android.build.api.artifact.ArtifactType$AAR extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Transformable
 com.android.build.api.artifact.ArtifactType$APK extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Transformable, com.android.build.api.artifact.Artifact$Replaceable, com.android.build.api.artifact.Artifact$ContainsMany
+com.android.build.api.artifact.ArtifactType$APPLICATION_MANIFEST extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Replaceable, com.android.build.api.artifact.Artifact$Transformable
 com.android.build.api.artifact.ArtifactType$BUNDLE extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Transformable
 com.android.build.api.artifact.ArtifactType$LIBRARY_MANIFEST extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Replaceable, com.android.build.api.artifact.Artifact$Transformable
-com.android.build.api.artifact.ArtifactType$MERGED_MANIFEST extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Replaceable, com.android.build.api.artifact.Artifact$Transformable
 com.android.build.api.artifact.ArtifactType$OBFUSCATION_MAPPING_FILE extends com.android.build.api.artifact.ArtifactType
 com.android.build.api.artifact.ArtifactType$OBFUSCATION_MAPPING_FILE.getFolderName: java.lang.String ()
 com.android.build.api.artifact.ArtifactType$PUBLIC_ANDROID_RESOURCES_LIST extends com.android.build.api.artifact.ArtifactType
@@ -631,6 +631,8 @@ com.android.build.api.dsl.Shaders.getScopedGlslcArgs: com.google.common.collect.
 com.android.build.api.dsl.Shaders.glslcArgs: void (java.lang.String[])
 com.android.build.api.dsl.Shaders.glslcScopedArgs: void (java.lang.String, java.lang.String[])
 com.android.build.api.dsl.SigningConfig implements org.gradle.api.Named
+com.android.build.api.dsl.SigningConfig.getEnableV1Signing: java.lang.Boolean ()
+com.android.build.api.dsl.SigningConfig.getEnableV2Signing: java.lang.Boolean ()
 com.android.build.api.dsl.SigningConfig.getEnableV3Signing: java.lang.Boolean ()
 com.android.build.api.dsl.SigningConfig.getEnableV4Signing: java.lang.Boolean ()
 com.android.build.api.dsl.SigningConfig.getKeyAlias: java.lang.String ()
@@ -640,6 +642,8 @@ com.android.build.api.dsl.SigningConfig.getStorePassword: java.lang.String ()
 com.android.build.api.dsl.SigningConfig.getStoreType: java.lang.String ()
 com.android.build.api.dsl.SigningConfig.isV1SigningEnabled: boolean ()
 com.android.build.api.dsl.SigningConfig.isV2SigningEnabled: boolean ()
+com.android.build.api.dsl.SigningConfig.setEnableV1Signing: void (java.lang.Boolean)
+com.android.build.api.dsl.SigningConfig.setEnableV2Signing: void (java.lang.Boolean)
 com.android.build.api.dsl.SigningConfig.setEnableV3Signing: void (java.lang.Boolean)
 com.android.build.api.dsl.SigningConfig.setEnableV4Signing: void (java.lang.Boolean)
 com.android.build.api.dsl.SigningConfig.setKeyAlias: void (java.lang.String)

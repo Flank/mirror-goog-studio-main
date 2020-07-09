@@ -128,6 +128,17 @@ java_binary(
     ],
 )
 
+java_binary(
+    name = "fix_unbundled_rules",
+    srcs = ["src/com/android/tools/binaries/FixUnbundledRules.java"],
+    main_class = "com.android.tools.binaries.FixUnbundledRules",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":bazel_generator",
+        ":utils",
+    ],
+)
+
 # Verify that the iml_to_build tool does not need to be run.
 java_test(
     name = "iml_to_build_consistency_test",

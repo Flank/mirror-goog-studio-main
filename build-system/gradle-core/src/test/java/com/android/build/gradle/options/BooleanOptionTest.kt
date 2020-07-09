@@ -54,7 +54,8 @@ class BooleanOptionTest {
 
     @Test
     fun `check experimental features do not have default value 'true'`() {
-        val knownViolatedOrIntendedFeatures = setOf(
+        // Ignore known violating or working-as-intended features
+        val ignoreList = setOf(
             BooleanOption.ENABLE_GRADLE_WORKERS,
             BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING,
             BooleanOption.ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT,
@@ -77,19 +78,15 @@ class BooleanOptionTest {
             BooleanOption.USE_NEW_APK_CREATOR,
             BooleanOption.EXCLUDE_RES_SOURCES_FOR_RELEASE_BUNDLES
         )
-        val violatedOptions =
-            BooleanOption.values()
-                .filter {
-                    it.stage == FeatureStage.Experimental
-                            && it.defaultValue
-                            && it !in knownViolatedOrIntendedFeatures
-                }
-        if (violatedOptions.isNotEmpty()) {
+        val violatingOptions = BooleanOption.values().filter {
+            it.stage == FeatureStage.Experimental && it.defaultValue && it !in ignoreList
+        }
+        if (violatingOptions.isNotEmpty()) {
             fail(
-                "The following experimental features have default value `true`: " + violatedOptions.joinToString(", ") + "\n" +
+                "The following experimental features have default value `true`: " + violatingOptions.joinToString(", ") + "\n" +
                         "When we change the default value of an EXPERIMENTAL feature from `false` to `true`, we should also change its stage to SUPPORTED or higher.\n" +
                         "Otherwise, the AGP would warn the users about using an experimental feature when they set the option to `false`, which is usually not intended.\n" +
-                        "If it is actually intended, add the feature to the blacklist in this test."
+                        "If it is actually intended, add the feature to the ignore list in this test."
             )
         }
     }

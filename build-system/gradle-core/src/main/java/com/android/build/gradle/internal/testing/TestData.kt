@@ -15,17 +15,24 @@
  */
 package com.android.build.gradle.internal.testing
 
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.builder.testing.api.DeviceConfigProvider
-import com.android.ide.common.process.ProcessException
 import com.android.sdklib.AndroidVersion
 import com.android.utils.ILogger
+import com.google.common.base.Joiner
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import java.io.File
 
 /**
- * Data representing the test app and the tested application/library.
+ * Data representing the test app and the tested application/library. Used as task input.
  */
 interface TestData {
     /**
@@ -42,6 +49,7 @@ interface TestData {
      * @return the id or null.
      */
     @get:Input
+    @get:Optional
     val testedApplicationId: Provider<String>
 
     @get:Input
@@ -51,28 +59,19 @@ interface TestData {
     val instrumentationRunnerArguments: Map<String, String>
 
     @get:Input
-    val animationsDisabled: Boolean
+    val animationsDisabled: Provider<Boolean>
 
     /** Returns whether the tested app is enabled for code coverage  */
     @get:Input
-    val isTestCoverageEnabled: Boolean
+    val testCoverageEnabled: Provider<Boolean>
 
     /** The min SDK version of the app  */
     @get:Input
-    val minSdkVersion: AndroidVersion
-    val isLibrary: Boolean
+    val minSdkVersion: Provider<AndroidVersion>
 
-    /**
-     * Returns an APK file to install based on given density and abis.
-     *
-     * @param deviceConfigProvider provider for the test device characteristics.
-     * @return the file to install or null if non is compatible.
-     */
-    @Throws(ProcessException::class)
-    fun getTestedApks(
-        deviceConfigProvider: DeviceConfigProvider,
-        logger: ILogger
-    ): List<File?>
+    /** If this is a library type. */
+    @get:Input
+    val libraryType: Provider<Boolean>
 
     /**
      * Returns the flavor name being test.
@@ -80,15 +79,32 @@ interface TestData {
      * @return the tested flavor name.
      */
     @get:Input
-    val flavorName: String
+    val flavorName: Provider<String>
+
+    /** Directory containing test APK. */
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    val testApkDir: Provider<Directory>
 
     /**
      * Returns the APK containing the test classes for the application.
      *
      * @return the APK file.
      */
-    @get:Input
-    val testApk: File
+    @Internal("Already captured by testApkDir property.")
+    fun getTestApk(): Provider<File> = testApkDir.map {
+        val testApkOutputs = BuiltArtifactsLoaderImpl().load(it)
+            ?: throw RuntimeException("No test APK in provided directory, file a bug")
+        if (testApkOutputs.elements.size != 1) {
+            throw RuntimeException(
+                "Unexpected number of main APKs, expected 1, got  "
+                        + testApkOutputs.elements.size
+                        + ":"
+                        + Joiner.on(",").join(testApkOutputs.elements)
+            )
+        }
+        File(testApkOutputs.elements.iterator().next().outputFile)
+    }
 
     /**
      * Returns the list of directories containing test so the build system can check the presence of
@@ -96,13 +112,22 @@ interface TestData {
      *
      * @return list of folders containing test source files.
      */
-    @get:Input
-    val testDirectories: List<File?>
+    @get:Internal
+    val testDirectories: ConfigurableFileCollection
 
     /**
      * Resolves all providers and returns a static version of this class
      *
-     * @return StaticTestData version of this class
+     * @return [StaticTestData] version of this class
      */
-    fun get(): StaticTestData
+    @Internal
+    fun getAsStaticData(): StaticTestData
+
+    /**
+     * Returns an APK file to install based on given density and abis.
+     *
+     * @param deviceConfigProvider provider for the test device characteristics.
+     * @return the file to install or null if non is compatible.
+     */
+    fun findTestedApks(deviceConfigProvider: DeviceConfigProvider, logger: ILogger): List<File>
 }

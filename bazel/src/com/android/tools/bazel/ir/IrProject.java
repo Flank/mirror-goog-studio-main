@@ -23,12 +23,30 @@ import java.util.List;
 public class IrProject {
     public List<IrModule> modules = new ArrayList<>();
     private File baseDir;
+    private String projectPath;
 
-    public IrProject(File file) {
-        baseDir = file;
+    /**
+     * The id of the project. This is used to support multiple projects in the same BUILD files.
+     * It is used to prefix rules, to annotate managed markers, and when it's needed to
+     * differentiate between rules. If empty, this behaves as a single/main project.
+     */
+    private String id;
+
+    public IrProject(File baseDir, String projectPath, String id) {
+        this.baseDir = baseDir;
+        this.projectPath = projectPath;
+        this.id = id;
     }
 
     public File getBaseDir() {
         return baseDir;
+    }
+
+    public String getProjectPath() {
+        return projectPath;
+    }
+
+    public String id() {
+        return id;
     }
 }

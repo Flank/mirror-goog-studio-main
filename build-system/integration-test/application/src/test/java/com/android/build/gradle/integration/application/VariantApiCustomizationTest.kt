@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -77,19 +76,17 @@ android {
                 task.getVersionCodeOutputFile().set(new File("/tmp/versionCode.txt"))
                 task.getVersionNameOutputFile().set(new File("/tmp/versionName.txt"))
         }
-        outputs[0].getVersionCode().set(customTaskProvider.map {
-            task ->
-                FileReader fr = new FileReader(task.getVersionCodeOutputFile().getAsFile().get())
-                String value = fr.readLine()
-                fr.close()
-                return Integer.parseInt(value);
+        outputs[0].getVersionCode().set(customTaskProvider.flatMap { it.getVersionCodeOutputFile() }.map {
+            FileReader fr = new FileReader(it.getAsFile())
+            String value = fr.readLine()
+            fr.close()
+            return Integer.parseInt(value);
         })
-        outputs[0].getVersionName().set(customTaskProvider.map {
-            task ->
-                FileReader fr = new FileReader(task.getVersionNameOutputFile().getAsFile().get())
-                String value = fr.readLine()
-                fr.close()
-                return value;
+        outputs[0].getVersionName().set(customTaskProvider.flatMap { it.getVersionNameOutputFile() }.map {
+            FileReader fr = new FileReader(it.getAsFile())
+            String value = fr.readLine()
+            fr.close()
+            return value;
         })
     }
 }""")
@@ -101,10 +98,7 @@ android {
             MultiModuleTestProject.builder()
                 .subproject(":app", app)
                 .build()
-        )
-        // http://b/158286191
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-        .create()
+        ).create()
 
     @Test
     fun setValuesViaVariantApi() {

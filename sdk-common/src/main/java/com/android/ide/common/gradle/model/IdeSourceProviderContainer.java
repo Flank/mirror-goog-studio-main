@@ -42,7 +42,9 @@ public final class IdeSourceProviderContainer implements SourceProviderContainer
         myArtifactName = container.getArtifactName();
         mySourceProvider =
                 modelCache.computeIfAbsent(
-                        container.getSourceProvider(), provider -> new IdeSourceProvider(provider));
+                        container.getSourceProvider(),
+                        provider ->
+                                IdeSourceProvider.create(provider, modelCache::deduplicateString));
 
         myHashCode = calculateHashCode();
     }

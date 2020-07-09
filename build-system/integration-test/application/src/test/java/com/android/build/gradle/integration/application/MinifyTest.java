@@ -28,7 +28,6 @@ import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.truth.TaskStateList;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.CodeShrinker;
@@ -272,36 +271,16 @@ public class MinifyTest {
                 GradleTestProject.ApkType.of("minified", "androidTest", true);
 
         Apk apk = project.getApk(testMinified);
-        Set<String> allClasses = Sets.newHashSet();
-        for (Dex dex : apk.getAllDexes()) {
-            allClasses.addAll(
-                    dex.getClasses()
-                            .keySet()
-                            .stream()
-                            .filter(c -> !c.startsWith("Lorg/"))
-                            .filter(c -> !c.startsWith("Ljunit/"))
-                            .filter(c -> !c.startsWith("Landroid/support/"))
-                            .collect(Collectors.toSet()));
-        }
-
-        if (project.getIntermediateFile(
-                        InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
-                .exists()) {
-            assertThat(allClasses)
-                    .containsExactly(
-                            "Lcom/android/tests/basic/MainTest;",
-                            "Lcom/android/tests/basic/UnusedTestClass;",
-                            "Lcom/android/tests/basic/UsedTestClass;",
-                            "Lcom/android/tests/basic/test/R;");
-        } else {
-            assertThat(allClasses)
-                    .containsExactly(
-                            "Lcom/android/tests/basic/MainTest;",
-                            "Lcom/android/tests/basic/UnusedTestClass;",
-                            "Lcom/android/tests/basic/UsedTestClass;",
-                            "Lcom/android/tests/basic/test/BuildConfig;",
-                            "Lcom/android/tests/basic/test/R;");
-        }
+        assertThat(apk)
+                .named("applies mapping from the tested app only to tested classes")
+                .containsClass("Lcom/android/tests/basic/MainTest;");
+        assertThat(apk)
+                .named("should not shrink test-only classes")
+                .containsClass("Lcom/android/tests/basic/UnusedTestClass;");
+        assertThat(apk)
+                .named("should not rename test classes")
+                .containsClass("Lcom/android/tests/basic/UsedTestClass;");
+        assertThat(apk).containsClass("Lcom/android/tests/basic/test/R;");
 
         assertThat(apk)
                 .hasClass("Lcom/android/tests/basic/MainTest;")

@@ -20,8 +20,10 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.testutils.FileSnapshot
 import com.google.common.truth.Expect
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.io.File
 
 /**
  * Test to ensure that the outputs of tasks are deterministic (and relocatable).
@@ -59,7 +61,8 @@ class DeterministicTaskOutputsTest {
             "app/build/test-results/testDebugUnitTest/",
 
             // This is @LocalState for the dexing task
-            "app/build/intermediates/dex_archive_input_jar_hashes/debug/out"
+            "app/build/intermediates/dex_archive_input_jar_hashes/debug/out",
+            "app/build/intermediates/desugar_graph/debug/out/currentProject/"
         )
     }
 
@@ -80,6 +83,18 @@ class DeterministicTaskOutputsTest {
     @get:Rule
     val expect: Expect = Expect.create()
 
+    @Before
+    fun setUpProjects() {
+        project1.getSubproject("app").buildFile.appendText("""
+            
+            android.buildTypes.debug.testCoverageEnabled true
+        """.trimIndent())
+        project2.getSubproject("app").buildFile.appendText("""
+            
+            android.buildTypes.debug.testCoverageEnabled true
+        """.trimIndent())
+    }
+
     @Test
     fun `check consistent outputs after building two identical projects`() {
         // Build the first project
@@ -97,7 +112,15 @@ class DeterministicTaskOutputsTest {
         )
 
         // Check that they have consistent outputs
-        expect.that(snapshot1.directorySet).containsExactlyElementsIn(snapshot2.directorySet)
+        val filterInconsistentSubDirs = { dirs: Set<File> ->
+            dirs.filter { dir ->
+                INCONSISTENT_TASK_OUTPUTS.none {
+                    dir.startsWith(it)
+                }
+            }
+        }
+        expect.that(filterInconsistentSubDirs(snapshot1.directorySet))
+            .containsExactlyElementsIn(filterInconsistentSubDirs(snapshot2.directorySet))
         for ((file, contents) in
         snapshot1.regularFileContentsMap.plus(snapshot2.regularFileContentsMap)) {
             if (INCONSISTENT_TASK_OUTPUTS.any { file.startsWith(it) }) {

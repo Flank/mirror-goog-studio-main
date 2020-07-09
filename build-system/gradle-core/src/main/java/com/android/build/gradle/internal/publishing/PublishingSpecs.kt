@@ -84,6 +84,7 @@ import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
+import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.FileSystemLocation
 
 /**
@@ -117,6 +118,7 @@ class PublishingSpecs {
         val outputType: Artifact.SingleArtifact<out FileSystemLocation>
         val artifactType: ArtifactType
         val publishedConfigTypes: ImmutableList<PublishedConfigType>
+        val libraryElements: String?
     }
 
     companion object {
@@ -224,7 +226,12 @@ class PublishingSpecs {
                 output(SYMBOL_LIST_WITH_PACKAGE_NAME, ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
 
                 runtime(RUNTIME_LIBRARY_CLASSES_JAR, ArtifactType.CLASSES_JAR)
-                runtime(RUNTIME_LIBRARY_CLASSES_DIR, ArtifactType.CLASSES_DIR)
+
+                // Publish the CLASSES_DIR artifact type with a LibraryElements.CLASSES attribute to
+                // match the behavior of the Java library plugin. The LibraryElements attribute will
+                // be used for incremental dexing of library subprojects.
+                runtime(RUNTIME_LIBRARY_CLASSES_DIR, ArtifactType.CLASSES_DIR, LibraryElements.CLASSES)
+
                 runtime(LIBRARY_ASSETS, ArtifactType.ASSETS)
                 runtime(PACKAGED_RES, ArtifactType.ANDROID_RES)
                 runtime(PUBLIC_RES, ArtifactType.PUBLIC_RES)
@@ -290,7 +297,7 @@ class PublishingSpecs {
 
         fun output(taskOutputType: Artifact.SingleArtifact<out FileSystemLocation>, artifactType: ArtifactType)
         fun api(taskOutputType: Artifact.SingleArtifact<out FileSystemLocation>, artifactType: ArtifactType)
-        fun runtime(taskOutputType: Artifact.SingleArtifact<out FileSystemLocation>, artifactType: ArtifactType)
+        fun runtime(taskOutputType: Artifact.SingleArtifact<out FileSystemLocation>, artifactType: ArtifactType, libraryElements: String? = null)
         fun reverseMetadata(taskOutputType: Artifact.SingleArtifact<out FileSystemLocation>, artifactType: ArtifactType)
         fun publish(taskOutputType: Artifact.SingleArtifact<out FileSystemLocation>, artifactType: ArtifactType)
     }
@@ -356,7 +363,9 @@ private class VariantPublishingSpecImpl(
 private data class OutputSpecImpl(
         override val outputType: Artifact.SingleArtifact<out FileSystemLocation>,
         override val artifactType: ArtifactType,
-        override val publishedConfigTypes: ImmutableList<PublishedConfigType> = API_AND_RUNTIME_ELEMENTS) : PublishingSpecs.OutputSpec
+        override val publishedConfigTypes: ImmutableList<PublishedConfigType> = API_AND_RUNTIME_ELEMENTS,
+        override val libraryElements: String? = null
+) : PublishingSpecs.OutputSpec
 
 // -- Implementation of the internal Spec Builder interfaces
 
@@ -373,8 +382,8 @@ private open class VariantSpecBuilderImpl (
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, API_ELEMENTS_ONLY))
     }
 
-    override fun runtime(taskOutputType: Artifact.SingleArtifact<*>, artifactType: ArtifactType) {
-        outputs.add(OutputSpecImpl(taskOutputType, artifactType, RUNTIME_ELEMENTS_ONLY))
+    override fun runtime(taskOutputType: Artifact.SingleArtifact<*>, artifactType: ArtifactType, libraryElements: String?) {
+        outputs.add(OutputSpecImpl(taskOutputType, artifactType, RUNTIME_ELEMENTS_ONLY, libraryElements))
     }
 
     override fun reverseMetadata(taskOutputType: Artifact.SingleArtifact<*>, artifactType: ArtifactType) {

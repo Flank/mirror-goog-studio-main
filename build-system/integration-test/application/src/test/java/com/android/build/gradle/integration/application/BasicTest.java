@@ -118,12 +118,7 @@ public class BasicTest {
 
         // Since source and target compatibility are not explicitly set in the build.gradle,
         // the default value depends on the JDK used.
-        JavaVersion expected;
-        if (JavaVersion.current().isJava7Compatible()) {
-            expected = JavaVersion.VERSION_1_7;
-        } else {
-            expected = JavaVersion.VERSION_1_6;
-        }
+        JavaVersion expected = JavaVersion.VERSION_1_8;
 
         JavaCompileOptions javaCompileOptions = model.getJavaCompileOptions();
         assertEquals(

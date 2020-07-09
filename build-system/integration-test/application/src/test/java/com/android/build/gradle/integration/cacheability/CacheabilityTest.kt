@@ -58,6 +58,7 @@ class CacheabilityTest {
                     ":app:generateDebugBuildConfig",
                     ":app:generateDebugResValues",
                     ":app:generateDebugUnitTestConfig",
+                    ":app:jacocoDebug",
                     ":app:javaPreCompileDebug",
                     ":app:javaPreCompileDebugUnitTest",
                     ":app:mergeDebugAssets",
@@ -82,6 +83,7 @@ class CacheabilityTest {
                  * If you add a task to this list, remember to add an explanation/file a bug for it.
                  */
                 DID_WORK to setOf(
+                    ":app:desugarDebugFileDependencies", /* Bug 160138798 */
                     ":app:mergeDebugResources", /* Bug 141301405 */
                     ":app:packageDebug", /* Bug 74595859 */
                     ":app:processDebugResources" /* Bug 141301405 */
@@ -132,6 +134,10 @@ class CacheabilityTest {
             TestFileUtils.appendToFile(
                 project.getSubproject("app").buildFile,
                 "android { testOptions { unitTests { includeAndroidResources = true } } }"
+            )
+            TestFileUtils.appendToFile(
+                project.getSubproject("app").buildFile,
+                "android { buildTypes { debug { testCoverageEnabled = true } } }"
             )
         }
     }

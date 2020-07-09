@@ -16,9 +16,7 @@
 
 package com.android.build.gradle.internal;
 
-import com.android.testutils.BazelRunfilesManifestProcessor;
 import com.android.testutils.JarTestSuiteRunner;
-import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 
 /** Suite used to run tests with Bazel. Skips tests that are known to fail under Bazel for now. */
@@ -28,8 +26,4 @@ import org.junit.runner.RunWith;
     com.android.build.gradle.external.gnumake.NdkSampleTest.class,
 })
 public class GradleCoreBazelSuite {
-    @BeforeClass
-    public static void setUp() {
-        BazelRunfilesManifestProcessor.setUpRunfiles();
-    }
 }

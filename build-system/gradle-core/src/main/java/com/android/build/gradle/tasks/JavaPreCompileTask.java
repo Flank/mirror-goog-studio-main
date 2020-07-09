@@ -40,6 +40,7 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Classpath;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -51,7 +52,7 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
 
     private ArtifactCollection annotationProcessorConfiguration;
 
-    @NonNull private List<String> apOptionClassNames;
+    private List<String> apOptionClassNames;
 
     @Inject
     public JavaPreCompileTask(ObjectFactory objectFactory) {
@@ -75,6 +76,11 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
     @Classpath
     public FileCollection getAnnotationProcessorConfiguration() {
         return annotationProcessorConfiguration.getArtifactFiles();
+    }
+
+    @Input
+    public List<String> getAPOptionClassNames() {
+        return apOptionClassNames;
     }
 
     @Override

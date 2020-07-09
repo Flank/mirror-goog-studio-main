@@ -68,7 +68,6 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
         final ArrayList<URL> urls = new ArrayList<>();
 
         addUrlsTo(System.getProperty("java.class.path"), urls);
-        addUrlsTo(System.getProperty("sun.boot.class.path"), urls);
         addUrlsTo(classPath.replaceAll(":", File.pathSeparator), urls);
 
         Pattern formPattern = Pattern.compile("(.*)=(.*\\.form)");

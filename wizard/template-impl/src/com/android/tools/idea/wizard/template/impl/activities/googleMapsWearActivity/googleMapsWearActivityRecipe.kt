@@ -21,8 +21,8 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.addSupportWearableDependency
-import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.debugRes.values.googleMapsApiXml as debugGoogleMapsApiXml
-import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.releaseRes.values.googleMapsApiXml as releaseGoogleMapsApiXml
+import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.debugRes.values.googleMapsApiXml as debugGoogleMapsApiXml
+import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.releaseRes.values.googleMapsApiXml as releaseGoogleMapsApiXml
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.res.layout.activityMapXml
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.res.values.stringsXml
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.src.app_package.mapActivityJava

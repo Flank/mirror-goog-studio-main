@@ -21,7 +21,6 @@ import android.graphics.Canvas;
 import android.graphics.Picture;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.inspector.WindowInspector;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -276,7 +275,7 @@ public class LayoutInspectorService {
                 // The compose API must run on the UI thread.
                 // For now: Build the entire component tree on the UI thread.
                 ComponentTreeBuilder builder =
-                        new ComponentTreeBuilder(event, root, mShowComposeNodes);
+                        new ComponentTreeBuilder(event, root, mProperties, mShowComposeNodes);
                 root.post(builder);
                 synchronized (builder) {
                     if (!builder.isDone()) {
@@ -360,14 +359,7 @@ public class LayoutInspectorService {
     @SuppressWarnings("unused") // invoked via jni
     public void onGetPropertiesInspectorCommand(long viewId) {
         try {
-            List<View> roots = WindowInspector.getGlobalWindowViews();
-            for (View root : roots) {
-                View view = findViewById(root, viewId);
-                if (view != null) {
-                    mProperties.handleGetProperties(view);
-                    return;
-                }
-            }
+            mProperties.handleGetProperties(viewId);
         } catch (Throwable ex) {
             sendErrorMessage(ex);
         }
@@ -382,36 +374,7 @@ public class LayoutInspectorService {
      */
     @SuppressWarnings("unused") // invoked via jni
     public void onEditPropertyInspectorCommand(long viewId, int attributeId, int value) {
-        try {
-            for (View root : getRootViews()) {
-                View view = findViewById(root, viewId);
-                if (view != null) {
-                    applyPropertyEdit(view, attributeId, value);
-                    return;
-                }
-            }
-        } catch (Throwable ex) {
-            sendErrorMessage(ex);
-        }
-    }
-
-    @Nullable
-    private static View findViewById(@Nullable View parent, long id) {
-        if (parent != null && parent.getUniqueDrawingId() == id) {
-            return parent;
-        }
-        if (!(parent instanceof ViewGroup)) {
-            return null;
-        }
-        ViewGroup group = (ViewGroup) parent;
-        int count = group.getChildCount();
-        for (int index = 0; index < count; index++) {
-            View found = findViewById(group.getChildAt(index), id);
-            if (found != null) {
-                return found;
-            }
-        }
-        return null;
+        mProperties.handleSetProperty(viewId, attributeId, value);
     }
 
     /** Sends an LayoutInspector Event with an error message back to Studio */
@@ -424,52 +387,22 @@ public class LayoutInspectorService {
         sendErrorMessage(error.toString());
     }
 
-    private void applyPropertyEdit(@NonNull View view, int attributeId, int value) {
-        switch (attributeId) {
-            case android.R.attr.padding:
-                view.setPadding(value, value, value, value);
-                break;
-            case android.R.attr.paddingLeft:
-                view.setPadding(
-                        value,
-                        view.getPaddingTop(),
-                        view.getPaddingRight(),
-                        view.getPaddingBottom());
-                break;
-            case android.R.attr.paddingTop:
-                view.setPadding(
-                        view.getPaddingLeft(),
-                        value,
-                        view.getPaddingRight(),
-                        view.getPaddingBottom());
-                break;
-            case android.R.attr.paddingRight:
-                view.setPadding(
-                        view.getPaddingLeft(),
-                        view.getPaddingTop(),
-                        value,
-                        view.getPaddingBottom());
-                break;
-            case android.R.attr.paddingBottom:
-                view.setPadding(
-                        view.getPaddingLeft(), view.getPaddingTop(), view.getPaddingRight(), value);
-                break;
-            default:
-                sendErrorMessage(
-                        "Unsupported attribute for editing: " + Integer.toHexString(attributeId));
-        }
-    }
-
     private static class ComponentTreeBuilder implements Runnable {
         private final long mEvent;
         private final View mRoot;
+        private final Properties mProperties;
         private final boolean mShowComposeNodes;
         private boolean mDone;
         private Throwable mException;
 
-        private ComponentTreeBuilder(long event, @NonNull View root, boolean showComposeNodes) {
+        private ComponentTreeBuilder(
+                long event,
+                @NonNull View root,
+                @NonNull Properties properties,
+                boolean showComposeNodes) {
             mEvent = event;
             mRoot = root;
+            mProperties = properties;
             mShowComposeNodes = showComposeNodes;
         }
 
@@ -485,7 +418,8 @@ public class LayoutInspectorService {
         @Override
         public void run() {
             try {
-                new ComponentTree(mShowComposeNodes).writeTree(mEvent, mRoot);
+                ComponentTree tree = new ComponentTree(mProperties, mShowComposeNodes);
+                tree.writeTree(mEvent, mRoot);
             } catch (Throwable ex) {
                 mException = ex;
             } finally {

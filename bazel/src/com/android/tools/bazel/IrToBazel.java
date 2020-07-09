@@ -22,7 +22,6 @@ import com.android.tools.bazel.ir.IrNode;
 import com.android.tools.bazel.ir.IrProject;
 import com.android.tools.bazel.model.BazelRule;
 import com.android.tools.bazel.model.ImlModule;
-import com.android.tools.bazel.model.ImlProject;
 import com.android.tools.bazel.model.JavaImport;
 import com.android.tools.bazel.model.JavaLibrary;
 import com.android.tools.bazel.model.Label;
@@ -35,7 +34,6 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -53,14 +51,16 @@ public class IrToBazel {
 
     public int convert(IrProject bazelProject, Configuration config) throws IOException {
 
-        File projectDir = bazelProject.getBaseDir().toPath().resolve("tools/idea").toFile();
+        File projectDir =
+                bazelProject.getBaseDir().toPath().resolve(bazelProject.getProjectPath()).toFile();
         Path workspace = bazelProject.getBaseDir().toPath();
-        Workspace bazel = new Workspace(workspace.toFile());
+        Workspace bazel = new Workspace(workspace.toFile(), bazelProject.id());
 
         // Map from file path to the bazel rule that provides it. Usually java_imports.
         Map<String, BazelRule> jarRules = Maps.newHashMap();
         Map<String, JavaLibrary> libraries = Maps.newHashMap();
         Map<IrModule, ImlModule> rules = new HashMap<>();
+        Map<String, UnmanagedRule> sdks = new HashMap<>();
 
         // 1st pass: Creation.
         for (IrModule bazelModule : bazelProject.modules) {
@@ -74,7 +74,9 @@ public class IrToBazel {
                                 + rel
                                 + " (does it not have a BUILD file yet?)");
             }
-            ImlModule iml = new ImlModule(pkg, config.nameRule(pkg.getName(), rel, name));
+            name = config.nameRule(pkg.getName(), rel, name);
+            name = bazelProject.id().isEmpty() ? name : bazelProject.id() + "." + name;
+            ImlModule iml = new ImlModule(pkg, name);
             rules.put(bazelModule, iml);
 
             for (File file : bazelModule.getImls()) {
@@ -135,9 +137,23 @@ public class IrToBazel {
                 if (dependency.dependency instanceof IrLibrary) {
                     IrLibrary library = (IrLibrary) dependency.dependency;
                     JavaLibrary namedLib = null;
-                    if (library.owner == null) {
+                    if (library.name.equals("studio-sdk") && library.owner == null) {
+                        UnmanagedRule rule = sdks.get("studio-sdk");
+                        if (rule == null) {
+                            rule =
+                                    new UnmanagedRule(
+                                            bazel.findPackage("prebuilts/studio/intellij-sdk"),
+                                            "studio-sdk");
+                            sdks.put("studio-sdk", rule);
+                        }
+                        rules.get(module).addDependency(rule, dependency.exported, scopes);
+                    } else if (library.owner == null) {
                         //noinspection ConstantConditions - getLibraryName() is not null for module-level libraries.
                         String libName = library.name.replaceAll(":", "_");
+                        libName =
+                                bazelProject.id().isEmpty()
+                                        ? libName
+                                        : bazelProject.id() + "." + libName;
                         namedLib = libraries.get(libName.toLowerCase());
                         if (namedLib == null) {
                             namedLib = new JavaLibrary(librariesPkg, libName);
@@ -185,6 +201,11 @@ public class IrToBazel {
                                         target = pickTargetNameForMavenArtifact(file);
                                     } else {
                                         target = packageRelative.replaceAll("\\.jar$", "");
+                                        if (!bazelProject.id().isEmpty()) {
+                                            target =
+                                                    target.replaceFirst(
+                                                            "([^/]*)$", bazelProject.id() + ".$1");
+                                        }
                                     }
                                     try {
                                         JavaImport javaImport = new JavaImport(jarPkg, target);
@@ -238,12 +259,6 @@ public class IrToBazel {
                 }
             }
         }
-
-        Package projectPkg = bazel
-                .findPackage(workspace.relativize(projectDir.toPath()).toString());
-        ImlProject imlProject = new ImlProject(projectPkg, "android-studio");
-        rules.values().stream().filter(ImlModule::isExport).sorted(Comparator.comparing(BazelRule::getLabel))
-                .forEach(imlProject::addModule);
 
         logger.info("Updating BUILD files...");
         CountingListener listener = new CountingListener(logger, dryRun);

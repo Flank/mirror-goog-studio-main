@@ -96,7 +96,7 @@ public class ViewNode<V extends View> {
 
         @Override
         public void readBoolean(int id, boolean b) {
-            readAny(id, b ? 1 : 0);
+            readAny(id, b);
         }
 
         @Override

@@ -125,7 +125,7 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
         private val configurationModel : CxxConfigurationModel,
         componentProperties: ComponentPropertiesImpl
     ) : VariantTaskCreationAction<ExternalNativeCleanTask, ComponentPropertiesImpl>(
-        componentProperties
+        componentProperties, false
     ) {
 
         override val name

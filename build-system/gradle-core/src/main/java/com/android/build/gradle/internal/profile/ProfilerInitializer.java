@@ -49,6 +49,7 @@ public final class ProfilerInitializer {
 
     @Nullable private static volatile RecordingBuildListener recordingBuildListener;
     @Nullable private static volatile Gradle gradle;
+    @Nullable private static volatile GradleAnalyticsEnvironment gradleAnalyticsEnvironment;
 
     private ProfilerInitializer() {
         //Static singleton class.
@@ -72,12 +73,13 @@ public final class ProfilerInitializer {
             if (recordingBuildListener != null) {
                 return recordingBuildListener;
             }
+            gradleAnalyticsEnvironment = new GradleAnalyticsEnvironment(project.getProviders());
             ProcessProfileWriterFactory.initialize(
                     project.getRootProject().getProjectDir(),
                     project.getGradle().getGradleVersion(),
                     new LoggerWrapper(project.getLogger()),
                     projectOptions.get(BooleanOption.ENABLE_PROFILE_JSON),
-                    new GradleAnalyticsEnvironment(project.getProviders()));
+                    gradleAnalyticsEnvironment);
             recordingBuildListener =
                     new RecordingBuildListener(project.getName(), ProcessProfileWriter.get());
             gradle = project.getGradle();
@@ -106,6 +108,8 @@ public final class ProfilerInitializer {
                                 Objects.requireNonNull(recordingBuildListener));
                 recordingBuildListener = null;
                 gradle = null;
+                Objects.requireNonNull(gradleAnalyticsEnvironment).releaseProviderFactory();
+                gradleAnalyticsEnvironment = null;
                 @Nullable
                 Path profileFile =
                         profileDir == null

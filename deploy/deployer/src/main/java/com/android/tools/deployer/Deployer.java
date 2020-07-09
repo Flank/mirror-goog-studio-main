@@ -28,7 +28,6 @@ import com.android.tools.idea.protobuf.ByteString;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -138,12 +137,14 @@ public class Deployer {
 
             // Inputs
             Task<List<String>> paths = runner.create(apks);
-            CachedDexSplitter splitter = new CachedDexSplitter(dexDb, new D8DexSplitter());
+
+            // Parse the apks
+            Task<List<Apk>> apkList =
+                    runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, paths);
 
             if (supportsNewPipeline()) {
-                if (installMode == InstallMode.DELTA) {
-                    installMode = InstallMode.DELTA_NO_SKIP;
-                }
+                installMode =
+                        installMode == InstallMode.DELTA ? InstallMode.DELTA_NO_SKIP : installMode;
                 result.skippedInstall =
                         !apkInstaller.install(
                                 packageName,
@@ -152,22 +153,14 @@ public class Deployer {
                                 installMode,
                                 metrics.getDeployMetrics());
 
-                List<Apk> apkList = new ApkParser().parsePaths(apks);
-                Task<List<Apk>> apkListTask = runner.create(apkList);
-
-                // Update the database
-                runner.create(Tasks.CACHE, splitter::cache, apkListTask);
-
-                String appId = ApplicationDumper.getPackageName(apkList);
-                OverlayId oid = new OverlayId(apkList);
-
+                Task<String> appId =
+                        runner.create(
+                                Tasks.PARSE_APP_IDS, ApplicationDumper::getPackageName, apkList);
                 runner.create(
                         Tasks.DEPLOY_CACHE_STORE,
-                        deployCache::store,
+                        deployCache::invalidate,
                         runner.create(adb.getSerial()),
-                        runner.create(appId),
-                        apkListTask,
-                        runner.create(oid));
+                        appId);
             } else {
                 result.skippedInstall =
                         !apkInstaller.install(
@@ -176,14 +169,12 @@ public class Deployer {
                                 options,
                                 installMode,
                                 metrics.getDeployMetrics());
-
-                // Parse the apks
-                Task<List<Apk>> apkList =
-                        runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, paths);
-
-                // Update the database
-                runner.create(Tasks.CACHE, splitter::cache, apkList);
             }
+
+            CachedDexSplitter splitter = new CachedDexSplitter(dexDb, new D8DexSplitter());
+
+            // Update the database
+            runner.create(Tasks.CACHE, splitter::cache, apkList);
 
             runner.runAsync();
             return result;
@@ -312,12 +303,12 @@ public class Deployer {
 
         // Get the list of files from the installed app assuming deployment cache is correct.
         Task<DeploymentCacheDatabase.Entry> speculativeDump =
-                runner.create(Tasks.OPTIMISTIC_DUMP, deployCache::get, deviceSerial, packageName);
-
-        // On an on-host verification of the dump first.
-        Task<ApplicationDumper> dumper = runner.create(new ApplicationDumper(installer));
-        Task<DeploymentCacheDatabase.Entry> verifyDump =
-                runner.create(Tasks.VERIFY_DUMP, Deployer::verifyCache, speculativeDump, dumper);
+                runner.create(
+                        Tasks.OPTIMISTIC_DUMP,
+                        this::dumpWithCache,
+                        packageName,
+                        deviceSerial,
+                        newFiles);
 
         // Calculate the difference between them speculating the deployment cache is correct.
         Task<List<FileDiff>> diffs =
@@ -346,14 +337,12 @@ public class Deployer {
                         useStructuralRedefinition,
                         useVariableReinitialization,
                         fastRestartOnSwapFail,
-                        metrics,
-                        adb,
-                        logger);
+                        metrics);
         Task<OptimisticApkSwapper.OverlayUpdate> overlayUpdate =
                 runner.create(
                         Tasks.COLLECT_SWAP_DATA,
                         OptimisticApkSwapper.OverlayUpdate::new,
-                        verifyDump,
+                        speculativeDump,
                         changedClasses,
                         extractedFiles);
         Task<OptimisticApkSwapper.SwapResult> swapResultTask =
@@ -398,37 +387,19 @@ public class Deployer {
         return deployResult;
     }
 
-    private static DeploymentCacheDatabase.Entry verifyCache(
-            DeploymentCacheDatabase.Entry entry, ApplicationDumper dumper)
-            throws DeployerException {
-        if (entry == null || !entry.getOverlayId().isBaseInstall()) {
+    private DeploymentCacheDatabase.Entry dumpWithCache(
+            String packageName, String deviceSerial, List<Apk> apks) throws DeployerException {
+        String serial = adb.getSerial();
+        DeploymentCacheDatabase.Entry entry = deployCache.get(serial, packageName);
+        if (entry != null && !entry.getOverlayId().isBaseInstall()) {
             return entry;
         }
 
-        // If we have an install without OID file, we are going to the classic dump to
-        // verify that we are actually looking at the same APK cached in the database.
-
-        List<Apk> cachedResults = entry.getApks();
-        List<Apk> actualResults = dumper.dump(entry.getApks()).apks;
-
-        if (cachedResults.size() != actualResults.size()) {
-            throw DeployerException.overlayIdMismatch();
-        }
-
-        cachedResults.sort(Comparator.comparing(apk -> apk.name));
-        actualResults.sort(Comparator.comparing(apk -> apk.name));
-
-        for (int i = 0, len = cachedResults.size(); i < len; i++) {
-            Apk cached = cachedResults.get(i);
-            Apk actual = actualResults.get(i);
-            if (!cached.name.equals(actual.name)) {
-                throw DeployerException.overlayIdMismatch();
-            } else if (!cached.checksum.equals(actual.checksum)) {
-                throw DeployerException.overlayIdMismatch();
-            }
-        }
-
-        return entry;
+        // If we have no cache data or an install without OID file, we use the classic dump.
+        ApplicationDumper dumper = new ApplicationDumper(installer);
+        List<Apk> deviceApks = dumper.dump(apks).apks;
+        deployCache.store(serial, packageName, deviceApks, new OverlayId(deviceApks));
+        return deployCache.get(serial, packageName);
     }
 
     public boolean supportsNewPipeline() {

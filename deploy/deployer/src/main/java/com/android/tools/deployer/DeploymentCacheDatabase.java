@@ -91,8 +91,7 @@ public class DeploymentCacheDatabase {
             return;
         }
 
-        try {
-            ObjectInputStream in = new ObjectInputStream(new FileInputStream(persistFile));
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(persistFile))) {
             HashMap<String, Entry> entries = (HashMap<String, Entry>) in.readObject();
             for (Map.Entry<String, Entry> e : entries.entrySet()) {
                 db.put(e.getKey(), e.getValue());
@@ -106,14 +105,20 @@ public class DeploymentCacheDatabase {
 
     public Entry get(String serial, String appId) {
         String key = String.format("%s:%s", serial, appId);
-        Entry e = db.getIfPresent(key);
-        return e;
+        return db.getIfPresent(key);
     }
 
     public boolean store(
             String serial, String appId, List<Apk> newInstalledApks, OverlayId overlayId) {
         String key = String.format("%s:%s", serial, appId);
         db.put(key, new Entry(newInstalledApks, overlayId));
+        writeToFile();
+        return true;
+    }
+
+    public boolean invalidate(String serial, String appId) {
+        String key = String.format("%s:%s", serial, appId);
+        db.invalidate(key);
         writeToFile();
         return true;
     }
@@ -128,12 +133,10 @@ public class DeploymentCacheDatabase {
             persistFile.delete();
         }
 
-        try {
-            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(persistFile));
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(persistFile))) {
             HashMap<String, Entry> entries = Maps.newHashMap(db.asMap());
             out.writeObject(entries);
             out.flush();
-            out.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

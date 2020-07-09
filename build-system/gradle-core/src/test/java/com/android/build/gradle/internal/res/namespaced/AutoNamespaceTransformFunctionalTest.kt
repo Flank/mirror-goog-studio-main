@@ -16,19 +16,13 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.IdentityTransform
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService
-import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.build.gradle.internal.services.createProjectServices
-import com.android.build.gradle.internal.services.getBuildService
-import com.android.build.gradle.options.ProjectOptions
-import com.android.build.gradle.options.SyncOptions
 import com.android.testutils.MavenRepoGenerator
 import com.android.testutils.TestInputsGenerator.jarWithEmptyClasses
-import com.android.testutils.TestUtils
 import com.android.testutils.apk.Zip
 import com.android.testutils.generateAarWithContent
 import com.android.testutils.truth.ZipFileSubject.assertThat
@@ -94,7 +88,7 @@ class AutoNamespaceTransformFunctionalTest {
         // Ignore the interactions with jetifier for this functional test.
         dependencies.registerTransform(
             IdentityTransform::class.java
-        ) { reg: TransformSpec<GenericTransformParameters> ->
+        ) { reg: TransformSpec<IdentityTransform.Parameters> ->
             reg.from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.JAR.type)
             reg.to.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.PROCESSED_JAR.type)
             reg.parameters.projectName.set(project.name)

@@ -39,3 +39,22 @@ kotlin_library(
         "//tools/base/third_party:org.jetbrains.kotlinx_kotlinx-coroutines-core",
     ],
 )
+
+# managed by go/iml_to_build [unb]
+iml_module(
+    name = "unb.studio.android.sdktools.layoutlib-extensions",
+    srcs = ["src/main/java"],
+    iml_files = ["android.sdktools.layoutlib-extensions.iml"],
+    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
+    resources = ["src/main/resources"],
+    tags = [
+        "manual",
+        "unb",
+    ],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
+        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
+    ],
+)

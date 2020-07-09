@@ -10,8 +10,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="android.sdktools.android-annotations" />
     <orderEntry type="library" name="guava-tools" level="project" />
-    <orderEntry type="library" name="xjc" level="project" />
     <orderEntry type="module" module-name="android.sdktools.repository" />
     <orderEntry type="module" module-name="android.sdktools.base.sdklib-base" />
+    <orderEntry type="library" name="jaxb-xjc" level="project" />
   </component>
 </module>

@@ -13,8 +13,8 @@ java_test(
         ":emulator_test_device",
         "//prebuilts/studio/sdk:platform-tools",
     ],
+    flaky = True,
     tags = [
-        "manual",
         "no_mac",
         "no_windows",
     ],

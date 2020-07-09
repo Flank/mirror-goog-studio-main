@@ -62,7 +62,7 @@ public class JacocoWithKotlinConnectedTest {
         project.execute("createDebugCoverageReport");
         assertThat(
                         project.file(
-                                "build/reports/coverage/debug/com.example.helloworld/HelloWorld.kt.html"))
+                                "build/reports/coverage/debug/com.example.helloworld/HelloWorld.html"))
                 .exists();
     }
 }

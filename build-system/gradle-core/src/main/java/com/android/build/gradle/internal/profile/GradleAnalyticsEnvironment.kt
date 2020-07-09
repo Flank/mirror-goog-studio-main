@@ -21,7 +21,7 @@ import org.gradle.api.provider.ProviderFactory
 import java.util.concurrent.ConcurrentHashMap
 
 /** Gradle-specific implementation of the [Environment] for the analytics library. */
-class GradleAnalyticsEnvironment(private val providerFactory: ProviderFactory) : Environment() {
+class GradleAnalyticsEnvironment(private var providerFactory: ProviderFactory?) : Environment() {
 
     private val systemProperties = ConcurrentHashMap<String, NullableString>()
     private val envVariables = ConcurrentHashMap<String, NullableString>()
@@ -29,22 +29,26 @@ class GradleAnalyticsEnvironment(private val providerFactory: ProviderFactory) :
     override fun getVariable(name: String): String? {
         return envVariables.computeIfAbsent(name) {
             NullableString(
-                providerFactory.environmentVariable(
-                    name
-                ).forUseAtConfigurationTime().orNull
+                providerFactory?.environmentVariable(name)?.forUseAtConfigurationTime()?.orNull
             )
         }.value
-
     }
 
     override fun getSystemProperty(name: String): String? {
         return systemProperties.computeIfAbsent(name) {
             NullableString(
-                providerFactory.systemProperty(
-                    name
-                ).forUseAtConfigurationTime().orNull
+                providerFactory?.systemProperty(name)?.forUseAtConfigurationTime()?.orNull
             )
         }.value
+    }
+
+    /**
+     * Release the provider factory to avoid leaks in http://b/160330055. Configuration cached runs
+     * will use cached system properties and env variables, and http://b/157470515 will fix this
+     * properly.
+     */
+    fun releaseProviderFactory() {
+        providerFactory = null
     }
 
     // ConcurrentHashMap does not allow null values, so wrap in in a data class

@@ -117,3 +117,42 @@ coverage_java_test(
         "//tools/base/third_party:org.smali_dexlib2",
     ],
 )
+
+# managed by go/iml_to_build [unb]
+iml_module(
+    name = "unb.studio.android.sdktools.analyzer",
+    srcs = ["src/main/java"],
+    iml_files = ["android.sdktools.analyzer.iml"],
+    lint_baseline = "lint_baseline.xml",
+    tags = [
+        "manual",
+        "unb",
+    ],
+    test_resources = ["src/test/resources"],
+    test_srcs = ["src/test/java"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    exports = [
+        "//tools/base/lint:unb.studio.android.sdktools.lint-api",
+        "//tools/base/lint:unb.studio.android.sdktools.lint-checks",
+    ],
+    # do not sort: must match IML order
+    deps = [
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
+        "//tools/base/annotations:unb.studio.android.sdktools.android-annotations[module]",
+        "//tools/base/common:unb.studio.android.sdktools.common[module]",
+        "//tools/adt/idea/.idea/libraries:unb.Guava",
+        "//prebuilts/tools/common/archive-patcher:unb.explainer",
+        "//prebuilts/tools/common/archive-patcher:unb.generator",
+        "//prebuilts/tools/common/archive-patcher:unb.shared",
+        "//tools/adt/idea/.idea/libraries:unb.dexlib2",
+        "//tools/adt/idea/.idea/libraries:unb.baksmali",
+        "//tools/base/testutils:unb.studio.android.sdktools.testutils[module, test]",
+        "//tools/adt/idea/.idea/libraries:unb.truth[test]",
+        "//tools/adt/idea/.idea/libraries:unb.jimfs[test]",
+        "//tools/base/apkparser:unb.studio.android.sdktools.binary-resources[module]",
+        "//tools/base/lint:unb.studio.android.sdktools.lint-api[module]",
+        "//tools/base/lint:unb.studio.android.sdktools.lint-checks[module]",
+        "//tools/base/sdk-common:unb.studio.android.sdktools.sdk-common[module]",
+    ],
+)

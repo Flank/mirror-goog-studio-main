@@ -148,7 +148,8 @@ public abstract class BaseTestRunner implements TestRunner {
                     // now look for a matching output file
                     List<File> testedApks = ImmutableList.of();
                     if (!testData.isLibrary()) {
-                        testedApks = testData.getTestedApks().invoke(deviceConfigProvider, logger);
+                        testedApks =
+                                testData.getTestedApkFinder().invoke(deviceConfigProvider, logger);
 
                         if (testedApks.isEmpty()) {
                             logger.info(

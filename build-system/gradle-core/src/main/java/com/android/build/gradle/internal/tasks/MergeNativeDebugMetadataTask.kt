@@ -22,6 +22,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -31,6 +32,7 @@ import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
@@ -40,8 +42,6 @@ import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.util.PatternSet
 import java.io.File
-import java.io.Serializable
-import javax.inject.Inject
 
 /**
  * Task that merges the .so.dbg or .so.sym native debug metadata files into a zip to be published in
@@ -59,26 +59,26 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
     abstract val outputFile: RegularFileProperty
 
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                MergeNativeDebugMetadataRunnable::class.java,
-                MergeNativeDebugMetadataRunnable.Params(
-                    inputFiles.files,
-                    outputFile.get().asFile
-                )
-            )
+        workerExecutor.noIsolation().submit(
+            MergeNativeDebugMetadataWorkAction::class.java
+        ) {
+            it.initializeFromAndroidVariantTask(this)
+            it.inputFiles.from(inputFiles)
+            it.outputFile.set(outputFile.get().asFile)
         }
     }
 
-    private class MergeNativeDebugMetadataRunnable @Inject constructor(
-        val params: Params
-    ) : Runnable {
+    abstract class MergeNativeDebugMetadataWorkAction :
+        ProfileAwareWorkAction<MergeNativeDebugMetadataWorkAction.Parameters>() {
 
         override fun run() {
-            mergeFiles(params.inputFiles, params.outputFile)
+            mergeFiles(parameters.inputFiles.files, parameters.outputFile.get())
         }
 
-        class Params(val inputFiles: Collection<File>, val outputFile: File) : Serializable
+        abstract class Parameters : ProfileAwareWorkAction.Parameters() {
+            abstract val inputFiles: ConfigurableFileCollection
+            abstract val outputFile: Property<File>
+        }
     }
 
     companion object {

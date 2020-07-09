@@ -20,6 +20,7 @@ import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.FeaturePackageInfo
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -28,6 +29,7 @@ import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
@@ -35,8 +37,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.io.Serializable
-import javax.inject.Inject
 
 /**
  * This task collects necessary information for the data binding annotation processor to generate
@@ -68,14 +68,11 @@ abstract class DataBindingExportFeatureInfoTask : NonIncrementalTask() {
         private set
 
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                ExportFeatureInfoRunnable::class.java, ExportFeatureInfoParams(
-                    outFolder = outFolder.get().asFile,
-                    resOffset = resOffset.get(),
-                    directDependencies = directDependencies.asFileTree.files
-                )
-            )
+        workerExecutor.noIsolation().submit(ExportFeatureInfoRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.outFolder.set(outFolder)
+            it.resOffset.set(resOffset)
+            it.directDependencies.set(directDependencies.asFileTree.files)
         }
     }
 
@@ -118,26 +115,25 @@ abstract class DataBindingExportFeatureInfoTask : NonIncrementalTask() {
     }
 }
 
-data class ExportFeatureInfoParams(
-    val outFolder: File,
-    val resOffset: Int,
-    val directDependencies: Set<File>
-) : Serializable
+abstract class ExportFeatureInfoParams: ProfileAwareWorkAction.Parameters() {
+    abstract val outFolder: DirectoryProperty
+    abstract val resOffset: Property<Int>
+    abstract val directDependencies: SetProperty<File>
+}
 
-class ExportFeatureInfoRunnable @Inject constructor(
-    val params: ExportFeatureInfoParams
-) : Runnable {
+abstract class ExportFeatureInfoRunnable: ProfileAwareWorkAction<ExportFeatureInfoParams>() {
     override fun run() {
-        FileUtils.cleanOutputDir(params.outFolder)
-        params.outFolder.mkdirs()
-        params.directDependencies.filter {
+        val outputFolder = parameters.outFolder.get().asFile
+        FileUtils.cleanOutputDir(outputFolder)
+        outputFolder.mkdirs()
+        parameters.directDependencies.get().filter {
             it.name.endsWith(DataBindingBuilder.BR_FILE_EXT)
         }.forEach {
-            FileUtils.copyFile(it, File(params.outFolder, it.name))
+            FileUtils.copyFile(it, File(outputFolder, it.name))
         }
         // save the package id offset
-        FeaturePackageInfo(packageId = params.resOffset).serialize(
-                File(params.outFolder, DataBindingBuilder.FEATURE_BR_OFFSET_FILE_NAME)
+        FeaturePackageInfo(packageId = parameters.resOffset.get()).serialize(
+                File(outputFolder, DataBindingBuilder.FEATURE_BR_OFFSET_FILE_NAME)
         )
     }
 }

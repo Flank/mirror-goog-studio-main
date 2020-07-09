@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.SigningConfigUtils
+import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.SigningOptions
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
@@ -97,7 +98,13 @@ class SigningConfigProvider(
                 // Get it from the variant scope
                 SigningConfigProvider(
                     signingConfigData = creationConfig.variantDslInfo.signingConfig?.let {
-                        SigningConfigData.fromSigningConfig(it)
+                        SigningConfigData.fromSigningConfig(
+                            it,
+                            creationConfig.minSdkVersion.apiLevel,
+                            creationConfig.globalScope
+                                .projectOptions
+                                .get(IntegerOption.IDE_TARGET_DEVICE_API)
+                        )
                     },
                     signingConfigFileCollection = null,
                     signingConfigValidationResultDir = creationConfig.artifacts.get(
@@ -119,10 +126,8 @@ class SigningConfigProvider(
                             storePassword = signingOptions.storePassword,
                             keyAlias = signingOptions.keyAlias,
                             keyPassword = signingOptions.keyPassword,
-                            v1SigningEnabled = signingOptions.v1Enabled!!,
-                            v2SigningEnabled = signingOptions.v2Enabled!!,
-                            v1SigningConfigured = signingOptions.v1Configured,
-                            v2SigningConfigured = signingOptions.v2Configured,
+                            enableV1Signing = signingOptions.v1Enabled!!,
+                            enableV2Signing = signingOptions.v2Enabled!!,
                             enableV3Signing = signingOptions.enableV3Signing,
                             enableV4Signing = signingOptions.enableV4Signing
                         ),

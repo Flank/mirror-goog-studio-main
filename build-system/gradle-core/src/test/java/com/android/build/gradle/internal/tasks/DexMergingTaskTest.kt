@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
@@ -45,20 +47,28 @@ class DexMergingTaskTest {
         val dexRoots = listOf(generateArchive("test/A"))
 
         val output = tmp.newFolder()
-        DexMergingTaskRunnable(
-            DexMergingParams(
-                DexingType.MONO_DEX,
-                SyncOptions.ErrorFormatMode.HUMAN_READABLE,
-                DexMergerTool.D8,
-                21,
-                true,
-                0,
-                null,
-                DexArchiveEntryBucket(dexRoots),
-                dexRoots,
-                output
-            )
-        ).run()
+        object : DexMergingTaskRunnable() {
+            override fun getParameters(): DexMergingParams {
+                return object : DexMergingParams() {
+                    override val dexingType = FakeGradleProperty(DexingType.MONO_DEX)
+                    override val errorFormatMode =
+                        FakeGradleProperty(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
+                    override val dexMerger = FakeGradleProperty(DexMergerTool.D8)
+                    override val minSdkVersion = FakeGradleProperty(21)
+                    override val debuggable = FakeGradleProperty(true)
+                    override val mergingThreshold = FakeGradleProperty(0)
+                    override val mainDexListFile = FakeObjectFactory.factory.fileProperty()
+                    override val dexArchiveEntryBucket =
+                        FakeGradleProperty(DexArchiveEntryBucket(dexRoots))
+                    override val dexRootsForDx =
+                        FakeObjectFactory.factory.listProperty(File::class.java).value(dexRoots)
+                    override val outputDir = FakeObjectFactory.factory.directoryProperty().fileValue(output)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
         assertThatDex(output.resolve("classes.dex")).containsExactlyClassesIn(listOf("Ltest/A;"))
     }
 
@@ -67,20 +77,28 @@ class DexMergingTaskTest {
         val dexRoots = listOf(generateArchive("test/A", "test/B", "test/C"))
 
         val output = tmp.newFolder()
-        DexMergingTaskRunnable(
-            DexMergingParams(
-                DexingType.MONO_DEX,
-                SyncOptions.ErrorFormatMode.HUMAN_READABLE,
-                DexMergerTool.D8,
-                21,
-                true,
-                0,
-                null,
-                DexArchiveEntryBucket(dexRoots),
-                dexRoots,
-                output
-            )
-        ).run()
+        object : DexMergingTaskRunnable() {
+            override fun getParameters(): DexMergingParams {
+                return object : DexMergingParams() {
+                    override val dexingType = FakeGradleProperty(DexingType.MONO_DEX)
+                    override val errorFormatMode =
+                        FakeGradleProperty(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
+                    override val dexMerger = FakeGradleProperty(DexMergerTool.D8)
+                    override val minSdkVersion = FakeGradleProperty(21)
+                    override val debuggable = FakeGradleProperty(true)
+                    override val mergingThreshold = FakeGradleProperty(0)
+                    override val mainDexListFile = FakeObjectFactory.factory.fileProperty()
+                    override val dexArchiveEntryBucket =
+                        FakeGradleProperty(DexArchiveEntryBucket(dexRoots))
+                    override val dexRootsForDx =
+                        FakeObjectFactory.factory.listProperty(File::class.java).value(dexRoots)
+                    override val outputDir = FakeObjectFactory.factory.directoryProperty().fileValue(output)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
         assertThatDex(output.resolve("classes.dex")).containsExactlyClassesIn(
             listOf(
                 "Ltest/A;",
@@ -98,20 +116,28 @@ class DexMergingTaskTest {
         mainDexList.writeText("test/A.class")
 
         val output = tmp.newFolder()
-        DexMergingTaskRunnable(
-            DexMergingParams(
-                DexingType.LEGACY_MULTIDEX,
-                SyncOptions.ErrorFormatMode.HUMAN_READABLE,
-                DexMergerTool.D8,
-                19,
-                true,
-                0,
-                mainDexList,
-                DexArchiveEntryBucket(dexRoots),
-                dexRoots,
-                output
-            )
-        ).run()
+        object : DexMergingTaskRunnable() {
+            override fun getParameters(): DexMergingParams {
+                return object : DexMergingParams() {
+                    override val dexingType = FakeGradleProperty(DexingType.LEGACY_MULTIDEX)
+                    override val errorFormatMode =
+                        FakeGradleProperty(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
+                    override val dexMerger = FakeGradleProperty(DexMergerTool.D8)
+                    override val minSdkVersion = FakeGradleProperty(19)
+                    override val debuggable = FakeGradleProperty(true)
+                    override val mergingThreshold = FakeGradleProperty(0)
+                    override val mainDexListFile = FakeObjectFactory.factory.fileProperty().fileValue(mainDexList)
+                    override val dexArchiveEntryBucket =
+                        FakeGradleProperty(DexArchiveEntryBucket(dexRoots))
+                    override val dexRootsForDx =
+                        FakeObjectFactory.factory.listProperty(File::class.java).value(dexRoots)
+                    override val outputDir = FakeObjectFactory.factory.directoryProperty().fileValue(output)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
         assertThatDex(output.resolve("classes.dex")).containsExactlyClassesIn(listOf("Ltest/A;"))
         assertThatDex(output.resolve("classes2.dex")).containsExactlyClassesIn(
             listOf(
@@ -129,20 +155,28 @@ class DexMergingTaskTest {
         }
 
         val output = tmp.newFolder()
-        DexMergingTaskRunnable(
-            DexMergingParams(
-                DexingType.NATIVE_MULTIDEX,
-                SyncOptions.ErrorFormatMode.HUMAN_READABLE,
-                DexMergerTool.D8,
-                21,
-                true,
-                numDexRoots + 1,
-                null,
-                DexArchiveEntryBucket(dexRoots),
-                dexRoots,
-                output
-            )
-        ).run()
+        object : DexMergingTaskRunnable() {
+            override fun getParameters(): DexMergingParams {
+                return object : DexMergingParams() {
+                    override val dexingType = FakeGradleProperty(DexingType.NATIVE_MULTIDEX)
+                    override val errorFormatMode =
+                        FakeGradleProperty(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
+                    override val dexMerger = FakeGradleProperty(DexMergerTool.D8)
+                    override val minSdkVersion = FakeGradleProperty(21)
+                    override val debuggable = FakeGradleProperty(true)
+                    override val mergingThreshold = FakeGradleProperty(numDexRoots + 1)
+                    override val mainDexListFile = FakeObjectFactory.factory.fileProperty()
+                    override val dexArchiveEntryBucket =
+                        FakeGradleProperty(DexArchiveEntryBucket(dexRoots))
+                    override val dexRootsForDx =
+                        FakeObjectFactory.factory.listProperty(File::class.java).value(dexRoots)
+                    override val outputDir = FakeObjectFactory.factory.directoryProperty().fileValue(output)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
         (0 until numDexRoots).forEach {
             assertThat(output.resolve("classes_$it.dex")).exists()
@@ -157,20 +191,28 @@ class DexMergingTaskTest {
         }
 
         val output = tmp.newFolder()
-        DexMergingTaskRunnable(
-            DexMergingParams(
-                DexingType.NATIVE_MULTIDEX,
-                SyncOptions.ErrorFormatMode.HUMAN_READABLE,
-                DexMergerTool.D8,
-                21,
-                true,
-                numDexRoots,
-                null,
-                DexArchiveEntryBucket(dexRoots),
-                dexRoots,
-                output
-            )
-        ).run()
+        object : DexMergingTaskRunnable() {
+            override fun getParameters(): DexMergingParams {
+                return object : DexMergingParams() {
+                    override val dexingType = FakeGradleProperty(DexingType.NATIVE_MULTIDEX)
+                    override val errorFormatMode =
+                        FakeGradleProperty(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
+                    override val dexMerger = FakeGradleProperty(DexMergerTool.D8)
+                    override val minSdkVersion = FakeGradleProperty(21)
+                    override val debuggable = FakeGradleProperty(true)
+                    override val mergingThreshold = FakeGradleProperty(numDexRoots)
+                    override val mainDexListFile = FakeObjectFactory.factory.fileProperty()
+                    override val dexArchiveEntryBucket =
+                        FakeGradleProperty(DexArchiveEntryBucket(dexRoots))
+                    override val dexRootsForDx =
+                        FakeObjectFactory.factory.listProperty(File::class.java).value(dexRoots)
+                    override val outputDir = FakeObjectFactory.factory.directoryProperty().fileValue(output)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
         assertThatDex(output.resolve("classes.dex")).containsExactlyClassesIn(
             (0 until numDexRoots).map { "Ltest/A$it;" })
@@ -188,20 +230,28 @@ class DexMergingTaskTest {
         }
 
         val output = tmp.newFolder()
-        DexMergingTaskRunnable(
-            DexMergingParams(
-                DexingType.NATIVE_MULTIDEX,
-                SyncOptions.ErrorFormatMode.HUMAN_READABLE,
-                DexMergerTool.D8,
-                21,
-                true,
-                numDexRoots + 1,
-                null,
-                DexArchiveEntryBucket(dexRoots),
-                dexRoots,
-                output
-            )
-        ).run()
+        object : DexMergingTaskRunnable() {
+            override fun getParameters(): DexMergingParams {
+                return object : DexMergingParams() {
+                    override val dexingType = FakeGradleProperty(DexingType.NATIVE_MULTIDEX)
+                    override val errorFormatMode =
+                        FakeGradleProperty(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
+                    override val dexMerger = FakeGradleProperty(DexMergerTool.D8)
+                    override val minSdkVersion = FakeGradleProperty(21)
+                    override val debuggable = FakeGradleProperty(true)
+                    override val mergingThreshold = FakeGradleProperty(numDexRoots + 1)
+                    override val mainDexListFile = FakeObjectFactory.factory.fileProperty()
+                    override val dexArchiveEntryBucket =
+                        FakeGradleProperty(DexArchiveEntryBucket(dexRoots))
+                    override val dexRootsForDx =
+                        FakeObjectFactory.factory.listProperty(File::class.java).value(dexRoots)
+                    override val outputDir = FakeObjectFactory.factory.directoryProperty().fileValue(output)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
         assertThatDex(output.resolve("classes.dex")).containsExactlyClassesIn(
             (0 until numDexRoots).flatMap { listOf("Ltest/A$it;", "Ltest/B$it;") }
@@ -230,20 +280,28 @@ class DexMergingTaskTest {
         val dexRoots = listOf(directoryB, directoryA)
 
         val output = tmp.newFolder()
-        DexMergingTaskRunnable(
-            DexMergingParams(
-                DexingType.NATIVE_MULTIDEX,
-                SyncOptions.ErrorFormatMode.HUMAN_READABLE,
-                DexMergerTool.D8,
-                21,
-                true,
-                Int.MAX_VALUE,
-                null,
-                DexArchiveEntryBucket(dexRoots),
-                dexRoots,
-                output
-            )
-        ).run()
+        object : DexMergingTaskRunnable() {
+            override fun getParameters(): DexMergingParams {
+                return object : DexMergingParams() {
+                    override val dexingType = FakeGradleProperty(DexingType.NATIVE_MULTIDEX)
+                    override val errorFormatMode =
+                        FakeGradleProperty(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
+                    override val dexMerger = FakeGradleProperty(DexMergerTool.D8)
+                    override val minSdkVersion = FakeGradleProperty(21)
+                    override val debuggable = FakeGradleProperty(true)
+                    override val mergingThreshold = FakeGradleProperty(Int.MAX_VALUE)
+                    override val mainDexListFile = FakeObjectFactory.factory.fileProperty()
+                    override val dexArchiveEntryBucket =
+                        FakeGradleProperty(DexArchiveEntryBucket(dexRoots))
+                    override val dexRootsForDx =
+                        FakeObjectFactory.factory.listProperty(File::class.java).value(dexRoots)
+                    override val outputDir = FakeObjectFactory.factory.directoryProperty().fileValue(output)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
         // Ordering within file collection should not change, but entries inside directories should
         // be sorted.

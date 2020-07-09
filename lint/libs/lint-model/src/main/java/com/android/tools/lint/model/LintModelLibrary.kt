@@ -28,12 +28,6 @@ interface LintModelLibrary : Comparable<LintModelLibrary> {
     val provided: Boolean
 
     /**
-     * Whether this library is "skipped"; an example of this is the R class that is
-     * provided to other modules but not to the runtime
-     */
-    val skipped: Boolean
-
-    /**
      * Returns the artifact address in a unique way.
      *
      * This is either a module path for sub-modules (with optional variant name), or a maven
@@ -41,16 +35,11 @@ interface LintModelLibrary : Comparable<LintModelLibrary> {
      */
     val artifactAddress: String
 
-    /** The actual resolved Maven coordinates of this library */
-    val resolvedCoordinates: LintModelMavenName
-
-    /** The location of an unzipped AAR or the corresponding Gradle project */
-    val folder: File?
-
+    // FIXME this should not be here, this should show up via the module that contributes this rather than via all its consumer
     val lintJar: File?
 
     override fun compareTo(other: LintModelLibrary): Int {
-        return resolvedCoordinates.compareTo(other.resolvedCoordinates)
+        return artifactAddress.compareTo(other.artifactAddress)
     }
 }
 
@@ -66,11 +55,15 @@ interface LintModelModuleLibrary : LintModelLibrary {
 interface LintModelExternalLibrary : LintModelLibrary {
     /** List of jar files in the library. Never empty. */
     val jarFiles: List<File>
+
+    /** The actual resolved Maven coordinates of this library */
+    val resolvedCoordinates: LintModelMavenName
 }
 
 interface LintModelAndroidLibrary : LintModelExternalLibrary {
+    /** The location of an unzipped AAR or the corresponding Gradle project */
+    val folder: File
     val manifest: File
-    override val folder: File
     val resFolder: File
     val assetsFolder: File
     val publicResources: File
@@ -97,11 +90,8 @@ abstract class DefaultLintModelLibrary : LintModelLibrary {
 class DefaultLintModelModuleLibrary(
     override val artifactAddress: String,
     override val projectPath: String,
-    override val resolvedCoordinates: LintModelMavenName,
-    override val folder: File?,
     override val lintJar: File?,
-    override val provided: Boolean,
-    override val skipped: Boolean
+    override val provided: Boolean
 ) : DefaultLintModelLibrary(), LintModelModuleLibrary {
     override fun toString(): String = "LocalLibrary(${projectPath})"
 }
@@ -119,7 +109,6 @@ class DefaultLintModelAndroidLibrary(
     override val externalAnnotations: File,
     override val proguardRules: File,
     override val provided: Boolean,
-    override val skipped: Boolean,
     override val resolvedCoordinates: LintModelMavenName
 ) : DefaultLintModelLibrary(), LintModelAndroidLibrary {
     override fun toString(): String = "AndroidLibrary(${resolvedCoordinates})"
@@ -127,12 +116,11 @@ class DefaultLintModelAndroidLibrary(
 
 class DefaultLintModelJavaLibrary(
     override val artifactAddress: String,
-    override val folder: File?,
     override val jarFiles: List<File>,
     override val resolvedCoordinates: LintModelMavenName,
-    override val provided: Boolean,
-    override val skipped: Boolean
+    override val provided: Boolean
 ) : DefaultLintModelLibrary(), LintModelJavaLibrary {
-    override val lintJar: File? = null
     override fun toString(): String = "JavaLibrary(${resolvedCoordinates})"
+
+    override val lintJar: File? = null
 }

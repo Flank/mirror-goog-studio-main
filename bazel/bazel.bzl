@@ -142,11 +142,16 @@ def _iml_module_jar_impl(
         # Forms
         if form_srcs:
             forms += relative_paths(ctx, form_srcs, roots)
+
+            # Note: we explicitly include the bootclasspath from the current Java toolchain with
+            # the classpath, because extracting it at runtime, when we are running in the
+            # FormCompiler JVM, is not portable across JDKs (and made much harder on JDK9+).
+
             option_flags, option_files = create_java_compiler_args_srcs(
                 ctx,
                 [form.path for form in form_srcs] + [k + "=" + v.path for k, v in form_deps] + [f.path for f in formc_input_jars],
                 java_jar,
-                transitive_runtime_jars.to_list(),
+                transitive_runtime_jars.to_list() + java_toolchain.bootclasspath.to_list(),
             )
             args = ctx.actions.args()
             args.add_all(option_flags)
@@ -156,7 +161,8 @@ def _iml_module_jar_impl(
             args.set_param_file_format("multiline")
 
             ctx.actions.run(
-                inputs = [v for _, v in form_deps] + form_srcs + formc_input_jars + option_files + transitive_runtime_jars.to_list(),
+                inputs = [v for _, v in form_deps] + form_srcs + formc_input_jars + option_files +
+                         transitive_runtime_jars.to_list() + java_toolchain.bootclasspath.to_list(),
                 outputs = [java_jar],
                 mnemonic = "formc",
                 arguments = [args],
@@ -353,7 +359,7 @@ _iml_module_ = rule(
             executable = True,
         ),
         "_bootclasspath": attr.label(
-            default = Label("//prebuilts/studio/jdk:bootclasspath"),
+            default = Label("@bazel_tools//tools/jdk:platformclasspath"),
             cfg = "host",
         ),
         "_kotlin": attr.label(
@@ -667,7 +673,8 @@ def _gen_split_tests(name, split_test_targets, test_tags = None, test_data = Non
     A new test target is generated for each split_test_target, a test_suite containing all
     split targets, and a test target which does not perform any splitting. The non-split target is
     only to be used for local development with the bazel `--test_filter` flag, since this flag
-    does not work on split test targets.
+    does not work on split test targets. The test_suite will only contain split tests which do not
+    use the 'manual' tag.
 
     Args:
         name: The base name of the test.
@@ -687,11 +694,12 @@ def _gen_split_tests(name, split_test_targets, test_tags = None, test_data = Non
     split_tests = []
     for split_name in split_test_targets:
         test_name = name + "_tests__" + split_name
-        split_tests.append(test_name)
         split_target = split_test_targets[split_name]
         shard_count = split_target.get("shard_count")
         tags = split_target.get("tags", default = [])
         data = split_target.get("data", default = [])
+        if "manual" not in tags:
+            split_tests.append(test_name)
         if test_data:
             data += test_data
         if test_tags:
@@ -709,6 +717,7 @@ def _gen_split_tests(name, split_test_targets, test_tags = None, test_data = Non
         )
     native.test_suite(
         name = name + "_tests",
+        tags = ["manual"] if "manual" in test_tags else [],
         tests = split_tests,
     )
 
@@ -821,208 +830,4 @@ def split_srcs(src_dirs, res_dirs, exclude):
         groovies = groovies,
         forms = forms,
         manifests = manifests,
-    )
-
-def _iml_project_impl(ctx):
-    imls = []
-    deps = []
-    inputs = []
-
-    module_jars = dict()
-    module_runtime = dict()
-    transitive_data = depset()
-
-    for dep in ctx.attr.modules:
-        if hasattr(dep, "runtime_info"):
-            for name in dep.runtime_info.names:
-                module_runtime[name] = dep.runtime_info.module_runtime
-                module_jars[name] = dep.runtime_info.module_jars
-            transitive_data = depset(transitive = [transitive_data, dep.runtime_info.transitive_data])
-        if hasattr(dep, "module"):
-            fail("Don't depend on modules directly: " + str(dep.label))
-
-    for dep in ctx.attr.libraries + ctx.attr.modules:
-        if JavaInfo in dep:
-            transitive_data = depset(transitive = [transitive_data, dep[JavaInfo].transitive_runtime_jars])
-
-    text = ""
-    transitive_data = depset(direct = module_jars.values(), transitive = [transitive_data])
-    for name, files in module_runtime.items():
-        transitive_data = depset(transitive = [transitive_data, files])
-        text += name + ": " + module_jars[name].path
-        for file in files.to_list():
-            text += ":" + file.path
-        text += "\n"
-
-    module_info = ctx.actions.declare_file(ctx.label.name + ".module_info")
-    ctx.actions.write(
-        output = module_info,
-        content = text,
-    )
-
-    artifacts = ""
-    for dep in ctx.attr.artifacts:
-        artifacts += dep.label.name + ": " + dep.artifact.path + "\n"
-    artifact_info = ctx.actions.declare_file(ctx.label.name + ".artifact_info")
-    ctx.actions.write(
-        output = artifact_info,
-        content = artifacts,
-    )
-
-#   outs = [ctx.outputs.win, ctx.outputs.win32, ctx.outputs.mac, ctx.outputs.linux, ctx.outputs.output]
-
-#   args = [
-#       "--win",
-#       ctx.outputs.win.path,
-#       "--win32",
-#       ctx.outputs.win32.path,
-#       "--mac",
-#       ctx.outputs.mac.path,
-#       "--linux",
-#       ctx.outputs.linux.path,
-#       "--bin_dir",
-#       ctx.var["BINDIR"],
-#       "--gen_dir",
-#       ctx.var["GENDIR"],
-#       "--build",
-#       ctx.file.build.path,
-#       "--tmp",
-#       module_info.path + ".tmp",
-#       "--out",
-#       ctx.outputs.output.path,
-#       "--module_info",
-#       module_info.path,
-#       "--artifact_info",
-#       artifact_info.path,
-#   ]
-
-#   ctx.actions.run(
-#       mnemonic = "Ant",
-#       inputs = [ctx.file.build, module_info, artifact_info] + ctx.files.data + ctx.files.artifacts + transitive_data.to_list(),
-#       outputs = outs,
-#       executable = ctx.executable.ant,
-#       # We cannot enable this yet, because Mac's sandbox throws an error
-#       # execution_requirements = { "block-network" : "1" },
-#       arguments = args,
-#   )
-
-_iml_project = rule(
-    attrs = {
-        "modules": attr.label_list(
-            allow_empty = False,
-        ),
-        "artifacts": attr.label_list(
-        ),
-        "libraries": attr.label_list(
-        ),
-        "data": attr.label_list(
-            allow_files = True,
-        ),
-        "deps": attr.label_list(
-        ),
-        "ant": attr.label(
-            executable = True,
-            cfg = "host",
-        ),
-        "build": attr.label(
-            allow_single_file = True,
-        ),
-    },
-    outputs = {
-        #       "win": "%{name}.win.zip",
-        #       "win32": "%{name}.win32.zip",
-        #       "mac": "%{name}.mac.zip",
-        #       "linux": "%{name}.tar.gz",
-        #       "output": "%{name}.log",
-    },
-    implementation = _iml_project_impl,
-)
-
-def normalize_label(label):
-    if ":" not in label:
-        label = label + ":" + label[label.rfind("/") + 1:]
-    return label
-
-def iml_project(name, modules = [], **kwargs):
-    normalized_modules = [normalize_label(module) for module in modules]
-    _iml_project(
-        name = name,
-        testonly = True,  # since "_testlib" entries are added programmatically to modules list here
-        modules = [n + "_runtime" for n in normalized_modules] + [n + "_testlib" for n in normalized_modules],
-        **kwargs
-    )
-
-def _iml_artifact_impl(ctx):
-    jars = []
-
-    if ctx.files.files:
-        files_jar = ctx.actions.declare_file(ctx.label.name + ".files.jar")
-
-        zipper_args = ["c", files_jar.path]
-        zipper_files = "".join([d + "/" + f.basename + "=" + f.path + "\n" for d, f in zip(ctx.attr.dirs, ctx.files.files)])
-        zipper_list = create_option_file(ctx, ctx.label.name + ".files.lst", zipper_files)
-        zipper_args += ["@" + zipper_list.path]
-        ctx.actions.run(
-            inputs = ctx.files.files + [zipper_list],
-            outputs = [files_jar],
-            executable = ctx.executable._zipper,
-            arguments = zipper_args,
-            progress_message = "Creating files artifact jar...",
-            mnemonic = "zipper",
-        )
-        jars += [files_jar]
-    for module in ctx.attr.modules:
-        if JavaInfo in module:
-            jars += module[JavaInfo].compile_jars.to_list()
-
-    run_singlejar(
-        ctx = ctx,
-        jars = jars,
-        out = ctx.outputs.artifact,
-    )
-
-    return struct(artifact = ctx.outputs.artifact)
-
-_iml_artifact = rule(
-    attrs = {
-        "dirs": attr.string_list(),
-        "files": attr.label_list(allow_files = True),
-        "modules": attr.label_list(),
-        "_zipper": attr.label(
-            default = Label("@bazel_tools//tools/zip:zipper"),
-            cfg = "host",
-            executable = True,
-        ),
-        "_singlejar": attr.label(
-            default = Label("@bazel_tools//tools/jdk:singlejar"),
-            cfg = "host",
-            executable = True,
-        ),
-    },
-    outputs = {
-        "artifact": "%{name}.jar",
-    },
-    implementation = _iml_artifact_impl,
-)
-
-def iml_artifact(name, dirs = {}, modules = [], **kwargs):
-    # Reverse the map so we can use a label to string dict
-    files = dict()
-    for d, fs in dirs.items():
-        for f in fs:
-            files[f] = d
-
-    dir_list = []
-    file_list = []
-    for d, fs in dirs.items():
-        for f in fs:
-            dir_list += [d]
-            file_list += [f]
-
-    _iml_artifact(
-        name = name,
-        dirs = dir_list,
-        files = file_list,
-        modules = modules,
-        **kwargs
     )

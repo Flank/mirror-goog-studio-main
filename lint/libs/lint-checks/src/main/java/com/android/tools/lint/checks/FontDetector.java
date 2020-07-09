@@ -52,6 +52,7 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.model.LintModelExternalLibrary;
 import com.android.tools.lint.model.LintModelLibrary;
 import com.android.tools.lint.model.LintModelMavenName;
 import com.android.tools.lint.model.LintModelVariant;
@@ -214,11 +215,13 @@ public class FontDetector extends ResourceXmlDetector {
         }
         LintModelLibrary library =
                 variant.getMainArtifact().findCompileDependency(APPCOMPAT_LIB_ARTIFACT);
-        if (library == null) {
+        if (!(library instanceof LintModelExternalLibrary)) {
             return;
         }
 
-        LintModelMavenName rc = library.getResolvedCoordinates();
+        LintModelExternalLibrary extLibrary = (LintModelExternalLibrary) library;
+
+        LintModelMavenName rc = extLibrary.getResolvedCoordinates();
         GradleCoordinate version =
                 new GradleCoordinate(
                         SUPPORT_LIB_GROUP_ID, APPCOMPAT_LIB_ARTIFACT_ID, rc.getVersion());

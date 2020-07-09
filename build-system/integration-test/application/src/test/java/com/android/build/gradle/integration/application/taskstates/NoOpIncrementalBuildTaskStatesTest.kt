@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application.taskstates
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.DID_WORK
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.SKIPPED
@@ -52,6 +51,7 @@ class NoOpIncrementalBuildTaskStatesTest {
                 ":app:compileDebugUnitTestJavaWithJavac",
                 ":app:compressDebugAssets",
                 ":app:createDebugCompatibleScreenManifests",
+                ":app:desugarDebugFileDependencies",
                 ":app:dexBuilderDebug",
                 ":app:extractDeepLinksDebug",
                 ":app:generateDebugBuildConfig",
@@ -93,8 +93,6 @@ class NoOpIncrementalBuildTaskStatesTest {
     @Test
     fun `check task states`() {
         val result = project.executor()
-            // http://b/158205860
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .run {
                 val tasks = listOf("assembleDebug", "testDebugUnitTest")
                 run(tasks)

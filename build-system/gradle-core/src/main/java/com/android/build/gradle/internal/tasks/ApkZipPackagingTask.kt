@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.packaging.JarMerger
@@ -32,8 +33,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.io.Serializable
-import javax.inject.Inject
 
 /**
  * Package all the APKs and mapping file into a zip for publishing to a repo.
@@ -53,36 +52,32 @@ abstract class ApkZipPackagingTask : NonIncrementalTask() {
     abstract val apkZipFile: RegularFileProperty
 
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                ApkZipPackagingRunnable::class.java,
-                Params(
-                    apkFolder.asFile.get(),
-                    mappingFile.orNull?.asFile,
-                    apkZipFile.asFile.get()
-                )
-            )
+        workerExecutor.noIsolation().submit(ApkZipPackagingRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.apkFolder.set(apkFolder)
+            it.mappingFile.set(mappingFile)
+            it.zipOutputFile.set(apkZipFile)
         }
     }
 
-    private data class Params(
-        val apkFolder: File,
-        val mappingFile: File?,
-        val zipOutputFile: File
-    ) : Serializable
+    abstract class Params : ProfileAwareWorkAction.Parameters () {
+        abstract val apkFolder: DirectoryProperty
+        abstract val mappingFile: RegularFileProperty
+        abstract val zipOutputFile: RegularFileProperty
+    }
 
-    private class ApkZipPackagingRunnable @Inject constructor(private val params: Params): Runnable {
+    abstract class ApkZipPackagingRunnable : ProfileAwareWorkAction<Params>() {
         override fun run() {
-            FileUtils.deleteIfExists(params.zipOutputFile)
+            FileUtils.deleteIfExists(parameters.zipOutputFile.asFile.get())
 
-            val sourceFiles = params.apkFolder.listFiles() ?: emptyArray<File>()
+            val sourceFiles = parameters.apkFolder.asFile.get().listFiles() ?: emptyArray<File>()
 
-            JarMerger(params.zipOutputFile.toPath()).use { jar ->
+            JarMerger(parameters.zipOutputFile.asFile.get().toPath()).use { jar ->
                 for (sourceFile in sourceFiles) {
                     jar.addFile(sourceFile.name, sourceFile.toPath())
                 }
 
-                params.mappingFile?.let {
+                parameters.mappingFile.asFile.orNull?.let {
                     jar.addFile(it.name, it.toPath())
                 }
             }

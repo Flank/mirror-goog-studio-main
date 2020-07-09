@@ -43,6 +43,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGE
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES;
+import static com.android.build.gradle.tasks.JavaCompileUtils.KOTLIN_KAPT_PLUGIN_ID;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -78,12 +79,14 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel;
+import com.android.build.gradle.internal.dependency.AndroidAttributes;
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
+import com.android.build.gradle.internal.lint.LintModelDependenciesWriterTask;
 import com.android.build.gradle.internal.lint.LintModelModuleWriterTask;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -157,7 +160,6 @@ import com.android.build.gradle.internal.tasks.mlkit.GenerateMlModelClass;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.BundleTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
-import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.LegacyShrinkBundleModuleResourcesTask;
 import com.android.build.gradle.internal.transforms.ShrinkAppBundleResourcesTask;
@@ -231,6 +233,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
+import kotlin.Pair;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
@@ -1512,7 +1515,10 @@ public abstract class TaskManager<
         taskFactory.register(new JavaPreCompileTask.CreationAction(componentProperties));
 
         final TaskProvider<? extends JavaCompile> javacTask =
-                taskFactory.register(new JavaCompileCreationAction(componentProperties));
+                taskFactory.register(
+                        new JavaCompileCreationAction(
+                                componentProperties,
+                                project.getPluginManager().hasPlugin(KOTLIN_KAPT_PLUGIN_ID)));
 
         postJavacCreation(componentProperties);
 
@@ -1861,6 +1867,7 @@ public abstract class TaskManager<
                         allVariants.stream()
                                 .map(ComponentInfo::getProperties)
                                 .collect(Collectors.toList())));
+        taskFactory.register(new LintModelDependenciesWriterTask.CreationAction(variantProperties));
     }
 
     /** Returns the full path of a task given its name. */
@@ -2041,18 +2048,7 @@ public abstract class TaskManager<
         TaskProvider<DeviceProviderInstrumentTestTask> connectedTask =
                 taskFactory.register(
                         new DeviceProviderInstrumentTestTask.CreationAction(
-                                androidTestProperties,
-                                new ConnectedDeviceProvider(
-                                        globalScope
-                                                .getSdkComponents()
-                                                .flatMap(
-                                                        SdkComponentsBuildService
-                                                                ::getAdbExecutableProvider),
-                                        extension.getAdbOptions().getTimeOutInMs(),
-                                        new LoggerWrapper(logger)),
-                                DeviceProviderInstrumentTestTask.CreationAction.Type
-                                        .INTERNAL_CONNECTED_DEVICE_PROVIDER,
-                                testData));
+                                androidTestProperties, testData));
 
         taskFactory.configure(
                 CONNECTED_ANDROID_TEST,
@@ -2084,11 +2080,7 @@ public abstract class TaskManager<
             final TaskProvider<DeviceProviderInstrumentTestTask> providerTask =
                     taskFactory.register(
                             new DeviceProviderInstrumentTestTask.CreationAction(
-                                    androidTestProperties,
-                                    deviceProvider,
-                                    DeviceProviderInstrumentTestTask.CreationAction.Type
-                                            .CUSTOM_DEVICE_PROVIDER,
-                                    testData));
+                                    androidTestProperties, deviceProvider, testData));
 
             taskFactory.configure(
                     DEVICE_ANDROID_TEST,
@@ -2212,7 +2204,7 @@ public abstract class TaskManager<
         maybeCreateJavaCodeShrinkerTask(componentProperties);
         if (componentProperties.getVariantScope().getCodeShrinker() == CodeShrinker.R8) {
             maybeCreateResourcesShrinkerTasks(componentProperties);
-            maybeCreateDexDesugarLibTask(componentProperties, false);
+            maybeCreateDexDesugarLibTask(creationConfig, componentProperties, false);
             return;
         }
 
@@ -2236,7 +2228,8 @@ public abstract class TaskManager<
             taskFactory.register(new D8MainDexListTask.CreationAction(componentProperties, true));
         }
 
-        createDexTasks(componentProperties, dexingType, registeredExternalTransform);
+        createDexTasks(
+                creationConfig, componentProperties, dexingType, registeredExternalTransform);
 
         maybeCreateResourcesShrinkerTasks(componentProperties);
 
@@ -2303,6 +2296,7 @@ public abstract class TaskManager<
      * archives in order to enable incremental dexing support.
      */
     private void createDexTasks(
+            @NonNull ApkCreationConfig apkCreationConfig,
             @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull DexingType dexingType,
             boolean registeredExternalTransform) {
@@ -2345,7 +2339,8 @@ public abstract class TaskManager<
                         enableDexingArtifactTransform,
                         componentProperties));
 
-        maybeCreateDexDesugarLibTask(componentProperties, enableDexingArtifactTransform);
+        maybeCreateDexDesugarLibTask(
+                apkCreationConfig, componentProperties, enableDexingArtifactTransform);
 
         createDexMergingTasks(componentProperties, dexingType, enableDexingArtifactTransform);
     }
@@ -2966,13 +2961,11 @@ public abstract class TaskManager<
         for (String modulePath : modulePaths) {
             Provider<RegularFile> file =
                     artifactDirectory.file(getFeatureFileName(modulePath, null));
-            Map<Attribute<String>, String> attributeMap =
-                    ImmutableMap.of(MODULE_PATH, project.absoluteProjectPath(modulePath));
             publishArtifactToConfiguration(
                     configuration,
                     file,
                     AndroidArtifacts.ArtifactType.FEATURE_DEX,
-                    attributeMap);
+                    new AndroidAttributes(new Pair<>(MODULE_PATH, project.absoluteProjectPath(modulePath))));
         }
     }
 
@@ -3269,7 +3262,7 @@ public abstract class TaskManager<
             }
             project.getPluginManager()
                     .withPlugin(
-                            "org.jetbrains.kotlin.kapt",
+                            KOTLIN_KAPT_PLUGIN_ID,
                             appliedPlugin ->
                                     configureKotlinKaptTasksForDataBinding(project, version));
         }
@@ -3362,14 +3355,11 @@ public abstract class TaskManager<
                 dataBindingArtifactDir,
                 exportClassListFile,
                 componentProperties.getVariantType().isExportDataBindingClassList(),
-                false, // Set to false to replace the first registration done by JavaCompile earlier
                 kaptTaskProvider,
                 componentProperties.getArtifacts());
 
         // Register the DirectoryProperty / RegularFileProperty as outputs as they are not yet
         // annotated as outputs (same with the code in JavaCompileCreationAction.configure).
-        // Ideally we need to unset the corresponding properties from JavaCompile's outputs, but
-        // there's currently no way to do it.
         kaptTask.getOutputs()
                 .dir(dataBindingArtifactDir)
                 .withPropertyName("dataBindingArtifactDir");
@@ -3383,7 +3373,10 @@ public abstract class TaskManager<
     protected void configureTestData(
             @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull AbstractTestDataImpl testData) {
-        testData.setAnimationsDisabled(extension.getTestOptions().getAnimationsDisabled());
+        testData.setAnimationsDisabled(
+                componentProperties
+                        .getServices()
+                        .provider(extension.getTestOptions()::getAnimationsDisabled));
         testData.setExtraInstrumentationTestRunnerArgs(
                 componentProperties
                         .getServices()
@@ -3402,13 +3395,14 @@ public abstract class TaskManager<
     }
 
     private void maybeCreateDexDesugarLibTask(
+            @NonNull ApkCreationConfig apkCreationConfig,
             @NonNull ComponentPropertiesImpl componentProperties,
             boolean enableDexingArtifactTransform) {
         boolean separateFileDependenciesDexingTask =
                 componentProperties.getVariantScope().getJava8LangSupportType()
                                 == Java8LangSupport.D8
                         && enableDexingArtifactTransform;
-        if (componentProperties.getVariantScope().getNeedsShrinkDesugarLibrary()) {
+        if (apkCreationConfig.getShouldPackageDesugarLibDex()) {
             taskFactory.register(
                     new L8DexDesugarLibTask.CreationAction(
                             componentProperties,

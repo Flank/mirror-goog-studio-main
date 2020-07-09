@@ -15,11 +15,9 @@
  */
 package com.android.tools.deployer;
 
-import com.android.ddmlib.internal.Debugger;
 import com.android.tools.deploy.proto.Deploy;
 import com.google.common.collect.Lists;
 import com.sun.jdi.ArrayReference;
-import com.sun.jdi.Bootstrap;
 import com.sun.jdi.ClassType;
 import com.sun.jdi.Field;
 import com.sun.jdi.Method;
@@ -27,12 +25,6 @@ import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ReferenceType;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.VirtualMachine;
-import com.sun.jdi.VirtualMachineManager;
-import com.sun.jdi.connect.AttachingConnector;
-import com.sun.jdi.connect.Connector;
-import com.sun.jdi.connect.IllegalConnectorArgumentsException;
-import com.sun.tools.jdi.SocketAttachingConnector;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,9 +35,6 @@ import java.util.concurrent.TimeUnit;
  * redefinition API by using JDWP's RedefineClasses command.
  */
 public class JdiBasedClassRedefiner implements ClassRedefiner {
-
-    private static final long DEBUGGER_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
-
     private static final String AGENT_LOC_FORMAT =
             "/data/data/%s/code_cache/.studio/%s.so=irsocket";
 
@@ -54,37 +43,6 @@ public class JdiBasedClassRedefiner implements ClassRedefiner {
 
     private final VirtualMachine vm;
     private final RedefineClassSupportState redefineSupportState;
-
-    /**
-     * Attach the debugger to a virtual machine.
-     *
-     * @param hostname Host name of the host that has the targetted device attached.
-     * @param portNumber This is the port number of the socket on the host that the debugger should
-     *     attach to. Generally, it should be the host port where ADB forwards to the device's JDWP
-     *     port number. This can also be the port number that the {@link
-     *     Debugger} is listening to.
-     * @return JDI Virtual Machine representation of the debugger or null if connection was not
-     *     successful.
-     */
-    static VirtualMachine attach(String hostname, int portNumber)
-            throws IOException, IllegalConnectorArgumentsException {
-        VirtualMachineManager manager = Bootstrap.virtualMachineManager();
-        for (AttachingConnector connector : manager.attachingConnectors()) {
-            if (connector instanceof SocketAttachingConnector) {
-                HashMap<String, Connector.Argument> args =
-                        new HashMap(connector.defaultArguments());
-                args.get("timeout").setValue(String.valueOf(DEBUGGER_TIMEOUT_MS));
-                args.get("hostname").setValue(hostname);
-                args.get("port").setValue("" + portNumber);
-                return connector.attach(args);
-            }
-        }
-        return null;
-    }
-
-    public JdiBasedClassRedefiner(VirtualMachine vm) {
-        this(vm, new RedefineClassSupportState(RedefineClassSupport.FULL, null));
-    }
 
     public JdiBasedClassRedefiner(
             VirtualMachine vm, RedefineClassSupportState redefineSupportState) {
@@ -97,7 +55,7 @@ public class JdiBasedClassRedefiner implements ClassRedefiner {
         Map<ReferenceType, byte[]> redefinitionRequest = new HashMap<>();
 
         for (Deploy.ClassDef redefinition : request.getModifiedClassesList()) {
-            List<ReferenceType> classes = getReferenceTypeByName(redefinition.getName());
+            List<ReferenceType> classes = vm.classesByName(redefinition.getName());
             for (ReferenceType classRef : classes) {
                 redefinitionRequest.put(classRef, redefinition.getDex().toByteArray());
             }
@@ -192,7 +150,7 @@ public class JdiBasedClassRedefiner implements ClassRedefiner {
         Map<ReferenceType, byte[]> redefinitionRequest = new HashMap<>();
 
         for (Deploy.ClassDef redefinition : request.getModifiedClassesList()) {
-            List<ReferenceType> classes = getReferenceTypeByName(redefinition.getName());
+            List<ReferenceType> classes = vm.classesByName(redefinition.getName());
             for (ReferenceType classRef : classes) {
                 redefinitionRequest.put(classRef, redefinition.getDex().toByteArray());
             }
@@ -212,34 +170,10 @@ public class JdiBasedClassRedefiner implements ClassRedefiner {
         return redefineSupportState;
     }
 
-    List<ReferenceType> getReferenceTypeByName(String name) {
-        return vm.classesByName(name);
-    }
-
-    boolean hasRedefineClassesCapabilities() {
-        return vm.canRedefineClasses();
-    }
-
     private static String getAgentName(Deploy.Arch appArch, boolean deviceIs64Bit) {
-        switch (appArch) {
-            case ARCH_32_BIT:
-                if (deviceIs64Bit) {
-                    return "agent-alt";
-                } else {
-                    return "agent";
-                }
-            case ARCH_64_BIT:
-                if (deviceIs64Bit) {
-                    return "agent";
-                } else {
-                    // A 64-bit application can't be running on a 32-bit phone, but maybe our ABI
-                    // detection was wrong. Try to attach and report any error via the
-                    // attachAgentException() handler.
-                    return "agent";
-                }
-            default:
-                // If the ABI is unrecognizeable, just try to attach the regular agent.
-                return "agent";
+        if (appArch == Deploy.Arch.ARCH_32_BIT && deviceIs64Bit) {
+            return "agent-alt";
         }
+        return "agent";
     }
 }

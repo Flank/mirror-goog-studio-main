@@ -37,13 +37,13 @@ import com.android.build.gradle.internal.dependency.FilterShrinkerRulesTransform
 import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.IdentityTransform
 import com.android.build.gradle.internal.dependency.JetifyTransform
-import com.android.build.gradle.internal.dependency.LibraryDependencySourcesTransform
+import com.android.build.gradle.internal.dependency.LibraryDependencyAnalyzerAarTransform
+import com.android.build.gradle.internal.dependency.LibraryDependencyAnalyzerJarTransform
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform
 import com.android.build.gradle.internal.dependency.MockableJarTransform
 import com.android.build.gradle.internal.dependency.ModelArtifactCompatibilityRule.Companion.setUp
 import com.android.build.gradle.internal.dependency.PlatformAttrTransform
 import com.android.build.gradle.internal.dependency.VersionedCodeShrinker.Companion.of
-import com.android.build.gradle.internal.dependency.getDesugarLibConfigurations
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfigurations
 import com.android.build.gradle.internal.dependency.registerDexingOutputSplitTransform
 import com.android.build.gradle.internal.dsl.BaseFlavor
@@ -57,6 +57,7 @@ import com.android.build.gradle.internal.res.namespaced.AutoNamespaceTransform
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.internal.variant.VariantInputModel
 import com.android.build.gradle.options.BooleanOption
@@ -151,7 +152,7 @@ class DependencyConfigurator(
         } else {
             dependencies.registerTransform(
                 IdentityTransform::class.java
-            ) { spec: TransformSpec<GenericTransformParameters> ->
+            ) { spec: TransformSpec<IdentityTransform.Parameters> ->
                 spec.parameters.projectName.set(projectName)
                 spec.from.attribute(
                     ArtifactAttributes.ARTIFACT_FORMAT,
@@ -164,7 +165,7 @@ class DependencyConfigurator(
             }
             dependencies.registerTransform(
                 IdentityTransform::class.java
-            ) { spec: TransformSpec<GenericTransformParameters> ->
+            ) { spec: TransformSpec<IdentityTransform.Parameters> ->
                 spec.parameters.projectName.set(projectName)
                 spec.from.attribute(
                     ArtifactAttributes.ARTIFACT_FORMAT,
@@ -421,7 +422,9 @@ class DependencyConfigurator(
             AndroidArtifacts.ArtifactType.CLASSES_JAR.type,
             AndroidArtifacts.ArtifactType.JAVA_RES.type
         )) {
-            dependencies.registerTransform(IdentityTransform::class.java) { spec: TransformSpec<GenericTransformParameters?> ->
+            dependencies.registerTransform(
+                IdentityTransform::class.java
+            ) { spec: TransformSpec<IdentityTransform.Parameters> ->
                 spec.from.attribute(
                     ArtifactAttributes.ARTIFACT_FORMAT,
                     AndroidArtifacts.ArtifactType.PROCESSED_JAR.type
@@ -446,41 +449,52 @@ class DependencyConfigurator(
             }
         }
 
-        // When consuming classes from Android libraries, there are 2 transforms:
-        //     1. `android-classes-directory` -> `android-classes`
-        //     2. `android-classes-jar` -> `android-classes`
-        // Currently Gradle always takes transform flow #1, which is ideal for incremental dexing.
-        // (We don't know why Gradle does that, but IncrementalDesugaringTest should catch it if
-        // this behavior changes.)
+        // From an Android library subproject, there are 2 transform flows to CLASSES:
+        //     1. CLASSES_DIR -> CLASSES
+        //     2. CLASSES_JAR -> CLASSES
+        // From a Java library subproject, there are also 2 transform flows to CLASSES:
+        //     1. JVM_CLASS_DIRECTORY -> CLASSES
+        //     2. JAR -> PROCESSED_JAR -> `CLASSES_JAR -> CLASSES
         dependencies.registerTransform(
-            ClassesDirToClassesTransform::class.java,
-            Action { spec: TransformSpec<GenericTransformParameters?> ->
-                spec.from
-                    .attribute(
-                        ArtifactAttributes.ARTIFACT_FORMAT,
-                        AndroidArtifacts.ArtifactType.CLASSES_DIR.type
-                    )
-                spec.to.attribute(
-                    ArtifactAttributes.ARTIFACT_FORMAT,
-                    AndroidArtifacts.ArtifactType.CLASSES.type
-                )
-            }
-        )
+            ClassesDirToClassesTransform::class.java
+        ) { spec: TransformSpec<GenericTransformParameters> ->
+            spec.from.attribute(
+                ArtifactAttributes.ARTIFACT_FORMAT,
+                AndroidArtifacts.ArtifactType.CLASSES_DIR.type
+            )
+            spec.to.attribute(
+                ArtifactAttributes.ARTIFACT_FORMAT,
+                AndroidArtifacts.ArtifactType.CLASSES.type
+            )
+        }
         dependencies.registerTransform(
-            IdentityTransform::class.java,
-            Action { spec: TransformSpec<GenericTransformParameters?> ->
-                spec.from.attribute(
-                    ArtifactAttributes.ARTIFACT_FORMAT,
-                    AndroidArtifacts.ArtifactType.CLASSES_JAR.type
-                )
-                spec.to.attribute(
-                    ArtifactAttributes.ARTIFACT_FORMAT,
-                    AndroidArtifacts.ArtifactType.CLASSES.type
-                )
-            }
-        )
+            IdentityTransform::class.java
+        ) { spec: TransformSpec<IdentityTransform.Parameters> ->
+            spec.from.attribute(
+                ArtifactAttributes.ARTIFACT_FORMAT,
+                AndroidArtifacts.ArtifactType.CLASSES_JAR.type
+            )
+            spec.to.attribute(
+                ArtifactAttributes.ARTIFACT_FORMAT,
+                AndroidArtifacts.ArtifactType.CLASSES.type
+            )
+        }
         dependencies.registerTransform(
-                LibraryDependencySourcesTransform::class.java,
+            IdentityTransform::class.java
+        ) { spec: TransformSpec<IdentityTransform.Parameters> ->
+            spec.parameters.acceptNonExistentInputFile.setDisallowChanges(true)
+            spec.from.attribute(
+                ArtifactAttributes.ARTIFACT_FORMAT,
+                ArtifactTypeDefinition.JVM_CLASS_DIRECTORY
+            )
+            spec.to.attribute(
+                ArtifactAttributes.ARTIFACT_FORMAT,
+                AndroidArtifacts.ArtifactType.CLASSES.type
+            )
+        }
+
+        dependencies.registerTransform(
+                LibraryDependencyAnalyzerAarTransform::class.java,
                 Action { spec: TransformSpec<GenericTransformParameters> ->
                     spec.parameters.projectName.set(projectName)
                     spec.from.attribute(
@@ -493,25 +507,20 @@ class DependencyConfigurator(
                     )
                 }
         )
-
-
-        // When consuming classes from Java libraries, there are 2 transforms:
-        //     1. `java-classes-directory` -> `android-classes`
-        //     2. `jar` -> `processed-jar` -> `android-classes-jar` -> `android-classes`
-        // Currently Gradle always takes transform flow #2, which is not ideal for incremental
-        // dexing.
-        // TODO(147137579): Configure Gradle to take transform flow #1.
-        dependencies.registerTransform(IdentityTransform::class.java) { spec: TransformSpec<GenericTransformParameters?> ->
-            spec.from
-                .attribute(
-                    ArtifactAttributes.ARTIFACT_FORMAT,
-                    ArtifactTypeDefinition.JVM_CLASS_DIRECTORY
-                )
-            spec.to.attribute(
-                ArtifactAttributes.ARTIFACT_FORMAT,
-                AndroidArtifacts.ArtifactType.CLASSES.type
-            )
-        }
+        dependencies.registerTransform(
+                LibraryDependencyAnalyzerJarTransform::class.java,
+                Action {spec : TransformSpec<GenericTransformParameters> ->
+                    spec.parameters.projectName.set(projectName)
+                    spec.from.attribute(
+                            ArtifactAttributes.ARTIFACT_FORMAT,
+                            AndroidArtifacts.ArtifactType.CLASSES.type
+                    )
+                    spec.to.attribute(
+                            ArtifactAttributes.ARTIFACT_FORMAT,
+                            AndroidArtifacts.ArtifactType.JAR_CLASS_LIST.type
+                    )
+                }
+        )
 
         val schema = dependencies.attributesSchema
         // custom strategy for build-type and product-flavor.
@@ -686,9 +695,6 @@ class DependencyConfigurator(
             }
         }
 
-        for (configuration in getDesugarLibConfigurations(allComponents)) {
-            configuration.registerTransform(dependencies)
-        }
         registerDexingOutputSplitTransform(dependencies)
 
         return this

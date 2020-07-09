@@ -17,9 +17,13 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariant
+import com.android.build.api.component.analytics.AnalyticsEnabledVariant
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
 open class DynamicFeatureVariantImpl @Inject constructor(
@@ -31,4 +35,15 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     variantConfiguration,
     variantApiServices
 ), DynamicFeatureVariant<DynamicFeatureVariantPropertiesImpl> {
+    override fun createUserVisibleVariantObject(
+        projectServices: ProjectServices,
+        stats: GradleBuildVariant.Builder
+    ): AnalyticsEnabledVariant<in DynamicFeatureVariantPropertiesImpl> =
+        projectServices.objectFactory.newInstance(
+            AnalyticsEnabledDynamicFeatureVariant::class.java,
+            this,
+            stats
+        ) as AnalyticsEnabledVariant<in DynamicFeatureVariantPropertiesImpl>
+
+
 }

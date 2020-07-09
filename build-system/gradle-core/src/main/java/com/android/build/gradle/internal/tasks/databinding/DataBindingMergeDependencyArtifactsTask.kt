@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.DataBindingBuilder
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -25,6 +26,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
@@ -32,8 +34,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.io.Serializable
-import javax.inject.Inject
 
 /**
  * Merges BR and Adapter artifacts from dependencies and serves it back to the annotation processor.
@@ -65,15 +65,11 @@ abstract class DataBindingMergeDependencyArtifactsTask : NonIncrementalTask() {
     abstract val outFolder: DirectoryProperty
 
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                MergeArtifactsRunnable::class.java,
-                MergeArtifactsParams(
-                    outFolder = outFolder.get().asFile,
-                    compileTimeDependencies = compileTimeDependencies.asFileTree.files,
-                    runtimeDependencies = runtimeDependencies.asFileTree.files
-                )
-            )
+        workerExecutor.noIsolation().submit(MergeArtifactsRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.outFolder.set(outFolder)
+            it.compileTimeDependencies.set(compileTimeDependencies.asFileTree.files)
+            it.runtimeDependencies.set(runtimeDependencies.asFileTree.files)
         }
     }
 
@@ -117,34 +113,33 @@ abstract class DataBindingMergeDependencyArtifactsTask : NonIncrementalTask() {
     }
 }
 
-data class MergeArtifactsParams(
-    val outFolder: File,
-    val compileTimeDependencies: Set<File>,
-    val runtimeDependencies: Set<File>
-) : Serializable
+abstract class MergeArtifactsParams: ProfileAwareWorkAction.Parameters() {
+    abstract val outFolder: DirectoryProperty
+    abstract val compileTimeDependencies: SetProperty<File>
+    abstract val runtimeDependencies: SetProperty<File>
+}
 
-class MergeArtifactsRunnable @Inject constructor(
-    val params: MergeArtifactsParams
-) : Runnable {
+abstract class MergeArtifactsRunnable: ProfileAwareWorkAction<MergeArtifactsParams>() {
     override fun run() {
-        params.run {
-            FileUtils.cleanOutputDir(outFolder)
+        parameters.run {
+            val outputFolder = outFolder.get().asFile
+            FileUtils.cleanOutputDir(outputFolder)
 
-            compileTimeDependencies.filter { file ->
+            compileTimeDependencies.get().filter { file ->
                 DataBindingBuilder.RESOURCE_FILE_EXTENSIONS.any { ext ->
                     file.name.endsWith(ext)
                 }
             }.forEach {
-                FileUtils.copyFile(it, File(outFolder, it.name))
+                FileUtils.copyFile(it, File(outputFolder, it.name))
             }
             // feature's base dependency does not show up in Runtime so we copy everything from
             // compile and add runtimeDeps on top of it. We still override files because compile
             // dependency may reference to an older version of the BR file in non-feature
             // compilation.
-            runtimeDependencies.filter {
+            runtimeDependencies.get().filter {
                 it.name.endsWith(DataBindingBuilder.BR_FILE_EXT)
             }.forEach {
-                FileUtils.copyFile(it, File(outFolder, it.name))
+                FileUtils.copyFile(it, File(outputFolder, it.name))
             }
         }
     }

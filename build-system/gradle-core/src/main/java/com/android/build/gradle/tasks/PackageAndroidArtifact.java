@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.dependency.AndroidAttributes;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -53,7 +54,6 @@ import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.NewIncrementalTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.build.gradle.internal.utils.DesugarLibUtils;
 import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters;
 import com.android.build.gradle.internal.workeractions.WorkActionAdapter;
 import com.android.build.gradle.options.BooleanOption;
@@ -109,6 +109,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 import javax.inject.Inject;
+import kotlin.Pair;
 import kotlin.jvm.functions.Function3;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
@@ -451,7 +452,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             parameter.getIsDebuggableBuild().set(getDebugBuild().get());
             parameter.getIsJniDebuggableBuild().set(getJniDebugBuild());
-            parameter.getTargetApi().set(getTargetApi());
             parameter.getDependencyDataFile().set(getDependencyDataFile());
             parameter
                     .getPackagerMode()
@@ -574,9 +574,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @NonNull
         public abstract Property<Boolean> getIsJniDebuggableBuild();
 
-        @Optional
-        public abstract Property<Integer> getTargetApi();
-
         @NonNull
         public abstract Property<IncrementalPackagerBuilder.BuildType> getPackagerMode();
 
@@ -686,7 +683,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .withSigning(
                                 params.getSigningConfig().get().resolve(),
                                 params.getMinSdkVersion().get(),
-                                params.getTargetApi().getOrNull(),
                                 dependencyData)
                         .withCreatedBy(params.getCreatedBy().get())
                         // TODO: allow extra metadata to be saved in the split scope to avoid
@@ -1132,7 +1128,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             PROJECT,
                             AndroidArtifacts.ArtifactType.FEATURE_DEX,
-                            ImmutableMap.of(MODULE_PATH, projectPath));
+                            new AndroidAttributes(new Pair<>(MODULE_PATH, projectPath)));
         }
 
         @NonNull
@@ -1155,16 +1151,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             if (!creationConfig.getShouldPackageDesugarLibDex()) {
                 return creationConfig.getServices().fileCollection();
             }
-            if (creationConfig.getVariantScope().getNeedsShrinkDesugarLibrary()) {
-                return creationConfig
-                        .getServices()
-                        .fileCollection(
-                                creationConfig
-                                        .getArtifacts()
-                                        .get(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE));
-            } else {
-                return DesugarLibUtils.getDesugarLibDexFromTransform(creationConfig);
-            }
+            return creationConfig
+                    .getServices()
+                    .fileCollection(
+                            creationConfig
+                                    .getArtifacts()
+                                    .get(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE));
         }
     }
 }
