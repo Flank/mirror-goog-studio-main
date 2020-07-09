@@ -52,11 +52,11 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
     override val incremental: Boolean = true
 
     override fun doFullTaskAction() {
-        createDelegate().doFullRun(getWorkerFacadeWithWorkers())
+        createDelegate().doFullRun(workerExecutor, this)
     }
 
     override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
-        createDelegate().doIncrementalRun(getWorkerFacadeWithWorkers(), changedInputs)
+        createDelegate().doIncrementalRun(workerExecutor, changedInputs, this)
     }
 
     class CreationAction(
