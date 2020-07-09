@@ -21,6 +21,7 @@ import com.android.build.api.component.impl.UnitTestPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.dsl.TestOptions
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
@@ -35,6 +36,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -76,27 +78,24 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
     val outputDirectory: DirectoryProperty = objectFactory.directoryProperty()
 
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                GenerateTestConfigRunnable::class.java,
-                GenerateTestConfigParams(testConfigInputs.computeProperties(projectDir.get().asFile),
-                    outputDirectory.get().asFile)
-            )
+        workerExecutor.noIsolation().submit(GenerateTestConfigRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.testConfigProperties.set(testConfigInputs.computeProperties(projectDir.get().asFile))
+            it.outputDirectory.set(outputDirectory)
         }
     }
 
-    private class GenerateTestConfigRunnable
-    @Inject internal constructor(private val params: GenerateTestConfigParams) : Runnable {
-
+    abstract class GenerateTestConfigRunnable : ProfileAwareWorkAction<GenerateTestConfigParams>() {
         override fun run() {
-            generateTestConfigFile(params.testConfigProperties, params.outputDirectory.toPath())
+            generateTestConfigFile(parameters.testConfigProperties.get(),
+                parameters.outputDirectory.get().asFile.toPath())
         }
     }
 
-    private class GenerateTestConfigParams internal constructor(
-        val testConfigProperties: TestConfigProperties,
-        val outputDirectory: File
-    ) : Serializable
+    abstract class GenerateTestConfigParams : ProfileAwareWorkAction.Parameters() {
+        abstract val testConfigProperties: Property<TestConfigProperties>
+        abstract val outputDirectory: DirectoryProperty
+    }
 
     class CreationAction(private val unitTestProperties: UnitTestPropertiesImpl) :
         VariantTaskCreationAction<GenerateTestConfig, ComponentPropertiesImpl>(
