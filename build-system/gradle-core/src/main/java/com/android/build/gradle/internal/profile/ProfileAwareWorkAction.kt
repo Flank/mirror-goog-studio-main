@@ -41,6 +41,15 @@ abstract class ProfileAwareWorkAction<T : ProfileAwareWorkAction.Parameters> : W
                 ?.getTaskRecord(taskOwnerString)
                 ?.addWorker(workerKeyString, GradleBuildProfileSpan.ExecutionType.WORKER_EXECUTION)
         }
+        fun initializeFromProfileAwareWorkAction(workAction: Parameters) {
+            projectName.setDisallowChanges(workAction.projectName.get())
+            taskOwner.setDisallowChanges(workAction.taskOwner.get())
+            val workerKeyString = "${workAction.workerKey.get()}${this.hashCode()}"
+            workerKey.setDisallowChanges(workerKeyString)
+            ProfilerInitializer.getListener()
+                ?.getTaskRecord(workAction.taskOwner.get())
+                ?.addWorker(workerKeyString, GradleBuildProfileSpan.ExecutionType.WORKER_EXECUTION)
+        }
     }
 
     final override fun execute() {
