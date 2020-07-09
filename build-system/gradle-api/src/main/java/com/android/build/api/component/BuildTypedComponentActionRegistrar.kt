@@ -21,12 +21,12 @@ import org.gradle.api.Incubating
 
 /**
  * Allows registering Actions on [ComponentT], with the ability to include
- * filters to target sub sets of [ComponentT].
+ * filters to target subsets of [ComponentT].
  *
  * This registrar is already filtered on build type and therefore only offers flavors of
  * [ComponentIdentity] as a filter.
  *
- * Calls can be chained to include more than one filters, though in some cases, selecting a
+ * Calls can be chained to include more than one filter, though in some cases, selecting a
  * particular filter can reduce the list of available filters in the chain.
  */
 @Incubating
@@ -35,7 +35,7 @@ interface BuildTypedComponentActionRegistrar<ComponentT>
     /**
      * Filters [ComponentT] instances with a flavor
      *
-     * @param flavorToDimension the flavor name to flavor dimension
+     * @param flavorToDimension The flavor name to flavor dimension.
      * @param action [Action] to perform on each filtered variant.
      */
     fun withFlavor(flavorToDimension: Pair<String, String>, action: Action<ComponentT>)
@@ -43,7 +43,7 @@ interface BuildTypedComponentActionRegistrar<ComponentT>
     /**
      * Filters [ComponentT] instances with a flavor
      *
-     * @param flavorToDimension the flavor name to flavor dimension
+     * @param flavorToDimension The flavor name to flavor dimension.
      * @param action [Action] to perform on each filtered variant.
      */
     fun withFlavor(flavorToDimension: Pair<String, String>, action: ComponentT.() -> Unit)
@@ -52,7 +52,7 @@ interface BuildTypedComponentActionRegistrar<ComponentT>
      * Filters [ComponentT] instances with a flavor, and return the same filter instance for further product
      * flavor filtering.
      *
-     * @param flavorToDimension the flavor name to flavor dimension
+     * @param flavorToDimension The flavor name to flavor dimension.
      * @param action [Action] to perform on each filtered variant.
      */
     fun withFlavor(flavorToDimension: Pair<String, String>): BuildTypedComponentActionRegistrar<ComponentT>

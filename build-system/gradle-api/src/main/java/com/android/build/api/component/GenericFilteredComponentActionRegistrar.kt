@@ -23,9 +23,9 @@ import org.gradle.api.Incubating
  * Allows registering Actions on [ComponentT], with the ability to include
  * filters to target sub sets of [ComponentT].
  *
- * The filters acts on the properties of [ComponentIdentity], and on the type of [ComponentT]
+ * The filter acts on the properties of [ComponentIdentity], and on the type of [ComponentT].
  *
- * Calls can be chained to include more than one filters, though in some cases, selecting a
+ * Calls can be chained to include more than one filter, though in some cases selecting a
  * particular filter can reduce the list of available filters in the chain.
  *
  * This extends [FilteredComponentActionRegistrar] to allow filtering per type.

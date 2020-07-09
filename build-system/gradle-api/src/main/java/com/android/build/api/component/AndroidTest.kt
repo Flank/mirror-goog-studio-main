@@ -19,7 +19,7 @@ package com.android.build.api.component
 import org.gradle.api.Incubating
 
 /**
- * Variant of the android test artifact
+ * Variant of the android test artifact.
  */
 @Incubating
 interface AndroidTest<PropertiesT: AndroidTestProperties> : TestComponent<PropertiesT> {

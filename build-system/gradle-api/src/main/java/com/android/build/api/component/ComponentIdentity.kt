@@ -22,19 +22,19 @@ import org.gradle.api.Named
 /**
  * Variant Configuration represents the identify of a variant
  *
- * This is computed from the list of build type and flavors.
+ * This is computed from the list of build types and flavors.
  */
 @Incubating
 interface ComponentIdentity: Named {
     /**
-     * Build Type name, might be replaced with access to locked DSL object once ready
+     * Build type name, might be replaced with access to locked DSL object once ready.
      */
     val buildType: String?
 
     /**
-     * List of flavor names, might be replaced with access to locked DSL objects once ready
+     * List of flavor names, might be replaced with access to locked DSL objects once ready.
      *
-     * The order is properly sorted based on the associated dimension order
+     * The order is properly sorted based on the associated dimension order.
      */
     val productFlavors: List<Pair<String, String>>
 
@@ -43,7 +43,7 @@ interface ComponentIdentity: Named {
      *
      * This does not include the build type. If no flavors are present, this is an empty string.
      *
-     * The full name of the variant is queried via [getName]
+     * The full name of the variant is queried via [getName].
      */
     val flavorName: String
 }

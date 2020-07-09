@@ -26,7 +26,7 @@ import org.gradle.api.Named
  * [org.gradle.api.artifacts.Configuration] object, where each represents a different flavor
  * dimension.
  *
- * The key should be created with `Attribute.of(dimensionName, ProductFlavorAttr.class)`
+ * The key should be created with `Attribute.of(dimensionName, ProductFlavorAttr.class)`.
  *
  */
 interface ProductFlavorAttr : Named

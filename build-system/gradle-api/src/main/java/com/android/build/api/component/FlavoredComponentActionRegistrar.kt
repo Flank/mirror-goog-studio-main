@@ -21,11 +21,11 @@ import org.gradle.api.Incubating
 
 /**
  * Allows registering Actions on [ComponentT], with the ability to include
- * filters to target sub sets of [ComponentT].
+ * filters to target subsets of [ComponentT].
  *
  * This registrar only offers product flavors and build type of [ComponentIdentity] as filters.
  *
- * Calls can be chained to include more than one filters, though in some cases, selecting a
+ * Calls can be chained to include more than one filter, though in some cases selecting a
  * particular filter can reduce the list of available filters in the chain.
  */
 @Incubating
@@ -36,8 +36,8 @@ interface FlavoredComponentActionRegistrar<ComponentT> :
     /**
      * Filters [ComponentT] instances using a build type reference.
      *
-     * @param buildType to filter [ComponentT] on
-     * @return an instance of [BuildTypedComponentActionRegistrar] to further filter variants.
+     * @param buildType to filter [ComponentT] on.
+     * @return An instance of [BuildTypedComponentActionRegistrar] to further filter variants.
      */
     fun withBuildType(buildType: String): BuildTypedComponentActionRegistrar<ComponentT>
 
@@ -50,8 +50,8 @@ interface FlavoredComponentActionRegistrar<ComponentT> :
      * Filters [ComponentT] instances using a build type reference and run a lambda of all the filtered
      * instances.
      *
-     * @param buildType to filter [ComponentT] on
-     * @param action lambda function to run on filtered [ComponentT]
+     * @param buildType Build type to filter [ComponentT] on.
+     * @param action Lambda function to run on filtered [ComponentT].
      */
     fun withBuildType(buildType: String, action: ComponentT.() -> Unit)
 }
