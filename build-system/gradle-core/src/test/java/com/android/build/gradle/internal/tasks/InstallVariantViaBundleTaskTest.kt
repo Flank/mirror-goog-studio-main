@@ -18,16 +18,18 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.builder.testing.api.DeviceConnector
 import com.android.builder.testing.api.DeviceProvider
-import com.android.bundle.Devices
-import com.android.tools.build.bundletool.commands.ExtractApksCommand
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableSet
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
+import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.mockito.ArgumentMatchers
 import org.mockito.Mock
-import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.verify
@@ -39,29 +41,50 @@ import java.nio.file.Path
 
 class InstallVariantViaBundleTaskTest {
 
+    @JvmField
+    @Rule
+    var tmp = TemporaryFolder()
+
     @Mock
     private lateinit var deviceConnector: DeviceConnector
+
+    private lateinit var params: InstallVariantViaBundleTask.Params
 
     @Before
     @Throws(Exception::class)
     fun setUpMocks() {
         MockitoAnnotations.initMocks(this)
-        `when`<Int>(deviceConnector.apiLevel).thenReturn(21)
-        `when`<String>(deviceConnector.name).thenReturn("fake_device")
+        `when`(deviceConnector.apiLevel).thenReturn(21)
+        `when`(deviceConnector.name).thenReturn("fake_device")
+        val project = ProjectBuilder.builder().withProjectDir(tmp.newFolder()).build()
+        params = object : InstallVariantViaBundleTask.Params() {
+            override val adbExe: RegularFileProperty
+                get() = project.objects.fileProperty().fileValue(File("adb.exe"))
+            override val apkBundle: RegularFileProperty
+                get() = project.objects.fileProperty().fileValue(File("bundle.aab"))
+            override val timeOutInMs: Property<Int>
+                get() = project.objects.property(Int::class.java).value(0)
+            override val installOptions: ListProperty<String>
+                get() = project.objects.listProperty(String::class.java)
+            override val variantName: Property<String>
+                get() = project.objects.property(String::class.java).value("variantName")
+            override val minApiCodeName: Property<String?>
+                get() = project.objects.property(String::class.java)
+            override val minSdkVersion: Property<Int>
+                get() = project.objects.property(Int::class.java).value(21)
+            override val projectName: Property<String>
+                get() = project.objects.property(String::class.java).value("projectName")
+            override val taskOwner: Property<String>
+                get() = project.objects.property(String::class.java).value("taskOwner")
+            override val workerKey: Property<String>
+                get() = project.objects.property(String::class.java).value("workerKey")
+
+        }
+
     }
 
     @Test
     fun installSingle() {
-        val params = InstallVariantViaBundleTask.Params(
-            File("adb.exe"),
-            File("bundle.aab"),
-            0,
-            listOf(),
-            "projectName",
-            "variantName",
-            null,
-            21
-        )
 
         val outputPath = Files.createTempFile(
             "extract-apk",
@@ -72,10 +95,10 @@ class InstallVariantViaBundleTaskTest {
 
         runnable.run()
 
-        verify<DeviceConnector>(deviceConnector, atLeastOnce()).name
-        verify<DeviceConnector>(deviceConnector, atLeastOnce()).apiLevel
+        verify(deviceConnector, atLeastOnce()).name
+        verify(deviceConnector, atLeastOnce()).apiLevel
 
-        verify<DeviceConnector>(deviceConnector).installPackage(
+        verify(deviceConnector).installPackage(
             ArgumentMatchers.eq(outputPath.toFile()),
             ArgumentMatchers.any(),
             ArgumentMatchers.anyInt(),
@@ -86,16 +109,6 @@ class InstallVariantViaBundleTaskTest {
 
     @Test
     fun installMultiple() {
-        val params = InstallVariantViaBundleTask.Params(
-            File("adb.exe"),
-            File("bundle.aab"),
-            0,
-            listOf(),
-            "projectName",
-            "variantName",
-            null,
-            21
-        )
 
         val outputPath = Files.createTempFile(
             "extract-apk",
@@ -110,10 +123,10 @@ class InstallVariantViaBundleTaskTest {
 
         runnable.run()
 
-        verify<DeviceConnector>(deviceConnector, atLeastOnce()).name
-        verify<DeviceConnector>(deviceConnector, atLeastOnce()).apiLevel
+        verify(deviceConnector, atLeastOnce()).name
+        verify(deviceConnector, atLeastOnce()).apiLevel
 
-        verify<DeviceConnector>(deviceConnector).installPackages(
+        verify(deviceConnector).installPackages(
             ArgumentMatchers.eq(listOf(outputPath.toFile(), outputPath2.toFile())),
             ArgumentMatchers.any(),
             ArgumentMatchers.anyInt(),
@@ -123,16 +136,20 @@ class InstallVariantViaBundleTaskTest {
     }
 
     private class TestInstallRunnable(
-        params: InstallVariantViaBundleTask.Params,
+        val params: InstallVariantViaBundleTask.Params,
         private val deviceConnector: DeviceConnector,
         private vararg val outputPaths: Path
-    ) : InstallVariantViaBundleTask.InstallRunnable(params) {
+    ) : InstallVariantViaBundleTask.InstallRunnable() {
 
         override fun createDeviceProvider(iLogger: ILogger): DeviceProvider =
             InstallVariantTaskTest.FakeDeviceProvider(ImmutableList.of(deviceConnector))
 
         override fun getApkFiles(device: DeviceConnector): List<Path> {
             return ImmutableList.copyOf(outputPaths)
+        }
+
+        override fun getParameters(): InstallVariantViaBundleTask.Params {
+            return params
         }
     }
 }
