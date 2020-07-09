@@ -18,8 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import org.gradle.api.DefaultTask
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
@@ -47,9 +45,9 @@ abstract class BaseTask : DefaultTask() {
      */
     protected inline fun recordTaskAction(crossinline block: () -> Unit) {
         Blocks.recordSpan<Unit, Exception>(
-            projectName,
-            path,
-            GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_ALL_PHASES
+                projectName,
+                path,
+                GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_ALL_PHASES
         ) { block() }
     }
 }

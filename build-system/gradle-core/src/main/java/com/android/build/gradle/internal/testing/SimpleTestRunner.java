@@ -78,7 +78,7 @@ public class SimpleTestRunner extends BaseTestRunner {
                             installOptions,
                             logger,
                             result);
-            executor.submit(SimpleTestRunnable.class, simpleTestParams);
+            executor.submit(new SimpleTestRunnable(simpleTestParams));
         }
         return results;
     }

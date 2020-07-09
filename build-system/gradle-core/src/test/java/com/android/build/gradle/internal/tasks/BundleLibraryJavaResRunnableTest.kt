@@ -20,11 +20,7 @@ import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
-import com.android.ide.common.workers.ExecutorServiceAdapter
-import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.testutils.truth.ZipFileSubject.assertThat
-import com.google.common.util.concurrent.MoreExecutors
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -36,12 +32,6 @@ class BundleLibraryJavaResRunnableTest {
     @JvmField
     @Rule
     val tmp = TemporaryFolder()
-    lateinit var workers: WorkerExecutorFacade
-
-    @Before
-    fun setUp() {
-        workers = ExecutorServiceAdapter("test", ":test", MoreExecutors.newDirectExecutorService())
-    }
 
     @Test
     fun testResourcesCopied() {

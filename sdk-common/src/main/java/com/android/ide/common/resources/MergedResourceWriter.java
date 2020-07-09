@@ -210,11 +210,7 @@ public class MergedResourceWriter
             @NonNull File temporaryDirectory) {
         return new MergedResourceWriter(
                 // no need for multi-threading in tests.
-                new ExecutorServiceAdapter(
-                        "tools_idea",
-                        ":test",
-                        MoreExecutors.newDirectExecutorService(),
-                        executorServiceAdapter),
+                new ExecutorServiceAdapter(MoreExecutors.newDirectExecutorService()),
                 rootFolder,
                 publicFile,
                 blameLogFolder != null ? new MergingLog(blameLogFolder) : null,
@@ -374,7 +370,7 @@ public class MergedResourceWriter
                         FileGenerationParameters workItem =
                                 new FileGenerationParameters(item, mPreprocessor);
                         if (workItem.resourceItem.getSourceFile() != null) {
-                            getExecutor().submit(FileGenerationWorkAction.class, workItem);
+                            getExecutor().submit(new FileGenerationWorkAction(workItem));
                         }
                     } catch (Exception e) {
                         throw new ConsumerException(e, item.getSourceFile().getFile());
@@ -400,7 +396,7 @@ public class MergedResourceWriter
         }
     }
 
-    public static class FileGenerationWorkAction implements Runnable {
+    public static class FileGenerationWorkAction implements WorkerExecutorFacade.WorkAction {
 
         private final FileGenerationParameters workItem;
 

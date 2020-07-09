@@ -219,7 +219,8 @@ public abstract class MergeResources extends ResourceAwareTask {
     public abstract DirectoryProperty getDataBindingLayoutInfoOutFolder();
 
     private SyncOptions.ErrorFormatMode errorFormatMode;
-    private int parallelism = getProject().getGradle().getStartParameter().getMaxWorkerCount();
+    private final int parallelism =
+            getProject().getGradle().getStartParameter().getMaxWorkerCount();
 
     @Internal
     public abstract Property<String> getAaptEnv();

@@ -43,7 +43,7 @@ public class MergedAssetWriter
         // Only write it if the state is TOUCHED.
         if (item.isTouched()) {
             getExecutor()
-                    .submit(AssetWorkAction.class, new AssetWorkParameters(item, getRootFolder()));
+                    .submit(new AssetWorkAction(new AssetWorkParameters(item, getRootFolder())));
         }
     }
 
@@ -57,7 +57,7 @@ public class MergedAssetWriter
         }
     }
 
-    public static class AssetWorkAction implements Runnable {
+    public static class AssetWorkAction implements WorkerExecutorFacade.WorkAction {
 
         private final AssetItem item;
         private final File rootFolder;

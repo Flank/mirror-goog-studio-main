@@ -21,9 +21,10 @@ import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.ide.common.build.CommonBuiltArtifacts
-import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.gson.GsonBuilder
 import org.gradle.api.file.Directory
+import org.gradle.workers.WorkAction
+import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import java.nio.file.Path
@@ -57,26 +58,27 @@ class BuiltArtifactsImpl(
             it.filters == variantOutputConfiguration.filters }
 
     /**
-     * Similar implementation of [BuiltArtifacts.transform] using the [WorkerExecutorFacade]
+     * Similar implementation of [BuiltArtifacts.transform] using the [WorkerExecutor]
      *
      * TODO : move those 2 APIs to TaskBaseOperationsImpl class.
      */
     internal fun <T: BuiltArtifacts.TransformParams> transform(
         newArtifactType: Artifact<Directory>,
-        workerFacade: WorkerExecutorFacade,
-        transformRunnableClass: Class<out Runnable>,
+        workerExecutor: WorkerExecutor,
+        transformRunnableClass: Class<out WorkAction<T>>,
         parametersFactory: (builtArtifact: BuiltArtifact) -> T
     ): Supplier<BuiltArtifacts> {
 
         val parametersList = mutableMapOf<BuiltArtifact, T>()
         elements.forEach { builtArtifact ->
-            workerFacade.submit(transformRunnableClass,
+            workerExecutor.noIsolation().submit(transformRunnableClass) {
                 parametersFactory(builtArtifact).also {
                     parametersList[builtArtifact] = it
-                })
+                }
+            }
         }
         return Supplier {
-            workerFacade.await()
+            workerExecutor.await()
             BuiltArtifactsImpl(
                 version,
                 newArtifactType,

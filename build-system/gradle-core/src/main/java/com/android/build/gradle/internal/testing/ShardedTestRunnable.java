@@ -26,6 +26,7 @@ import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.TestIdentifier;
 import com.android.ddmlib.testrunner.TestRunResult;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -45,7 +46,7 @@ import javax.inject.Inject;
  * Basic Callable to distribute and run tests on a given {@link DeviceConnector} using {@link
  * RemoteAndroidTestRunner}. The boolean return value is true if success.
  */
-public class ShardedTestRunnable implements Runnable {
+public class ShardedTestRunnable implements WorkerExecutorFacade.WorkAction {
 
     public static final String FILE_COVERAGE_EC_SUFFIX = "coverage.ec";
 
