@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -130,11 +131,19 @@ public class JacocoTest {
                         + "    renderScript = false\n"
                         + "  }\n"
                         + "}\n");
-        project.executor().withArgument("--dry-run").run("createDebugAndroidTestCoverageReport");
+        project.executor()
+                .withArgument("--dry-run")
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                // https://issuetracker.google.com/146163513
+                .run("createDebugAndroidTestCoverageReport");
 
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(), "com.android.application", "com.android.library");
-        project.executor().withArgument("--dry-run").run("createDebugAndroidTestCoverageReport");
+        project.executor()
+                .withArgument("--dry-run")
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                // https://issuetracker.google.com/146163513
+                .run("createDebugAndroidTestCoverageReport");
     }
 
     /** Regression test for b/154069245. */

@@ -51,8 +51,8 @@ fun runL8(
         logger.fine("Library classes: $libraries")
         logger.fine("Min Api level: $minSdkVersion")
         logger.fine("Is debuggable: $isDebuggable")
-        keepRules.keepRulesFiles?.forEach { logger.fine("Keep rules file: $it") }
-        keepRules.keepRulesConfigurations?.forEach {
+        keepRules.keepRulesFiles.forEach { logger.fine("Keep rules file: $it") }
+        keepRules.keepRulesConfigurations.forEach {
             logger.fine("Keep rules configuration: $it") }
     }
     FileUtils.cleanOutputDir(output.toFile())
@@ -85,11 +85,11 @@ fun runL8(
         .setMinApiLevel(minSdkVersion)
         .setMode(if (isDebuggable) CompilationMode.DEBUG else CompilationMode.RELEASE)
 
-    if (keepRules.keepRulesFiles != null) {
+    if (keepRules.keepRulesFiles.isNotEmpty()) {
         l8CommandBuilder.addProguardConfigurationFiles(keepRules.keepRulesFiles)
     }
 
-    if (keepRules.keepRulesConfigurations != null) {
+    if (keepRules.keepRulesConfigurations.isNotEmpty()) {
         l8CommandBuilder.addProguardConfiguration(
             keepRules.keepRulesConfigurations, Origin.unknown())
     }
@@ -98,6 +98,6 @@ fun runL8(
 }
 
 data class KeepRulesConfig(
-    val keepRulesFiles: List<Path>?,
-    val keepRulesConfigurations: List<String>?
+    val keepRulesFiles: List<Path>,
+    val keepRulesConfigurations: List<String>
 )

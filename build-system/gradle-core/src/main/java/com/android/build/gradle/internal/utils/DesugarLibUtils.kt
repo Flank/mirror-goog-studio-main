@@ -18,8 +18,6 @@
 
 package com.android.build.gradle.internal.utils
 
-import com.android.build.gradle.internal.component.BaseCreationConfig
-import com.android.build.gradle.internal.dependency.ATTR_L8_MIN_SDK
 import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_CORE_LIBRARY_DESUGARING
 import com.android.sdklib.AndroidTargetHash
@@ -67,21 +65,6 @@ private val ATTR_LINT_COMPILE_SDK: Attribute<String> = Attribute.of("lint-compil
 fun getDesugarLibJarFromMaven(project: Project): FileCollection {
     val configuration = getDesugarLibConfiguration(project)
     return getArtifactCollection(configuration)
-}
-
-/**
- * Returns a file collection which contains desugar lib jars' dex file generated
- * by artifact transform
- */
-fun getDesugarLibDexFromTransform(creationConfig: BaseCreationConfig): FileCollection {
-    if (!creationConfig.variantScope.isCoreLibraryDesugaringEnabled) {
-        return creationConfig.globalScope.project.files()
-    }
-
-    val configuration = getDesugarLibConfiguration(creationConfig.globalScope.project)
-    return getDesugarLibDexFromTransform(
-        configuration,
-        creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel)
 }
 
 /** Implementation of provider holding JSON file value. */
@@ -158,18 +141,6 @@ private fun getDesugarLibConfiguration(project: Project): Configuration {
                 "dependencies to $CONFIG_NAME_CORE_LIBRARY_DESUGARING configuration.")
     }
     return configuration
-}
-
-private fun getDesugarLibDexFromTransform(configuration: Configuration, minSdkVersion: Int): FileCollection {
-    return configuration.incoming.artifactView { config ->
-        config.attributes {
-            it.attribute(
-                ArtifactAttributes.ARTIFACT_FORMAT,
-                DESUGAR_LIB_DEX
-            )
-            it.attribute(ATTR_L8_MIN_SDK, minSdkVersion.toString())
-        }
-    }.artifacts.artifactFiles
 }
 
 private fun getDesugarLibConfigFromTransform(configuration: Configuration): FileCollection {

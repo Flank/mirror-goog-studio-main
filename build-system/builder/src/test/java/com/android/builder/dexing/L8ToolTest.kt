@@ -21,12 +21,8 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.io.BufferedReader
-import java.io.File
-import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.jar.JarFile
 import com.android.testutils.truth.FileSubject.assertThat
 
 /**
@@ -45,7 +41,7 @@ class L8ToolTest {
             desugarConfig,
             bootClasspath,
             20,
-            KeepRulesConfig(null, null),
+            KeepRulesConfig(emptyList(), emptyList()),
             true
         )
         assertThat(getDexFileCount(output)).isEqualTo(1)

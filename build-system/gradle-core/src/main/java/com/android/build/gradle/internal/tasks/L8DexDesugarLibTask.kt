@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.AndroidJarInput
-import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfiguration
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -40,6 +39,7 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -50,7 +50,7 @@ import java.nio.file.Path
 import javax.inject.Inject
 
 /**
- * A task using L8 tool to dex and shrink desugar library with keep rules
+ * A task using L8 tool to dex and shrink (if needed) desugar library with keep rules.
  */
 @CacheableTask
 abstract class L8DexDesugarLibTask : NonIncrementalTask() {
@@ -64,6 +64,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
     @get:Classpath
     abstract val desugarLibJar: ConfigurableFileCollection
 
+    @get:Optional
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val keepRulesFiles: ConfigurableFileCollection
@@ -126,11 +127,19 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             task.androidJarInput.sdkBuildService.set(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
-            task.minSdkVersion.set(
-                creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel)
+            task.minSdkVersion.set(creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel)
+
+            setKeepRules(task)
+
+            task.debuggable.set(creationConfig.variantDslInfo.isDebuggable)
+        }
+
+        private fun setKeepRules(task: L8DexDesugarLibTask) {
+            if (!creationConfig.variantScope.needsShrinkDesugarLibrary) {
+                return;
+            }
 
             val attributes = getDexingArtifactConfiguration(creationConfig).getAttributes()
-
             if (enableDexingArtifactTransform) {
                 task.keepRulesFiles.from(
                     creationConfig.variantDependencies.getArtifactCollection(
@@ -181,12 +190,11 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             if (separateFileDependenciesDexingTask) {
                 task.keepRulesFiles.from(
                     creationConfig.artifacts.get(
-                    InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES))
+                        InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES))
             }
-            val hasDynamicFeatures =
-                creationConfig.variantType.isBaseModule && creationConfig.globalScope.hasDynamicFeatures()
+
             val nonMinified = creationConfig.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8
-            if (hasDynamicFeatures && nonMinified) {
+            if (creationConfig.globalScope.hasDynamicFeatures() && nonMinified) {
                 task.keepRulesFiles.from(
                     creationConfig.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
@@ -228,7 +236,6 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             if (nonMinified) {
                 task.keepRulesConfigurations.set(listOf("-dontobfuscate"))
             }
-            task.debuggable.set(creationConfig.variantDslInfo.isDebuggable)
         }
     }
 }
@@ -250,7 +257,7 @@ class L8DexRunnable @Inject constructor(val params: L8DexParams) : Runnable {
     override fun run() {
         params.desugarLibDex.mkdir()
         val keepRulesConfig =
-            KeepRulesConfig(getAllFilesUnderDirectories(params.keepRulesFiles), params.keepRulesConfigurations)
+            KeepRulesConfig(getAllFilesUnderDirectories(params.keepRulesFiles), params.keepRulesConfigurations ?: emptyList())
         runL8(
             params.desugarLibJar.map { it.toPath() },
             params.desugarLibDex.toPath(),

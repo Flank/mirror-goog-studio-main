@@ -117,7 +117,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     }
 
     private DeviceProvider deviceProvider;
-    private final DirectoryProperty coverageDir;
     private File reportsDir;
     private FileCollection buddyApks;
     private ProcessExecutor processExecutor;
@@ -150,7 +149,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     @Inject
     public DeviceProviderInstrumentTestTask(
             ObjectFactory objectFactory, @NonNull ExecOperations execOperations) {
-        coverageDir = objectFactory.directoryProperty();
         this.execOperations = execOperations;
     }
 
@@ -175,7 +173,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             additionalTestOutputDir = null;
         }
 
-        File coverageOutDir = getCoverageDir().get().getAsFile();
+        File coverageOutDir = getCoverageDirectory().get().getAsFile();
         FileUtils.cleanOutputDir(coverageOutDir);
 
         boolean success;
@@ -298,8 +296,12 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     public abstract DirectoryProperty getAdditionalTestOutputDir();
 
     @OutputDirectory
-    public DirectoryProperty getCoverageDir() {
-        return coverageDir;
+    public abstract DirectoryProperty getCoverageDirectory();
+
+    @Deprecated
+    @Internal
+    public File getCoverageDir() {
+        return getCoverageDirectory().get().getAsFile();
     }
 
     @Deprecated
@@ -464,7 +466,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 creationConfig
                         .getArtifacts()
                         .setInitialProvider(
-                                taskProvider, DeviceProviderInstrumentTestTask::getCoverageDir)
+                                taskProvider,
+                                DeviceProviderInstrumentTestTask::getCoverageDirectory)
                         .withName(deviceProvider.getName())
                         .on(InternalArtifactType.CODE_COVERAGE.INSTANCE);
             } else {
@@ -485,7 +488,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 creationConfig
                         .getArtifacts()
                         .setInitialProvider(
-                                taskProvider, DeviceProviderInstrumentTestTask::getCoverageDir)
+                                taskProvider,
+                                DeviceProviderInstrumentTestTask::getCoverageDirectory)
                         .withName(deviceProvider.getName())
                         .on(InternalArtifactType.DEVICE_PROVIDER_CODE_COVERAGE.INSTANCE);
             }

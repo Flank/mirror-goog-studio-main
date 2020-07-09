@@ -1089,21 +1089,7 @@ open class LintCliClient : LintClient {
     ): Boolean {
         // TODO: Use bootclasspath from Gradle?
 
-        var buildTarget: IAndroidTarget? = null
-        var isAndroid = false
-        for (project in knownProjects) {
-            if (project.isAndroidProject) {
-                isAndroid = true
-                val t = project.buildTarget
-                if (t != null) {
-                    if (buildTarget == null) {
-                        buildTarget = t
-                    } else if (buildTarget.version > t.version) {
-                        buildTarget = t
-                    }
-                }
-            }
-        }
+        val buildTarget = pickBuildTarget(knownProjects)
         if (buildTarget != null) {
             val file: File? = buildTarget.getFile(IAndroidTarget.ANDROID_JAR)
             if (file != null) {
@@ -1113,21 +1099,35 @@ open class LintCliClient : LintClient {
             }
         }
 
-        if (!isAndroid) {
-            val jdkHome = getJdkHome()
-            if (jdkHome != null) {
-                val isJre = !isJdkFolder(jdkHome)
-                val roots = JavaSdkUtil.getJdkClassesRoots(jdkHome, isJre)
-                for (root in roots) {
-                    if (root.exists()) {
-                        files.add(root)
-                    }
+        val jdkHome = getJdkHome()
+        if (jdkHome != null) {
+            val isJre = !isJdkFolder(jdkHome)
+            val roots = JavaSdkUtil.getJdkClassesRoots(jdkHome, isJre)
+            for (root in roots) {
+                if (root.exists()) {
+                    files.add(root)
                 }
-
-                return true
             }
+
+            return true
         }
+
         return false
+    }
+
+    /**
+     * Return the best build target to use among the given set of projects.
+     * This is necessary because we need to pick a single target to use to
+     * (for example) configure a boot classpath for the parsing infrastructure,
+     * but in theory Gradle lets you configure different compileSdkVersions for
+     * different modules, so here we pick the highest of the versions to make
+     * sure it's capable of resolving all library calls into the platform.
+     */
+    private fun pickBuildTarget(knownProjects: Collection<Project>): IAndroidTarget? {
+        return knownProjects.asSequence()
+            .filter { it.isAndroidProject }
+            .mapNotNull { it.buildTarget }
+            .maxBy { it.version }
     }
 
     public override fun disposeProjects(knownProjects: Collection<Project>) {
@@ -1202,7 +1202,7 @@ open class LintCliClient : LintClient {
     }
 
     override fun getClientRevision(): String? {
-        val plugin = Version.TOOLS_VERSION
+        val plugin = Version.ANDROID_GRADLE_PLUGIN_VERSION
         return plugin ?: "unknown"
     }
 
@@ -1375,7 +1375,8 @@ open class LintCliClient : LintClient {
             // is up to date
             val annotationsManager =
                 ExternalAnnotationsManager.getInstance(project) as LintExternalAnnotationsManager
-            annotationsManager.updateAnnotationRoots(this@LintCliClient)
+            val target = pickBuildTarget(contexts.first().driver.projects)
+            annotationsManager.updateAnnotationRoots(this@LintCliClient, target)
             return ok
         }
     }

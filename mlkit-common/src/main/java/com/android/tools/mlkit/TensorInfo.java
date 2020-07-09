@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Objects;
 import org.tensorflow.lite.support.metadata.schema.AssociatedFile;
 import org.tensorflow.lite.support.metadata.schema.Content;
@@ -519,7 +520,7 @@ public class TensorInfo {
                 builder.setContentRange(new ContentRange(content.range().min(), content.range().max()));
             }
 
-            AssociatedFile file = tensorMetadata.associatedFiles(0);
+            AssociatedFile file = getPreferredAssociatedFile(tensorMetadata);
             if (file != null) {
                 builder.setFileName(Strings.nullToEmpty(file.name()))
                         .setFileType(FileType.fromByte(file.type()));
@@ -562,6 +563,30 @@ public class TensorInfo {
 
     private static String getDefaultName(Source source, int index) {
         return (source == Source.INPUT ? DEFAULT_INPUT_NAME : DEFAULT_OUTPUT_NAME) + index;
+    }
+
+    /**
+     * Gets preferred associated file among multiple files with following priority: Locale(English)
+     * > Locale(Any) > No Locale. Otherwise select the first file.
+     */
+    @Nullable
+    private static AssociatedFile getPreferredAssociatedFile(
+            @NonNull TensorMetadata tensorMetadata) {
+        AssociatedFile defaultFile = tensorMetadata.associatedFiles(0);
+        int length = tensorMetadata.associatedFilesLength();
+        for (int i = 0; i < length; i++) {
+            AssociatedFile associatedFile = tensorMetadata.associatedFiles(i);
+            String localeTag = associatedFile.locale();
+            if (localeTag != null) {
+                if (Locale.ENGLISH.equals(Locale.forLanguageTag(localeTag))) {
+                    return associatedFile;
+                } else {
+                    defaultFile = associatedFile;
+                }
+            }
+        }
+
+        return defaultFile;
     }
 
     public static TensorInfo.ContentType extractContentType(TensorMetadata tensorMetadata) {
