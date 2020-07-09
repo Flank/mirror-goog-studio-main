@@ -154,6 +154,11 @@ iml_module(
     bundle_data = [
         "//tools/base/deploy/installer:android-installer",
     ],
+    bundled_deps = [
+        "//tools/base/deploy/proto:deploy_java_proto",
+        "//prebuilts/r8:unb.r8",
+        "//tools/base/deploy/deployer:java_version",
+    ],
     iml_files = ["android.sdktools.deployer.iml"],
     lint_baseline = "lint_baseline.xml",
     tags = [
