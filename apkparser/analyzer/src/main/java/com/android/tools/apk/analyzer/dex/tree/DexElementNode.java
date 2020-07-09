@@ -19,8 +19,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.proguard.ProguardMap;
 import com.android.tools.proguard.ProguardSeedsMap;
-import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import javax.swing.tree.DefaultMutableTreeNode;
 import org.jf.dexlib2.iface.reference.Reference;
 import org.jf.dexlib2.immutable.reference.ImmutableReference;
@@ -66,7 +66,13 @@ public abstract class DexElementNode extends DefaultMutableTreeNode {
             node.sort(comparator);
         }
         if (children != null) {
-            Collections.sort(children, comparator);
+            // As of JDK 11 DefaultMutableTreeNode.children has generic type Vector<TreeNode>
+            // so its value can't be assigned directly to a Vector<DexElementNode> variable.
+            // Instead here it is safely cast to raw superclass List and assigned unchecked
+            // to a List<DexElementNode> variable.
+            @SuppressWarnings({"unchecked", "rawtypes"})
+            List<DexElementNode> childrenList = (List) children;
+            childrenList.sort(comparator);
         }
     }
 
