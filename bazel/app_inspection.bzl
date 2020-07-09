@@ -1,4 +1,5 @@
 load(":proto.bzl", "ProtoPackageInfo", "android_java_proto_library")
+load(":maven.bzl", "maven_java_import")
 
 def _impl(ctx):
     args = [ctx.file.jar.path] + [ctx.attr.proto_file_name + ":" + ctx.outputs.out.path]
@@ -46,4 +47,26 @@ def app_inspection_proto(name, jar, proto_file_name, visibility = None):
         grpc_support = 1,
         protoc_grpc_version = "1.21.1",
         visibility = visibility,
+    )
+
+# Rule that re-exports an aar file as a jar, as a way to
+# allow connecting .aar outputs with rules that require
+# .jar inputs.
+#
+# In the process of re-exporting, Android specific concepts
+# are discarded (e.g. resources, manifests).
+# because these artifacts are not required by app inspection.
+def app_inspection_aar_import(name, aar, **kwargs):
+    unpacked_jar = name + "_unpacked_classes.jar"
+    native.genrule(
+        name = name + "_unpack",
+        srcs = [aar],
+        outs = [unpacked_jar],
+        tools = ["//tools/base/bazel:unzipper"],
+        cmd = "$(location //tools/base/bazel:unzipper) $< classes.jar:$@",
+    )
+    maven_java_import(
+        name = name,
+        jars = [unpacked_jar],
+        **kwargs
     )
