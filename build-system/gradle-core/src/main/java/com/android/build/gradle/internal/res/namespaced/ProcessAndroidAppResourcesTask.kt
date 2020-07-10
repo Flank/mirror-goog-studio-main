@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -104,11 +103,11 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
                 intermediateDir = aaptIntermediateDir)
 
         val aapt2ServiceKey = aapt2.registerAaptService()
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                Aapt2LinkRunnable::class.java,
-                Aapt2LinkRunnable.Params(aapt2ServiceKey, config, aapt2.getErrorFormatMode())
-            )
+        workerExecutor.noIsolation().submit(Aapt2LinkRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.aapt2ServiceKey.set(aapt2ServiceKey)
+            it.request.set(config)
+            it.errorFormatMode.set(aapt2.getErrorFormatMode())
         }
     }
 

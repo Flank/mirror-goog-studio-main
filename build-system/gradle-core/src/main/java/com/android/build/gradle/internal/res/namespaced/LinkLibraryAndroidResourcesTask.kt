@@ -95,11 +95,11 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                 intermediateDir = aaptIntermediateDir)
 
         val aapt2ServiceKey = aapt2.registerAaptService()
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                Aapt2LinkRunnable::class.java,
-                Aapt2LinkRunnable.Params(aapt2ServiceKey, request, aapt2.getErrorFormatMode())
-            )
+        workerExecutor.noIsolation().submit(Aapt2LinkRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.aapt2ServiceKey.set(aapt2ServiceKey)
+            it.request.set(request)
+            it.errorFormatMode.set(aapt2.getErrorFormatMode())
         }
     }
 

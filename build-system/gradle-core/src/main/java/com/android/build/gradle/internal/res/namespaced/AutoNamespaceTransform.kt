@@ -284,13 +284,8 @@ abstract class AutoNamespaceTransform : TransformAction<AutoNamespaceParameters>
             intermediateDir = aaptIntermediateDir.toFile()
         )
 
-        Aapt2LinkRunnable(
-            Aapt2LinkRunnable.Params(
-                aapt2ServiceKey,
-                request,
-                parameters.aapt2.getErrorFormatMode() // TODO(b/152323103) this should be implicit
-            )
-        ).run()
+        // TODO(b/152323103) this should be implicit
+        runAapt2Link(aapt2ServiceKey, request, parameters.aapt2.getErrorFormatMode())
 
         outputAar.putNextEntry(ZipEntry(SdkConstants.FN_RESOURCE_STATIC_LIBRARY))
         Files.copy(staticLibApk, outputAar)
