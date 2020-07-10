@@ -31,10 +31,10 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.security.InvalidParameterException;
-import java.util.Arrays;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -375,58 +375,59 @@ public final class EmulatorConsole {
      */
     @Nullable
     public synchronized String getAvdName() {
-        return getOutput(COMMAND_AVD_NAME);
+        try {
+            return getOutput(COMMAND_AVD_NAME);
+        } catch (CommandFailedException exception) {
+            return exception.getMessage();
+        } catch (Exception exception) {
+            // noinspection ConstantConditions
+            if (exception instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+
+            return null;
+        }
     }
 
     /**
      * Returns the absolute path to the virtual device in the file system. The path is operating
-     * system dependent; it will have / name separators on Linux and \ separators on Windows. The
-     * subcommand was added to the emulator in Version 30.0.18.
+     * system dependent; it will have / name separators on Linux and \ separators on Windows.
      *
-     * @return the AVD path. If the command failed returns the error message after "KO: " or null.
-     *     Returns the error message "bad sub-command" in versions prior to 30.0.18.
+     * @throws CommandFailedException If the subcommand failed or if the emulator's version is older
+     *     than 30.0.18
      */
-    @Nullable
+    @NonNull
     public synchronized String getAvdPath() {
         return getOutput(COMMAND_AVD_PATH);
     }
 
-    @Nullable
+    @NonNull
     private String getOutput(@NonNull String command) {
         if (!sendCommand(command)) {
-            return null;
+            throw new CommandFailedException();
         }
 
-        String[] lines = readLines();
-
-        if (lines == null) {
-            return null;
-        }
-
-        return processOutput(lines);
+        return processOutput(Objects.requireNonNull(readLines()));
     }
 
-    @Nullable
+    @NonNull
     @VisibleForTesting
     static String processOutput(@NonNull String[] lines) {
         if (lines.length == 0) {
-            return null;
+            throw new IllegalArgumentException();
         }
 
         Matcher matcher = RE_KO.matcher(lines[lines.length - 1]);
 
         if (matcher.matches()) {
-            return matcher.group(1);
+            throw new CommandFailedException(matcher.group(1));
         }
 
         if (lines.length >= 2 && lines[lines.length - 1].equals("OK")) {
             return lines[lines.length - 2];
         }
 
-        Log.w(LOG_TAG, "Unexpected output");
-        Arrays.asList(lines).forEach(line -> Log.d(LOG_TAG, line));
-
-        return null;
+        throw new IllegalArgumentException(String.join(System.lineSeparator(), lines));
     }
 
     /**

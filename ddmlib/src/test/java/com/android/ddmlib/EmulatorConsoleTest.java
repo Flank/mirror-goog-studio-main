@@ -17,6 +17,7 @@ package com.android.ddmlib;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,10 +51,13 @@ public final class EmulatorConsoleTest {
         String[] lines = {};
 
         // Act
-        Object output = EmulatorConsole.processOutput(lines);
-
+        try {
+            EmulatorConsole.processOutput(lines);
+            fail();
+        }
         // Assert
-        assertNull(output);
+        catch (IllegalArgumentException ignored) {
+        }
     }
 
     @Test
@@ -86,10 +90,14 @@ public final class EmulatorConsoleTest {
         };
 
         // Act
-        Object output = EmulatorConsole.processOutput(lines);
-
+        try {
+            EmulatorConsole.processOutput(lines);
+            fail();
+        }
         // Assert
-        assertEquals("bad sub-command", output);
+        catch (CommandFailedException exception) {
+            assertEquals("bad sub-command", exception.getMessage());
+        }
     }
 
     @Test
@@ -145,9 +153,12 @@ public final class EmulatorConsoleTest {
         };
 
         // Act
-        Object output = EmulatorConsole.processOutput(lines);
-
+        try {
+            EmulatorConsole.processOutput(lines);
+            fail();
+        }
         // Assert
-        assertNull(output);
+        catch (IllegalArgumentException ignored) {
+        }
     }
 }
