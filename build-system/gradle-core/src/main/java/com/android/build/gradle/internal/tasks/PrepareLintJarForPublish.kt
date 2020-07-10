@@ -48,7 +48,8 @@ abstract class PrepareLintJarForPublish : DefaultTask() {
     @get:PathSensitive(PathSensitivity.NONE)
     lateinit var lintChecks: FileCollection
         private set
-    @get:OutputFile abstract val outputLintJar: RegularFileProperty
+    @get:OutputFile
+    abstract val outputLintJar: RegularFileProperty
 
     @get:Internal
     val projectName = project.name
@@ -65,17 +66,15 @@ abstract class PrepareLintJarForPublish : DefaultTask() {
 
     @TaskAction
     fun prepare() {
-        Workers.preferWorkers(projectName, path, workerExecutor, enableGradleWorkers.get()).use {
-            it.submit(
-                PublishLintJarWorkerRunnable::class.java, PublishLintJarRequest(
-                    files = lintChecks.files,
-                    outputLintJar = outputLintJar.get().asFile
-                )
-            )
+        workerExecutor.noIsolation().submit(PublishLintJarWorkerRunnable::class.java) {
+            it.initializeWith(projectName, path)
+            it.files.from(lintChecks)
+            it.outputLintJar.set(outputLintJar)
         }
     }
 
-    class CreationAction(private val scope: GlobalScope) : TaskCreationAction<PrepareLintJarForPublish>() {
+    class CreationAction(private val scope: GlobalScope) :
+        TaskCreationAction<PrepareLintJarForPublish>() {
         override val name = NAME
         override val type = PrepareLintJarForPublish::class.java
 

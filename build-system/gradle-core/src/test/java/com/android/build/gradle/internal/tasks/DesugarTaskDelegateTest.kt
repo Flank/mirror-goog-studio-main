@@ -42,7 +42,7 @@ class DesugarTaskDelegateTest {
     var tmp = TemporaryFolder()
 
     private lateinit var output: File
-    private lateinit var task: NonIncrementalTask
+    private lateinit var task: AndroidVariantTask
     private val submittedConfigurations = mutableSetOf<DesugarActionParams>()
 
     @Mock
@@ -52,8 +52,7 @@ class DesugarTaskDelegateTest {
     fun setUp() {
         MockitoAnnotations.initMocks(this)
         val project = ProjectBuilder.builder().withProjectDir(tmp.newFolder()).build()
-        task = Mockito.mock(NonIncrementalTask::class.java)
-        Mockito.doReturn("path").`when`(task).path
+        task = project.tasks.create("task", AndroidVariantTask::class.java)
         val workQueue = object: WorkQueue {
             override fun <T : WorkParameters?> submit(
                 actionClass: Class<out WorkAction<T>>?,

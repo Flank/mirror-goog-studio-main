@@ -17,37 +17,37 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.utils.FileUtils
-import com.google.common.collect.Iterables
-import com.google.common.io.Files
-import java.io.File
-import java.io.Serializable
-import javax.inject.Inject
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.RegularFileProperty
 
-class PublishLintJarWorkerRunnable @Inject constructor(val params: PublishLintJarRequest) : Runnable {
+abstract class PublishLintJarWorkerRunnable : ProfileAwareWorkAction<PublishLintJarRequest>() {
     override fun run() {
         // there could be more than one files if the dependency is on a sub-projects that
         // publishes its compile dependencies. Rather than query getSingleFile and fail with
         // a weird message, do a manual check
-        if (params.files.size > 1) {
+        if (parameters.files.files.size > 1) {
             throw RuntimeException(
                 "Found more than one jar in the '"
                         + VariantDependencies.CONFIG_NAME_LINTPUBLISH
-                        + "' configuration. Only one file is supported. If using a separate Gradle project, make sure compilation dependencies are using compileOnly")
+                        + "' configuration. Only one file is supported. If using a separate Gradle project, make sure compilation dependencies are using compileOnly"
+            )
         }
 
-        if (params.files.isEmpty()) {
-            if (params.outputLintJar.isFile) {
-                FileUtils.delete(params.outputLintJar)
+        val outputLintJar = parameters.outputLintJar.asFile.get()
+        if (parameters.files.isEmpty) {
+            if (outputLintJar.isFile) {
+                FileUtils.delete(outputLintJar)
             }
         } else {
-            FileUtils.mkdirs(params.outputLintJar.parentFile)
-            Files.copy(Iterables.getOnlyElement(params.files), params.outputLintJar)
+            FileUtils.mkdirs(outputLintJar.parentFile)
+            parameters.files.singleFile.copyTo(outputLintJar)
         }
     }
 }
 
-data class PublishLintJarRequest(
-    val files: Set<File>,
-    val outputLintJar: File
-): Serializable
+abstract class PublishLintJarRequest : ProfileAwareWorkAction.Parameters() {
+    abstract val files: ConfigurableFileCollection
+    abstract val outputLintJar: RegularFileProperty
+}
