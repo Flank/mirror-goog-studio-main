@@ -31,4 +31,7 @@ open class UnitTestImpl @Inject constructor(
     variantConfiguration,
     variantApiServices
 ), UnitTest<UnitTestPropertiesImpl> {
+    override fun executePropertiesActions(target: UnitTestPropertiesImpl) {
+        propertiesActions.executeActions(target)
+    }
 }

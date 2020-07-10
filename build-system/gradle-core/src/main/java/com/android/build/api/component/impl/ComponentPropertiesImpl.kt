@@ -83,7 +83,7 @@ import java.io.File
 import java.util.concurrent.Callable
 
 abstract class ComponentPropertiesImpl(
-    open val variant: ComponentImpl<out ComponentPropertiesImpl>,
+    open val variant: ComponentImpl<out ComponentProperties>,
     override val buildFeatures: BuildFeatureValues,
     override val variantDslInfo: VariantDslInfo,
     override val variantDependencies: VariantDependencies,

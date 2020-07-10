@@ -56,6 +56,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.Artifact.SingleArtifact;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
+import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
@@ -67,6 +68,7 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.variant.AndroidVersion;
+import com.android.build.api.variant.VariantProperties;
 import com.android.build.api.variant.impl.VariantApiExtensionsKt;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
@@ -271,7 +273,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 
 /** Manages tasks creation. */
 public abstract class TaskManager<
-        VariantT extends VariantImpl<? extends VariantPropertiesT>,
+        VariantT extends VariantImpl<? extends VariantProperties>,
         VariantPropertiesT extends VariantPropertiesImpl> {
     private static final String MULTIDEX_VERSION = "1.0.2";
 
@@ -324,7 +326,7 @@ public abstract class TaskManager<
     @NonNull
     private final List<
                     ComponentInfo<
-                            TestComponentImpl<? extends TestComponentPropertiesImpl>,
+                            TestComponentImpl<? extends TestComponentProperties>,
                             TestComponentPropertiesImpl>>
             testComponents;
 
@@ -352,8 +354,7 @@ public abstract class TaskManager<
             @NonNull
                     List<
                                     ComponentInfo<
-                                            TestComponentImpl<
-                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentImpl<? extends TestComponentProperties>,
                                             TestComponentPropertiesImpl>>
                             testComponents,
             boolean hasFlavors,
@@ -414,7 +415,7 @@ public abstract class TaskManager<
             createTasksForVariant(variant, variants);
         }
         for (ComponentInfo<
-                        TestComponentImpl<? extends TestComponentPropertiesImpl>,
+                        TestComponentImpl<? extends TestComponentProperties>,
                         TestComponentPropertiesImpl>
                 testComponent : testComponents) {
             createTasksForTest(testComponent);
@@ -519,7 +520,7 @@ public abstract class TaskManager<
     private void createTasksForTest(
             @NonNull
                     ComponentInfo<
-                                    TestComponentImpl<? extends TestComponentPropertiesImpl>,
+                                    TestComponentImpl<? extends TestComponentProperties>,
                                     TestComponentPropertiesImpl>
                             testComponent) {
         final TestComponentPropertiesImpl componentProperties = testComponent.getProperties();

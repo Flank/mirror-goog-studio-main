@@ -37,7 +37,7 @@ import com.android.build.gradle.internal.variant.VariantPathHelper
 import javax.inject.Inject
 
 abstract class TestComponentPropertiesImpl @Inject constructor(
-    componentIdentity: TestComponentImpl<out TestComponentPropertiesImpl>,
+    componentIdentity: TestComponentImpl<out TestComponentProperties>,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,

@@ -22,9 +22,11 @@ import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.dsl.CommonExtension;
+import com.android.build.api.variant.VariantProperties;
 import com.android.build.api.variant.impl.GradleProperty;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
@@ -134,7 +136,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Base class for all Android plugins */
 public abstract class BasePlugin<
-                VariantT extends VariantImpl<VariantPropertiesT>,
+                VariantT extends VariantImpl<? extends VariantProperties>,
                 VariantPropertiesT extends VariantPropertiesImpl>
         implements Plugin<Project>, LintModelModuleLoaderProvider {
 
@@ -200,8 +202,7 @@ public abstract class BasePlugin<
             @NonNull
                     List<
                                     ComponentInfo<
-                                            TestComponentImpl<
-                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentImpl<? extends TestComponentProperties>,
                                             TestComponentPropertiesImpl>>
                             testComponents,
             boolean hasFlavors,
@@ -424,7 +425,7 @@ public abstract class BasePlugin<
         globalScope.setExtension(extension);
 
         variantManager =
-                new VariantManager<>(
+                new VariantManager(
                         globalScope,
                         project,
                         projectServices.getProjectOptions(),

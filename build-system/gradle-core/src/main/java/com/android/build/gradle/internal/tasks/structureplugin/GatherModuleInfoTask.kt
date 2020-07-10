@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks.structureplugin
 
+import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.plugins.BasePlugin
@@ -76,7 +77,7 @@ private class AndroidCollector : DataCollector {
         if (!task.project.isAndroidProject()) return
         dataHolder.type = ModuleType.ANDROID
         task.project.plugins.withType(BasePlugin::class.java).firstOrNull()?.let {
-            val basePlugin: BasePlugin<VariantImpl<VariantPropertiesImpl>, VariantPropertiesImpl> = it as BasePlugin<VariantImpl<VariantPropertiesImpl>, VariantPropertiesImpl>
+            val basePlugin: BasePlugin<VariantImpl<VariantProperties>, VariantPropertiesImpl> = it as BasePlugin<VariantImpl<VariantProperties>, VariantPropertiesImpl>
             collectBuildConfig(dataHolder, basePlugin)
             collectResources(dataHolder, basePlugin)
         }
@@ -84,7 +85,7 @@ private class AndroidCollector : DataCollector {
 
     private fun collectBuildConfig(
         dataHolder: ModuleInfo,
-        plugin: BasePlugin<VariantImpl<VariantPropertiesImpl>, VariantPropertiesImpl>
+        plugin: BasePlugin<VariantImpl<VariantProperties>, VariantPropertiesImpl>
     ) {
         plugin.extension.defaultConfig.minSdkVersion?.apiLevel?.let {
             dataHolder.androidBuildConfig.minSdkVersion = it }
@@ -98,7 +99,7 @@ private class AndroidCollector : DataCollector {
 
     private fun collectResources(
         dataHolder: ModuleInfo,
-        plugin: BasePlugin<VariantImpl<VariantPropertiesImpl>, VariantPropertiesImpl>
+        plugin: BasePlugin<VariantImpl<VariantProperties>, VariantPropertiesImpl>
     ) {
         val resources = plugin.extension.sourceSets
             .findByName(SourceSet.MAIN_SOURCE_SET_NAME)?.res ?: return
@@ -154,7 +155,7 @@ private class SourceFilesCollector : DataCollector {
 
     private fun Project.findMainSourceSet(): Set<File> {
         if (isAndroidProject()) {
-            val androidPlugin = plugins.withType(BasePlugin::class.java).first() as BasePlugin<VariantImpl<VariantPropertiesImpl>,VariantPropertiesImpl>
+            val androidPlugin = plugins.withType(BasePlugin::class.java).first() as BasePlugin<VariantImpl<VariantProperties>,VariantPropertiesImpl>
             return androidPlugin.extension.sourceSets
                 .findByName(SourceSet.MAIN_SOURCE_SET_NAME)?.java?.srcDirs ?: emptySet()
         } else {

@@ -20,6 +20,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.variant.impl.TestVariantImpl;
@@ -63,8 +64,7 @@ public class TestApplicationTaskManager
             @NonNull
                     List<
                                     ComponentInfo<
-                                            TestComponentImpl<
-                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentImpl<? extends TestComponentProperties>,
                                             TestComponentPropertiesImpl>>
                             testComponents,
             boolean hasFlavors,

@@ -22,7 +22,8 @@ import static org.junit.Assert.assertNotNull;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
-import com.android.build.api.variant.impl.VariantImpl;
+import com.android.build.api.variant.impl.ApplicationVariantImpl;
+import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.internal.BadPluginException;
@@ -508,11 +509,10 @@ public class AppPluginInternalTest {
         assertThat(bootclasspath).containsExactlyElementsIn(android.getBootClasspath());
     }
 
-    public static <
-                    VariantT extends VariantImpl<VariantPropertiesT>,
-                    VariantPropertiesT extends VariantPropertiesImpl>
-            List<ComponentPropertiesImpl> getComponents(
-                    @NonNull VariantManager<VariantT, VariantPropertiesT> variantManager) {
+    public static List<ComponentPropertiesImpl> getComponents(
+            @NonNull
+                    VariantManager<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>
+                            variantManager) {
 
         List<VariantPropertiesImpl> variants =
                 variantManager.getMainComponents().stream()

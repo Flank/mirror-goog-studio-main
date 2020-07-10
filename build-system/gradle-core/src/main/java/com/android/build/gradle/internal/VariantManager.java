@@ -24,6 +24,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.component.ComponentIdentity;
+import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.analytics.AnalyticsEnabledVariant;
 import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
@@ -102,7 +103,7 @@ import org.gradle.api.model.ObjectFactory;
 
 /** Class to create, manage variants. */
 public class VariantManager<
-        VariantT extends VariantImpl<VariantPropertiesT>,
+        VariantT extends VariantImpl<? extends VariantProperties>,
         VariantPropertiesT extends VariantPropertiesImpl> {
 
     @NonNull private final Project project;
@@ -128,7 +129,7 @@ public class VariantManager<
     @NonNull
     private final List<
                     ComponentInfo<
-                            TestComponentImpl<? extends TestComponentPropertiesImpl>,
+                            TestComponentImpl<? extends TestComponentProperties>,
                             TestComponentPropertiesImpl>>
             testComponents = Lists.newArrayList();
 
@@ -188,7 +189,7 @@ public class VariantManager<
     @NonNull
     public List<
                     ComponentInfo<
-                            TestComponentImpl<? extends TestComponentPropertiesImpl>,
+                            TestComponentImpl<? extends TestComponentProperties>,
                             TestComponentPropertiesImpl>>
             getTestComponents() {
         return testComponents;
@@ -468,7 +469,7 @@ public class VariantManager<
         commonExtension.executeVariantPropertiesOperations(variantProperties);
 
         // also execute the delayed actions registered on the Variant object itself
-        variant.executePropertiesActions(variantProperties);
+        ((VariantImpl<VariantPropertiesImpl>) variant).executePropertiesActions(variantProperties);
 
         return new ComponentInfo(variant, variantProperties, userVisibleVariantObject);
     }
@@ -506,7 +507,7 @@ public class VariantManager<
     /** Create a TestVariantData for the specified testedVariantData. */
     @Nullable
     public ComponentInfo<
-                    TestComponentImpl<? extends TestComponentPropertiesImpl>,
+                    TestComponentImpl<? extends TestComponentProperties>,
                     TestComponentPropertiesImpl>
             createTestComponents(
                     @NonNull DimensionCombination dimensionCombination,
@@ -565,7 +566,7 @@ public class VariantManager<
 
         VariantDslInfoImpl variantDslInfo = variantBuilder.createVariantDslInfo();
 
-        TestComponentImpl<? extends TestComponentPropertiesImpl> component;
+        TestComponentImpl<? extends TestComponentProperties> component;
 
         GradleBuildVariant.Builder apiAccessStats = GradleBuildVariant.newBuilder();
         // this is ANDROID_TEST
@@ -907,7 +908,7 @@ public class VariantManager<
                 if (variantFactory.getVariantType().getHasTestComponents()) {
                     if (buildTypeData == testBuildTypeData) {
                         ComponentInfo<
-                                        TestComponentImpl<? extends TestComponentPropertiesImpl>,
+                                        TestComponentImpl<? extends TestComponentProperties>,
                                         TestComponentPropertiesImpl>
                                 androidTest =
                                         createTestComponents(
@@ -924,7 +925,7 @@ public class VariantManager<
                     }
 
                     ComponentInfo<
-                                    TestComponentImpl<? extends TestComponentPropertiesImpl>,
+                                    TestComponentImpl<? extends TestComponentProperties>,
                                     TestComponentPropertiesImpl>
                             unitTest =
                                     createTestComponents(
@@ -950,7 +951,7 @@ public class VariantManager<
     private void addTestComponent(
             @NonNull
                     ComponentInfo<
-                                    TestComponentImpl<? extends TestComponentPropertiesImpl>,
+                                    TestComponentImpl<? extends TestComponentProperties>,
                                     TestComponentPropertiesImpl>
                             testComponent) {
         testComponents.add(testComponent);

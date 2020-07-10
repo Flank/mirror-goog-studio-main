@@ -42,7 +42,7 @@ import org.gradle.api.provider.Provider
 import java.io.Serializable
 
 abstract class VariantPropertiesImpl(
-    override val variant: VariantImpl<out VariantPropertiesImpl>,
+    override val variant: VariantImpl<out VariantProperties>,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
