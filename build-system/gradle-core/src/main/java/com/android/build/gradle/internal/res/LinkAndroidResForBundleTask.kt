@@ -154,15 +154,11 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
         }
 
         val aapt2ServiceKey = aapt2.registerAaptService()
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                Aapt2ProcessResourcesRunnable::class.java,
-                Aapt2ProcessResourcesRunnable.Params(
-                    aapt2ServiceKey,
-                    config,
-                    aapt2.getErrorFormatMode()
-                )
-            )
+        workerExecutor.noIsolation().submit(Aapt2ProcessResourcesRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.aapt2ServiceKey.set(aapt2ServiceKey)
+            it.request.set(config)
+            it.errorFormatMode.set(aapt2.getErrorFormatMode())
         }
     }
 
