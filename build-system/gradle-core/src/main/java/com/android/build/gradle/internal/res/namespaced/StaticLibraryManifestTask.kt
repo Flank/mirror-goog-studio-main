@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -28,6 +29,7 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
+import java.nio.charset.StandardCharsets
 
 /**
  * Task to write an android manifest for the res.apk static library
@@ -38,14 +40,14 @@ abstract class StaticLibraryManifestTask : NonIncrementalTask() {
     @get:Input
     abstract val packageName: Property<String>
 
-    @get:OutputFile abstract val manifestFile: RegularFileProperty
+    @get:OutputFile
+    abstract val manifestFile: RegularFileProperty
 
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                StaticLibraryManifestRunnable::class.java,
-                StaticLibraryManifestRequest(manifestFile.get().asFile, packageName.get())
-            )
+        workerExecutor.noIsolation().submit(StaticLibraryManifestWorkAction::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.manifestFile.set(manifestFile)
+            it.packageName.set(packageName)
         }
     }
 
@@ -67,7 +69,8 @@ abstract class StaticLibraryManifestTask : NonIncrementalTask() {
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 StaticLibraryManifestTask::manifestFile
-            ).withName(SdkConstants.ANDROID_MANIFEST_XML).on(InternalArtifactType.STATIC_LIBRARY_MANIFEST)
+            ).withName(SdkConstants.ANDROID_MANIFEST_XML)
+                .on(InternalArtifactType.STATIC_LIBRARY_MANIFEST)
         }
 
         override fun configure(
@@ -77,4 +80,21 @@ abstract class StaticLibraryManifestTask : NonIncrementalTask() {
             task.packageName.setDisallowChanges(creationConfig.packageName)
         }
     }
+}
+
+abstract class StaticLibraryManifestWorkAction :
+    ProfileAwareWorkAction<StaticLibraryManifestRequest>() {
+    override fun run() {
+        parameters.manifestFile.asFile.get().outputStream().writer(StandardCharsets.UTF_8)
+            .buffered().use {
+                it.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
+                    .append("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n")
+                    .append("    package=\"${parameters.packageName.get()}\"/>\n")
+            }
+    }
+}
+
+abstract class StaticLibraryManifestRequest : ProfileAwareWorkAction.Parameters() {
+    abstract val manifestFile: RegularFileProperty
+    abstract val packageName: Property<String>
 }
