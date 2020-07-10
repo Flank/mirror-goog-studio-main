@@ -35,7 +35,6 @@ import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import java.io.File
 import java.lang.reflect.Method
-import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
 import java.net.URLClassLoader
 
@@ -43,14 +42,26 @@ import java.net.URLClassLoader
  * Fake implementation of [WorkerExecutor]. [ObjectFactory] is used to instantiate parameters,
  * while [tmpDir] is used to output generated decorated classes.
  */
-class FakeGradleWorkExecutor(
+open class FakeGradleWorkExecutor(
     objectFactory: ObjectFactory,
     tmpDir: File,
-    injectableService: List<FakeInjectableService> = emptyList()
+    injectableService: List<FakeInjectableService> = emptyList(),
+    private val executionMode: ExecutionMode = ExecutionMode.RUNNING
 ) : WorkerExecutor {
 
     private val workQueue =
-        FakeGradleWorkQueue(objectFactory, tmpDir.resolve("generatedClasses"), injectableService)
+        FakeGradleWorkQueue(
+            executionMode,
+            objectFactory,
+            tmpDir.resolve("generatedClasses"),
+            injectableService
+        )
+
+    val capturedParameters: List<WorkParameters>
+        get() {
+            check(executionMode == ExecutionMode.CAPTURING) { "Recording params is possible only in capturing mode." }
+            return workQueue.capturedParameters
+        }
 
     override fun submit(
         aClass: Class<out Runnable?>,
@@ -64,11 +75,13 @@ class FakeGradleWorkExecutor(
     }
 
     override fun classLoaderIsolation(): WorkQueue {
-        TODO()
+        check(executionMode == ExecutionMode.CAPTURING)
+        return workQueue
     }
 
     override fun processIsolation(): WorkQueue {
-        TODO()
+        check(executionMode == ExecutionMode.CAPTURING)
+        return workQueue
     }
 
     override fun noIsolation(action: Action<in WorkerSpec?>): WorkQueue {
@@ -76,11 +89,13 @@ class FakeGradleWorkExecutor(
     }
 
     override fun classLoaderIsolation(action: Action<in ClassLoaderWorkerSpec?>): WorkQueue {
-        TODO()
+        check(executionMode == ExecutionMode.CAPTURING)
+        return workQueue
     }
 
     override fun processIsolation(action: Action<in ProcessWorkerSpec?>): WorkQueue {
-        TODO()
+        check(executionMode == ExecutionMode.CAPTURING)
+        return workQueue
     }
 
     override fun await() {
@@ -93,49 +108,79 @@ class FakeInjectableService(
     val implementation: Any
 )
 
+enum class ExecutionMode {
+    // Run work actions
+    RUNNING,
+
+    // Just record parameters used for launching work actions
+    CAPTURING,
+}
+
 /** Runs workers actions by directly instantiating worker actions and worker action parameters. */
-class FakeGradleWorkQueue(
+private class FakeGradleWorkQueue(
+    private val executionMode: ExecutionMode,
     private val objectFactory: ObjectFactory,
     private val generatedClassesOutput: File,
     private val injectableService: List<FakeInjectableService>
 ) : WorkQueue {
+
+    val capturedParameters = mutableListOf<WorkParameters>()
+
     @Suppress("UNCHECKED_CAST")
     override fun <T : WorkParameters> submit(
         aClass: Class<out WorkAction<T>>,
         action: Action<in T>
     ) {
         val parameterTypeName =
-            (aClass.genericSuperclass as ParameterizedType).actualTypeArguments[0].typeName
+            (aClass.genericSuperclass as? ParameterizedType
+                ?: aClass.genericInterfaces.single() as ParameterizedType).actualTypeArguments[0].typeName
+        if (aClass.constructors.single().parameterCount != 0) {
+            // we should just instantiate it and pass in all params + services
+            runWorkAction(parameterTypeName, action, aClass)
+        } else {
+            val workerActionName = aClass.name.replace(".", "/")
+            val bytes =
+                aClass.classLoader.getResourceAsStream("$workerActionName.class")
+                    .use { it!!.readBytes() }
 
-        val workerActionName = aClass.name.replace(".", "/")
-        val bytes = aClass.classLoader.getResourceAsStream("$workerActionName.class")
-            .use { it!!.readBytes() }
+            val reader = ClassReader(bytes)
+            val cw = ClassWriter(0)
+            reader.accept(WorkerActionDecorator(cw, parameterTypeName, injectableService), 0)
 
-        val reader = ClassReader(bytes)
-        val cw = ClassWriter(0)
-        reader.accept(WorkerActionDecorator(cw, parameterTypeName, injectableService), 0)
-
-        generatedClassesOutput.resolve("$workerActionName$CLASS_SUFFIX.class").also {
-            it.parentFile.mkdirs()
-            it.writeBytes(cw.toByteArray())
+            generatedClassesOutput.resolve("$workerActionName$CLASS_SUFFIX.class").also {
+                it.parentFile.mkdirs()
+                it.writeBytes(cw.toByteArray())
+            }
+            URLClassLoader(
+                arrayOf(generatedClassesOutput.toURI().toURL()),
+                aClass.classLoader
+            ).use { classloader ->
+                val actualClass = classloader.loadClass(aClass.name + CLASS_SUFFIX)
+                runWorkAction(parameterTypeName, action, actualClass)
+            }
         }
+    }
 
-        URLClassLoader(
-            arrayOf(generatedClassesOutput.toURI().toURL()),
-            aClass.classLoader
-        ).use { classloader ->
-            // initialize and configure parameters
-            val parametersInstance =
-                objectFactory.newInstance(this::class.java.classLoader.loadClass(parameterTypeName)) as T
-            action.execute(parametersInstance)
+    @Suppress("UNCHECKED_CAST")
+    private fun <T : WorkParameters> runWorkAction(
+        parameterTypeName: String?,
+        action: Action<in T>,
+        actualClass: Class<out Any>
+    ) {
+        // initialize and configure parameters
+        val parametersInstance =
+            objectFactory.newInstance(this::class.java.classLoader.loadClass(parameterTypeName)) as T
+        action.execute(parametersInstance)
 
-            // create and run worker action
-            val loadClass: Class<*> = classloader.loadClass(aClass.name + CLASS_SUFFIX)
-            val allConstructorArgs =
-                (listOf(parametersInstance) + injectableService.map { it.implementation }).toTypedArray()
-            val newInstance =
-                loadClass.constructors.single().newInstance(*allConstructorArgs) as WorkAction<T>
-            (newInstance as WorkAction<*>).execute()
+        when (executionMode) {
+            ExecutionMode.CAPTURING -> capturedParameters.add(parametersInstance)
+            ExecutionMode.RUNNING -> {
+                // create and run worker action
+                val allConstructorArgs =
+                    (listOf(parametersInstance) + injectableService.map { it.implementation }).toTypedArray()
+                val newInstance = objectFactory.newInstance(actualClass, *allConstructorArgs)
+                (newInstance as WorkAction<*>).execute()
+            }
         }
     }
 
@@ -194,6 +239,7 @@ class WorkerActionDecorator(
             null,
             null
         ).apply {
+            visitAnnotation("Ljavax/inject/Inject;", true)
             visitCode()
             visitVarInsn(Opcodes.ALOAD, 0)
             visitMethodInsn(Opcodes.INVOKESPECIAL, name, "<init>", "()V", false)
@@ -215,7 +261,7 @@ class WorkerActionDecorator(
 
         super.visit(
             version,
-            access and Modifier.ABSTRACT.inv(),
+            access,
             generatedClassName,
             signature,
             name,

@@ -35,6 +35,7 @@ import static org.objectweb.asm.Opcodes.V1_8;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.fixtures.ExecutionMode;
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor;
 import com.android.ide.common.resources.FileStatus;
 import com.android.testutils.Serialization;
@@ -98,7 +99,12 @@ public class FixStackFramesDelegateTest {
         Project project = ProjectBuilder.builder().withProjectDir(tmp.newFolder()).build();
         ObjectFactory objectFactory = project.getObjects();
         task = project.getTasks().register("taskName", AndroidVariantTask.class).get();
-        executor = new FakeGradleWorkExecutor(objectFactory, tmp.newFolder(), Collections.emptyList());
+        executor =
+                new FakeGradleWorkExecutor(
+                        objectFactory,
+                        tmp.newFolder(),
+                        Collections.emptyList(),
+                        ExecutionMode.RUNNING);
     }
 
     @Test

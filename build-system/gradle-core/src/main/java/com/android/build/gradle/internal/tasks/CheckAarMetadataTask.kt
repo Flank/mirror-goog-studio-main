@@ -44,7 +44,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import java.util.Properties
@@ -58,10 +57,6 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
     // depend on this task.
     @get:OutputDirectory
     abstract val dummyOutputDirectory: DirectoryProperty
-
-    // Use a property to hold the [WorkerExecutor] so unit tests can reset it if necessary.
-    @get:Internal
-    abstract val workerExecutorProperty: Property<WorkerExecutor>
 
     @VisibleForTesting
     @get:Internal
@@ -82,7 +77,7 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
     abstract val compileSdkVersion: Property<String>
 
     override fun doTaskAction() {
-        workerExecutorProperty.get().noIsolation().submit(
+        workerExecutor.noIsolation().submit(
             CheckAarMetadataWorkAction::class.java
         ) {
             it.aarMetadataArtifacts.addAll(
@@ -125,7 +120,6 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
         override fun configure(task: CheckAarMetadataTask) {
             super.configure(task)
 
-            task.workerExecutorProperty.setDisallowChanges(task.workerExecutor)
             task.aarMetadataArtifacts =
                 creationConfig.variantDependencies.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
