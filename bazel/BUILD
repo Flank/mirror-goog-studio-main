@@ -40,7 +40,7 @@ java_library(
     deps = [
         ":utils",
         "//tools/idea/.idea/libraries:Ant",
-        "//tools/idea/.idea/libraries:Groovy",
+        "//tools/idea/.idea/libraries:org.codehaus.groovy_groovy",
     ],
 )
 
