@@ -40,6 +40,9 @@ interface Variant<PropertiesT : VariantProperties>: Component<PropertiesT>,
     fun androidTest(action: AndroidTest<AndroidTestProperties>.() -> Unit)
     fun androidTestProperties(action: AndroidTestProperties.() -> Unit)
 
+    /**
+     * Gets the minimum supported SDK Version for this variant.
+     */
     var minSdkVersion: AndroidVersion
 
     /**

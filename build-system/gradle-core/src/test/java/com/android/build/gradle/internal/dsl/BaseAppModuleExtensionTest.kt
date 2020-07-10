@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.gradle.api.BaseVariantOutput
@@ -82,7 +83,7 @@ class BaseAppModuleExtensionTest {
     fun testOnVariants() {
         appExtension.onVariants
             .withName("foo") {
-                minSdkVersion = AndroidVersionImpl(23)
+                minSdkVersion = AndroidVersion(23)
             }
 
         appExtension.onVariants

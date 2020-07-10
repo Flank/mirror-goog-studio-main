@@ -763,6 +763,8 @@ com.android.build.api.variant.AaptOptions
 com.android.build.api.variant.AaptOptions.getAdditionalParameters: org.gradle.api.provider.ListProperty<java.lang.String> ()
 com.android.build.api.variant.AaptOptions.getIgnoreAssetsPatterns: org.gradle.api.provider.ListProperty<java.lang.String> ()
 com.android.build.api.variant.AndroidVersion
+com.android.build.api.variant.AndroidVersion.<init>: com.android.build.api.variant.AndroidVersion (int, java.lang.String)
+com.android.build.api.variant.AndroidVersion.<init>: com.android.build.api.variant.AndroidVersion (int, java.lang.String, int, kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.variant.AndroidVersion.getApiLevel: int ()
 com.android.build.api.variant.AndroidVersion.getCodename: java.lang.String ()
 com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.Variant

@@ -19,14 +19,16 @@ package com.android.build.api.variant
 import org.gradle.api.Incubating
 
 @Incubating
-interface AndroidVersion {
+open class AndroidVersion(
+
     /**
      * SDK version codes mirroring ones found in Build#VERSION_CODES on Android.
      */
-    val apiLevel: Int
+    val apiLevel: Int,
+
     /**
      * Preview versions of the platform are identified by a code name. Their API level
      * is usually set to the value of the previous platform.
      */
-    val codename: String?
-}
+    val codename: String? = null
+)

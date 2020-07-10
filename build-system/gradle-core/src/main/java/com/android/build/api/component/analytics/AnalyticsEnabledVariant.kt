@@ -47,7 +47,8 @@ abstract class AnalyticsEnabledVariant<PropertiesT: VariantProperties>(
         set(value) {
             stats.variantApiAccessBuilder.addVariantAccessBuilder().type =
                 VariantMethodType.MIN_SDK_VERSION_VALUE_VALUE
-            delegate.minSdkVersion = value}
+            delegate.minSdkVersion = value
+        }
 
     override var renderscriptTargetApi: Int
         get() = delegate.renderscriptTargetApi

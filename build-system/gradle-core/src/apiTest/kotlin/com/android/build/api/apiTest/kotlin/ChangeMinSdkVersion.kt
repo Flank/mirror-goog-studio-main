@@ -41,12 +41,14 @@ class ChangeMinSdkVersion: VariantApiBaseTest(TestType.Script) {
                     kotlin("android")
                     kotlin("android.extensions")
             }
+            import com.android.build.api.variant.AndroidVersion
+            
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
 
                 onVariants {
                     if (name == "release") {
-                        minSdkVersion = 23
+                        minSdkVersion = AndroidVersion(23)
                     }
                 }
             }
