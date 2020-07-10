@@ -20,11 +20,11 @@ import com.android.SdkConstants
 import com.android.SdkConstants.DOT_AAR
 import com.android.SdkConstants.DOT_JAR
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.utils.isValidZipEntryName
-import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.utils.FileUtils
 import com.google.common.base.Joiner
 import com.google.common.base.Preconditions
@@ -33,6 +33,7 @@ import com.google.common.io.Files
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
@@ -42,12 +43,11 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.workers.WorkerExecutor
 import java.io.File
-import java.io.Serializable
 import java.nio.ByteBuffer
 import java.util.regex.Pattern
 import java.util.zip.ZipFile
-import javax.inject.Inject
 
 private val pattern = Pattern.compile("lib/[^/]+/[^/]+\\.so")
 
@@ -71,47 +71,53 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
     abstract val outputDirectory: DirectoryProperty
 
     override fun doTaskAction() {
-        getWorkerFacadeWithThreads(useGradleExecutor = true).use { workers ->
-            LibraryJniLibsDelegate(
-                projectNativeLibs.get().asFile,
-                localJarsNativeLibs?.files ?: listOf(),
-                outputDirectory.get().asFile,
-                workers
-            ).copyFiles()
-        }
+        LibraryJniLibsDelegate(
+            projectNativeLibs.get().asFile,
+            localJarsNativeLibs?.files ?: listOf(),
+            outputDirectory.get().asFile,
+            workerExecutor,
+            this
+        ).copyFiles()
     }
 
     class LibraryJniLibsDelegate(
         private val projectNativeLibs: File,
         private val localJarsNativeLibs: Collection<File>,
         val outputDirectory: File,
-        val workers: WorkerExecutorFacade
+        val workers: WorkerExecutor,
+        private val instantiator: AndroidVariantTask
     ) {
         fun copyFiles() {
             FileUtils.cleanOutputDir(outputDirectory)
             val inputFiles = listOf(projectNativeLibs) + localJarsNativeLibs.toList()
             for (inputFile in inputFiles) {
-                workers.submit(
-                    LibraryJniLibsRunnable::class.java,
-                    LibraryJniLibsRunnable.Params(inputFile, outputDirectory)
-                )
+                workers.noIsolation().submit(LibraryJniLibsRunnable::class.java) {
+                    it.initializeFromAndroidVariantTask(instantiator)
+                    it.inputFile.set(inputFile)
+                    it.outputDirectory.set(outputDirectory)
+
+                }
             }
         }
     }
 
-    class LibraryJniLibsRunnable @Inject constructor(val params: Params) : Runnable {
+    abstract class LibraryJniLibsRunnable : ProfileAwareWorkAction<LibraryJniLibsRunnable.Params>() {
 
-        class Params(val inputFile: File, val outputDirectory: File) : Serializable
+        abstract class Params: ProfileAwareWorkAction.Parameters() {
+            abstract val inputFile: Property<File>
+            abstract val outputDirectory: DirectoryProperty
+        }
 
         override fun run() {
-            if (params.inputFile.isFile) {
+            val inputFile = parameters.inputFile.get()
+            if (inputFile.isFile) {
                 Preconditions.checkState(
-                    params.inputFile.name.endsWith(DOT_JAR)
-                            || params.inputFile.name.endsWith(DOT_AAR),
-                    "Non-directory inputs must have .jar or .aar extension: ${params.inputFile}")
-                copyFromJar(params.inputFile, params.outputDirectory)
+                    inputFile.name.endsWith(DOT_JAR)
+                            || inputFile.name.endsWith(DOT_AAR),
+                    "Non-directory inputs must have .jar or .aar extension: ${inputFile}")
+                copyFromJar(inputFile, parameters.outputDirectory.asFile.get())
             } else {
-                copyFromFolder(params.inputFile, params.outputDirectory)
+                copyFromFolder(inputFile, parameters.outputDirectory.asFile.get())
             }
         }
     }
