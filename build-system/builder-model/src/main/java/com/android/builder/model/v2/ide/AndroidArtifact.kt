@@ -74,7 +74,7 @@ interface AndroidArtifact : BaseArtifact {
      *
      * @return the path to a json file.
      */
-    val assembleTaskOutputListingFile: String
+    val assembleTaskOutputListingFile: File
 
     /**
      * The test info, if applicable, otherwise null

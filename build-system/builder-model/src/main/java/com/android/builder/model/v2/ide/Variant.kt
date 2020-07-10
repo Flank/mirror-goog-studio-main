@@ -60,10 +60,11 @@ interface Variant {
     val productFlavors: List<String>
 
     /**
-     * The list of target projects and the variants that this variant is testing.
-     * This is specified for the test only variants (ones using the test plugin).
+     * For standalone test plugins: information about the tested project.
+     *
+     * For other plugin types, this is null
      */
-    val testedTargetVariants: Collection<TestedTargetVariant>
+    val testedTargetVariant: TestedTargetVariant?
 
     /**
      * Whether the variant is instant app compatible.

@@ -242,9 +242,9 @@ class FileNormalizerImpl(
             val relativeFile = relativeToOrNull(root)
             if (relativeFile != null) {
                 return if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
-                    "[$varName]/${relativeFile.toString().replace("\\", "/")}"
+                    "{$varName}/${relativeFile.toString().replace("\\", "/")}"
                 } else {
-                    "[$varName]/$relativeFile"
+                    "{$varName}/$relativeFile"
                 }
             }
         }

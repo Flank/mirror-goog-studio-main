@@ -26,53 +26,25 @@ import java.io.File
 interface BundleInfo {
 
     /**
-     * Returns the name of the task used to generate the bundle file (.aab), or null if the task is
-     * not supported.
-     *
-     * @return name of the task used to generate the bundle file (.aab)
+     * The name of the task used to generate the bundle file (.aab)
      */
-    val bundleTaskName: String?
+    val bundleTaskName: String
 
     /**
-     * Returns the path to the listing file generated after each [.getBundleTaskName] task
+     * The path to the listing file generated after each [bundleTaskName] task
      * execution. The listing file will contain a reference to the produced bundle file (.aab).
-     * Returns null when [.getBundleTaskName] returns null.
-     *
-     * @return the file path for the bundle model file.
      */
-    val bundleTaskOutputListingFile: String?
+    val bundleTaskOutputListingFile: File
 
     /**
-     * Returns the name of the task used to generate APKs via the bundle file (.aab), or null if the
-     * task is not supported.
-     *
-     * @return name of the task used to generate the APKs via the bundle
+     * The name of the task used to generate APKs via the bundle file (.aab)
      */
-    val apkFromBundleTaskName: String?
+    val apkFromBundleTaskName: String
 
     /**
-     * Returns the path to the model file generated after each [.getApkFromBundleTaskName]
+     * The path to the model file generated after each [apkFromBundleTaskName]
      * task execution. The model will contain a reference to the folder where APKs from bundle are
-     * placed into. Returns null when [.getApkFromBundleTaskName] returns null.
-     *
-     * @return the file path for the [.getApkFromBundleTaskName] output model.
+     * placed into.
      */
-    val apkFromBundleTaskOutputListingFile: String?
-
-    /**
-     * The bundle file (.aab file).
-     *
-     * TODO is this still needed now that we have bundleTaskOutputListingFile?
-     */
-    val bundleFile: File
-
-    /**
-     * The location of the generated APK(s) from the bundle.
-     *
-     * The location is always returned but it may not have been generated if the build request
-     * only built the bundle.
-     *
-     * TODO is this still needed now that we have apkFromBundleTaskOutputListingFile?
-     */
-    val apkFolder: File
+    val apkFromBundleTaskOutputListingFile: File
 }

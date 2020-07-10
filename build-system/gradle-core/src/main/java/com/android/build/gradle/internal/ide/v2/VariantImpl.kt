@@ -33,7 +33,7 @@ data class VariantImpl(
     override val unitTestArtifact: JavaArtifact?,
     override val buildType: String?,
     override val productFlavors: List<String>,
-    override val testedTargetVariants: Collection<TestedTargetVariant>,
+    override val testedTargetVariant: TestedTargetVariant?,
     override val isInstantAppCompatible: Boolean,
     override val desugaredMethods: List<String>
 ) : Variant, Serializable {

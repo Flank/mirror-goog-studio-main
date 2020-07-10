@@ -24,12 +24,10 @@ import java.io.Serializable
  * Implementation of [BundleInfo] for serialization via the Tooling API.
  */
 data class BundleInfoImpl(
-    override val bundleTaskName: String?,
-    override val bundleTaskOutputListingFile: String?,
-    override val apkFromBundleTaskName: String?,
-    override val apkFromBundleTaskOutputListingFile: String?,
-    override val bundleFile: File,
-    override val apkFolder: File
+    override val bundleTaskName: String,
+    override val bundleTaskOutputListingFile: File,
+    override val apkFromBundleTaskName: String,
+    override val apkFromBundleTaskOutputListingFile: File
 ) : BundleInfo, Serializable {
     companion object {
         @JvmStatic

@@ -19,10 +19,14 @@ package com.android.build.gradle.integration.common.fixture.model
 import com.android.builder.model.v2.dsl.BaseConfig
 import com.android.builder.model.v2.dsl.BuildType
 import com.android.builder.model.v2.dsl.ProductFlavor
+import com.android.builder.model.v2.ide.AndroidArtifact
+import com.android.builder.model.v2.ide.BaseArtifact
 import com.android.builder.model.v2.ide.BuildTypeContainer
+import com.android.builder.model.v2.ide.JavaArtifact
 import com.android.builder.model.v2.ide.LintOptions
 import com.android.builder.model.v2.ide.ProductFlavorContainer
 import com.android.builder.model.v2.ide.SourceProvider
+import com.android.builder.model.v2.ide.Variant
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.VariantDependencies
 import java.io.File
@@ -50,6 +54,19 @@ fun AndroidProject.dump(normalizer: FileNormalizer): String {
 fun VariantDependencies.dump(normalizer: FileNormalizer): String {
     return dump("VariantDependencies", normalizer) {
         // TODO
+    }.also {
+        println("--------------------------------------------------")
+        println("Dumped model:")
+        println(it)
+    }
+}
+
+/**
+ * Entry point to dump a single [Variant]
+ */
+fun Variant.dump(normalizer: FileNormalizer): String {
+    return dump("VariantDependencies", normalizer) {
+        writeToBuilder(this)
     }.also {
         println("--------------------------------------------------")
         println("Dumped model:")
@@ -101,6 +118,11 @@ private fun AndroidProject.writeToBuilder(builder: DumpBuilder) {
                 item("enableV2Signing", config.enableV2Signing)
                 item("enableV3Signing", config.enableV3Signing)
                 item("enableV4Signing", config.enableV4Signing)
+            }
+        }
+        multiLineList("variants", variants.sortedBy { it.name }) {
+            largeObject("variant(${it.name})", it) { variant ->
+                variant.writeToBuilder(this)
             }
         }
         multiLineList("lintRuleJars", lintRuleJars.sorted()) {
@@ -296,6 +318,83 @@ private fun SourceProvider.writeToBuilder(builder: DumpBuilder) {
         }
         multiLineList("mlModelsDirectories", mlModelsDirectories?.sorted()) {
             value(it)
+        }
+    }
+}
+
+private fun Variant.writeToBuilder(builder: DumpBuilder) {
+    builder.apply {
+        item("name", name)
+        item("displayName", name)
+        item("buildType", buildType)
+        item("productFlavors", productFlavors)
+        item("isInstantAppCompatible", isInstantAppCompatible)
+        item("desugaredMethods", desugaredMethods)
+        largeObject("mainArtifact", mainArtifact) {
+            it.writeToBuilder(this)
+        }
+        largeObject("androidTestArtifact", androidTestArtifact) {
+            it.writeToBuilder(this)
+        }
+        largeObject("unitTestArtifact", unitTestArtifact) {
+            it.writeToBuilder(this)
+        }
+        struct("testedTargetVariant", testedTargetVariant) {
+            item("targetProjectPath", it.targetProjectPath)
+            item("targetVariant", it.targetVariant)
+        }
+    }
+}
+
+private fun AndroidArtifact.writeToBuilder(builder: DumpBuilder) {
+    writeBaseArtifactToBuilder(builder)
+    builder.apply {
+        item("isSigned", isSigned)
+        item("signingConfigName", signingConfigName)
+        item("sourceGenTaskName", sourceGenTaskName)
+        item("generatedResourceFolders", generatedResourceFolders.sorted())
+        item("abiFilters", abiFilters?.sorted())
+        item("assembleTaskOutputListingFile", assembleTaskOutputListingFile)
+        struct("testInfo", testInfo) {
+            item("animationsDisabled", it.animationsDisabled)
+            item("execution", it.execution)
+            item("additionalRuntimeApks", it.additionalRuntimeApks)
+            item("instrumentedTestTaskName", it.instrumentedTestTaskName)
+        }
+        struct("bundleInfo", bundleInfo) {
+            item("bundleTaskName", it.bundleTaskName)
+            item("bundleTaskOutputListingFile", it.bundleTaskOutputListingFile)
+            item("apkFromBundleTaskName", it.apkFromBundleTaskName)
+            item("apkFromBundleTaskOutputListingFile", it.apkFromBundleTaskOutputListingFile)
+        }
+        item("codeShrinker", codeShrinker)
+    }
+}
+
+private fun JavaArtifact.writeToBuilder(builder: DumpBuilder) {
+    writeBaseArtifactToBuilder(builder)
+    builder.apply {
+
+    }
+
+}
+
+private fun BaseArtifact.writeBaseArtifactToBuilder(builder: DumpBuilder) {
+    builder.apply {
+        item("compileTaskName", compileTaskName)
+        item("assembleTaskName", assembleTaskName)
+        multiLineList("classesFolders", classesFolders.sorted()) {
+            value(it)
+        }
+        item("ideSetupTaskNames", ideSetupTaskNames.sorted())
+        multiLineList("generatedSourceFolders", generatedSourceFolders.sorted()) {
+            value(it)
+        }
+        largeObject("variantSourceProvider", variantSourceProvider) {
+            it.writeToBuilder(this)
+        }
+        largeObject("multiFlavorSourceProvider", multiFlavorSourceProvider) {
+            it.writeToBuilder(this)
         }
     }
 }

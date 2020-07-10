@@ -783,6 +783,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                             .get()
                             .getAsFile());
         }
+
         // The separately compile R class, if applicable.
         if (!globalScope.getExtension().getAaptOptions().getNamespaced()) {
             additionalTestClasses.add(
@@ -1007,7 +1008,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     @NonNull
-    private static List<File> getGeneratedSourceFoldersForUnitTests(
+    public static List<File> getGeneratedSourceFoldersForUnitTests(
             @Nullable ComponentPropertiesImpl componentProperties) {
         if (componentProperties == null) {
             return Collections.emptyList();
@@ -1026,7 +1027,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     @NonNull
-    private List<File> getGeneratedSourceFolders(
+    public static List<File> getGeneratedSourceFolders(
             @Nullable ComponentPropertiesImpl componentProperties) {
         if (componentProperties == null) {
             return Collections.emptyList();
@@ -1076,7 +1077,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     @NonNull
-    private static List<File> getGeneratedResourceFolders(
+    public static List<File> getGeneratedResourceFolders(
             @Nullable ComponentPropertiesImpl componentProperties) {
         if (componentProperties == null) {
             return Collections.emptyList();

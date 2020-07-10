@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-88918b174e6069741c245c3997b8f77bda8c1f9169d2aea1420966e6872e12f3
+9ed3cb0d9509bf3a6c29ace2490b08cbaa7294c5191c7a2fab93ebc485f2c3f5
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -554,7 +554,7 @@ com.android.builder.model.v2.ide.AdbOptions.getInstallOptions: java.util.Collect
 com.android.builder.model.v2.ide.AdbOptions.getTimeOutInMs: int ()
 com.android.builder.model.v2.ide.AndroidArtifact implements com.android.builder.model.v2.ide.BaseArtifact
 com.android.builder.model.v2.ide.AndroidArtifact.getAbiFilters: java.util.Set<java.lang.String> ()
-com.android.builder.model.v2.ide.AndroidArtifact.getAssembleTaskOutputListingFile: java.lang.String ()
+com.android.builder.model.v2.ide.AndroidArtifact.getAssembleTaskOutputListingFile: java.io.File ()
 com.android.builder.model.v2.ide.AndroidArtifact.getBundleInfo: com.android.builder.model.v2.ide.BundleInfo ()
 com.android.builder.model.v2.ide.AndroidArtifact.getCodeShrinker: com.android.builder.model.v2.ide.CodeShrinker ()
 com.android.builder.model.v2.ide.AndroidArtifact.getGeneratedResourceFolders: java.util.Collection<java.io.File> ()
@@ -575,13 +575,11 @@ com.android.builder.model.v2.ide.ArtifactDependencies
 com.android.builder.model.v2.ide.ArtifactDependencies.getCompileDependencies: java.util.List<com.android.builder.model.v2.ide.GraphItem> ()
 com.android.builder.model.v2.ide.ArtifactDependencies.getPackageDependencies: java.util.List<com.android.builder.model.v2.ide.GraphItem> ()
 com.android.builder.model.v2.ide.BaseArtifact
-com.android.builder.model.v2.ide.BaseArtifact.getAdditionalClassesFolders: java.util.Set<java.io.File> ()
 com.android.builder.model.v2.ide.BaseArtifact.getAssembleTaskName: java.lang.String ()
-com.android.builder.model.v2.ide.BaseArtifact.getClassesFolder: java.io.File ()
+com.android.builder.model.v2.ide.BaseArtifact.getClassesFolders: java.util.Set<java.io.File> ()
 com.android.builder.model.v2.ide.BaseArtifact.getCompileTaskName: java.lang.String ()
 com.android.builder.model.v2.ide.BaseArtifact.getGeneratedSourceFolders: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.ide.BaseArtifact.getIdeSetupTaskNames: java.util.Set<java.lang.String> ()
-com.android.builder.model.v2.ide.BaseArtifact.getJavaResourcesFolder: java.io.File ()
 com.android.builder.model.v2.ide.BaseArtifact.getMultiFlavorSourceProvider: com.android.builder.model.v2.ide.SourceProvider ()
 com.android.builder.model.v2.ide.BaseArtifact.getVariantSourceProvider: com.android.builder.model.v2.ide.SourceProvider ()
 com.android.builder.model.v2.ide.BuildTypeContainer
@@ -590,12 +588,10 @@ com.android.builder.model.v2.ide.BuildTypeContainer.getBuildType: com.android.bu
 com.android.builder.model.v2.ide.BuildTypeContainer.getSourceProvider: com.android.builder.model.v2.ide.SourceProvider ()
 com.android.builder.model.v2.ide.BuildTypeContainer.getUnitTestSourceProvider: com.android.builder.model.v2.ide.SourceProvider ()
 com.android.builder.model.v2.ide.BundleInfo
-com.android.builder.model.v2.ide.BundleInfo.getApkFolder: java.io.File ()
 com.android.builder.model.v2.ide.BundleInfo.getApkFromBundleTaskName: java.lang.String ()
-com.android.builder.model.v2.ide.BundleInfo.getApkFromBundleTaskOutputListingFile: java.lang.String ()
-com.android.builder.model.v2.ide.BundleInfo.getBundleFile: java.io.File ()
+com.android.builder.model.v2.ide.BundleInfo.getApkFromBundleTaskOutputListingFile: java.io.File ()
 com.android.builder.model.v2.ide.BundleInfo.getBundleTaskName: java.lang.String ()
-com.android.builder.model.v2.ide.BundleInfo.getBundleTaskOutputListingFile: java.lang.String ()
+com.android.builder.model.v2.ide.BundleInfo.getBundleTaskOutputListingFile: java.io.File ()
 com.android.builder.model.v2.ide.CodeShrinker extends java.lang.Enum
 com.android.builder.model.v2.ide.CodeShrinker.valueOf: com.android.builder.model.v2.ide.CodeShrinker (java.lang.String)
 com.android.builder.model.v2.ide.CodeShrinker.values: com.android.builder.model.v2.ide.CodeShrinker[] ()
@@ -605,6 +601,7 @@ com.android.builder.model.v2.ide.GraphItem.getDependencies: java.util.List<com.a
 com.android.builder.model.v2.ide.GraphItem.getRequestedCoordinates: java.lang.String ()
 com.android.builder.model.v2.ide.JavaArtifact implements com.android.builder.model.v2.ide.BaseArtifact
 com.android.builder.model.v2.ide.JavaArtifact.getMockablePlatformJar: java.io.File ()
+com.android.builder.model.v2.ide.JavaArtifact.getRuntimeResourceFolder: java.io.File ()
 com.android.builder.model.v2.ide.JavaCompileOptions
 com.android.builder.model.v2.ide.JavaCompileOptions.getEncoding: java.lang.String ()
 com.android.builder.model.v2.ide.JavaCompileOptions.getSourceCompatibility: java.lang.String ()
@@ -708,7 +705,7 @@ com.android.builder.model.v2.ide.Variant.getDisplayName: java.lang.String ()
 com.android.builder.model.v2.ide.Variant.getMainArtifact: com.android.builder.model.v2.ide.AndroidArtifact ()
 com.android.builder.model.v2.ide.Variant.getName: java.lang.String ()
 com.android.builder.model.v2.ide.Variant.getProductFlavors: java.util.List<java.lang.String> ()
-com.android.builder.model.v2.ide.Variant.getTestedTargetVariants: java.util.Collection<com.android.builder.model.v2.ide.TestedTargetVariant> ()
+com.android.builder.model.v2.ide.Variant.getTestedTargetVariant: com.android.builder.model.v2.ide.TestedTargetVariant ()
 com.android.builder.model.v2.ide.Variant.getUnitTestArtifact: com.android.builder.model.v2.ide.JavaArtifact ()
 com.android.builder.model.v2.ide.Variant.isInstantAppCompatible: boolean ()
 com.android.builder.model.v2.ide.VectorDrawablesOptions

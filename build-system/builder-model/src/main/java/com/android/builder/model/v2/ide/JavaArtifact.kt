@@ -27,5 +27,13 @@ import java.io.File
  */
 interface JavaArtifact : BaseArtifact {
     /** Path to the mockable platform jar generated for this [JavaArtifact], if present.  */
-    val mockablePlatformJar: File
+    val mockablePlatformJar: File?
+
+    /**
+     * Returns the folder containing resource files that classes from this artifact expect to find
+     * on the classpath.
+     *
+     * This is used to run the unit tests
+     */
+    val runtimeResourceFolder: File?
 }

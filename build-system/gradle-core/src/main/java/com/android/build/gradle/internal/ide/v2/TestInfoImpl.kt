@@ -27,7 +27,7 @@ data class TestInfoImpl(
     override val animationsDisabled: Boolean,
     override val execution: TestInfo.Execution?,
     override val additionalRuntimeApks: Collection<File>,
-    override val instrumentedTestTaskName: String?
+    override val instrumentedTestTaskName: String
 ) : TestInfo, Serializable {
     companion object {
         @JvmStatic
