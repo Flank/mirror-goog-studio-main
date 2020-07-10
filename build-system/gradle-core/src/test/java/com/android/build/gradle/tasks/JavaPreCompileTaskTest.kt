@@ -14,171 +14,158 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.tasks;
+package com.android.build.gradle.tasks
 
-import static com.android.testutils.truth.PathSubject.assertThat;
-import static com.google.common.truth.Truth.assertThat;
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.google.common.base.Charsets
+import com.google.common.io.Files
+import com.google.common.truth.Truth.assertThat
+import org.gradle.api.Project
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.testfixtures.ProjectBuilder
+import org.junit.Before
+import org.junit.BeforeClass
+import org.junit.ClassRule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import java.io.File
+import java.io.FileOutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions;
-import com.android.build.gradle.internal.services.FakeServices;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.testfixtures.ProjectBuilder;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+class JavaPreCompileTaskTest {
 
-public class JavaPreCompileTaskTest {
-    @ClassRule public static TemporaryFolder temporaryFolder = new TemporaryFolder();
+    private lateinit var project: Project
+    private lateinit var outputFile: File
 
-    private static final String testProcessorName = "com.google.test.MyAnnotationProcessor";
+    @Before
+    fun setUp() {
+        project = ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build()
+        outputFile = temporaryFolder.root.resolve("outputFile")
+    }
 
-    private static final String dependencyWithProcessorJar = "dependencyWithProcessor.jar";
+    @Test
+    fun `no annotation processors are present`() {
+        getWorkAction(
+            getAnnotationProcessorArtifacts(jar, directory, nonJarFile),
+            emptyList(),
+            outputFile
+        ).execute()
 
-    private static File nonJarFile;
-    private static File jar;
-    private static File jarWithAnnotationProcessor;
-    private static File directory;
-    private static File directoryWithAnnotationProcessor;
+        assertThat(getAnnotationProcessorList()).isEmpty()
+    }
 
-    private Project project;
-    private Configuration processorConfiguration;
-    private JavaPreCompileTask task;
+    @Test
+    fun `annotation processors are present`() {
+        getWorkAction(
+            getAnnotationProcessorArtifacts(
+                jarWithAnnotationProcessor,
+                directoryWithAnnotationProcessor,
+                jar,
+                directory,
+                nonJarFile
+            ),
+            emptyList(),
+            outputFile
+        ).execute()
 
-    @BeforeClass
-    public static void classSetUp() throws IOException {
-        directory = temporaryFolder.newFolder();
-        directoryWithAnnotationProcessor = temporaryFolder.newFolder();
-        File processorMetaInfFile =
-                new File(
-                        directoryWithAnnotationProcessor,
-                        JavaCompileUtils.ANNOTATION_PROCESSORS_INDICATOR_FILE);
-        Files.createParentDirs(processorMetaInfFile);
-        assertThat(processorMetaInfFile.createNewFile()).isTrue();
+        assertThat(getAnnotationProcessorList()).containsExactly(
+            jarWithAnnotationProcessor.name,
+            directoryWithAnnotationProcessor.name
+        )
+    }
 
-        nonJarFile = temporaryFolder.newFile("notJar.txt");
-        Files.asCharSink(nonJarFile, Charsets.UTF_8).write("This is not a jar file");
+    @Test
+    fun `annotation processor class names are specified`() {
+        getWorkAction(
+            getAnnotationProcessorArtifacts(
+                jarWithAnnotationProcessor,
+                directoryWithAnnotationProcessor,
+                jar,
+                directory,
+                nonJarFile
+            ),
+            listOf(ANNOTATION_PROCESSOR_CLASS_NAME),
+            outputFile
+        ).execute()
 
-        jar = temporaryFolder.newFile("dependency.jar");
-        ZipOutputStream jarOut = new ZipOutputStream(new FileOutputStream(jar));
-        jarOut.close();
+        assertThat(getAnnotationProcessorList()).containsExactly(ANNOTATION_PROCESSOR_CLASS_NAME)
+    }
 
-        jarWithAnnotationProcessor = temporaryFolder.newFile(dependencyWithProcessorJar);
-        try (ZipOutputStream out =
-                new ZipOutputStream(new FileOutputStream(jarWithAnnotationProcessor))) {
-            out.putNextEntry(new ZipEntry(JavaCompileUtils.ANNOTATION_PROCESSORS_INDICATOR_FILE));
-            out.write(testProcessorName.getBytes());
-            out.closeEntry();
+    private fun getAnnotationProcessorArtifacts(vararg files: File): List<SerializableArtifact> {
+        val configuration = project.configurations.create("annotationProcessor")
+        project.dependencies.add("annotationProcessor", project.files(files))
+        return configuration.incoming.artifacts.artifacts.map { SerializableArtifact(it) }
+    }
+
+    private fun getWorkAction(
+        annotationProcessorArtifacts: List<SerializableArtifact>,
+        annotationProcessorClassNames: List<String>,
+        annotationProcessorListFile: File
+    ): JavaPreCompileWorkAction {
+        return object : JavaPreCompileWorkAction() {
+            override fun getParameters(): JavaPreCompileParameters {
+                return object : JavaPreCompileParameters() {
+                    override val annotationProcessorArtifacts =
+                        project.objects.listProperty(SerializableArtifact::class.java)
+                            .value(annotationProcessorArtifacts)
+                    override val annotationProcessorClassNames =
+                        project.objects.listProperty(String::class.java)
+                            .value(annotationProcessorClassNames)
+                    override val annotationProcessorListFile: RegularFileProperty =
+                        FakeObjectFactory.factory.fileProperty()
+                            .fileValue(annotationProcessorListFile)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
         }
     }
 
-    @Before
-    public void setUp() throws IOException {
-        File testDir = temporaryFolder.newFolder();
-        project = ProjectBuilder.builder().withProjectDir(testDir).build();
-        task = project.getTasks().create("test", JavaPreCompileTask.class);
-        processorConfiguration = project.getConfigurations().create("annotationProcessor");
-        project.getConfigurations().create("api");
-        task.getProcessorListFile().set(temporaryFolder.newFile());
-        task.getEnableGradleWorkers().set(false);
-    }
+    private fun getAnnotationProcessorList() = readAnnotationProcessorsFromJsonFile(outputFile).keys
 
-    @Test
-    public void checkSuccessForNormalJar() throws IOException {
-        project.getDependencies().add("api", project.files(jar, nonJarFile, directory));
-        task.init(
-                processorConfiguration.getIncoming().getArtifacts(),
-                new AnnotationProcessorOptions(FakeServices.createDslServices()).getClassNames());
+    companion object {
 
-        task.doTaskAction();
+        @JvmStatic
+        @get:ClassRule
+        val temporaryFolder = TemporaryFolder()
 
-        assertThat(getProcessorNames()).isEmpty();
-    }
+        private const val ANNOTATION_PROCESSOR_CLASS_NAME = "com.example.MyAnnotationProcessor"
 
-    @Test
-    public void checkSuccessWithAnnotationProcessor() throws IOException {
-        project.getDependencies()
-                .add(
-                        "annotationProcessor",
-                        project.files(
-                                jarWithAnnotationProcessor, directoryWithAnnotationProcessor));
-        task.init(
-                processorConfiguration.getIncoming().getArtifacts(),
-                new AnnotationProcessorOptions(FakeServices.createDslServices()).getClassNames());
+        private lateinit var directory: File
+        private lateinit var directoryWithAnnotationProcessor: File
+        private lateinit var jar: File
+        private lateinit var jarWithAnnotationProcessor: File
+        private lateinit var nonJarFile: File
 
-        task.doTaskAction();
+        @Suppress("unused")
+        @BeforeClass
+        @JvmStatic
+        fun classSetUp() {
+            directory = temporaryFolder.newFolder("directory")
 
-        assertThat(getProcessorNames())
-                .containsExactly(
-                        jarWithAnnotationProcessor.getName(),
-                        directoryWithAnnotationProcessor.getName());
-    }
+            directoryWithAnnotationProcessor =
+                temporaryFolder.newFolder("directoryWithAnnotationProcessor")
+            val processorMetaInfFile =
+                File(directoryWithAnnotationProcessor, ANNOTATION_PROCESSORS_INDICATOR_FILE)
+            Files.createParentDirs(processorMetaInfFile)
+            assertThat(processorMetaInfFile.createNewFile()).isTrue()
 
-    @Test
-    public void checkNoAnnotationProcessorsIncluded() {
-        project.getDependencies().add("api", project.files(jarWithAnnotationProcessor));
-        AnnotationProcessorOptions options =
-                new AnnotationProcessorOptions(FakeServices.createDslServices());
-        options.setIncludeCompileClasspath(true);
-        task.init(processorConfiguration.getIncoming().getArtifacts(), options.getClassNames());
-        task.doTaskAction();
-        assertThat(getProcessorNames()).isEmpty();
-    }
+            jar = temporaryFolder.newFile("jar.jar")
+            ZipOutputStream(FileOutputStream(jar)).use { }
 
-    @Test
-    public void checkProcessorConfigurationAddedForMetrics() throws IOException {
-        AnnotationProcessorOptions options =
-                new AnnotationProcessorOptions(FakeServices.createDslServices());
-        project.getDependencies()
-                .add("annotationProcessor", project.files(jarWithAnnotationProcessor));
-        task.init(processorConfiguration.getIncoming().getArtifacts(), options.getClassNames());
-        task.doTaskAction();
+            jarWithAnnotationProcessor = temporaryFolder.newFile("jarWithAnnotationProcessor.jar")
+            ZipOutputStream(FileOutputStream(jarWithAnnotationProcessor))
+                .use { out ->
+                    out.putNextEntry(ZipEntry(ANNOTATION_PROCESSORS_INDICATOR_FILE))
+                    out.write(ANNOTATION_PROCESSOR_CLASS_NAME.toByteArray())
+                    out.closeEntry()
+                }
 
-        assertThat(getProcessorNames()).containsExactly(jarWithAnnotationProcessor.getName());
-    }
-
-    @Test
-    public void checkExplicitProcessorAddedForMetrics() throws IOException {
-        AnnotationProcessorOptions options =
-                new AnnotationProcessorOptions(FakeServices.createDslServices());
-        options.getClassNames().add(testProcessorName);
-        task.init(processorConfiguration.getIncoming().getArtifacts(), options.getClassNames());
-        task.doTaskAction();
-
-        assertThat(getProcessorNames()).containsExactly(testProcessorName);
-    }
-
-    @Test
-    public void checkImplicitProcessorsAddedForMetrics() throws IOException {
-        project.getDependencies()
-                .add("annotationProcessor", project.files(jarWithAnnotationProcessor));
-        AnnotationProcessorOptions options =
-                new AnnotationProcessorOptions(FakeServices.createDslServices());
-
-        task.init(processorConfiguration.getIncoming().getArtifacts(), options.getClassNames());
-        task.doTaskAction();
-
-        // Since the processor names are not explicitly specified via
-        // AnnotationProcessorOptions.getClassNames(), any annotation processors on the annotation
-        // processor classpath will be executed and should be added for metrics
-        assertThat(getProcessorNames()).containsExactly(dependencyWithProcessorJar);
-    }
-
-    @NonNull
-    private Set<String> getProcessorNames() {
-        File outputFile = task.getProcessorListFile().get().getAsFile();
-        assertThat(outputFile).isFile();
-        return JavaCompileUtils.readAnnotationProcessorsFromJsonFile(outputFile).keySet();
+            nonJarFile = temporaryFolder.newFile("nonJarFile.txt")
+            Files.asCharSink(nonJarFile, Charsets.UTF_8).write("This is not a jar file")
+        }
     }
 }
