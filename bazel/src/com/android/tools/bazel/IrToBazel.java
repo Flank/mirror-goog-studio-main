@@ -174,14 +174,7 @@ public class IrToBazel {
 
                         BazelRule jarRule = jarRules.get(relJar);
                         if (jarRule == null) {
-                            if (isGenFile(relJar)) {
-                                // Assume the rule is the same as the file name. This seems like a reasonable
-                                // assumption and is good enough to handle the profilers jarjar case.
-                                jarRule =
-                                        new UnmanagedRule(
-                                                bazel.findPackage(relJar),
-                                                Files.getNameWithoutExtension(relJar));
-                            } else if (isBinFile(relJar)) {
+                            if (isBinFile(relJar)) {
                                 String targetName = Files.getNameWithoutExtension(relJar);
                                 if (targetName.startsWith("lib")) {
                                     targetName = targetName.substring("lib".length());
@@ -262,10 +255,6 @@ public class IrToBazel {
 
         logger.info("%d BUILD file(s) updated.", listener.getUpdatedPackages());
         return listener.getUpdatedPackages();
-    }
-
-    private static boolean isGenFile(String relJar) {
-        return relJar.startsWith("bazel-genfiles");
     }
 
     private static boolean isBinFile(String relJar) {
