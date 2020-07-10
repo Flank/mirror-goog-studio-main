@@ -23,20 +23,21 @@ def coverage_java_test(name, data = [], jvm_flags = [], visibility = None, test_
         **kwargs
     )
 
-def coverage_baseline(name, srcs, jar = None):
+def coverage_baseline(name, srcs, jar = None, tags = None):
     # some rules produce multiple jars under their base name so this lets us overload if necessary
     if not jar:
         jar = name
 
+    tags = tags if tags else []
+    tags += [] if "no_mac" in tags else ["no_mac"]
+    tags += [] if "no_windows" in tags else ["no_windows"]
+
+    cov_sources_tags = tags + ([] if "coverage-sources" in tags else ["coverage-sources"])
     native.genrule(
         name = name + "_coverage.baseline.srcs",
         srcs = srcs,
         outs = [name + ".coverage.baseline.srcs"],
-        tags = [
-            "coverage-sources",
-            "no_mac",
-            "no_windows",
-        ],
+        tags = cov_sources_tags,
         cmd = "printf '$(RULEDIR)/%s\n' {} | sed -e 's%^$(BINDIR)/%%' >$@".format(" ".join(srcs)),
     )
 
@@ -45,10 +46,7 @@ def coverage_baseline(name, srcs, jar = None):
         tools = ["@cov//:ignore_files_filter"],
         srcs = [name + "_coverage.baseline.srcs"],
         outs = [name + ".coverage.baseline.srcs.filtered"],
-        tags = [
-            "no_mac",
-            "no_windows",
-        ],
+        tags = tags,
         cmd = "python $(location @cov//:ignore_files_filter) <$< >$@",
         visibility = ["@baseline//:__pkg__"],
     )
@@ -58,10 +56,7 @@ def coverage_baseline(name, srcs, jar = None):
         tools = ["@//prebuilts/tools/common/jacoco:cli"],
         srcs = [jar],
         outs = [name + ".coverage.baseline.xml"],
-        tags = [
-            "no_mac",
-            "no_windows",
-        ],
+        tags = tags,
         cmd = "$(location {cli}) report --quiet --classfiles $< --xml $@".format(
             cli = "@//prebuilts/tools/common/jacoco:cli",
         ),
@@ -75,10 +70,7 @@ def coverage_baseline(name, srcs, jar = None):
             name + "_coverage.baseline.xml",
         ],
         outs = [name + ".coverage.baseline.lcov"],
-        tags = [
-            "no_mac",
-            "no_windows",
-        ],
+        tags = tags,
         cmd = "python $(location {x2l}) {test} $(location {srcs}) <$(location {xml}) >$@".format(
             x2l = "@cov//:jacoco_xml_to_lcov",
             test = "baseline",
@@ -88,14 +80,16 @@ def coverage_baseline(name, srcs, jar = None):
         visibility = ["@baseline//:__pkg__"],
     )
 
-def coverage_java_library(name, srcs = [], **kwargs):
+def coverage_java_library(name, srcs = [], tags = [], **kwargs):
     native.java_library(
         name = name,
         srcs = srcs,
+        tags = tags,
         **kwargs
     )
 
     coverage_baseline(
         name = name,
         srcs = srcs,
+        tags = tags,
     )

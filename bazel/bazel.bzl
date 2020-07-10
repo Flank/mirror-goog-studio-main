@@ -599,6 +599,7 @@ def iml_module(
             name = name,
             srcs = srcs.javas + srcs.kotlins,
             jar = name + ".jar",
+            tags = tags,
         )
 
     # Only add test utils to other than itself.
@@ -624,6 +625,10 @@ def iml_module(
         if lint_timeout:
             kwargs["timeout"] = lint_timeout
 
+        lint_tags = tags if tags else []
+        if "no_windows" not in lint_tags:
+            lint_tags += ["no_windows"]
+
         lint_test(
             name = name + "_lint_test",
             srcs = lint_srcs,
@@ -631,7 +636,7 @@ def iml_module(
             deps = prod_deps,
             custom_rules = ["//tools/base/lint:studio-checks.lint-rules.jar"],
             external_annotations = ["//tools/base/external-annotations:annotations.zip"],
-            tags = ["no_windows"],
+            tags = lint_tags,
             **kwargs
         )
     elif lint_timeout:
