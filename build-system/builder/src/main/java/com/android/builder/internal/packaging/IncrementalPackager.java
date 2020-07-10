@@ -109,6 +109,9 @@ public class IncrementalPackager implements Closeable {
     /** Whether the build is debuggable, which might influence the compression level. */
     private final boolean mIsDebuggableBuild;
 
+    /** Whether the zip entries will be ordered deterministically. */
+    private final boolean mDeterministicEntryOrder;
+
     /** Whether v3 signing is enabled. */
     private final boolean mEnableV3Signing;
 
@@ -139,7 +142,7 @@ public class IncrementalPackager implements Closeable {
                             new ApkFlinger(
                                     mCreationData,
                                     compressionLevel,
-                                    !mIsDebuggableBuild,
+                                    mDeterministicEntryOrder,
                                     mEnableV3Signing,
                                     mEnableV4Signing);
                     break;
@@ -193,6 +196,7 @@ public class IncrementalPackager implements Closeable {
      * @param acceptedAbis the set of accepted ABIs; if empty then all ABIs are accepted
      * @param jniDebugMode is JNI debug mode enabled?
      * @param debuggableBuild is this a debuggable build?
+     * @param deterministicEntryOrder will APK entries be ordered deterministically?
      * @param enableV3Signing is v3 signing enabled?
      * @param enableV4Signing is v4 signing enabled?
      * @param apkCreatorType the {@link ApkCreatorType}
@@ -210,6 +214,7 @@ public class IncrementalPackager implements Closeable {
             @NonNull Set<String> acceptedAbis,
             boolean jniDebugMode,
             boolean debuggableBuild,
+            boolean deterministicEntryOrder,
             boolean enableV3Signing,
             boolean enableV4Signing,
             @NonNull ApkCreatorType apkCreatorType,
@@ -228,6 +233,7 @@ public class IncrementalPackager implements Closeable {
         mCreationData = creationData;
         mApkCreatorFactory = factory;
         mIsDebuggableBuild = debuggableBuild;
+        mDeterministicEntryOrder = deterministicEntryOrder;
         mEnableV3Signing = enableV3Signing;
         mEnableV4Signing = enableV4Signing;
         mClosed = false;
