@@ -21,6 +21,7 @@ import com.android.tools.bazel.ir.IrModule;
 import com.android.tools.bazel.ir.IrNode;
 import com.android.tools.bazel.ir.IrProject;
 import com.android.tools.bazel.model.BazelRule;
+import com.android.tools.bazel.model.FileGroup;
 import com.android.tools.bazel.model.ImlModule;
 import com.android.tools.bazel.model.JavaImport;
 import com.android.tools.bazel.model.JavaLibrary;
@@ -33,6 +34,8 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -58,8 +61,11 @@ public class IrToBazel {
         // Map from file path to the bazel rule that provides it. Usually java_imports.
         Map<String, BazelRule> jarRules = Maps.newHashMap();
         Map<String, JavaLibrary> libraries = Maps.newHashMap();
+        Map<IrLibrary, JavaImport> imports = Maps.newHashMap();
+        Map<String, FileGroup> groups = Maps.newHashMap();
         Map<IrModule, ImlModule> rules = new HashMap<>();
         Map<String, UnmanagedRule> sdks = new HashMap<>();
+        Map<String, JavaImport> reuse = Maps.newHashMap();
 
         // 1st pass: Creation.
         for (IrModule bazelModule : bazelProject.modules) {
@@ -115,9 +121,9 @@ public class IrToBazel {
             File librariesDir = new File(projectDir, ".idea/libraries");
             Package librariesPkg = bazel
                     .findPackage(workspace.relativize(librariesDir.toPath()).toString());
-
+            ImlModule imlModule = rules.get(module);
             for (IrModule friend : module.getTestFriends()) {
-                rules.get(module).addTestFriend(rules.get(friend));
+                imlModule.addTestFriend(rules.get(friend));
             }
 
             for (IrModule.Dependency<? extends IrNode> dependency : module
@@ -134,109 +140,143 @@ public class IrToBazel {
                     scopes.add(ImlModule.Tag.RUNTIME);
                 }
                 if (dependency.dependency instanceof IrLibrary) {
-                    IrLibrary library = (IrLibrary) dependency.dependency;
-                    JavaLibrary namedLib = null;
-                    if (library.name.equals("studio-sdk") && library.owner == null) {
-                        UnmanagedRule rule = sdks.get("studio-sdk");
-                        if (rule == null) {
-                            rule =
-                                    new UnmanagedRule(
-                                            bazel.findPackage("prebuilts/studio/intellij-sdk"),
-                                            "studio-sdk");
-                            sdks.put("studio-sdk", rule);
-                        }
-                        rules.get(module).addDependency(rule, dependency.exported, scopes);
-                    } else if (library.owner == null) {
-                        //noinspection ConstantConditions - getLibraryName() is not null for module-level libraries.
-                        String libName = library.name.replaceAll(":", "_");
-                        libName =
-                                bazelProject.id().isEmpty()
-                                        ? libName
-                                        : bazelProject.id() + "." + libName;
-                        namedLib = libraries.get(libName.toLowerCase());
-                        if (namedLib == null) {
-                            namedLib = new JavaLibrary(librariesPkg, libName);
-                            libraries.put(libName.toLowerCase(), namedLib);
-                        }
-                    }
-                    for (File file : library.getFiles()) {
-                        String relJar = workspace.relativize(file.toPath()).toString();
-
-                        if (relJar.startsWith("tools/idea/build/dependencies/build/kotlin")) {
-                            // These files are used by the "KotlinPlugin" library and get copied
-                            // there by build_studio.sh that most Studio developers don't run
-                            // locally. They are not needed for our build, because Android Studio
-                            // has its own library, called "kotlin-plugin", that points to files in
-                            // prebuilts. Here we ignore these files, so that output of iml_to_build
-                            // doesn't depend on whether build_studio.sh was run or not.
-                            continue;
-                        }
-
-                        BazelRule jarRule = jarRules.get(relJar);
-                        if (jarRule == null) {
-                            if (isBinFile(relJar)) {
-                                String targetName = Files.getNameWithoutExtension(relJar);
-                                if (targetName.startsWith("lib")) {
-                                    targetName = targetName.substring("lib".length());
+                    if (config.strict) {
+                        IrLibrary library = (IrLibrary) dependency.dependency;
+                        JavaImport javaImport = imports.get(library);
+                        if (javaImport == null) {
+                            if (library.name.equals("studio-sdk") && library.owner == null) {
+                                UnmanagedRule rule = sdks.get("studio-sdk");
+                                if (rule == null) {
+                                    rule =
+                                            new UnmanagedRule(
+                                                    bazel.findPackage(
+                                                            "prebuilts/studio/intellij-sdk"),
+                                                    "studio-sdk");
+                                    sdks.put("studio-sdk", rule);
                                 }
-                                jarRule = new UnmanagedRule(bazel.findPackage(relJar), targetName);
-                            } else {
-                                // This must be a prebuilt jar in the source tree.
+                                imlModule.addDependency(rule, dependency.exported, scopes);
+                                continue;
+                            }
+                            if (library.owner != null && library.owner != module) {
+                                throw new IllegalStateException(
+                                        "Module library belongs to a different module");
+                            }
+                            Package libPackage =
+                                    library.owner == null ? librariesPkg : imlModule.getPackage();
+                            String libName = library.getName().replaceAll(":", "_");
+                            libName =
+                                    bazelProject.id().isEmpty()
+                                            ? libName
+                                            : bazelProject.id() + "." + libName;
+
+                            // Group library files by package
+                            ArrayList<Package> pkgs = new ArrayList<>();
+                            ArrayList<List<String>> sources = new ArrayList<>();
+                            Package last = null;
+                            for (File file : library.getFiles()) {
+                                String relJar = workspace.relativize(file.toPath()).toString();
                                 Package jarPkg = bazel.findPackage(relJar);
-                                if (jarPkg != null) {
-                                    String packageRelative = jarPkg.getPackageDir().toPath()
-                                            .relativize(file.toPath()).toString();
+                                String relToPkg =
+                                        jarPkg.getPackageDir()
+                                                .toPath()
+                                                .relativize(file.toPath())
+                                                .toString();
 
-                                    // TODO: Fix all these dependencies correctly
-                                    String target;
-                                    if (relJar.startsWith("prebuilts/tools/common/m2")) {
-                                        target = pickTargetNameForMavenArtifact(file);
-                                    } else {
-                                        target = packageRelative.replaceAll("\\.jar$", "");
-                                        if (!bazelProject.id().isEmpty()) {
-                                            target =
-                                                    target.replaceFirst(
-                                                            "([^/]*)$", bazelProject.id() + ".$1");
-                                        }
-                                    }
-                                    try {
-                                        JavaImport javaImport = new JavaImport(jarPkg, target);
-                                        javaImport.addJar(packageRelative);
-                                        jarRule = javaImport;
-                                    } catch (IllegalStateException e) {
-                                        throw new IllegalStateException("Cannot add jar " + packageRelative, e);
-                                    }
+                                Package pkg = null;
+                                String source = null;
+
+                                if (isBinFile(relJar)) {
+                                    // There is already a rule, use the current package and a full
+                                    // path
+                                    pkg = libPackage;
+                                    String targetName = new File(relJar).getName();
+                                    source = "//" + jarPkg.getName() + ":" + targetName;
+                                } else if (jarPkg == libPackage) {
+                                    // This must be a prebuilt jar in the source tree.
+                                    pkg = libPackage;
+                                    source = relToPkg;
                                 } else {
-                                    logger.warning("Cannot find package for %s", relJar);
+                                    pkg = jarPkg;
+                                    source = relToPkg;
                                 }
+
+                                if (pkg == last) {
+                                    sources.get(sources.size() - 1).add(source);
+                                } else {
+                                    pkgs.add(pkg);
+                                    sources.add(new ArrayList<>(Arrays.asList(source)));
+                                }
+                                last = pkg;
                             }
-                        }
 
-                        if (jarRule != null) {
-                            jarRules.put(relJar, jarRule);
-
-                            if (namedLib != null) {
-                                namedLib.addDependency(jarRule, true);
+                            // Generate the rules
+                            // In order to generate palatable rules, we specialize common cases
+                            if (pkgs.size() == 1 && libPackage != librariesPkg) {
+                                // No need to have file groups, we can use a java_import where the
+                                // files are (except for named project level libraries)
+                                Package pkg = pkgs.get(0);
+                                String key = pkg.getName() + "@";
+                                for (String src : sources.get(0)) {
+                                    key += src + ":";
+                                }
+                                javaImport = reuse.get(key);
+                                if (javaImport == null) {
+                                    javaImport = new JavaImport(pkg, libName);
+                                    for (String src : sources.get(0)) {
+                                        javaImport.addJar(src);
+                                    }
+                                    reuse.put(key, javaImport);
+                                }
                             } else {
-                                ImlModule imlModule = rules.get(module);
-                                imlModule.addDependency(jarRule, dependency.exported, scopes);
-                                if (config.bundleDeps) {
-                                    if (!scopes.contains(ImlModule.Tag.TEST)
-                                            && !dependency.scope.equals(IrModule.Scope.PROVIDED)) {
-                                        imlModule.addBundledDep(jarRule);
+                                javaImport = new JavaImport(libPackage, libName);
+                                // General case
+                                for (int i = 0; i < pkgs.size(); i++) {
+                                    Package pkg = pkgs.get(i);
+                                    List<String> srcs = sources.get(i);
+                                    if (pkg == libPackage) {
+                                        for (String src : srcs) {
+                                            javaImport.addJar(src);
+                                        }
+                                    } else {
+                                        String key = pkg.getName() + ":" + libName;
+                                        FileGroup fileGroup = groups.get(key);
+                                        if (fileGroup == null) {
+                                            fileGroup = new FileGroup(pkg, libName + "_files");
+                                            for (String src : srcs) {
+                                                fileGroup.addSource(src);
+                                            }
+                                            groups.put(key, fileGroup);
+                                        }
+                                        javaImport.addJar(fileGroup.getLabel());
                                     }
                                 }
                             }
+                            imports.put(library, javaImport);
                         }
-                    }
-                    if (namedLib != null && !namedLib.isEmpty()) {
-                        rules.get(module).addDependency(namedLib, dependency.exported, scopes);
+                        imlModule.addDependency(javaImport, dependency.exported, scopes);
+                        if (library.owner == module
+                                && !scopes.contains(ImlModule.Tag.TEST)
+                                && !dependency.scope.equals(IrModule.Scope.PROVIDED)) {
+                            imlModule.addBundledDep(javaImport);
+                        }
+                    } else {
+                        addLegacyLibraryDependency(
+                                bazelProject,
+                                workspace,
+                                bazel,
+                                jarRules,
+                                libraries,
+                                rules,
+                                sdks,
+                                module,
+                                librariesPkg,
+                                dependency,
+                                scopes);
                     }
                 } else if (dependency.dependency instanceof IrModule) {
                     scopes.add(0, ImlModule.Tag.MODULE);
-                    rules.get(module)
-                            .addDependency(rules.get(dependency.dependency), dependency.exported,
-                                    scopes);
+                    imlModule.addDependency(
+                            rules.get(dependency.dependency), dependency.exported, scopes);
                 }
             }
         }
@@ -255,6 +295,110 @@ public class IrToBazel {
 
         logger.info("%d BUILD file(s) updated.", listener.getUpdatedPackages());
         return listener.getUpdatedPackages();
+    }
+
+    private void addLegacyLibraryDependency(
+            IrProject bazelProject,
+            Path workspace,
+            Workspace bazel,
+            Map<String, BazelRule> jarRules,
+            Map<String, JavaLibrary> libraries,
+            Map<IrModule, ImlModule> rules,
+            Map<String, UnmanagedRule> sdks,
+            IrModule module,
+            Package librariesPkg,
+            IrModule.Dependency<? extends IrNode> dependency,
+            List<ImlModule.Tag> scopes) {
+        IrLibrary library = (IrLibrary) dependency.dependency;
+        JavaLibrary namedLib = null;
+        if (library.name.equals("studio-sdk") && library.owner == null) {
+            UnmanagedRule rule = sdks.get("studio-sdk");
+            if (rule == null) {
+                rule =
+                        new UnmanagedRule(
+                                bazel.findPackage("prebuilts/studio/intellij-sdk"), "studio-sdk");
+                sdks.put("studio-sdk", rule);
+            }
+            rules.get(module).addDependency(rule, dependency.exported, scopes);
+        } else if (library.owner == null) {
+            //noinspection ConstantConditions - getLibraryName() is not null for module-level
+            // libraries.
+            String libName = library.name.replaceAll(":", "_");
+            libName = bazelProject.id().isEmpty() ? libName : bazelProject.id() + "." + libName;
+            namedLib = libraries.get(libName.toLowerCase());
+            if (namedLib == null) {
+                namedLib = new JavaLibrary(librariesPkg, libName);
+                libraries.put(libName.toLowerCase(), namedLib);
+            }
+        }
+        for (File file : library.getFiles()) {
+            String relJar = workspace.relativize(file.toPath()).toString();
+
+            if (relJar.startsWith("tools/idea/build/dependencies/build/kotlin")) {
+                // These files are used by the "KotlinPlugin" library and get copied
+                // there by build_studio.sh that most Studio developers don't run
+                // locally. They are not needed for our build, because Android Studio
+                // has its own library, called "kotlin-plugin", that points to files in
+                // prebuilts. Here we ignore these files, so that output of iml_to_build
+                // doesn't depend on whether build_studio.sh was run or not.
+                continue;
+            }
+
+            BazelRule jarRule = jarRules.get(relJar);
+            if (jarRule == null) {
+                if (isBinFile(relJar)) {
+                    String targetName = Files.getNameWithoutExtension(relJar);
+                    if (targetName.startsWith("lib")) {
+                        targetName = targetName.substring("lib".length());
+                    }
+                    jarRule = new UnmanagedRule(bazel.findPackage(relJar), targetName);
+                } else {
+                    // This must be a prebuilt jar in the source tree.
+                    Package jarPkg = bazel.findPackage(relJar);
+                    if (jarPkg != null) {
+                        String packageRelative =
+                                jarPkg.getPackageDir()
+                                        .toPath()
+                                        .relativize(file.toPath())
+                                        .toString();
+
+                        // TODO: Fix all these dependencies correctly
+                        String target;
+                        if (relJar.startsWith("prebuilts/tools/common/m2")) {
+                            target = pickTargetNameForMavenArtifact(file);
+                        } else {
+                            target = packageRelative.replaceAll("\\.jar$", "");
+                            if (!bazelProject.id().isEmpty()) {
+                                target = target.replaceFirst("([^/]*)$", bazelProject.id() + ".$1");
+                            }
+                        }
+                        try {
+                            JavaImport javaImport = new JavaImport(jarPkg, target);
+                            javaImport.addJar(packageRelative);
+                            jarRule = javaImport;
+                        } catch (IllegalStateException e) {
+                            throw new IllegalStateException("Cannot add jar " + packageRelative, e);
+                        }
+                    } else {
+                        logger.warning("Cannot find package for %s", relJar);
+                    }
+                }
+            }
+
+            if (jarRule != null) {
+                jarRules.put(relJar, jarRule);
+
+                if (namedLib != null) {
+                    namedLib.addDependency(jarRule, true);
+                } else {
+                    ImlModule imlModule = rules.get(module);
+                    imlModule.addDependency(jarRule, dependency.exported, scopes);
+                }
+            }
+        }
+        if (namedLib != null && !namedLib.isEmpty()) {
+            rules.get(module).addDependency(namedLib, dependency.exported, scopes);
+        }
     }
 
     private static boolean isBinFile(String relJar) {

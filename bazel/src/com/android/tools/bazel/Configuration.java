@@ -19,7 +19,7 @@ import com.android.tools.bazel.model.BazelRule;
 
 public class Configuration {
 
-    public boolean bundleDeps;
+    public boolean strict;
     public boolean dryRun;
     public boolean warningsAsErrors;
     public String imlGraph;
@@ -39,7 +39,7 @@ public class Configuration {
     }
 
     public boolean shouldSuppress(BazelRule rule) {
-        return rule.getLabel().startsWith("//prebuilts/tools/common/m2/repository/")
+        return (rule.getLabel().startsWith("//prebuilts/tools/common/m2/repository/") && !strict)
                 || rule.getLabel().endsWith(":intellij.gradle.toolingExtension.impl") // b/156122269
                 || rule.getLabel().startsWith("//tools/vendor/google3/blaze/");
     }

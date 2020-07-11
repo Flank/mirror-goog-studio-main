@@ -48,8 +48,8 @@ public class ImlToBazel {
                 config.dryRun = true;
             } else if (arg.equals("--warnings_as_errors")) {
                 config.warningsAsErrors = true;
-            } else if (arg.equals("--bundle_deps")) {
-                config.bundleDeps = true;
+            } else if (arg.equals("--strict")) {
+                config.strict = true;
             } else {
                 System.err.println("Unknown argument: " + arg);
                 System.exit(1);
