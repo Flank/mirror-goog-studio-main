@@ -16,18 +16,22 @@
 
 package com.android.build.gradle.integration.common.fixture.model
 
+import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.builder.model.v2.dsl.BaseConfig
 import com.android.builder.model.v2.dsl.BuildType
 import com.android.builder.model.v2.dsl.ProductFlavor
 import com.android.builder.model.v2.ide.AndroidArtifact
+import com.android.builder.model.v2.ide.ArtifactDependencies
 import com.android.builder.model.v2.ide.BaseArtifact
 import com.android.builder.model.v2.ide.BuildTypeContainer
 import com.android.builder.model.v2.ide.JavaArtifact
+import com.android.builder.model.v2.ide.Library
 import com.android.builder.model.v2.ide.LintOptions
 import com.android.builder.model.v2.ide.ProductFlavorContainer
 import com.android.builder.model.v2.ide.SourceProvider
 import com.android.builder.model.v2.ide.Variant
 import com.android.builder.model.v2.models.AndroidProject
+import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.VariantDependencies
 import java.io.File
 
@@ -49,11 +53,53 @@ fun AndroidProject.dump(normalizer: FileNormalizer): String {
 }
 
 /**
- * Entry point to dump an [VariantDependencies]
+ * Entry point to dump a [VariantDependencies]
  */
-fun VariantDependencies.dump(normalizer: FileNormalizer): String {
-    return dump("VariantDependencies", normalizer) {
-        // TODO
+fun VariantDependencies.dump(
+    normalizer: FileNormalizer,
+    container: ModelContainerV2<VariantDependencies>,
+    dumpGlobalLibrary: Boolean = true
+): String {
+    val variantDepString = dump(
+        "VariantDependencies",
+        normalizer,
+        container.infoMaps.keys.map { it.rootDir.absolutePath }.sorted()
+    ) {
+        writeToBuilder(this)
+    }
+
+    val finalString = if (dumpGlobalLibrary) {
+        variantDepString + dump(
+            "GlobalLibraryMap",
+            normalizer,
+            container.infoMaps.keys.map { it.rootDir.absolutePath }.sorted()
+        ) {
+            container.globalLibraryMap?.writeToBuilder(this)
+        }
+    } else {
+        variantDepString
+    }
+
+    return finalString.also {
+        println("--------------------------------------------------")
+        println("Dumped model:")
+        println(it)
+    }
+}
+
+/**
+ * Entry point to dump a [GlobalLibraryMap]
+ */
+fun GlobalLibraryMap.dump(
+    normalizer: FileNormalizer,
+    container: ModelContainerV2<VariantDependencies>
+): String {
+    return dump(
+        "GlobalLibraryMap",
+        normalizer,
+        container.infoMaps.keys.map { it.rootDir.absolutePath }.sorted()
+    ) {
+        writeToBuilder(this)
     }.also {
         println("--------------------------------------------------")
         println("Dumped model:")
@@ -429,5 +475,69 @@ private fun LintOptions.writeToBuilder(builder: DumpBuilder) {
         multiLineList("severityOverrides", severityOverrides?.entries?.sortedBy { it.key }) {
             entry(it.key, it.value)
         }
+    }
+}
+
+private fun VariantDependencies.writeToBuilder(builder: DumpBuilder) {
+    builder.apply {
+        item("name", name)
+        largeObject("mainArtifact", mainArtifact) {
+            it.writeToBuilder(this)
+        }
+        largeObject("androidTestArtifact", androidTestArtifact) {
+            it.writeToBuilder(this)
+        }
+        largeObject("unitTestArtifact", unitTestArtifact) {
+            it.writeToBuilder(this)
+        }
+    }
+}
+
+private fun ArtifactDependencies.writeToBuilder(builder: DumpBuilder) {
+    builder.apply {
+        multiLineList("compileDependencies", compileDependencies) {
+            struct("GraphItem", it) { item->
+                artifactAddress("artifactAddress", item.artifactAddress)
+                item("requestedCoordinates", item.requestedCoordinates)
+                item("dependencies", item.dependencies)
+            }
+        }
+        multiLineList("packageDependencies", runtimeDependencies) {
+            struct("GraphItem", it) { item->
+                artifactAddress("artifactAddress", item.artifactAddress)
+                item("requestedCoordinates", item.requestedCoordinates)
+                item("dependencies", item.dependencies)
+            }
+        }
+    }
+}
+
+private fun GlobalLibraryMap.writeToBuilder(builder: DumpBuilder) {
+    builder.apply {
+        multiLineList("libraries", libraries.values.sortedBy { it.artifactAddress }) {
+            largeObject("library", it) { library ->
+                item("type", library.type)
+                artifactAddress("artifactAddress", library.artifactAddress)
+                item("artifact", library.artifact)
+                buildId("buildId", library.buildId)
+                item("projectPath", library.projectPath)
+                item("variant", library.variant)
+                item("compileJarFiles", library.compileJarFiles)
+                item("runtimeJarFiles", library.runtimeJarFiles)
+                item("resFolder", library.resFolder)
+                item("resStaticLibrary", library.resStaticLibrary)
+                item("assetsFolder", library.assetsFolder)
+                item("jniFolder", library.jniFolder)
+                item("aidlFolder", library.aidlFolder)
+                item("renderscriptFolder", library.renderscriptFolder)
+                item("proguardRules", library.proguardRules)
+                item("lintJar", library.lintJar)
+                item("externalAnnotations", library.externalAnnotations)
+                item("publicResources", library.publicResources)
+                item("symbolFile", library.symbolFile)
+            }
+        }
+
+
     }
 }

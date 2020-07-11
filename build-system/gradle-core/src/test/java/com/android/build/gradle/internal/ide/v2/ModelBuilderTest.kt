@@ -245,7 +245,6 @@ class ModelBuilderTest {
     )
 
     data class FakeModelBuilderParameter(
-        override val variantName: String = "foo",
-        override val abiName: String? = null
+        override var variantName: String = "foo"
     ) : ModelBuilderParameter
 }

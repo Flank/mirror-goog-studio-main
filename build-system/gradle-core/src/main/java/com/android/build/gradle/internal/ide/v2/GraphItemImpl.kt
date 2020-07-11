@@ -16,19 +16,20 @@
 
 package com.android.build.gradle.internal.ide.v2
 
-import com.android.builder.model.v2.ide.ArtifactDependencies
 import com.android.builder.model.v2.ide.GraphItem
 import java.io.Serializable
 
 /**
- * Implementation of [ArtifactDependencies] for serialization via the Tooling API.
+ * Implementation of [GraphItem] for serialization via the Tooling API.
  */
-data class ArtifactDependenciesImpl(
-    override val compileDependencies: List<GraphItem>,
-    override val runtimeDependencies: List<GraphItem>?
-) : ArtifactDependencies, Serializable {
+data class GraphItemImpl(
+    override val artifactAddress: String,
+    override val requestedCoordinates: String?,
+    override val dependencies: List<GraphItem>
+) : GraphItem, Serializable {
     companion object {
         @JvmStatic
         private val serialVersionUID: Long = 1L
     }
+
 }

@@ -29,8 +29,22 @@ import java.io.File
  *
  * @return the strings with the dumped model
  */
-fun dump(name: String, normalizer: FileNormalizer, action: DumpBuilder.() -> Unit): String {
-    val rootBuilder = DumpBuilder()
+fun dump(
+    name: String,
+    normalizer: FileNormalizer,
+    includedBuilds: List<String>? = null,
+    action: DumpBuilder.() -> Unit
+): String {
+
+    val map = mutableMapOf<String, String>()
+    if (includedBuilds != null) {
+        var index = 1
+        for (includedBuild in includedBuilds) {
+            map[includedBuild] = "BUILD_${index++}"
+        }
+    }
+
+    val rootBuilder = DumpBuilder(map)
 
     rootBuilder.header("> $name")
     val actionBuilder = rootBuilder.builder()
@@ -41,6 +55,8 @@ fun dump(name: String, normalizer: FileNormalizer, action: DumpBuilder.() -> Uni
     rootBuilder.write(sb, normalizer)
     return sb.toString()
 }
+
+typealias BuildIdMap = Map<String, String>
 
 /**
  * an object that can be written
@@ -155,6 +171,7 @@ const val INDENT_STEP = 3
  * this can accumulate [Writeable] items (which includes sub-dump builders)
  */
 class DumpBuilder(
+    private val buildIdMap: BuildIdMap,
     indent: Int = 0,
     private val prefix: Char = '-'): Writeable(indent) {
     private val items = mutableListOf<Writeable>()
@@ -184,8 +201,39 @@ class DumpBuilder(
         items.add(Header(indent, name))
     }
 
-    internal fun builder() = DumpBuilder(indent + INDENT_STEP).also {
+    internal fun builder() = DumpBuilder(
+        buildIdMap = buildIdMap,
+        indent = indent + INDENT_STEP
+    ).also {
         items.add(it)
+    }
+
+    /**
+     * Handles an Artifact address.
+     *
+     * Addresses for subprojects are made up of <build-ID>@@<projectpath>::<variant> and build IDs
+     * are the location of the root project of the build.
+     */
+    fun artifactAddress(key: String, value: String) {
+        if (value.contains("@@")) {
+            val buildId =  value.substringBefore("@@")
+            val projectPathAndVariant = value.substringAfter("@@")
+
+            val newID = buildIdMap[buildId] ?: buildId
+
+            item(key, "{${newID}}@@${projectPathAndVariant}")
+        } else {
+            item(key, value)
+        }
+    }
+
+    /**
+     * Handles an Build ID
+     *
+     * build IDs are the location of the root project of the build.
+     */
+    fun buildId(key: String, value: String?) {
+        item(key, value?.let { buildIdMap[it]?.let { "{$it}" } } ?: value)
     }
 
     /**
@@ -204,7 +252,10 @@ class DumpBuilder(
             items.add(KeyValuePair(indent, name, list))
         } else {
             items.add(Header(indent, "> $name:"))
-            val newBuilder = DumpBuilder(indent + INDENT_STEP, prefix = '*')
+            val newBuilder = DumpBuilder(
+                buildIdMap = buildIdMap,
+                indent = indent + INDENT_STEP,
+                prefix = '*')
             items.add(newBuilder)
             newBuilder.apply {
                 for (item in list) {
@@ -252,7 +303,10 @@ class DumpBuilder(
             items.add(KeyValuePair(indent, name, obj))
         } else {
             items.add(KeyOnly(indent, name))
-            val newBuilder = DumpBuilder(indent + INDENT_STEP, prefix = '*')
+            val newBuilder = DumpBuilder(
+                buildIdMap = buildIdMap,
+                indent = indent + INDENT_STEP,
+                prefix = '*')
             items.add(newBuilder)
             action(newBuilder, obj)
         }
@@ -272,7 +326,10 @@ class DumpBuilder(
             items.add(KeyValuePair(indent, name, obj))
         } else {
             items.add(Header(indent, "> $name:"))
-            val newBuilder = DumpBuilder(indent + INDENT_STEP)
+            val newBuilder = DumpBuilder(
+                buildIdMap = buildIdMap,
+                indent = indent + INDENT_STEP
+            )
             items.add(newBuilder)
             action(newBuilder, obj)
             items.add(Header(indent, "< $name"))

@@ -15,7 +15,7 @@
  */
 package com.android.build.gradle.integration.common.fixture
 
-import com.android.builder.model.v2.models.AndroidProject
+import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.ProjectSyncIssues
 import org.gradle.tooling.model.BuildIdentifier
 import java.io.Serializable
@@ -23,11 +23,12 @@ import java.io.Serializable
 /**
  * The object returned by the model action via the tooling API.
  *
- * This is used to query for AndroidProject v2 (with no dependencies)
+ * This is meant to contain both the model and the associated sync issue.
  */
-class AndroidProjectContainer(
+class ModelContainerV2<T>(
     val rootBuildId: BuildIdentifier,
-    val infoMaps: Map<BuildIdentifier, Map<String, ProjectInfo>>
+    val infoMaps: Map<BuildIdentifier, Map<String, ModelInfo<T>>>,
+    val globalLibraryMap: GlobalLibraryMap? = null
 ) : Serializable {
 
     companion object {
@@ -35,8 +36,8 @@ class AndroidProjectContainer(
         private val serialVersionUID: Long = 1L
     }
 
-    data class ProjectInfo(
-        val project: AndroidProject,
+    data class ModelInfo<T>(
+        val model: T,
         val issues: ProjectSyncIssues
     ): Serializable {
         companion object {
@@ -48,8 +49,8 @@ class AndroidProjectContainer(
     /**
      * Returns the only model when there is no composite builds and a single sub-project.
      */
-    val singleAndroidProject: AndroidProject
-        get() = singleInfo.project
+    val singleModel: T
+        get() = singleInfo.model
 
     /**
      * Returns the only SyncIssue model when there is no composite builds and a single sub-project.
@@ -61,7 +62,7 @@ class AndroidProjectContainer(
      * Retursn the single ProjectInfo (containing both AndroidProject and ProjecSyncIssues)
      * when there is no composite builds and a single sub-project.
      */
-    val singleInfo: ProjectInfo
+    val singleInfo: ModelInfo<T>
         get() {
             if (infoMaps.size != 1) {
                 throw RuntimeException("Found ${infoMaps.size} builds when querying for single: ${infoMaps.keys}")
@@ -70,7 +71,7 @@ class AndroidProjectContainer(
         }
 
     /** Returns the only model map. This is only valid if there is no included builds.  */
-    val singleInfoMap: Map<String, ProjectInfo>
+    val singleInfoMap: Map<String, ModelInfo<T>>
         get() {
             if (infoMaps.size != 1) {
                 throw RuntimeException("Found ${infoMaps.size} builds when querying for single: ${infoMaps.keys}")
@@ -81,7 +82,8 @@ class AndroidProjectContainer(
     /**
      * returns the project map for the root build
      */
-    val rootInfoMap: Map<String, ProjectInfo>
-        get() = infoMaps[rootBuildId] ?: throw RuntimeException("failed to find project map for root build id")
-
+    val rootInfoMap: Map<String, ModelInfo<T>>
+        get() {
+            return infoMaps[rootBuildId] ?: throw RuntimeException("failed to find project map for root build id")
+        }
 }

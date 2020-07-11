@@ -31,7 +31,6 @@ typealias BuildMapping = ImmutableMap<String, String>
 
 private const val CURRENT_BUILD_NAME = "__current_build__"
 
-
 fun ProjectComponentIdentifier.getBuildId(
     mapping: BuildMapping
 ): String? {

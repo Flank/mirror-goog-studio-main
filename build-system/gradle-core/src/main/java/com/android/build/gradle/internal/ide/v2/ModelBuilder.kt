@@ -39,13 +39,17 @@ import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl.GlobalSyncIssueService
 import com.android.build.gradle.internal.ide.DependencyFailureHandler
 import com.android.build.gradle.internal.ide.ModelBuilder
+import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputs
+import com.android.build.gradle.internal.ide.dependencies.BuildMapping
+import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
+import com.android.build.gradle.internal.ide.dependencies.computeBuildMapping
+import com.android.build.gradle.internal.ide.dependencies.getDependencyGraphBuilder
 import com.android.build.gradle.internal.ide.dependencies.getVariantName
 import com.android.build.gradle.internal.ide.verifyIDEIsNotOld
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_IDE_MODEL
 import com.android.build.gradle.internal.scope.InternalArtifactType.BUNDLE_IDE_MODEL
@@ -62,6 +66,7 @@ import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SyncIssue
 import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags.BooleanFlag
+import com.android.builder.model.v2.ide.ArtifactDependencies
 import com.android.builder.model.v2.ide.BuildTypeContainer
 import com.android.builder.model.v2.ide.BundleInfo
 import com.android.builder.model.v2.ide.JavaArtifact
@@ -77,11 +82,11 @@ import com.android.builder.model.v2.models.VariantDependencies
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.Project
+import org.gradle.api.provider.Provider
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
-import java.util.HashSet
 import javax.xml.namespace.QName
 import javax.xml.stream.XMLInputFactory
 import javax.xml.stream.XMLStreamException
@@ -143,7 +148,7 @@ class ModelBuilder<
         className: String,
         parameter: ModelBuilderParameter,
         project: Project
-    ): Any = when (className) {
+    ): Any? = when (className) {
         VariantDependencies::class.java.name -> buildVariantDependenciesModel(project, parameter)
         AndroidProject::class.java.name,
         GlobalLibraryMap::class.java.name,
@@ -268,7 +273,13 @@ class ModelBuilder<
     }
 
     private fun buildGlobalLibraryMapModel(project: Project): GlobalLibraryMap {
-        throw RuntimeException("Not yet implemented")
+        val globalLibraryBuildService =
+            getBuildService(
+                project.gradle.sharedServices,
+                GlobalLibraryBuildService::class.java
+            ).get()
+
+        return globalLibraryBuildService.createModel()
     }
 
     private fun buildProjectSyncIssueModel(project: Project): ProjectSyncIssues {
@@ -300,8 +311,51 @@ class ModelBuilder<
     private fun buildVariantDependenciesModel(
         project: Project,
         parameter: ModelBuilderParameter
-    ): VariantDependencies {
-        throw RuntimeException("Not yet implemented")
+    ): VariantDependencies? {
+        // get the variant to return the dependencies for
+        val variantName = parameter.variantName
+        val variant = variantModel.variants.singleOrNull { it.name == variantName }
+            ?: return null
+
+        val globalLibraryBuildService =
+            getBuildService(
+                project.gradle.sharedServices,
+                GlobalLibraryBuildService::class.java
+            ).get()
+
+        val mavenCoordinatesBuildService =
+            getBuildService(
+                project.gradle.sharedServices,
+                MavenCoordinatesCacheBuildService::class.java
+            )
+
+        val buildMapping = project.gradle.computeBuildMapping()
+
+        return VariantDependenciesImpl(
+            name = variantName,
+            mainArtifact = createDependencies(
+                variant,
+                buildMapping,
+                globalLibraryBuildService,
+                mavenCoordinatesBuildService
+            ),
+            androidTestArtifact = variant.testComponents[VariantTypeImpl.ANDROID_TEST]?.let {
+                createDependencies(
+                    it,
+                    buildMapping,
+                    globalLibraryBuildService,
+                    mavenCoordinatesBuildService
+                )
+            },
+            unitTestArtifact = variant.testComponents[VariantTypeImpl.UNIT_TEST]?.let {
+                createDependencies(
+                    it,
+                    buildMapping,
+                    globalLibraryBuildService,
+                    mavenCoordinatesBuildService
+                )
+            }
+        )
     }
 
     private fun createVariant(
@@ -436,6 +490,34 @@ class ModelBuilder<
 
             mockablePlatformJar = globalScope.mockableJarArtifact.files.singleOrNull()
         )
+    }
+
+    private fun createDependencies(
+        component: ComponentPropertiesImpl,
+        buildMapping: BuildMapping,
+        globalLibraryBuildService: GlobalLibraryBuildService,
+        mavenCoordinatesBuildService: Provider<MavenCoordinatesCacheBuildService>
+    ): ArtifactDependencies {
+        val modelBuilder = DependencyModelBuilder(globalLibraryBuildService)
+        val graphBuilder = getDependencyGraphBuilder()
+
+        val inputs = ArtifactCollectionsInputs(
+            variantDependencies = component.variantDependencies,
+            projectPath = globalScope.project.path,
+            variantName = component.name,
+            runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
+            mavenCoordinatesCache = mavenCoordinatesBuildService
+        )
+
+        graphBuilder.createDependencies(
+            modelBuilder = modelBuilder,
+            artifactCollectionsProvider = inputs,
+            withFullDependency = true,
+            buildMapping = buildMapping,
+            issueReporter = syncIssueReporter
+        )
+
+        return modelBuilder.createModel()
     }
 
     private fun getFlags(): AndroidGradlePluginProjectFlagsImpl {

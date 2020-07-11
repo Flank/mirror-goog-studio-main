@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.model
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.model.dump
 import com.android.build.gradle.integration.common.utils.goldenFile
 import com.android.builder.model.v2.ide.SyncIssue
@@ -25,33 +25,32 @@ import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
 
-class BasicModelV2Test {
+class AppModelTest {
+
     @get:Rule
     val project = builder()
-        .fromTestProject("basic")
-        // http://b/149978740 and http://b/146208910
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
         .create()
 
     @Test
-    fun testAndroidProjectModel() {
+    fun `default AndroidProject model`() {
         val result = project.modelV2()
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchAndroidProjects()
 
         Truth.assertWithMessage("Dumped AndroidProject (full version in stdout)")
             .that(result.container.singleModel.dump(result.normalizer))
-            .isEqualTo(goldenFile("testProject"))
+            .isEqualTo(goldenFile("Default_AndroidProject_Model"))
     }
 
     @Test
-    fun testVariantDependenciesModel() {
+    fun `default VariantDependencies model`() {
         val result = project.modelV2()
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchVariantDependencies("debug")
 
         Truth.assertWithMessage("Dumped VariantDependencies(debug) (full version in stdout)")
             .that(result.container.singleModel.dump(result.normalizer, result.container))
-            .isEqualTo(goldenFile("testDep"))
+            .isEqualTo(goldenFile("Default_VariantDependencies_Model"))
     }
 }

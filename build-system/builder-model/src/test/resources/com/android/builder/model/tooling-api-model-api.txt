@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-ff711a616bf95353e29dfb27148f812a0b2aa7ff5ec41171f2ae2dc6e6d43141
+58ee2116ed32f62cc2077f0de209fb56a55ba7d12b87cf5b53c5475045f29902
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -573,7 +573,7 @@ com.android.builder.model.v2.ide.ApiVersion.getApiLevel: int ()
 com.android.builder.model.v2.ide.ApiVersion.getCodename: java.lang.String ()
 com.android.builder.model.v2.ide.ArtifactDependencies
 com.android.builder.model.v2.ide.ArtifactDependencies.getCompileDependencies: java.util.List<com.android.builder.model.v2.ide.GraphItem> ()
-com.android.builder.model.v2.ide.ArtifactDependencies.getPackageDependencies: java.util.List<com.android.builder.model.v2.ide.GraphItem> ()
+com.android.builder.model.v2.ide.ArtifactDependencies.getRuntimeDependencies: java.util.List<com.android.builder.model.v2.ide.GraphItem> ()
 com.android.builder.model.v2.ide.BaseArtifact
 com.android.builder.model.v2.ide.BaseArtifact.getAssembleTaskName: java.lang.String ()
 com.android.builder.model.v2.ide.BaseArtifact.getClassesFolders: java.util.Set<java.io.File> ()
@@ -743,8 +743,8 @@ com.android.builder.model.v2.models.AndroidProject.getViewBindingOptions: com.an
 com.android.builder.model.v2.models.GlobalLibraryMap
 com.android.builder.model.v2.models.GlobalLibraryMap.getLibraries: java.util.Map<java.lang.String, com.android.builder.model.v2.ide.Library> ()
 com.android.builder.model.v2.models.ModelBuilderParameter
-com.android.builder.model.v2.models.ModelBuilderParameter.getAbiName: java.lang.String ()
 com.android.builder.model.v2.models.ModelBuilderParameter.getVariantName: java.lang.String ()
+com.android.builder.model.v2.models.ModelBuilderParameter.setVariantName: void (java.lang.String)
 com.android.builder.model.v2.models.ProjectSyncIssues
 com.android.builder.model.v2.models.ProjectSyncIssues.getSyncIssues: java.util.Collection<com.android.builder.model.v2.ide.SyncIssue> ()
 com.android.builder.model.v2.models.VariantDependencies

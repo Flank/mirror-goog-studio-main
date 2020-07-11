@@ -63,6 +63,7 @@ import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ide.NativeModelBuilder;
 import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCacheBuildService;
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService;
+import com.android.build.gradle.internal.ide.v2.GlobalLibraryBuildService;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.profile.ProfileAgent;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
@@ -311,8 +312,13 @@ public abstract class BasePlugin<
                         .execute();
 
         new LibraryDependencyCacheBuildService.RegistrationAction(
-                        project, mavenCoordinatesCacheBuildService)
-                .execute();
+                project, mavenCoordinatesCacheBuildService
+        ).execute();
+
+        new GlobalLibraryBuildService.RegistrationAction(
+                project, mavenCoordinatesCacheBuildService
+        ).execute();
+
         new LintClassLoaderBuildService.RegistrationAction(project).execute();
 
         extraModelInfo = new ExtraModelInfo(mavenCoordinatesCacheBuildService);
