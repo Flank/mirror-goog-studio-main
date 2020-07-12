@@ -412,7 +412,7 @@ class LintUtilsTest : TestCase() {
         assertEquals("nb", getLocale(context)!!.language)
         dispose(context)
 
-        UastEnvironment.ensureDisposed()
+        UastEnvironment.disposeApplicationEnvironment()
     }
 
     private fun dispose(context: XmlContext) {

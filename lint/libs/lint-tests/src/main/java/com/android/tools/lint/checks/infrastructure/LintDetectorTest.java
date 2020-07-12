@@ -43,9 +43,9 @@ import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.LintExternalAnnotationsManager;
 import com.android.tools.lint.LintStats;
+import com.android.tools.lint.UastEnvironment;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
-import com.android.tools.lint.UastEnvironment;
 import com.android.tools.lint.checks.ApiLookup;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestFile.BinaryTestFile;
@@ -156,7 +156,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             }
         }
 
-        UastEnvironment.ensureDisposed();
+        UastEnvironment.disposeApplicationEnvironment();
         Disposer.assertIsEmpty(true);
     }
 
@@ -288,7 +288,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             deleteFile(f);
         }
 
-        UastEnvironment.ensureDisposed();
+        UastEnvironment.disposeApplicationEnvironment();
 
         return result;
     }
