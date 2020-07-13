@@ -93,14 +93,12 @@ class ObsoleteApiTest(private val provider: TestProjectProvider) {
 
     @Test
     fun `Test from command line`() {
-        val configurationCaching = if (provider.name == "Kotlin") {
-            // http://b/158092419
-            BaseGradleExecutor.ConfigurationCaching.OFF
-        } else {
-            BaseGradleExecutor.ConfigurationCaching.ON
-        }
         val result = project.executor().with(BooleanOption.DEBUG_OBSOLETE_API, true)
-            .withConfigurationCaching(configurationCaching)
+            .also {
+                // http://b/158092419
+                if (provider.name == "Kotlin")
+                    it.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            }
             .run("help")
 
         result.stdout.use {

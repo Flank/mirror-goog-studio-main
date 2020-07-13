@@ -23,6 +23,7 @@ import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupp
 import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport.R8;
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -100,16 +101,17 @@ public class DesugarAppWithLibraryTest {
         if (java8LangSupport == R8) {
             configureR8Desugaring(project.getSubproject("app"));
         }
-        project.executor()
-                .with(BooleanOption.ENABLE_D8_DESUGARING, java8LangSupport == D8)
-                .with(OptionalBooleanOption.ENABLE_R8, java8LangSupport == R8)
-                .with(BooleanOption.ENABLE_R8_DESUGARING, java8LangSupport == R8)
-                // https://github.com/gradle/gradle/issues/13200
-                .withConfigurationCaching(
-                        java8LangSupport == DESUGAR
-                                ? BaseGradleExecutor.ConfigurationCaching.OFF
-                                : BaseGradleExecutor.ConfigurationCaching.ON)
-                .run(":app:assembleDebug");
+        GradleTaskExecutor executor =
+                project.executor()
+                        .with(BooleanOption.ENABLE_D8_DESUGARING, java8LangSupport == D8)
+                        .with(OptionalBooleanOption.ENABLE_R8, java8LangSupport == R8)
+                        .with(BooleanOption.ENABLE_R8_DESUGARING, java8LangSupport == R8);
+        // https://github.com/gradle/gradle/issues/13200
+        if (java8LangSupport == DESUGAR) {
+            executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
+        }
+
+        executor.run(":app:assembleDebug");
         Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).containsClass("Lcom/example/Data;");
     }

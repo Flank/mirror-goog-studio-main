@@ -116,7 +116,6 @@ class BasicInstantExecutionTest {
 
     private fun executor(): GradleTaskExecutor =
         project.executor()
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
             .withLoggingLevel(LoggingLevel.LIFECYCLE)
             .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
 }

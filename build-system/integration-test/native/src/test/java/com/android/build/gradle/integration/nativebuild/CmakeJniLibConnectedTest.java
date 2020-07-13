@@ -37,7 +37,6 @@ public class CmakeJniLibConnectedTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("ndkJniLib")
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
                     .addFile(HelloWorldJniApp.cmakeLists("lib"))
                     .create();
 

@@ -45,7 +45,6 @@ public class NdkBuildTargetsTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cpp").build())
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
                     .addFile(HelloWorldJniApp.androidMkMultiModule("src/main/cpp"))
                     .addFile(HelloWorldJniApp.libraryCpp("src/main/cpp/library1", "library1.cpp"))
                     .addFile(HelloWorldJniApp.libraryCpp("src/main/cpp/library2", "library2.cpp"))

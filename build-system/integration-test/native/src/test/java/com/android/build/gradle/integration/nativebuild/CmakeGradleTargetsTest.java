@@ -52,7 +52,6 @@ public class CmakeGradleTargetsTest {
                     .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cxx").build())
                     .addFile(HelloWorldJniApp.cmakeListsWithExecutables("."))
                     .addFile(HelloWorldJniApp.executableCpp("src/main/cxx/executable", "main.cpp"))
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
                     .setCmakeVersion("3.10.4819442")
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .setWithCmakeDirInLocalProp(true)

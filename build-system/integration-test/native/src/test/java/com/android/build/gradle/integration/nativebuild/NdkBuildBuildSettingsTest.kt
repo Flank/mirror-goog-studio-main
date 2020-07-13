@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.nativebuild
 
 import com.android.SdkConstants
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
@@ -40,7 +39,6 @@ class NdkBuildBuildSettingsTest {
     @JvmField
     val project = GradleTestProject.builder()
         .fromTestApp(HelloWorldJniApp.builder().build())
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .addFile(HelloWorldJniApp.androidMkC("src/main/jni"))
         .create()

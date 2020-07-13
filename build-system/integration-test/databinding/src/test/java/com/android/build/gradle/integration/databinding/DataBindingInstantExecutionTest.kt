@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.databinding
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.options.BooleanOption
@@ -54,7 +53,5 @@ class DataBindingInstantExecutionTest {
     }
 
     private fun executor(): GradleTaskExecutor =
-        project.executor()
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
-            .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
+        project.executor().with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
 }

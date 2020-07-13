@@ -59,10 +59,7 @@ public class BytecodeGenerationHooksTest {
 
     @Test
     public void buildApp() throws Exception {
-        GradleBuildResult result =
-                project.executor()
-                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
-                        .run("clean", "app:assembleDebug");
+        GradleBuildResult result = project.executor().run("clean", "app:assembleDebug");
 
         // check that the app's dex file contains the App class.
         Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
@@ -120,10 +117,7 @@ public class BytecodeGenerationHooksTest {
 
     @Test
     public void buildAppTest() throws Exception {
-        GradleBuildResult result =
-                project.executor()
-                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
-                        .run("clean", "app:assembleAndroidTest");
+        GradleBuildResult result = project.executor().run("clean", "app:assembleAndroidTest");
 
         final GradleTestProject appProject = project.getSubproject("app");
 
@@ -156,7 +150,6 @@ public class BytecodeGenerationHooksTest {
     public void buildAppUnitTest() throws IOException, InterruptedException {
         GradleBuildResult result =
                 project.executor()
-                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
                         .run("clean", "app:testDebugUnitTest");
 
         // verify the compile classpath
@@ -195,7 +188,6 @@ public class BytecodeGenerationHooksTest {
     public void buildLibTest() throws IOException, InterruptedException {
         GradleBuildResult result =
                 project.executor()
-                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
                         .run("clean", "lib:assembleAndroidTest");
 
         // verify the compile classpath
