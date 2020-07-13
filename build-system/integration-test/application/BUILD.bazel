@@ -54,7 +54,6 @@ TEST_DATA = [
     "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
     "//prebuilts/tools/common/mlkit/testData",
     "//tools/base/build-system:gradle-distrib",
-    "//tools/base/build-system:gradle-distrib-6.6-20200609220026+0000",
     "//tools/base/build-system/aapt2:aapt2_for_tests",
     "//tools/base/build-system/integration-test:test-projects/BasicRenderScript",
     "//tools/base/build-system/integration-test:test-projects/additionalTestOutput",
