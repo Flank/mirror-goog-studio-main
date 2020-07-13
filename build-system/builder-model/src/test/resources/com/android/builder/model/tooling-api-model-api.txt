@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-9ed3cb0d9509bf3a6c29ace2490b08cbaa7294c5191c7a2fab93ebc485f2c3f5
+ff711a616bf95353e29dfb27148f812a0b2aa7ff5ec41171f2ae2dc6e6d43141
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -752,3 +752,26 @@ com.android.builder.model.v2.models.VariantDependencies.getAndroidTestArtifact: 
 com.android.builder.model.v2.models.VariantDependencies.getMainArtifact: com.android.builder.model.v2.ide.ArtifactDependencies ()
 com.android.builder.model.v2.models.VariantDependencies.getName: java.lang.String ()
 com.android.builder.model.v2.models.VariantDependencies.getUnitTestArtifact: com.android.builder.model.v2.ide.ArtifactDependencies ()
+com.android.builder.model.v2.models.ndk.NativeAbi implements java.io.Serializable
+com.android.builder.model.v2.models.ndk.NativeAbi.getBuildFileIndexFile: java.io.File ()
+com.android.builder.model.v2.models.ndk.NativeAbi.getCompileCommandsJsonFile: java.io.File ()
+com.android.builder.model.v2.models.ndk.NativeAbi.getName: java.lang.String ()
+com.android.builder.model.v2.models.ndk.NativeAbi.getSymbolFolderIndexFile: java.io.File ()
+com.android.builder.model.v2.models.ndk.NativeBuildSystem extends java.lang.Enum
+com.android.builder.model.v2.models.ndk.NativeBuildSystem.valueOf: com.android.builder.model.v2.models.ndk.NativeBuildSystem (java.lang.String)
+com.android.builder.model.v2.models.ndk.NativeBuildSystem.values: com.android.builder.model.v2.models.ndk.NativeBuildSystem[] ()
+com.android.builder.model.v2.models.ndk.NativeModelBuilderParameter implements java.io.Serializable
+com.android.builder.model.v2.models.ndk.NativeModelBuilderParameter.getAbisToGenerateBuildInformation: java.util.List<java.lang.String> ()
+com.android.builder.model.v2.models.ndk.NativeModelBuilderParameter.getVariantsToGenerateBuildInformation: java.util.List<java.lang.String> ()
+com.android.builder.model.v2.models.ndk.NativeModelBuilderParameter.setAbisToGenerateBuildInformation: void (java.util.List<java.lang.String>)
+com.android.builder.model.v2.models.ndk.NativeModelBuilderParameter.setVariantsToGenerateBuildInformation: void (java.util.List<java.lang.String>)
+com.android.builder.model.v2.models.ndk.NativeModule implements java.io.Serializable
+com.android.builder.model.v2.models.ndk.NativeModule.getDefaultNdkVersion: java.lang.String ()
+com.android.builder.model.v2.models.ndk.NativeModule.getExternalNativeBuildFile: java.io.File ()
+com.android.builder.model.v2.models.ndk.NativeModule.getName: java.lang.String ()
+com.android.builder.model.v2.models.ndk.NativeModule.getNativeBuildSystem: com.android.builder.model.v2.models.ndk.NativeBuildSystem ()
+com.android.builder.model.v2.models.ndk.NativeModule.getNdkVersion: java.lang.String ()
+com.android.builder.model.v2.models.ndk.NativeModule.getVariants: java.util.List<com.android.builder.model.v2.models.ndk.NativeVariant> ()
+com.android.builder.model.v2.models.ndk.NativeVariant implements java.io.Serializable
+com.android.builder.model.v2.models.ndk.NativeVariant.getAbis: java.util.List<com.android.builder.model.v2.models.ndk.NativeAbi> ()
+com.android.builder.model.v2.models.ndk.NativeVariant.getName: java.lang.String ()
