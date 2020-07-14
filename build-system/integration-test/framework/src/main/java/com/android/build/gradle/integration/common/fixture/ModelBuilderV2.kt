@@ -290,6 +290,14 @@ class FileNormalizerImpl(
     }
 
     override fun normalize(file: File): String  {
+        val suffix = if (file.isFile) {
+            "{F}"
+        } else if (file.isDirectory) {
+            "{D}"
+        } else {
+            "{!}"
+        }
+
         for (rootData in rootDataList) {
             val result = file.relativeToOrNull(
                 rootData.root,
@@ -297,11 +305,11 @@ class FileNormalizerImpl(
                 rootData.stringModifier)
 
             if (result != null) {
-                return result
+                return result + suffix
             }
         }
 
-        return file.toString()
+        return file.toString() + suffix
     }
 
     override fun toString(): String {

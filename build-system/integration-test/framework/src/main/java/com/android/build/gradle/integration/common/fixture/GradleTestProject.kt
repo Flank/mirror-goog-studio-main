@@ -1254,7 +1254,7 @@ allprojects { proj ->
 
     /** Fluent method to get the model.  */
     fun modelV2(): ModelBuilderV2 {
-        return applyOptions(ModelBuilderV2(this, projectConnection))
+        return applyOptions(ModelBuilderV2(this, projectConnection)).withLocalAndroidSdkHome()
     }
 
     private fun <T : BaseGradleExecutor<T>> applyOptions(executor: T): T {
