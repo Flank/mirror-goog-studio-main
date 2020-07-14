@@ -457,6 +457,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/tasks/mlkit/codegen/codeinjector/innerclass/",
                 "com/android/build/gradle/internal/tasks/mlkit/codegen/codeinjector/methods/",
                 "com/android/build/gradle/internal/tasks/structureplugin/",
+                "com/android/build/gradle/internal/tasks/integrity_config_schema.xsd",
                 "com/android/build/gradle/internal/tasks/",
                 "com/android/build/gradle/internal/test/",
                 "com/android/build/gradle/internal/test/report/",

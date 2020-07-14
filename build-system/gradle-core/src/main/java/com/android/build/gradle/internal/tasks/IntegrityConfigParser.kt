@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.bundle.AppIntegrityConfigOuterClass.AppIntegrityConfig
-import com.android.bundle.AppIntegrityConfigOuterClass.DebuggerCheck
 import com.android.bundle.AppIntegrityConfigOuterClass.EmulatorCheck
 import com.android.bundle.AppIntegrityConfigOuterClass.InstallerCheck
 import com.android.bundle.AppIntegrityConfigOuterClass.LicenseCheck
@@ -25,17 +24,26 @@ import com.android.bundle.AppIntegrityConfigOuterClass.Policy
 import com.android.utils.forEach
 import org.w3c.dom.Document
 import org.w3c.dom.Element
+import org.xml.sax.SAXParseException
+import javax.xml.XMLConstants
+import javax.xml.transform.dom.DOMSource
+import javax.xml.validation.SchemaFactory
 
 class IntegrityConfigParser(private val config: Document) {
 
+    class InvalidIntegrityConfigException(message: String, t: Throwable) : Exception(message, t)
+
     fun parseConfig(): AppIntegrityConfig {
-        //TODO: validate schema
+        try {
+            validate(config)
+        } catch (e: SAXParseException) {
+            throw InvalidIntegrityConfigException("The IntegrityConfig xml provided is invalid.", e)
+        }
         val configElement = config.documentElement
         return AppIntegrityConfig.newBuilder()
             .setEnabled(isEnabled(configElement))
             .setLicenseCheck(parseLicenseCheckConfig(configElement))
             .setInstallerCheck(parseInstallerCheckConfig(configElement))
-            .setDebuggerCheck(parseDebuggerCheckConfig(configElement))
             .setEmulatorCheck(parseEmulatorCheckConfig(configElement))
             .build()
     }
@@ -59,11 +67,8 @@ class IntegrityConfigParser(private val config: Document) {
                     Policy.newBuilder().setAction(Policy.Action.WARN)
                 )
             )
-            .setDebuggerCheck(DebuggerCheck.newBuilder().setEnabled(true))
             .setEmulatorCheck(EmulatorCheck.newBuilder().setEnabled(true))
             .build()
-
-
 
         private fun org.w3c.dom.Element.getChildByTagName(tagName: String): Element? {
             childNodes.forEach {
@@ -99,14 +104,6 @@ class IntegrityConfigParser(private val config: Document) {
             return builder
         }
 
-        private fun parseDebuggerCheckConfig(parent: Element): DebuggerCheck.Builder {
-            val builder = DebuggerCheck.newBuilder(DEFAULT_CONFIG.debuggerCheck)
-            parent.getChildByTagName("DebuggerCheck")?.let { debuggerCheckElement ->
-                builder.enabled = isEnabled(debuggerCheckElement)
-            }
-            return builder
-        }
-
         private fun parseEmulatorCheckConfig(parent: Element): EmulatorCheck.Builder {
             val builder = EmulatorCheck.newBuilder(DEFAULT_CONFIG.emulatorCheck)
             parent.getChildByTagName("EmulatorCheck")?.let { emulatorCheckElement ->
@@ -125,6 +122,13 @@ class IntegrityConfigParser(private val config: Document) {
         private fun isEnabled(element: Element): Boolean {
             return !element.hasAttribute("enabled")
                     || element.getAttribute("enabled") == "true"
+        }
+
+        private fun validate(document: Document) {
+            val schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
+            val schema =
+                schemaFactory.newSchema(IntegrityConfigParser::class.java.getResource("integrity_config_schema.xsd"))
+            schema.newValidator().validate(DOMSource(document))
         }
     }
 }

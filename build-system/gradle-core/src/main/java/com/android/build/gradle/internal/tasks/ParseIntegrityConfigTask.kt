@@ -86,6 +86,7 @@ abstract class ParseIntegrityConfigTask : NonIncrementalTask() {
         }
         private fun loadXML(xmlFile: File): Document {
             val documentFactory = DocumentBuilderFactory.newInstance()
+            documentFactory.isNamespaceAware = true
             val documentBuilder = documentFactory.newDocumentBuilder()
             return documentBuilder.parse(xmlFile)
         }

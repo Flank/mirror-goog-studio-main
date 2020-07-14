@@ -31,6 +31,11 @@ import com.android.build.gradle.internal.services.createTaskCreationServices
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantType
+import com.android.bundle.AppIntegrityConfigOuterClass.AppIntegrityConfig
+import com.android.bundle.AppIntegrityConfigOuterClass.EmulatorCheck
+import com.android.bundle.AppIntegrityConfigOuterClass.InstallerCheck
+import com.android.bundle.AppIntegrityConfigOuterClass.LicenseCheck
+import com.android.bundle.AppIntegrityConfigOuterClass.Policy
 import com.android.testutils.truth.FileSubject
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableMap
@@ -43,6 +48,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
+import java.io.FileInputStream
 
 class ParseIntegrityConfigTaskTest {
 
@@ -76,7 +82,7 @@ class ParseIntegrityConfigTaskTest {
     @Test
     fun testParseConfig() {
         val configXML = project.projectDir.resolve("IntegrityConfig.xml")
-        FileUtils.writeToFile(configXML, "<integrity_config/>")
+        FileUtils.writeToFile(configXML, "<IntegrityConfig/>")
 
         val appIntegrityConfigProto = testFolder.root.resolve("expected_output")
         // Under test
@@ -95,6 +101,55 @@ class ParseIntegrityConfigTaskTest {
         }.execute()
 
         FileSubject.assertThat(appIntegrityConfigProto).exists()
+        val config = AppIntegrityConfig.parseFrom(
+            FileInputStream(appIntegrityConfigProto)
+        )
+        val defaultConfig = AppIntegrityConfig.newBuilder()
+            .setEnabled(true)
+            .setLicenseCheck(
+                LicenseCheck.newBuilder().setEnabled(false).setPolicy(
+                    Policy.newBuilder().setAction(
+                        Policy.Action.WARN)
+                )
+            )
+            .setInstallerCheck(
+                InstallerCheck.newBuilder().setEnabled(true).setPolicy(
+                    Policy.newBuilder().setAction(
+                        Policy.Action.WARN)
+                )
+            )
+            .setEmulatorCheck(EmulatorCheck.newBuilder().setEnabled(true))
+            .build()
+        assertThat(config).isEqualTo(defaultConfig)
+    }
+
+    @Test
+    fun testParseConfig_disabled() {
+        val configXML = project.projectDir.resolve("IntegrityConfig.xml")
+        FileUtils.writeToFile(configXML, """<IntegrityConfig enabled="false"/>""")
+
+        val appIntegrityConfigProto = testFolder.root.resolve("expected_output")
+        // Under test
+        object : ParseIntegrityConfigTask.ParseIntegrityConfigRunnable() {
+            override fun getParameters(): ParseIntegrityConfigTask.Params {
+                return object : ParseIntegrityConfigTask.Params() {
+                    override val integrityConfigDir =
+                        project.objects.directoryProperty().fileValue(project.projectDir)
+                    override val appIntegrityConfigProto =
+                        project.objects.fileProperty().fileValue(appIntegrityConfigProto)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
+
+        FileSubject.assertThat(appIntegrityConfigProto).exists()
+        val config = AppIntegrityConfig.parseFrom(
+            FileInputStream(appIntegrityConfigProto)
+        )
+
+        assertThat(config.enabled).isFalse()
     }
 
     @Test
@@ -102,7 +157,7 @@ class ParseIntegrityConfigTaskTest {
         val configDirectory = project.projectDir.resolve("test_config")
         val configFileName = "IntegrityConfig.xml"
         val configXML = configDirectory.resolve(configFileName)
-        FileUtils.writeToFile(configXML, "<integrity_config/>")
+        FileUtils.writeToFile(configXML, "<IntegrityConfig/>")
 
         val bundleOptions = dslServices.newInstance(BundleOptions::class.java, dslServices)
         bundleOptions.integrityConfigDir.set(configDirectory)
@@ -119,7 +174,7 @@ class ParseIntegrityConfigTaskTest {
         FileSubject.assertThat(configDir).exists()
         val configFile = configDir.resolve(configFileName)
         FileSubject.assertThat(configFile).exists()
-        FileSubject.assertThat(configFile).contains("<integrity_config/>")
+        FileSubject.assertThat(configFile).contains("<IntegrityConfig/>")
     }
 
     private fun createScopeFromBundleOptions(bundleOptions: BundleOptions): VariantCreationConfig {

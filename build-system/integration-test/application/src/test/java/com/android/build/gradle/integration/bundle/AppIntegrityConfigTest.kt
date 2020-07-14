@@ -18,14 +18,16 @@ package com.android.build.gradle.integration.bundle
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.bundle.AppIntegrityConfigOuterClass
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject
 import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.utils.FileUtils
-
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
+import java.nio.file.Files
 
 class AppIntegrityConfigTest {
 
@@ -36,19 +38,53 @@ class AppIntegrityConfigTest {
                 .appendToBuild("android.bundle.integrityConfigDir = file('protection_config')")
                 .withFile(
                     "protection_config/IntegrityConfig.xml",
-                    "<integrity_config></integrity_config>"
+                    """<IntegrityConfig>
+                                    <EmulatorCheck enabled="false"/>
+                               </IntegrityConfig>"""
                 )
         )
         .withName("integrity-test").create()
 
     @Test
     fun testBuildBundle() {
+        val entry = "/BUNDLE-METADATA/com.google.play.apps.integrity/AppIntegrityConfig.pb"
+
         project.execute(":bundleDebug")
+
         val bundleFile = getBundleFile()
         FileSubject.assertThat(bundleFile).exists()
+        assertThat(bundleFile) { it.contains(entry) }
         Zip(bundleFile).use {
-            assertThat(it)
-                .contains("/BUNDLE-METADATA/com.google.play.apps.integrity/AppIntegrityConfig.pb")
+            val configFile =
+                it.getEntry("/BUNDLE-METADATA/com.google.play.apps.integrity/AppIntegrityConfig.pb")
+
+            val config =
+                AppIntegrityConfigOuterClass.AppIntegrityConfig.parseFrom(
+                    Files.readAllBytes(configFile)
+                )
+            val expectedConfig = AppIntegrityConfigOuterClass.AppIntegrityConfig.newBuilder()
+                .setEnabled(true)
+                .setLicenseCheck(
+                    AppIntegrityConfigOuterClass.LicenseCheck.newBuilder()
+                        .setEnabled(false)
+                        .setPolicy(
+                            AppIntegrityConfigOuterClass.Policy.newBuilder().setAction(
+                                AppIntegrityConfigOuterClass.Policy.Action.WARN
+                            )
+                        )
+                )
+                .setInstallerCheck(
+                    AppIntegrityConfigOuterClass.InstallerCheck.newBuilder()
+                        .setEnabled(true)
+                        .setPolicy(
+                            AppIntegrityConfigOuterClass.Policy.newBuilder().setAction(
+                                AppIntegrityConfigOuterClass.Policy.Action.WARN
+                            )
+                        )
+                ).setEmulatorCheck(
+                    AppIntegrityConfigOuterClass.EmulatorCheck.newBuilder().setEnabled(false)
+                ).build()
+            assertThat(config).isEqualTo(expectedConfig);
         }
     }
 
