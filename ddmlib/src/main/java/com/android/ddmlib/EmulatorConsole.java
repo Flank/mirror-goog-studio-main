@@ -397,12 +397,12 @@ public final class EmulatorConsole {
      *     than 30.0.18
      */
     @NonNull
-    public synchronized String getAvdPath() {
+    public synchronized String getAvdPath() throws CommandFailedException {
         return getOutput(COMMAND_AVD_PATH);
     }
 
     @NonNull
-    private String getOutput(@NonNull String command) {
+    private String getOutput(@NonNull String command) throws CommandFailedException {
         if (!sendCommand(command)) {
             throw new CommandFailedException();
         }
@@ -412,7 +412,7 @@ public final class EmulatorConsole {
 
     @NonNull
     @VisibleForTesting
-    static String processOutput(@NonNull String[] lines) {
+    static String processOutput(@NonNull String[] lines) throws CommandFailedException {
         if (lines.length == 0) {
             throw new IllegalArgumentException();
         }

@@ -46,7 +46,7 @@ public final class EmulatorConsoleTest {
     }
 
     @Test
-    public void processOutputLinesLengthEqualsZero() {
+    public void processOutputLinesLengthEqualsZero() throws CommandFailedException {
         // Arrange
         String[] lines = {};
 
@@ -101,7 +101,7 @@ public final class EmulatorConsoleTest {
     }
 
     @Test
-    public void processOutputLastLineEqualsOkLinux() {
+    public void processOutputLastLineEqualsOkLinux() throws CommandFailedException {
         // Arrange
         String[] lines = {"/home/juancnuno/.android/avd/Pixel_4_API_30.avd", "OK"};
 
@@ -113,7 +113,7 @@ public final class EmulatorConsoleTest {
     }
 
     @Test
-    public void processOutputLastLineEqualsOkWindows() {
+    public void processOutputLastLineEqualsOkWindows() throws CommandFailedException {
         // Arrange
         String[] lines = {"C:\\Users\\rpaquay\\.android\\avd\\Pixel_2_API_29.avd", "OK"};
 
@@ -125,7 +125,7 @@ public final class EmulatorConsoleTest {
     }
 
     @Test
-    public void processOutput() {
+    public void processOutput() throws CommandFailedException {
         // Arrange
         // See http://b/161150889
         String[] lines = {

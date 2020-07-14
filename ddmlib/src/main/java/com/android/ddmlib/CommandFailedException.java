@@ -17,7 +17,7 @@ package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
 
-public final class CommandFailedException extends RuntimeException {
+public final class CommandFailedException extends Exception {
     CommandFailedException() {}
 
     CommandFailedException(@NonNull String message) {
