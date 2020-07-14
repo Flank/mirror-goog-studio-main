@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.DataBindingBuilder
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -74,8 +74,8 @@ abstract class DataBindingMergeDependencyArtifactsTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: BaseCreationConfig
-    ) : VariantTaskCreationAction<DataBindingMergeDependencyArtifactsTask, BaseCreationConfig>(
+        creationConfig: ComponentCreationConfig
+    ) : VariantTaskCreationAction<DataBindingMergeDependencyArtifactsTask, ComponentCreationConfig>(
         creationConfig
     ) {
 

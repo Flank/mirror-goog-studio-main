@@ -28,7 +28,7 @@ import java.io.File
  * This is meant to be used only by TaskManagers and TaskCreation actions. Other stages of the plugin
  * will use different services objects.
  *
- * This is accessed via [com.android.build.gradle.internal.component.BaseCreationConfig]
+ * This is accessed via [com.android.build.gradle.internal.component.ComponentCreationConfig]
  */
 interface TaskCreationServices: BaseServices {
     fun file(file: Any): File

@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.CompilerArguments
 import com.android.build.api.artifact.impl.DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
@@ -148,7 +148,7 @@ class DataBindingCompilerArguments constructor(
 
         @JvmStatic
         fun createArguments(
-            creationConfig: BaseCreationConfig,
+            creationConfig: ComponentCreationConfig,
             enableDebugLogs: Boolean,
             printEncodedErrorLogs: Boolean
         ): DataBindingCompilerArguments {
@@ -205,7 +205,7 @@ class DataBindingCompilerArguments constructor(
          * of the tested variant.
          */
         @JvmStatic
-        fun getModuleType(creationConfig: BaseCreationConfig): CompilerArguments.Type {
+        fun getModuleType(creationConfig: ComponentCreationConfig): CompilerArguments.Type {
             val component = creationConfig.onTestedConfig {
                 it
             } ?: creationConfig
@@ -226,7 +226,7 @@ class DataBindingCompilerArguments constructor(
          * trigger unnecessary computations (see bug 133092984 and 110412851).
          */
         @JvmStatic
-        fun getLayoutInfoArtifactType(creationConfig: BaseCreationConfig): InternalArtifactType<Directory> {
+        fun getLayoutInfoArtifactType(creationConfig: ComponentCreationConfig): InternalArtifactType<Directory> {
             return if (creationConfig.variantType.isAar) {
                 DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE
             } else {

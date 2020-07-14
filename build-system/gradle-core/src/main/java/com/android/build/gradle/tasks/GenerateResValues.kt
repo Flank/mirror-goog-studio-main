@@ -16,7 +16,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.api.variant.impl.ResValue
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.generators.ResValueGenerator
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -54,8 +54,8 @@ abstract class GenerateResValues : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: BaseCreationConfig
-    ) : VariantTaskCreationAction<GenerateResValues, BaseCreationConfig>(
+        creationConfig: ComponentCreationConfig
+    ) : VariantTaskCreationAction<GenerateResValues, ComponentCreationConfig>(
         creationConfig
     ) {
 

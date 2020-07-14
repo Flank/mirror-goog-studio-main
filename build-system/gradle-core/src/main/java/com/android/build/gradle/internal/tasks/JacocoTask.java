@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.component.BaseCreationConfig;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction;
@@ -94,7 +94,7 @@ public abstract class JacocoTask extends NewIncrementalTask {
 
     /** Returns which Jacoco version to use. */
     @NonNull
-    public static String getJacocoVersion(@NonNull BaseCreationConfig creationConfig) {
+    public static String getJacocoVersion(@NonNull ComponentCreationConfig creationConfig) {
         if (creationConfig.getVariantScope().getDexer() == DexerTool.DX) {
             return JacocoConfigurations.VERSION_FOR_DX;
         } else {

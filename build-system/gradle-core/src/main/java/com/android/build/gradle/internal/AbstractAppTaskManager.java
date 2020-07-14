@@ -32,7 +32,7 @@ import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ApplicationCreationConfig;
-import com.android.build.gradle.internal.component.BaseCreationConfig;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.feature.BundleAllClasses;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -190,7 +190,7 @@ public abstract class AbstractAppTaskManager<
     }
 
     @Override
-    protected void postJavacCreation(@NonNull BaseCreationConfig creationConfig) {
+    protected void postJavacCreation(@NonNull ComponentCreationConfig creationConfig) {
         final Provider<Directory> javacOutput = creationConfig.getArtifacts().get(JAVAC.INSTANCE);
         final FileCollection preJavacGeneratedBytecode =
                 creationConfig.getVariantData().getAllPreJavacGeneratedBytecode();
@@ -209,7 +209,7 @@ public abstract class AbstractAppTaskManager<
     }
 
     @Override
-    protected void createVariantPreBuildTask(@NonNull BaseCreationConfig creationConfig) {
+    protected void createVariantPreBuildTask(@NonNull ComponentCreationConfig creationConfig) {
         final VariantType variantType = creationConfig.getVariantType();
 
         if (variantType.isApk()) {
@@ -257,7 +257,7 @@ public abstract class AbstractAppTaskManager<
     @NonNull
     @Override
     protected Set<ScopeType> getJavaResMergingScopes(
-            @NonNull BaseCreationConfig creationConfig,
+            @NonNull ComponentCreationConfig creationConfig,
             @NonNull QualifiedContent.ContentType contentType) {
         if (creationConfig.getVariantScope().consumesFeatureJars() && contentType == RESOURCES) {
             return TransformManager.SCOPE_FULL_WITH_FEATURES;

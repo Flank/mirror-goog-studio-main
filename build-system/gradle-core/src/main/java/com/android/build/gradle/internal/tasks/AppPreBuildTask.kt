@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.TaskManager
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
@@ -71,14 +71,14 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
         }
     }
 
-    private class EmptyCreationAction(creationConfig: BaseCreationConfig) :
+    private class EmptyCreationAction(creationConfig: ComponentCreationConfig) :
         TaskManager.AbstractPreBuildCreationAction<AndroidVariantTask>(creationConfig) {
 
         override val type: Class<AndroidVariantTask>
             get() = AndroidVariantTask::class.java
     }
 
-    private class CheckCreationAction(creationConfig: BaseCreationConfig) :
+    private class CheckCreationAction(creationConfig: ComponentCreationConfig) :
         TaskManager.AbstractPreBuildCreationAction<AppPreBuildTask>(creationConfig) {
 
         override val type: Class<AppPreBuildTask>
@@ -104,7 +104,7 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
     companion object {
         @JvmStatic
         fun getCreationAction(
-            creationConfig: BaseCreationConfig
+            creationConfig: ComponentCreationConfig
         ): TaskManager.AbstractPreBuildCreationAction<*> {
             return if (creationConfig.variantType.isBaseModule && creationConfig.globalScope.hasDynamicFeatures()) {
                 CheckCreationAction(creationConfig)

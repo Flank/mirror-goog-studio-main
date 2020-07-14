@@ -51,7 +51,7 @@ import org.gradle.api.provider.Provider
  * supertype and make some tasks receive a generic type that does not fit the actual
  * implementation hierarchy (see for instance ApkCreationConfig)
  */
-interface BaseCreationConfig : ComponentIdentity {
+interface ComponentCreationConfig : ComponentIdentity {
     // ---------------------------------------------------------------------------------------------
     // BASIC INFO
     // ---------------------------------------------------------------------------------------------

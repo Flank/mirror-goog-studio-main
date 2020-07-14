@@ -18,7 +18,7 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_JAR
@@ -57,7 +57,7 @@ const val DEFAULT_INCREMENTAL_COMPILATION = true
  *
  * @see [JavaCompile.configurePropertiesForAnnotationProcessing]
  */
-fun JavaCompile.configureProperties(creationConfig: BaseCreationConfig) {
+fun JavaCompile.configureProperties(creationConfig: ComponentCreationConfig) {
     val compileOptions = creationConfig.globalScope.extension.compileOptions
 
     this.options.bootstrapClasspath = creationConfig.variantScope.bootClasspath
@@ -74,7 +74,7 @@ fun JavaCompile.configureProperties(creationConfig: BaseCreationConfig) {
  * @see [JavaCompile.configureProperties]
  */
 fun JavaCompile.configurePropertiesForAnnotationProcessing(
-    creationConfig: BaseCreationConfig
+    creationConfig: ComponentCreationConfig
 ) {
     val processorOptions = creationConfig.variantDslInfo.javaCompileOptions.annotationProcessorOptions
     val compileOptions = this.options
@@ -100,7 +100,7 @@ fun JavaCompile.configurePropertiesForAnnotationProcessing(
  *
  * @see [JavaCompile.configurePropertiesForAnnotationProcessing]
  */
-fun JavaCompile.configureAnnotationProcessorPath(creationConfig: BaseCreationConfig) {
+fun JavaCompile.configureAnnotationProcessorPath(creationConfig: ComponentCreationConfig) {
     options.annotationProcessorPath = creationConfig.variantDependencies.getArtifactFileCollection(
         ANNOTATION_PROCESSOR,
         ALL,

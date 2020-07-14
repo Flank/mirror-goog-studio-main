@@ -16,7 +16,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.AndroidJarInput
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
@@ -104,8 +104,8 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: BaseCreationConfig
-    ) : VariantTaskCreationAction<LinkLibraryAndroidResourcesTask, BaseCreationConfig>(
+        creationConfig: ComponentCreationConfig
+    ) : VariantTaskCreationAction<LinkLibraryAndroidResourcesTask, ComponentCreationConfig>(
         creationConfig
     ) {
 

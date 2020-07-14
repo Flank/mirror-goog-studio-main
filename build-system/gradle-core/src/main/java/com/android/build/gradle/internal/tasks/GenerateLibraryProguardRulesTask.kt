@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -117,8 +117,8 @@ abstract class GenerateLibraryProguardRulesTask : NewIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: BaseCreationConfig
-    ): VariantTaskCreationAction<GenerateLibraryProguardRulesTask, BaseCreationConfig>(
+        creationConfig: ComponentCreationConfig
+    ): VariantTaskCreationAction<GenerateLibraryProguardRulesTask, ComponentCreationConfig>(
         creationConfig
     ) {
 

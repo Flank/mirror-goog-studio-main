@@ -29,7 +29,7 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.AndroidJarInput
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -406,11 +406,11 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     }
 
     abstract class BaseCreationAction(
-        creationConfig: BaseCreationConfig,
+        creationConfig: ComponentCreationConfig,
         private val generateLegacyMultidexMainDexProguardRules: Boolean,
         private val baseName: String?,
         private val isLibrary: Boolean
-    ) : VariantTaskCreationAction<LinkApplicationAndroidResourcesTask, BaseCreationConfig>(
+    ) : VariantTaskCreationAction<LinkApplicationAndroidResourcesTask, ComponentCreationConfig>(
         creationConfig
     ) {
 
@@ -420,7 +420,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         override val type: Class<LinkApplicationAndroidResourcesTask>
             get() = LinkApplicationAndroidResourcesTask::class.java
 
-        protected open fun preconditionsCheck(creationConfig: BaseCreationConfig) {}
+        protected open fun preconditionsCheck(creationConfig: ComponentCreationConfig) {}
 
         override fun handleProvider(
             taskProvider: TaskProvider<LinkApplicationAndroidResourcesTask>
@@ -551,7 +551,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     }
 
     internal class CreationAction(
-        creationConfig: BaseCreationConfig,
+        creationConfig: ComponentCreationConfig,
         generateLegacyMultidexMainDexProguardRules: Boolean,
         private val sourceArtifactType: TaskManager.MergeType,
         baseName: String,
@@ -563,7 +563,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         isLibrary
     ) {
 
-        override fun preconditionsCheck(creationConfig: BaseCreationConfig) {
+        override fun preconditionsCheck(creationConfig: ComponentCreationConfig) {
             if (creationConfig.variantType.isAar) {
                 throw IllegalArgumentException("Use GenerateLibraryRFileTask")
             } else {

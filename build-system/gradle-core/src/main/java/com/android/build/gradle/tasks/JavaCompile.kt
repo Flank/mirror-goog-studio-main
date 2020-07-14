@@ -17,7 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.profile.PROPERTY_VARIANT_NAME_KEY
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_SOURCES
@@ -44,7 +44,7 @@ import java.util.concurrent.Callable
  * Kotlin-Java projects), [JavaCompile] performs compilation only, without annotation processing.
  */
 class JavaCompileCreationAction(
-    private val creationConfig: BaseCreationConfig, private val usingKapt: Boolean
+    private val creationConfig: ComponentCreationConfig, private val usingKapt: Boolean
 ) : TaskCreationAction<JavaCompile>() {
 
     private val globalScope = creationConfig.globalScope

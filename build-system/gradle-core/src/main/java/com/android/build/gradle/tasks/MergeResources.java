@@ -30,7 +30,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService;
-import com.android.build.gradle.internal.component.BaseCreationConfig;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.databinding.MergingFileLookup;
 import com.android.build.gradle.internal.errors.MessageReceiverImpl;
 import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
@@ -774,7 +774,7 @@ public abstract class MergeResources extends ResourceAwareTask {
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<MergeResources, BaseCreationConfig> {
+            extends VariantTaskCreationAction<MergeResources, ComponentCreationConfig> {
         @NonNull private final TaskManager.MergeType mergeType;
         @NonNull
         private final String taskNamePrefix;
@@ -786,7 +786,7 @@ public abstract class MergeResources extends ResourceAwareTask {
         private boolean isLibrary;
 
         public CreationAction(
-                @NonNull BaseCreationConfig creationConfig,
+                @NonNull ComponentCreationConfig creationConfig,
                 @NonNull TaskManager.MergeType mergeType,
                 @NonNull String taskNamePrefix,
                 @Nullable File mergedNotCompiledOutputDirectory,

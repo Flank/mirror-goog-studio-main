@@ -16,7 +16,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.profile.PROPERTY_VARIANT_NAME_KEY
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_SOURCES
@@ -33,7 +33,7 @@ import org.gradle.api.tasks.compile.JavaCompile
  *
  * In the future, this might not call javac at all, but it needs to be profiled first.
  */
-class CompileRClassTaskCreationAction(private val creationConfig: BaseCreationConfig) :
+class CompileRClassTaskCreationAction(private val creationConfig: ComponentCreationConfig) :
     TaskCreationAction<JavaCompile>() {
 
     private val output = creationConfig.globalScope.project.objects.directoryProperty()

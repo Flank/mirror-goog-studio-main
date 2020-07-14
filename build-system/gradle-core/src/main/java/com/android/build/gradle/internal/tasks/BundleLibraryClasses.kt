@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.FN_CLASSES_JAR
 import com.android.build.api.transform.QualifiedContent
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.databinding.DataBindingExcludeDelegate
 import com.android.build.gradle.internal.databinding.configureFrom
@@ -84,7 +84,7 @@ interface BundleLibraryClassesInputs {
 }
 
 private fun BundleLibraryClassesInputs.configure(
-    creationConfig: BaseCreationConfig,
+    creationConfig: ComponentCreationConfig,
     inputs: FileCollection,
     packageRClass: Boolean
 ) {
@@ -195,9 +195,9 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
     }
 
     class CreationAction(
-        creationConfig: BaseCreationConfig,
+        creationConfig: ComponentCreationConfig,
         private val publishedType: PublishedConfigType
-    ) : VariantTaskCreationAction<BundleLibraryClassesJar, BaseCreationConfig>(
+    ) : VariantTaskCreationAction<BundleLibraryClassesJar, ComponentCreationConfig>(
         creationConfig
     ) {
 

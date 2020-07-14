@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
 import com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES
@@ -123,8 +123,8 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
         throw RuntimeException(sb.toString())
     }
 
-    class CreationAction(creationConfig: BaseCreationConfig) :
-        VariantTaskCreationAction<PackageForUnitTest, BaseCreationConfig>(
+    class CreationAction(creationConfig: ComponentCreationConfig) :
+        VariantTaskCreationAction<PackageForUnitTest, ComponentCreationConfig>(
             creationConfig
         ) {
 

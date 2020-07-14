@@ -16,7 +16,7 @@
 package com.android.build.gradle.internal
 
 import com.android.SdkConstants.FD_RES_VALUES
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -156,7 +156,7 @@ class DependencyResourcesComputer {
         return builder.build()
     }
 
-    fun initFromVariantScope(creationConfig: BaseCreationConfig, includeDependencies: Boolean) {
+    fun initFromVariantScope(creationConfig: ComponentCreationConfig, includeDependencies: Boolean) {
         val globalScope = creationConfig.globalScope
         val variantData = creationConfig.variantData
         val project = globalScope.project

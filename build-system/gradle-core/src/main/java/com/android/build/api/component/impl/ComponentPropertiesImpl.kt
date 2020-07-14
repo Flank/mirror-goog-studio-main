@@ -33,7 +33,7 @@ import com.android.build.api.variant.impl.fullName
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.DependencyConfigurator
 import com.android.build.gradle.internal.VariantManager
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -100,7 +100,7 @@ abstract class ComponentPropertiesImpl(
     override val services: TaskCreationServices,
     @Deprecated("Do not use if you can avoid it. Check if services has what you need")
     override val globalScope: GlobalScope
-): ComponentProperties, BaseCreationConfig, ComponentIdentity by variant {
+): ComponentProperties, ComponentCreationConfig, ComponentIdentity by variant {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API

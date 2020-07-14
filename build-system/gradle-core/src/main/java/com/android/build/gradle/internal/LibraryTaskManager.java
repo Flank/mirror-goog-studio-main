@@ -40,7 +40,7 @@ import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.LibraryExtension;
-import com.android.build.gradle.internal.component.BaseCreationConfig;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel;
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator;
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment;
@@ -431,7 +431,7 @@ public class LibraryTaskManager
     }
 
     @Override
-    protected void createDependencyStreams(@NonNull BaseCreationConfig creationConfig) {
+    protected void createDependencyStreams(@NonNull ComponentCreationConfig creationConfig) {
         super.createDependencyStreams(creationConfig);
 
         // add the same jars twice in the same stream as the EXTERNAL_LIB in the task manager
@@ -510,7 +510,7 @@ public class LibraryTaskManager
     }
 
     @Override
-    protected void postJavacCreation(@NonNull BaseCreationConfig creationConfig) {
+    protected void postJavacCreation(@NonNull ComponentCreationConfig creationConfig) {
         // create an anchor collection for usage inside the same module (unit tests basically)
         ConfigurableFileCollection files =
                 creationConfig
@@ -585,7 +585,7 @@ public class LibraryTaskManager
     @NonNull
     @Override
     protected Set<ScopeType> getJavaResMergingScopes(
-            @NonNull BaseCreationConfig creationConfig,
+            @NonNull ComponentCreationConfig creationConfig,
             @NonNull QualifiedContent.ContentType contentType) {
         Preconditions.checkArgument(
                 contentType == RESOURCES || contentType == NATIVE_LIBS,

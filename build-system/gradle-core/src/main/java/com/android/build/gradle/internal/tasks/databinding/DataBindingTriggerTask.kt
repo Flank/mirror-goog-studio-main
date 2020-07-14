@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks.databinding
 
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -72,8 +72,8 @@ abstract class DataBindingTriggerTask : NonIncrementalTask() {
         outputFile.writeText(fileContents)
     }
 
-    class CreationAction(creationConfig: BaseCreationConfig) :
-        VariantTaskCreationAction<DataBindingTriggerTask, BaseCreationConfig>(
+    class CreationAction(creationConfig: ComponentCreationConfig) :
+        VariantTaskCreationAction<DataBindingTriggerTask, ComponentCreationConfig>(
             creationConfig
         ) {
 

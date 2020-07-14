@@ -78,7 +78,7 @@ import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ApplicationCreationConfig;
-import com.android.build.gradle.internal.component.BaseCreationConfig;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.component.TestCreationConfig;
 import com.android.build.gradle.internal.component.UnitTestCreationConfig;
@@ -338,7 +338,7 @@ public abstract class TaskManager<
     @NonNull protected final TaskFactory taskFactory;
     @NonNull protected final ImmutableList<VariantPropertiesT> variantPropertiesList;
     @NonNull private final ImmutableList<TestComponentPropertiesImpl> testComponentPropertiesList;
-    @NonNull private final ImmutableList<BaseCreationConfig> allPropertiesList;
+    @NonNull private final ImmutableList<ComponentCreationConfig> allPropertiesList;
 
     /**
      * Creates the TaskManager
@@ -384,7 +384,7 @@ public abstract class TaskManager<
                         .map(ComponentInfo::getProperties)
                         .collect(ImmutableList.toImmutableList());
         allPropertiesList =
-                ImmutableList.<BaseCreationConfig>builder()
+                ImmutableList.<ComponentCreationConfig>builder()
                         .addAll(variantPropertiesList)
                         .addAll(testComponentPropertiesList)
                         .build();
@@ -737,7 +737,7 @@ public abstract class TaskManager<
                 "Configuration for Compose related kotlin compiler extension");
 
         // register for all variant the prepareKotlinCompileTask if necessary.
-        for (BaseCreationConfig creationConfig : allPropertiesList) {
+        for (ComponentCreationConfig creationConfig : allPropertiesList) {
             try {
                 TaskProvider<Task> compileKotlin =
                         globalScope
@@ -834,7 +834,7 @@ public abstract class TaskManager<
         }
     }
 
-    protected void createDependencyStreams(@NonNull BaseCreationConfig creationConfig) {
+    protected void createDependencyStreams(@NonNull ComponentCreationConfig creationConfig) {
         // Since it's going to chance the configurations, we need to do it before
         // we start doing queries to fill the streams.
         handleJacocoDependencies(creationConfig);
@@ -961,14 +961,14 @@ public abstract class TaskManager<
 
     /** Returns whether or not dependencies from the {@link CustomClassTransform} are packaged */
     protected static boolean packagesCustomClassDependencies(
-            @NonNull BaseCreationConfig creationConfig) {
+            @NonNull ComponentCreationConfig creationConfig) {
         return appliesCustomClassTransforms(creationConfig)
                 && !creationConfig.getVariantType().isDynamicFeature();
     }
 
     /** Returns whether or not custom class transforms are applied */
     protected static boolean appliesCustomClassTransforms(
-            @NonNull BaseCreationConfig creationConfig) {
+            @NonNull ComponentCreationConfig creationConfig) {
         if (creationConfig instanceof ApkCreationConfig) {
             return ((ApkCreationConfig) creationConfig).getDebuggable()
                     && !creationConfig.getVariantType().isForTesting()
@@ -1032,7 +1032,7 @@ public abstract class TaskManager<
     }
 
     public void createMergeResourcesTask(
-            @NonNull BaseCreationConfig creationConfig,
+            @NonNull ComponentCreationConfig creationConfig,
             boolean processResources,
             ImmutableSet<MergeResources.Flag> flags) {
 
@@ -1075,7 +1075,7 @@ public abstract class TaskManager<
     }
 
     public TaskProvider<MergeResources> basicCreateMergeResourcesTask(
-            @NonNull BaseCreationConfig creationConfig,
+            @NonNull ComponentCreationConfig creationConfig,
             @NonNull MergeType mergeType,
             @Nullable File outputLocation,
             final boolean includeDependencies,
@@ -1139,7 +1139,7 @@ public abstract class TaskManager<
         return mergeResourcesTask;
     }
 
-    public void createMergeAssetsTask(@NonNull BaseCreationConfig creationConfig) {
+    public void createMergeAssetsTask(@NonNull ComponentCreationConfig creationConfig) {
         taskFactory.register(new MergeSourceSetFolders.MergeAppAssetCreationAction(creationConfig));
     }
 
@@ -1173,7 +1173,7 @@ public abstract class TaskManager<
         }
     }
 
-    public void createGenerateResValuesTask(@NonNull BaseCreationConfig creationConfig) {
+    public void createGenerateResValuesTask(@NonNull ComponentCreationConfig creationConfig) {
         if (creationConfig.getBuildFeatures().getResValues()) {
             TaskProvider<GenerateResValues> generateResValuesTask =
                     taskFactory.register(new GenerateResValues.CreationAction(creationConfig));
@@ -1209,7 +1209,7 @@ public abstract class TaskManager<
     }
 
     private void createApkProcessResTask(
-            @NonNull BaseCreationConfig creationConfig,
+            @NonNull ComponentCreationConfig creationConfig,
             @Nullable SingleArtifact<Directory> packageOutputType) {
         final GlobalScope globalScope = creationConfig.getGlobalScope();
 
@@ -1251,7 +1251,7 @@ public abstract class TaskManager<
     }
 
     public void createProcessResTask(
-            @NonNull BaseCreationConfig creationConfig,
+            @NonNull ComponentCreationConfig creationConfig,
             @Nullable SingleArtifact<Directory> packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName) {
@@ -1301,7 +1301,7 @@ public abstract class TaskManager<
     }
 
     private void createNonNamespacedResourceTasks(
-            @NonNull BaseCreationConfig creationConfig,
+            @NonNull ComponentCreationConfig creationConfig,
             SingleArtifact<Directory> packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName,
@@ -1375,7 +1375,7 @@ public abstract class TaskManager<
         }
     }
 
-    private static boolean generatesProguardOutputFile(@NonNull BaseCreationConfig creationConfig) {
+    private static boolean generatesProguardOutputFile(@NonNull ComponentCreationConfig creationConfig) {
         return creationConfig.getVariantScope().getCodeShrinker() != null
                 || creationConfig.getVariantType().isDynamicFeature();
     }
@@ -1389,7 +1389,7 @@ public abstract class TaskManager<
      */
     @NonNull
     protected abstract Set<ScopeType> getJavaResMergingScopes(
-            @NonNull BaseCreationConfig creationConfig,
+            @NonNull ComponentCreationConfig creationConfig,
             @NonNull QualifiedContent.ContentType contentType);
 
     /**
@@ -1407,7 +1407,7 @@ public abstract class TaskManager<
      * This sets up only the Sync part. The java res merging is setup via {@link
      * #createMergeJavaResTask(VariantCreationConfig)}
      */
-    public void createProcessJavaResTask(@NonNull BaseCreationConfig creationConfig) {
+    public void createProcessJavaResTask(@NonNull ComponentCreationConfig creationConfig) {
         // Copy the source folders java resources into the temporary location, mainly to
         // maintain the PluginDsl COPY semantics.
         taskFactory.register(new ProcessJavaResTask.CreationAction(creationConfig));
@@ -1438,7 +1438,7 @@ public abstract class TaskManager<
     /**
      * Sets up the Merge Java Res task.
      *
-     * @see #createProcessJavaResTask(BaseCreationConfig)
+     * @see #createProcessJavaResTask(ComponentCreationConfig)
      */
     public void createMergeJavaResTask(@NonNull VariantCreationConfig creationConfig) {
         TransformManager transformManager = creationConfig.getTransformManager();
@@ -1490,7 +1490,7 @@ public abstract class TaskManager<
         }
     }
 
-    protected abstract void postJavacCreation(@NonNull BaseCreationConfig creationConfig);
+    protected abstract void postJavacCreation(@NonNull ComponentCreationConfig creationConfig);
 
     /**
      * Creates the task for creating *.class files using javac. These tasks are created regardless
@@ -1498,7 +1498,7 @@ public abstract class TaskManager<
      * always used when running unit tests.
      */
     public TaskProvider<? extends JavaCompile> createJavacTask(
-            @NonNull BaseCreationConfig creationConfig) {
+            @NonNull ComponentCreationConfig creationConfig) {
         taskFactory.register(new JavaPreCompileTask.CreationAction(creationConfig));
 
         final TaskProvider<? extends JavaCompile> javacTask =
@@ -1517,7 +1517,7 @@ public abstract class TaskManager<
      *
      * <p>This should not be called for classes that will also be compiled from source by jack.
      */
-    protected void addJavacClassesStream(@NonNull BaseCreationConfig creationConfig) {
+    protected void addJavacClassesStream(@NonNull ComponentCreationConfig creationConfig) {
         ArtifactsImpl artifacts = creationConfig.getArtifacts();
         Provider<Directory> javaOutputs = artifacts.get(JAVAC.INSTANCE);
         Preconditions.checkNotNull(javaOutputs);
@@ -1565,7 +1565,7 @@ public abstract class TaskManager<
     /** Makes the given task the one used by top-level "compile" task. */
     public static void setJavaCompilerTask(
             @NonNull TaskProvider<? extends JavaCompile> javaCompilerTask,
-            @NonNull BaseCreationConfig creationConfig) {
+            @NonNull ComponentCreationConfig creationConfig) {
         TaskFactoryUtils.dependsOn(
                 creationConfig.getTaskContainer().getCompileTask(), javaCompilerTask);
     }
@@ -2425,7 +2425,7 @@ public abstract class TaskManager<
         }
     }
 
-    protected void handleJacocoDependencies(@NonNull BaseCreationConfig creationConfig) {
+    protected void handleJacocoDependencies(@NonNull ComponentCreationConfig creationConfig) {
         VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
         // we add the jacoco jar if coverage is enabled, but we don't add it
         // for test apps as it's already part of the tested app.
@@ -2502,7 +2502,7 @@ public abstract class TaskManager<
                                 .build());
     }
 
-    protected void createDataBindingTasksIfNecessary(@NonNull BaseCreationConfig creationConfig) {
+    protected void createDataBindingTasksIfNecessary(@NonNull ComponentCreationConfig creationConfig) {
         boolean dataBindingEnabled = creationConfig.getBuildFeatures().getDataBinding();
         boolean viewBindingEnabled = creationConfig.getBuildFeatures().getViewBinding();
         if (!dataBindingEnabled && !viewBindingEnabled) {
@@ -2526,7 +2526,7 @@ public abstract class TaskManager<
     }
 
     private void setDataBindingAnnotationProcessorParams(
-            @NonNull BaseCreationConfig creationConfig) {
+            @NonNull ComponentCreationConfig creationConfig) {
         VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
         JavaCompileOptions javaCompileOptions = variantDslInfo.getJavaCompileOptions();
         AnnotationProcessorOptions processorOptions =
@@ -2681,7 +2681,7 @@ public abstract class TaskManager<
             ListMultimap<String, TaskProvider<? extends Task>> bundleMap =
                     ArrayListMultimap.create();
 
-            for (BaseCreationConfig creationConfig : allPropertiesList) {
+            for (ComponentCreationConfig creationConfig : allPropertiesList) {
                 final VariantType variantType = creationConfig.getVariantType();
                 if (!variantType.isTestComponent()) {
                     final MutableTaskContainer taskContainer = creationConfig.getTaskContainer();
@@ -2763,7 +2763,7 @@ public abstract class TaskManager<
             }
         } else {
             // Case #2
-            for (BaseCreationConfig creationConfig : allPropertiesList) {
+            for (ComponentCreationConfig creationConfig : allPropertiesList) {
                 final VariantType variantType = creationConfig.getVariantType();
                 if (!variantType.isTestComponent()) {
                     final MutableTaskContainer taskContainer = creationConfig.getTaskContainer();
@@ -3004,7 +3004,7 @@ public abstract class TaskManager<
                     task.setGroup(ANDROID_GROUP);
                 });
 
-        List<BaseCreationConfig> signingReportComponents =
+        List<ComponentCreationConfig> signingReportComponents =
                 allPropertiesList.stream()
                         .filter(
                                 component ->
@@ -3037,7 +3037,7 @@ public abstract class TaskManager<
         }
     }
 
-    public void createAnchorTasks(@NonNull BaseCreationConfig creationConfig) {
+    public void createAnchorTasks(@NonNull ComponentCreationConfig creationConfig) {
         createVariantPreBuildTask(creationConfig);
 
         // also create sourceGenTask
@@ -3086,17 +3086,17 @@ public abstract class TaskManager<
         createCompileAnchorTask(creationConfig);
     }
 
-    protected void createVariantPreBuildTask(@NonNull BaseCreationConfig creationConfig) {
+    protected void createVariantPreBuildTask(@NonNull ComponentCreationConfig creationConfig) {
         // default pre-built task.
         createDefaultPreBuildTask(creationConfig);
     }
 
-    protected void createDefaultPreBuildTask(@NonNull BaseCreationConfig creationConfig) {
+    protected void createDefaultPreBuildTask(@NonNull ComponentCreationConfig creationConfig) {
         taskFactory.register(new PreBuildCreationAction(creationConfig));
     }
 
     public abstract static class AbstractPreBuildCreationAction<TaskT extends AndroidVariantTask>
-            extends VariantTaskCreationAction<TaskT, BaseCreationConfig> {
+            extends VariantTaskCreationAction<TaskT, ComponentCreationConfig> {
 
         @NonNull
         @Override
@@ -3104,7 +3104,7 @@ public abstract class TaskManager<
             return computeTaskName("pre", "Build");
         }
 
-        public AbstractPreBuildCreationAction(@NonNull BaseCreationConfig creationConfig) {
+        public AbstractPreBuildCreationAction(@NonNull ComponentCreationConfig creationConfig) {
             super(creationConfig, false);
         }
 
@@ -3127,7 +3127,7 @@ public abstract class TaskManager<
 
     private static class PreBuildCreationAction
             extends AbstractPreBuildCreationAction<AndroidVariantTask> {
-        public PreBuildCreationAction(@NonNull BaseCreationConfig creationConfig) {
+        public PreBuildCreationAction(@NonNull ComponentCreationConfig creationConfig) {
             super(creationConfig);
         }
 
@@ -3138,7 +3138,7 @@ public abstract class TaskManager<
         }
     }
 
-    private void createCompileAnchorTask(@NonNull BaseCreationConfig creationConfig) {
+    private void createCompileAnchorTask(@NonNull ComponentCreationConfig creationConfig) {
         final MutableTaskContainer taskContainer = creationConfig.getTaskContainer();
         taskContainer.setCompileTask(
                 taskFactory.register(
@@ -3293,7 +3293,7 @@ public abstract class TaskManager<
             return;
         }
         // create a map from kapt task name to variant scope
-        Map<String, BaseCreationConfig> kaptTaskLookup =
+        Map<String, ComponentCreationConfig> kaptTaskLookup =
                 allPropertiesList.stream()
                         .collect(
                                 Collectors.toMap(
@@ -3305,7 +3305,7 @@ public abstract class TaskManager<
                         (Action<Task>)
                                 kaptTask -> {
                                     // find matching scope.
-                                    BaseCreationConfig matchingComponent =
+                                    ComponentCreationConfig matchingComponent =
                                             kaptTaskLookup.get(kaptTask.getName());
                                     if (matchingComponent != null) {
                                         configureKaptTaskInScopeForDataBinding(
@@ -3315,7 +3315,7 @@ public abstract class TaskManager<
     }
 
     private void configureKaptTaskInScopeForDataBinding(
-            @NonNull BaseCreationConfig creationConfig, @NonNull Task kaptTask) {
+            @NonNull ComponentCreationConfig creationConfig, @NonNull Task kaptTask) {
         DirectoryProperty dataBindingArtifactDir =
                 creationConfig.getGlobalScope().getProject().getObjects().directoryProperty();
         RegularFileProperty exportClassListFile =

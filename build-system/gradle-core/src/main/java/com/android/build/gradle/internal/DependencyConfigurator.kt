@@ -24,7 +24,7 @@ import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform
 import com.android.build.gradle.internal.dependency.AarToClassTransform
 import com.android.build.gradle.internal.dependency.AarTransform
@@ -524,8 +524,8 @@ class DependencyConfigurator(
         variants: List<ComponentInfo<VariantT, VariantPropertiesT>>,
         testComponents: List<ComponentInfo<TestComponentImpl<out TestComponentProperties>, TestComponentPropertiesImpl>>
     ): DependencyConfigurator {
-        val allComponents: List<BaseCreationConfig> =
-            (variants + testComponents).map { it.properties as BaseCreationConfig }
+        val allComponents: List<ComponentCreationConfig> =
+            (variants + testComponents).map { it.properties as ComponentCreationConfig }
 
         val dependencies = project.dependencies
         if (globalScope.projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM]) {

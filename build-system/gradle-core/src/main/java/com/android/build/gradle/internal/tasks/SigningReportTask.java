@@ -22,7 +22,7 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.Identifier
 import static org.gradle.internal.logging.text.StyledTextOutput.Style.Normal;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.component.BaseCreationConfig;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.ide.common.signing.CertificateInfo;
 import com.android.ide.common.signing.KeystoreHelper;
@@ -50,7 +50,7 @@ import org.gradle.internal.logging.text.StyledTextOutputFactory;
  */
 public class SigningReportTask extends DefaultTask {
 
-    private List<BaseCreationConfig> components;
+    private List<ComponentCreationConfig> components;
 
     @TaskAction
     public void generate() {
@@ -60,7 +60,7 @@ public class SigningReportTask extends DefaultTask {
 
         Map<SigningConfig, SigningInfo> cache = Maps.newHashMap();
 
-        for (BaseCreationConfig component : components) {
+        for (ComponentCreationConfig component : components) {
             textOutput.withStyle(Identifier).text("Variant: ");
             textOutput.withStyle(Description).text(component.getName());
             textOutput.println();
@@ -119,7 +119,7 @@ public class SigningReportTask extends DefaultTask {
     }
 
     /** Sets the configurations to generate the report for. */
-    public void setComponents(@NonNull Collection<BaseCreationConfig> components) {
+    public void setComponents(@NonNull Collection<ComponentCreationConfig> components) {
         this.components = ImmutableList.copyOf(components);
     }
 
