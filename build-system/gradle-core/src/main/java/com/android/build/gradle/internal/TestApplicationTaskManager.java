@@ -99,6 +99,8 @@ public class TestApplicationTaskManager
 
         configureTestData(testVariantProperties, testData);
 
+        createValidateSigningTask(testVariantProperties);
+
         // create the test connected check task.
         TaskProvider<DeviceProviderInstrumentTestTask> instrumentTestTask =
                 taskFactory.register(
