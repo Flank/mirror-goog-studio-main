@@ -1,5 +1,5 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo")
-load("//tools/base/build-system/integration-test:integration-test.bzl", "gradle_integration_test")
+load("//tools/base/build-system/integration-test:integration-test.bzl", "gradle_integration_test", "single_gradle_integration_test_per_source")
 
 #keep sorted
 TEST_DEPS = [
@@ -200,22 +200,56 @@ AUTOMATIC_TEST_DATA = TEST_DATA + [
     "//prebuilts/tools/common/cmake:cmake-3.8.2",
 ]
 
-gradle_integration_test(
+# These sources need to compiled together as there are inter-dependencies. Avoid adding more.
+SOURCES_TO_COMPILE_TOGETHER = [
+    "src/test/java/com/android/build/gradle/integration/application/testData/*",
+    "src/test/java/com/android/build/gradle/integration/application/AnalyzeDependenciesTest.kt",
+    "src/test/java/com/android/build/gradle/integration/application/CoreLibraryDesugarTest.kt",
+    "src/test/java/com/android/build/gradle/integration/application/CoreLibraryDesugarConversionTest.kt",
+    "src/test/java/com/android/build/gradle/integration/application/CustomClassTransformTest.kt",
+    "src/test/java/com/android/build/gradle/integration/application/MinSdkVersionTest.kt",
+    "src/test/java/com/android/build/gradle/integration/application/MultiDexTest.java",
+    "src/test/java/com/android/build/gradle/integration/application/OptimizeResourcesTaskTest.kt",
+    "src/test/java/com/android/build/gradle/integration/application/RulesExtractionDynamicAppTest.kt",
+    "src/test/java/com/android/build/gradle/integration/application/RulesExtractionTestUtil.kt",
+    "src/test/java/com/android/build/gradle/integration/application/SigningTest.java",
+    "src/test/java/com/android/build/gradle/integration/bundle/DynamicAppLegacyMultidexTest.kt",
+    "src/test/java/com/android/build/gradle/integration/bundle/DynamicAppSigningConfigTest.kt",
+    "src/test/java/com/android/build/gradle/integration/bundle/DynamicAppTest.kt",
+    "src/test/java/com/android/build/gradle/integration/desugar/desugaringProjectConfigurator.kt",
+    "src/test/java/com/android/build/gradle/integration/desugar/DesugarAppTest.java",
+    "src/test/java/com/android/build/gradle/integration/desugar/DesugarLibraryAndroidTestTest.kt",
+    "src/test/java/com/android/build/gradle/integration/desugar/DesugarAppWithDesugarToolTest.java",
+    "src/test/java/com/android/build/gradle/integration/desugar/DesugarMultiProjectTest.java",
+    "src/test/java/com/android/build/gradle/integration/desugar/DesugarFileDependencyTest.kt",
+    "src/test/java/com/android/build/gradle/integration/desugar/DesugarAppWithLibraryTest.java",
+    "src/test/java/com/android/build/gradle/integration/desugar/DesugarLibraryWithDesugarToolTest.java",
+    "src/test/java/com/android/build/gradle/integration/desugar/DesugarAarTogetherWithD8Test.kt",
+    "src/test/java/com/android/build/gradle/integration/desugar/DesugarAppAndroidTestTest.kt",
+    "src/test/java/com/android/build/gradle/integration/desugar/resources/*",
+    "src/test/java/com/android/build/gradle/integration/desugar/RecalculateStackFramesTaskTest.kt",
+    "src/test/java/com/android/build/gradle/integration/library/JarsInLibraries.java",
+]
+
+# Glob matching all connected tests. These should not be run with bazel.
+CONNECTED_TESTS = [
+    "src/test/java/com/android/build/gradle/integration/**/*ConnectedTest.*",
+    "src/test/java/com/android/build/gradle/integration/testing/ConnectedCheckTest.java",
+]
+
+CHECK_ALL_SOURCES = ["src/test/java/**/CheckAll.java"]
+
+# Creates separate target for each source
+single_gradle_integration_test_per_source(
     name = "tests",
     srcs = glob(
         [
             "src/test/java/**/*.java",
             "src/test/java/**/*.kt",
         ],
-        exclude = [
-            "src/test/java/**/CheckAll*",
-            "src/test/java/**/IncrementalDexingWithDesugaringTest.kt",
-            "src/test/java/**/IncrementalJavaCompileWithAPsTest.kt",
-        ],
+        exclude = SOURCES_TO_COMPILE_TOGETHER + CONNECTED_TESTS + CHECK_ALL_SOURCES,
     ),
     data = TEST_DATA,
-    lint_baseline = "lint_baseline.xml",
-    #keep sorted
     maven_repos = [
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test:androidx_latest",
@@ -225,62 +259,23 @@ gradle_integration_test(
         "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
     resources = glob(["src/test/resources/**"]),
-    shard_count = 20,
     deps = TEST_DEPS,
 )
 
 gradle_integration_test(
-    name = "tests_IncrementalDexingWithDesugaringTest",
+    name = "coupled_tests",
     srcs = glob(
-        [
-            "src/test/java/**/IncrementalDexingWithDesugaringTest.kt",
-        ],
+        SOURCES_TO_COMPILE_TOGETHER,
     ),
     data = TEST_DATA,
     #keep sorted
     maven_repos = [
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
-        "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
     resources = glob(["src/test/resources/**"]),
-    deps = TEST_DEPS,
-)
-
-gradle_integration_test(
-    name = "tests_IncrementalJavaCompileWithAPsTest",
-    srcs = glob(
-        [
-            "src/test/java/**/IncrementalJavaCompileWithAPsTest.kt",
-        ],
-    ),
-    data = TEST_DATA,
-    #keep sorted
-    maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
-        "//tools/base/build-system/integration-test:androidx_latest",
-        "//tools/base/build-system/integration-test:support_library_latest",
-        "//tools/base/build-system/integration-test/application:prebuilts",
-        "//tools/base/third_party/kotlin:kotlin-m2repository",
-    ],
-    resources = glob(["src/test/resources/**"]),
-    deps = TEST_DEPS,
-)
-
-gradle_integration_test(
-    name = "tests_CompileSdkAndLanguageLevelTest",
-    srcs = glob(
-        [
-            "src/test/java/**/CompileSdkAndLanguageLevelTest.kt",
-        ],
-    ),
-    data = TEST_DATA,
-    #keep sorted
-    maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
-    ],
-    resources = glob(["src/test/resources/**"]),
+    shard_count = 10,
     deps = TEST_DEPS,
 )
 
@@ -288,7 +283,7 @@ gradle_integration_test(
 gradle_integration_test(
     name = "automatic-tests",
     timeout = "long",
-    srcs = glob(["src/test/java/**/CheckAll.java"]),
+    srcs = glob(CHECK_ALL_SOURCES),
     data = AUTOMATIC_TEST_DATA,
     #keep sorted
     maven_repos = [

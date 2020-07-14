@@ -29,6 +29,7 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.profile.Recorder;
+import com.android.builder.profile.ThreadRecorder;
 import com.android.ide.common.util.ReferenceHolder;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -76,7 +77,6 @@ import org.gradle.workers.WorkerExecutor;
 public abstract class TransformTask extends StreamBasedTask {
 
     private Transform transform;
-    private Recorder recorder;
     Collection<SecondaryFile> secondaryFiles = null;
     List<FileCollection> secondaryInputFiles = null;
 
@@ -178,6 +178,7 @@ public abstract class TransformTask extends StreamBasedTask {
                         .setTransformClassName(transform.getClass().getName())
                         .build();
 
+        Recorder recorder = ThreadRecorder.get();
         recorder.record(
                 ExecutionType.TASK_TRANSFORM_PREPARATION,
                 preExecutionInfo,
@@ -584,13 +585,13 @@ public abstract class TransformTask extends StreamBasedTask {
             task.referencedInputStreams = referencedInputStreams;
             task.outputStream = outputStream;
             task.setVariantName(variantName);
-            task.recorder = recorder;
+            boolean cachingEnabled = transform.isCacheable();
             task.getOutputs()
                     .cacheIf(
                             "Transform "
                                     + transform.getClass().getName()
                                     + " declares itself as cacheable",
-                            (Spec<? super Task> & Serializable) (t -> transform.isCacheable()));
+                            (Spec<? super Task> & Serializable) (t -> cachingEnabled));
             task.registerConsumedAndReferencedStreamInputs();
             task.getProjectPath().set(task.getProject().getPath());
             task.secondaryInputFiles =
