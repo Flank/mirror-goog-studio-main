@@ -142,11 +142,11 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
   std::string agent_alt_src_path = src_path + kAgentAltFilename;
   std::string server_src_path = src_path + kServerFilename;
 
-  bool need_agent = access(agent_src_path.c_str(), F_OK) == -1;
-  bool need_server = access(server_src_path.c_str(), F_OK) == -1;
+  bool need_agent = IO::access(agent_src_path, F_OK) == -1;
+  bool need_server = IO::access(server_src_path, F_OK) == -1;
 
 #if defined(__aarch64__) || defined(__x86_64__)
-  bool need_agent_alt = access(agent_alt_src_path.c_str(), F_OK) == -1;
+  bool need_agent_alt = IO::access(agent_alt_src_path, F_OK) == -1;
 #else
   bool need_agent_alt = false;
 #endif
@@ -226,8 +226,7 @@ bool SwapCommand::WriteArrayToDisk(const unsigned char* array,
                                    uint64_t array_len,
                                    const std::string& dst_path) const noexcept {
   Phase p("WriteArrayToDisk");
-  std::string real_path = workspace_.GetRoot() + dst_path;
-  int fd = open(real_path.c_str(), O_WRONLY | O_CREAT, kRwFileMode);
+  int fd = IO::open(dst_path, O_WRONLY | O_CREAT, kRwFileMode);
   if (fd == -1) {
     ErrEvent("WriteArrayToDisk, open: "_s + strerror(errno));
     return false;
@@ -244,7 +243,7 @@ bool SwapCommand::WriteArrayToDisk(const unsigned char* array,
     return false;
   }
 
-  chmod(real_path.c_str(), kRxFileMode);
+  IO::chmod(dst_path, kRxFileMode);
   return true;
 }
 
@@ -332,7 +331,7 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
 
   for (int pid : request_.process_ids()) {
     const std::string pid_string = to_string(pid);
-    if (access(("/proc/" + pid_string).c_str(), F_OK) != 0) {
+    if (IO::access("/proc/" + pid_string, F_OK) != 0) {
       response_->set_extra(pid_string);
       return proto::SwapResponse::PROCESS_TERMINATED;
     }
