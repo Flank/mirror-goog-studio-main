@@ -16,14 +16,14 @@
 
 package com.android.builder.model.v2.models.ndk
 
+import com.android.builder.model.v2.AndroidModel
 import java.io.File
-import java.io.Serializable
 
-/** 
+/**
  * Response returned by Gradle to Android Studio containing information about a native ABI under a
- * module and variant. 
+ * module and variant.
  */
-interface NativeAbi : Serializable {
+interface NativeAbi: AndroidModel {
     /**
      * The ABI name. This value aligns with [com.android.build.gradle.internal.core.Abi.tag]. For
      * example, "x86_64", "arm64-v8a".

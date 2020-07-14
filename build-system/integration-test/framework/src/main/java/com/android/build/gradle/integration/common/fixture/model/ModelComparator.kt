@@ -22,6 +22,7 @@ import com.android.builder.model.v2.ide.Variant
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.VariantDependencies
+import com.android.builder.model.v2.models.ndk.NativeModule
 import com.google.common.base.Charsets
 import com.google.common.io.Resources
 import com.google.common.truth.Truth
@@ -120,6 +121,20 @@ open class ModelComparator {
             }
 
             runComparison("Variant", content, goldenFile)
+        }
+
+        fun compare(
+            model: NativeModule,
+            goldenFile: String
+        ) {
+            val content = dump(NativeModule::class.java, result.normalizer) {
+                model.writeToBuilder(this)
+            }.also {
+                generateStdoutHeader()
+                println(it)
+            }
+
+            runComparison("NativeModule", content, goldenFile)
         }
 
         /**

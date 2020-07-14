@@ -126,7 +126,8 @@ data class CxxProjectModelData(
     override val rootBuildGradleFolder: File = File("."),
     override val sdkFolder: File = File("."),
     override val chromeTraceJsonFolder: File? = null,
-    override val isPrefabEnabled: Boolean = false
+    override val isPrefabEnabled: Boolean = false,
+    override val isV2NativeModelEnabled: Boolean = false
 ) : CxxProjectModel
 
 private fun CxxProjectModel.toData() = CxxProjectModelData(
@@ -138,7 +139,8 @@ private fun CxxProjectModel.toData() = CxxProjectModelData(
     isNativeCompilerSettingsCacheEnabled = isNativeCompilerSettingsCacheEnabled,
     rootBuildGradleFolder = rootBuildGradleFolder,
     sdkFolder = sdkFolder,
-    isPrefabEnabled = isPrefabEnabled
+    isPrefabEnabled = isPrefabEnabled,
+    isV2NativeModelEnabled = isV2NativeModelEnabled
 )
 
 /**

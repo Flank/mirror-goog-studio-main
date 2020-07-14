@@ -43,6 +43,7 @@ import com.android.build.gradle.options.BooleanOption.BUILD_ONLY_TARGET_ABI
 import com.android.build.gradle.options.BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION
 import com.android.build.gradle.options.BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE
 import com.android.build.gradle.options.BooleanOption.ENABLE_PROFILE_JSON
+import com.android.build.gradle.options.BooleanOption.ENABLE_V2_NATIVE_MODEL
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.StringOption.IDE_BUILD_TARGET_ABI
 import com.android.build.gradle.options.StringOption.PROFILE_OUTPUT_DIR
@@ -88,7 +89,8 @@ data class CxxConfigurationModel(
     val prefabPackageDirectoryList: FileCollection?,
     val implicitBuildTargetSet: Set<String>,
     val variantName: String,
-    val nativeVariantConfig: NativeBuildSystemVariantConfig
+    val nativeVariantConfig: NativeBuildSystemVariantConfig,
+    val isV2NativeModelEnabled: Boolean
 )
 
 /**
@@ -219,7 +221,8 @@ fun tryCreateCxxConfigurationModel(
         variantName = componentProperties.name,
         nativeVariantConfig = createNativeBuildSystemVariantConfig(
             buildSystem, componentProperties.variantDslInfo
-        )
+        ),
+        isV2NativeModelEnabled = option(ENABLE_V2_NATIVE_MODEL)
     )
 }
 

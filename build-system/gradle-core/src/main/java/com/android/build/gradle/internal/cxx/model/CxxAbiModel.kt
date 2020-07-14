@@ -143,6 +143,28 @@ val CxxAbiModel.jsonGenerationLoggingRecordFile: File
 val CxxAbiModel.prefabConfigFile: File
     get() = FileUtils.join(originalCxxBuildFolder, "prefab_config.json")
 
+/**
+ * compile_commands.json file for this ABI.
+ * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/compile_commands.json
+ */
+val CxxAbiModel.compileCommandsJsonFile: File
+    get() = FileUtils.join(originalCxxBuildFolder, "compile_commands.json")
+
+/**
+ * Text file containing absolute paths to folders containing the generated symbols, one per line.
+ * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/symbol_folder_index.txt
+ */
+val CxxAbiModel.symbolFolderIndexFile: File
+    get() = FileUtils.join(originalCxxBuildFolder, "symbol_folder_index.txt")
+
+/**
+ * Text file containing absolute paths to native build files (For example, CMakeLists.txt for
+ * CMake). One per line.
+ * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/build_file_index.txt
+ */
+val CxxAbiModel.buildFileIndexFile: File
+    get() = FileUtils.join(originalCxxBuildFolder, "build_file_index.txt")
+
 fun CxxAbiModel.shouldGeneratePrefabPackages(): Boolean {
     // Prefab will fail if we try to create ARMv5/MIPS/MIPS64 modules. r17 was the first NDK version
     // that we can guarantee will not be used to use those ABIs.

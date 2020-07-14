@@ -20,6 +20,7 @@ import com.android.builder.model.v2.dsl.BuildType
 import com.android.builder.model.v2.dsl.ClassField
 import com.android.builder.model.v2.ide.ApiVersion
 import com.google.common.truth.Truth
+import com.google.gson.JsonElement
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
@@ -84,6 +85,7 @@ data class FakeApiVersion(override val apiLevel: Int, override val codename: Str
 
 class FakeFileNormalizer: FileNormalizer {
     override fun normalize(file: File): String = file.absolutePath
+    override fun unscrupulouslyReplace(value: JsonElement): JsonElement = value
 }
 
 // impl of BuildType for testing

@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.builder.model.v2.models.ndk
+package com.android.build.gradle.internal.ide.v2
 
-import com.android.builder.model.v2.AndroidModel
+import com.android.builder.model.v2.models.ndk.NativeAbi
+import com.android.builder.model.v2.models.ndk.NativeVariant
+import java.io.Serializable
 
-/**
- * Response returned by Gradle to Android Studio containing information about a variant in a native
- * module.
- */
-interface NativeVariant: AndroidModel {
-    /** Name of the variant. For example "debug", "release". */
-    val name: String
-
-    /** ABIs in this variant. */
-    val abis: List<NativeAbi>
-}
+data class NativeVariantImpl(override val name: String, override val abis: List<NativeAbi>) :
+    NativeVariant, Serializable

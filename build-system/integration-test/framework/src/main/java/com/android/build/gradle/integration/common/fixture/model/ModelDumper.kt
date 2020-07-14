@@ -31,6 +31,9 @@ import com.android.builder.model.v2.ide.Variant
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.VariantDependencies
+import com.android.builder.model.v2.models.ndk.NativeAbi
+import com.android.builder.model.v2.models.ndk.NativeModule
+import com.android.builder.model.v2.models.ndk.NativeVariant
 
 // --------------
 // dump fixtures specific to each model class
@@ -109,6 +112,37 @@ internal fun AndroidProject.writeToBuilder(builder: DumpBuilder) {
         multiLineList("flags", flags.booleanFlagMap?.entries?.sortedBy { it.key.name }) {
             entry(it.key.name, it.value)
         }
+    }
+}
+
+fun NativeModule.writeToBuilder(builder: DumpBuilder) {
+    builder.apply {
+        item("name", name)
+        multiLineList("variants", variants.sortedBy { name }) { variant ->
+            variant.writeToBuilder(this)
+        }
+        item("nativeBuildSystem", nativeBuildSystem)
+        item("ndkVersion", ndkVersion)
+        item("defaultNdkVersion", defaultNdkVersion)
+        item("externalNativeBuildFile", externalNativeBuildFile)
+    }
+}
+
+private fun NativeVariant.writeToBuilder(builder: DumpBuilder) {
+    builder.struct("NativeVariant", this) {
+        item("name", name)
+        multiLineList("abis", abis.sortedBy { name }) { abi ->
+            abi.writeToBuilder(this)
+        }
+    }
+}
+
+private fun NativeAbi.writeToBuilder(builder: DumpBuilder) {
+    builder.struct("NativeAbi", this) {
+        item("name", name)
+        item("sourceFlagsFile", sourceFlagsFile)
+        item("symbolFolderIndexFile", symbolFolderIndexFile)
+        item("buildFileIndexFile", buildFileIndexFile)
     }
 }
 

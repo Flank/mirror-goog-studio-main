@@ -86,7 +86,8 @@ class CmakeServerExternalNativeJsonGeneratorTranslationTest {
             "x86",
             File("C:/Users/jomof/AndroidStudioProjects/MyApplication10/app/.externalNativeBuild/cmake/debug/x86"),
             getTestTarget(target),
-            StringTable(table)
+            StringTable(table),
+            false
         )
         val flagsOrdinal = library.files!!.first().flagsOrdinal!!
         assertThat(table[flagsOrdinal]).contains("--target")

@@ -80,4 +80,6 @@ interface CxxProjectModel {
      * Feature flag enabling prefab for the project.
      */
     val isPrefabEnabled: Boolean
+
+    val isV2NativeModelEnabled: Boolean
 }

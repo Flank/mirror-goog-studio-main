@@ -386,7 +386,8 @@ internal class CmakeServerExternalNativeJsonGenerator(
             abi.abi.tag,
             workingDirectory,
             target,
-            strings
+            strings,
+            abi.variant.module.project.isV2NativeModelEnabled
         )
     }
 
@@ -580,7 +581,8 @@ internal class CmakeServerExternalNativeJsonGenerator(
             abi: String,
             workingDirectory: File,
             target: Target,
-            strings: StringTable
+            strings: StringTable,
+            isV2NativeModelEnabled: Boolean
         ): NativeLibraryValue {
             val nativeLibraryValue = NativeLibraryValue()
             nativeLibraryValue.abi = abi
@@ -596,6 +598,10 @@ internal class CmakeServerExternalNativeJsonGenerator(
                 nativeLibraryValue.output = File(target.artifacts[0])
             }
             nativeLibraryValue.runtimeFiles = findRuntimeFiles(target)
+
+            if (isV2NativeModelEnabled) {
+                return nativeLibraryValue
+            }
 
             // Maps each source file to the index of the corresponding strings table entry, which
             // contains the build flags for that source file.

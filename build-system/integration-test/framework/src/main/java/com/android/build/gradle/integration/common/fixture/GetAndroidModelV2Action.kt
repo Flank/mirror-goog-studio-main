@@ -16,9 +16,9 @@
 package com.android.build.gradle.integration.common.fixture
 
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2.ModelInfo
+import com.android.builder.model.v2.AndroidModel
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
-import com.android.builder.model.v2.models.ModelBuilderParameter
 import com.android.builder.model.v2.models.ProjectSyncIssues
 import com.android.builder.model.v2.models.VariantDependencies
 import org.gradle.tooling.BuildAction
@@ -32,12 +32,19 @@ import org.gradle.tooling.model.gradle.BasicGradleProject
  *
  * This is returned as a [ModelContainer]
  */
-class GetAndroidModelV2Action<T>(
-    private val modelClass: Class<T>,
-    private val variantName: String? = null
-) : BuildAction<ModelContainerV2<T>> {
+class GetAndroidModelV2Action<ModelT : AndroidModel, ParamT> private constructor(
+    private val modelClass: Class<ModelT>,
+    private val paramClassAndModifier: Pair<Class<ParamT>, ((ParamT) -> Unit)>?
+) : BuildAction<ModelContainerV2<ModelT>> {
 
-    override fun execute(buildController: BuildController): ModelContainerV2<T> {
+    constructor(modelClass: Class<ModelT>) : this(modelClass, null)
+    constructor(
+        modelClass: Class<ModelT>,
+        paramClass: Class<ParamT>,
+        paramModifier: (ParamT) -> Unit
+    ) : this(modelClass, paramClass to paramModifier)
+
+    override fun execute(buildController: BuildController): ModelContainerV2<ModelT> {
         val t1 = System.currentTimeMillis()
 
         // accumulate pairs of (build Id, project) to query.
@@ -84,19 +91,23 @@ class GetAndroidModelV2Action<T>(
     private fun getAndroidProjectMap(
         projects: List<Pair<BuildIdentifier, BasicGradleProject>>,
         buildController: BuildController
-    ): Map<BuildIdentifier, MutableMap<String, ModelInfo<T>>> {
-        val models = mutableMapOf<BuildIdentifier, MutableMap<String, ModelInfo<T>>>()
+    ): Map<BuildIdentifier, MutableMap<String, ModelInfo<ModelT>>> {
+        val models = mutableMapOf<BuildIdentifier, MutableMap<String, ModelInfo<ModelT>>>()
 
         for ((buildId, project) in projects) {
-            val model = if (variantName == null ) {
-                 buildController.findModel(project, modelClass)
+            val model = if (paramClassAndModifier == null) {
+                buildController.findModel(project, modelClass)
             } else {
-                 buildController.findModel(project, modelClass, ModelBuilderParameter::class.java) {
-                     it.variantName = variantName
-                 }
+                buildController.findModel(
+                    project,
+                    modelClass,
+                    paramClassAndModifier.first,
+                    paramClassAndModifier.second
+                )
             } ?: continue
 
-            val issues = buildController.findModel(project, ProjectSyncIssues::class.java) ?: continue
+            val issues =
+                buildController.findModel(project, ProjectSyncIssues::class.java) ?: continue
 
             val map = models.computeIfAbsent(buildId) { mutableMapOf() }
             map[project.path] = ModelInfo(model, issues)

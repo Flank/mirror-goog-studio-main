@@ -16,7 +16,11 @@
 
 package com.android.build.gradle.integration.common.fixture
 
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+import com.android.testutils.AssumeUtil
 import com.google.common.truth.Truth
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import org.gradle.tooling.model.BuildIdentifier
 import org.junit.Test
 import java.io.File
@@ -29,8 +33,11 @@ class FileNormalizerTest {
         gradleUserHome = File("/path/to/Gradle"),
         androidSdk = File("/path/to/Sdk"),
         androidHome = File("/path/to/Home"),
-        localRepos = listOf(Paths.get("/path/to/localRepo1"), Paths.get("/path/to/localRepo2"))
+        androidNdkSxSRoot = File("/path/to/ndkSxSRoot"),
+        localRepos = listOf(Paths.get("/path/to/localRepo1"), Paths.get("/path/to/localRepo2")),
+        defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION
     )
+    private val gson = Gson()
 
     @Test
     fun `Test Outside Paths`() {
@@ -81,6 +88,85 @@ class FileNormalizerTest {
     fun `Test android Home`() {
         Truth.assertThat(normalizer.normalize(File("/path/to/Home/foo")))
             .isEqualTo("{ANDROID_HOME}/foo{!}")
+    }
+
+    @Test
+    fun `Test android NDK Root`() {
+        Truth.assertThat(normalizer.normalize(File("/path/to/ndkSxSRoot/$DEFAULT_NDK_SIDE_BY_SIDE_VERSION/foo")))
+            .isEqualTo("{NDK_ROOT}/foo{!}")
+    }
+
+    @Test
+    fun `Test unscrupulouslyReplace(JsonElement)`() {
+        AssumeUtil.assumeNotWindows()
+        Truth.assertThat(
+            normalizer.unscrupulouslyReplace(
+                gson.fromJson(
+                    """
+                        {
+                            gradleUserHome = "/path/to/Gradle",
+                            androidSdk = "/path/to/Sdk",
+                            androidHome = "/path/to/Home",
+                            androidNdkRoot = "/path/to/ndkSxSRoot/$DEFAULT_NDK_SIDE_BY_SIDE_VERSION"
+                        }
+                    """, JsonObject::class.java
+                )
+            )
+        ).isEqualTo(
+            gson.fromJson(
+                """
+                {
+                    gradleUserHome = "{GRADLE}",
+                    androidSdk = "{SDK}",
+                    androidHome = "{ANDROID_HOME}",
+                    androidNdkRoot = "{NDK_ROOT}"
+                }
+                """, JsonObject::class.java
+            )
+        )
+    }
+
+    @Test
+    fun `Test unscrupulouslyReplace(JsonElement) - windows`() {
+        AssumeUtil.assumeWindows()
+        val normalizer = FileNormalizerImpl(
+            buildId = BuildIdentifierImpl(File("C:\\path\\to\\Project")),
+            gradleUserHome = File("C:\\path\\to\\Gradle"),
+            androidSdk = File("C:\\path\\to\\Sdk"),
+            androidHome = File("C:\\path\\to\\Home"),
+            androidNdkSxSRoot = File("C:\\path\\to\\ndkSxSRoot"),
+            localRepos = listOf(
+                Paths.get("C:\\path\\to\\localRepo1"),
+                Paths.get("C:\\path\\to\\localRepo2")
+            ),
+            defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+        )
+
+        Truth.assertThat(
+            normalizer.unscrupulouslyReplace(
+                gson.fromJson(
+                    """
+                    {
+                        gradleUserHome = "C:\\path\\to\\Gradle",
+                        androidSdk = "C:\\path\\to\\Sdk",
+                        androidHome = "C:\\path\\to\\Home",
+                        androidNdkRoot = "C:\\path\\to\\ndkSxSRoot\\$DEFAULT_NDK_SIDE_BY_SIDE_VERSION"
+                    }
+                    """, JsonObject::class.java
+                )
+            )
+        ).isEqualTo(
+            gson.fromJson(
+                """
+                {
+                    gradleUserHome = "{GRADLE}",
+                    androidSdk = "{SDK}",
+                    androidHome = "{ANDROID_HOME}",
+                    androidNdkRoot = "{NDK_ROOT}"
+                }
+                """, JsonObject::class.java
+            )
+        )
     }
 
     private class BuildIdentifierImpl(private val rootDir: File) : BuildIdentifier {
