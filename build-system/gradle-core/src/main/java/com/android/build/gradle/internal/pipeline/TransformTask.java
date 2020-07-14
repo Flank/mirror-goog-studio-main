@@ -41,18 +41,21 @@ import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionTyp
 import com.google.wireless.android.sdk.stats.GradleTransformExecution;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.gradle.api.Task;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.LoggingManager;
 import org.gradle.api.provider.Property;
+import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -587,7 +590,7 @@ public abstract class TransformTask extends StreamBasedTask {
                             "Transform "
                                     + transform.getClass().getName()
                                     + " declares itself as cacheable",
-                            t -> transform.isCacheable());
+                            (Spec<? super Task> & Serializable) (t -> transform.isCacheable()));
             task.registerConsumedAndReferencedStreamInputs();
             task.getProjectPath().set(task.getProject().getPath());
             task.secondaryInputFiles =
