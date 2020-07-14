@@ -18,15 +18,13 @@ package com.android.build.gradle.integration.model
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.build.gradle.integration.common.fixture.model.dump
-import com.android.build.gradle.integration.common.utils.goldenFile
+import com.android.build.gradle.integration.common.fixture.model.ModelComparator
 import com.android.builder.model.v2.ide.SyncIssue
-import com.google.common.truth.Truth
 import org.gradle.api.JavaVersion
 import org.junit.Rule
 import org.junit.Test
 
-class AppModelTest {
+class AppModelTest: ModelComparator() {
 
     @get:Rule
     val project = builder()
@@ -39,10 +37,10 @@ class AppModelTest {
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchAndroidProjects()
 
-        val fileName = if (JavaVersion.current().isJava11Compatible) "Default_AndroidProject_Model_jdk11" else "Default_AndroidProject_Model"
-        Truth.assertWithMessage("Dumped AndroidProject (full version in stdout)")
-            .that(result.container.singleModel.dump(result.normalizer))
-            .isEqualTo(goldenFile(fileName))
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = if (JavaVersion.current().isJava11Compatible) "Default_AndroidProject_Model_jdk11" else "Default_AndroidProject_Model"
+        )
     }
 
     @Test
@@ -51,8 +49,9 @@ class AppModelTest {
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchVariantDependencies("debug")
 
-        Truth.assertWithMessage("Dumped VariantDependencies(debug) (full version in stdout)")
-            .that(result.container.singleModel.dump(result.normalizer, result.container))
-            .isEqualTo(goldenFile("Default_VariantDependencies_Model"))
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "Default_VariantDependencies_Model"
+        )
     }
 }

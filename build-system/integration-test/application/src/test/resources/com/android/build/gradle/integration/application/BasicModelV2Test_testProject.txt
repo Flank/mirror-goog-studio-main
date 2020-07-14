@@ -1,4 +1,5 @@
-> AndroidProject
+> AndroidProject:
+    - modelVersion      = "n/a"
     - apiVersion        = 3
     - projectType       = "APPLICATION"
     - path              = ":"
@@ -13,8 +14,8 @@
     > bootClasspath:
        * {SDK}/platforms/android-29/android.jar
     < bootClasspath
-    > DefaultConfigContainer:
-       > Flavor:
+    > defaultConfig:
+       > productFlavor:
           - name                               = "main"
           - applicationIdSuffix                = (null)
           - versionNameSuffix                  = (null)
@@ -35,6 +36,7 @@
           > resValues:
              * value:
                 * name          = "foo"
+                * type          = "string"
                 * value         = "foo"
                 * documentation = ""
                 * annotations   = []
@@ -49,6 +51,7 @@
           - multiDexKeepFile                   = (null)
           - multiDexKeepProguard               = (null)
           - dimension                          = (null)
+          - applicationId                      = (null)
           - versionCode                        = 12
           - versionName                        = "2.0"
           - minSdkVersion:
@@ -75,10 +78,10 @@
           - vectorDrawables:
              * generatedDensities = ["hdpi", "ldpi", "mdpi", "xhdpi", "xxhdpi", "xxxhdpi"]
              * useSupportLibrary  = false
-       < Flavor
-       > Prod-SourceProvider:
+       < productFlavor
+       > sourceProvider:
           - name                = "main"
-          - ManifestFile        = {PROJECT}/src/main/AndroidManifest.xml
+          - manifestFile        = {PROJECT}/src/main/AndroidManifest.xml
           > javaDirectories:
              * {PROJECT}/src/main/java
           < javaDirectories
@@ -110,10 +113,10 @@
              * {PROJECT}/src/main/shaders
           < shadersDirectories
           - mlModelsDirectories = (null)
-       < Prod-SourceProvider
-       > AndroidTest-SourceProvider:
+       < sourceProvider
+       > androidTestSourceProvider:
           - name                = "androidTest"
-          - ManifestFile        = {PROJECT}/src/androidTest/AndroidManifest.xml
+          - manifestFile        = {PROJECT}/src/androidTest/AndroidManifest.xml
           > javaDirectories:
              * {PROJECT}/src/androidTest/java
           < javaDirectories
@@ -145,10 +148,10 @@
              * {PROJECT}/src/androidTest/shaders
           < shadersDirectories
           - mlModelsDirectories = (null)
-       < AndroidTest-SourceProvider
-       > UnitTest-SourceProvider:
+       < androidTestSourceProvider
+       > unitTestSourceProvider:
           - name                = "test"
-          - ManifestFile        = {PROJECT}/src/test/AndroidManifest.xml
+          - manifestFile        = {PROJECT}/src/test/AndroidManifest.xml
           > javaDirectories:
              * {PROJECT}/src/test/java
           < javaDirectories
@@ -180,11 +183,11 @@
              * {PROJECT}/src/test/shaders
           < shadersDirectories
           - mlModelsDirectories = (null)
-       < UnitTest-SourceProvider
-    < DefaultConfigContainer
+       < unitTestSourceProvider
+    < defaultConfig
     > buildTypes:
        > buildTypeContainer(debug):
-          > BuildType:
+          > buildType:
              - name                     = "debug"
              - applicationIdSuffix      = ".debug"
              - versionNameSuffix        = (null)
@@ -199,6 +202,7 @@
              > resValues:
                 * value:
                    * name          = "foo"
+                   * type          = "string"
                    * value         = "foo2"
                    * documentation = ""
                    * annotations   = []
@@ -220,10 +224,10 @@
              - isZipAlignEnabled        = true
              - isEmbedMicroApp          = false
              - signingConfig            = "debug"
-          < BuildType
-          > Prod-SourceProvider:
+          < buildType
+          > sourceProvider:
              - name                = "debug"
-             - ManifestFile        = {PROJECT}/src/debug/AndroidManifest.xml
+             - manifestFile        = {PROJECT}/src/debug/AndroidManifest.xml
              > javaDirectories:
                 * {PROJECT}/src/debug/java
              < javaDirectories
@@ -255,10 +259,10 @@
                 * {PROJECT}/src/debug/shaders
              < shadersDirectories
              - mlModelsDirectories = (null)
-          < Prod-SourceProvider
-          > AndroidTest-SourceProvider:
+          < sourceProvider
+          > androidTestSourceProvider:
              - name                = "androidTestDebug"
-             - ManifestFile        = {PROJECT}/src/androidTestDebug/AndroidManifest.xml
+             - manifestFile        = {PROJECT}/src/androidTestDebug/AndroidManifest.xml
              > javaDirectories:
                 * {PROJECT}/src/androidTestDebug/java
              < javaDirectories
@@ -290,10 +294,10 @@
                 * {PROJECT}/src/androidTestDebug/shaders
              < shadersDirectories
              - mlModelsDirectories = (null)
-          < AndroidTest-SourceProvider
-          > UnitTest-SourceProvider:
+          < androidTestSourceProvider
+          > unitTestSourceProvider:
              - name                = "testDebug"
-             - ManifestFile        = {PROJECT}/src/testDebug/AndroidManifest.xml
+             - manifestFile        = {PROJECT}/src/testDebug/AndroidManifest.xml
              > javaDirectories:
                 * {PROJECT}/src/testDebug/java
              < javaDirectories
@@ -325,10 +329,10 @@
                 * {PROJECT}/src/testDebug/shaders
              < shadersDirectories
              - mlModelsDirectories = (null)
-          < UnitTest-SourceProvider
+          < unitTestSourceProvider
        < buildTypeContainer(debug)
        > buildTypeContainer(release):
-          > BuildType:
+          > buildType:
              - name                     = "release"
              - applicationIdSuffix      = (null)
              - versionNameSuffix        = (null)
@@ -351,10 +355,10 @@
              - isZipAlignEnabled        = true
              - isEmbedMicroApp          = true
              - signingConfig            = (null)
-          < BuildType
-          > Prod-SourceProvider:
+          < buildType
+          > sourceProvider:
              - name                = "release"
-             - ManifestFile        = {PROJECT}/src/release/AndroidManifest.xml
+             - manifestFile        = {PROJECT}/src/release/AndroidManifest.xml
              > javaDirectories:
                 * {PROJECT}/src/release/java
              < javaDirectories
@@ -386,10 +390,10 @@
                 * {PROJECT}/src/release/shaders
              < shadersDirectories
              - mlModelsDirectories = (null)
-          < Prod-SourceProvider
-          > AndroidTest-SourceProvider:
+          < sourceProvider
+          > androidTestSourceProvider:
              - name                = "androidTestRelease"
-             - ManifestFile        = {PROJECT}/src/androidTestRelease/AndroidManifest.xml
+             - manifestFile        = {PROJECT}/src/androidTestRelease/AndroidManifest.xml
              > javaDirectories:
                 * {PROJECT}/src/androidTestRelease/java
              < javaDirectories
@@ -421,10 +425,10 @@
                 * {PROJECT}/src/androidTestRelease/shaders
              < shadersDirectories
              - mlModelsDirectories = (null)
-          < AndroidTest-SourceProvider
-          > UnitTest-SourceProvider:
+          < androidTestSourceProvider
+          > unitTestSourceProvider:
              - name                = "testRelease"
-             - ManifestFile        = {PROJECT}/src/testRelease/AndroidManifest.xml
+             - manifestFile        = {PROJECT}/src/testRelease/AndroidManifest.xml
              > javaDirectories:
                 * {PROJECT}/src/testRelease/java
              < javaDirectories
@@ -456,7 +460,7 @@
                 * {PROJECT}/src/testRelease/shaders
              < shadersDirectories
              - mlModelsDirectories = (null)
-          < UnitTest-SourceProvider
+          < unitTestSourceProvider
        < buildTypeContainer(release)
     < buildTypes
     - productFlavors    = []
@@ -472,6 +476,7 @@
           - enableV2Signing = (null)
           - enableV3Signing = (null)
           - enableV4Signing = (null)
+          - isSigningReady  = true
        < signingConfig(debug)
     < signingConfigs
     > variants:
@@ -555,6 +560,8 @@
              < generatedSourceFolders
              - variantSourceProvider     = (null)
              - multiFlavorSourceProvider = (null)
+             - mockablePlatformJar       = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/android.jar
+             - runtimeResourceFolder     = {PROJECT}/build/intermediates/java_res/debugUnitTest/out
           < unitTestArtifact
           - testedTargetVariant    = (null)
        < variant(debug)
@@ -609,6 +616,8 @@
              < generatedSourceFolders
              - variantSourceProvider     = (null)
              - multiFlavorSourceProvider = (null)
+             - mockablePlatformJar       = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/android.jar
+             - runtimeResourceFolder     = {PROJECT}/build/intermediates/java_res/releaseUnitTest/out
           < unitTestArtifact
           - testedTargetVariant    = (null)
        < variant(release)

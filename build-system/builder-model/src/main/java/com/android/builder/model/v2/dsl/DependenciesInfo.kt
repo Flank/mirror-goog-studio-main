@@ -15,6 +15,8 @@
  */
 package com.android.builder.model.v2.dsl
 
+import com.android.builder.model.v2.AndroidModel
+
 /**
  * Information about whether the dependencies are packaged in the apk/bundle.
  *
@@ -22,7 +24,7 @@ package com.android.builder.model.v2.dsl
  *
  * @since 4.2
  */
-interface DependenciesInfo {
+interface DependenciesInfo: AndroidModel {
     val includeInApk: Boolean
     val includeInBundle: Boolean
 }

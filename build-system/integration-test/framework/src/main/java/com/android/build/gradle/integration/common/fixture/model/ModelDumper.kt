@@ -25,7 +25,6 @@ import com.android.builder.model.v2.ide.ArtifactDependencies
 import com.android.builder.model.v2.ide.BaseArtifact
 import com.android.builder.model.v2.ide.BuildTypeContainer
 import com.android.builder.model.v2.ide.JavaArtifact
-import com.android.builder.model.v2.ide.Library
 import com.android.builder.model.v2.ide.LintOptions
 import com.android.builder.model.v2.ide.ProductFlavorContainer
 import com.android.builder.model.v2.ide.SourceProvider
@@ -35,96 +34,12 @@ import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.VariantDependencies
 import java.io.File
 
-interface FileNormalizer {
-    fun normalize(file: File): String
-}
-
-/**
- * Entry point to dump an [AndroidProject]
- */
-fun AndroidProject.dump(normalizer: FileNormalizer): String {
-    return dump("AndroidProject", normalizer) {
-        writeToBuilder(this)
-    }.also {
-        println("--------------------------------------------------")
-        println("Dumped model:")
-        println(it)
-    }
-}
-
-/**
- * Entry point to dump a [VariantDependencies]
- */
-fun VariantDependencies.dump(
-    normalizer: FileNormalizer,
-    container: ModelContainerV2<VariantDependencies>,
-    dumpGlobalLibrary: Boolean = true
-): String {
-    val variantDepString = dump(
-        "VariantDependencies",
-        normalizer,
-        container.infoMaps.keys.map { it.rootDir.absolutePath }.sorted()
-    ) {
-        writeToBuilder(this)
-    }
-
-    val finalString = if (dumpGlobalLibrary) {
-        variantDepString + dump(
-            "GlobalLibraryMap",
-            normalizer,
-            container.infoMaps.keys.map { it.rootDir.absolutePath }.sorted()
-        ) {
-            container.globalLibraryMap?.writeToBuilder(this)
-        }
-    } else {
-        variantDepString
-    }
-
-    return finalString.also {
-        println("--------------------------------------------------")
-        println("Dumped model:")
-        println(it)
-    }
-}
-
-/**
- * Entry point to dump a [GlobalLibraryMap]
- */
-fun GlobalLibraryMap.dump(
-    normalizer: FileNormalizer,
-    container: ModelContainerV2<VariantDependencies>
-): String {
-    return dump(
-        "GlobalLibraryMap",
-        normalizer,
-        container.infoMaps.keys.map { it.rootDir.absolutePath }.sorted()
-    ) {
-        writeToBuilder(this)
-    }.also {
-        println("--------------------------------------------------")
-        println("Dumped model:")
-        println(it)
-    }
-}
-
-/**
- * Entry point to dump a single [Variant]
- */
-fun Variant.dump(normalizer: FileNormalizer): String {
-    return dump("VariantDependencies", normalizer) {
-        writeToBuilder(this)
-    }.also {
-        println("--------------------------------------------------")
-        println("Dumped model:")
-        println(it)
-    }
-}
-
 // --------------
-// Internal dump fixtures specific to each model class
+// dump fixtures specific to each model class
 
-private fun AndroidProject.writeToBuilder(builder: DumpBuilder) {
+internal fun AndroidProject.writeToBuilder(builder: DumpBuilder) {
     builder.apply {
+        item("modelVersion", "n/a")
         item("apiVersion", apiVersion)
         item("projectType", projectType.name)
         item("path", path)
@@ -139,7 +54,7 @@ private fun AndroidProject.writeToBuilder(builder: DumpBuilder) {
         multiLineList("bootClasspath", bootClasspath.sorted()) {
             value(it)
         }
-        largeObject("DefaultConfigContainer", defaultConfig) {
+        largeObject("defaultConfig", defaultConfig) {
             it.writeToBuilder(this)
         }
         multiLineList("buildTypes", buildTypes.sortedBy { it.buildType.name }) {
@@ -164,6 +79,7 @@ private fun AndroidProject.writeToBuilder(builder: DumpBuilder) {
                 item("enableV2Signing", config.enableV2Signing)
                 item("enableV3Signing", config.enableV3Signing)
                 item("enableV4Signing", config.enableV4Signing)
+                item("isSigningReady", config.isSigningReady)
             }
         }
         multiLineList("variants", variants.sortedBy { it.name }) {
@@ -201,16 +117,16 @@ private fun AndroidProject.writeToBuilder(builder: DumpBuilder) {
 
 private fun ProductFlavorContainer.writeToBuilder(builder: DumpBuilder) {
     builder.apply {
-        largeObject("Flavor", productFlavor) {
+        largeObject("productFlavor", productFlavor) {
             it.writeToBuilder(this)
         }
-        largeObject("Prod-SourceProvider", sourceProvider) {
+        largeObject("sourceProvider", sourceProvider) {
             it.writeToBuilder(this)
         }
-        largeObject("AndroidTest-SourceProvider", androidTestSourceProvider) {
+        largeObject("androidTestSourceProvider", androidTestSourceProvider) {
             it.writeToBuilder(this)
         }
-        largeObject("UnitTest-SourceProvider", unitTestSourceProvider) {
+        largeObject("unitTestSourceProvider", unitTestSourceProvider) {
             it.writeToBuilder(this)
         }
     }
@@ -220,6 +136,7 @@ private fun ProductFlavor.writeToBuilder(builder: DumpBuilder) {
     dumpBaseConfig(builder)
     builder.apply {
         item("dimension", dimension)
+        item("applicationId", applicationId)
         item("versionCode", versionCode)
         item("versionName", versionName)
         struct("minSdkVersion", minSdkVersion) {
@@ -256,16 +173,16 @@ private fun ProductFlavor.writeToBuilder(builder: DumpBuilder) {
 
 private fun BuildTypeContainer.writeToBuilder(builder: DumpBuilder) {
     builder.apply {
-        largeObject("BuildType", buildType) {
+        largeObject("buildType", buildType) {
             it.writeToBuilder(this)
         }
-        largeObject("Prod-SourceProvider", sourceProvider) {
+        largeObject("sourceProvider", sourceProvider) {
             it.writeToBuilder(this)
         }
-        largeObject("AndroidTest-SourceProvider", androidTestSourceProvider) {
+        largeObject("androidTestSourceProvider", androidTestSourceProvider) {
             it.writeToBuilder(this)
         }
-        largeObject("UnitTest-SourceProvider", unitTestSourceProvider) {
+        largeObject("unitTestSourceProvider", unitTestSourceProvider) {
             it.writeToBuilder(this)
         }
     }
@@ -305,6 +222,7 @@ private fun BaseConfig.dumpBaseConfig(builder: DumpBuilder) {
         multiLineList("resValues", resValues.entries.sortedBy { it.key }) {
             struct("value", it.value) { field ->
                 item("name", field.name)
+                item("type", field.type)
                 item("value", field.value)
                 item("documentation", field.documentation)
                 list("annotations", field.annotations.sorted())
@@ -331,7 +249,7 @@ private fun BaseConfig.dumpBaseConfig(builder: DumpBuilder) {
 private fun SourceProvider.writeToBuilder(builder: DumpBuilder) {
     builder.apply {
         item("name", name)
-        item("ManifestFile", manifestFile)
+        item("manifestFile", manifestFile)
         multiLineList("javaDirectories", javaDirectories.sorted()) {
             value(it)
         }
@@ -368,7 +286,7 @@ private fun SourceProvider.writeToBuilder(builder: DumpBuilder) {
     }
 }
 
-private fun Variant.writeToBuilder(builder: DumpBuilder) {
+internal fun Variant.writeToBuilder(builder: DumpBuilder) {
     builder.apply {
         item("name", name)
         item("displayName", name)
@@ -420,9 +338,9 @@ private fun AndroidArtifact.writeToBuilder(builder: DumpBuilder) {
 private fun JavaArtifact.writeToBuilder(builder: DumpBuilder) {
     writeBaseArtifactToBuilder(builder)
     builder.apply {
-
+        item("mockablePlatformJar", mockablePlatformJar)
+        item("runtimeResourceFolder", runtimeResourceFolder)
     }
-
 }
 
 private fun BaseArtifact.writeBaseArtifactToBuilder(builder: DumpBuilder) {
@@ -478,7 +396,7 @@ private fun LintOptions.writeToBuilder(builder: DumpBuilder) {
     }
 }
 
-private fun VariantDependencies.writeToBuilder(builder: DumpBuilder) {
+internal fun VariantDependencies.writeToBuilder(builder: DumpBuilder) {
     builder.apply {
         item("name", name)
         largeObject("mainArtifact", mainArtifact) {
@@ -502,7 +420,7 @@ private fun ArtifactDependencies.writeToBuilder(builder: DumpBuilder) {
                 item("dependencies", item.dependencies)
             }
         }
-        multiLineList("packageDependencies", runtimeDependencies) {
+        multiLineList("runtimeDependencies", runtimeDependencies) {
             struct("GraphItem", it) { item->
                 artifactAddress("artifactAddress", item.artifactAddress)
                 item("requestedCoordinates", item.requestedCoordinates)
@@ -512,7 +430,7 @@ private fun ArtifactDependencies.writeToBuilder(builder: DumpBuilder) {
     }
 }
 
-private fun GlobalLibraryMap.writeToBuilder(builder: DumpBuilder) {
+internal fun GlobalLibraryMap.writeToBuilder(builder: DumpBuilder) {
     builder.apply {
         multiLineList("libraries", libraries.values.sortedBy { it.artifactAddress }) {
             largeObject("library", it) { library ->
@@ -524,6 +442,7 @@ private fun GlobalLibraryMap.writeToBuilder(builder: DumpBuilder) {
                 item("variant", library.variant)
                 item("compileJarFiles", library.compileJarFiles)
                 item("runtimeJarFiles", library.runtimeJarFiles)
+                item("manifest", library.manifest)
                 item("resFolder", library.resFolder)
                 item("resStaticLibrary", library.resStaticLibrary)
                 item("assetsFolder", library.assetsFolder)
@@ -537,7 +456,5 @@ private fun GlobalLibraryMap.writeToBuilder(builder: DumpBuilder) {
                 item("symbolFile", library.symbolFile)
             }
         }
-
-
     }
 }

@@ -1,4 +1,4 @@
-> VariantDependencies
+> VariantDependencies:
     - name = "debug"
     > mainArtifact:
        > compileDependencies:
@@ -135,7 +135,7 @@
              * requestedCoordinates = (null)
              * dependencies         = []
        < compileDependencies
-       > packageDependencies:
+       > runtimeDependencies:
           * GraphItem:
              * artifactAddress      = "com.android.support:support-v13:28.0.0@aar"
              * requestedCoordinates = (null)
@@ -272,7 +272,7 @@
              * artifactAddress      = "com.android.support:support-annotations:28.0.0@jar"
              * requestedCoordinates = (null)
              * dependencies         = []
-       < packageDependencies
+       < runtimeDependencies
     < mainArtifact
     > androidTestArtifact:
        > compileDependencies:
@@ -441,7 +441,7 @@
              * requestedCoordinates = (null)
              * dependencies         = []
        < compileDependencies
-       > packageDependencies:
+       > runtimeDependencies:
           * GraphItem:
              * artifactAddress      = "org.hamcrest:hamcrest-library:1.3@jar"
              * requestedCoordinates = (null)
@@ -474,7 +474,7 @@
              * artifactAddress      = "net.sf.kxml:kxml2:2.3.0@jar"
              * requestedCoordinates = (null)
              * dependencies         = []
-       < packageDependencies
+       < runtimeDependencies
     < androidTestArtifact
     > unitTestArtifact:
        > compileDependencies:
@@ -623,7 +623,7 @@
              * requestedCoordinates = (null)
              * dependencies         = []
        < compileDependencies
-       > packageDependencies:
+       > runtimeDependencies:
           * GraphItem:
              * artifactAddress      = "junit:junit:4.12@jar"
              * requestedCoordinates = (null)
@@ -768,10 +768,10 @@
              * artifactAddress      = "com.android.support:support-annotations:28.0.0@jar"
              * requestedCoordinates = (null)
              * dependencies         = []
-       < packageDependencies
+       < runtimeDependencies
     < unitTestArtifact
 < VariantDependencies
-> GlobalLibraryMap
+> GlobalLibraryMap:
     > libraries:
        > library:
           - type                = 3
@@ -782,6 +782,7 @@
           - variant             = "debug"
           - compileJarFiles     = (null)
           - runtimeJarFiles     = (null)
+          - manifest            = (null)
           - resFolder           = (null)
           - resStaticLibrary    = (null)
           - assetsFolder        = (null)
@@ -803,6 +804,7 @@
           - variant             = (null)
           - compileJarFiles     = (null)
           - runtimeJarFiles     = (null)
+          - manifest            = (null)
           - resFolder           = (null)
           - resStaticLibrary    = (null)
           - assetsFolder        = (null)
@@ -824,6 +826,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/runtime-1.1.1/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/runtime-1.1.1/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/runtime-1.1.1/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/runtime-1.1.1/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/runtime-1.1.1/assets
@@ -845,6 +848,7 @@
           - variant             = (null)
           - compileJarFiles     = (null)
           - runtimeJarFiles     = (null)
+          - manifest            = (null)
           - resFolder           = (null)
           - resStaticLibrary    = (null)
           - assetsFolder        = (null)
@@ -866,6 +870,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/livedata-core-1.1.1/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/livedata-core-1.1.1/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/livedata-core-1.1.1/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/livedata-core-1.1.1/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/livedata-core-1.1.1/assets
@@ -887,6 +892,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/livedata-1.1.1/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/livedata-1.1.1/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/livedata-1.1.1/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/livedata-1.1.1/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/livedata-1.1.1/assets
@@ -908,6 +914,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/runtime-1.1.1/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/runtime-1.1.1/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/runtime-1.1.1/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/runtime-1.1.1/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/runtime-1.1.1/assets
@@ -929,6 +936,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/viewmodel-1.1.1/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/viewmodel-1.1.1/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/viewmodel-1.1.1/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/viewmodel-1.1.1/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/viewmodel-1.1.1/assets
@@ -950,6 +958,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/monitor-1.0.2/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/monitor-1.0.2/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/monitor-1.0.2/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/monitor-1.0.2/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/monitor-1.0.2/assets
@@ -971,6 +980,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/rules-1.0.2/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/rules-1.0.2/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/rules-1.0.2/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/rules-1.0.2/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/rules-1.0.2/assets
@@ -992,6 +1002,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/runner-1.0.2/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/runner-1.0.2/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/runner-1.0.2/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/runner-1.0.2/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/runner-1.0.2/assets
@@ -1013,6 +1024,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/asynclayoutinflater-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/asynclayoutinflater-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/asynclayoutinflater-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/asynclayoutinflater-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/asynclayoutinflater-28.0.0/assets
@@ -1034,6 +1046,7 @@
           - variant             = (null)
           - compileJarFiles     = (null)
           - runtimeJarFiles     = (null)
+          - manifest            = (null)
           - resFolder           = (null)
           - resStaticLibrary    = (null)
           - assetsFolder        = (null)
@@ -1055,6 +1068,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/coordinatorlayout-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/coordinatorlayout-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/coordinatorlayout-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/coordinatorlayout-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/coordinatorlayout-28.0.0/assets
@@ -1076,6 +1090,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/cursoradapter-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/cursoradapter-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/cursoradapter-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/cursoradapter-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/cursoradapter-28.0.0/assets
@@ -1097,6 +1112,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/customview-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/customview-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/customview-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/customview-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/customview-28.0.0/assets
@@ -1118,6 +1134,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/documentfile-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/documentfile-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/documentfile-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/documentfile-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/documentfile-28.0.0/assets
@@ -1139,6 +1156,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/drawerlayout-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/drawerlayout-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/drawerlayout-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/drawerlayout-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/drawerlayout-28.0.0/assets
@@ -1160,6 +1178,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/interpolator-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/interpolator-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/interpolator-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/interpolator-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/interpolator-28.0.0/assets
@@ -1181,6 +1200,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/loader-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/loader-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/loader-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/loader-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/loader-28.0.0/assets
@@ -1202,6 +1222,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/localbroadcastmanager-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/localbroadcastmanager-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/localbroadcastmanager-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/localbroadcastmanager-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/localbroadcastmanager-28.0.0/assets
@@ -1223,6 +1244,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/print-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/print-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/print-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/print-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/print-28.0.0/assets
@@ -1244,6 +1266,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/slidingpanelayout-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/slidingpanelayout-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/slidingpanelayout-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/slidingpanelayout-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/slidingpanelayout-28.0.0/assets
@@ -1265,6 +1288,7 @@
           - variant             = (null)
           - compileJarFiles     = (null)
           - runtimeJarFiles     = (null)
+          - manifest            = (null)
           - resFolder           = (null)
           - resStaticLibrary    = (null)
           - assetsFolder        = (null)
@@ -1286,6 +1310,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-compat-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-compat-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-compat-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-compat-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-compat-28.0.0/assets
@@ -1307,6 +1332,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-core-ui-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-core-ui-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-core-ui-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-core-ui-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-core-ui-28.0.0/assets
@@ -1328,6 +1354,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-core-utils-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-core-utils-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-core-utils-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-core-utils-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-core-utils-28.0.0/assets
@@ -1349,6 +1376,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-fragment-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-fragment-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-fragment-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-fragment-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-fragment-28.0.0/assets
@@ -1370,6 +1398,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-media-compat-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-media-compat-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-media-compat-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-media-compat-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-media-compat-28.0.0/assets
@@ -1391,6 +1420,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-v13-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-v13-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-v13-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-v13-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-v13-28.0.0/assets
@@ -1412,6 +1442,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-v4-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-v4-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-v4-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-v4-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/support-v4-28.0.0/assets
@@ -1433,6 +1464,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/swiperefreshlayout-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/swiperefreshlayout-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/swiperefreshlayout-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/swiperefreshlayout-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/swiperefreshlayout-28.0.0/assets
@@ -1454,6 +1486,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/versionedparcelable-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/versionedparcelable-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/versionedparcelable-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/versionedparcelable-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/versionedparcelable-28.0.0/assets
@@ -1475,6 +1508,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/viewpager-28.0.0/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/viewpager-28.0.0/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/viewpager-28.0.0/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/viewpager-28.0.0/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/viewpager-28.0.0/assets
@@ -1496,6 +1530,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/play-services-base-15.0.1/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/play-services-base-15.0.1/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/play-services-base-15.0.1/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/play-services-base-15.0.1/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/play-services-base-15.0.1/assets
@@ -1517,6 +1552,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/play-services-basement-15.0.1/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/play-services-basement-15.0.1/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/play-services-basement-15.0.1/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/play-services-basement-15.0.1/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/play-services-basement-15.0.1/assets
@@ -1538,6 +1574,7 @@
           - variant             = (null)
           - compileJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/play-services-tasks-15.0.1/jars/classes.jar]
           - runtimeJarFiles     = [{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/play-services-tasks-15.0.1/jars/classes.jar]
+          - manifest            = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/play-services-tasks-15.0.1/AndroidManifest.xml
           - resFolder           = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/play-services-tasks-15.0.1/res
           - resStaticLibrary    = (null)
           - assetsFolder        = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/play-services-tasks-15.0.1/assets
@@ -1559,6 +1596,7 @@
           - variant             = (null)
           - compileJarFiles     = (null)
           - runtimeJarFiles     = (null)
+          - manifest            = (null)
           - resFolder           = (null)
           - resStaticLibrary    = (null)
           - assetsFolder        = (null)
@@ -1580,6 +1618,7 @@
           - variant             = (null)
           - compileJarFiles     = (null)
           - runtimeJarFiles     = (null)
+          - manifest            = (null)
           - resFolder           = (null)
           - resStaticLibrary    = (null)
           - assetsFolder        = (null)
@@ -1601,6 +1640,7 @@
           - variant             = (null)
           - compileJarFiles     = (null)
           - runtimeJarFiles     = (null)
+          - manifest            = (null)
           - resFolder           = (null)
           - resStaticLibrary    = (null)
           - assetsFolder        = (null)
@@ -1622,6 +1662,7 @@
           - variant             = (null)
           - compileJarFiles     = (null)
           - runtimeJarFiles     = (null)
+          - manifest            = (null)
           - resFolder           = (null)
           - resStaticLibrary    = (null)
           - assetsFolder        = (null)
@@ -1643,6 +1684,7 @@
           - variant             = (null)
           - compileJarFiles     = (null)
           - runtimeJarFiles     = (null)
+          - manifest            = (null)
           - resFolder           = (null)
           - resStaticLibrary    = (null)
           - assetsFolder        = (null)

@@ -16,6 +16,7 @@
 
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.AndroidModel
 import java.io.File
 
 /**
@@ -23,7 +24,7 @@ import java.io.File
  *
  * @since 4.2
  */
-interface BundleInfo {
+interface BundleInfo: AndroidModel {
 
     /**
      * The name of the task used to generate the bundle file (.aab)

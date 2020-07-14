@@ -15,6 +15,8 @@
  */
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.AndroidModel
+
 /**
  * Class representing the tested variants.
  *
@@ -23,7 +25,7 @@ package com.android.builder.model.v2.ide
  *
  * @since 4.2
  */
-interface TestedTargetVariant {
+interface TestedTargetVariant: AndroidModel {
     /**
      * Returns the Gradle path of the project that is being tested.
      */

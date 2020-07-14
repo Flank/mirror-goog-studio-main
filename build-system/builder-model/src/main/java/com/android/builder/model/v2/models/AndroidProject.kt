@@ -15,6 +15,7 @@
  */
 package com.android.builder.model.v2.models
 
+import com.android.builder.model.v2.AndroidModel
 import com.android.builder.model.v2.dsl.DependenciesInfo
 import com.android.builder.model.v2.dsl.SigningConfig
 import com.android.builder.model.v2.ide.AaptOptions
@@ -35,7 +36,7 @@ import java.io.File
  *
  * @since 4.2
  */
-interface AndroidProject {
+interface AndroidProject: AndroidModel {
     companion object {
         //  Injectable properties to use with -P
         // Sent by Studio 4.2+

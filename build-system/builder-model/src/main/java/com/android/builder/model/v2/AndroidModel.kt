@@ -14,17 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.common.utils
+package com.android.builder.model.v2
 
-import com.google.common.base.Charsets
-import com.google.common.io.Resources
-
-fun Any.goldenFile(
-    name: String
-): String {
-    val url = Resources.getResource(
-        this.javaClass,
-        "${this.javaClass.simpleName}_${name}.txt"
-    )
-    return Resources.toString(url, Charsets.UTF_8)
-}
+/**
+ * Base interface for all model interfaces.
+ */
+interface AndroidModel

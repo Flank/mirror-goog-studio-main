@@ -15,12 +15,14 @@
  */
 package com.android.builder.model.v2.dsl
 
+import com.android.builder.model.v2.AndroidModel
+
 /**
  * A Simple class field with name, type and value, all as strings.
  *
  * @since 4.2
  */
-interface ClassField {
+interface ClassField: AndroidModel {
     val type: String
     val name: String
     val value: String

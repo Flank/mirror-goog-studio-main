@@ -286,17 +286,6 @@ class FileNormalizerImpl(
             mutableList.add(RootData(it, "LOCAL_REPO"))
         }
 
-        println("Path variables:")
-        val len = mutableList.map { it.varName.length }.max()?.dec() ?: 10
-        for (rootData in mutableList) {
-            print(rootData.varName)
-            for (i in rootData.varName.length..len) {
-                print(' ')
-            }
-
-            println(": ${rootData.root}")
-        }
-
         rootDataList = mutableList.toList()
     }
 
@@ -313,6 +302,23 @@ class FileNormalizerImpl(
         }
 
         return file.toString()
+    }
+
+    override fun toString(): String {
+        val sb = StringBuilder()
+        sb.append("Path variables:")
+        val len = rootDataList.map { it.varName.length }.max()?.dec() ?: 10
+        for (rootData in rootDataList) {
+            sb.append('\n')
+            sb.append(rootData.varName)
+            for (i in rootData.varName.length..len) {
+                sb.append(' ')
+            }
+
+            sb.append(": ${rootData.root}")
+        }
+
+        return sb.toString()
     }
 
     private fun File.relativeToOrNull(

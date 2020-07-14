@@ -15,6 +15,7 @@
  */
 package com.android.builder.model.v2.models
 
+import com.android.builder.model.v2.AndroidModel
 import com.android.builder.model.v2.ide.SyncIssue
 
 /**
@@ -25,7 +26,7 @@ import com.android.builder.model.v2.ide.SyncIssue
  *
  * @since 4.2
  */
-interface ProjectSyncIssues {
+interface ProjectSyncIssues: AndroidModel {
     /** Returns issues found during sync.  */
     val syncIssues: Collection<SyncIssue>
 }

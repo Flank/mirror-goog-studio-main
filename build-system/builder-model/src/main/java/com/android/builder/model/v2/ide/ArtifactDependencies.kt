@@ -15,6 +15,8 @@
  */
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.AndroidModel
+
 /**
  * The dependencies information for a given artifact.
  *
@@ -26,7 +28,7 @@ package com.android.builder.model.v2.ide
  *
  * @since 4.2
  */
-interface ArtifactDependencies {
+interface ArtifactDependencies: AndroidModel {
     /**
      * The compile dependency graph.
      */

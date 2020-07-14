@@ -15,6 +15,7 @@
  */
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.AndroidModel
 import java.io.File
 
 /**
@@ -26,7 +27,7 @@ import java.io.File
  *
  * @since 4.2
  */
-interface AndroidArtifact : BaseArtifact {
+interface AndroidArtifact : BaseArtifact, AndroidModel {
     /**
      * Returns whether the output file is signed. This can only be true for the main apk of an
      * application project.

@@ -15,6 +15,7 @@
  */
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.AndroidModel
 import java.io.File
 
 /**
@@ -25,7 +26,7 @@ import java.io.File
  *
  * @since 4.2
  */
-interface JavaArtifact : BaseArtifact {
+interface JavaArtifact : BaseArtifact, AndroidModel {
     /** Path to the mockable platform jar generated for this [JavaArtifact], if present.  */
     val mockablePlatformJar: File?
 

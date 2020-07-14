@@ -15,12 +15,14 @@
  */
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.AndroidModel
+
 /**
  * A build Variant.
  *
  * @since 4.2
  */
-interface Variant {
+interface Variant: AndroidModel {
     /**
      * The name of the variant.
      */

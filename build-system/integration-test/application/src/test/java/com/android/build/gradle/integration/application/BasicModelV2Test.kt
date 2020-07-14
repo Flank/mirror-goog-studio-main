@@ -18,15 +18,13 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
-import com.android.build.gradle.integration.common.fixture.model.dump
-import com.android.build.gradle.integration.common.utils.goldenFile
+import com.android.build.gradle.integration.common.fixture.model.ModelComparator
 import com.android.builder.model.v2.ide.SyncIssue
-import com.google.common.truth.Truth
 import org.gradle.api.JavaVersion
 import org.junit.Rule
 import org.junit.Test
 
-class BasicModelV2Test {
+class BasicModelV2Test: ModelComparator() {
     @get:Rule
     val project = builder()
         .fromTestProject("basic")
@@ -40,10 +38,10 @@ class BasicModelV2Test {
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchAndroidProjects()
 
-        val fileName = if (JavaVersion.current().isJava11Compatible()) "testProject_jdk11" else "testProject"
-        Truth.assertWithMessage("Dumped AndroidProject (full version in stdout)")
-            .that(result.container.singleModel.dump(result.normalizer))
-            .isEqualTo(goldenFile(fileName))
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = if (JavaVersion.current().isJava11Compatible) "testProject_jdk11" else "testProject"
+        )
     }
 
     @Test
@@ -52,8 +50,9 @@ class BasicModelV2Test {
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchVariantDependencies("debug")
 
-        Truth.assertWithMessage("Dumped VariantDependencies(debug) (full version in stdout)")
-            .that(result.container.singleModel.dump(result.normalizer, result.container))
-            .isEqualTo(goldenFile("testDep"))
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "testDep"
+        )
     }
 }

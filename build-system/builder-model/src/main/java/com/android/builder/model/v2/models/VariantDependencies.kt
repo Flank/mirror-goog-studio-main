@@ -16,6 +16,7 @@
 
 package com.android.builder.model.v2.models
 
+import com.android.builder.model.v2.AndroidModel
 import com.android.builder.model.v2.ide.ArtifactDependencies
 
 /**
@@ -26,7 +27,7 @@ import com.android.builder.model.v2.ide.ArtifactDependencies
  *
  * @since 4.2
  */
-interface VariantDependencies {
+interface VariantDependencies: AndroidModel {
     /**
      * Returns the name of the variant. It is made up of the build type and flavors (if applicable)
      *

@@ -15,6 +15,7 @@
  */
 package com.android.builder.model.v2.dsl
 
+import com.android.builder.model.v2.AndroidModel
 import com.android.builder.model.v2.ide.VectorDrawablesOptions
 import com.android.builder.model.v2.ide.ApiVersion
 
@@ -31,7 +32,7 @@ import com.android.builder.model.v2.ide.ApiVersion
  *
  * @since 4.2
  */
-interface ProductFlavor : BaseConfig {
+interface ProductFlavor : BaseConfig, AndroidModel {
 
     /**
      * the optional dimension name.

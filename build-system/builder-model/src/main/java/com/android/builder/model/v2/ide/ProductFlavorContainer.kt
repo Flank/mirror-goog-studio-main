@@ -15,6 +15,7 @@
  */
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.AndroidModel
 import com.android.builder.model.v2.dsl.ProductFlavor
 
 /**
@@ -22,7 +23,7 @@ import com.android.builder.model.v2.dsl.ProductFlavor
  *
  * @since 4.2
  */
-interface ProductFlavorContainer {
+interface ProductFlavorContainer: AndroidModel {
     /**
      * The Product Flavor itself.
      *

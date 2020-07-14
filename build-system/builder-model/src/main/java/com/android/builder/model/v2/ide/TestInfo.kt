@@ -16,6 +16,7 @@
 
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.AndroidModel
 import java.io.File
 
 /**
@@ -26,7 +27,7 @@ import java.io.File
  *
  * @since 4.2
  */
-interface TestInfo {
+interface TestInfo: AndroidModel {
 
     enum class Execution {
         /** On device orchestration is not used in this case.  */

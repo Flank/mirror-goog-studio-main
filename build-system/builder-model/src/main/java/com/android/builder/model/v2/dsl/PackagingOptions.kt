@@ -15,12 +15,14 @@
  */
 package com.android.builder.model.v2.dsl
 
+import com.android.builder.model.v2.AndroidModel
+
 /**
  * Options for APK packaging.
  *
  * @since 4.2
  */
-interface PackagingOptions {
+interface PackagingOptions: AndroidModel {
     /**
      * Glob patterns to exclude from packaging.
      *
