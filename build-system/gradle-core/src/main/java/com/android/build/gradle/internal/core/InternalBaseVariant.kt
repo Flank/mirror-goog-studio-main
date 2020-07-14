@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.core
 
 import com.android.build.gradle.api.BaseVariant
+import java.io.File
 import com.android.builder.model.ProductFlavor as GradleToolingModelProductFlavor
 
 /**
@@ -30,6 +31,10 @@ interface InternalBaseVariant: BaseVariant {
     interface MergedFlavor: GradleToolingModelProductFlavor {
         override val testInstrumentationRunnerArguments: MutableMap<String, String>
         override val manifestPlaceholders: MutableMap<String, Any>
+        override val resourceConfigurations: MutableCollection<String>
+        override val proguardFiles: MutableList<File>
+        override val consumerProguardFiles: MutableList<File>
+        override val testProguardFiles: MutableList<File>
     }
 }
 

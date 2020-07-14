@@ -168,15 +168,26 @@ class KotlinDslTest {
     @Test
     fun `mergedFlavor source compatibility`() {
         val applicationVariants = (android as BaseAppModuleExtension).applicationVariants
+        val fileF = File("f")
+        val fileG = File("g")
+        val fileH = File("h")
         applicationVariants.all { variant ->
             variant.mergedFlavor.manifestPlaceholders += mapOf("a" to "b")
             variant.mergedFlavor.testInstrumentationRunnerArguments += mapOf("c" to "d")
+            variant.mergedFlavor.resourceConfigurations += "e"
+            variant.mergedFlavor.proguardFiles += fileF
+            variant.mergedFlavor.consumerProguardFiles += fileG // While not applicable to apps, the same objects are used for libraries
+            variant.mergedFlavor.testProguardFiles += fileH
         }
         plugin.createAndroidTasks()
         assertThat(applicationVariants).hasSize(2)
         applicationVariants.first().also { variant ->
             assertThat(variant.mergedFlavor.manifestPlaceholders).containsExactly("a", "b")
             assertThat(variant.mergedFlavor.testInstrumentationRunnerArguments).containsExactly("c", "d")
+            assertThat(variant.mergedFlavor.resourceConfigurations).containsExactly("e")
+            assertThat(variant.mergedFlavor.proguardFiles).containsExactly(fileF)
+            assertThat(variant.mergedFlavor.consumerProguardFiles).containsExactly(fileG)
+            assertThat(variant.mergedFlavor.testProguardFiles).containsExactly(fileH)
         }
     }
 
