@@ -21,6 +21,7 @@ import com.android.build.api.artifact.impl.ArtifactTransformationRequestImpl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.FilterConfiguration
+import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.profile.ProfileAgent
 import com.android.build.gradle.internal.profile.RecordingBuildListener
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -249,14 +250,12 @@ class TaskBasedOperationsImplTest {
 
     @Test
     fun asynchronousApiTest() {
-        asynchronousTest(
-            workers =  getFakeWorkerExecutor(false, ":replace", InternalApiTask.WorkItemParameters::class.java))
+        asynchronousTest(workers =  getFakeWorkerExecutor(false))
     }
 
     @Test
     fun asynchronousWaitingTest() {
-        asynchronousTest(
-            workers = getFakeWorkerExecutor(true, ":replace", InternalApiTask.WorkItemParameters::class.java))
+        asynchronousTest(workers = getFakeWorkerExecutor(true))
     }
 
     private fun asynchronousTest(
@@ -327,9 +326,7 @@ class TaskBasedOperationsImplTest {
         try {
             ProfileAgent.register(projectName, recordingBuildListener)
             asynchronousTest(
-                workers = getFakeWorkerExecutor(waiting = waiting,
-                    taskPath = ":replace",
-                    parameterType = InternalApiTask.WorkItemParameters::class.java),
+                workers = getFakeWorkerExecutor(waiting = waiting),
                 recordingBuildListener = recordingBuildListener)
             val profileMBean =
                 GradlePluginMBeans.getProfileMBean(projectName)
@@ -346,36 +343,13 @@ class TaskBasedOperationsImplTest {
      * synchronously.
      *
      * @param waiting true if [WorkQueue.await] is supposed to be called.
-     * @param taskPath Task path used for profiling information.
-     * @param parameterType Class for the parameters used when executing [WorkQueue] submissions.
      */
-    private fun getFakeWorkerExecutor(
-        waiting: Boolean,
-        taskPath: String,
-        parameterType: Class<*>): WorkerExecutor {
-
-        val workQueue: WorkQueue = object: WorkQueue {
-
-            override fun <T : WorkParameters?> submit(
-                workActionType: Class<out WorkAction<T>>,
-                workParametersCustomizer: Action<in T>
-            ) {
-                val parameters = project.objects.newInstance(parameterType)
-                @Suppress("UNCHECKED_CAST")
-                workParametersCustomizer.execute(parameters as T)
-                val workItemAction = project.objects.newInstance(workActionType, parameters)
-                workItemAction.execute()
-            }
-
+    private fun getFakeWorkerExecutor(waiting: Boolean): WorkerExecutor {
+        return object: FakeGradleWorkExecutor(project.objects, tmpDir.newFolder()) {
             override fun await() {
                 Assert.assertTrue("Task was not supposed to wait for results", waiting)
             }
         }
-
-        // replace injected WorkerExecutor with dummy version.
-        val workerExecutor = Mockito.mock(WorkerExecutor::class.java)
-        Mockito.`when`(workerExecutor.noIsolation()).thenReturn(workQueue)
-        return workerExecutor
     }
 
     private fun checkOutputFolderCorrectness(outputFolder: File) {

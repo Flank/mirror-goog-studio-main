@@ -16,6 +16,7 @@
 
 package com.android.tools.bazel.ir;
 
+import com.google.common.io.Files;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,5 +38,14 @@ public class IrLibrary extends IrNode {
 
     public List<File> getFiles() {
         return files;
+    }
+
+    public String getName() {
+        if (name.startsWith("#") || name.isEmpty()) {
+            for (File file : files) {
+                return Files.getNameWithoutExtension(file.getName());
+            }
+        }
+        return name;
     }
 }

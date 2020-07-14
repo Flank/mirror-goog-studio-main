@@ -16,13 +16,13 @@
 
 package com.android.build.gradle.internal.testing.utp
 
+import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.builder.testing.api.DeviceConnector
-import com.android.sdklib.AndroidVersion
 import com.android.sdklib.BuildToolInfo
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.TextFormat
@@ -80,7 +80,7 @@ class UtpConfigFactoryTest {
         instrumentationRunnerArguments = emptyMap<String, String>(),
         animationsDisabled = false,
         isTestCoverageEnabled = false,
-        minSdkVersion = AndroidVersion.DEFAULT,
+        minSdkVersion = AndroidVersionImpl(1),
         isLibrary = false,
         flavorName = "",
         testApk = File(""),

@@ -17,6 +17,7 @@
 package com.android.tools.binaries;
 
 import com.android.tools.bazel.BazelToolsLogger;
+import com.android.tools.bazel.Configuration;
 import com.android.tools.utils.WorkspaceUtils;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,13 +34,14 @@ public class ImlToBazelConsistencyTest {
     public void testNoMissingUpdates() throws Exception {
         StringBuilderLogger logger = new StringBuilderLogger();
         try {
+            Configuration config = new Configuration();
+            config.dryRun = true;
+            config.warningsAsErrors = true;
             int updated =
                     ImlToBazel.run(
+                            config,
                             WorkspaceUtils.findWorkspace(),
                             /*project=*/ "tools/idea",
-                            /*imlGraph=*/ null,
-                            /*dryRun=*/ true,
-                            /*warningsAsErrors=*/ true,
                             logger);
             if (updated != 0) {
                 fail("IML and build files are inconsistent", logger, null);

@@ -122,7 +122,7 @@ public class TestVariantFactory
                         .getObjectFactory()
                         .newInstance(
                                 TestVariantPropertiesImpl.class,
-                                componentIdentity,
+                                variant,
                                 buildFeatures,
                                 variantDslInfo,
                                 variantDependencies,
@@ -171,7 +171,7 @@ public class TestVariantFactory
     @NonNull
     @Override
     public UnitTestPropertiesImpl createUnitTestProperties(
-            @NonNull ComponentIdentity componentIdentity,
+            @NonNull UnitTestImpl componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
@@ -190,7 +190,7 @@ public class TestVariantFactory
     @NonNull
     @Override
     public AndroidTestPropertiesImpl createAndroidTestProperties(
-            @NonNull ComponentIdentity componentIdentity,
+            @NonNull AndroidTestImpl componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,

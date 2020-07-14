@@ -756,6 +756,9 @@ com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.b
 com.android.build.api.variant.AaptOptions
 com.android.build.api.variant.AaptOptions.getAdditionalParameters: org.gradle.api.provider.ListProperty<java.lang.String> ()
 com.android.build.api.variant.AaptOptions.getIgnoreAssetsPatterns: org.gradle.api.provider.ListProperty<java.lang.String> ()
+com.android.build.api.variant.AndroidVersion
+com.android.build.api.variant.AndroidVersion.getApiLevel: int ()
+com.android.build.api.variant.AndroidVersion.getCodename: java.lang.String ()
 com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.ApplicationVariant.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
 com.android.build.api.variant.ApplicationVariant.getDebuggable: boolean ()
@@ -833,8 +836,8 @@ com.android.build.api.variant.TestVariantProperties.getTestedApplicationId: org.
 com.android.build.api.variant.Variant implements com.android.build.api.component.Component, com.android.build.api.component.ActionableComponentObject
 com.android.build.api.variant.Variant.androidTest: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTest<com.android.build.api.component.AndroidTestProperties>, kotlin.Unit>)
 com.android.build.api.variant.Variant.androidTestProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTestProperties, kotlin.Unit>)
-com.android.build.api.variant.Variant.getMinSdkVersion: int ()
-com.android.build.api.variant.Variant.setMinSdkVersion: void (int)
+com.android.build.api.variant.Variant.getMinSdkVersion: com.android.build.api.variant.AndroidVersion ()
+com.android.build.api.variant.Variant.setMinSdkVersion: void (com.android.build.api.variant.AndroidVersion)
 com.android.build.api.variant.Variant.unitTest: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTest<com.android.build.api.component.UnitTestProperties>, kotlin.Unit>)
 com.android.build.api.variant.Variant.unitTestProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTestProperties, kotlin.Unit>)
 com.android.build.api.variant.VariantInfo

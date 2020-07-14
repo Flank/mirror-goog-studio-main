@@ -21,7 +21,9 @@ import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import java.io.File
 
-class TaskCreationServicesImpl(projectServices: ProjectServices) :
+class TaskCreationServicesImpl(
+    override val variantPropertiesApiServices: VariantPropertiesApiServices,
+    projectServices: ProjectServices) :
     BaseServicesImpl(projectServices), TaskCreationServices {
 
     override fun file(file: Any): File = projectServices.fileResolver(file)

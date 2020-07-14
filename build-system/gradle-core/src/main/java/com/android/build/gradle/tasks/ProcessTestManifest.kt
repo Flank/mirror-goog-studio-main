@@ -20,6 +20,7 @@ import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.dirName
+import com.android.build.api.variant.impl.getApiString
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.component.TestCreationConfig
@@ -442,7 +443,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                 creationConfig.dirName
             )
             task.minSdkVersion
-                .set(project.provider { creationConfig.minSdkVersion.apiString })
+                .set(project.provider { creationConfig.minSdkVersion.getApiString() })
             task.minSdkVersion.disallowChanges()
             task.targetSdkVersion
                 .set(

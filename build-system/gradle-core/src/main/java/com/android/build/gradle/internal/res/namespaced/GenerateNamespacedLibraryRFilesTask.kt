@@ -17,7 +17,8 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -42,7 +43,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.io.Serializable
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
@@ -77,53 +77,48 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
     abstract val symbolsWithPackageNameFile: RegularFileProperty
 
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                TaskAction::class.java,
-                Params(
-                    partialRFiles = partialRFiles.get().map(Directory::getAsFile),
-                    packageForR = packageForR.get(),
-                    rJarFile = rJarFile.orNull?.asFile,
-                    textSymbolOutputFile = textSymbolFile.orNull?.asFile,
-                    symbolsWithPackageNameOutputFile = symbolsWithPackageNameFile.orNull?.asFile
-                )
-            )
+        workerExecutor.noIsolation().submit(TaskAction::class.java) { parameters ->
+            parameters.initializeFromAndroidVariantTask(this)
+            parameters.partialRFiles.set(partialRFiles)
+            parameters.packageForR.set(packageForR)
+            parameters.rJarFile.set(rJarFile)
+            parameters.textSymbolOutputFile.set(textSymbolFile)
+            parameters.symbolsWithPackageNameOutputFile.set(symbolsWithPackageNameFile)
         }
     }
 
-    private class Params(
-        val partialRFiles: List<File>,
-        val packageForR: String,
-        val rJarFile: File?,
-        val textSymbolOutputFile: File?,
-        val symbolsWithPackageNameOutputFile: File?
-    ) : Serializable
+    abstract class Params : ProfileAwareWorkAction.Parameters() {
+        abstract val partialRFiles: ListProperty<Directory>
+        abstract val packageForR: Property<String>
+        abstract val rJarFile: RegularFileProperty
+        abstract val textSymbolOutputFile: RegularFileProperty
+        abstract val symbolsWithPackageNameOutputFile: RegularFileProperty
+    }
 
-    private class TaskAction @Inject constructor(private val params: Params) : Runnable {
+    abstract class TaskAction: ProfileAwareWorkAction<Params>() {
         override fun run() {
             // Keeping the order is important.
-            val partialRFiles: MutableList<File> = ArrayList(params.partialRFiles.size)
+            val partialRFiles: MutableList<File> = ArrayList(parameters.partialRFiles.get().size)
             val visitor = object : SimpleFileVisitor<Path>() {
                 override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
                     partialRFiles.add(file.toFile())
                     return FileVisitResult.CONTINUE
                 }
             }
-            params.partialRFiles.forEach { directory ->
-                Files.walkFileTree(directory.toPath(), emptySet(), 1, visitor)
+            parameters.partialRFiles.get().forEach { directory ->
+                Files.walkFileTree(directory.asFile.toPath(), emptySet(), 1, visitor)
             }
             // Read the symbol tables from the partial R.txt files and merge them into one.
-            val resources = SymbolTable.mergePartialTables(partialRFiles, params.packageForR)
+            val resources = SymbolTable.mergePartialTables(partialRFiles, parameters.packageForR.get())
 
-            if (params.rJarFile != null) {
-                // Generate the R.jar file containing compiled R class and its' inner classes.
-                exportToCompiledJava(ImmutableList.of(resources), params.rJarFile.toPath())
+            parameters.rJarFile.orNull?.apply {
+                exportToCompiledJava(ImmutableList.of(resources), asFile.toPath())
             }
-            if (params.textSymbolOutputFile != null) {
-                SymbolIo.writeForAar(resources, params.textSymbolOutputFile)
+            parameters.textSymbolOutputFile.orNull?.apply {
+                SymbolIo.writeForAar(resources, asFile)
             }
-            if (params.symbolsWithPackageNameOutputFile != null) {
-                params.symbolsWithPackageNameOutputFile.bufferedWriter().use { writer ->
+            parameters.symbolsWithPackageNameOutputFile.orNull?.apply {
+                asFile.bufferedWriter().use { writer ->
                     writeSymbolListWithPackageName(resources, writer)
                 }
             }
@@ -131,9 +126,9 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
     }
 
 
-    class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<GenerateNamespacedLibraryRFilesTask, ComponentPropertiesImpl>(
-            componentProperties
+    class CreationAction(creationConfig: BaseCreationConfig) :
+        VariantTaskCreationAction<GenerateNamespacedLibraryRFilesTask, BaseCreationConfig>(
+            creationConfig
         ) {
         override val name: String get() = computeTaskName("generate", "RFile")
 

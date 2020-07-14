@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.component.TestCreationConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.GradleException
 import org.gradle.api.provider.Property
@@ -48,8 +48,8 @@ See https://d.android.com/r/tools/test-apk-dependency-conflicts.html for details
         )
     }
 
-    class CreationAction(private val testComponentProperties: TestComponentPropertiesImpl) :
-        TaskManager.AbstractPreBuildCreationAction<TestPreBuildTask>(testComponentProperties) {
+    class CreationAction(creationConfig: TestCreationConfig) :
+        TaskManager.AbstractPreBuildCreationAction<TestPreBuildTask>(creationConfig) {
 
         override val type: Class<TestPreBuildTask>
             get() = TestPreBuildTask::class.java
@@ -60,7 +60,7 @@ See https://d.android.com/r/tools/test-apk-dependency-conflicts.html for details
             super.configure(task)
             val runtimeClasspath = creationConfig.variantDependencies.runtimeClasspath
             val compileClasspath =
-                testComponentProperties.testedVariant.variantDependencies.runtimeClasspath
+                creationConfig.testedConfig?.variantDependencies?.runtimeClasspath
             task.runtimeVersionMap.set(
                 task.project.providers.provider {
                     runtimeClasspath.toVersionMap()
@@ -68,7 +68,7 @@ See https://d.android.com/r/tools/test-apk-dependency-conflicts.html for details
             )
             task.compileVersionMap.set(
                 task.project.providers.provider {
-                    compileClasspath.toVersionMap()
+                    compileClasspath?.toVersionMap()
                 }
             )
             task.fakeOutputDirectory = File(

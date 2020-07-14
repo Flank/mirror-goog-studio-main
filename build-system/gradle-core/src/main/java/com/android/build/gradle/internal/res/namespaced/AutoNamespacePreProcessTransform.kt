@@ -20,7 +20,7 @@ import com.android.SdkConstants.FN_ANDROID_MANIFEST_XML
 import com.android.SdkConstants.FN_RESOURCE_STATIC_LIBRARY
 import com.android.SdkConstants.FN_R_DEF_TXT
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
-import com.android.build.gradle.internal.res.Aapt2CompileRunnable
+import com.android.build.gradle.internal.res.runAapt2Compile
 import com.android.build.gradle.internal.services.getErrorFormatMode
 import com.android.build.gradle.internal.services.registerAaptService
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
@@ -199,13 +199,8 @@ abstract class AutoNamespacePreProcessTransform : TransformAction<AutoNamespaceP
         val aapt2ServiceKey =  parameters.aapt2.registerAaptService()
 
         // TODO: Performance: Investigate if this should be multi-threaded?
-        Aapt2CompileRunnable(
-            Aapt2CompileRunnable.Params(
-                aapt2ServiceKey,
-                requestList,
-                parameters.aapt2.getErrorFormatMode() // TODO(b/152323103) this should be implicit
-            )
-        ).run()
+        // TODO(b/152323103) errorFormatMode should be implicit
+        runAapt2Compile(aapt2ServiceKey, requestList, parameters.aapt2.getErrorFormatMode(), false)
     }
 
     companion object {

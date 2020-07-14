@@ -17,8 +17,10 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.BundleOptions
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
@@ -26,7 +28,6 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.build.gradle.internal.services.createProjectServices
 import com.android.build.gradle.internal.services.createTaskCreationServices
-import com.android.build.gradle.internal.services.createVariantPropertiesApiServices
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantType
@@ -76,15 +77,24 @@ class ParseIntegrityConfigTaskTest {
     fun testParseConfig() {
         val configXML = project.projectDir.resolve("IntegrityConfig.xml")
         FileUtils.writeToFile(configXML, "<integrity_config/>")
-        val params = ParseIntegrityConfigTask.Params(
-            project.projectDir,
-            testFolder.newFile()
-        )
 
+        val appIntegrityConfigProto = testFolder.root.resolve("expected_output")
         // Under test
-        ParseIntegrityConfigTask.ParseIntegrityConfigRunnable(params).run()
+        object : ParseIntegrityConfigTask.ParseIntegrityConfigRunnable() {
+            override fun getParameters(): ParseIntegrityConfigTask.Params {
+                return object : ParseIntegrityConfigTask.Params() {
+                    override val integrityConfigDir =
+                        project.objects.directoryProperty().fileValue(project.projectDir)
+                    override val appIntegrityConfigProto =
+                        project.objects.fileProperty().fileValue(appIntegrityConfigProto)
+                    override val projectName = FakeGradleProperty("projectName")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
-        assertThat(params.appIntegrityConfigProto.exists())
+        FileSubject.assertThat(appIntegrityConfigProto).exists()
     }
 
     @Test
@@ -112,10 +122,10 @@ class ParseIntegrityConfigTaskTest {
         FileSubject.assertThat(configFile).contains("<integrity_config/>")
     }
 
-    private fun createScopeFromBundleOptions(bundleOptions: BundleOptions): ComponentPropertiesImpl {
+    private fun createScopeFromBundleOptions(bundleOptions: BundleOptions): VariantCreationConfig {
         val services = createTaskCreationServices(projectServices)
 
-        val componentProperties = Mockito.mock(ComponentPropertiesImpl::class.java)
+        val componentProperties = Mockito.mock(VariantCreationConfig::class.java)
         val variantType = Mockito.mock(VariantType::class.java)
         val extension = Mockito.mock(BaseAppModuleExtension::class.java)
         val globalScope = Mockito.mock(GlobalScope::class.java)

@@ -17,9 +17,9 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.AdbExecutableInput
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -34,22 +34,17 @@ import com.android.utils.FileUtils
 import com.android.utils.ILogger
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.GradleException
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
-import java.io.Serializable
 import java.nio.file.Path
-import javax.inject.Inject
 
 /**
  * Task installing an app variant. It looks at connected device and install the best matching
@@ -76,35 +71,29 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
     }
 
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                InstallRunnable::class.java,
-                Params(
-                    adbExecutableInput.getAdbExecutable().get().asFile,
-                    apkBundle.get().asFile,
-                    timeOutInMs,
-                    installOptions,
-                    projectName,
-                    variantName,
-                    minSdkCodename,
-                    minSdkVersion
-                )
-            )
+        workerExecutor.noIsolation().submit(InstallRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.adbExe.set(adbExecutableInput.getAdbExecutable())
+            it.apkBundle.set(apkBundle.get().asFile)
+            it.timeOutInMs.set(timeOutInMs)
+            it.installOptions.set(installOptions)
+            it.variantName.set(variantName)
+            it.minApiCodeName.set(minSdkCodename)
+            it.minSdkVersion.set(minSdkVersion)
         }
     }
 
-    internal data class Params(
-        val adbExe: File,
-        val apkBundle: File,
-        val timeOutInMs: Int,
-        val installOptions: List<String>,
-        val projectName: String,
-        val variantName: String,
-        val minApiCodeName: String?,
-        val minSdkVersion: Int
-    ) : Serializable
+    abstract class Params : ProfileAwareWorkAction.Parameters() {
+        abstract val adbExe: RegularFileProperty
+        abstract val apkBundle: RegularFileProperty
+        abstract val timeOutInMs: Property<Int>
+        abstract val installOptions: ListProperty<String>
+        abstract val variantName: Property<String>
+        abstract val minApiCodeName: Property<String?>
+        abstract val minSdkVersion: Property<Int>
+    }
 
-    internal open class InstallRunnable @Inject constructor(protected val params: Params): Runnable {
+    abstract class InstallRunnable : ProfileAwareWorkAction<Params>() {
         override fun run() {
 
             val logger: Logger = Logging.getLogger(InstallVariantViaBundleTask::class.java)
@@ -115,10 +104,10 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
                 var successfulInstallCount = 0
                 val devices = deviceProvider.devices
 
-                val androidVersion = AndroidVersion(params.minSdkVersion, params.minApiCodeName)
+                val androidVersion = AndroidVersion(parameters.minSdkVersion.get(), parameters.minApiCodeName.orNull)
                 for (device in devices) {
                     if (!InstallUtils.checkDeviceApiLevel(
-                            device, androidVersion, iLogger, params.projectName, params.variantName)
+                            device, androidVersion, iLogger, parameters.projectName.get(), parameters.variantName.get())
                     ) {
                         continue
                     }
@@ -126,8 +115,8 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
                     logger.lifecycle(
                         "Generating APKs for device '{}' for {}:{}",
                         device.name,
-                        params.projectName,
-                        params.variantName
+                        parameters.projectName.get(),
+                        parameters.variantName.get()
                     )
 
                     val apkPaths = getApkFiles(device)
@@ -136,8 +125,8 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
                         logger.lifecycle(
                             "Skipping device '{}' for '{}:{}': No APK generated",
                             device.name,
-                            params.projectName,
-                            params.variantName)
+                            parameters.projectName.get(),
+                            parameters.variantName.get())
 
                     } else {
                         val apkFiles = apkPaths.map { it.toFile() }
@@ -147,15 +136,15 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
                             "Installing APKs '{}' on '{}' for {}:{}",
                             FileUtils.getNamesAsCommaSeparatedList(apkFiles),
                             device.name,
-                            params.projectName,
-                            params.variantName
+                            parameters.projectName.get(),
+                            parameters.variantName.get()
                         )
 
                         if (apkFiles.size > 1) {
-                            device.installPackages(apkFiles, params.installOptions, params.timeOutInMs, iLogger)
+                            device.installPackages(apkFiles, parameters.installOptions.get(), parameters.timeOutInMs.get(), iLogger)
                             successfulInstallCount++
                         } else {
-                            device.installPackage(apkFiles[0], params.installOptions, params.timeOutInMs, iLogger)
+                            device.installPackage(apkFiles[0], parameters.installOptions.get(), parameters.timeOutInMs.get(), iLogger)
                             successfulInstallCount++
                         }
                     }
@@ -175,15 +164,15 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
 
         protected open fun createDeviceProvider(iLogger: ILogger): DeviceProvider =
             ConnectedDeviceProvider(
-                params.adbExe,
-                params.timeOutInMs,
+                parameters.adbExe.get().asFile,
+                parameters.timeOutInMs.get(),
                 iLogger
             )
 
         @VisibleForTesting
         protected open fun getApkFiles(device: DeviceConnector) : List<Path> {
             return getApkFiles(
-                params.apkBundle.toPath(),
+                parameters.apkBundle.get().asFile.toPath(),
                 DeviceConfigProviderImpl(device))
         }
      }

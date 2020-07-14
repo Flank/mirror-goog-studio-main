@@ -15,8 +15,8 @@
  */
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.AndroidJarInput
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
@@ -95,18 +95,18 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                 intermediateDir = aaptIntermediateDir)
 
         val aapt2ServiceKey = aapt2.registerAaptService()
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                Aapt2LinkRunnable::class.java,
-                Aapt2LinkRunnable.Params(aapt2ServiceKey, request, aapt2.getErrorFormatMode())
-            )
+        workerExecutor.noIsolation().submit(Aapt2LinkRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.aapt2ServiceKey.set(aapt2ServiceKey)
+            it.request.set(request)
+            it.errorFormatMode.set(aapt2.getErrorFormatMode())
         }
     }
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<LinkLibraryAndroidResourcesTask, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: BaseCreationConfig
+    ) : VariantTaskCreationAction<LinkLibraryAndroidResourcesTask, BaseCreationConfig>(
+        creationConfig
     ) {
 
         override val name: String

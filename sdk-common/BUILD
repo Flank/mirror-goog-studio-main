@@ -52,6 +52,7 @@ iml_module(
         "//tools/idea/.idea/libraries:studio-analytics-proto",
         "//tools/idea/.idea/libraries:aia-proto",
         "//tools/idea/.idea/libraries:studio-proto",
+        "//tools/idea/.idea/libraries:jaxb-api",
     ],
 )
 
@@ -91,6 +92,7 @@ kotlin_library(
         "//tools/base/third_party:com.google.code.gson_gson",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.protobuf_protobuf-java",
+        "//tools/base/third_party:jakarta.xml.bind_jakarta.xml.bind-api",
         "//tools/base/third_party:javax.inject_javax.inject",
         "//tools/base/third_party:net.sf.kxml_kxml2",
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",

@@ -18,7 +18,9 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
+import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -49,7 +51,6 @@ import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.Serializable
 import java.nio.file.Path
-import javax.inject.Inject
 
 /**
  * Task that generates the bundle (.aab) with all the modules.
@@ -120,89 +121,87 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     }
 
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                BundleToolRunnable::class.java,
-                Params(
-                    baseModuleFile = baseModuleZip.get().asFileTree.singleFile,
-                    featureFiles = featureZips.files,
-                    assetPackFiles = if (!assetPackZips.isPresent) null else assetPackZips.get().asFileTree.files,
-                    mainDexList = mainDexList.orNull?.asFile,
-                    obfuscationMappingFile = if (obsfuscationMappingFile.isPresent) obsfuscationMappingFile.get().asFile else null,
-                    integrityConfigFile = if (integrityConfigFile.isPresent) integrityConfigFile.get().asFile else null,
-                    nativeDebugMetadataFiles = nativeDebugMetadataFiles.files,
-                    aaptOptionsNoCompress = aaptOptionsNoCompress.get(),
-                    bundleOptions = bundleOptions,
-                    bundleFlags = bundleFlags,
-                    bundleFile = bundleFile.get().asFile,
-                    bundleDeps = if (bundleDeps.isPresent) bundleDeps.get().asFile else null,
-                    bundleNeedsFusedStandaloneConfig = bundleNeedsFusedStandaloneConfig.get()
-                )
-            )
+        workerExecutor.noIsolation().submit(BundleToolWorkAction::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.baseModuleFile.set(baseModuleZip.get().asFileTree.singleFile)
+            it.featureFiles.from(featureZips)
+            if (assetPackZips.isPresent) {
+                it.assetPackFiles.from(assetPackZips.get().asFileTree.files)
+            }
+            it.mainDexList.set(mainDexList)
+            it.obfuscationMappingFile.set(obsfuscationMappingFile)
+            it.integrityConfigFile.set(integrityConfigFile)
+            it.nativeDebugMetadataFiles.from(nativeDebugMetadataFiles)
+            it.aaptOptionsNoCompress.set(aaptOptionsNoCompress)
+            it.bundleOptions.set(bundleOptions)
+            it.bundleFlags.set(bundleFlags)
+            it.bundleFile.set(bundleFile)
+            it.bundleDeps.set(bundleDeps)
+            it.bundleNeedsFusedStandaloneConfig.set(bundleNeedsFusedStandaloneConfig)
         }
     }
 
-    private data class Params(
-        val baseModuleFile: File,
-        val featureFiles: Set<File>,
-        val assetPackFiles: Set<File>?,
-        val mainDexList: File?,
-        val obfuscationMappingFile: File?,
-        val integrityConfigFile: File?,
-        val nativeDebugMetadataFiles: Set<File>,
-        val aaptOptionsNoCompress: Collection<String>,
-        val bundleOptions: BundleOptions,
-        val bundleFlags: BundleFlags,
-        val bundleFile: File,
-        val bundleDeps: File?,
-        val bundleNeedsFusedStandaloneConfig: Boolean
-    ) : Serializable
+    abstract class Params: ProfileAwareWorkAction.Parameters() {
+        abstract val baseModuleFile: RegularFileProperty
+        abstract val featureFiles: ConfigurableFileCollection
+        abstract val assetPackFiles: ConfigurableFileCollection
+        abstract val mainDexList: RegularFileProperty
+        abstract val obfuscationMappingFile: RegularFileProperty
+        abstract val integrityConfigFile: RegularFileProperty
+        abstract val nativeDebugMetadataFiles: ConfigurableFileCollection
+        abstract val aaptOptionsNoCompress: ListProperty<String>
+        abstract val bundleOptions: Property<BundleOptions>
+        abstract val bundleFlags: Property<BundleFlags>
+        abstract val bundleFile: RegularFileProperty
+        abstract val bundleDeps: RegularFileProperty
+        abstract val bundleNeedsFusedStandaloneConfig: Property<Boolean>
+    }
 
-    private class BundleToolRunnable @Inject constructor(private val params: Params) : Runnable {
+    abstract class BundleToolWorkAction : ProfileAwareWorkAction<Params>() {
         override fun run() {
             // BundleTool requires that the destination directory for the bundle file exists,
             // and that the bundle file itself does not
-            val bundleFile = params.bundleFile
+            val bundleFile = parameters.bundleFile.asFile.get()
             FileUtils.cleanOutputDir(bundleFile.parentFile)
 
             val builder = ImmutableList.builder<Path>()
-            builder.add(params.baseModuleFile.toPath())
-            params.featureFiles.forEach { builder.add(getBundlePath(it)) }
+            builder.add(parameters.baseModuleFile.asFile.get().toPath())
+            parameters.featureFiles.forEach { builder.add(getBundlePath(it)) }
             // BundleTool needs directories, not zips.
-            params.assetPackFiles?.forEach { builder.add(getBundlePath(it.parentFile)) }
+            parameters.assetPackFiles.files.forEach { builder.add(getBundlePath(it.parentFile)) }
 
             val noCompressGlobsForBundle =
-                PackagingUtils.getNoCompressGlobsForBundle(params.aaptOptionsNoCompress)
+                PackagingUtils.getNoCompressGlobsForBundle(parameters.aaptOptionsNoCompress.get())
 
             val splitsConfig = Config.SplitsConfig.newBuilder()
-                .splitBy(Config.SplitDimension.Value.ABI, params.bundleOptions.enableAbi)
+                .splitBy(Config.SplitDimension.Value.ABI, parameters.bundleOptions.get().enableAbi)
                 .splitBy(
                     Config.SplitDimension.Value.SCREEN_DENSITY,
-                    params.bundleOptions.enableDensity
+                    parameters.bundleOptions.get().enableDensity
                 )
-                .splitBy(Config.SplitDimension.Value.LANGUAGE, params.bundleOptions.enableLanguage)
+                .splitBy(Config.SplitDimension.Value.LANGUAGE, parameters.bundleOptions.get().enableLanguage)
 
-            params.bundleOptions.enableTexture?.let {
+            parameters.bundleOptions.get().enableTexture?.let {
                 splitsConfig.addSplitDimension(
                     Config.SplitDimension.newBuilder()
                         .setValue(Config.SplitDimension.Value.TEXTURE_COMPRESSION_FORMAT)
                         .setSuffixStripping(
                             Config.SuffixStripping.newBuilder()
                                 .setEnabled(true)
-                                .setDefaultSuffix(params.bundleOptions.textureDefaultFormat ?: "")
+                                .setDefaultSuffix(parameters.bundleOptions.get().textureDefaultFormat ?: "")
                         )
                         .setNegate(!it)
                 )
             }
 
             val uncompressNativeLibrariesConfig = Config.UncompressNativeLibraries.newBuilder()
-                .setEnabled(params.bundleFlags.enableUncompressedNativeLibs)
+                .setEnabled(parameters.bundleFlags.get().enableUncompressedNativeLibs)
 
             val bundleOptimizations = Config.Optimizations.newBuilder()
                 .setSplitsConfig(splitsConfig)
                 .setUncompressNativeLibraries(uncompressNativeLibrariesConfig)
 
-            if (params.bundleNeedsFusedStandaloneConfig) {
+            if (parameters.bundleNeedsFusedStandaloneConfig.get()) {
                 bundleOptimizations.setStandaloneConfig(
                     Config.StandaloneConfig.newBuilder()
                         .addSplitDimension(
@@ -244,7 +243,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 .setOutputPath(bundleFile.toPath())
                 .setModulesPaths(builder.build())
 
-            params.bundleDeps?.let {
+            parameters.bundleDeps.asFile.orNull?.let {
                 command.addMetadataFile(
                     "com.android.tools.build.libraries",
                     "dependencies.pb",
@@ -252,11 +251,11 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 )
             }
 
-            params.mainDexList?.let {
+            parameters.mainDexList.asFile.orNull?.let {
                 command.setMainDexListFile(it.toPath())
             }
 
-            params.obfuscationMappingFile?.let {
+            parameters.obfuscationMappingFile.asFile.orNull?.let {
                 command.addMetadataFile(
                     "com.android.tools.build.obfuscation",
                     "proguard.map",
@@ -264,7 +263,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 )
             }
 
-            params.integrityConfigFile?.let {
+            parameters.integrityConfigFile.asFile.orNull?.let {
                 if (it.isFile) {
                     command.addMetadataFile(
                         "com.google.play.apps.integrity",
@@ -274,7 +273,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 }
             }
 
-            params.nativeDebugMetadataFiles.forEach { file ->
+            parameters.nativeDebugMetadataFiles.forEach { file ->
                 command.addMetadataFile(
                     "com.android.tools.build.debugsymbols",
                     "${file.parentFile.name}/${file.name}",
@@ -402,7 +401,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
 
             task.bundleNeedsFusedStandaloneConfig.set(
                 task.project.providers.provider {
-                    creationConfig.minSdkVersion.featureLevel < MIN_SDK_FOR_SPLITS
+                    creationConfig.minSdkVersion.getFeatureLevel() < MIN_SDK_FOR_SPLITS
                             && creationConfig.artifacts.get(InternalArtifactType.ASSET_PACK_BUNDLE).isPresent
                 }
             )

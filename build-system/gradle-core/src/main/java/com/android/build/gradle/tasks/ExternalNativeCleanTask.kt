@@ -15,9 +15,9 @@
  */
 package com.android.build.gradle.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfigs
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
@@ -123,9 +123,9 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
 
     class CreationAction(
         private val configurationModel : CxxConfigurationModel,
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<ExternalNativeCleanTask, ComponentPropertiesImpl>(
-        componentProperties, false
+        creationConfig: VariantCreationConfig
+    ) : VariantTaskCreationAction<ExternalNativeCleanTask, VariantCreationConfig>(
+        creationConfig, false
     ) {
 
         override val name

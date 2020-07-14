@@ -16,7 +16,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.profile.PROPERTY_VARIANT_NAME_KEY
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_SOURCES
@@ -33,13 +33,13 @@ import org.gradle.api.tasks.compile.JavaCompile
  *
  * In the future, this might not call javac at all, but it needs to be profiled first.
  */
-class CompileRClassTaskCreationAction(private val component: ComponentPropertiesImpl) :
+class CompileRClassTaskCreationAction(private val creationConfig: BaseCreationConfig) :
     TaskCreationAction<JavaCompile>() {
 
-    private val output = component.globalScope.project.objects.directoryProperty()
+    private val output = creationConfig.globalScope.project.objects.directoryProperty()
 
     override val name: String
-        get() = component.computeTaskName("compile", "FinalRClass")
+        get() = creationConfig.computeTaskName("compile", "FinalRClass")
 
     override val type: Class<JavaCompile>
         get() = JavaCompile::class.java
@@ -47,19 +47,19 @@ class CompileRClassTaskCreationAction(private val component: ComponentProperties
     override fun handleProvider(taskProvider: TaskProvider<JavaCompile>) {
         super.handleProvider(taskProvider)
 
-        component.artifacts.setInitialProvider(
+        creationConfig.artifacts.setInitialProvider(
             taskProvider
         ) {  output  }.withName(SdkConstants.FD_RES).on(RUNTIME_R_CLASS_CLASSES)
     }
 
     override fun configure(task: JavaCompile) {
-        val taskContainer: MutableTaskContainer = component.taskContainer
+        val taskContainer: MutableTaskContainer = creationConfig.taskContainer
         task.dependsOn(taskContainer.preBuildTask)
-        task.extensions.add(PROPERTY_VARIANT_NAME_KEY, component.name)
+        task.extensions.add(PROPERTY_VARIANT_NAME_KEY, creationConfig.name)
 
         task.classpath = task.project.files()
-        if (component.variantType.isTestComponent || component.variantType.isApk) {
-            task.source(component.artifacts.get(RUNTIME_R_CLASS_SOURCES))
+        if (creationConfig.variantType.isTestComponent || creationConfig.variantType.isApk) {
+            task.source(creationConfig.artifacts.get(RUNTIME_R_CLASS_SOURCES))
         }
         task.setDestinationDir(output.asFile)
 

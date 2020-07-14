@@ -34,7 +34,7 @@ public class ArchiveTreeNode extends DefaultMutableTreeNode implements ArchiveNo
     @Override
     public List<ArchiveNode> getChildren() {
         //noinspection unchecked
-        return children == null ? ImmutableList.of() : ImmutableList.copyOf(children);
+        return children == null ? ImmutableList.of() : ImmutableList.copyOf((List) children);
     }
 
     @Override

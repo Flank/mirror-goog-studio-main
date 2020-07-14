@@ -19,11 +19,16 @@ package com.android.build.gradle.internal.cxx.stripping
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.ndk.NdkHandler
 import java.io.File
+import java.io.Serializable
 
 /**
  * This class is responsible for locating symbol strip tool withing the NDK.
  */
-class SymbolStripExecutableFinder(val stripExecutables: Map<Abi, File>) {
+class SymbolStripExecutableFinder(val stripExecutables: Map<Abi, File>): Serializable {
+
+    companion object {
+        private const val serialVersionUID = 4L
+    }
 
     /**
      * Return the collection of strip tools that we know about.

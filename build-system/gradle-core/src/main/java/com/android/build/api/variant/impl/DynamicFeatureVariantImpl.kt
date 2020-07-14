@@ -20,6 +20,7 @@ import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariant
 import com.android.build.api.component.analytics.AnalyticsEnabledVariant
 import com.android.build.api.variant.DynamicFeatureVariant
+import com.android.build.api.variant.DynamicFeatureVariantProperties
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices
@@ -30,20 +31,22 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity,
     variantApiServices: VariantApiServices
-) : VariantImpl<DynamicFeatureVariantPropertiesImpl>(
+) : VariantImpl<DynamicFeatureVariantProperties>(
     variantDslInfo,
     variantConfiguration,
     variantApiServices
-), DynamicFeatureVariant<DynamicFeatureVariantPropertiesImpl> {
+), DynamicFeatureVariant<DynamicFeatureVariantProperties> {
     override fun createUserVisibleVariantObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledVariant<in DynamicFeatureVariantPropertiesImpl> =
+    ): AnalyticsEnabledVariant<in DynamicFeatureVariantProperties> =
         projectServices.objectFactory.newInstance(
             AnalyticsEnabledDynamicFeatureVariant::class.java,
             this,
             stats
-        ) as AnalyticsEnabledVariant<in DynamicFeatureVariantPropertiesImpl>
+        ) as AnalyticsEnabledVariant<in DynamicFeatureVariantProperties>
 
-
+    override fun executePropertiesActions(target: DynamicFeatureVariantProperties) {
+        propertiesActions.executeActions(target)
+    }
 }

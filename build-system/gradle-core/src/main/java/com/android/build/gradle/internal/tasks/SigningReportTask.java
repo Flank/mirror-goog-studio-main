@@ -22,7 +22,7 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.Identifier
 import static org.gradle.internal.logging.text.StyledTextOutput.Style.Normal;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.gradle.internal.component.BaseCreationConfig;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.ide.common.signing.CertificateInfo;
 import com.android.ide.common.signing.KeystoreHelper;
@@ -30,7 +30,6 @@ import com.android.ide.common.signing.KeytoolException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
@@ -51,17 +50,17 @@ import org.gradle.internal.logging.text.StyledTextOutputFactory;
  */
 public class SigningReportTask extends DefaultTask {
 
-    private List<ComponentPropertiesImpl> components;
+    private List<BaseCreationConfig> components;
 
     @TaskAction
-    public void generate() throws IOException {
+    public void generate() {
 
         StyledTextOutput textOutput = getServices().get(
                 StyledTextOutputFactory.class).create(getClass());
 
         Map<SigningConfig, SigningInfo> cache = Maps.newHashMap();
 
-        for (ComponentPropertiesImpl component : components) {
+        for (BaseCreationConfig component : components) {
             textOutput.withStyle(Identifier).text("Variant: ");
             textOutput.withStyle(Description).text(component.getName());
             textOutput.println();
@@ -120,7 +119,7 @@ public class SigningReportTask extends DefaultTask {
     }
 
     /** Sets the configurations to generate the report for. */
-    public void setComponents(@NonNull Collection<ComponentPropertiesImpl> components) {
+    public void setComponents(@NonNull Collection<BaseCreationConfig> components) {
         this.components = ImmutableList.copyOf(components);
     }
 

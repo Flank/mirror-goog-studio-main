@@ -17,7 +17,8 @@
 package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -42,6 +43,7 @@ import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -56,10 +58,8 @@ import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import java.io.File
 import java.io.IOException
-import java.io.Serializable
 import java.util.SortedSet
 import java.util.TreeSet
-import javax.inject.Inject
 import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.parsers.ParserConfigurationException
@@ -102,54 +102,48 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
         } else {
             listOf()
         }
-
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                ParseResourcesRunnable::class.java,
-                ParseResourcesParams(
-                    inputResDir = inputResourcesDir.get().asFile,
-                    platformAttrsRTxt = platformAttrRTxt.get().singleFile,
-                    librarySymbolsFile = librarySymbolsFile.get().asFile,
-                    incremental = incremental,
-                    changedResources = changedResources,
-                    partialRDir = partialRDir.orNull?.asFile,
-                    enablePartialRIncrementalBuilds = enablePartialRIncrementalBuilds.get()
-                )
-            )
+        workerExecutor.noIsolation().submit(ParseResourcesRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.inputResDir.set(inputResourcesDir)
+            it.platformAttrsRTxt.set(platformAttrRTxt.get().singleFile)
+            it.librarySymbolsFile.set(librarySymbolsFile)
+            it.incremental.set(incremental)
+            it.changedResources.set(changedResources)
+            it.partialRDir.set(partialRDir)
+            it.enablePartialRIncrementalBuilds.set(enablePartialRIncrementalBuilds)
         }
     }
 
-    data class ParseResourcesParams(
-        val inputResDir: File,
-        val platformAttrsRTxt: File,
-        val librarySymbolsFile: File,
-        val incremental: Boolean,
-        val changedResources: Collection<SerializableChange>,
-        val partialRDir: File?,
-        val enablePartialRIncrementalBuilds: Boolean
-    ) : Serializable
+    abstract class ParseResourcesParams: ProfileAwareWorkAction.Parameters() {
+        abstract val inputResDir: DirectoryProperty
+        abstract val platformAttrsRTxt: RegularFileProperty
+        abstract val librarySymbolsFile: RegularFileProperty
+        abstract val incremental: Property<Boolean>
+        abstract val changedResources: ListProperty<SerializableChange>
+        abstract val partialRDir: DirectoryProperty
+        abstract val enablePartialRIncrementalBuilds: Property<Boolean>
+    }
 
-    class ParseResourcesRunnable @Inject constructor(private val params: ParseResourcesParams
-    ) : Runnable {
+    abstract class ParseResourcesRunnable : ProfileAwareWorkAction<ParseResourcesParams>() {
         override fun run() {
-            if (params.incremental) {
-                if (params.enablePartialRIncrementalBuilds && params.partialRDir != null) {
-                    doIncrementalPartialRTaskAction(params)
+            if (parameters.incremental.get()) {
+                if (parameters.enablePartialRIncrementalBuilds.get() && parameters.partialRDir.isPresent) {
+                    doIncrementalPartialRTaskAction(parameters)
                     return
                 }
-                if (params.changedResources.all { canBeProcessedIncrementallyWithRDef(it) }) {
-                    doIncrementalRDefTaskAction(params)
+                if (parameters.changedResources.get().all { canBeProcessedIncrementallyWithRDef(it) }) {
+                    doIncrementalRDefTaskAction(parameters)
                     return
                 }
             }
-            doFullTaskAction(params)
+            doFullTaskAction(parameters)
         }
     }
 
     class CreateAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<ParseLibraryResourcesTask, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: BaseCreationConfig
+    ) : VariantTaskCreationAction<ParseLibraryResourcesTask, BaseCreationConfig>(
+        creationConfig
     ) {
 
         override val name: String
@@ -196,42 +190,43 @@ data class SymbolTableWithContextPath(val path : String, val symbolTable: Symbol
 data class PartialRFileNameContents(val name : String, val contents: String)
 
 internal fun doFullTaskAction(parseResourcesParams: ParseLibraryResourcesTask.ParseResourcesParams) {
-    if (parseResourcesParams.enablePartialRIncrementalBuilds
-            && parseResourcesParams.partialRDir != null) {
-        val partialRDirectory = parseResourcesParams.partialRDir
+    if (parseResourcesParams.enablePartialRIncrementalBuilds.get()
+            && parseResourcesParams.partialRDir.isPresent) {
+        val partialRDirectory = parseResourcesParams.partialRDir.asFile.get()
         // Generate SymbolTables from resource files are used to generate:
         // 1. Partial R files, which are used for incremental task runs.
         // 2. A merged SymbolTable which is used to generate the librarySymbolsFile.
         val androidPlatformAttrSymbolTable = getAndroidAttrSymbols(
-                parseResourcesParams.platformAttrsRTxt)
+                parseResourcesParams.platformAttrsRTxt.asFile.get())
         val documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
         val resourceFileSymbolTables: SortedSet<SymbolTableWithContextPath> =
-                getResourceDirectorySymbolTables(parseResourcesParams.inputResDir,
+                getResourceDirectorySymbolTables(parseResourcesParams.inputResDir.asFile.get(),
                         androidPlatformAttrSymbolTable, documentBuilder)
         writeSymbolTablesToPartialRFiles(resourceFileSymbolTables, partialRDirectory)
         // Write in the format of R-def.txt since the IDs do not matter. The symbols will be
         // written in a deterministic way (sorted by type, then by canonical name).
         writeRDefFromPartialRDirectory(
-                partialRDirectory, parseResourcesParams.librarySymbolsFile)
+                partialRDirectory, parseResourcesParams.librarySymbolsFile.asFile.get())
     } else {
         // IDs do not matter as we will merge all symbols and re-number them in the
         // GenerateLibraryRFileTask anyway. Give a fake package for the same reason.
         val symbolTable = parseResourceSourceSetDirectory(
-                parseResourcesParams.inputResDir,
+                parseResourcesParams.inputResDir.asFile.get(),
                 IdProvider.constant(),
-                getAndroidAttrSymbols(parseResourcesParams.platformAttrsRTxt),
+                getAndroidAttrSymbols(parseResourcesParams.platformAttrsRTxt.asFile.get()),
                 "local"
         )
         // Write in the format of R-def.txt since the IDs do not matter. The symbols will be
         // written in a deterministic way (sorted by type, then by canonical name).
-        SymbolIo.writeRDef(symbolTable, parseResourcesParams.librarySymbolsFile.toPath())
+        SymbolIo.writeRDef(symbolTable, parseResourcesParams.librarySymbolsFile.asFile.get().toPath())
     }
 }
 
 internal fun doIncrementalRDefTaskAction(
         parseResourcesParams: ParseLibraryResourcesTask.ParseResourcesParams) {
     // Read the symbols from the previous run.
-    val currentSymbols = SymbolIo.readRDef(parseResourcesParams.librarySymbolsFile.toPath())
+    val librarySymbolFile = parseResourcesParams.librarySymbolsFile.asFile.get().toPath()
+    val currentSymbols = SymbolIo.readRDef(librarySymbolFile)
     val newSymbols = SymbolTable.builder().tablePackage("local")
 
     val documentBuilderFactory = DocumentBuilderFactory.newInstance()
@@ -240,9 +235,9 @@ internal fun doIncrementalRDefTaskAction(
     } catch (e: ParserConfigurationException) {
         throw ResourceDirectoryParseException("Failed to instantiate DOM parser.", e)
     }
-    val platformSymbols = getAndroidAttrSymbols(parseResourcesParams.platformAttrsRTxt)
+    val platformSymbols = getAndroidAttrSymbols(parseResourcesParams.platformAttrsRTxt.asFile.get())
 
-    parseResourcesParams.changedResources.forEach { fileChange ->
+    parseResourcesParams.changedResources.get().forEach { fileChange ->
         val file = fileChange.file
         val type = ResourceFolderType.getFolderType(file.parentFile.name)!!
         // Values and ID generating resources (e.g. layouts) that have a FileStatus
@@ -259,7 +254,7 @@ internal fun doIncrementalRDefTaskAction(
     // If we found at least one new symbol we need to update the R.txt
     if (!newSymbols.isEmpty()) {
         newSymbols.addAllIfNotExist(currentSymbols.symbols.values())
-        SymbolIo.writeRDef(newSymbols.build(), parseResourcesParams.librarySymbolsFile.toPath())
+        SymbolIo.writeRDef(newSymbols.build(), librarySymbolFile)
     }
 }
 
@@ -273,27 +268,26 @@ internal fun doIncrementalRDefTaskAction(
  */
 internal fun doIncrementalPartialRTaskAction(
         parseResourcesParams: ParseLibraryResourcesTask.ParseResourcesParams) {
-    if (parseResourcesParams.partialRDir == null) {
-        throw IOException("No partial r.txt directory found.")
-    }
-    val platformSymbols = getAndroidAttrSymbols(parseResourcesParams.platformAttrsRTxt)
+    val partialRDir = parseResourcesParams.partialRDir.asFile.orNull
+        ?: throw IOException("No partial r.txt directory found.")
+    val platformSymbols = getAndroidAttrSymbols(parseResourcesParams.platformAttrsRTxt.asFile.get())
     var updateLibrarySymbolsFile = false
-    val existingPartialRFiles = parseResourcesParams.partialRDir.walkTopDown()
+    val existingPartialRFiles = partialRDir.walkTopDown()
     val documentBuilderFactory = DocumentBuilderFactory.newInstance()
-    for (incrementalRes in parseResourcesParams.changedResources) {
+    for (incrementalRes in parseResourcesParams.changedResources.get()) {
         val incrementalResAsPartialRFileName = getPartialRFileName(incrementalRes.file)
         val documentBuilder = documentBuilderFactory.newDocumentBuilder()
         when (incrementalRes.fileStatus) {
             FileStatus.NEW -> {
                 val createdPartialRFile = getPartialRFromResource(
                         incrementalRes.file, platformSymbols, documentBuilder)
-                val fileToAdd = File(parseResourcesParams.partialRDir, createdPartialRFile.name)
+                val fileToAdd = File(partialRDir, createdPartialRFile.name)
                 FileUtils.writeToFile(fileToAdd, createdPartialRFile.contents)
                 updateLibrarySymbolsFile = true
             }
             FileStatus.CHANGED -> {
                 val maybeExistingPartialRFile = FileUtils.join(
-                        parseResourcesParams.partialRDir, incrementalResAsPartialRFileName)
+                    partialRDir, incrementalResAsPartialRFileName)
 
                 val changedFileExists = maybeExistingPartialRFile.exists()
                 val createdPartialRFile = getPartialRFromResource(
@@ -306,14 +300,14 @@ internal fun doIncrementalPartialRTaskAction(
                                 createdPartialRFile.contents
                 if (updateChangedFile) {
                     val fileToAdd =
-                            File(parseResourcesParams.partialRDir, createdPartialRFile.name)
+                            File(partialRDir, createdPartialRFile.name)
                     FileUtils.writeToFile(fileToAdd, createdPartialRFile.contents)
                     updateLibrarySymbolsFile = true
                 }
             }
             FileStatus.REMOVED -> if (existingPartialRFiles.map { it.name }
                             .contains(incrementalResAsPartialRFileName)) {
-                val fileToDelete = FileUtils.join(parseResourcesParams.partialRDir,
+                val fileToDelete = FileUtils.join(partialRDir,
                         incrementalResAsPartialRFileName)
                 FileUtils.delete(fileToDelete)
                 updateLibrarySymbolsFile = true
@@ -322,8 +316,7 @@ internal fun doIncrementalPartialRTaskAction(
     }
 
     if (updateLibrarySymbolsFile) {
-        writeRDefFromPartialRDirectory(
-                parseResourcesParams.partialRDir, parseResourcesParams.librarySymbolsFile)
+        writeRDefFromPartialRDirectory(partialRDir, parseResourcesParams.librarySymbolsFile.asFile.get())
     }
 }
 

@@ -19,7 +19,9 @@ package com.android.build.gradle.tasks
 import com.android.SdkConstants
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.ComponentIdentityImpl
+import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.FilterConfiguration
+import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
@@ -36,7 +38,6 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
-import com.android.sdklib.AndroidVersion
 import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
@@ -92,7 +93,7 @@ class CompatibleScreensManifestTest {
         `when`(variantProperties.variantType).thenReturn(VariantTypeImpl.BASE_APK)
         `when`(variantProperties.variantData).thenReturn(variantData)
         `when`(variantProperties.services).thenReturn(services)
-        `when`<AndroidVersion>(variantProperties.minSdkVersion).thenReturn(AndroidVersion(21))
+        `when`<AndroidVersion>(variantProperties.minSdkVersion).thenReturn(AndroidVersionImpl(21))
 
 
         `when`(taskContainer.preBuildTask).thenReturn(project.tasks.register("preBuildTask"))

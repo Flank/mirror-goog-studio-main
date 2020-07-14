@@ -16,12 +16,13 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.google.common.annotations.VisibleForTesting
 import com.android.bundle.AppIntegrityConfigOuterClass.AppIntegrityConfig
+import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -36,10 +37,8 @@ import org.gradle.api.tasks.TaskProvider
 import org.w3c.dom.Document
 import java.io.File
 import java.io.FileNotFoundException
-import java.io.Serializable
 import java.nio.file.Files
 import javax.xml.parsers.DocumentBuilderFactory
-import javax.inject.Inject
 
 private const val CONFIG_FILE_NAME = "IntegrityConfig.xml"
 
@@ -58,36 +57,31 @@ abstract class ParseIntegrityConfigTask : NonIncrementalTask() {
     abstract val appIntegrityConfigProto: RegularFileProperty
 
     public override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                ParseIntegrityConfigRunnable::class.java,
-                Params(
-                    integrityConfigDir.orNull?.asFile,
-                    appIntegrityConfigProto.asFile.get()
-                )
-            )
+        workerExecutor.noIsolation().submit(ParseIntegrityConfigRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.integrityConfigDir.set(integrityConfigDir)
+            it.appIntegrityConfigProto.set(appIntegrityConfigProto)
         }
     }
 
     @VisibleForTesting
-    data class Params(
-        val integrityConfigDir: File?,
-        val appIntegrityConfigProto: File
-    ) : Serializable
+    abstract class Params: ProfileAwareWorkAction.Parameters() {
+        abstract val integrityConfigDir: DirectoryProperty
+        abstract val appIntegrityConfigProto: RegularFileProperty
+    }
 
     @VisibleForTesting
-    class ParseIntegrityConfigRunnable @Inject constructor(private val params: Params) :
-        Runnable {
+    abstract class ParseIntegrityConfigRunnable  : ProfileAwareWorkAction<Params>() {
         override fun run() {
-            params.integrityConfigDir?.let {
+            parameters.integrityConfigDir.asFile.orNull?.let {
                 if (!it.isDirectory) {
                     throw FileNotFoundException("Could not find directory ${it.absolutePath}")
                 }
                 val doc = loadXML(it.resolve(CONFIG_FILE_NAME))
                 val configProto = IntegrityConfigParser(doc).parseConfig()
-                storeProto(configProto, params.appIntegrityConfigProto)
+                storeProto(configProto, parameters.appIntegrityConfigProto.asFile.get())
             } ?: run {
-                Files.deleteIfExists(params.appIntegrityConfigProto.toPath())
+                Files.deleteIfExists(parameters.appIntegrityConfigProto.asFile.get().toPath())
             }
         }
         private fun loadXML(xmlFile: File): Document {
@@ -105,9 +99,9 @@ abstract class ParseIntegrityConfigTask : NonIncrementalTask() {
     }
 
 
-    class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<ParseIntegrityConfigTask, ComponentPropertiesImpl>(
-            componentProperties
+    class CreationAction(creationConfig: VariantCreationConfig) :
+        VariantTaskCreationAction<ParseIntegrityConfigTask, VariantCreationConfig>(
+            creationConfig
         ) {
 
         override val name: String
@@ -133,7 +127,7 @@ abstract class ParseIntegrityConfigTask : NonIncrementalTask() {
             task.integrityConfigDir.set(getIntegrityConfigFolder(creationConfig))
         }
 
-        private fun getIntegrityConfigFolder(component: ComponentPropertiesImpl): Provider<out Directory> =
+        private fun getIntegrityConfigFolder(component: VariantCreationConfig): Provider<out Directory> =
             (component.globalScope.extension as BaseAppModuleExtension).bundle.integrityConfigDir
     }
 }

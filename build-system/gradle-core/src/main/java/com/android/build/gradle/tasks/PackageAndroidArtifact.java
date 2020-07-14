@@ -90,7 +90,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.util.Arrays;
@@ -254,6 +253,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
     @Input
     public abstract Property<Boolean> getDebugBuild();
+
+    @Input
+    public abstract Property<Boolean> getIsInvokedFromIde();
 
     @Nested
     public SigningConfigProvider getSigningConfig() {
@@ -451,6 +453,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             parameter.getMinSdkVersion().set(getMinSdkVersion().get());
 
             parameter.getIsDebuggableBuild().set(getDebugBuild().get());
+            parameter.getIsInvokedFromIde().set(getIsInvokedFromIde().get());
             parameter.getIsJniDebuggableBuild().set(getJniDebugBuild());
             parameter.getDependencyDataFile().set(getDependencyDataFile());
             parameter
@@ -510,7 +513,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         }
     }
 
-    public abstract static class SplitterParams implements DecoratedWorkParameters, Serializable {
+    public abstract static class SplitterParams implements DecoratedWorkParameters {
         @NonNull
         public abstract Property<VariantOutputImpl.SerializedForm> getVariantOutput();
 
@@ -570,6 +573,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         @NonNull
         public abstract Property<Boolean> getIsDebuggableBuild();
+
+        @NonNull
+        public abstract Property<Boolean> getIsInvokedFromIde();
 
         @NonNull
         public abstract Property<Boolean> getIsJniDebuggableBuild();
@@ -695,6 +701,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                         params.getAaptOptionsNoCompress().get(), manifest))
                         .withIntermediateDir(incrementalDirForSplit)
                         .withDebuggableBuild(params.getIsDebuggableBuild().get())
+                        .withDeterministicEntryOrder(!params.getIsInvokedFromIde().get())
                         .withAcceptedAbis(getAcceptedAbis(params))
                         .withJniDebuggableBuild(params.getIsJniDebuggableBuild().get())
                         .withApkCreatorType(params.getApkCreatorType().get())
@@ -1009,6 +1016,11 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact.getDebugBuild().disallowChanges();
 
             ProjectOptions projectOptions = creationConfig.getServices().getProjectOptions();
+            packageAndroidArtifact
+                    .getIsInvokedFromIde()
+                    .set(projectOptions.getProvider(BooleanOption.IDE_INVOKED_FROM_IDE));
+            packageAndroidArtifact.getIsInvokedFromIde().disallowChanges();
+
             packageAndroidArtifact.projectBaseName = globalScope.getProjectBaseName();
             packageAndroidArtifact.manifestType = manifestType;
             packageAndroidArtifact.buildTargetAbi =

@@ -18,18 +18,17 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.manifmerger.XmlDocument
 import com.android.utils.PositionXmlParser
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -37,16 +36,13 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
-import org.gradle.workers.WorkerExecutor
 import java.io.BufferedInputStream
 import java.io.FileInputStream
 import java.io.Serializable
 import javax.inject.Inject
 
 @CacheableTask
-abstract class ProcessManifestForMetadataFeatureTask @Inject constructor(
-    objects: ObjectFactory,
-    workers: WorkerExecutor): NonIncrementalTask() {
+abstract class ProcessManifestForMetadataFeatureTask : NonIncrementalTask() {
 
     @get:OutputFile
     abstract val metadataFeatureManifest: RegularFileProperty
@@ -57,14 +53,6 @@ abstract class ProcessManifestForMetadataFeatureTask @Inject constructor(
 
     @get:Input
     abstract val dynamicFeature: Property<Boolean>
-
-    // Use a property to hold the [WorkerExecutor] so unit tests can reset it if necessary.
-    @get:Internal
-    val workersProperty: Property<WorkerExecutor> = objects.property(WorkerExecutor::class.java)
-
-    init {
-        workersProperty.set(workers)
-    }
 
     @TaskAction
     override fun doTaskAction() {
@@ -77,7 +65,7 @@ abstract class ProcessManifestForMetadataFeatureTask @Inject constructor(
             return
         }
 
-        workersProperty.get().noIsolation().submit(WorkItem::class.java) {
+        workerExecutor.noIsolation().submit(WorkItem::class.java) {
             it.inputXmlFile.set(bundleManifest)
             it.outputXmlFile.set(metadataFeatureManifestFile)
         }
@@ -105,8 +93,8 @@ abstract class ProcessManifestForMetadataFeatureTask @Inject constructor(
         }
     }
 
-    class CreationAction(creationConfig: BaseCreationConfig) :
-        VariantTaskCreationAction<ProcessManifestForMetadataFeatureTask, BaseCreationConfig>(
+    class CreationAction(creationConfig: VariantCreationConfig) :
+        VariantTaskCreationAction<ProcessManifestForMetadataFeatureTask, VariantCreationConfig>(
             creationConfig = creationConfig
         ) {
         override val name: String
@@ -126,7 +114,6 @@ abstract class ProcessManifestForMetadataFeatureTask @Inject constructor(
 
         override fun configure(task: ProcessManifestForMetadataFeatureTask) {
             super.configure(task)
-            task.workersProperty.disallowChanges()
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.BUNDLE_MANIFEST,
                 task.bundleManifest

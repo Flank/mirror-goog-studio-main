@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "tools/base/deploy/installer/executor/executor.h"
 
@@ -34,16 +35,7 @@ namespace deploy {
 
 class Workspace {
  public:
-  Workspace(const std::string& executable_path, const std::string& version,
-            Executor* executor);
-
-  bool Valid() const { return base_ != ""; }
-
-  const std::string GetRoot() const noexcept { return root_; }
-
-  void SetRoot(const std::string& root) { root_ = root; }
-
-  const std::string GetExecPath() const noexcept { return exec_path_; }
+  Workspace(const std::string& version, Executor* executor);
 
   const std::string GetVersion() const noexcept { return version_; }
 
@@ -55,8 +47,6 @@ class Workspace {
 
   void SetCmdPath(const std::string& path) { cmd_path_ = path; }
 
-  const std::string GetBase() const noexcept { return base_; }
-
   const std::string GetTmpFolder() const noexcept { return tmp_; }
 
   const MessagePipeWrapper& GetOutput() const noexcept { return output_pipe_; }
@@ -65,22 +55,22 @@ class Workspace {
 
   void SetExecutor(Executor* executor) { executor_ = executor; }
 
+  IO& GetIO() const noexcept { return *io_; }
+
+  void SetIO(IO* io) { io_ = io; }
+
   void Init() noexcept;
 
  private:
-  static constexpr auto kBasedir = "/data/local/tmp/.studio/";
-
-  const std::string exec_path_;
   const std::string version_;
 
   std::string pm_path_;
   std::string cmd_path_;
 
-  std::string base_;
   std::string tmp_;
-  std::string root_;
 
   Executor* executor_;
+  IO* io_;
 
   deploy::MessagePipeWrapper output_pipe_;
 };

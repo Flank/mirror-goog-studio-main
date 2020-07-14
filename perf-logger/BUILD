@@ -25,6 +25,10 @@ iml_module(
 iml_module(
     name = "unb.studio.perf-logger",
     iml_files = ["perf-logger.iml"],
+    tags = [
+        "manual",
+        "unb",
+    ],
     test_srcs = [
         "src/main/java",
         "src/test/java",

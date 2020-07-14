@@ -99,21 +99,6 @@ bool ParseParameters(int argc, char** argv, Parameters* parameters) {
   return true;
 }
 
-std::string GetInstallerPath() {
-#ifdef __APPLE__
-  uint32_t size = 1024;
-  char dest[size];
-  std::fill(dest, dest + size, '\0');
-  _NSGetExecutablePath(dest, &size);
-#else
-  int size = 1024;
-  char dest[size];
-  std::fill(dest, dest + size, '\0');
-  readlink("/proc/self/exe", dest, size);
-#endif
-  return std::string(dest);
-}
-
 void SendResponse(proto::InstallerResponse* response,
                   const Workspace& workspace) noexcept {
   std::unique_ptr<std::vector<Event>> events = ConsumeEvents();
@@ -156,7 +141,7 @@ int main(int argc, char** argv) {
   BeginPhase("installer");
 
   ExecutorImpl executor;
-  Workspace workspace(GetInstallerPath(), GetVersion(), &executor);
+  Workspace workspace(GetVersion(), &executor);
 
   // Check and parse parameters
   if (argc < 2) {
@@ -178,7 +163,6 @@ int main(int argc, char** argv) {
   RedirectExecutor redirect(Env::shell(), executor);
   if (Env::IsValid()) {
     workspace.SetExecutor(&redirect);
-    workspace.SetRoot(Env::root());
   }
 
   workspace.Init();
@@ -204,12 +188,6 @@ int main(int argc, char** argv) {
     std::string message =
         "Command "_s + parameters.command_name + ": wrong parameters";
     return Fail(proto::InstallerResponse::ERROR_PARAMETER, workspace, message);
-  }
-
-  // Create a workspace for filesystem operations.
-  if (!workspace.Valid()) {
-    return Fail(proto::InstallerResponse::ERROR_CMD, workspace,
-                "Bad workspace");
   }
 
   // Finally! Run !

@@ -22,6 +22,7 @@ import static com.android.builder.core.BuilderConstants.RELEASE;
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.ComponentIdentity;
+import com.android.build.api.variant.VariantProperties;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.BuildTypeData;
@@ -48,7 +49,7 @@ import com.android.builder.errors.IssueReporter.Type;
  * <p>This can be an app project, or a test-only project, though the default behavior is app.
  */
 public abstract class AbstractAppVariantFactory<
-                VariantT extends VariantImpl<VariantPropertiesT>,
+                VariantT extends VariantImpl<? extends VariantProperties>,
                 VariantPropertiesT extends VariantPropertiesImpl>
         extends BaseVariantFactory<VariantT, VariantPropertiesT> {
 

@@ -16,10 +16,12 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.ide.common.workers.WorkerExecutorFacade
+import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
+import org.gradle.testfixtures.ProjectBuilder
+import org.gradle.workers.WorkerExecutor
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -33,12 +35,16 @@ class LibraryJniLibsTaskTest {
     var tmpDir = TemporaryFolder()
 
     private lateinit var outputDirectory: File
-    private lateinit var workers: WorkerExecutorFacade
+    private lateinit var workers: WorkerExecutor
+    private lateinit var task: AndroidVariantTask
 
     @Before
     fun setUp() {
         outputDirectory = tmpDir.newFile("out")
-        workers = testWorkers
+        with(ProjectBuilder.builder().withProjectDir(tmpDir.newFolder()).build()) {
+            workers = FakeGradleWorkExecutor(objects, tmpDir.newFolder())
+            task = tasks.create("task", AndroidVariantTask::class.java)
+        }
     }
 
     @Test
@@ -61,7 +67,8 @@ class LibraryJniLibsTaskTest {
             dir1,
             listOf(jarFile1, jarFile2),
             outputDirectory,
-            workers
+            workers,
+            task
         ).copyFiles()
 
         // Make sure the output is a jar file with expected contents

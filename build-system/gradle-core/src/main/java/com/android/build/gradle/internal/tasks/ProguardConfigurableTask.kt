@@ -95,7 +95,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
     @get:OutputFile
     abstract val mappingFile: RegularFileProperty
 
-    abstract class CreationAction<TaskT : ProguardConfigurableTask, CreationConfigT: BaseCreationConfig>
+    abstract class CreationAction<TaskT : ProguardConfigurableTask, CreationConfigT: VariantCreationConfig>
     @JvmOverloads
     internal constructor(
         creationConfig: CreationConfigT,

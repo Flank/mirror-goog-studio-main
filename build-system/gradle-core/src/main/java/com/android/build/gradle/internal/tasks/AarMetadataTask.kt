@@ -19,6 +19,7 @@ import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
 import com.android.build.gradle.internal.component.LibraryCreationConfig
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -26,16 +27,12 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
-import org.gradle.workers.WorkerExecutor
 import java.io.File
-import java.lang.StringBuilder
-import javax.inject.Inject
 
 /** A task that writes the AAR metadata file  */
 @CacheableTask
@@ -43,10 +40,6 @@ abstract class AarMetadataTask : NonIncrementalTask() {
 
     @get:OutputFile
     abstract val output: RegularFileProperty
-
-    // Use a property to hold the [WorkerExecutor] so unit tests can reset it if necessary.
-    @get:Internal
-    abstract val workerExecutorProperty: Property<WorkerExecutor>
 
     @get:Input
     abstract val aarFormatVersion: Property<String>
@@ -59,7 +52,8 @@ abstract class AarMetadataTask : NonIncrementalTask() {
     abstract val minCompileSdk: Property<Int?>
 
     override fun doTaskAction() {
-        workerExecutorProperty.get().noIsolation().submit(AarMetadataWorkAction::class.java) {
+        workerExecutor.noIsolation().submit(AarMetadataWorkAction::class.java) {
+            it.initializeFromAndroidVariantTask(this)
             it.output.set(output)
             it.aarFormatVersion.set(aarFormatVersion)
             it.aarMetadataVersion.set(aarMetadataVersion)
@@ -91,7 +85,6 @@ abstract class AarMetadataTask : NonIncrementalTask() {
         override fun configure(task: AarMetadataTask) {
             super.configure(task)
 
-            task.workerExecutorProperty.setDisallowChanges(task.workerExecutor)
             task.aarFormatVersion.setDisallowChanges(AAR_FORMAT_VERSION)
             task.aarMetadataVersion.setDisallowChanges(AAR_METADATA_VERSION)
             task.minCompileSdk.setDisallowChanges(
@@ -110,22 +103,20 @@ abstract class AarMetadataTask : NonIncrementalTask() {
 }
 
 /** [WorkAction] to write AAR metadata file */
-abstract class AarMetadataWorkAction @Inject constructor(
-    private val aarMetadataWorkParameters: AarMetadataWorkParameters
-): WorkAction<AarMetadataWorkParameters> {
+abstract class AarMetadataWorkAction: ProfileAwareWorkAction<AarMetadataWorkParameters>() {
 
-    override fun execute() {
+    override fun run() {
         writeAarMetadataFile(
-            aarMetadataWorkParameters.output.get().asFile,
-            aarMetadataWorkParameters.aarFormatVersion.get(),
-            aarMetadataWorkParameters.aarMetadataVersion.get(),
-            aarMetadataWorkParameters.minCompileSdk.orNull
+            parameters.output.get().asFile,
+            parameters.aarFormatVersion.get(),
+            parameters.aarMetadataVersion.get(),
+            parameters.minCompileSdk.orNull
         )
     }
 }
 
 /** [WorkParameters] for [AarMetadataWorkAction] */
-abstract class AarMetadataWorkParameters: WorkParameters {
+abstract class AarMetadataWorkParameters: ProfileAwareWorkAction.Parameters() {
     abstract val output: RegularFileProperty
     abstract val aarFormatVersion: Property<String>
     abstract val aarMetadataVersion: Property<String>

@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 #include <cstring>
 
+#include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/trace.h"
 
 namespace deploy {
@@ -59,7 +60,7 @@ ApkArchive::Location ApkArchive::GetSignatureLocation(
 
 size_t ApkArchive::GetArchiveSize(const std::string& path) const noexcept {
   struct stat st;
-  stat(path.c_str(), &st);
+  IO::stat(path, &st);
   return st.st_size;
 }
 
@@ -126,7 +127,7 @@ ApkArchive::Location ApkArchive::GetCDLocation() noexcept {
 bool ApkArchive::Prepare(const std::string& path) noexcept {
   Trace traceDump("Prepare");
   // Search End of Central Directory Record
-  int fd = open(path.c_str(), O_RDONLY, 0);
+  int fd = IO::open(path, O_RDONLY, 0);
   if (fd == -1) {
     std::cerr << "Unable to open file '" << path << "'" << std::endl;
     return false;

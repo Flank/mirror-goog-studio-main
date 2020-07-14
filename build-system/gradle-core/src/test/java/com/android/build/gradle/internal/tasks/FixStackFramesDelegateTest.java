@@ -35,9 +35,9 @@ import static org.objectweb.asm.Opcodes.V1_8;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.fixtures.ExecutionMode;
+import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor;
 import com.android.ide.common.resources.FileStatus;
-import com.android.ide.common.workers.ExecutorServiceAdapter;
-import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.testutils.Serialization;
 import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.TestUtils;
@@ -55,17 +55,21 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ForkJoinPool;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+import org.gradle.api.Project;
+import org.gradle.api.model.ObjectFactory;
+import org.gradle.testfixtures.ProjectBuilder;
+import org.gradle.workers.WorkerExecutor;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -81,8 +85,8 @@ public class FixStackFramesDelegateTest {
     private static final Set<File> ANDROID_JAR =
             ImmutableSet.of(TestUtils.getPlatformFile("android.jar"));
 
-    private final WorkerExecutorFacade executor =
-            new ExecutorServiceAdapter("test", ":test", ForkJoinPool.commonPool());
+    private WorkerExecutor executor;
+    private AndroidVariantTask task;
 
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
@@ -91,6 +95,16 @@ public class FixStackFramesDelegateTest {
     @Before
     public void setUp() throws IOException {
         output = tmp.newFolder("out");
+
+        Project project = ProjectBuilder.builder().withProjectDir(tmp.newFolder()).build();
+        ObjectFactory objectFactory = project.getObjects();
+        task = project.getTasks().register("taskName", AndroidVariantTask.class).get();
+        executor =
+                new FakeGradleWorkExecutor(
+                        objectFactory,
+                        tmp.newFolder(),
+                        Collections.emptyList(),
+                        ExecutionMode.RUNNING);
     }
 
     @Test
@@ -102,7 +116,7 @@ public class FixStackFramesDelegateTest {
         FixStackFramesDelegate delegate =
                 new FixStackFramesDelegate(ANDROID_JAR, classesToFix, classesToFix, output);
 
-        delegate.doFullRun(executor);
+        delegate.doFullRun(executor, task);
 
         assertAllClassesAreValid(singleOutput().toPath());
     }
@@ -116,16 +130,17 @@ public class FixStackFramesDelegateTest {
         FixStackFramesDelegate delegate =
                 new FixStackFramesDelegate(ANDROID_JAR, classesToFix, classesToFix, output);
 
-        delegate.doIncrementalRun(executor, ImmutableMap.of());
+        delegate.doIncrementalRun(executor, ImmutableMap.of(), task);
 
         assertThat(output.list()).named("output artifacts").hasLength(0);
 
-        delegate.doIncrementalRun(executor, ImmutableMap.of(jar.toFile(), FileStatus.NEW));
+        delegate.doIncrementalRun(executor, ImmutableMap.of(jar.toFile(), FileStatus.NEW), task);
 
         assertThat(output.list()).named("output artifacts").hasLength(1);
 
         FileUtils.delete(jar.toFile());
-        delegate.doIncrementalRun(executor, ImmutableMap.of(jar.toFile(), FileStatus.REMOVED));
+        delegate.doIncrementalRun(
+                executor, ImmutableMap.of(jar.toFile(), FileStatus.REMOVED), task);
 
         assertThat(output.list()).named("output artifacts").hasLength(0);
     }
@@ -144,7 +159,7 @@ public class FixStackFramesDelegateTest {
         FixStackFramesDelegate delegate =
                 new FixStackFramesDelegate(ANDROID_JAR, classesToFix, referencedClasses, output);
 
-        delegate.doFullRun(executor);
+        delegate.doFullRun(executor, task);
 
         assertThat(output.list()).named("output artifacts").hasLength(1);
         assertAllClassesAreValid(singleOutput().toPath(), referencedJar);
@@ -159,7 +174,7 @@ public class FixStackFramesDelegateTest {
         FixStackFramesDelegate delegate =
                 new FixStackFramesDelegate(ANDROID_JAR, classesToFix, ImmutableSet.of(), output);
 
-        delegate.doFullRun(executor);
+        delegate.doFullRun(executor, task);
 
         assertThat(readZipEntry(jar, "test/A.class"))
                 .isEqualTo(readZipEntry(singleOutput().toPath(), "test/A.class"));
@@ -190,7 +205,7 @@ public class FixStackFramesDelegateTest {
         FixStackFramesDelegate delegate =
                 new FixStackFramesDelegate(ANDROID_JAR, classesToFix, ImmutableSet.of(), output);
 
-        delegate.doFullRun(executor);
+        delegate.doFullRun(executor, task);
 
         try (Zip it = new Zip(singleOutput())) {
             assertThat(it).doesNotContain("LICENSE");
@@ -205,7 +220,7 @@ public class FixStackFramesDelegateTest {
                 new FixStackFramesDelegate(
                         ANDROID_JAR, ImmutableSet.of(), ImmutableSet.of(), output);
 
-        delegate.doFullRun(executor);
+        delegate.doFullRun(executor, task);
 
         assertThat(output.list()).named("output artifacts").hasLength(0);
     }

@@ -32,14 +32,23 @@ abstract class ProfileAwareWorkAction<T : ProfileAwareWorkAction.Parameters> : W
         abstract val taskOwner: Property<String>
         abstract val workerKey: Property<String>
         fun initializeFromAndroidVariantTask(task: AndroidVariantTask) {
-            projectName.setDisallowChanges(task.projectName)
-            val taskOwnerString = task.path
-            taskOwner.setDisallowChanges(taskOwnerString)
+            initializeWith(task.projectName, task.path)
+        }
+        fun initializeWith(projectName: String, taskOwner:  String) {
             val workerKeyString = "$taskOwner{${this.javaClass.name}${this.hashCode()}"
-            workerKey.setDisallowChanges(workerKeyString)
+            initAllProperties(projectName, taskOwner, workerKeyString)
+        }
+        fun initializeFromProfileAwareWorkAction(workAction: Parameters) {
+            val workerKeyString = "${workAction.workerKey.get()}${this.hashCode()}"
+            initAllProperties(workAction.projectName.get(), workAction.taskOwner.get(), workerKeyString)
+        }
+        private fun initAllProperties(projectName: String, taskOwner: String, workerKey: String) {
+            this.projectName.setDisallowChanges(projectName)
+            this.taskOwner.setDisallowChanges(taskOwner)
+            this.workerKey.setDisallowChanges(workerKey)
             ProfilerInitializer.getListener()
-                ?.getTaskRecord(taskOwnerString)
-                ?.addWorker(workerKeyString, GradleBuildProfileSpan.ExecutionType.WORKER_EXECUTION)
+                ?.getTaskRecord(taskOwner)
+                ?.addWorker(workerKey, GradleBuildProfileSpan.ExecutionType.WORKER_EXECUTION)
         }
     }
 

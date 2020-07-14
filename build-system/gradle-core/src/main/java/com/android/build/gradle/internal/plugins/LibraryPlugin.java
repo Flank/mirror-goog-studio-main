@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
+import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.variant.impl.LibraryVariantImpl;
@@ -37,6 +38,7 @@ import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.LibraryVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.model.v2.ide.ProjectType;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.util.List;
@@ -109,6 +111,11 @@ public class LibraryPlugin extends BasePlugin<LibraryVariantImpl, LibraryVariant
         return AndroidProjectTypes.PROJECT_TYPE_LIBRARY;
     }
 
+    @Override
+    protected ProjectType getProjectTypeV2() {
+        return ProjectType.LIBRARY;
+    }
+
     @NonNull
     @Override
     protected LibraryTaskManager createTaskManager(
@@ -116,8 +123,7 @@ public class LibraryPlugin extends BasePlugin<LibraryVariantImpl, LibraryVariant
             @NonNull
                     List<
                                     ComponentInfo<
-                                            TestComponentImpl<
-                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentImpl<? extends TestComponentProperties>,
                                             TestComponentPropertiesImpl>>
                             testComponents,
             boolean hasFlavors,

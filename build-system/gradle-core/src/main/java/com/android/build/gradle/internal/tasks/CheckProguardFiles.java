@@ -17,9 +17,9 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.ProguardFiles.ProguardFile;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import java.io.File;
@@ -76,10 +76,10 @@ public abstract class CheckProguardFiles extends NonIncrementalTask {
     public abstract DirectoryProperty getBuildDirectory();
 
     public static class CreationAction
-            extends VariantTaskCreationAction<CheckProguardFiles, ComponentPropertiesImpl> {
+            extends VariantTaskCreationAction<CheckProguardFiles, VariantCreationConfig> {
 
-        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
-            super(componentProperties);
+        public CreationAction(@NonNull VariantCreationConfig creationConfig) {
+            super(creationConfig);
         }
 
         @NonNull

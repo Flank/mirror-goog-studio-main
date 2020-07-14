@@ -18,33 +18,31 @@
 
 #include <fcntl.h>
 
+#include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/executor/runas_executor.h"
 
 namespace deploy {
 
 namespace {
+constexpr const char* kBaseDir = "/data/local/tmp/.studio";
 constexpr const char* kDefaultPmPath = "/system/bin/pm";
 constexpr const char* kDefaultCmdPath = "/system/bin/cmd";
 constexpr int kDirectoryMode = (S_IRWXG | S_IRWXU | S_IRWXO);
 }  // namespace
 
-Workspace::Workspace(const std::string& executable_path,
-                     const std::string& version, Executor* executor)
-    : exec_path_(executable_path),
-      version_(version),
+Workspace::Workspace(const std::string& version, Executor* executor)
+    : version_(version),
       pm_path_(kDefaultPmPath),
       cmd_path_(kDefaultCmdPath),
       executor_(executor),
       output_pipe_(dup(STDOUT_FILENO)) {
-  base_ = kBasedir;
-  tmp_ = base_ + "tmp-" + version + "/";
+  tmp_ = kBaseDir + "/tmp-"_s + version + "/";
 }
 
 void Workspace::Init() noexcept {
   // Create all directory that may be used.
-  std::string dir = GetRoot() + tmp_;
-  mkdir(dir.c_str(), kDirectoryMode);
+  IO::mkdir(tmp_, kDirectoryMode);
 
   // Close all file descriptor which could potentially mess up with
   // our protobuffer output and install a data sink instead.

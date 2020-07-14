@@ -24,8 +24,8 @@ import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.transform.QualifiedContent;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
@@ -79,7 +79,7 @@ public class TaskTestUtils {
     protected static final String TASK_NAME = "task name";
 
     protected TaskFactory taskFactory;
-    protected ComponentPropertiesImpl componentProperties;
+    protected VariantCreationConfig creationConfig;
     protected TransformManager transformManager;
     protected FakeSyncIssueReporter issueReporter;
 
@@ -92,7 +92,7 @@ public class TaskTestUtils {
         FileUtils.mkdirs(projectDirectory);
         project = ProjectBuilder.builder().withProjectDir(projectDirectory).build();
         TestProjects.loadGradleProperties(project, ImmutableMap.of());
-        componentProperties = getComponentProperties();
+        creationConfig = getCreationConfig();
         issueReporter = new FakeSyncIssueReporter();
         transformManager = new TransformManager(project, issueReporter, new NoOpRecorder());
         taskFactory = new TaskFactoryImpl(project.getTasks());
@@ -278,7 +278,7 @@ public class TaskTestUtils {
     }
 
     @NonNull
-    private static ComponentPropertiesImpl getComponentProperties() {
+    private static VariantCreationConfig getCreationConfig() {
         GlobalScope globalScope = mock(GlobalScope.class);
         when(globalScope.getBuildDir()).thenReturn(new File("build dir"));
         when(globalScope.getProjectOptions())
@@ -288,23 +288,24 @@ public class TaskTestUtils {
                                 new FakeProviderFactory(
                                         FakeProviderFactory.getFactory(), ImmutableMap.of())));
 
-        ComponentPropertiesImpl componentProperties = mock(ComponentPropertiesImpl.class);
-        when(componentProperties.getGlobalScope()).thenReturn(globalScope);
-        when(componentProperties.getName()).thenReturn("theVariantName");
-        when(componentProperties.getFlavorName()).thenReturn("theFlavorName");
-        when(componentProperties.getBuildType()).thenReturn("debug");
-        when(componentProperties.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
+        VariantCreationConfig creationConfig = mock(VariantCreationConfig.class);
+        when(creationConfig.getGlobalScope()).thenReturn(globalScope);
+        when(creationConfig.getName()).thenReturn("theVariantName");
+        when(creationConfig.getFlavorName()).thenReturn("theFlavorName");
+        when(creationConfig.getBuildType()).thenReturn("debug");
+        when(creationConfig.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
 
         VariantScope scope = mock(VariantScope.class);
-        when(componentProperties.getVariantScope()).thenReturn(scope);
-        when(componentProperties.computeTaskName(Mockito.anyString())).thenReturn(TASK_NAME);
+        when(creationConfig.getVariantScope()).thenReturn(scope);
+        when(creationConfig.computeTaskName(Mockito.anyString(), Mockito.eq("")))
+                .thenReturn(TASK_NAME);
 
         VariantDslInfo variantDslInfo = mock(VariantDslInfo.class);
-        when(componentProperties.getVariantDslInfo()).thenReturn(variantDslInfo);
-        when(componentProperties.getDirName()).thenReturn("config dir name");
-        when(componentProperties.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
+        when(creationConfig.getVariantDslInfo()).thenReturn(variantDslInfo);
+        when(creationConfig.getDirName()).thenReturn("config dir name");
+        when(creationConfig.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
         when(variantDslInfo.isDebuggable()).thenReturn(true);
-        return componentProperties;
+        return creationConfig;
     }
 
     /**

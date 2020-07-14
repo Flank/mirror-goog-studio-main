@@ -13,17 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.tools.bazel;
 
 import com.android.tools.bazel.model.BazelRule;
-import java.util.List;
 
-interface Configuration {
-    String nameRule(String pkg, String rel, String name);
+public class Configuration {
 
-    List<String> getAdditionalImports();
+    public boolean strict;
+    public boolean dryRun;
+    public boolean warningsAsErrors;
+    public String imlGraph;
 
-    boolean shouldSuppress(BazelRule rule);
+    public String nameRule(String pkg, String rel, String name) {
+        String prefix = "";
+        if (rel.startsWith("tools/base")) {
+            prefix = "studio.";
+        } else if (rel.startsWith("tools/data-binding")) {
+            prefix = "studio.";
+            if (name.startsWith("db-")) {
+                name = name.replace("db-", "");
+            }
+        }
+
+        return prefix + name;
+    }
+
+    public boolean shouldSuppress(BazelRule rule) {
+        return (rule.getLabel().startsWith("//prebuilts/tools/common/m2/repository/") && !strict)
+                || rule.getLabel().endsWith(":intellij.gradle.toolingExtension.impl") // b/156122269
+                || rule.getLabel().startsWith("//tools/vendor/google3/blaze/");
+    }
 }
-

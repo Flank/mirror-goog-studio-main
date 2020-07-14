@@ -16,11 +16,11 @@
 package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -38,9 +38,6 @@ import com.android.builder.symbols.processLibraryMainSymbolTable
 import com.android.ide.common.symbols.IdProvider
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
-import java.io.File
-import java.io.IOException
-import javax.inject.Inject
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -54,7 +51,9 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-
+import java.io.File
+import java.io.IOException
+import javax.inject.Inject
 
 @CacheableTask
 abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
@@ -195,9 +194,9 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
     }
 
     internal class CreationAction(
-        componentProperties: ComponentPropertiesImpl,
+        creationConfig: BaseCreationConfig,
         val isLibrary: Boolean)
-        : VariantTaskCreationAction<GenerateLibraryRFileTask, ComponentPropertiesImpl>(componentProperties) {
+        : VariantTaskCreationAction<GenerateLibraryRFileTask, BaseCreationConfig>(creationConfig) {
 
         override val name: String
             get() = computeTaskName("generate", "RFile")
@@ -294,9 +293,9 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
         }
     }
 
-    internal class TestRuntimeStubRClassCreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<GenerateLibraryRFileTask, ComponentPropertiesImpl>(
-            componentProperties
+    internal class TestRuntimeStubRClassCreationAction(creationConfig: BaseCreationConfig) :
+        VariantTaskCreationAction<GenerateLibraryRFileTask, BaseCreationConfig>(
+            creationConfig
         ) {
 
         override val name: String = computeTaskName("generate", "StubRFile")

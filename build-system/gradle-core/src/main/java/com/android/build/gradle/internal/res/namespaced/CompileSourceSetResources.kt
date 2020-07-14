@@ -15,7 +15,7 @@
  */
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
@@ -187,9 +187,9 @@ abstract class CompileSourceSetResources : IncrementalTask() {
     class CreationAction(
         override val name: String,
         private val inputDirectories: FileCollection,
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<CompileSourceSetResources, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: BaseCreationConfig
+    ) : VariantTaskCreationAction<CompileSourceSetResources, BaseCreationConfig>(
+        creationConfig
     ) {
 
         override val type: Class<CompileSourceSetResources>

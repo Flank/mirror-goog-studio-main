@@ -16,11 +16,12 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.ide.common.workers.ExecutorServiceAdapter
 import com.android.ide.common.workers.WorkerExecutorFacade
-import com.android.testutils.apk.Zip
-import com.android.testutils.truth.ZipFileSubject
 import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.google.common.util.concurrent.MoreExecutors
 import org.junit.Before
@@ -55,18 +56,24 @@ class BundleLibraryJavaResRunnableTest {
                 }
             }
         )
-        BundleLibraryJavaResRunnable(
-            BundleLibraryJavaResRunnable.Params(
-                output,
-                input,
-                JarCreatorType.JAR_FLINGER,
-                Deflater.BEST_SPEED)
-        ).run()
+        object : BundleLibraryJavaResRunnable() {
+            override fun getParameters(): Params {
+                return object : Params() {
+                    override val output = FakeObjectFactory.factory.fileProperty().fileValue(output)
+                    override val inputs = FakeConfigurableFileCollection(input)
+                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
+                    override val compressionLevel = FakeGradleProperty(Deflater.BEST_SPEED)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("task")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
-        Zip(output).use {
-            assertThat(it).contains("a.txt")
-            assertThat(it).contains("b.txt")
-            assertThat(it).contains("sub/c.txt")
+        assertThat(output) {
+            it.contains("a.txt")
+            it.contains("b.txt")
+            it.contains("sub/c.txt")
         }
     }
 
@@ -79,17 +86,23 @@ class BundleLibraryJavaResRunnableTest {
                 dir.resolve("A.class").createNewFile()
             }
         )
-        BundleLibraryJavaResRunnable(
-            BundleLibraryJavaResRunnable.Params(
-                output,
-                input,
-                JarCreatorType.JAR_FLINGER,
-                Deflater.BEST_SPEED)
-        ).run()
+        object : BundleLibraryJavaResRunnable() {
+            override fun getParameters(): Params {
+                return object : Params() {
+                    override val output = FakeObjectFactory.factory.fileProperty().fileValue(output)
+                    override val inputs = FakeConfigurableFileCollection(input)
+                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
+                    override val compressionLevel = FakeGradleProperty(Deflater.BEST_SPEED)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("task")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
-        Zip(output).use {
-            assertThat(it).contains("a.txt")
-            assertThat(it).doesNotContain("A.class")
+        assertThat(output) {
+            it.contains("a.txt")
+            it.doesNotContain("A.class")
         }
     }
 
@@ -108,20 +121,25 @@ class BundleLibraryJavaResRunnableTest {
             it.putNextEntry(ZipEntry("sub/a.txt"))
             it.closeEntry()
         }
+        object : BundleLibraryJavaResRunnable() {
+            override fun getParameters(): Params {
+                return object : Params() {
+                    override val output = FakeObjectFactory.factory.fileProperty().fileValue(output)
+                    override val inputs = FakeConfigurableFileCollection(inputJar)
+                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
+                    override val compressionLevel = FakeGradleProperty(Deflater.BEST_SPEED)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("task")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
 
-        BundleLibraryJavaResRunnable(
-            BundleLibraryJavaResRunnable.Params(
-                output,
-                setOf(inputJar),
-                JarCreatorType.JAR_FLINGER,
-                Deflater.BEST_SPEED)
-        ).run()
-
-        Zip(output).use {
-            assertThat(it).contains("a.txt")
-            assertThat(it).contains("sub/a.txt")
-            assertThat(it).doesNotContain("A.class")
-            assertThat(it).doesNotContain("sub/B.class")
+        assertThat(output) {
+            it.contains("a.txt")
+            it.contains("sub/a.txt")
+            it.doesNotContain("A.class")
+            it.doesNotContain("sub/B.class")
         }
     }
 
@@ -136,17 +154,22 @@ class BundleLibraryJavaResRunnableTest {
             }
         }
 
-        BundleLibraryJavaResRunnable(
-            BundleLibraryJavaResRunnable.Params(
-                output,
-                setOf(inputDirWithJar),
-                JarCreatorType.JAR_FLINGER,
-                Deflater.BEST_SPEED)
-        ).run()
-
-        Zip(output).use {
-            assertThat(it).contains("subJar.jar")
-            assertThat(it).doesNotContain("A.class")
+        object : BundleLibraryJavaResRunnable() {
+            override fun getParameters(): Params {
+                return object : Params() {
+                    override val output = FakeObjectFactory.factory.fileProperty().fileValue(output)
+                    override val inputs = FakeConfigurableFileCollection(inputDirWithJar)
+                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
+                    override val compressionLevel = FakeGradleProperty(Deflater.BEST_SPEED)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("task")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                }
+            }
+        }.execute()
+        assertThat(output) {
+            it.contains("subJar.jar")
+            it.doesNotContain("A.class")
         }
     }
 }
