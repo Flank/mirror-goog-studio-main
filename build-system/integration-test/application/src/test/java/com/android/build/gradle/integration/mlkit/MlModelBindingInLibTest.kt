@@ -47,7 +47,7 @@ class MlModelBindingInLibTest {
                 dependencies {
                     implementation 'androidx.appcompat:appcompat:1.1.0'
                     implementation 'org.tensorflow:tensorflow-lite-support:0.1.0-rc1'
-                    implementation 'org.tensorflow:tensorflow-lite-metadata:0.1.0-rc1'
+                    implementation 'org.tensorflow:tensorflow-lite-metadata:0.1.0-rc2'
                 }
             """
         )

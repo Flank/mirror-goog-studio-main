@@ -22,7 +22,7 @@
       <library name="tensorflow-lite-metadata" type="repository">
         <properties maven-id="org.tensorflow:tensorflow-lite-metadata:0.1.0-rc1" />
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-metadata/0.1.0-rc1/tensorflow-lite-metadata-0.1.0-rc1.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-metadata/0.1.0-rc2/tensorflow-lite-metadata-0.1.0-rc2.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
