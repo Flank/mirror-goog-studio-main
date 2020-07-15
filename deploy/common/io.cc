@@ -60,7 +60,25 @@ FILE* IO::fopen(const std::string& filename, const std::string& mode) {
 }
 
 int IO::stat(const std::string& pathname, struct stat* statbuf) {
-  return __stat(ResolvePath(pathname).c_str(), statbuf);
+  int ret = __stat(ResolvePath(pathname).c_str(), statbuf);
+#ifdef __ANDROID__
+  return ret;
+#else
+  // In tests contexts, we need to do some trickery re: /proc entries, because
+  // we use Android-specific UID conventions in Apply Changes.
+  if (ret != 0 || pathname.find("/proc") != 0) {
+    return ret;
+  }
+
+  FILE* uid = IO::fopen(pathname + "/.uid", "r");
+  if (uid == nullptr) {
+    Log::E("Cannot fake-stat %s", pathname.c_str());
+    return 1;
+  }
+  fscanf(uid, "%d", &statbuf->st_uid);
+  fclose(uid);
+  return 0;
+#endif
 }
 
 int IO::chmod(const std::string& pathname, mode_t mode) {

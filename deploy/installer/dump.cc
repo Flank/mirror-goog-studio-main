@@ -203,22 +203,7 @@ bool DumpCommand::ParseProc(dirent* proc_entry, ProcStats* stats) {
     return false;
   }
 
-  // When testing the installer we do not use the real
-  // userid's on files, we mostly run all the same code
-  // but in this case, if the root file system is not the
-  // real one, we use a fake uid for the file.
-
-#ifdef __ANDROID__
   stats->uid = proc_dir_stat.st_uid;
-#else
-  FILE* uid = IO::fopen(proc_path + "/.uid", "r");
-  if (uid == nullptr) {
-    Log::E("Cannot fake-stat %s", proc_path.c_str());
-    return false;
-  }
-  fscanf(uid, "%d", &stats->uid);
-  fclose(uid);
-#endif
 
   std::string cmdline_path = proc_path + "/cmdline";
   FILE* proc_cmdline = IO::fopen(cmdline_path, "r");
