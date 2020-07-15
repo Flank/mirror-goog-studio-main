@@ -31,6 +31,7 @@ def main():
   bazel = os.path.join(workspace, 'prebuilts', 'tools', platform, 'bazel',
                        'bazel-real')
   args = sys.argv[1:]
+  command = bazel_command(args)
 
   env = {}
   env['JAVA_HOME'] = os.path.join(workspace, 'prebuilts', 'studio', 'jdk', jdk_subdir)
@@ -53,7 +54,8 @@ def main():
     # This isn't really the correct check, since --config=remote is just an alias for a bunch of other
     # settings. But in practice that's how you get into remote mode, so it should be good enough for now
     # at least.
-    if (not '--config=remote' in args and not '--config=dynamic' in args):
+    if (command in ['build', 'test'] and
+        (not '--config=remote' in args and not '--config=dynamic' in args)):
       if (not os.path.exists('C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.26.28801') or
               not os.path.exists('C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.18362.0')):
         print('You must have MSVC Buildtools version 14.26.28801 and Windows SDK 10.0.18362.0 installed.\n'
@@ -85,7 +87,6 @@ def main():
   else: # Linux
     env['CC'] = os.environ.get('GCC', '/usr/bin/gcc')
 
-  command = bazel_command(args)
 
   if command == 'info' and bazel_command_index(args) == len(args) - 1:
     print("bazel-cpu-count: " + str(count_bazel_CPUs()))
