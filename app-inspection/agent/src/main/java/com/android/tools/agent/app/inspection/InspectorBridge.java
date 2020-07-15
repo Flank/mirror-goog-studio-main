@@ -99,7 +99,8 @@ public final class InspectorBridge {
                                 }
                             }
                         });
-        InspectorContext context = new InspectorContext(inspectorId, project);
+        InspectorContext context =
+                new InspectorContext(inspectorId, project, new InspectorExecutorsImpl(executor));
 
         return new InspectorBridge(executor, context);
     }

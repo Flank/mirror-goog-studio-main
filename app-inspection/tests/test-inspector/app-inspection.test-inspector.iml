@@ -10,5 +10,6 @@
     <orderEntry type="module" module-name="app-inspection.test-inspector.api" />
     <orderEntry type="library" name="app-inspection" level="project" />
     <orderEntry type="library" name="androidx-annotations" level="project" />
+    <orderEntry type="library" name="android" level="project" />
   </component>
 </module>

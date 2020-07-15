@@ -20,6 +20,7 @@ import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.inspection.Inspector;
 import androidx.inspection.InspectorEnvironment;
+import androidx.inspection.InspectorExecutors;
 import androidx.inspection.InspectorFactory;
 import dalvik.system.DexClassLoader;
 import java.util.ArrayList;
@@ -44,11 +45,17 @@ final class InspectorContext {
     private final ConcurrentHashMap<Integer, CommandCallbackImpl> mIdToCommandCallback =
             new ConcurrentHashMap<>();
 
-    InspectorContext(String inspectorId, String project) {
+    private final InspectorExecutors mExecutors;
+
+    InspectorContext(
+            @NonNull String inspectorId,
+            @NonNull String project,
+            @NonNull InspectorExecutors executors) {
         mInspectorId = inspectorId;
         mProjectName = project;
+        mExecutors = executors;
     }
-    
+
     public String getProject() {
         return mProjectName;
     }
@@ -74,7 +81,7 @@ final class InspectorContext {
                 if (mInspectorId.equals(inspectorFactory.getInspectorId())) {
                     ConnectionImpl connection = new ConnectionImpl(mInspectorId);
                     InspectorEnvironment environment =
-                            new InspectorEnvironmentImpl(nativePtr, mInspectorId);
+                            new InspectorEnvironmentImpl(nativePtr, mInspectorId, mExecutors);
                     inspector = inspectorFactory.createInspector(connection, environment);
                     break;
                 }

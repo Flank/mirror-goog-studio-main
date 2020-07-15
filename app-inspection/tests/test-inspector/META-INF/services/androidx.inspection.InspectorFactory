@@ -4,3 +4,4 @@ test.inspector.TestEnvironmentInspectorFactory
 test.inspector.ReverseEchoInspectorFactory
 test.inspector.TodoInspectorFactory
 test.inspector.TestCancellationInspectorFactory
+test.inspector.TestExecutorsInspectorFactory
