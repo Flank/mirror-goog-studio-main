@@ -8,6 +8,12 @@ group = 'com.android.tools.lint'
 archivesBaseName = 'lint-tests'
 version = rootProject.ext.baseVersion
 
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
 dependencies {
     compile project(':base:lint')
     compile project(':base:intellij-core')
