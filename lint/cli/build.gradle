@@ -7,6 +7,12 @@ group = 'com.android.tools.lint'
 archivesBaseName = 'lint'
 version = rootProject.ext.baseVersion
 
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
 dependencies {
     compile project(':base:lint-checks')
     compile libs.guava
