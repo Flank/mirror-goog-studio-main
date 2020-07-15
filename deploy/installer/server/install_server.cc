@@ -37,8 +37,6 @@ namespace deploy {
 
 namespace {
 
-const std::string kRunAsExecFailed = "exec failed";
-
 enum class StartResult { SUCCESS, TRY_COPY, FAILURE };
 
 // Attempts to start the server and connect an InstallClient to it. If this
@@ -81,12 +79,7 @@ std::unique_ptr<InstallClient> TryStartServer(const Executor& executor,
 
   if (count > 0) {
     std::string error_message(err_buffer, 0, count);
-    if (error_message.find(kRunAsExecFailed)) {
-      *result = StartResult::TRY_COPY;
-      return nullptr;
-    }
-
-    ErrEvent("Unable to startup install-server, output: '"_s + error_message +
+    ErrEvent("Unable to startup install-server, output: '" + error_message +
              "'");
   }
 
@@ -176,10 +169,11 @@ void InstallServer::HandleOverlayUpdate(
   const std::string overlay_folder = request.overlay_path() + "/.overlay"_s;
 
   if (request.wipe_all_files()) {
-    if (nftw(overlay_folder.c_str(),
-             [](const char* path, const struct stat* sbuf, int type,
-                struct FTW* ftwb) { return remove(path); },
-             10 /*max FD*/, FTW_DEPTH | FTW_MOUNT | FTW_PHYS) != 0) {
+    if (nftw(
+            overlay_folder.c_str(),
+            [](const char* path, const struct stat* sbuf, int type,
+               struct FTW* ftwb) { return remove(path); },
+            10 /*max FD*/, FTW_DEPTH | FTW_MOUNT | FTW_PHYS) != 0) {
       response->set_status(proto::OverlayUpdateResponse::UPDATE_FAILED);
       response->set_error_message("Could not wipe existing overlays");
     }
@@ -302,13 +296,15 @@ std::unique_ptr<InstallClient> StartInstallServer(
 
   StartResult result;
   auto client = TryStartServer(run_as, exec_path + exec_name, &result);
+  if (result == StartResult::SUCCESS) {
+    return client;
+  }
 
-  if (result == StartResult::TRY_COPY &&
-      TryCopyServer(run_as, server_path, exec_path, exec_name)) {
+  if (TryCopyServer(run_as, server_path, exec_path, exec_name)) {
     return TryStartServer(run_as, exec_path + exec_name, &result);
   }
 
-  return client;
+  return nullptr;
 }
 
 }  // namespace deploy
