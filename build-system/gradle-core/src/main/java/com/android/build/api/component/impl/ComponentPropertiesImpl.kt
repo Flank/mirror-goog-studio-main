@@ -618,4 +618,9 @@ abstract class ComponentPropertiesImpl(
     fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory) {
         asmClassVisitorsRegistry.configureAndLock(objectFactory, asmApiVersion)
     }
+
+    companion object {
+        // String to
+        final val ENABLE_LEGACY_API: String = "Turn on with by putting '${BooleanOption.ENABLE_LEGACY_API.propertyName}=true in gradle.properties'"
+    }
 }

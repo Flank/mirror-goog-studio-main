@@ -690,7 +690,8 @@ public class ModelBuilder<Extension extends BaseExtension>
                 componentProperties.getBaseName(),
                 componentProperties.getBuildType(),
                 getProductFlavorNames(componentProperties),
-                new ProductFlavorImpl(variantDslInfo.getMergedFlavor()),
+                new ProductFlavorImpl(
+                        variantDslInfo.getMergedFlavor(), variantDslInfo.getApplicationId()),
                 mainArtifact,
                 extraAndroidArtifacts,
                 clonedExtraJavaArtifacts,

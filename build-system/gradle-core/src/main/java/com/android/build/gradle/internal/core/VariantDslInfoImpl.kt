@@ -58,6 +58,7 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
 import java.util.ArrayList
@@ -100,7 +101,9 @@ open class VariantDslInfoImpl internal constructor(
      *
      * Still, DO NOT USE. You should mostly use [VariantDslInfo] which does not give access to this.
      */
-    val mergedFlavor: MergedFlavor = mergeFlavors(defaultConfig, productFlavorList, dslServices)
+    val mergedFlavor: MergedFlavor by lazy {
+        mergeFlavors(defaultConfig, productFlavorList, applicationId, dslServices)
+    }
 
     /** Variant-specific build Config fields.  */
     private val mBuildConfigFields: MutableMap<String, ClassField> = Maps.newTreeMap()
@@ -313,8 +316,15 @@ open class VariantDslInfoImpl internal constructor(
      *
      * @return the application ID
      */
-    override val applicationId: Provider<String>
-        get() {
+    override val applicationId: Property<String> =
+        services.newPropertyBackingDeprecatedApi(
+            String::class.java,
+            initApplicationId(),
+            "applicationId"
+        )
+
+
+    private fun initApplicationId(): Provider<String> {
             // -------------
             // Special case for test components and separate test sub-projects
             if (variantType.isForTesting) {
@@ -358,7 +368,7 @@ open class VariantDslInfoImpl internal constructor(
                 services.provider(
                     Callable { "$finalAppIdFromFlavors${computeApplicationIdSuffix()}" })
             }
-        }
+    }
 
     /**
      * Combines all the appId suffixes into a single one.
