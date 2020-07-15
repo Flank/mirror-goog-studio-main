@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.prefs.AndroidLocation;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
@@ -31,7 +30,6 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.security.InvalidParameterException;
-import java.util.Arrays;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Locale;
@@ -64,7 +62,6 @@ public final class EmulatorConsole {
 
     private static final String COMMAND_PING = "help\r\n"; //$NON-NLS-1$
     private static final String COMMAND_AVD_NAME = "avd name\r\n"; //$NON-NLS-1$
-    private static final String COMMAND_AVD_PATH = "avd path\r\n";
     private static final String COMMAND_KILL = "kill\r\n"; //$NON-NLS-1$
     private static final String COMMAND_GSM_STATUS = "gsm status\r\n"; //$NON-NLS-1$
     private static final String COMMAND_GSM_CALL = "gsm call %1$s\r\n"; //$NON-NLS-1$
@@ -370,61 +367,26 @@ public final class EmulatorConsole {
         sendCommand(COMMAND_KILL);
     }
 
-    /**
-     * @return the AVD name. If the command failed returns the error message after "KO: " or null.
-     */
-    @Nullable
     public synchronized String getAvdName() {
-        return getOutput(COMMAND_AVD_NAME);
-    }
-
-    /**
-     * Returns the absolute path to the virtual device in the file system. The path is operating
-     * system dependent; it will have / name separators on Linux and \ separators on Windows. The
-     * subcommand was added to the emulator in Version 30.0.18.
-     *
-     * @return the AVD path. If the command failed returns the error message after "KO: " or null.
-     *     Returns the error message "bad sub-command" in versions prior to 30.0.18.
-     */
-    @Nullable
-    public synchronized String getAvdPath() {
-        return getOutput(COMMAND_AVD_PATH);
-    }
-
-    @Nullable
-    private String getOutput(@NonNull String command) {
-        if (!sendCommand(command)) {
-            return null;
+        if (sendCommand(COMMAND_AVD_NAME)) {
+            String[] result = readLines();
+            // qemu2's readline implementation sends some formatting characters in the first line
+            // let's make sure that only the last two lines are fine
+            if (result != null && result.length >= 2) { // this should be the name on the (length - 1)th line,
+                                                        // and ok on last one
+                return result[result.length - 2];
+            } else {
+                // try to see if there's a message after KO
+                Matcher m = RE_KO.matcher(result[result.length-1]);
+                if (m.matches()) {
+                    return m.group(1);
+                }
+                Log.w(LOG_TAG, "avd name result did not match expected");
+                for (int i=0; i < result.length; i++) {
+                    Log.d(LOG_TAG, result[i]);
+                }
+            }
         }
-
-        String[] lines = readLines();
-
-        if (lines == null) {
-            return null;
-        }
-
-        return processOutput(lines);
-    }
-
-    @Nullable
-    @VisibleForTesting
-    static String processOutput(@NonNull String[] lines) {
-        if (lines.length == 0) {
-            return null;
-        }
-
-        Matcher matcher = RE_KO.matcher(lines[lines.length - 1]);
-
-        if (matcher.matches()) {
-            return matcher.group(1);
-        }
-
-        if (lines.length >= 2 && lines[lines.length - 1].equals("OK")) {
-            return lines[lines.length - 2];
-        }
-
-        Log.w(LOG_TAG, "Unexpected output");
-        Arrays.asList(lines).forEach(line -> Log.d(LOG_TAG, line));
 
         return null;
     }

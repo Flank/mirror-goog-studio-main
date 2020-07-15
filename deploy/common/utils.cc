@@ -22,7 +22,6 @@
 #include <unistd.h>
 
 #include "tools/base/deploy/common/env.h"
-#include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/log.h"
 
 namespace deploy {
@@ -84,7 +83,7 @@ void ConvertEventToProtoEvent(deploy::Event& event,
 }
 
 bool ReadFile(const std::string& file_path, std::string* content) {
-  int fd = IO::open(file_path, O_RDONLY);
+  int fd = open(file_path.c_str(), O_RDONLY);
   if (fd == -1) {
     ErrEvent("Could not open file at '" + file_path + "': " + strerror(errno));
     return false;
@@ -115,7 +114,7 @@ bool ReadFile(const std::string& file_path, std::string* content) {
 }
 
 bool WriteFile(const std::string& file_path, const std::string& content) {
-  int fd = IO::creat(file_path, S_IRWXU);
+  int fd = creat(file_path.c_str(), S_IRWXU);
   if (fd == -1) {
     ErrEvent("Could not create file at '" + file_path +
              "': " + strerror(errno));
@@ -144,7 +143,7 @@ bool WriteFile(const std::string& file_path, const std::string& content) {
 
 std::string GetAgentExceptionLogDir(const std::string& package_name) {
   std::ostringstream log_dir;
-  log_dir << "/data/data/" << package_name << "/.agent-logs";
+  log_dir << Env::root() << "/data/data/" << package_name << "/.agent-logs";
   return log_dir.str();
 }
 

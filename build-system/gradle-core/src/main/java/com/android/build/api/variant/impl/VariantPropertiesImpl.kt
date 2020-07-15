@@ -16,8 +16,8 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
@@ -42,7 +42,7 @@ import org.gradle.api.provider.Provider
 import java.io.Serializable
 
 abstract class VariantPropertiesImpl(
-    override val variant: VariantImpl<out VariantProperties>,
+    componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
@@ -56,7 +56,7 @@ abstract class VariantPropertiesImpl(
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : ComponentPropertiesImpl(
-    variant,
+    componentIdentity,
     buildFeatureValues,
     variantDslInfo,
     variantDependencies,
@@ -148,7 +148,4 @@ abstract class VariantPropertiesImpl(
             "$name:resValues"
         )
     }
-
-    override val minSdkVersion: AndroidVersion
-        get() = variant.minSdkVersion
 }

@@ -25,6 +25,7 @@ import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkQueue
 import java.io.File
+import java.io.Serializable
 import java.util.function.Supplier
 
 /**
@@ -109,7 +110,7 @@ interface ArtifactTransformationRequest<TaskT: Task> {
      * @param parameterConfigurator The lambda to configure instances of [parameterType] for each
      * [BuiltArtifact].
      */
-    fun <ParamT: WorkParameters> submit(
+    fun <ParamT> submit(
         task: TaskT,
         workQueue: WorkQueue,
         actionType: Class<out WorkAction<ParamT>>,
@@ -118,6 +119,7 @@ interface ArtifactTransformationRequest<TaskT: Task> {
             outputLocation: Directory,
             parameters: ParamT) -> File
     ): Supplier<BuiltArtifacts>
+            where ParamT : WorkParameters, ParamT: Serializable
 
     /**
      * Submit a lambda to process each input [BuiltArtifact] object synchronously.

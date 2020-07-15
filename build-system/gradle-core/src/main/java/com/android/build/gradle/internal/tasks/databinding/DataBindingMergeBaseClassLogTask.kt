@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks.databinding
 
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
@@ -64,9 +64,9 @@ abstract class DataBindingMergeBaseClassLogTask: IncrementalTask() {
         delegate.doIncrementalRun(workerExecutor, changedInputs)
     }
 
-    class CreationAction(creationConfig: BaseCreationConfig) :
-        VariantTaskCreationAction<DataBindingMergeBaseClassLogTask, BaseCreationConfig>(
-            creationConfig
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<DataBindingMergeBaseClassLogTask, ComponentPropertiesImpl>(
+            componentProperties
         ) {
 
         override val name = computeTaskName("dataBindingMergeGenClasses")

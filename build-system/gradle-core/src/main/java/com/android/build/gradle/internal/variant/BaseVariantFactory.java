@@ -26,7 +26,6 @@ import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
-import com.android.build.api.variant.VariantProperties;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
@@ -59,7 +58,7 @@ import org.gradle.api.Project;
 
 /** Common superclass for all {@link VariantFactory} implementations. */
 public abstract class BaseVariantFactory<
-                VariantT extends VariantImpl<? extends VariantProperties>,
+                VariantT extends VariantImpl<VariantPropertiesT>,
                 VariantPropertiesT extends VariantPropertiesImpl>
         implements VariantFactory<VariantT, VariantPropertiesT> {
 
@@ -106,7 +105,7 @@ public abstract class BaseVariantFactory<
     @NonNull
     @Override
     public UnitTestPropertiesImpl createUnitTestProperties(
-            @NonNull UnitTestImpl componentIdentity,
+            @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
@@ -148,7 +147,7 @@ public abstract class BaseVariantFactory<
     @NonNull
     @Override
     public AndroidTestPropertiesImpl createAndroidTestProperties(
-            @NonNull AndroidTestImpl componentIdentity,
+            @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,

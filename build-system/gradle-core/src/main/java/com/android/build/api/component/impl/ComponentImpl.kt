@@ -18,20 +18,19 @@ package com.android.build.api.component.impl
 
 import com.android.build.api.component.Component
 import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.component.ComponentProperties
 import com.android.build.api.variant.impl.DelayedActionExecutor
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.VariantApiServices
 import org.gradle.api.Action
 
-abstract class ComponentImpl<PropertiesT : ComponentProperties>(
+abstract class ComponentImpl<PropertiesT : ComponentPropertiesImpl>(
     protected val variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity,
     protected val variantApiServices: VariantApiServices
 ) :
     Component<PropertiesT>, ComponentIdentity by variantConfiguration {
 
-    protected val propertiesActions = DelayedActionExecutor<PropertiesT>()
+    private val propertiesActions = DelayedActionExecutor<PropertiesT>()
 
     override var enabled: Boolean = true
 
@@ -44,5 +43,7 @@ abstract class ComponentImpl<PropertiesT : ComponentProperties>(
     }
 
     // FIXME should be internal
-    abstract fun executePropertiesActions(target: PropertiesT)
+    fun executePropertiesActions(target: PropertiesT) {
+        propertiesActions.executeActions(target)
+    }
 }

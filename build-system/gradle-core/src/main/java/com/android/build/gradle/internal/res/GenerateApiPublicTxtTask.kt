@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.res
 
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -84,7 +84,7 @@ abstract class GenerateApiPublicTxtTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: VariantCreationConfig) : VariantTaskCreationAction<GenerateApiPublicTxtTask, VariantCreationConfig>(creationConfig) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) : VariantTaskCreationAction<GenerateApiPublicTxtTask, ComponentPropertiesImpl>(componentProperties) {
         override val name: String = computeTaskName("generate", "ExternalPublicTxt")
         override val type: Class<GenerateApiPublicTxtTask> get() = GenerateApiPublicTxtTask::class.java
 

@@ -25,7 +25,6 @@
 #include <sys/wait.h>
 
 #include "tools/base/deploy/common/event.h"
-#include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/executor/runas_executor.h"
 #include "tools/base/deploy/installer/overlay/overlay.h"
@@ -164,7 +163,7 @@ void InstallServer::HandleCheckSetup(
     const proto::CheckSetupRequest& request,
     proto::CheckSetupResponse* response) const {
   for (const std::string& file : request.files()) {
-    if (IO::access(file, F_OK) != 0) {
+    if (access(file.c_str(), F_OK) != 0) {
       response->add_missing_files(file);
     }
   }
@@ -227,7 +226,7 @@ void InstallServer::HandleGetAgentExceptionLog(
     const proto::GetAgentExceptionLogRequest& request,
     proto::GetAgentExceptionLogResponse* response) const {
   const std::string log_dir = GetAgentExceptionLogDir(request.package_name());
-  DIR* dir = IO::opendir(log_dir);
+  DIR* dir = opendir(log_dir.c_str());
   if (dir == nullptr) {
     return;
   }
@@ -237,12 +236,13 @@ void InstallServer::HandleGetAgentExceptionLog(
       continue;
     }
     const std::string log_path = log_dir + "/" + entry->d_name;
+
     struct stat info;
-    if (IO::stat(log_path, &info) != 0) {
+    if (stat(log_path.c_str(), &info) != 0) {
       continue;
     }
 
-    int fd = IO::open(log_path, O_RDONLY);
+    int fd = open(log_path.c_str(), O_RDONLY);
     if (fd < 0) {
       continue;
     }
@@ -252,7 +252,7 @@ void InstallServer::HandleGetAgentExceptionLog(
     if (read(fd, bytes.data(), info.st_size) == info.st_size) {
       response->add_logs()->ParseFromArray(bytes.data(), info.st_size);
     }
-    IO::unlink(log_path);
+    unlink(log_path.c_str());
   }
   closedir(dir);
 }
@@ -285,7 +285,7 @@ bool TryCopyServer(const RunasExecutor& run_as, const std::string& server_path,
 bool InstallServer::DoesOverlayIdMatch(const std::string& overlay_folder,
                                        const std::string& expected_id) const {
   // If the overlay folder is not present, expected id must be empty.
-  if (IO::access(overlay_folder, F_OK) != 0) {
+  if (access(overlay_folder.c_str(), F_OK) != 0) {
     return expected_id.empty();
   }
 

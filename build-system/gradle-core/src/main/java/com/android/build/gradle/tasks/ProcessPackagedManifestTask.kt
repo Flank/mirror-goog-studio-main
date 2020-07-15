@@ -47,6 +47,7 @@ import org.gradle.workers.WorkerExecutor
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
+import java.io.Serializable
 import javax.inject.Inject
 
 @CacheableTask
@@ -90,7 +91,7 @@ abstract class ProcessPackagedManifestTask @Inject constructor(
             }
     }
 
-    interface WorkItemParameters: DecoratedWorkParameters {
+    interface WorkItemParameters: DecoratedWorkParameters, Serializable {
         val inputXmlFile: RegularFileProperty
         val outputXmlFile: RegularFileProperty
     }

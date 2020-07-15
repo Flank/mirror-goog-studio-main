@@ -17,16 +17,16 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.dexing.isProguardRule
 import org.gradle.api.tasks.TaskProvider
 
 class MergeGeneratedProguardFilesCreationAction(
-    creationConfig: VariantCreationConfig
-) : VariantTaskCreationAction<MergeFileTask, VariantCreationConfig>(
-    creationConfig
+    componentProperties: ComponentPropertiesImpl
+) : VariantTaskCreationAction<MergeFileTask, ComponentPropertiesImpl>(
+    componentProperties
 ) {
 
     override val name: String

@@ -17,9 +17,9 @@
 package com.android.build.gradle.internal.transforms
 
 import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
@@ -177,9 +177,9 @@ abstract class LegacyShrinkBundleModuleResourcesTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: VariantCreationConfig) :
-        VariantTaskCreationAction<LegacyShrinkBundleModuleResourcesTask, VariantCreationConfig>(
-            creationConfig
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<LegacyShrinkBundleModuleResourcesTask, ComponentPropertiesImpl>(
+            componentProperties
         ) {
 
         override val name: String = computeTaskName("shrink", "Resources")

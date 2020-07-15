@@ -20,7 +20,7 @@ import org.gradle.api.Named
 import org.gradle.api.provider.Provider
 
 /**
- * Interface for properties common to all test components.
+ * Interface for properties common to all variant generating APKs
  */
 interface TestCreationConfig: BaseCreationConfig, Named {
 

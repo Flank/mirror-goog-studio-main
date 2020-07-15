@@ -18,10 +18,10 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.impl.ArtifactTransformationRequestImpl
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
@@ -147,9 +147,9 @@ abstract class ShrinkResourcesOldShrinkerTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: VariantCreationConfig
-    ) : VariantTaskCreationAction<ShrinkResourcesOldShrinkerTask, VariantCreationConfig>(
-        creationConfig
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<ShrinkResourcesOldShrinkerTask, ComponentPropertiesImpl>(
+        componentProperties
     ) {
         override val type = ShrinkResourcesOldShrinkerTask::class.java
         override val name = computeTaskName("shrink", "Res")

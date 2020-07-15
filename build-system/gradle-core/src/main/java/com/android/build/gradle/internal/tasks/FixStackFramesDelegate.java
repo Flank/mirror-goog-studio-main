@@ -19,10 +19,10 @@ package com.android.build.gradle.internal.tasks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.profile.ProfileAwareWorkAction;
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry;
 import com.android.builder.utils.ZipEntryUtils;
 import com.android.ide.common.resources.FileStatus;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -50,8 +50,7 @@ import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
-import org.gradle.api.provider.Property;
-import org.gradle.workers.WorkerExecutor;
+import javax.inject.Inject;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
@@ -164,12 +163,11 @@ public class FixStackFramesDelegate {
     }
 
     private void processFiles(
-            @NonNull WorkerExecutor workers,
-            @NonNull Map<File, FileStatus> changedInput,
-            @NonNull AndroidVariantTask task)
+            @NonNull WorkerExecutorFacade workers, @NonNull Map<File, FileStatus> changedInput)
             throws IOException {
 
         try (Closer closer = Closer.create()) {
+            closer.register(workers);
             URLClassLoader classLoader = createClassLoader();
             closer.register(classLoader);
 
@@ -182,15 +180,9 @@ public class FixStackFramesDelegate {
                 Files.deleteIfExists(out.toPath());
 
                 if (entry.getValue() == FileStatus.NEW || entry.getValue() == FileStatus.CHANGED) {
-                    workers.noIsolation()
-                            .submit(
-                                    FixStackFramesRunnable.class,
-                                    params -> {
-                                        params.initializeFromAndroidVariantTask(task);
-                                        params.getInput().set(entry.getKey());
-                                        params.getOutput().set(out);
-                                        params.getClassLoaderKey().set(classLoaderKey);
-                                    });
+                    workers.submit(
+                            FixStackFramesRunnable.class,
+                            new Params(entry.getKey(), out, classLoaderKey));
                 }
             }
             // We keep waiting for all the workers to finnish so that all the work is done before
@@ -199,20 +191,17 @@ public class FixStackFramesDelegate {
         }
     }
 
-    public void doFullRun(@NonNull WorkerExecutor workers, @NonNull AndroidVariantTask task)
-            throws IOException {
+    public void doFullRun(@NonNull WorkerExecutorFacade workers) throws IOException {
         FileUtils.cleanOutputDir(outFolder);
 
         Map<File, FileStatus> inputToProcess =
                 classesToFix.stream().collect(Collectors.toMap(f -> f, f -> FileStatus.NEW));
 
-        processFiles(workers, inputToProcess, task);
+        processFiles(workers, inputToProcess);
     }
 
     public void doIncrementalRun(
-            @NonNull WorkerExecutor workers,
-            @NonNull Map<File, FileStatus> changedInput,
-            @NonNull AndroidVariantTask task)
+            @NonNull WorkerExecutorFacade workers, @NonNull Map<File, FileStatus> changedInput)
             throws IOException {
         // We should only process (unzip and fix stack) existing jar input from classesToFix
         // If changedInput contains a folder or deleted jar we will still try to delete
@@ -221,14 +210,16 @@ public class FixStackFramesDelegate {
                 classesToFix.stream().filter(File::isFile).collect(Collectors.toSet());
 
         Map<File, FileStatus> inputToProcess =
-                changedInput.entrySet().stream()
+                changedInput
+                        .entrySet()
+                        .stream()
                         .filter(
                                 e ->
                                         e.getValue() == FileStatus.REMOVED
                                                 || jarsToProcess.contains(e.getKey()))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        processFiles(workers, inputToProcess, task);
+        processFiles(workers, inputToProcess);
     }
 
     private static class BaseKey implements Serializable {
@@ -266,27 +257,35 @@ public class FixStackFramesDelegate {
     }
 
     // TODO: convert to Kotlin data class
-    public abstract static class Params extends ProfileAwareWorkAction.Parameters {
-        abstract Property<File> getInput();
+    private static class Params implements Serializable {
+        @NonNull private final File input;
+        @NonNull private final File output;
+        @NonNull private final ClassLoaderKey classLoaderKey;
 
-        abstract Property<File> getOutput();
-
-        abstract Property<ClassLoaderKey> getClassLoaderKey();
+        private Params(
+                @NonNull File input, @NonNull File output, @NonNull ClassLoaderKey classLoaderKey) {
+            this.input = input;
+            this.output = output;
+            this.classLoaderKey = classLoaderKey;
+        }
     }
 
-    public abstract static class FixStackFramesRunnable extends ProfileAwareWorkAction<Params> {
+    private static class FixStackFramesRunnable implements Runnable {
+        @NonNull private final Params params;
+
+        @Inject
+        public FixStackFramesRunnable(@NonNull Params params) {
+            this.params = params;
+        }
 
         @Override
         public void run() {
             try {
                 URLClassLoader classLoader =
                         FixStackFramesDelegate.sharedState
-                                .getService(getParameters().getClassLoaderKey().get())
+                                .getService(params.classLoaderKey)
                                 .getService();
-                createFile(
-                        getParameters().getInput().get(),
-                        getParameters().getOutput().get(),
-                        classLoader);
+                createFile(params.input, params.output, classLoader);
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }

@@ -16,11 +16,11 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.component.impl.UnitTestPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
-import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.dsl.TestOptions
-import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
@@ -35,7 +35,6 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -77,28 +76,31 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
     val outputDirectory: DirectoryProperty = objectFactory.directoryProperty()
 
     override fun doTaskAction() {
-        workerExecutor.noIsolation().submit(GenerateTestConfigRunnable::class.java) {
-            it.initializeFromAndroidVariantTask(this)
-            it.testConfigProperties.set(testConfigInputs.computeProperties(projectDir.get().asFile))
-            it.outputDirectory.set(outputDirectory)
+        getWorkerFacadeWithWorkers().use {
+            it.submit(
+                GenerateTestConfigRunnable::class.java,
+                GenerateTestConfigParams(testConfigInputs.computeProperties(projectDir.get().asFile),
+                    outputDirectory.get().asFile)
+            )
         }
     }
 
-    abstract class GenerateTestConfigRunnable : ProfileAwareWorkAction<GenerateTestConfigParams>() {
+    private class GenerateTestConfigRunnable
+    @Inject internal constructor(private val params: GenerateTestConfigParams) : Runnable {
+
         override fun run() {
-            generateTestConfigFile(parameters.testConfigProperties.get(),
-                parameters.outputDirectory.get().asFile.toPath())
+            generateTestConfigFile(params.testConfigProperties, params.outputDirectory.toPath())
         }
     }
 
-    abstract class GenerateTestConfigParams : ProfileAwareWorkAction.Parameters() {
-        abstract val testConfigProperties: Property<TestConfigProperties>
-        abstract val outputDirectory: DirectoryProperty
-    }
+    private class GenerateTestConfigParams internal constructor(
+        val testConfigProperties: TestConfigProperties,
+        val outputDirectory: File
+    ) : Serializable
 
-    class CreationAction(private val unitTestCreationConfig: UnitTestCreationConfig) :
-        VariantTaskCreationAction<GenerateTestConfig, UnitTestCreationConfig>(
-            unitTestCreationConfig
+    class CreationAction(private val unitTestProperties: UnitTestPropertiesImpl) :
+        VariantTaskCreationAction<GenerateTestConfig, ComponentPropertiesImpl>(
+            unitTestProperties
         ) {
 
         override val name: String
@@ -122,13 +124,13 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
             task: GenerateTestConfig
         ) {
             super.configure(task)
-            task.testConfigInputs = TestConfigInputs(unitTestCreationConfig)
+            task.testConfigInputs = TestConfigInputs(unitTestProperties)
             task.projectDir.set(task.project.projectDir)
             task.projectDir.disallowChanges()
         }
     }
 
-    class TestConfigInputs(creationConfig: UnitTestCreationConfig) {
+    class TestConfigInputs(unitTestProperties: UnitTestPropertiesImpl) {
         @get:Input
         val isUseRelativePathEnabled: Boolean
 
@@ -155,20 +157,20 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
         val packageNameOfFinalRClass: Provider<String>
 
         init {
-            val testedVariant = creationConfig.testedConfig
+            val testedVariant = unitTestProperties.testedVariant
 
-            isUseRelativePathEnabled = creationConfig.services.projectOptions.get(
+            isUseRelativePathEnabled = unitTestProperties.services.projectOptions.get(
                 BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG
             )
-            resourceApk = creationConfig.artifacts.get(APK_FOR_LOCAL_TEST)
+            resourceApk = unitTestProperties.artifacts.get(APK_FOR_LOCAL_TEST)
             mergedAssets = testedVariant.artifacts.get(MERGED_ASSETS)
             mergedManifest = testedVariant.artifacts.get(PACKAGED_MANIFESTS)
             mainVariantOutput = testedVariant.outputs.getMainSplit()
             packageNameOfFinalRClass = testedVariant.packageName
             buildDirectoryPath = FileUtils.toSystemIndependentPath(
                 FileUtils.relativePossiblyNonExistingPath(
-                    creationConfig.globalScope.project.buildDir,
-                    creationConfig.globalScope.project.projectDir)
+                    unitTestProperties.globalScope.project.buildDir,
+                    unitTestProperties.globalScope.project.projectDir)
             )
         }
 

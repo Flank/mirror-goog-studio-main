@@ -16,7 +16,7 @@
 package com.android.build.gradle.internal.tasks.mlkit
 
 import com.android.SdkConstants.DOT_TFLITE
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ML_MODELS
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -78,9 +78,9 @@ abstract class GenerateMlModelClass : NonIncrementalTask() {
             })
     }
 
-    class CreationAction(creationConfig: VariantCreationConfig) :
-        VariantTaskCreationAction<GenerateMlModelClass, VariantCreationConfig>(
-            creationConfig
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<GenerateMlModelClass, ComponentPropertiesImpl>(
+            componentProperties
         ) {
 
         override val name: String = computeTaskName("generate", "MlModelClass")

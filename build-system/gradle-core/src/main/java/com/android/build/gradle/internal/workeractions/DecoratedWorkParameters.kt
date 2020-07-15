@@ -24,7 +24,7 @@ import java.io.Serializable
  * Decorated [WorkParameters] that will remember the project name, task name and worker key to be
  * able to sent sensible events to the profiler MBean objects.
  */
-interface DecoratedWorkParameters : WorkParameters {
+interface DecoratedWorkParameters : WorkParameters, Serializable {
     val projectName: Property<String>
     val taskName: Property<String>
     val workerKey: Property<String>

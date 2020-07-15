@@ -16,9 +16,9 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.ApplicationVariantProperties
-import com.android.build.api.variant.DependenciesInfo
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -35,7 +35,7 @@ import org.gradle.api.provider.Property
 import javax.inject.Inject
 
 open class ApplicationVariantPropertiesImpl @Inject constructor(
-    override val variant: ApplicationVariantImpl,
+    componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
@@ -44,13 +44,13 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
-    variantDependencyInfo: DependenciesInfo,
+    variantDependencyInfo: com.android.build.api.variant.DependenciesInfo,
     transformManager: TransformManager,
     internalServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : VariantPropertiesImpl(
-    variant,
+    componentIdentity,
     buildFeatureValues,
     variantDslInfo,
     variantDependencies,
@@ -78,7 +78,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     override val embedsMicroApp: Boolean
         get() = variantDslInfo.isEmbedMicroApp
 
-    override val dependenciesInfo: DependenciesInfo = variantDependencyInfo
+    override val dependenciesInfo: com.android.build.api.variant.DependenciesInfo = variantDependencyInfo
 
     override val aaptOptions: AaptOptions by lazy {
         initializeAaptOptionsFromDsl(
@@ -99,7 +99,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     override val testOnlyApk: Boolean
-        get() = variantScope.isTestOnly(this)
+        get() = variantScope.isTestOnly
 
     override val needAssetPackTasks: Property<Boolean> =
         internalServices.propertyOf(Boolean::class.java, false)

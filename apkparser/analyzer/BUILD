@@ -122,11 +122,6 @@ coverage_java_test(
 iml_module(
     name = "unb.studio.android.sdktools.analyzer",
     srcs = ["src/main/java"],
-    bundled_deps = [
-        "//prebuilts/tools/common/archive-patcher:unb.explainer",
-        "//prebuilts/tools/common/archive-patcher:unb.generator",
-        "//prebuilts/tools/common/archive-patcher:unb.shared",
-    ],
     iml_files = ["android.sdktools.analyzer.iml"],
     lint_baseline = "lint_baseline.xml",
     tags = [

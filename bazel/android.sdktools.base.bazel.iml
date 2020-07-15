@@ -144,6 +144,5 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module" module-name="android.sdktools.zipflinger" scope="TEST" />
   </component>
 </module>

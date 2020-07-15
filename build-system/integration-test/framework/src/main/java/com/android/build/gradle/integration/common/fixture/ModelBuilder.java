@@ -64,7 +64,6 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
 
     ModelBuilder(@NonNull GradleTestProject project, @NonNull ProjectConnection projectConnection) {
         super(
-                project,
                 projectConnection,
                 project::setLastBuildResult,
                 project.getTestDir().toPath(),
@@ -81,7 +80,6 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
             @Nullable Path buildDotGradleFile,
             @NonNull GradleTestProjectBuilder.MemoryRequirement heapSize) {
         super(
-                null,
                 projectConnection,
                 lastBuildResultConsumer,
                 projectDirectory,

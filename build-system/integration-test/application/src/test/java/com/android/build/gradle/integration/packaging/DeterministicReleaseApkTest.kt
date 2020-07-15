@@ -25,7 +25,6 @@ import com.android.builder.internal.packaging.ApkCreatorType
 import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
 import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
 import com.google.common.truth.Truth.assertThat
-import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -33,7 +32,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 @RunWith(FilterableParameterized::class)
-class DeterministicApkTest(private val apkCreatorType: ApkCreatorType) {
+class DeterministicReleaseApkTest(apkCreatorType: ApkCreatorType) {
 
     companion object {
         @Parameterized.Parameters(name = "apkCreatorType_{0}")
@@ -54,7 +53,7 @@ class DeterministicApkTest(private val apkCreatorType: ApkCreatorType) {
             .create()
 
     @Test
-    fun cleanReleaseBuildDeterministicTest() {
+    fun cleanBuildDeterministicTest() {
         // First we build the release APK as-is
         project.execute(":assembleRelease")
         val apk1 = project.getApk(GradleTestProject.ApkType.RELEASE)
@@ -64,25 +63,6 @@ class DeterministicApkTest(private val apkCreatorType: ApkCreatorType) {
         // Then clean, build again, and assert that APK is the same as the original
         project.execute("clean", ":assembleRelease")
         val apk2 = project.getApk(GradleTestProject.ApkType.RELEASE)
-        assertThat(apk2).exists()
-        val byteArray2 = apk2.file.toFile().readBytes()
-        assertThat(byteArray2).isEqualTo(byteArray1)
-    }
-
-    @Test
-    fun cleanDebugBuildDeterministicTest() {
-        // Deterministic builds for debug APKs supported only with zipflinger
-        Assume.assumeTrue(apkCreatorType == APK_FLINGER)
-
-        // First we build the debug APK as-is
-        project.execute(":assembleDebug")
-        val apk1 = project.getApk(GradleTestProject.ApkType.DEBUG)
-        assertThat(apk1).exists()
-        val byteArray1 = apk1.file.toFile().readBytes()
-
-        // Then clean, build again, and assert that APK is the same as the original
-        project.execute("clean", ":assembleDebug")
-        val apk2 = project.getApk(GradleTestProject.ApkType.DEBUG)
         assertThat(apk2).exists()
         val byteArray2 = apk2.file.toFile().readBytes()
         assertThat(byteArray2).isEqualTo(byteArray1)

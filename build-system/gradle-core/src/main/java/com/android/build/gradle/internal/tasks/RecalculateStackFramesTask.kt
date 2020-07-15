@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -52,18 +52,18 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
     override val incremental: Boolean = true
 
     override fun doFullTaskAction() {
-        createDelegate().doFullRun(workerExecutor, this)
+        createDelegate().doFullRun(getWorkerFacadeWithWorkers())
     }
 
     override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
-        createDelegate().doIncrementalRun(workerExecutor, changedInputs, this)
+        createDelegate().doIncrementalRun(getWorkerFacadeWithWorkers(), changedInputs)
     }
 
     class CreationAction(
-        creationConfig: VariantCreationConfig,
+        componentProperties: ComponentPropertiesImpl,
         private val isTestCoverageEnabled: Boolean) :
-        VariantTaskCreationAction<RecalculateStackFramesTask, VariantCreationConfig>(
-            creationConfig
+        VariantTaskCreationAction<RecalculateStackFramesTask, ComponentPropertiesImpl>(
+            componentProperties
         ) {
 
         override val name = computeTaskName("fixStackFrames")

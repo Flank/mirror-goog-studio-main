@@ -49,16 +49,12 @@ import java.util.zip.Deflater
  *
  * @param deterministicEntryOrder whether or not the order of the entries in the created APK will be
  * deterministic, regardless of any multi-threading in the implementation and/or regardless of the
- * order of calls to [writeZip], [writeFile], and [deleteFile]. Importantly, deterministicEntryOrder
- * does not guarantee that the resulting APK will be deterministic for a given set of source files;
- * that is true for clean builds, but not incremental builds. Instead, if deterministicEntryOrder is
- * true, the resulting APK will be deterministic given the same initial APK and the same calls to
- * [writeZip], [writeFile], and [deleteFile].
+ * order of calls to [writeZip], [writeFile], and [deleteFile].
  */
 class ApkFlinger(
     creationData: ApkCreatorFactory.CreationData,
     private val compressionLevel: Int,
-    deterministicEntryOrder: Boolean = true,
+    deterministicEntryOrder: Boolean = false,
     enableV3Signing: Boolean = false,
     enableV4Signing: Boolean = false
 ) : ApkCreator {

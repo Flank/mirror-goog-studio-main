@@ -25,11 +25,11 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.TestComponentProperties;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
-import com.android.build.gradle.internal.component.BaseCreationConfig;
-import com.android.build.gradle.internal.component.UnitTestCreationConfig;
 import com.android.build.gradle.internal.scope.BootClasspathBuilder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -81,13 +81,13 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<AndroidUnitTest, BaseCreationConfig> {
+            extends VariantTaskCreationAction<AndroidUnitTest, ComponentPropertiesImpl> {
 
-        @NonNull private final UnitTestCreationConfig unitTestCreationConfig;
+        @NonNull private final UnitTestPropertiesImpl unitTestProperties;
 
-        public CreationAction(@NonNull UnitTestCreationConfig unitTestCreationConfig) {
-            super(unitTestCreationConfig);
-            this.unitTestCreationConfig = unitTestCreationConfig;
+        public CreationAction(@NonNull UnitTestPropertiesImpl unitTestProperties) {
+            super(unitTestProperties);
+            this.unitTestProperties = unitTestProperties;
         }
 
         @NonNull
@@ -138,8 +138,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                 // class for details).
                 // Since this task also depends on the indirect inputs to the GenerateTestConfig
                 // task, we also need to register those inputs with Gradle.
-                task.testConfigInputs =
-                        new GenerateTestConfig.TestConfigInputs(unitTestCreationConfig);
+                task.testConfigInputs = new GenerateTestConfig.TestConfigInputs(unitTestProperties);
             }
 
             // Put the variant name in the report path, so that different testing tasks don't
@@ -171,11 +170,11 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
 
         @NonNull
         private ConfigurableFileCollection computeClasspath(
-                BaseCreationConfig creationConfig, boolean includeAndroidResources) {
-            GlobalScope globalScope = creationConfig.getGlobalScope();
-            ArtifactsImpl artifacts = creationConfig.getArtifacts();
+                ComponentPropertiesImpl component, boolean includeAndroidResources) {
+            GlobalScope globalScope = component.getGlobalScope();
+            ArtifactsImpl artifacts = component.getArtifacts();
 
-            ConfigurableFileCollection collection = creationConfig.getServices().fileCollection();
+            ConfigurableFileCollection collection = component.getServices().fileCollection();
 
             // the test classpath is made up of:
             // 1. the config file
@@ -184,35 +183,34 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                         artifacts.get(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY.INSTANCE));
             }
 
-            // 2. the test creationConfig classes and java_res
-            collection.from(creationConfig.getArtifacts().getAllClasses());
+            // 2. the test component classes and java_res
+            collection.from(component.getArtifacts().getAllClasses());
             // TODO is this the right thing? this doesn't include the res merging via transform
             // AFAIK
             collection.from(artifacts.get(InternalArtifactType.JAVA_RES.INSTANCE));
 
             // 3. the runtime dependencies for both CLASSES and JAVA_RES type
             collection.from(
-                    creationConfig
+                    component
                             .getVariantDependencies()
                             .getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, CLASSES_JAR));
             collection.from(
-                    creationConfig
+                    component
                             .getVariantDependencies()
                             .getArtifactFileCollection(
                                     RUNTIME_CLASSPATH, ALL, ArtifactType.JAVA_RES));
 
             // 4. The separately compile R class, if applicable.
             if (!globalScope.getExtension().getAaptOptions().getNamespaced()) {
-                collection.from(creationConfig.getVariantScope().getRJarForUnitTests());
+                collection.from(component.getVariantScope().getRJarForUnitTests());
             }
 
             // 5. Any additional or requested optional libraries
-            collection.from(
-                    getAdditionalAndRequestedOptionalLibraries(creationConfig.getGlobalScope()));
+            collection.from(getAdditionalAndRequestedOptionalLibraries(component.getGlobalScope()));
 
             // 6. Mockable JAR is last, to make sure you can shadow the classes with
             // dependencies.
-            collection.from(creationConfig.getGlobalScope().getMockableJarArtifact());
+            collection.from(component.getGlobalScope().getMockableJarArtifact());
 
             return collection;
         }

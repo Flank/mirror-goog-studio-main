@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.dependency
 import com.android.SdkConstants
 import com.android.SdkConstants.FD_RES
 import com.android.SdkConstants.FD_RES_VALUES
-import com.android.build.gradle.internal.res.runAapt2Compile
+import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getErrorFormatMode
 import com.android.build.gradle.internal.services.registerAaptService
@@ -29,6 +29,7 @@ import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
+import org.gradle.api.artifacts.transform.TransformParameters
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
@@ -71,8 +72,14 @@ abstract class AarResourcesCompilerTransform :
         }
 
         val aapt2ServiceKey = parameters.aapt2.registerAaptService()
-        // TODO(b/152323103) errorFormatMode should be implicit
-        runAapt2Compile(aapt2ServiceKey, requestList, parameters.aapt2.getErrorFormatMode(), false)
+
+        Aapt2CompileRunnable(
+            Aapt2CompileRunnable.Params(
+                aapt2ServiceKey,
+                requestList,
+                parameters.aapt2.getErrorFormatMode() // TODO(b/152323103) this should be implicit
+            )
+        ).run()
     }
 
     private fun getPackage(manifest: Path): String =
@@ -80,7 +87,7 @@ abstract class AarResourcesCompilerTransform :
             AndroidManifestParser.parse(it).`package`
         }
 
-    interface Parameters : GenericTransformParameters {
+    interface Parameters : TransformParameters {
         @get:Nested
         val aapt2: Aapt2Input
     }

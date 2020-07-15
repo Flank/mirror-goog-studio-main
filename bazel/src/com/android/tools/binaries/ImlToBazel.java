@@ -17,9 +17,9 @@
 package com.android.tools.binaries;
 
 import com.android.tools.bazel.BazelToolsLogger;
-import com.android.tools.bazel.Configuration;
 import com.android.tools.bazel.ImlToIr;
 import com.android.tools.bazel.IrToBazel;
+import com.android.tools.bazel.StudioConfiguration;
 import com.android.tools.bazel.ir.IrProject;
 import com.android.tools.utils.WorkspaceUtils;
 import java.io.IOException;
@@ -31,9 +31,11 @@ import java.util.Iterator;
 public class ImlToBazel {
     public static void main(String[] strings) throws Exception {
 
-        Configuration config = new Configuration();
         Path workspace = null;
+        boolean dryRun = false;
+        boolean warningsAsErrors = false;
         String project = "tools/idea";
+        String imlGraph = null;
 
         Iterator<String> args = Arrays.asList(strings).iterator();
         while (args.hasNext()) {
@@ -43,13 +45,11 @@ public class ImlToBazel {
             } else if (arg.equals("--project_path") && args.hasNext()) {
                 project = args.next();
             } else if (arg.equals("--iml_graph") && args.hasNext()) {
-                config.imlGraph = args.next();
+                imlGraph = args.next();
             } else if (arg.equals("--dry_run")){
-                config.dryRun = true;
+                dryRun = true;
             } else if (arg.equals("--warnings_as_errors")) {
-                config.warningsAsErrors = true;
-            } else if (arg.equals("--strict")) {
-                config.strict = true;
+                warningsAsErrors = true;
             } else {
                 System.err.println("Unknown argument: " + arg);
                 System.exit(1);
@@ -62,7 +62,7 @@ public class ImlToBazel {
         long now = System.nanoTime();
         int filesUpdated = 0;
         try {
-            filesUpdated = run(config, workspace, project);
+            filesUpdated = run(workspace, project, imlGraph, dryRun, warningsAsErrors);
         } catch (ProjectLoadingException e) {
             System.err.println(e.issues + " issues encountered.");
             System.exit(e.issues);
@@ -73,28 +73,39 @@ public class ImlToBazel {
         long milli = (System.nanoTime() - now) / 1000000L;
         System.err.println(String.format("Total time: %d.%03ds", milli / 1000, milli % 1000));
 
-        // JPS creates a shared thread executor that creates non-daemon threads. There is no way to
-        // access that to shut it down, so we exit
-        System.exit(config.dryRun ? filesUpdated : 0);
-    }
-
-    public static int run(Configuration config, Path workspace, String project) throws IOException {
-        return run(config, workspace, project, new BazelToolsLogger());
+        // JPS creates a shared thread executor that creates non-daemon threads. There is no way to access that to shut it down, so we exit
+        System.exit(dryRun ? filesUpdated : 0);
     }
 
     public static int run(
-            Configuration config, Path workspace, String project, BazelToolsLogger logger)
+            Path workspace,
+            String project,
+            String imlGraph,
+            boolean dryRun,
+            boolean warningsAsErrors)
             throws IOException {
+        return run(workspace, project, imlGraph, dryRun, warningsAsErrors, new BazelToolsLogger());
+    }
+
+    public static int run(
+            Path workspace,
+            String project,
+            String imlGraph,
+            boolean dryRun,
+            boolean warningsAsErrors,
+            BazelToolsLogger logger)
+            throws IOException {
+        StudioConfiguration configuration = new StudioConfiguration();
 
         ImlToIr imlToIr = new ImlToIr();
-        IrProject irProject = imlToIr.convert(config, workspace, project, logger);
+        IrProject irProject = imlToIr.convert(workspace, project, imlGraph, logger);
 
-        check(logger, config.warningsAsErrors);
+        check(logger, warningsAsErrors);
 
-        IrToBazel irToBazel = new IrToBazel(logger, config);
-        int packagesUpdated = irToBazel.convert(irProject);
+        IrToBazel irToBazel = new IrToBazel(logger, dryRun);
+        int packagesUpdated = irToBazel.convert(irProject, configuration);
 
-        check(logger, config.warningsAsErrors);
+        check(logger, warningsAsErrors);
 
         return packagesUpdated;
     }

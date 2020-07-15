@@ -20,7 +20,6 @@ import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariant
 import com.android.build.api.component.analytics.AnalyticsEnabledVariant
 import com.android.build.api.variant.LibraryVariant
-import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices
@@ -31,23 +30,20 @@ open class LibraryVariantImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity,
     variantApiServices: VariantApiServices
-) : VariantImpl<LibraryVariantProperties>(
+) : VariantImpl<LibraryVariantPropertiesImpl>(
     variantDslInfo,
     variantConfiguration,
     variantApiServices
-), LibraryVariant<LibraryVariantProperties> {
+), LibraryVariant<LibraryVariantPropertiesImpl> {
 
     override fun createUserVisibleVariantObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledVariant<in LibraryVariantProperties> =
+    ): AnalyticsEnabledVariant<in LibraryVariantPropertiesImpl> =
         projectServices.objectFactory.newInstance(
             AnalyticsEnabledLibraryVariant::class.java,
             this,
             stats
-        ) as AnalyticsEnabledVariant<in LibraryVariantProperties>
+        ) as AnalyticsEnabledVariant<in LibraryVariantPropertiesImpl>
 
-    override fun executePropertiesActions(target: LibraryVariantProperties) {
-        propertiesActions.executeActions(target)
-    }
 }

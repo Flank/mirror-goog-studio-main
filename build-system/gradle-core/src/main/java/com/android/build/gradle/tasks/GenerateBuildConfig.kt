@@ -185,8 +185,8 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
     // ----- Config Action -----
 
-    internal class CreationAction(creationConfig: VariantCreationConfig) :
-        VariantTaskCreationAction<GenerateBuildConfig, VariantCreationConfig>(
+    internal class CreationAction(creationConfig: BaseCreationConfig) :
+        VariantTaskCreationAction<GenerateBuildConfig, BaseCreationConfig>(
             creationConfig
         ) {
 

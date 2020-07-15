@@ -74,7 +74,7 @@ bool BaseInstallCommand::SendApkToPackageManager(
   workspace_.GetExecutor().ForkAndExec("cmd", parameters, &pm_stdin, nullptr,
                                        nullptr, &pid);
 
-  PatchApplier patchApplier;
+  PatchApplier patchApplier(workspace_.GetRoot());
   bool patch_result = patchApplier.ApplyPatchToFD(patch, pm_stdin);
 
   // Clean up

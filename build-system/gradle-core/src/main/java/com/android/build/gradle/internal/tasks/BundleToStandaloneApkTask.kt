@@ -17,8 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getAapt2Executable
@@ -30,7 +29,6 @@ import com.android.tools.build.bundletool.model.Aapt2Command
 import com.android.utils.FileUtils
 import com.google.common.util.concurrent.MoreExecutors
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
@@ -41,11 +39,13 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.IOException
+import java.io.Serializable
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.util.concurrent.ForkJoinPool
 import java.util.zip.ZipInputStream
+import javax.inject.Inject
 
 /**
  * Task that generates the standalone from a bundle.
@@ -64,7 +64,7 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
 
     @get:OutputDirectory
     val outputDirectory: File
-        get() = outputFile.get().asFile.parentFile!!
+       get() = outputFile.get().asFile.parentFile!!
 
     @get:Input
     val fileName: String
@@ -77,39 +77,42 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
         private set
 
     override fun doTaskAction() {
-        workerExecutor.noIsolation().submit(BundleToolRunnable::class.java) {
-            it.initializeFromAndroidVariantTask(this)
-            it.bundleFile.set(bundle)
-            it.aapt2File.set(aapt2.getAapt2Executable().toFile())
-            it.outputFile.set(outputFile)
-            it.temporaryDir.set(tempDirectory)
-            signingConfig.resolve()?.let { config ->
-                it.keystoreFile.set(config.storeFile)
-                it.keystorePassword.set(config.storePassword)
-                it.keyAlias.set(config.keyAlias)
-                it.keyPassword.set(config.keyPassword)
-            }
+        val config = signingConfig.resolve()
+        getWorkerFacadeWithWorkers().use {
+            it.submit(
+                BundleToolRunnable::class.java,
+                Params(
+                    bundle.get().asFile,
+                    aapt2.getAapt2Executable().toFile(),
+                    outputFile.get().asFile,
+                    tempDirectory,
+                    config?.storeFile,
+                    config?.storePassword,
+                    config?.keyAlias,
+                    config?.keyPassword
+                )
+            )
         }
     }
 
-    abstract class Params : ProfileAwareWorkAction.Parameters() {
-        abstract val bundleFile: RegularFileProperty
-        abstract val aapt2File: Property<File>
-        abstract val outputFile: RegularFileProperty
-        abstract val temporaryDir: Property<File>
-        abstract val keystoreFile: Property<File>
-        abstract val keystorePassword: Property<String>
-        abstract val keyAlias: Property<String>
-        abstract val keyPassword: Property<String>
-    }
+    private data class Params(
+        val bundleFile: File,
+        val aapt2File: File,
+        val outputFile: File,
+        val temporaryDir: File,
+        val keystoreFile: File?,
+        val keystorePassword: String?,
+        val keyAlias: String?,
+        val keyPassword: String?
+    ) : Serializable
 
-    abstract class BundleToolRunnable : ProfileAwareWorkAction<Params>() {
+    private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
         override fun run() {
-            FileUtils.cleanOutputDir(parameters.outputFile.asFile.get().parentFile)
-            FileUtils.cleanOutputDir(parameters.temporaryDir.get())
+            FileUtils.cleanOutputDir(params.outputFile.parentFile)
+            FileUtils.cleanOutputDir(params.temporaryDir)
 
             val outputApksBundle =
-                parameters.temporaryDir.get().toPath().resolve("universal_bundle.apks")
+                params.temporaryDir.toPath().resolve("universal_bundle.apks")
 
             generateUniversalApkBundle(outputApksBundle)
             extractUniversalApk(outputApksBundle)
@@ -118,19 +121,17 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
         private fun generateUniversalApkBundle(outputApksBundle: Path) {
             val command = BuildApksCommand
                 .builder()
-                .setExecutorService(MoreExecutors.listeningDecorator(ForkJoinPool.commonPool()))
-                .setBundlePath(parameters.bundleFile.asFile.get().toPath())
+                .setExecutorService(
+                    MoreExecutors.listeningDecorator(
+                        ForkJoinPool.commonPool()))
+                .setBundlePath(params.bundleFile.toPath())
                 .setOutputFile(outputApksBundle)
-                .setAapt2Command(
-                    Aapt2Command.createFromExecutablePath(
-                        parameters.aapt2File.get().toPath()
-                    )
-                )
+                .setAapt2Command(Aapt2Command.createFromExecutablePath(params.aapt2File.toPath()))
                 .setSigningConfiguration(
-                    keystoreFile = parameters.keystoreFile.orNull,
-                    keystorePassword = parameters.keystorePassword.orNull,
-                    keyAlias = parameters.keyAlias.orNull,
-                    keyPassword = parameters.keyPassword.orNull
+                    keystoreFile = params.keystoreFile,
+                    keystorePassword = params.keystorePassword,
+                    keyAlias = params.keyAlias,
+                    keyPassword = params.keyPassword
                 )
 
             command.setApkBuildMode(ApkBuildMode.UNIVERSAL)
@@ -139,9 +140,7 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
         }
 
         private fun extractUniversalApk(outputApksBundle: Path) {
-            ZipInputStream(
-                Files.newInputStream(outputApksBundle).buffered()
-            ).use { zipInputStream ->
+            ZipInputStream(Files.newInputStream(outputApksBundle).buffered()).use { zipInputStream ->
                 var found = false
                 while (true) {
                     val entry = zipInputStream.nextEntry ?: break
@@ -151,7 +150,7 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
                         }
                         Files.copy(
                             zipInputStream,
-                            parameters.outputFile.asFile.get().toPath(),
+                            params.outputFile.toPath(),
                             StandardCopyOption.REPLACE_EXISTING
                         )
                         found = true
@@ -164,9 +163,9 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: VariantCreationConfig) :
-        VariantTaskCreationAction<BundleToStandaloneApkTask, VariantCreationConfig>(
-            creationConfig
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<BundleToStandaloneApkTask, ComponentPropertiesImpl>(
+            componentProperties
         ) {
 
         override val name: String
@@ -179,13 +178,11 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
             // Mirrors logic in OutputFactory.getOutputFileName, but without splits.
-            val suffix =
-                if (creationConfig.variantDslInfo.isSigningReady) SdkConstants.DOT_ANDROID_PACKAGE else "-unsigned.apk"
+            val suffix = if (creationConfig.variantDslInfo.isSigningReady) SdkConstants.DOT_ANDROID_PACKAGE else "-unsigned.apk"
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 BundleToStandaloneApkTask::outputFile
-            )
-                .withName("${creationConfig.globalScope.projectBaseName}-${creationConfig.baseName}-universal$suffix")
+            ).withName("${creationConfig.globalScope.projectBaseName}-${creationConfig.baseName}-universal$suffix")
                 .on(InternalArtifactType.UNIVERSAL_APK)
         }
 
@@ -195,8 +192,7 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
             super.configure(task)
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.INTERMEDIARY_BUNDLE, task.bundle
-            )
+                InternalArtifactType.INTERMEDIARY_BUNDLE, task.bundle)
             creationConfig.services.initializeAapt2Input(task.aapt2)
             task.tempDirectory = creationConfig.paths.getIncrementalDir(name)
             task.signingConfig = SigningConfigProvider.create(creationConfig)

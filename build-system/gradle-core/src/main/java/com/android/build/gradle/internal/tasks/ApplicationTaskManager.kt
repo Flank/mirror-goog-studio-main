@@ -16,13 +16,11 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.TestComponentProperties
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.internal.AbstractAppTaskManager
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -50,7 +48,7 @@ import java.util.stream.Collectors
 
 class ApplicationTaskManager(
     variants: List<ComponentInfo<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>>,
-    testComponents: List<ComponentInfo<TestComponentImpl<out TestComponentProperties>, TestComponentPropertiesImpl>>,
+    testComponents: List<ComponentInfo<TestComponentImpl<out TestComponentPropertiesImpl>, TestComponentPropertiesImpl>>,
     hasFlavors: Boolean,
     globalScope: GlobalScope,
     extension: BaseExtension,

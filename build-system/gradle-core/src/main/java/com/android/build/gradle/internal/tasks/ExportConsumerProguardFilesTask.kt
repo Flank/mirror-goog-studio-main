@@ -17,9 +17,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.ProguardFiles
-import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -38,7 +37,9 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
+import java.io.Serializable
 import java.util.function.Consumer
+import javax.inject.Inject
 
 @CacheableTask
 abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
@@ -46,7 +47,6 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
     @get:Input
     var isBaseModule: Boolean = false
         private set
-
     @get:Input
     var isDynamicFeature: Boolean = false
         private set
@@ -75,16 +75,20 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
                 Consumer { exception -> throw EvalIssueException(exception) }
             )
         }
-        workerExecutor.noIsolation().submit(ExportConsumerProguardRunnable::class.java) {
-            it.initializeFromAndroidVariantTask(this)
-            it.input.from(inputFiles)
-            it.outputDir.set(outputDir)
+        getWorkerFacadeWithWorkers().use {
+            it.submit(
+                ExportConsumerProguardRunnable::class.java,
+                ExportConsumerProguardRunnable.Params(
+                    inputFiles.files,
+                    outputDir.get().asFile
+                )
+            )
         }
     }
 
-    class CreationAction(creationConfig: VariantCreationConfig) :
-        VariantTaskCreationAction<ExportConsumerProguardFilesTask, VariantCreationConfig>(
-            creationConfig
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<ExportConsumerProguardFilesTask, ComponentPropertiesImpl>(
+            componentProperties
         ) {
 
         override val name: String
@@ -142,10 +146,8 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
         ) {
             val defaultFiles = immutableMapBuilder<File, String> {
                 for (knownFileName in ProguardFiles.KNOWN_FILE_NAMES) {
-                    this.put(
-                        ProguardFiles.getDefaultProguardFile(knownFileName, buildDirectory),
-                        knownFileName
-                    )
+                    this.put(ProguardFiles.getDefaultProguardFile(knownFileName, buildDirectory),
+                        knownFileName)
                 }
             }
 
@@ -170,12 +172,11 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
     }
 }
 
-abstract class ExportConsumerProguardRunnable :
-    ProfileAwareWorkAction<ExportConsumerProguardRunnable.Params>() {
+private class ExportConsumerProguardRunnable @Inject constructor(private val params: Params) : Runnable {
     override fun run() {
-        FileUtils.deleteRecursivelyIfExists(parameters.outputDir.asFile.get())
+        FileUtils.deleteRecursivelyIfExists(params.outputDir)
         var counter = 0
-        parameters.input.forEach { input ->
+        params.input.forEach { input ->
             if (input.isFile) {
                 val libSubDir = getLibSubDir(counter++)
                 input.copyTo(File(libSubDir, SdkConstants.FN_PROGUARD_TXT))
@@ -188,11 +189,10 @@ abstract class ExportConsumerProguardRunnable :
         }
     }
 
-    private fun getLibSubDir(count: Int) =
-        File(parameters.outputDir.asFile.get(), "lib$count").also { it.mkdirs() }
+    private fun getLibSubDir(count: Int) = File(params.outputDir, "lib$count").also { it.mkdirs() }
 
-    abstract class Params : ProfileAwareWorkAction.Parameters() {
-        abstract val input: ConfigurableFileCollection
-        abstract val outputDir: DirectoryProperty
-    }
+    data class Params(
+        val input: Set<File>,
+        val outputDir: File
+    ) : Serializable
 }

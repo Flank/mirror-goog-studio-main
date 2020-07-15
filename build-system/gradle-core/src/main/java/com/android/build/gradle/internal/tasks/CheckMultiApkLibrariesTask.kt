@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
@@ -94,9 +94,9 @@ abstract class CheckMultiApkLibrariesTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: BaseCreationConfig) :
-        VariantTaskCreationAction<CheckMultiApkLibrariesTask, BaseCreationConfig>(
-            creationConfig,
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<CheckMultiApkLibrariesTask, ComponentPropertiesImpl>(
+            componentProperties,
             dependsOnPreBuildTask = false
         ) {
 

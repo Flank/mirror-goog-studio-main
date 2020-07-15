@@ -103,7 +103,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -174,7 +174,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -231,7 +231,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -302,7 +302,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -359,7 +359,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -429,7 +429,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -486,7 +486,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -556,7 +556,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -614,7 +614,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -682,7 +682,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -738,7 +738,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -808,7 +808,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -881,7 +881,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -960,7 +960,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -1068,7 +1068,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transforms to the manager
         TaskProvider<TransformTask> classesTask =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, classesTransform)
+                        .addTransform(taskFactory, componentProperties, classesTransform)
                         .orElseThrow(syncIssueToException);
 
         // and get the real gradle task object
@@ -1179,7 +1179,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transforms to the manager
         TaskProvider<TransformTask> classesTask =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, classesTransform)
+                        .addTransform(taskFactory, componentProperties, classesTransform)
                         .orElseThrow(syncIssueToException);
 
         // and get the real gradle task object
@@ -1242,7 +1242,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -1319,7 +1319,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -1406,7 +1406,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -1505,7 +1505,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -1578,7 +1578,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -1654,7 +1654,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -1718,7 +1718,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -1790,7 +1790,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -1933,7 +1933,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -2062,7 +2062,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, transform)
+                        .addTransform(taskFactory, componentProperties, transform)
                         .orElseThrow(syncIssueToException);
 
         // and get the real gradle task object
@@ -2103,7 +2103,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -2163,7 +2163,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -2225,7 +2225,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -2275,7 +2275,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -2352,7 +2352,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -2410,7 +2410,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -2453,7 +2453,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // add the transform to the manager
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());

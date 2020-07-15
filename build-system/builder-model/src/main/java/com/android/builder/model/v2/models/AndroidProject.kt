@@ -192,8 +192,9 @@ interface AndroidProject {
      *
      * @return the name of a variant that exists under the presence of the variant filter. Only
      * returns null if all variants are removed.
+     * @since 3.5
      */
-    val defaultVariant: String?
+    val defaultVariant: String
 
     /**
      * Returns a list of all the flavor dimensions, may be empty.
@@ -217,6 +218,11 @@ interface AndroidProject {
      * @return a list of jar files.
      */
     val bootClasspath: Collection<File>
+
+    /**
+     * Returns a list of folders or jar files that contains the framework source code.
+     */
+    val frameworkSources: Collection<File>
 
     /**
      * Returns a list of [SigningConfig].
@@ -258,6 +264,11 @@ interface AndroidProject {
      * The build tools version used by this module.
      */
     val buildToolsVersion: String
+
+    /**
+     * The NDK version used by this module.
+     */
+    val ndkVersion: String
 
     /**
      * The list of dynamic features.

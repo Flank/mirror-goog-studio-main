@@ -32,6 +32,7 @@ import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
@@ -63,7 +64,7 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
         ) {
             it.initializeFromAndroidVariantTask(this)
             it.inputFiles.from(inputFiles)
-            it.outputFile.set(outputFile)
+            it.outputFile.set(outputFile.get().asFile)
         }
     }
 
@@ -71,12 +72,12 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
         ProfileAwareWorkAction<MergeNativeDebugMetadataWorkAction.Parameters>() {
 
         override fun run() {
-            mergeFiles(parameters.inputFiles.files, parameters.outputFile.asFile.get())
+            mergeFiles(parameters.inputFiles.files, parameters.outputFile.get())
         }
 
         abstract class Parameters : ProfileAwareWorkAction.Parameters() {
             abstract val inputFiles: ConfigurableFileCollection
-            abstract val outputFile: RegularFileProperty
+            abstract val outputFile: Property<File>
         }
     }
 

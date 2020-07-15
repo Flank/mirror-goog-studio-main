@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.res
 
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.services.useAaptDaemon
 import com.android.build.gradle.options.SyncOptions
@@ -33,30 +32,32 @@ import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.symbols.getPackageNameFromManifest
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
-import org.gradle.api.provider.Property
 import java.io.File
 import java.io.IOException
+import java.io.Serializable
+import javax.inject.Inject
 
-abstract class Aapt2ProcessResourcesRunnable : ProfileAwareWorkAction<Aapt2ProcessResourcesRunnable.Params>() {
+class Aapt2ProcessResourcesRunnable @Inject constructor(
+        private val params: Params) : Runnable {
 
     override fun run() {
         val logger = Logging.getLogger(this::class.java)
-        useAaptDaemon(parameters.aapt2ServiceKey.get()) { daemon ->
+        useAaptDaemon(params.aapt2ServiceKey) { daemon ->
             processResources(
                 aapt = daemon,
-                aaptConfig = parameters.request.get(),
+                aaptConfig = params.request,
                 rJar = null,
                 logger = logger,
-                errorFormatMode = parameters.errorFormatMode.get()
+                errorFormatMode = params.errorFormatMode
             )
         }
     }
 
-    abstract class Params: ProfileAwareWorkAction.Parameters() {
-        abstract val aapt2ServiceKey: Property<Aapt2DaemonServiceKey>
-        abstract val request: Property<AaptPackageConfig>
-        abstract val errorFormatMode: Property<SyncOptions.ErrorFormatMode>
-    }
+    class Params(
+        val aapt2ServiceKey: Aapt2DaemonServiceKey,
+        val request: AaptPackageConfig,
+        val errorFormatMode: SyncOptions.ErrorFormatMode
+    ) : Serializable
 }
 
 @Throws(IOException::class, ProcessException::class)

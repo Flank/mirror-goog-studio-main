@@ -18,15 +18,16 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.profile.ProfileAwareWorkAction;
 import com.android.builder.core.DesugarProcessArgs;
 import com.google.common.collect.ImmutableList;
+import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
+import java.util.List;
+import javax.inject.Inject;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
-import org.gradle.api.provider.ListProperty;
 import org.gradle.workers.IsolationMode;
 import org.gradle.workers.WorkerConfiguration;
 
@@ -68,15 +69,29 @@ public final class DesugarWorkerItem {
         workerConfiguration.setParams(args.getArgs(isWindows));
     }
 
-    public abstract static class DesugarActionParams extends ProfileAwareWorkAction.Parameters {
-        abstract ListProperty<String> getArgs();
+    public static class DesugarActionParams implements Serializable {
+        private List<String> args;
+
+        public DesugarActionParams(List<String> args) {
+            this.args = args;
+        }
+
+        public List<String> getArgs() {
+            return args;
+        }
     }
 
     /**
      * Action running in a separate process to desugar java8 byte codes into java7 compliant byte
      * codes.
      */
-    public abstract static class DesugarAction extends ProfileAwareWorkAction<DesugarActionParams> {
+    public static class DesugarAction implements Runnable {
+        @NonNull private final List<String> args;
+
+        @Inject
+        public DesugarAction(@NonNull DesugarActionParams params) {
+            this.args = params.getArgs();
+        }
 
         @Override
         public void run() {
@@ -89,8 +104,7 @@ public final class DesugarWorkerItem {
                 Method mainMethod = clazz.getMethod("main", String[].class);
                 mainMethod.setAccessible(true);
 
-                mainMethod.invoke(
-                        null, (Object) getParameters().getArgs().get().toArray(new String[0]));
+                mainMethod.invoke(null, (Object) args.toArray(new String[0]));
             } catch (Exception e) {
                 LOGGER.error("Error while running desugar ", e);
             }

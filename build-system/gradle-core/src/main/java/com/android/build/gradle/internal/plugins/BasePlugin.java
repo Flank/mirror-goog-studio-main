@@ -22,11 +22,8 @@ import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
-import com.android.build.api.dsl.CommonExtension;
-import com.android.build.api.variant.VariantProperties;
 import com.android.build.api.variant.impl.GradleProperty;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
@@ -95,7 +92,6 @@ import com.android.build.gradle.options.SyncOptions;
 import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
-import com.android.builder.model.v2.ide.ProjectType;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
@@ -136,7 +132,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Base class for all Android plugins */
 public abstract class BasePlugin<
-                VariantT extends VariantImpl<? extends VariantProperties>,
+                VariantT extends VariantImpl<VariantPropertiesT>,
                 VariantPropertiesT extends VariantPropertiesImpl>
         implements Plugin<Project>, LintModelModuleLoaderProvider {
 
@@ -202,7 +198,8 @@ public abstract class BasePlugin<
             @NonNull
                     List<
                                     ComponentInfo<
-                                            TestComponentImpl<? extends TestComponentProperties>,
+                                            TestComponentImpl<
+                                                    ? extends TestComponentPropertiesImpl>,
                                             TestComponentPropertiesImpl>>
                             testComponents,
             boolean hasFlavors,
@@ -211,9 +208,6 @@ public abstract class BasePlugin<
             @NonNull Recorder threadRecorder);
 
     protected abstract int getProjectType();
-
-    /** The project type of the IDE model v2. */
-    protected abstract ProjectType getProjectTypeV2();
 
     @VisibleForTesting
     public VariantManager<VariantT, VariantPropertiesT> getVariantManager() {
@@ -425,7 +419,7 @@ public abstract class BasePlugin<
         globalScope.setExtension(extension);
 
         variantManager =
-                new VariantManager(
+                new VariantManager<>(
                         globalScope,
                         project,
                         projectServices.getProjectOptions(),
@@ -472,14 +466,6 @@ public abstract class BasePlugin<
                         dslServices.getIssueReporter());
 
         registerModelBuilder(registry, globalScope, variantModel, extension, extraModelInfo);
-
-        registry.register(
-                new com.android.build.gradle.internal.ide.v2.ModelBuilder(
-                        globalScope,
-                        variantModel,
-                        (CommonExtension) extension,
-                        projectServices.getIssueReporter(),
-                        getProjectTypeV2()));
 
         // Register a builder for the native tooling model
         NativeModelBuilder nativeModelBuilder =
@@ -638,8 +624,7 @@ public abstract class BasePlugin<
                         project, project.getName(), globalScope, variantInputModel, projectServices)
                 .configureDependencySubstitutions()
                 .configureGeneralTransforms()
-                .configureVariantTransforms(variants, variantManager.getTestComponents())
-                .configureAttributeMatchingStrategies();
+                .configureVariantTransforms(variants, variantManager.getTestComponents());
 
         // Run the old Variant API, after the variants and tasks have been created.
         ApiObjectFactory apiObjectFactory =

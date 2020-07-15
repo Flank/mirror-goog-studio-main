@@ -102,7 +102,6 @@ kotlin_library(
         "//tools/data-binding:tools.compilerCommon",
         "//tools/base/third_party:org.tensorflow_tensorflow-lite-metadata",  # For mlkit-common
         "//tools/base/third_party:com.google.flatbuffers_flatbuffers-java",  # For mlkit-common
-        "//tools/base/third_party:jakarta.xml.bind_jakarta.xml.bind-api",
     ],
 )
 

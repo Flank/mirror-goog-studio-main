@@ -22,7 +22,6 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.signing.SigningConfigProvider
 import com.android.build.gradle.internal.signing.SigningConfigProviderParams
@@ -43,10 +42,12 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
+import java.io.Serializable
 import java.util.Locale
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
+import javax.inject.Inject
 
 /**
  * Task that copies the bundle file (.aab) to it's final destination and do final touches like:
@@ -79,29 +80,31 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
     abstract val applicationId: Property<String>
 
     override fun doTaskAction() {
-        workerExecutor.noIsolation().submit(BundleToolRunnable::class.java) {
-            it.initializeFromAndroidVariantTask(this)
-            it.intermediaryBundleFile.set(intermediaryBundleFile)
-            it.finalBundleFile.set(finalBundleFile)
-            signingConfig?.convertToParams()?.let { signing ->
-                it.signingConfig.set(signing)
-            }
-            it.bundleIdeModel.set(bundleIdeModel)
-            it.applicationId.set(applicationId)
-            it.variantName.set(variantName)
+        getWorkerFacadeWithWorkers().use {
+            it.submit(
+                BundleToolRunnable::class.java,
+                Params(
+                    intermediaryBundleFile = intermediaryBundleFile.get().asFile,
+                    finalBundleFile = finalBundleFile.get().asFile,
+                    signingConfig = signingConfig?.convertToParams(),
+                    bundleIdeModel = bundleIdeModel.get().asFile,
+                    applicationId = applicationId.get(),
+                    variantName = variantName
+                )
+            )
         }
     }
 
-    abstract class Params: ProfileAwareWorkAction.Parameters() {
-        abstract val intermediaryBundleFile: RegularFileProperty
-        abstract val finalBundleFile: RegularFileProperty
-        abstract val signingConfig: Property<SigningConfigProviderParams>
-        abstract val bundleIdeModel: RegularFileProperty
-        abstract val applicationId: Property<String>
-        abstract val variantName: Property<String>
-    }
+    private data class Params(
+        val intermediaryBundleFile: File,
+        val finalBundleFile: File,
+        val signingConfig: SigningConfigProviderParams?,
+        val bundleIdeModel: File,
+        val applicationId: String,
+        val variantName: String
+    ) : Serializable
 
-    abstract class BundleToolRunnable : ProfileAwareWorkAction<Params>() {
+    private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
 
         private fun compressBundle(inputFile: File, outputFile: File) {
             ZipInputStream(inputFile.inputStream().buffered()).use { inputStream ->
@@ -119,9 +122,9 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
         }
 
         override fun run() {
-            FileUtils.deleteIfExists(parameters.finalBundleFile.asFile.get())
+            FileUtils.deleteIfExists(params.finalBundleFile)
 
-            parameters.signingConfig.orNull?.resolve()?.let {
+            params.signingConfig?.resolve()?.let {
                 val certificateInfo =
                     KeystoreHelper.getCertificateInfo(
                         it.storeType,
@@ -138,10 +141,10 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                     )
                         .build()
                 val compressedBundleFile = createTempFile("compressedBundle", ".aab")
-                compressBundle(parameters.intermediaryBundleFile.asFile.get(), compressedBundleFile)
+                compressBundle(params.intermediaryBundleFile, compressedBundleFile)
                 try {
                     ApkSigner.Builder(listOf(signingConfig))
-                        .setOutputApk(parameters.finalBundleFile.asFile.get())
+                        .setOutputApk(params.finalBundleFile)
                         .setInputApk(compressedBundleFile)
                         .setV2SigningEnabled(false)
                         .setV3SigningEnabled(false)
@@ -153,16 +156,16 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                     FileUtils.deleteIfExists(compressedBundleFile)
                 }
             } ?: run {
-                compressBundle(parameters.intermediaryBundleFile.asFile.get(), parameters.finalBundleFile.asFile.get())
+                compressBundle(params.intermediaryBundleFile, params.finalBundleFile)
             }
 
             BuiltArtifactsImpl(
                 artifactType = ArtifactType.BUNDLE,
-                applicationId = parameters.applicationId.get(),
-                variantName = parameters.variantName.get(),
+                applicationId = params.applicationId,
+                variantName = params.variantName,
                 elements = listOf(
-                    BuiltArtifactImpl.make(outputFile = parameters.finalBundleFile.asFile.get().absolutePath))
-            ).saveToFile(parameters.bundleIdeModel.asFile.get())
+                    BuiltArtifactImpl.make(outputFile = params.finalBundleFile.absolutePath))
+            ).saveToFile(params.bundleIdeModel)
         }
     }
 

@@ -22,7 +22,6 @@ import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.dirName
-import com.android.build.api.variant.impl.getApiString
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -179,7 +178,7 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
             creationConfig.outputs.getEnabledVariantOutputs().forEach(task.variantOutputs::add)
             task.variantOutputs.disallowChanges()
 
-            task.minSdkVersion.set(task.project.provider { creationConfig.minSdkVersion.getApiString() })
+            task.minSdkVersion.set(task.project.provider { creationConfig.minSdkVersion.apiString })
             task.minSdkVersion.disallowChanges()
         }
     }

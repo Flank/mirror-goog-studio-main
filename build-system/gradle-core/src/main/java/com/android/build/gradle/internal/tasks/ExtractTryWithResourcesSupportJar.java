@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.component.VariantCreationConfig;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.core.DesugarProcessBuilder;
 import com.android.utils.FileUtils;
@@ -54,10 +54,10 @@ public abstract class ExtractTryWithResourcesSupportJar extends NonIncrementalTa
 
     public static class CreationAction
             extends VariantTaskCreationAction<
-                    ExtractTryWithResourcesSupportJar, VariantCreationConfig> {
+                    ExtractTryWithResourcesSupportJar, ComponentPropertiesImpl> {
 
-        public CreationAction(@NonNull VariantCreationConfig creationConfig) {
-            super(creationConfig);
+        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
+            super(componentProperties);
         }
 
         @NonNull

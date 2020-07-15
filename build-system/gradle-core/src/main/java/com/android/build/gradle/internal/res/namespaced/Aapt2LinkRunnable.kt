@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.res.rewriteLinkException
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.services.useAaptDaemon
@@ -25,42 +24,33 @@ import com.android.build.gradle.options.SyncOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2Exception
 import org.gradle.api.logging.Logging
-import org.gradle.api.provider.Property
+import java.io.Serializable
+import javax.inject.Inject
 
-abstract class Aapt2LinkRunnable : ProfileAwareWorkAction<Aapt2LinkRunnable.Params>() {
+class Aapt2LinkRunnable @Inject constructor(
+    private val params: Params
+) : Runnable {
 
     override fun run() {
-        runAapt2Link(
-            parameters.aapt2ServiceKey.get(),
-            parameters.request.get(),
-            parameters.errorFormatMode.get()
-        )
-    }
-
-    abstract class Params : ProfileAwareWorkAction.Parameters() {
-        abstract val aapt2ServiceKey: Property<Aapt2DaemonServiceKey>
-        abstract val request: Property<AaptPackageConfig>
-        abstract val errorFormatMode: Property<SyncOptions.ErrorFormatMode>
-    }
-}
-
-fun runAapt2Link(
-    aapt2ServiceKey: Aapt2DaemonServiceKey,
-    request: AaptPackageConfig,
-    errorFormatMode: SyncOptions.ErrorFormatMode
-) {
-    val logger = Logging.getLogger(Aapt2LinkRunnable::class.java)
-    useAaptDaemon(aapt2ServiceKey) { daemon ->
-        try {
-            daemon.link(request, LoggerWrapper(logger))
-        } catch (exception: Aapt2Exception) {
-            throw rewriteLinkException(
-                exception,
-                errorFormatMode,
-                null,
-                null,
-                logger
-            )
+        val logger = Logging.getLogger(this::class.java)
+        useAaptDaemon(params.aapt2ServiceKey) { daemon ->
+            try {
+                daemon.link(params.request, LoggerWrapper(logger))
+            } catch (exception: Aapt2Exception) {
+                throw rewriteLinkException(
+                    exception,
+                    params.errorFormatMode,
+                    null,
+                    null,
+                    logger
+                )
+            }
         }
     }
+
+    class Params(
+        val aapt2ServiceKey: Aapt2DaemonServiceKey,
+        val request: AaptPackageConfig,
+        val errorFormatMode: SyncOptions.ErrorFormatMode
+    ) : Serializable
 }

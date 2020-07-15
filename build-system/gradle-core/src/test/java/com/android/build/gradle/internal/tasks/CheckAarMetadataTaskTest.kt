@@ -18,9 +18,9 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
+import com.android.build.gradle.internal.fixtures.DirectWorkQueue
 import com.android.build.gradle.internal.fixtures.FakeArtifactCollection
 import com.android.build.gradle.internal.fixtures.FakeComponentIdentifier
-import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeResolvedArtifactResult
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testfixtures.ProjectBuilder
@@ -30,7 +30,10 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import javax.inject.Inject
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.MockitoAnnotations
+import java.lang.RuntimeException
 
 /**
  * Unit tests for [CheckAarMetadataTask].
@@ -40,21 +43,21 @@ class CheckAarMetadataTaskTest {
     @get: Rule
     val temporaryFolder = TemporaryFolder()
 
-    private lateinit var task: CheckAarMetadataTask
+    @Mock
+    lateinit var workerExecutor: WorkerExecutor
 
-    abstract class CheckAarMetadataTaskForTest @Inject constructor(testWorkerExecutor: WorkerExecutor) :
-        CheckAarMetadataTask() {
-        override val workerExecutor = testWorkerExecutor
-    }
+    private lateinit var task: CheckAarMetadataTask
 
     @Before
     fun setUp() {
+        MockitoAnnotations.initMocks(this)
         val project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
-        task = project.tasks.register(
-            "checkAarMetadataTask",
-            CheckAarMetadataTaskForTest::class.java,
-            FakeGradleWorkExecutor(project.objects, temporaryFolder.newFolder())
-        ).get()
+        val taskProvider =
+            project.tasks.register("checkAarMetadataTask", CheckAarMetadataTask::class.java)
+        task = taskProvider.get()
+        val workQueue = DirectWorkQueue(CheckAarMetadataWorkParameters::class.java)
+        Mockito.`when`(workerExecutor.noIsolation()).thenReturn(workQueue)
+        task.workerExecutorProperty.set(workerExecutor)
     }
 
     @Test

@@ -16,9 +16,10 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.AndroidJarInput
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.processResources
@@ -164,9 +165,9 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: VariantCreationConfig
-    ) : VariantTaskCreationAction<VerifyLibraryResourcesTask, VariantCreationConfig>(
-        creationConfig
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<VerifyLibraryResourcesTask, ComponentPropertiesImpl>(
+        componentProperties
     ) {
 
         override val name: String

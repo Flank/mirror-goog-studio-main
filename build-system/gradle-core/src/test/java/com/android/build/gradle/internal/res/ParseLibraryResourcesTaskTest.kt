@@ -17,16 +17,12 @@
 package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.builder.files.SerializableChange
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.symbols.SymbolTable
 import com.android.resources.ResourceFolderType
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
-import org.gradle.api.model.ObjectFactory
-import org.gradle.testfixtures.ProjectBuilder
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -41,17 +37,10 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
-    private lateinit var objects: ObjectFactory
-
     companion object {
         @JvmStatic
         @Parameterized.Parameters
         fun enablePartialRIncrementalBuilds() = arrayOf(true, false)
-    }
-
-    @Before
-    fun setUp() {
-        objects = ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build().objects
     }
 
     @Test
@@ -112,19 +101,16 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
         val librarySymbolsFile = File(parentFolder, "R-def.txt")
         val partialRDirectory = File(parentFolder, SdkConstants.FD_PARTIAL_R)
 
-        val params = object : ParseLibraryResourcesTask.ParseResourcesParams() {
-            override val inputResDir = objects.directoryProperty().fileValue(resourcesFolder)
-            override val platformAttrsRTxt = objects.fileProperty().fileValue(platformAttrsRTxtFile)
-            override val librarySymbolsFile = objects.fileProperty().fileValue(librarySymbolsFile)
-            override val incremental = FakeGradleProperty(false)
-            override val changedResources = objects.listProperty(SerializableChange::class.java)
-            override val partialRDir = objects.directoryProperty().fileValue(partialRDirectory)
-            override val enablePartialRIncrementalBuilds =
-                FakeGradleProperty(this@ParseLibraryResourcesTaskTest.enablePartialRIncrementalBuilds)
-            override val projectName = FakeGradleProperty("projectName")
-            override val taskOwner = FakeGradleProperty("taskOwner")
-            override val workerKey = FakeGradleProperty("workerKey")
-        }
+        val params = ParseLibraryResourcesTask.ParseResourcesParams(
+          inputResDir = resourcesFolder,
+          changedResources = emptyList(),
+          platformAttrsRTxt = platformAttrsRTxtFile,
+          librarySymbolsFile = librarySymbolsFile,
+          incremental = false,
+          partialRDir = partialRDirectory,
+          enablePartialRIncrementalBuilds = enablePartialRIncrementalBuilds
+        )
+
         doFullTaskAction(params)
 
         assertThat(librarySymbolsFile.readLines()).containsExactly(
@@ -147,19 +133,15 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
         val librarySymbolsFile = File(parentFolder, "R-def.txt")
         val partialRDirectory = File(parentFolder, SdkConstants.FD_PARTIAL_R)
 
-        val params = object : ParseLibraryResourcesTask.ParseResourcesParams() {
-            override val inputResDir = objects.directoryProperty().fileValue(resourcesFolder)
-            override val platformAttrsRTxt = objects.fileProperty().fileValue(platformAttrsRTxtFile)
-            override val librarySymbolsFile = objects.fileProperty().fileValue(librarySymbolsFile)
-            override val incremental = FakeGradleProperty(false)
-            override val changedResources = objects.listProperty(SerializableChange::class.java)
-            override val partialRDir = objects.directoryProperty().fileValue(partialRDirectory)
-            override val enablePartialRIncrementalBuilds =
-                FakeGradleProperty(this@ParseLibraryResourcesTaskTest.enablePartialRIncrementalBuilds)
-            override val projectName = FakeGradleProperty("projectName")
-            override val taskOwner = FakeGradleProperty("taskOwner")
-            override val workerKey = FakeGradleProperty("workerKey")
-        }
+        val params = ParseLibraryResourcesTask.ParseResourcesParams(
+                inputResDir = resourcesFolder,
+                changedResources = emptyList(),
+                platformAttrsRTxt = platformAttrsRTxtFile,
+                librarySymbolsFile = librarySymbolsFile,
+                incremental = false,
+                partialRDir = partialRDirectory,
+                enablePartialRIncrementalBuilds = enablePartialRIncrementalBuilds
+        )
 
         doFullTaskAction(params)
 
@@ -200,19 +182,15 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
           SerializableChange(addedLayout, FileStatus.NEW, addedLayout.absolutePath)
         )
 
-        val params = object : ParseLibraryResourcesTask.ParseResourcesParams() {
-            override val inputResDir = objects.directoryProperty().fileValue(resourcesFolder)
-            override val platformAttrsRTxt = objects.fileProperty().fileValue(platformAttrsRTxtFile)
-            override val librarySymbolsFile = objects.fileProperty().fileValue(librarySymbolsFile)
-            override val incremental = FakeGradleProperty(true)
-            override val changedResources = objects.listProperty(SerializableChange::class.java).value(changedResources)
-            override val partialRDir = objects.directoryProperty().fileValue(partialRFolder)
-            override val enablePartialRIncrementalBuilds =
-                FakeGradleProperty(this@ParseLibraryResourcesTaskTest.enablePartialRIncrementalBuilds)
-            override val projectName = FakeGradleProperty("projectName")
-            override val taskOwner = FakeGradleProperty("taskOwner")
-            override val workerKey = FakeGradleProperty("workerKey")
-        }
+        val params = ParseLibraryResourcesTask.ParseResourcesParams(
+          inputResDir = resourcesFolder,
+          changedResources = changedResources,
+          platformAttrsRTxt = platformAttrsRTxtFile,
+          librarySymbolsFile = librarySymbolsFile,
+          incremental = true,
+          partialRDir = partialRFolder,
+          enablePartialRIncrementalBuilds = enablePartialRIncrementalBuilds
+        )
 
         if (enablePartialRIncrementalBuilds){
             doIncrementalPartialRTaskAction(params)
@@ -272,20 +250,15 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
         val changedResources = listOf(
                 SerializableChange(modifiedLayout, FileStatus.CHANGED, modifiedLayout.absolutePath)
         )
-        val params = object : ParseLibraryResourcesTask.ParseResourcesParams() {
-            override val inputResDir = objects.directoryProperty().fileValue(resourcesFolder)
-            override val platformAttrsRTxt = objects.fileProperty().fileValue(platformAttrsRTxtFile)
-            override val librarySymbolsFile = objects.fileProperty().fileValue(librarySymbolsFile)
-            override val incremental = FakeGradleProperty(true)
-            override val changedResources =
-                objects.listProperty(SerializableChange::class.java).value(changedResources)
-            override val partialRDir = objects.directoryProperty().fileValue(partialRFolder)
-            override val enablePartialRIncrementalBuilds =
-                FakeGradleProperty(this@ParseLibraryResourcesTaskTest.enablePartialRIncrementalBuilds)
-            override val projectName = FakeGradleProperty("projectName")
-            override val taskOwner = FakeGradleProperty("taskOwner")
-            override val workerKey = FakeGradleProperty("workerKey")
-        }
+        val params = ParseLibraryResourcesTask.ParseResourcesParams(
+                inputResDir = resourcesFolder,
+                changedResources = changedResources,
+                platformAttrsRTxt = platformAttrsRTxtFile,
+                librarySymbolsFile = librarySymbolsFile,
+                incremental = true,
+                partialRDir = partialRFolder,
+                enablePartialRIncrementalBuilds = enablePartialRIncrementalBuilds
+        )
 
         if (enablePartialRIncrementalBuilds) {
             doIncrementalPartialRTaskAction(params)
@@ -339,19 +312,15 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
         val changedResources = listOf(
                 SerializableChange(removedLayout, FileStatus.REMOVED, removedLayout.absolutePath)
         )
-        val params = object : ParseLibraryResourcesTask.ParseResourcesParams() {
-            override val inputResDir = objects.directoryProperty().fileValue(resourcesFolder)
-            override val platformAttrsRTxt = objects.fileProperty().fileValue(platformAttrsRTxtFile)
-            override val librarySymbolsFile = objects.fileProperty().fileValue(librarySymbolsFile)
-            override val incremental = FakeGradleProperty(true)
-            override val changedResources =
-                objects.listProperty(SerializableChange::class.java).value(changedResources)
-            override val partialRDir = objects.directoryProperty().fileValue(partialRFolder)
-            override val enablePartialRIncrementalBuilds = FakeGradleProperty(true)
-            override val projectName = FakeGradleProperty("projectName")
-            override val taskOwner = FakeGradleProperty("taskOwner")
-            override val workerKey = FakeGradleProperty("workerKey")
-        }
+        val params = ParseLibraryResourcesTask.ParseResourcesParams(
+                inputResDir = resourcesFolder,
+                changedResources = changedResources,
+                platformAttrsRTxt = platformAttrsRTxtFile,
+                librarySymbolsFile = librarySymbolsFile,
+                incremental = true,
+                partialRDir = partialRFolder,
+                enablePartialRIncrementalBuilds = true
+        )
 
         if (enablePartialRIncrementalBuilds) {
             doIncrementalPartialRTaskAction(params)

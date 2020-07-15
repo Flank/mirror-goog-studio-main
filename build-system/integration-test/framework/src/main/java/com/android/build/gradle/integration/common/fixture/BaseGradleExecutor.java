@@ -86,7 +86,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     @NonNull
     final ProjectConnection projectConnection;
-    @Nullable protected final GradleTestProject project;
     @NonNull final Consumer<GradleBuildResult> lastBuildResultConsumer;
     @NonNull private final List<String> arguments = Lists.newArrayList();
     @NonNull private final ProjectOptionsBuilder options = new ProjectOptionsBuilder();
@@ -100,7 +99,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     private ConfigurationCaching configurationCaching;
 
     BaseGradleExecutor(
-            @Nullable GradleTestProject project,
             @NonNull ProjectConnection projectConnection,
             @NonNull Consumer<GradleBuildResult> lastBuildResultConsumer,
             @NonNull Path projectDirectory,
@@ -108,7 +106,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             @Nullable Path profileDirectory,
             @NonNull GradleTestProjectBuilder.MemoryRequirement memoryRequirement,
             @NonNull ConfigurationCaching configurationCaching) {
-        this.project = project;
         this.lastBuildResultConsumer = lastBuildResultConsumer;
         this.projectDirectory = projectDirectory;
         this.projectConnection = projectConnection;
@@ -254,16 +251,12 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
             Files.createDirectories(androidSdkHome);
 
-            this.androidSdkHome = androidSdkHome.toFile();
-
             arguments.add(
                     String.format("-D%s=%s", "ANDROID_SDK_HOME", androidSdkHome.toAbsolutePath()));
         }
 
         return arguments;
     }
-
-    @Nullable public File androidSdkHome = null;
 
     protected final Set<String> getOptionPropertyNames() {
         return options.getOptions()
@@ -393,7 +386,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         WARN_GRADLE_6_6,
     }
 
-    @NonNull
+    @Nullable
     protected static <LauncherT extends ConfigurableLauncher<LauncherT>, ResultT> ResultT runBuild(
             @NonNull LauncherT launcher, @NonNull RunAction<LauncherT, ResultT> runAction) {
         CancellationTokenSource cancellationTokenSource =

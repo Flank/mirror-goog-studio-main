@@ -17,15 +17,17 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.fixtures.FakeFileChange
-import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.android.zipflinger.ZipArchive
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.file.FileType
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.work.ChangeType
+import org.gradle.workers.WorkAction
+import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkQueue
 import org.junit.Before
 import org.junit.Rule
@@ -56,7 +58,20 @@ class CompressAssetsTaskTest {
         MockitoAnnotations.initMocks(this)
 
         val project: Project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
-        workQueue = FakeGradleWorkExecutor(project.objects, temporaryFolder.newFolder()).noIsolation()
+        workQueue = object: WorkQueue {
+            override fun <T : WorkParameters?> submit(
+                workActionClass: Class<out WorkAction<T>>?,
+                parameterAction: Action<in T>?
+            ) {
+                val workParameters =
+                    project.objects.newInstance(CompressAssetsWorkParameters::class.java)
+                @Suppress("UNCHECKED_CAST")
+                parameterAction?.execute(workParameters as T)
+                workActionClass?.let { project.objects.newInstance(it, workParameters).execute() }
+            }
+
+            override fun await() {}
+        }
 
         // create input dir with various assets, one of which won't be compressed
         inputDir = temporaryFolder.newFolder("inputDir")

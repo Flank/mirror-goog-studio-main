@@ -19,7 +19,6 @@ package com.android.tools.binaries;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.android.tools.bazel.Configuration;
 import java.nio.file.Paths;
 import org.junit.Test;
 
@@ -27,24 +26,25 @@ public class ImlToBazelTest {
 
     @Test
     public void testExpected() throws Exception {
-        Configuration config = new Configuration();
-        config.dryRun = true;
         int updated =
                 ImlToBazel.run(
-                        config,
                         Paths.get("tools/base/bazel/test/iml_to_bazel").toAbsolutePath(),
-                        ".");
+                        ".",
+                        null,
+                        true,
+                        false);
         assertEquals(0, updated);
     }
 
     @Test
     public void testWarningsAsErrors() throws Exception {
         try {
-            Configuration config = new Configuration();
-            config.dryRun = true;
-            config.warningsAsErrors = true;
             ImlToBazel.run(
-                    config, Paths.get("tools/base/bazel/test/iml_to_bazel").toAbsolutePath(), ".");
+                    Paths.get("tools/base/bazel/test/iml_to_bazel").toAbsolutePath(),
+                    ".",
+                    null,
+                    true,
+                    true);
             fail("Expected a failure.");
         } catch (ImlToBazel.ProjectLoadingException e) {
             // There's a cycle in the project, we should be a warning.

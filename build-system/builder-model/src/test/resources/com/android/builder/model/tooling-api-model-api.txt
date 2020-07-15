@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-88918b174e6069741c245c3997b8f77bda8c1f9169d2aea1420966e6872e12f3
+90a0b71eb50bcdbdedec26c6023aac72b0e1415931c29cf95b368d3238a13221
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -533,10 +533,6 @@ com.android.builder.model.v2.dsl.ProductFlavor.getVersionCode: java.lang.Integer
 com.android.builder.model.v2.dsl.ProductFlavor.getVersionName: java.lang.String ()
 com.android.builder.model.v2.dsl.ProductFlavor.getWearAppUnbundled: java.lang.Boolean ()
 com.android.builder.model.v2.dsl.SigningConfig
-com.android.builder.model.v2.dsl.SigningConfig.getEnableV1Signing: java.lang.Boolean ()
-com.android.builder.model.v2.dsl.SigningConfig.getEnableV2Signing: java.lang.Boolean ()
-com.android.builder.model.v2.dsl.SigningConfig.getEnableV3Signing: java.lang.Boolean ()
-com.android.builder.model.v2.dsl.SigningConfig.getEnableV4Signing: java.lang.Boolean ()
 com.android.builder.model.v2.dsl.SigningConfig.getKeyAlias: java.lang.String ()
 com.android.builder.model.v2.dsl.SigningConfig.getKeyPassword: java.lang.String ()
 com.android.builder.model.v2.dsl.SigningConfig.getName: java.lang.String ()
@@ -544,6 +540,8 @@ com.android.builder.model.v2.dsl.SigningConfig.getStoreFile: java.io.File ()
 com.android.builder.model.v2.dsl.SigningConfig.getStorePassword: java.lang.String ()
 com.android.builder.model.v2.dsl.SigningConfig.getStoreType: java.lang.String ()
 com.android.builder.model.v2.dsl.SigningConfig.isSigningReady: boolean ()
+com.android.builder.model.v2.dsl.SigningConfig.isV1SigningEnabled: boolean ()
+com.android.builder.model.v2.dsl.SigningConfig.isV2SigningEnabled: boolean ()
 com.android.builder.model.v2.ide.AaptOptions
 com.android.builder.model.v2.ide.AaptOptions$Namespacing extends java.lang.Enum
 com.android.builder.model.v2.ide.AaptOptions$Namespacing.valueOf: com.android.builder.model.v2.ide.AaptOptions$Namespacing (java.lang.String)
@@ -731,11 +729,13 @@ com.android.builder.model.v2.models.AndroidProject.getDependenciesInfo: com.andr
 com.android.builder.model.v2.models.AndroidProject.getDynamicFeatures: java.util.Collection<java.lang.String> ()
 com.android.builder.model.v2.models.AndroidProject.getFlags: com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags ()
 com.android.builder.model.v2.models.AndroidProject.getFlavorDimensions: java.util.Collection<java.lang.String> ()
+com.android.builder.model.v2.models.AndroidProject.getFrameworkSources: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.models.AndroidProject.getGroupId: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getJavaCompileOptions: com.android.builder.model.v2.ide.JavaCompileOptions ()
 com.android.builder.model.v2.models.AndroidProject.getLintOptions: com.android.builder.model.v2.ide.LintOptions ()
 com.android.builder.model.v2.models.AndroidProject.getLintRuleJars: java.util.List<java.io.File> ()
 com.android.builder.model.v2.models.AndroidProject.getModelVersion: java.lang.String ()
+com.android.builder.model.v2.models.AndroidProject.getNdkVersion: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getPath: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getProductFlavors: java.util.Collection<com.android.builder.model.v2.ide.ProductFlavorContainer> ()
 com.android.builder.model.v2.models.AndroidProject.getProjectType: com.android.builder.model.v2.ide.ProjectType ()

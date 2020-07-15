@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -25,9 +25,9 @@ import org.gradle.api.tasks.TaskProvider
 
 /** Configuration action for a task to merge aapt proguard files  */
 class MergeAaptProguardFilesCreationAction(
-    creationConfig: VariantCreationConfig
-) : VariantTaskCreationAction<MergeFileTask, VariantCreationConfig>(
-    creationConfig
+    componentProperties: ComponentPropertiesImpl
+) : VariantTaskCreationAction<MergeFileTask, ComponentPropertiesImpl>(
+    componentProperties
 ) {
 
     override val name: String

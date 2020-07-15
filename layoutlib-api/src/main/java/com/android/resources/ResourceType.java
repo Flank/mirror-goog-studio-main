@@ -281,6 +281,14 @@ public enum ResourceType {
     }
 
     /**
+     * @deprecated Use other static methods in this class. Kept for layoutlib binary compatibility.
+     */
+    @Deprecated
+    public static ResourceType getEnum(@NonNull String className) {
+        return fromClassName(className);
+    }
+
+    /**
      * Returns true if the generated R class contains an inner class for this {@link ResourceType}.
      */
     public boolean getHasInnerClass() {

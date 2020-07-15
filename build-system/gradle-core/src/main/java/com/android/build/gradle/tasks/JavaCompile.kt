@@ -17,7 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.profile.PROPERTY_VARIANT_NAME_KEY
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_SOURCES
@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_EXPORT_CLASS_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import org.gradle.api.JavaVersion
 import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
@@ -36,6 +37,7 @@ import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.util.PatternSet
 import java.util.concurrent.Callable
 
+
 /**
  * [TaskCreationAction] for the [JavaCompile] task.
  *
@@ -44,10 +46,10 @@ import java.util.concurrent.Callable
  * Kotlin-Java projects), [JavaCompile] performs compilation only, without annotation processing.
  */
 class JavaCompileCreationAction(
-    private val creationConfig: BaseCreationConfig, private val usingKapt: Boolean
+    private val componentProperties: ComponentPropertiesImpl, private val usingKapt: Boolean
 ) : TaskCreationAction<JavaCompile>() {
 
-    private val globalScope = creationConfig.globalScope
+    private val globalScope = componentProperties.globalScope
 
     private val classesOutputDirectory = globalScope.project.objects.directoryProperty()
     private val annotationProcessorOutputDirectory = globalScope.project.objects.directoryProperty()
@@ -56,7 +58,7 @@ class JavaCompileCreationAction(
     private val dataBindingExportClassListFile = globalScope.project.objects.fileProperty()
 
     override val name: String
-        get() = creationConfig.computeTaskName("compile", "JavaWithJavac")
+        get() = componentProperties.computeTaskName("compile", "JavaWithJavac")
 
     override val type: Class<JavaCompile>
         get() = JavaCompile::class.java
@@ -64,9 +66,9 @@ class JavaCompileCreationAction(
     override fun handleProvider(taskProvider: TaskProvider<JavaCompile>) {
         super.handleProvider(taskProvider)
 
-        creationConfig.taskContainer.javacTask = taskProvider
+        componentProperties.taskContainer.javacTask = taskProvider
 
-        val artifacts = creationConfig.artifacts
+        val artifacts = componentProperties.artifacts
 
         artifacts
             .setInitialProvider(taskProvider) { classesOutputDirectory }
@@ -80,14 +82,14 @@ class JavaCompileCreationAction(
             .withName(AP_GENERATED_SOURCES_DIR_NAME)
             .on(AP_GENERATED_SOURCES)
 
-        if (creationConfig.buildFeatures.dataBinding) {
+        if (componentProperties.buildFeatures.dataBinding) {
             // Data binding artifacts are part of the annotation processing outputs of JavaCompile
             // if Kapt is not used; otherwise, they are the outputs of Kapt.
             if (!usingKapt) {
                 registerDataBindingOutputs(
                     dataBindingArtifactDir,
                     dataBindingExportClassListFile,
-                    creationConfig.variantType.isExportDataBindingClassList,
+                    componentProperties.variantType.isExportDataBindingClassList,
                     taskProvider,
                     artifacts
                 )
@@ -96,18 +98,18 @@ class JavaCompileCreationAction(
     }
 
     override fun configure(task: JavaCompile) {
-        task.dependsOn(creationConfig.taskContainer.preBuildTask)
-        task.extensions.add(PROPERTY_VARIANT_NAME_KEY, creationConfig.name)
+        task.dependsOn(componentProperties.taskContainer.preBuildTask)
+        task.extensions.add(PROPERTY_VARIANT_NAME_KEY, componentProperties.name)
 
-        task.configureProperties(creationConfig)
+        task.configureProperties(componentProperties)
         // Set up the annotation processor classpath even when Kapt is used, because Java compiler
         // plugins like ErrorProne share their classpath with annotation processors (see
         // https://github.com/gradle/gradle/issues/6573), and special annotation processors like
         // Lombok want to run via JavaCompile (see https://youtrack.jetbrains.com/issue/KT-7112).
-        task.configurePropertiesForAnnotationProcessing(creationConfig)
+        task.configurePropertiesForAnnotationProcessing(componentProperties)
 
         // Wrap sources in Callable to evaluate them just before execution, b/117161463.
-        val sourcesToCompile = Callable { listOf(creationConfig.javaSources) }
+        val sourcesToCompile = Callable { listOf(componentProperties.javaSources) }
         // Include only java sources, otherwise we hit b/144249620.
         val javaSourcesFilter = PatternSet().include("**/*.java")
         task.source = task.project.files(sourcesToCompile).asFileTree.matching(javaSourcesFilter)
@@ -121,11 +123,11 @@ class JavaCompileCreationAction(
         // correct if Kapt is not used.
         if (!usingKapt) {
             // Record apList as input. It impacts recordAnnotationProcessors() below.
-            val apList = creationConfig.artifacts.get(ANNOTATION_PROCESSOR_LIST)
+            val apList = componentProperties.artifacts.get(ANNOTATION_PROCESSOR_LIST)
             task.inputs.files(apList).withPathSensitivity(PathSensitivity.NONE)
                 .withPropertyName("annotationProcessorList")
 
-            task.recordAnnotationProcessors(apList, creationConfig.name)
+            task.recordAnnotationProcessors(apList, componentProperties.name)
         }
 
         // Set up the outputs
@@ -135,7 +137,7 @@ class JavaCompileCreationAction(
         // https://docs.gradle.org/current/userguide/upgrading_version_6.html#querying_a_mapped_output_property_of_a_task_before_the_task_has_completed
         // (currently caught by BasicInstantExecutionTest).
         task.options.annotationProcessorGeneratedSourcesDirectory =
-            creationConfig.artifacts
+            componentProperties.artifacts
                 .getOutputPath(AP_GENERATED_SOURCES, AP_GENERATED_SOURCES_DIR_NAME)
 
         // The API of JavaCompile to set up outputs only accepts File or Provider<File> (see above).
@@ -147,12 +149,12 @@ class JavaCompileCreationAction(
             .withPropertyName("annotationProcessorOutputDirectory")
 
         // Also do that for data binding artifacts
-        if (creationConfig.buildFeatures.dataBinding) {
+        if (componentProperties.buildFeatures.dataBinding) {
             // Data binding artifacts are part of the annotation processing outputs of JavaCompile
             // if Kapt is not used; otherwise, they are the outputs of Kapt.
             if (!usingKapt) {
                 task.outputs.dir(dataBindingArtifactDir).withPropertyName("dataBindingArtifactDir")
-                if (creationConfig.variantType.isExportDataBindingClassList) {
+                if (componentProperties.variantType.isExportDataBindingClassList) {
                     task.outputs.file(dataBindingExportClassListFile)
                         .withPropertyName("dataBindingExportClassListFile")
                 }

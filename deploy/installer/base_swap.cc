@@ -155,7 +155,7 @@ void BaseSwapCommand::Swap(const proto::SwapRequest& request,
 
   for (int pid : request.process_ids()) {
     const std::string pid_string = to_string(pid);
-    if (IO::access("/proc/" + pid_string, F_OK) != 0) {
+    if (access(("/proc/" + pid_string).c_str(), F_OK) != 0) {
       response->set_status(proto::SwapResponse::PROCESS_TERMINATED);
       response->set_extra(pid_string);
       return;
@@ -167,12 +167,13 @@ void BaseSwapCommand::Swap(const proto::SwapRequest& request,
 
 void BaseSwapCommand::FilterProcessIds(std::vector<int>* process_ids) {
   Phase p("FilterProcessIds");
+  const std::string proc_path = workspace_.GetRoot() + "/proc/";
   auto it = process_ids->begin();
   while (it != process_ids->end()) {
     const int pid = *it;
-    const std::string pid_path = "/proc/" + to_string(pid);
+    const std::string pid_path = proc_path + to_string(pid);
     struct stat proc_dir_stat;
-    if (IO::stat(pid_path, &proc_dir_stat) < 0) {
+    if (stat(pid_path.c_str(), &proc_dir_stat) < 0) {
       LogEvent("Ignoring pid '" + to_string(pid) + "'; could not stat().");
       it = process_ids->erase(it);
     } else if (proc_dir_stat.st_uid < kFirstAppUid ||

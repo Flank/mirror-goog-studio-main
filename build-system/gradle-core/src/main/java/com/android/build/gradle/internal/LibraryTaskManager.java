@@ -27,7 +27,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.component.TestComponentProperties;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.dsl.PrefabPackagingOptions;
@@ -40,7 +40,6 @@ import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.LibraryExtension;
-import com.android.build.gradle.internal.component.BaseCreationConfig;
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel;
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator;
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment;
@@ -108,7 +107,8 @@ public class LibraryTaskManager
             @NonNull
                     List<
                                     ComponentInfo<
-                                            TestComponentImpl<? extends TestComponentProperties>,
+                                            TestComponentImpl<
+                                                    ? extends TestComponentPropertiesImpl>,
                                             TestComponentPropertiesImpl>>
                             testComponents,
             boolean hasFlavors,
@@ -213,8 +213,8 @@ public class LibraryTaskManager
         taskFactory.register(new MergeGeneratedProguardFilesCreationAction(libVariantProperties));
 
         // External native build
-        createExternalNativeBuildJsonGenerators(variant.getVariant(), libVariantProperties);
-        createExternalNativeBuildTasks(variant.getVariant(), libVariantProperties);
+        createExternalNativeBuildJsonGenerators(libVariantProperties);
+        createExternalNativeBuildTasks(libVariantProperties);
 
         createMergeJniLibFoldersTasks(libVariantProperties);
 
@@ -431,19 +431,21 @@ public class LibraryTaskManager
     }
 
     @Override
-    protected void createDependencyStreams(@NonNull BaseCreationConfig creationConfig) {
-        super.createDependencyStreams(creationConfig);
+    protected void createDependencyStreams(@NonNull ComponentPropertiesImpl componentProperties) {
+        super.createDependencyStreams(componentProperties);
 
         // add the same jars twice in the same stream as the EXTERNAL_LIB in the task manager
         // so that filtering of duplicates in proguard can work.
-        creationConfig
+        componentProperties
                 .getTransformManager()
                 .addStream(
                         OriginalStream.builder("local-deps-classes")
                                 .addContentTypes(TransformManager.CONTENT_CLASS)
                                 .addScope(InternalScope.LOCAL_DEPS)
                                 .setFileCollection(
-                                        creationConfig.getVariantScope().getLocalPackagedJars())
+                                        componentProperties
+                                                .getVariantScope()
+                                                .getLocalPackagedJars())
                                 .build());
     }
 
@@ -510,21 +512,25 @@ public class LibraryTaskManager
     }
 
     @Override
-    protected void postJavacCreation(@NonNull BaseCreationConfig creationConfig) {
+    protected void postJavacCreation(@NonNull ComponentPropertiesImpl componentProperties) {
         // create an anchor collection for usage inside the same module (unit tests basically)
         ConfigurableFileCollection files =
-                creationConfig
+                componentProperties
                         .getServices()
                         .fileCollection(
-                                creationConfig.getArtifacts().get(JAVAC.INSTANCE),
-                                creationConfig.getVariantData().getAllPreJavacGeneratedBytecode(),
-                                creationConfig.getVariantData().getAllPostJavacGeneratedBytecode());
-        creationConfig.getArtifacts().appendToAllClasses(files);
+                                componentProperties.getArtifacts().get(JAVAC.INSTANCE),
+                                componentProperties
+                                        .getVariantData()
+                                        .getAllPreJavacGeneratedBytecode(),
+                                componentProperties
+                                        .getVariantData()
+                                        .getAllPostJavacGeneratedBytecode());
+        componentProperties.getArtifacts().appendToAllClasses(files);
 
         // Create jar used for publishing to API elements (for other projects to compile against).
         taskFactory.register(
                 new BundleLibraryClassesJar.CreationAction(
-                        creationConfig, AndroidArtifacts.PublishedConfigType.API_ELEMENTS));
+                        componentProperties, AndroidArtifacts.PublishedConfigType.API_ELEMENTS));
     }
 
     public void createLibraryAssetsTask(@NonNull VariantPropertiesImpl variantProperties) {
@@ -585,12 +591,12 @@ public class LibraryTaskManager
     @NonNull
     @Override
     protected Set<ScopeType> getJavaResMergingScopes(
-            @NonNull BaseCreationConfig creationConfig,
+            @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull QualifiedContent.ContentType contentType) {
         Preconditions.checkArgument(
                 contentType == RESOURCES || contentType == NATIVE_LIBS,
                 "contentType must be RESOURCES or NATIVE_LIBS");
-        if (creationConfig.getVariantType().isTestComponent()) {
+        if (componentProperties.getVariantType().isTestComponent()) {
             if (contentType == RESOURCES) {
                 return TransformManager.SCOPE_FULL_PROJECT_WITH_LOCAL_JARS;
             }

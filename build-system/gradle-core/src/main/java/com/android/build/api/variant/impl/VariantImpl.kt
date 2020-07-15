@@ -23,16 +23,14 @@ import com.android.build.api.component.UnitTest
 import com.android.build.api.component.UnitTestProperties
 import com.android.build.api.component.analytics.AnalyticsEnabledVariant
 import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Action
 
-abstract class VariantImpl<PropertiesT: VariantProperties>(
+abstract class VariantImpl<PropertiesT: VariantPropertiesImpl>(
     variantDslInfo: VariantDslInfo,
     componentIdentity: ComponentIdentity,
     variantApiServices: VariantApiServices
@@ -40,9 +38,7 @@ abstract class VariantImpl<PropertiesT: VariantProperties>(
     ComponentImpl<PropertiesT>(variantDslInfo, componentIdentity, variantApiServices),
     Variant<PropertiesT> {
 
-    override var minSdkVersion: AndroidVersion = AndroidVersionImpl(
-        variantDslInfo.minSdkVersion.apiLevel,
-        variantDslInfo.minSdkVersion.codename)
+    override var minSdkVersion = variantDslInfo.minSdkVersion.apiLevel
 
     override fun unitTest(action: UnitTest<UnitTestProperties>.() -> Unit) {
         throw RuntimeException("Actions can only be registered through DSL aware objects.")

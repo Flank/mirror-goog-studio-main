@@ -37,7 +37,6 @@ iml_module(
         "//tools/base/repository:studio.android.sdktools.repository[module]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8[test]",
-        "//tools/idea/.idea/libraries:jaxb-api",
     ],
 )
 
@@ -89,7 +88,6 @@ maven_java_library(
         "//tools/base/third_party:org.apache.httpcomponents_httpclient",
         # Include explicitly in order to depend on httpcore 4.4.5 instead of 4.4.4
         "//tools/base/third_party:org.apache.httpcomponents_httpcore",
-        "//tools/base/third_party:jakarta.xml.bind_jakarta.xml.bind-api",
     ],
 )
 

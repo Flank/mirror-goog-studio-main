@@ -31,10 +31,6 @@ iml_module(
     name = "unb.studio.android.sdktools.base.bazel.avd",
     srcs = ["src"],
     iml_files = ["android.sdktools.base.bazel.avd.iml"],
-    tags = [
-        "manual",
-        "unb",
-    ],
     visibility = ["//visibility:public"],
     deps = ["//prebuilts/studio/intellij-sdk:studio-sdk"],
 )

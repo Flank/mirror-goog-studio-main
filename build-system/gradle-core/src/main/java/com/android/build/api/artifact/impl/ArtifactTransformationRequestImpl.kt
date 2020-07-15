@@ -20,10 +20,12 @@ import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
+import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters
+import com.android.build.gradle.internal.workeractions.WorkActionAdapter
 import com.android.ide.common.workers.GradlePluginMBeans
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
@@ -43,12 +45,12 @@ class ArtifactTransformationRequestImpl<TaskT: Task>(
     private val outputArtifactType: Artifact.SingleArtifact<Directory>
 ) : Serializable, ArtifactTransformationRequest<TaskT> {
 
-    override fun <ParamT: WorkParameters> submit(
+    override fun <ParamT> submit(
         task: TaskT,
         workQueue: WorkQueue,
         actionType: Class<out WorkAction<ParamT>>,
-        parameterConfigurator: (builtArtifact: BuiltArtifact, outputLocation: Directory, parameters: ParamT) -> File
-    ): Supplier<BuiltArtifacts> {
+        parameterConfigurator: (builtArtifact: BuiltArtifact, outputLocation: Directory, parameters: ParamT) -> File): Supplier<BuiltArtifacts>
+            where ParamT : WorkParameters, ParamT: Serializable {
 
         val mapOfBuiltArtifactsToParameters = mutableMapOf<BuiltArtifact, File>()
         val sourceBuiltArtifacts =

@@ -18,7 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -180,9 +180,9 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: BaseCreationConfig
-    ) : VariantTaskCreationAction<AnalyzeDependenciesTask, BaseCreationConfig>(
-        creationConfig
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<AnalyzeDependenciesTask, ComponentPropertiesImpl>(
+        componentProperties
     ) {
 
         override val name: String

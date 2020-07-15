@@ -33,10 +33,10 @@ for(Entry entry : map.getEntries().values()) {
 ```
  ZipArchive zip = new ZipArchive("app.apk");
 
- ZipSource zipSource1 = ZipSource.selectAll(new File("/path/to/zip1.zip"));
+ ZipSource zipSource1 = ZipSource.selectAll(new File("/path/to/zip1.zip")):
  zip.add(zipSource1);
 
- ZipSource zipSource2 = ZipSource.selectAll(new File("/path/to/zip2.zip"));
+ ZipSource zipSource2 = ZipSource.selectAll(new File("/path/to/zip2.zip")):
  zip.add(zipSource2);
 
  zip.close();
@@ -46,7 +46,7 @@ for(Entry entry : map.getEntries().values()) {
 ```
  ZipArchive zip = new ZipArchive("app.apk");
 
- ZipSource zipSource = new ZipSource(new File("/path/to/zip1.zip"));
+ ZipSource zipSource = new ZipSource(new File("/path/to/zip1.zip")):
 
  zipSource.select("classes18.dex", "classes18NewName.dex"); // non-aligned (default)
 
@@ -61,7 +61,7 @@ for(Entry entry : map.getEntries().values()) {
 ## How to iterate over a zip source entries and select only a few
 ```
  ZipArchive zip = new ZipArchive("app.apk");
- ZipSource zipSource = new ZipSource(new File("/path/to/zip1.zip"));
+ ZipSource zipSource = new ZipSource(new File("/path/to/zip1.zip")):
  for(String name : zipSource.entries().keys()) {
      if (youwantIt) {
          zipSource.select(name, "newName");
@@ -76,21 +76,21 @@ Creating a ZipSource is not an I/O free operation since the CD of the source arc
 In the case where one source zip is to be used to generate multiple destination zips, parsing
 can be done only once by providing the same ZipMap to each ZipSource.
 
-```
+``` 
  // The source zip is parsed only once.
  ZipMap map = ZipMap.from(new File("source.zip"));
 
- ZipSource zipSource1 = new ZipSource(map);
+ ZipSource zipSource1 = new ZipSource(map):
  zipSource1.select("a", "a");
  try(ZipArchive archive = new ZipArchive("dest1.zip")) {
    archive.add(zipSource1);
  }
 
 
- ZipSource zipSource2 = new ZipSource(map);
+ ZipSource zipSource2 = new ZipSource(map):
  zipSource2.select("b", "b");
  try(ZipArchive archive = new ZipArchive("dest2.zip")) {
    archive.add(zipSource2);
  }
 
-```
+``` 

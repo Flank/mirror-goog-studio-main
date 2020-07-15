@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.dependency
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.dexing.readDesugarGraph
 import com.android.build.gradle.internal.dexing.writeDesugarGraph
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
@@ -324,18 +324,18 @@ abstract class DexingWithClasspathTransform : BaseDexingTransform<BaseDexingTran
     override fun computeClasspathFiles() = classpath.files.map(File::toPath)
 }
 
-fun getDexingArtifactConfigurations(components: Collection<BaseCreationConfig>): Set<DexingArtifactConfiguration> {
+fun getDexingArtifactConfigurations(components: Collection<ComponentPropertiesImpl>): Set<DexingArtifactConfiguration> {
     return components.map { getDexingArtifactConfiguration(it) }.toSet()
 }
 
-fun getDexingArtifactConfiguration(creationConfig: BaseCreationConfig): DexingArtifactConfiguration {
+fun getDexingArtifactConfiguration(component: ComponentPropertiesImpl): DexingArtifactConfiguration {
     return DexingArtifactConfiguration(
-        minSdk = creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel,
-        isDebuggable = creationConfig.variantDslInfo.isDebuggable,
-        enableDesugaring = creationConfig.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8,
-        enableCoreLibraryDesugaring = creationConfig.variantScope.isCoreLibraryDesugaringEnabled,
-        needsShrinkDesugarLibrary = creationConfig.variantScope.needsShrinkDesugarLibrary,
-        incrementalDexingTransform = creationConfig.globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM)
+        minSdk = component.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel,
+        isDebuggable = component.variantDslInfo.isDebuggable,
+        enableDesugaring = component.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8,
+        enableCoreLibraryDesugaring = component.variantScope.isCoreLibraryDesugaringEnabled,
+        needsShrinkDesugarLibrary = component.variantScope.needsShrinkDesugarLibrary,
+        incrementalDexingTransform = component.globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM)
     )
 }
 

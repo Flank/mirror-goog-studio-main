@@ -52,7 +52,6 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
             @NonNull GradleTestProject gradleTestProject,
             @NonNull ProjectConnection projectConnection) {
         super(
-                gradleTestProject,
                 projectConnection,
                 gradleTestProject::setLastBuildResult,
                 gradleTestProject.getTestDir().toPath(),

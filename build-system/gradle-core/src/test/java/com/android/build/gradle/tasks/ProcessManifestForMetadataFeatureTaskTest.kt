@@ -20,11 +20,14 @@ import com.android.SdkConstants
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
-import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.utils.PositionXmlParser
 import com.google.common.truth.Truth
+import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
+import org.gradle.workers.WorkAction
+import org.gradle.workers.WorkParameters
+import org.gradle.workers.WorkQueue
 import org.gradle.workers.WorkerExecutor
 import org.junit.Before
 import org.junit.Rule
@@ -35,7 +38,6 @@ import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 import java.io.File
 import java.io.IOException
-import javax.inject.Inject
 
 class ProcessManifestForMetadataFeatureTaskTest {
 
@@ -48,31 +50,44 @@ class ProcessManifestForMetadataFeatureTaskTest {
     @Mock
     lateinit var variantOutputConfiguration: VariantOutputConfigurationImpl
 
+    @Mock
+    lateinit var workers: WorkerExecutor
+
     private lateinit var task: ProcessManifestForMetadataFeatureTask
     private lateinit var sourceManifestFolder: File
-    private lateinit var workerExecutor: WorkerExecutor
-
-    abstract class ProcessManifestForMetadataFeatureTaskForTest @Inject constructor(
-        testWorkerExecutor: WorkerExecutor
-    ) : ProcessManifestForMetadataFeatureTask() {
-        override val workerExecutor = testWorkerExecutor
-    }
 
     @Before
     @Throws(IOException::class)
     fun setUp() {
         MockitoAnnotations.initMocks(this)
         val project: Project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
-        task = project.tasks.register(
-            "testManifestForMetadataFeature",
-            ProcessManifestForMetadataFeatureTaskForTest::class.java,
-            FakeGradleWorkExecutor(project.objects, temporaryFolder.newFolder())
-        ).get()
+        val taskProvider = project.tasks.register(
+            "testManifestForMetadataFeature", ProcessManifestForMetadataFeatureTask::class.java)
+        task = taskProvider.get()
         sourceManifestFolder = temporaryFolder.newFolder("source_manifest")
         Mockito.`when`(mainSplit.variantOutputConfiguration).thenReturn(variantOutputConfiguration)
         Mockito.`when`(variantOutputConfiguration.outputType).thenReturn(
             VariantOutputConfiguration.OutputType.SINGLE)
         Mockito.`when`(variantOutputConfiguration.filters).thenReturn(listOf())
+        val workItemParameters =
+            project.objects.newInstance(ProcessManifestForMetadataFeatureTask.WorkItemParameters::class.java)
+        val workQueue = object: WorkQueue {
+            override fun <T : WorkParameters?> submit(
+                p0: Class<out WorkAction<T>>?,
+                p1: Action<in T>?
+            ) {
+                @Suppress("UNCHECKED_CAST")
+                p1?.execute(workItemParameters as T)
+                project.objects.newInstance(ProcessManifestForMetadataFeatureTask.WorkItem::class.java,
+                    workItemParameters).execute()
+            }
+
+            override fun await() {
+            }
+
+        }
+        Mockito.`when`(workers.noIsolation()).thenReturn(workQueue)
+        task.workersProperty.set(workers)
     }
 
     @Test

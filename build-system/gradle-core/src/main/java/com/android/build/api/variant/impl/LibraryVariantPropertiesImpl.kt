@@ -17,7 +17,6 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -35,7 +34,7 @@ import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class LibraryVariantPropertiesImpl @Inject constructor(
-    override val variant: LibraryVariantImpl,
+    componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
@@ -49,7 +48,7 @@ open class LibraryVariantPropertiesImpl @Inject constructor(
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : VariantPropertiesImpl(
-    variant,
+    componentIdentity,
     buildFeatureValues,
     variantDslInfo,
     variantDependencies,

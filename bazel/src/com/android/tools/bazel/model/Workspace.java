@@ -64,6 +64,9 @@ public class Workspace {
     }
 
     public Package findPackage(String rel) {
+        if (rel.startsWith("bazel-genfiles")) {
+            rel = rel.substring("bazel-genfiles".length() + 1);
+        }
         if (rel.startsWith("bazel-bin")) {
             rel = rel.substring("bazel-bin".length() + 1);
         }

@@ -28,7 +28,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.component.VariantCreationConfig;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.services.BuildServicesKt;
@@ -303,10 +303,11 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<ExtractAnnotations, VariantCreationConfig> {
+            extends VariantTaskCreationAction<ExtractAnnotations, ComponentPropertiesImpl> {
 
-        public CreationAction(@NonNull VariantCreationConfig creationConfig) {
-            super(creationConfig);
+
+        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
+            super(componentProperties);
         }
 
         @NonNull
@@ -357,7 +358,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                             .getExtension()
                             .getCompileOptions()
                             .getEncoding());
-            task.classpath = creationConfig.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR, null);
+            task.classpath = creationConfig.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR);
 
             task.libraries =
                     creationConfig

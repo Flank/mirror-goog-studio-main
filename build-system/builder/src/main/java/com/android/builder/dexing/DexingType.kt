@@ -52,5 +52,3 @@ enum class DexingType(
     fun isPreDex() = preDex
     fun isMultiDex() = multiDex
 }
-
-fun DexingType.isLegacyMultiDexMode() = this === DexingType.LEGACY_MULTIDEX

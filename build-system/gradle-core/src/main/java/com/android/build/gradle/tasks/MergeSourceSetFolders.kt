@@ -15,10 +15,9 @@
  */
 package com.android.build.gradle.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.component.BaseCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ASSETS
@@ -306,9 +305,9 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
     }
 
     abstract class CreationAction protected constructor(
-        creationConfig: BaseCreationConfig
-    ) : VariantTaskCreationAction<MergeSourceSetFolders, BaseCreationConfig>(
-        creationConfig
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<MergeSourceSetFolders, ComponentPropertiesImpl>(
+        componentProperties
     ) {
 
         override val type: Class<MergeSourceSetFolders>
@@ -326,10 +325,10 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
     }
 
     open class MergeAssetBaseCreationAction(
-        creationConfig: BaseCreationConfig,
+        componentProperties: ComponentPropertiesImpl,
         private val outputArtifactType: InternalArtifactType<Directory>,
         private val includeDependencies: Boolean
-    ) : CreationAction(creationConfig) {
+    ) : CreationAction(componentProperties) {
 
         override val name: String
             get() = computeTaskName("merge", "Assets")
@@ -394,9 +393,9 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         }
     }
 
-    class MergeAppAssetCreationAction(creationConfig: BaseCreationConfig) :
+    class MergeAppAssetCreationAction(componentProperties: ComponentPropertiesImpl) :
         MergeAssetBaseCreationAction(
-            creationConfig,
+            componentProperties,
             InternalArtifactType.MERGED_ASSETS,
             true
         ) {
@@ -405,9 +404,9 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             get() = computeTaskName("merge", "Assets")
     }
 
-    class LibraryAssetCreationAction(creationConfig: VariantCreationConfig) :
+    class LibraryAssetCreationAction(componentProperties: ComponentPropertiesImpl) :
         MergeAssetBaseCreationAction(
-            creationConfig,
+            componentProperties,
             InternalArtifactType.LIBRARY_ASSETS,
             false
         ) {
@@ -416,8 +415,8 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             get() = computeTaskName("package", "Assets")
     }
 
-    class MergeJniLibFoldersCreationAction(creationConfig: VariantCreationConfig) :
-        CreationAction(creationConfig) {
+    class MergeJniLibFoldersCreationAction(componentProperties: ComponentPropertiesImpl) :
+        CreationAction(componentProperties) {
 
         override val name: String
             get() = computeTaskName("merge", "JniLibFolders")
@@ -451,8 +450,8 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         }
     }
 
-    class MergeShaderSourceFoldersCreationAction(creationConfig: VariantCreationConfig) :
-        CreationAction(creationConfig) {
+    class MergeShaderSourceFoldersCreationAction(componentProperties: ComponentPropertiesImpl) :
+        CreationAction(componentProperties) {
 
         override val name: String
             get() = computeTaskName("merge", "Shaders")
@@ -485,8 +484,8 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         }
     }
 
-    class MergeMlModelsSourceFoldersCreationAction(creationConfig: VariantCreationConfig) :
-        CreationAction(creationConfig) {
+    class MergeMlModelsSourceFoldersCreationAction(componentProperties: ComponentPropertiesImpl) :
+        CreationAction(componentProperties) {
 
         override val name: String
             get() = computeTaskName("merge", "MlModels")

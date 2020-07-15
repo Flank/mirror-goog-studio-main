@@ -28,15 +28,15 @@ data class SourceProviderImpl(
     override val manifestFile: File,
     override val javaDirectories: Collection<File>,
     override val resourcesDirectories: Collection<File>,
-    override val aidlDirectories: Collection<File>?,
-    override val renderscriptDirectories: Collection<File>?,
+    override val aidlDirectories: Collection<File>,
+    override val renderscriptDirectories: Collection<File>,
     override val cDirectories: Collection<File>,
     override val cppDirectories: Collection<File>,
-    override val resDirectories: Collection<File>?,
-    override val assetsDirectories: Collection<File>?,
+    override val resDirectories: Collection<File>,
+    override val assetsDirectories: Collection<File>,
     override val jniLibsDirectories: Collection<File>,
-    override val shadersDirectories: Collection<File>?,
-    override val mlModelsDirectories: Collection<File>?
+    override val shadersDirectories: Collection<File>,
+    override val mlModelsDirectories: Collection<File>
 ) : SourceProvider, Serializable {
     companion object {
         @JvmStatic

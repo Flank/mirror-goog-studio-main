@@ -80,7 +80,7 @@ public class TransformManagerTest extends TaskTestUtils {
         // add the transform
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
 
         // get the new stream
@@ -123,7 +123,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        transformManager.addTransform(taskFactory, creationConfig, t);
+        transformManager.addTransform(taskFactory, componentProperties, t);
 
         final ImmutableList<SyncIssue> syncIssues = issueReporter.getSyncIssues();
         assertThat(syncIssues).hasSize(1);
@@ -173,7 +173,7 @@ public class TransformManagerTest extends TaskTestUtils {
         // add the transform
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
 
         // get the new stream
@@ -218,7 +218,7 @@ public class TransformManagerTest extends TaskTestUtils {
         // add the transform
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
 
         // get the new streams
@@ -284,7 +284,7 @@ public class TransformManagerTest extends TaskTestUtils {
         // add the transform
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
 
         // get the new streams
@@ -357,7 +357,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .setScopes(Scope.PROJECT)
                 .setReferencedScopes(Scope.EXTERNAL_LIBRARIES)
                 .build();
-        transformManager.addTransform(taskFactory, creationConfig, t);
+        transformManager.addTransform(taskFactory, componentProperties, t);
 
         // get the new streams
         List<TransformStream> streams = transformManager.getStreams();
@@ -393,7 +393,7 @@ public class TransformManagerTest extends TaskTestUtils {
         // add the transform
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
 
         // get the new streams
@@ -460,7 +460,7 @@ public class TransformManagerTest extends TaskTestUtils {
         // add the transform
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
 
         // get the new stream
@@ -506,7 +506,7 @@ public class TransformManagerTest extends TaskTestUtils {
         // add the transform
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
 
         // check the class stream was not consumed.
@@ -548,7 +548,7 @@ public class TransformManagerTest extends TaskTestUtils {
         // add the transform
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
 
         // get the new stream
@@ -598,7 +598,7 @@ public class TransformManagerTest extends TaskTestUtils {
         // add the transform
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
 
         // get the new stream
@@ -654,7 +654,7 @@ public class TransformManagerTest extends TaskTestUtils {
         // add the transform
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
 
         // get the new stream
@@ -705,7 +705,7 @@ public class TransformManagerTest extends TaskTestUtils {
         // add the transform
         TaskProvider<TransformTask> task =
                 transformManager
-                        .addTransform(taskFactory, creationConfig, t)
+                        .addTransform(taskFactory, componentProperties, t)
                         .orElseThrow(syncIssueToException);
 
         // get the new stream
@@ -760,7 +760,7 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // add the transform
         Optional<TaskProvider<TransformTask>> task =
-                transformManager.addTransform(taskFactory, creationConfig, t);
+                transformManager.addTransform(taskFactory, componentProperties, t);
 
         assertThat(task.isPresent()).isFalse();
 
@@ -786,7 +786,7 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // add the transform
         Optional<TaskProvider<TransformTask>> task =
-                transformManager.addTransform(taskFactory, creationConfig, t);
+                transformManager.addTransform(taskFactory, componentProperties, t);
 
         assertThat(task.isPresent()).isFalse();
 
@@ -811,7 +811,7 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // add the transform
         Optional<TaskProvider<TransformTask>> task =
-                transformManager.addTransform(taskFactory, creationConfig, t);
+                transformManager.addTransform(taskFactory, componentProperties, t);
 
         assertThat(task.isPresent()).isFalse();
 
@@ -834,7 +834,7 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // add the transform
         Optional<TaskProvider<TransformTask>> task =
-                transformManager.addTransform(taskFactory, creationConfig, t);
+                transformManager.addTransform(taskFactory, componentProperties, t);
 
         assertThat(task.isPresent()).isFalse();
 

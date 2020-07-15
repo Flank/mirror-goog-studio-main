@@ -84,7 +84,7 @@ class InstallerTest : public ::testing::Test {};
 TEST_F(InstallerTest, TestGetProcessInfo) {
   Executor* exec = new GetProcessInfoExecutor(
       "tools/base/deploy/installer/tests/data/dumpOutput.txt");
-  Workspace workspace("fakeversion", exec);
+  Workspace workspace("fake/path", "fakeversion", exec);
   CmdCommand cmd(workspace);
 
   std::vector<ProcessRecord> records;
@@ -130,7 +130,7 @@ TEST_F(InstallerTest, TestFileNoOpPatching) {
 
   int pipeBuffer[2];
   pipe(pipeBuffer);
-  PatchApplier patchApplier;
+  PatchApplier patchApplier("");
   bool patchSucceeded =
       patchApplier.ApplyPatchToFD(patchInstruction, pipeBuffer[1]);
   EXPECT_TRUE(patchSucceeded == true);
@@ -158,7 +158,7 @@ TEST_F(InstallerTest, TestFilePatchingDirtyBeginning) {
 
   int pipeBuffer[2];
   pipe(pipeBuffer);
-  PatchApplier patchApplier;
+  PatchApplier patchApplier("");
   patchApplier.ApplyPatchToFD(patchInstruction, pipeBuffer[1]);
   close(pipeBuffer[1]);
 
@@ -185,7 +185,7 @@ TEST_F(InstallerTest, TestFilePatching) {
 
   int pipeBuffer[2];
   pipe(pipeBuffer);
-  PatchApplier patchApplier;
+  PatchApplier patchApplier("");
   patchApplier.ApplyPatchToFD(patchInstruction, pipeBuffer[1]);
   close(pipeBuffer[1]);
 

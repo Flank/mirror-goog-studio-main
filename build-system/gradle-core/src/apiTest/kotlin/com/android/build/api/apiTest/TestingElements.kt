@@ -566,7 +566,7 @@ fun getManifestProducerTask() =
 
             import java.nio.file.Files
 
-            interface WorkItemParameters extends WorkParameters {
+            interface WorkItemParameters extends WorkParameters, Serializable {
                 RegularFileProperty getInputApkFile()
                 RegularFileProperty getOutputApkFile()
             }

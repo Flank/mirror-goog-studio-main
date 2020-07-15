@@ -17,11 +17,11 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent.DefaultContentType
 import com.android.build.api.transform.QualifiedContent.Scope
 import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.InternalScope
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dependency.BaseDexingTransform
 import com.android.build.gradle.internal.dependency.KEEP_RULES_FILE_NAME
 import com.android.build.gradle.internal.dexing.DexParameters
@@ -310,12 +310,12 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
     class CreationAction(
         private val dexOptions: DexOptions,
         enableDexingArtifactTransform: Boolean,
-        creationConfig: VariantCreationConfig
-    ) : VariantTaskCreationAction<DexArchiveBuilderTask, VariantCreationConfig>(
-        creationConfig
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<DexArchiveBuilderTask, ComponentPropertiesImpl>(
+        componentProperties
     ) {
 
-        override val name = creationConfig.computeTaskName("dexBuilder")
+        override val name = componentProperties.computeTaskName("dexBuilder")
 
         private val projectClasses: FileCollection
         private val subProjectsClasses: FileCollection
@@ -332,7 +332,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             val classesFilter =
                 StreamFilter { types, _ -> DefaultContentType.CLASSES in types }
 
-            val transformManager = creationConfig.transformManager
+            val transformManager = componentProperties.transformManager
 
             projectClasses = transformManager.getPipelineOutputAsFileCollection(
                 StreamFilter { _, scopes -> scopes == setOf(Scope.PROJECT) },
@@ -341,17 +341,17 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
 
             val desugaringClasspathScopes: MutableSet<ScopeType> = mutableSetOf(Scope.PROVIDED_ONLY)
             if (enableDexingArtifactTransform) {
-                subProjectsClasses = creationConfig.services.fileCollection()
-                externalLibraryClasses = creationConfig.services.fileCollection()
-                mixedScopeClasses = creationConfig.services.fileCollection()
+                subProjectsClasses = componentProperties.services.fileCollection()
+                externalLibraryClasses = componentProperties.services.fileCollection()
+                mixedScopeClasses = componentProperties.services.fileCollection()
                 dexExternalLibsInArtifactTransform = false
 
                 desugaringClasspathScopes.add(Scope.EXTERNAL_LIBRARIES)
                 desugaringClasspathScopes.add(Scope.TESTED_CODE)
                 desugaringClasspathScopes.add(Scope.SUB_PROJECTS)
-            } else if (creationConfig.variantScope.consumesFeatureJars()) {
-                subProjectsClasses = creationConfig.services.fileCollection()
-                externalLibraryClasses = creationConfig.services.fileCollection()
+            } else if (componentProperties.variantScope.consumesFeatureJars()) {
+                subProjectsClasses = componentProperties.services.fileCollection()
+                externalLibraryClasses = componentProperties.services.fileCollection()
                 dexExternalLibsInArtifactTransform = false
 
                 // Get all classes from the scopes we are interested in.
@@ -385,35 +385,35 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                     classesFilter
                 )
                 dexExternalLibsInArtifactTransform =
-                    creationConfig.services.projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS]
-                            && creationConfig.variantScope.dexer == DexerTool.D8
+                    componentProperties.services.projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS]
+                            && componentProperties.variantScope.dexer == DexerTool.D8
             }
 
             desugaringClasspathForArtifactTransforms = if (dexExternalLibsInArtifactTransform) {
-                val testedExternalLibs = creationConfig.onTestedConfig {
+                val testedExternalLibs = componentProperties.onTestedConfig {
                     it.variantDependencies.getArtifactCollection(
                         ConsumedConfigType.RUNTIME_CLASSPATH,
                         ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.CLASSES_JAR
                     ).artifactFiles
-                } ?: creationConfig.services.fileCollection()
+                } ?: componentProperties.services.fileCollection()
 
                 // Before b/115334911 was fixed, provided classpath did not contain the tested project.
                 // Because we do not want tested variant classes in the desugaring classpath for
                 // external libraries, we explicitly remove it.
-                val testedProject = this.creationConfig.onTestedConfig {
+                val testedProject = creationConfig.onTestedConfig {
                     val artifactType =
                         it.variantScope.publishingSpec.getSpec(
                             AndroidArtifacts.ArtifactType.CLASSES_JAR,
                             AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS
                         )!!.outputType
-                    creationConfig.services.fileCollection(
+                    componentProperties.services.fileCollection(
                         it.artifacts.get(artifactType)
                     )
-                } ?: creationConfig.services.fileCollection()
+                } ?: componentProperties.services.fileCollection()
 
-                creationConfig.services.fileCollection(
-                    creationConfig.transformManager.getPipelineOutputAsFileCollection(
+                componentProperties.services.fileCollection(
+                    componentProperties.transformManager.getPipelineOutputAsFileCollection(
                         StreamFilter { _, scopes ->
                             scopes.subtract(desugaringClasspathScopes).isEmpty()
                         },
@@ -421,11 +421,11 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                     ), testedExternalLibs, externalLibraryClasses
                 ).minus(testedProject)
             } else {
-                creationConfig.services.fileCollection()
+                componentProperties.services.fileCollection()
             }
 
             desugaringClasspathClasses =
-                creationConfig.transformManager.getPipelineOutputAsFileCollection(
+                componentProperties.transformManager.getPipelineOutputAsFileCollection(
                     StreamFilter { _, scopes ->
                         scopes.contains(Scope.TESTED_CODE)
                                 || scopes.subtract(desugaringClasspathScopes).isEmpty()

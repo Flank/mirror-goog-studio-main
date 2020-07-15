@@ -31,8 +31,8 @@ open class TestVariantImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity,
     variantApiServices: VariantApiServices
-) : VariantImpl<TestVariantProperties>(variantDslInfo, variantConfiguration, variantApiServices),
-    TestVariant<TestVariantProperties> {
+) : VariantImpl<TestVariantPropertiesImpl>(variantDslInfo, variantConfiguration, variantApiServices),
+    TestVariant<TestVariantPropertiesImpl> {
     override fun createUserVisibleVariantObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
@@ -42,8 +42,4 @@ open class TestVariantImpl @Inject constructor(
             this,
             stats
         ) as AnalyticsEnabledVariant<in TestVariantProperties>
-
-    override fun executePropertiesActions(target: TestVariantProperties) {
-        propertiesActions.executeActions(target)
-    }
 }

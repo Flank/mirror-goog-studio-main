@@ -29,10 +29,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -153,27 +157,26 @@ public class JarTestSuiteRunner extends Suite {
                     "Must set test.suite.jar to the name of the jar containing JUnit tests");
         }
         String nameLowerCase = name.toLowerCase(Locale.US);
-
         final ClassLoader loader = JarTestSuite.class.getClassLoader();
-        Queue<String> paths =
-                new ArrayDeque<>(
-                        Arrays.asList(
-                                System.getProperty(JAVA_CLASS_PATH).split(File.pathSeparator)));
-        while (!paths.isEmpty()) {
-            String path = paths.remove();
-            // Lower case in order to avoid issues on Windows/Mac.
-            String pathLowerCase = path.toLowerCase(Locale.US);
-            if (pathLowerCase.endsWith(nameLowerCase)) {
-                testClasses.addAll(getTestClasses(path, loader));
+        if (loader instanceof URLClassLoader) {
+            Queue<URL> urls = new ArrayDeque<>();
+            urls.addAll(Arrays.asList(((URLClassLoader) loader).getURLs()));
+            while (!urls.isEmpty()) {
+                URL url = urls.remove();
+                // Lower case in order to avoid issues on Windows/Mac.
+                String urlLowerCase = url.getPath().toLowerCase(Locale.US);
+                if (urlLowerCase.endsWith(nameLowerCase)) {
+                    testClasses.addAll(getTestClasses(url, loader));
+                }
+                addManifestClassPath(url, urls);
             }
-            addManifestClassPath(path, paths);
         }
         if (testClasses.isEmpty()) {
             throw new RuntimeException("No JUnit tests found in test suite. Searched in: " + name);
         }
 
-        final Set<String> excludeClassNames =
-                new HashSet<>(classNamesToExclude(suiteClass, testClasses));
+        final Set<String> excludeClassNames = new HashSet<>();
+        excludeClassNames.addAll(classNamesToExclude(suiteClass, testClasses));
         testClasses.removeIf(c -> excludeClassNames.contains(c.getCanonicalName()));
         if (testClasses.isEmpty()) {
             throw new RuntimeException("No JUnit tests remain after applying filters");
@@ -183,10 +186,9 @@ public class JarTestSuiteRunner extends Suite {
         return testClasses.toArray(new Class<?>[0]);
     }
 
-    private static void addManifestClassPath(String jarPath, Queue<String> existingPaths)
-            throws IOException {
-        if (jarPath.endsWith(".jar")) {
-            File file = new File(jarPath);
+    private static void addManifestClassPath(URL jarUrl, Queue<URL> urls) throws IOException {
+        if (jarUrl.getPath().endsWith(".jar")) {
+            File file = new File(jarUrl.getFile());
             try (ZipFile zipFile = new ZipFile(file)) {
                 ZipEntry entry = zipFile.getEntry("META-INF/MANIFEST.MF");
                 if (entry != null) {
@@ -197,13 +199,13 @@ public class JarTestSuiteRunner extends Suite {
                         if (cp != null) {
                             String[] paths = cp.split(" ");
                             for (String path : paths) {
-                                File absoluteFile = new File(path);
-                                if (absoluteFile.exists()) {
-                                    existingPaths.add(path);
-                                } else {
+                                try {
+                                    URL url = new URL(path);
+                                    urls.add(url);
+                                } catch (MalformedURLException e) {
                                     File relFile = new File(file.getParentFile(), path);
                                     if (relFile.exists()) {
-                                        existingPaths.add(relFile.getAbsolutePath());
+                                        urls.add(relFile.toURI().toURL());
                                     } else {
                                         System.err.println(
                                                 "Cannot find class-path jar: "
@@ -241,10 +243,9 @@ public class JarTestSuiteRunner extends Suite {
         return excludeClassNames;
     }
 
-    private static List<Class<?>> getTestClasses(String path, ClassLoader loader)
-            throws ClassNotFoundException, IOException {
+    private static List<Class<?>> getTestClasses(URL url, ClassLoader loader) throws ClassNotFoundException, IOException {
         List<Class<?>> testClasses = new ArrayList<>();
-        File file = new File(path);
+        File file = new File(url.getFile());
         if (file.exists()) {
             try (ZipInputStream zis = new ZipInputStream(new FileInputStream(file))) {
                 ZipEntry ze;

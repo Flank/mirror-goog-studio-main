@@ -27,7 +27,6 @@
 #include <unistd.h>
 
 #include "tools/base/deploy/common/event.h"
-#include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/apk_archive.h"
@@ -57,6 +56,7 @@ void DumpCommand::Run(proto::InstallerResponse* response) {
   for (const std::string& package_name : package_names_) {
     proto::PackageDump* package_dump = dump_response->add_packages();
     package_dump->set_name(package_name);
+
     GetProcessIds(package_name, package_dump);
 
     // TODO: Since dump performs multiple operations, this should not
@@ -91,7 +91,7 @@ bool DumpCommand::GetApks(const std::string& package_name,
   // Extract all apks.
   for (std::string& apk_path : apks_path) {
     Phase p2("processing APK");
-    ApkArchive archive(apk_path);
+    ApkArchive archive(workspace_.GetRoot() + apk_path);
     Dump dump = archive.ExtractMetadata();
 
     proto::ApkDump* apk_dump = package_dump->add_apks();
@@ -130,9 +130,10 @@ bool DumpCommand::GetProcessIds(const std::string& package_name,
     return false;
   }
 
-  DIR* proc_dir = IO::opendir("/proc");
+  std::string proc_path = workspace_.GetRoot() + "/proc";
+  DIR* proc_dir = opendir(proc_path.c_str());
   if (proc_dir == nullptr) {
-    ErrEvent("Could not open system '/proc' directory");
+    ErrEvent("Could not open system proc directory: " + proc_path);
     return false;
   }
 
@@ -196,10 +197,11 @@ bool DumpCommand::GetProcessIds(const std::string& package_name,
 }
 
 bool DumpCommand::ParseProc(dirent* proc_entry, ProcStats* stats) {
-  const std::string proc_path = "/proc/"_s + proc_entry->d_name;
+  std::string proc_path = workspace_.GetRoot() + "/proc/";
+  proc_path += proc_entry->d_name;
 
   struct stat proc_dir_stat;
-  if (IO::stat(proc_path, &proc_dir_stat) < 0) {
+  if (stat(proc_path.c_str(), &proc_dir_stat) < 0) {
     return false;
   }
 
@@ -208,20 +210,20 @@ bool DumpCommand::ParseProc(dirent* proc_entry, ProcStats* stats) {
   // but in this case, if the root file system is not the
   // real one, we use a fake uid for the file.
 
-#ifdef __ANDROID__
-  stats->uid = proc_dir_stat.st_uid;
-#else
-  FILE* uid = IO::fopen(proc_path + "/.uid", "r");
-  if (uid == nullptr) {
-    Log::E("Cannot fake-stat %s", proc_path.c_str());
-    return false;
+  if (workspace_.GetRoot().empty()) {
+    stats->uid = proc_dir_stat.st_uid;
+  } else {
+    FILE* uid = fopen((proc_path + "/.uid").c_str(), "r");
+    if (uid == nullptr) {
+      Log::E("Cannot fake-stat %s", proc_path.c_str());
+      return false;
+    }
+    fscanf(uid, "%d", &stats->uid);
+    fclose(uid);
   }
-  fscanf(uid, "%d", &stats->uid);
-  fclose(uid);
-#endif
 
   std::string cmdline_path = proc_path + "/cmdline";
-  FILE* proc_cmdline = IO::fopen(cmdline_path, "r");
+  FILE* proc_cmdline = fopen(cmdline_path.c_str(), "r");
   if (proc_cmdline == nullptr) {
     return false;
   }
@@ -232,7 +234,7 @@ bool DumpCommand::ParseProc(dirent* proc_entry, ProcStats* stats) {
   fclose(proc_cmdline);
 
   std::string stat_path = proc_path + "/stat";
-  FILE* proc_stat = IO::fopen(stat_path, "r");
+  FILE* proc_stat = fopen(stat_path.c_str(), "r");
   if (proc_stat == nullptr) {
     return false;
   }

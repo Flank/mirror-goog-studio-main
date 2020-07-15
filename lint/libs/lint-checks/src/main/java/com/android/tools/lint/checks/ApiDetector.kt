@@ -2309,7 +2309,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 ATTR_AUTOFILL_HINTS,
                 "foregroundServiceType",
                 "autofilledHighlight",
-                "requestLegacyExternalStorage",
 
                 // The following attributes are benign because aapt2 will rewrite them
                 // into the safe alternatives; e.g. paddingHorizontal gets rewritten as

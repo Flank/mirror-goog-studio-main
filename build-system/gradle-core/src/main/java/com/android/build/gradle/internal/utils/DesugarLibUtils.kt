@@ -18,11 +18,10 @@
 
 package com.android.build.gradle.internal.utils
 
-import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.VariantDependencies.Companion.CONFIG_NAME_CORE_LIBRARY_DESUGARING
 import com.android.sdklib.AndroidTargetHash
+import com.android.sdklib.AndroidVersion
 import com.google.common.io.ByteStreams
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -117,7 +116,7 @@ fun getDesugaredMethods(
     if (compileSdkVersion == null || !coreLibraryDesugaringEnabled || configuration.dependencies.isEmpty())
         return Collections.emptyList()
 
-    val minSdk = minSdkVersion.getFeatureLevel()
+    val minSdk = minSdkVersion.featureLevel
     val compileSdk = AndroidTargetHash.getPlatformVersion(compileSdkVersion)!!.featureLevel
     registerDesugarLibLintTransform(project, minSdk, compileSdk)
     val files = getDesugarLibLintFromTransform(configuration, minSdk, compileSdk ).files

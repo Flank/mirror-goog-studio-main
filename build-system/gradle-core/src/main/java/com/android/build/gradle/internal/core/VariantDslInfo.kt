@@ -310,6 +310,8 @@ interface VariantDslInfo {
 
     val multiDexKeepProguard: File?
 
+    val isLegacyMultiDexMode: Boolean
+
     // dynamic features can always be build in native multidex mode
     val dexingType: DexingType
 

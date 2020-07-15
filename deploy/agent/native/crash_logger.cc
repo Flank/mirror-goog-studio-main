@@ -23,7 +23,6 @@
 #include <sstream>
 
 #include "tools/base/deploy/common/event.h"
-#include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/utils.h"
 
 namespace deploy {
@@ -72,14 +71,14 @@ void CrashLogger::WriteLog(const proto::AgentExceptionLog& log) const {
   std::vector<char> bytes(log.ByteSizeLong());
   log.SerializeToArray(bytes.data(), bytes.size());
 
-  IO::mkdir(log_dir_, S_IRWXG | S_IRWXU | S_IRWXO);
+  mkdir(log_dir_.c_str(), S_IRWXG | S_IRWXU | S_IRWXO);
 
   std::ostringstream log_file(log_dir_, std::ostringstream::ate);
   log_file << "/agent-" << getpid() << "-" << log.event_time_ns() << ".log";
 
   // These log files will persist between installations of the app. They are
   // deleted when the install-server recovers them.
-  int fd = IO::creat(log_file.str(), S_IRUSR | S_IWUSR);
+  int fd = creat(log_file.str().c_str(), S_IRUSR | S_IWUSR);
   if (fd == -1) {
     return;
   }

@@ -15,17 +15,17 @@
  */
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.api.AndroidSourceSet
-import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
+import java.io.File
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
 
 abstract class ProcessJavaResTask : Sync(), VariantAwareTask {
 
@@ -43,9 +43,9 @@ abstract class ProcessJavaResTask : Sync(), VariantAwareTask {
 
     /** Configuration Action for a process*JavaRes tasks.  */
     class CreationAction(
-        creationConfig: BaseCreationConfig
-    ) : VariantTaskCreationAction<ProcessJavaResTask, BaseCreationConfig>(
-        creationConfig
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<ProcessJavaResTask, ComponentPropertiesImpl>(
+        componentProperties
     ) {
 
         override val name: String

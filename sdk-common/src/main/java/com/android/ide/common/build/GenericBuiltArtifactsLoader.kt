@@ -51,7 +51,7 @@ object GenericBuiltArtifactsLoader {
             try {
                 gson.fromJson<GenericBuiltArtifacts>(it, GenericBuiltArtifacts::class.java)
             } catch (e: Exception) {
-                logger.quiet("Cannot parse build output metadata file, please run a clean build")
+                logger.error(e, "Cannot parse build output metadata file, please run a clean build")
                 return null
             }
         }

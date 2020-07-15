@@ -26,7 +26,6 @@
 #include <deque>
 #include <string>
 
-#include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/utils.h"
 
@@ -57,9 +56,9 @@ bool Overlay::Open() {
     return true;
   }
 
-  if (IO::access(overlay_folder_, F_OK) != 0) {
+  if (access(overlay_folder_.c_str(), F_OK) != 0) {
     // If overlay directory does not already exist, create one.
-    if (IO::mkdir(overlay_folder_, S_IRWXU) < 0) {
+    if (mkdir(overlay_folder_.c_str(), S_IRWXU) < 0) {
       ErrEvent("Could not create overlay folder at '" + overlay_folder_ +
                "': " + strerror(errno));
       return false;
@@ -69,7 +68,7 @@ bool Overlay::Open() {
     // dirty. We cannot use DeleteFile() here, because the overlay isn't open
     // yet.
     const std::string id_file = overlay_folder_ + kIdFile;
-    if (IO::unlink(id_file) != 0) {
+    if (unlink(id_file.c_str()) != 0) {
       ErrEvent("Could not remove id file to open overlay: "_s +
                strerror(errno));
       return false;
@@ -94,7 +93,7 @@ bool Overlay::WriteFile(const std::string& path,
   std::string dir = overlay_path.substr(0, overlay_path.find_last_of('/'));
 
   // Check each path in reverse order so we check the minimum number of paths.
-  while (IO::access(dir, F_OK)) {
+  while (access(dir.c_str(), F_OK)) {
     std::string next = dir.substr(0, dir.find_last_of('/'));
     dirs.push_back(std::move(dir));
     dir = std::move(next);
@@ -102,7 +101,7 @@ bool Overlay::WriteFile(const std::string& path,
 
   // Create the directories that don't already exist.
   while (!dirs.empty()) {
-    if (IO::mkdir(dirs.back(), S_IRWXU) < 0) {
+    if (mkdir(dirs.back().c_str(), S_IRWXU) < 0) {
       ErrEvent("Could not create directory at '" + dirs.back() +
                "': " + strerror(errno));
       return false;
@@ -125,7 +124,7 @@ bool Overlay::DeleteFile(const std::string& path) const {
   }
 
   const std::string overlay_path = overlay_folder_ + path;
-  if (IO::unlink(overlay_path) != 0) {
+  if (unlink(overlay_path.c_str()) != 0) {
     ErrEvent("Could not remove file '" + overlay_path +
              "': " + strerror(errno));
     return false;

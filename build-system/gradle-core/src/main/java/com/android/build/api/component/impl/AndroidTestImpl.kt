@@ -17,7 +17,6 @@
 package com.android.build.api.component.impl
 
 import com.android.build.api.component.AndroidTest
-import com.android.build.api.component.AndroidTestProperties
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.VariantApiServices
@@ -27,12 +26,9 @@ open class AndroidTestImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity,
     variantApiServices: VariantApiServices
-) : TestComponentImpl<AndroidTestProperties>(
+) : TestComponentImpl<AndroidTestPropertiesImpl>(
     variantDslInfo,
     variantConfiguration,
     variantApiServices
-), AndroidTest<AndroidTestProperties> {
-    override fun executePropertiesActions(target: AndroidTestProperties) {
-        propertiesActions.executeActions(target)
-    }
+), AndroidTest<AndroidTestPropertiesImpl> {
 }

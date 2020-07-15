@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.testing.utp
 
-import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.testing.StaticTestData
@@ -27,6 +26,7 @@ import com.android.ide.common.process.ProcessExecutor
 import com.android.ide.common.process.ProcessOutputHandler
 import com.android.ide.common.process.ProcessResult
 import com.android.ide.common.workers.ExecutorServiceAdapter
+import com.android.sdklib.AndroidVersion
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.ILogger
@@ -85,7 +85,7 @@ class UtpTestRunnerTest {
     fun setupMocks() {
         `when`(mockDevice.apiLevel).thenReturn(28)
         `when`(mockDevice.name).thenReturn("mockDeviceName")
-        `when`(mockTestData.minSdkVersion).thenReturn(AndroidVersionImpl(28))
+        `when`(mockTestData.minSdkVersion).thenReturn(AndroidVersion(28))
         `when`(mockTestData.testApk).thenReturn(mockTestApk)
         `when`(mockTestData.testedApkFinder).thenReturn { _, _ -> listOf(mockAppApk) }
 

@@ -26,7 +26,6 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.dsl.BuildFeatures;
-import com.android.build.api.variant.VariantProperties;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
@@ -60,7 +59,7 @@ import org.gradle.api.Project;
  * provides variant type (app, lib) specific implementation.
  */
 public interface VariantFactory<
-        VariantT extends VariantImpl<? extends VariantProperties>,
+        VariantT extends VariantImpl<VariantPropertiesT>,
         VariantPropertiesT extends VariantPropertiesImpl> {
 
     @NonNull
@@ -99,7 +98,7 @@ public interface VariantFactory<
 
     @NonNull
     UnitTestPropertiesImpl createUnitTestProperties(
-            @NonNull UnitTestImpl componentIdentity,
+            @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
@@ -115,7 +114,7 @@ public interface VariantFactory<
 
     @NonNull
     AndroidTestPropertiesImpl createAndroidTestProperties(
-            @NonNull AndroidTestImpl componentIdentity,
+            @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,

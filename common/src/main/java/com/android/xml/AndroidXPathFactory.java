@@ -79,7 +79,7 @@ public class AndroidXPathFactory {
         }
 
         @Override
-        public Iterator<String> getPrefixes(String namespaceURI) {
+        public Iterator<?> getPrefixes(String namespaceURI) {
             if (SdkConstants.ANDROID_URI.equals(namespaceURI)) {
                 return mAndroidPrefixes.iterator();
             }

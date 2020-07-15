@@ -15,139 +15,31 @@
  */
 package com.android.ddmlib;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import junit.framework.TestCase;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+/**
+ * Unit tests for {@link EmulatorConsole}.
+ */
+public class EmulatorConsoleTest extends TestCase {
 
-@RunWith(JUnit4.class)
-public final class EmulatorConsoleTest {
-    /** Test success case for {@link EmulatorConsole#getEmulatorPort(String)}. */
-    @Test
-    public void getEmulatorPort() {
+    /**
+     * Test success case for {@link EmulatorConsole#getEmulatorPort(String)}.
+     */
+    public void testGetEmulatorPort() {
         assertEquals(Integer.valueOf(5554), EmulatorConsole.getEmulatorPort("emulator-5554"));
     }
 
     /**
      * Test {@link EmulatorConsole#getEmulatorPort(String)} when input serial has invalid format.
      */
-    @Test
-    public void getEmulatorPort_invalid() {
+    public void testGetEmulatorPort_invalid() {
         assertNull(EmulatorConsole.getEmulatorPort("invalidserial"));
     }
 
-    /** Test {@link EmulatorConsole#getEmulatorPort(String)} when port is not a number. */
-    @Test
-    public void getEmulatorPort_nan() {
+    /**
+     * Test {@link EmulatorConsole#getEmulatorPort(String)} when port is not a number.
+     */
+    public void testGetEmulatorPort_nan() {
         assertNull(EmulatorConsole.getEmulatorPort("emulator-NaN"));
-    }
-
-    @Test
-    public void processOutputLinesLengthEqualsZero() {
-        // Arrange
-        String[] lines = {};
-
-        // Act
-        Object output = EmulatorConsole.processOutput(lines);
-
-        // Assert
-        assertNull(output);
-    }
-
-    @Test
-    public void processOutputMatcherMatches() {
-        // Arrange
-        String[] lines = {
-            "allows you to control (e.g. start/stop) the execution of the virtual device",
-            "",
-            "available sub-commands:",
-            "    stop             stop the virtual device",
-            "    start            start/restart the virtual device",
-            "    status           query virtual device status",
-            "    heartbeat        query the heart beat number of the guest system",
-            "    rewindaudio      rewind the input audio to the beginning",
-            "    name             query virtual device name",
-            "    snapshot         state snapshot commands",
-            "    pause            pause the virtual device",
-            "    hostmicon        activate the host audio input device",
-            "    hostmicoff       deactivate the host audio input device",
-            "    resume           resume the virtual device",
-            "    bugreport        generate bug report info.",
-            "    id               query virtual device ID",
-            "    windowtype       query virtual device headless or qtwindow",
-            "    path             query AVD path",
-            "    discoverypath    query AVD discovery path",
-            "    snapshotspath    query AVD snapshots path",
-            "    snapshotpath     query path to a particular AVD snapshot",
-            "",
-            "KO:  bad sub-command"
-        };
-
-        // Act
-        Object output = EmulatorConsole.processOutput(lines);
-
-        // Assert
-        assertEquals("bad sub-command", output);
-    }
-
-    @Test
-    public void processOutputLastLineEqualsOkLinux() {
-        // Arrange
-        String[] lines = {"/home/juancnuno/.android/avd/Pixel_4_API_30.avd", "OK"};
-
-        // Act
-        Object output = EmulatorConsole.processOutput(lines);
-
-        // Assert
-        assertEquals("/home/juancnuno/.android/avd/Pixel_4_API_30.avd", output);
-    }
-
-    @Test
-    public void processOutputLastLineEqualsOkWindows() {
-        // Arrange
-        String[] lines = {"C:\\Users\\rpaquay\\.android\\avd\\Pixel_2_API_29.avd", "OK"};
-
-        // Act
-        Object output = EmulatorConsole.processOutput(lines);
-
-        // Assert
-        assertEquals("C:\\Users\\rpaquay\\.android\\avd\\Pixel_2_API_29.avd", output);
-    }
-
-    @Test
-    public void processOutput() {
-        // Arrange
-        // See http://b/161150889
-        String[] lines = {
-            "allows you to control (e.g. start/stop) the execution of the virtual device",
-            "",
-            "available sub-commands:",
-            "    stop             stop the virtual device",
-            "    start            start/restart the virtual device",
-            "    status           query virtual device status",
-            "    heartbeat        query the heart beat number of the guest system",
-            "    rewindaudio      rewind the input audio to the beginning",
-            "    name             query virtual device name",
-            "    snapshot         state snapshot commands",
-            "    pause            pause the virtual device",
-            "    hostmicon        activate the host audio input device",
-            "    hostmicoff       deactivate the host audio input device",
-            "    resume           resume the virtual device",
-            "    bugreport        generate bug report info.",
-            "    id               query virtual device ID",
-            "    windowtype       query virtual device headless or qtwindow",
-            "    path             query AVD path",
-            "    discoverypath    query AVD discovery path",
-            "    snapshotspath    query AVD snapshots path",
-            "    snapshotpath     query path to a pa"
-        };
-
-        // Act
-        Object output = EmulatorConsole.processOutput(lines);
-
-        // Assert
-        assertNull(output);
     }
 }

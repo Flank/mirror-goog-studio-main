@@ -61,7 +61,7 @@ class ToolsAttributeUsageRecorder(val rawResourcesPath: Path) : ResourceUsageRec
     private fun processResourceToolsAttributes(path: Path): Map<String, String> {
         val toolsAttributes = mutableMapOf<String, String>()
         Files.newBufferedReader(path).use { reader ->
-            val factory = XMLInputFactory.newInstance()
+            val factory = XMLInputFactory.newFactory()
             val xmlStreamReader = factory.createXMLStreamReader(reader)
 
             var rootElementProcessed = false

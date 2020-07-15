@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.pipeline
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.VariantInfo
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.google.common.collect.ImmutableList
 
@@ -29,13 +29,13 @@ data class VariantInfoImpl(
     val _isDebuggable: Boolean
 ) : VariantInfo {
 
-    constructor(creationConfig: VariantCreationConfig) :
+    constructor(componentProperties: ComponentPropertiesImpl) :
             this(
-                _isTest = creationConfig.variantType.isForTesting,
-                _variantName = creationConfig.name,
-                _buildTypeName = creationConfig.buildType,
-                _flavorNames = creationConfig.productFlavors.map { it.second }.toImmutableList(),
-                _isDebuggable = creationConfig.variantDslInfo.isDebuggable
+                _isTest = componentProperties.variantType.isForTesting,
+                _variantName = componentProperties.name,
+                _buildTypeName = componentProperties.buildType,
+                _flavorNames = componentProperties.productFlavors.map { it.second }.toImmutableList(),
+                _isDebuggable = componentProperties.variantDslInfo.isDebuggable
             )
 
     override fun isTest(): Boolean = _isTest

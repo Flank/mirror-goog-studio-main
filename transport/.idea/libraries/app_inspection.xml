@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="app-inspection">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../../bazel-bin/prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT/ijar_unpacked_classes.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT/inspection-1.0.0-20200219.005553-1.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

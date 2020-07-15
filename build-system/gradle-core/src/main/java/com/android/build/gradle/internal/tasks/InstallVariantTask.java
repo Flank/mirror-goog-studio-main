@@ -19,7 +19,6 @@ import com.android.annotations.NonNull;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.variant.BuiltArtifacts;
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
-import com.android.build.api.variant.impl.VariantApiExtensionsKt;
 import com.android.build.gradle.internal.AdbExecutableInput;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
@@ -223,9 +222,7 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
 
             task.variantName = creationConfig.getBaseName();
             task.supportedAbis = creationConfig.getVariantDslInfo().getSupportedAbis();
-            task.minSdkVersion =
-                    VariantApiExtensionsKt.toSharedAndroidVersion(
-                            creationConfig.getMinSdkVersion());
+            task.minSdkVersion = creationConfig.getMinSdkVersion();
 
             task.setDescription("Installs the " + creationConfig.getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);

@@ -17,6 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.TestVariantProperties
 import com.android.build.gradle.internal.component.TestVariantCreationConfig
@@ -37,7 +38,7 @@ import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class TestVariantPropertiesImpl @Inject constructor(
-    override val variant: TestVariantImpl,
+    componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
@@ -51,7 +52,7 @@ open class TestVariantPropertiesImpl @Inject constructor(
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : VariantPropertiesImpl(
-    variant,
+    componentIdentity,
     buildFeatureValues,
     variantDslInfo,
     variantDependencies,

@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
-import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
+import com.android.build.gradle.internal.fixtures.DirectWorkQueue
 import com.android.testutils.truth.FileSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testfixtures.ProjectBuilder
@@ -28,9 +28,11 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.MockitoAnnotations
 import java.io.File
 import java.util.Properties
-import javax.inject.Inject
 
 /**
  * Unit tests for [AarMetadataTask].
@@ -40,22 +42,21 @@ class AarMetadataTaskTest {
     @get: Rule
     val temporaryFolder = TemporaryFolder()
 
+    @Mock
+    lateinit var workerExecutor: WorkerExecutor
+
     private lateinit var task: AarMetadataTask
     private lateinit var outputFile: File
 
-    abstract class AarMetadataForTest @Inject constructor(testWorkerExecutor: WorkerExecutor) :
-        AarMetadataTask() {
-        override val workerExecutor = testWorkerExecutor
-    }
-
     @Before
     fun setUp() {
+        MockitoAnnotations.initMocks(this)
         val project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
-        task = project.tasks.register(
-            "aarMetadataTask",
-            AarMetadataForTest::class.java,
-            FakeGradleWorkExecutor(project.objects, temporaryFolder.newFolder())
-        ).get()
+        val taskProvider = project.tasks.register("aarMetadataTask", AarMetadataTask::class.java)
+        task = taskProvider.get()
+        val workQueue = DirectWorkQueue(AarMetadataWorkParameters::class.java)
+        Mockito.`when`(workerExecutor.noIsolation()).thenReturn(workQueue)
+        task.workerExecutorProperty.set(workerExecutor)
         outputFile = temporaryFolder.newFile("AarMetadata.xml")
     }
 

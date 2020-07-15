@@ -17,10 +17,10 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.DOT_JAR
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -36,6 +36,7 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
 import java.util.zip.Deflater
 
 /**
@@ -97,9 +98,9 @@ abstract class MergeClassesTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: VariantCreationConfig
-    ) : VariantTaskCreationAction<MergeClassesTask, VariantCreationConfig>(
-        creationConfig
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<MergeClassesTask, ComponentPropertiesImpl>(
+        componentProperties
     ) {
         override val type = MergeClassesTask::class.java
         override val name: String = computeTaskName("merge", "Classes")
@@ -107,7 +108,7 @@ abstract class MergeClassesTask : NonIncrementalTask() {
         // Because ordering matters for the transform pipeline, we need to fetch the classes as soon
         // as this creation action is instantiated.
         private val inputFiles =
-            creationConfig
+            componentProperties
                 .transformManager
                 .getPipelineOutputAsFileCollection { contentTypes, scopes ->
                     contentTypes.contains(QualifiedContent.DefaultContentType.CLASSES)

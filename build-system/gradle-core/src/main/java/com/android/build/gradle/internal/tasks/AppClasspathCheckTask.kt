@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.repository.GradleVersion
@@ -74,20 +74,20 @@ dependencies {
         throw RuntimeException(message)
     }
 
-    class CreationAction(private val creationConfig: BaseCreationConfig) :
+    class CreationAction(private val componentProperties: ComponentPropertiesImpl) :
         TaskCreationAction<AppClasspathCheckTask>() {
 
         override val name: String
-        get() = creationConfig.computeTaskName("check", "Classpath")
+        get() = componentProperties.computeTaskName("check", "Classpath")
 
         override val type: Class<AppClasspathCheckTask>
             get() = AppClasspathCheckTask::class.java
 
         override fun configure(task: AppClasspathCheckTask) {
-            task.variantName = creationConfig.name
+            task.variantName = componentProperties.name
 
-            val runtimeClasspath = creationConfig.variantDependencies.runtimeClasspath
-            val compileClasspath = creationConfig.variantDependencies.compileClasspath
+            val runtimeClasspath = componentProperties.variantDependencies.runtimeClasspath
+            val compileClasspath = componentProperties.variantDependencies.compileClasspath
             task.runtimeVersionMap.set(
                 task.project.providers.provider {
                     runtimeClasspath.toVersionMap()
@@ -99,9 +99,9 @@ dependencies {
                 }
             )
             task.fakeOutputDirectory = FileUtils.join(
-                creationConfig.globalScope.intermediatesDir,
+                componentProperties.globalScope.intermediatesDir,
                 name,
-                creationConfig.dirName
+                componentProperties.dirName
             )
             task.projectPath.setDisallowChanges(task.project.path)
             task.projectBuildFile.set(task.project.buildFile)

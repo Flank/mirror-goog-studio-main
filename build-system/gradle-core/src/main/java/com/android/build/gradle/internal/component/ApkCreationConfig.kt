@@ -23,7 +23,7 @@ import org.gradle.api.provider.MapProperty
 /**
  * Interface for properties common to all variant generating APKs
  */
-interface ApkCreationConfig: VariantCreationConfig {
+interface ApkCreationConfig: BaseCreationConfig {
 
     val aaptOptions: AaptOptions
 
@@ -35,6 +35,8 @@ interface ApkCreationConfig: VariantCreationConfig {
 
     // TODO: move to a non variant object (GlobalTaskScope?)
     val testOnlyApk: Boolean
+
+    val resValues: MapProperty<ResValue.Key, ResValue>
 
     val minifiedEnabled: Boolean
 

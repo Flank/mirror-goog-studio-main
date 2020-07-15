@@ -126,49 +126,47 @@ public class FixUnbundledRules {
                 }
                 CallExpression call = ((CallStatement) statement).getCall();
                 String literal = call.getLiteralArgument("name");
-                if (literal != null
-                        && (literal.startsWith("\"" + PROJECT_ID + ".")
-                                || literal.contains("/" + PROJECT_ID + "."))) {
+                if (literal != null && literal.startsWith("\"" + PROJECT_ID + ".")) {
                     String original = literal.substring(PROJECT_ID.length() + 2, literal.length() - 1);
                     CallStatement oCall = buildFile.getCall(original);
+                    if (oCall == null) {
+                        System.out.println(
+                                "Cannot find original rule " + p.getName() + " : " + original);
+                        continue;
+                    }
+                    if (!defined.containsKey(call.getLiteral())) {
+                        continue;
+                    }
+                    Set<String> args = new HashSet<>();
+                    for (Argument a : call.getArguments()) {
+                        args.add(a.getName());
+                    }
+
+                    // For all arguments that are not managed, copy them to the new rule
                     boolean tags = false;
-                    if (oCall != null) {
-                        if (!defined.containsKey(call.getLiteral())) {
+                    for (Argument a : oCall.getCall().getArguments()) {
+                        if (defined.get(call.getLiteral()).contains(a.getName())) {
+                            // Leave generated fields alone.
                             continue;
                         }
-                        Set<String> args = new HashSet<>();
-                        for (Argument a : call.getArguments()) {
-                            args.add(a.getName());
-                        }
-
-                        // For all arguments that are not managed, copy them to the new rule
-                        for (Argument a : oCall.getCall().getArguments()) {
-                            if (defined.get(call.getLiteral()).contains(a.getName())) {
-                                // Leave generated fields alone.
-                                continue;
-                            }
-                            if (a.getName().equals("tags")) {
-                                ListExpression le =
-                                        ListExpression.build(Arrays.asList("manual", PROJECT_ID));
-                                if (a.getExpression() instanceof ListExpression) {
-                                    for (Expression e :
-                                            ((ListExpression) a.getExpression()).getExpressions()) {
-                                        le.add(e);
-                                    }
+                        if (a.getName().equals("tags")) {
+                            ListExpression le = ListExpression.build(Arrays.asList("manual", PROJECT_ID));
+                            if (a.getExpression() instanceof ListExpression) {
+                                for (Expression e : ((ListExpression) a.getExpression()).getExpressions()) {
+                                    le.add(e);
                                 }
-                                call.setArgument("tags", le);
-                                tags = true;
-                            } else {
-                                call.setArgument(a.getName(), a.getExpression());
                             }
-                            statement.setHidden(false);
-                            update = true;
+                            call.setArgument("tags", le);
+                            tags = true;
+                        } else {
+                            call.setArgument(a.getName(), a.getExpression());
                         }
+                        statement.setHidden(false);
+                        update = true;
                     }
                     if (!tags) {
                         call.addElementToList("tags", "manual");
                         call.addElementToList("tags", PROJECT_ID);
-                        update = true;
                     }
                 }
             }

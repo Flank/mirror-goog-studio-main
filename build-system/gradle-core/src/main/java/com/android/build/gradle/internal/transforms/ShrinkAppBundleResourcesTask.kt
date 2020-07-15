@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.transforms
 
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.res.shrinker.LoggerAndFileDebugReporter
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerImpl
 import com.android.build.gradle.internal.res.shrinker.gatherer.ProtoResourceTableGatherer
@@ -87,9 +87,9 @@ abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: VariantCreationConfig) :
-        VariantTaskCreationAction<ShrinkAppBundleResourcesTask, VariantCreationConfig>(
-            creationConfig
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<ShrinkAppBundleResourcesTask, ComponentPropertiesImpl>(
+            componentProperties
         ) {
 
         override val name: String = computeTaskName("shrinkBundle", "Resources")

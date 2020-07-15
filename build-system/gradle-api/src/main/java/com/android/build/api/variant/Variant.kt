@@ -40,5 +40,5 @@ interface Variant<PropertiesT : VariantProperties>: Component<PropertiesT>,
     fun androidTest(action: AndroidTest<AndroidTestProperties>.() -> Unit)
     fun androidTestProperties(action: AndroidTestProperties.() -> Unit)
 
-    var minSdkVersion: AndroidVersion
+    var minSdkVersion: Int
 }

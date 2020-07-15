@@ -135,7 +135,7 @@ data class ViewNode internal constructor(private val parent: ViewNode?, val name
         return childCount == 0
     }
 
-    override fun children(): Enumeration<out TreeNode> {
+    override fun children(): Enumeration<*> {
         return Collections.enumeration(children)
     }
 

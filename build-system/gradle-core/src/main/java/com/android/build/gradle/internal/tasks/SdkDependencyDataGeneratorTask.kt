@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import java.nio.charset.StandardCharsets.UTF_8
 
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.tools.build.libraries.metadata.AppDependencies
@@ -111,9 +111,9 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
   }
 
   class CreationAction(
-    creationConfig: VariantCreationConfig
-  ) : VariantTaskCreationAction<SdkDependencyDataGeneratorTask, VariantCreationConfig>(
-    creationConfig
+    componentProperties: ComponentPropertiesImpl
+  ) : VariantTaskCreationAction<SdkDependencyDataGeneratorTask, ComponentPropertiesImpl>(
+    componentProperties
   ) {
     override val name: String = computeTaskName("sdk", "DependencyData")
     override val type: Class<SdkDependencyDataGeneratorTask> = SdkDependencyDataGeneratorTask::class.java

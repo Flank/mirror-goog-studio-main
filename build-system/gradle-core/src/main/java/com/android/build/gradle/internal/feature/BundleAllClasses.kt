@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.feature
 
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -128,9 +128,9 @@ abstract class BundleAllClasses : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: BaseCreationConfig) :
-        VariantTaskCreationAction<BundleAllClasses, BaseCreationConfig>(
-            creationConfig
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<BundleAllClasses, ComponentPropertiesImpl>(
+            componentProperties
         ) {
 
         override val name: String

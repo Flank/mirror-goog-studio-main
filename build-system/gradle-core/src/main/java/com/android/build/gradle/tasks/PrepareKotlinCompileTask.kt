@@ -31,7 +31,7 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.Task
@@ -74,11 +74,11 @@ abstract class PrepareKotlinCompileTask() : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: BaseCreationConfig,
+        componentProperties: ComponentPropertiesImpl,
         private val taskToConfigure: TaskProvider<Task>,
         private val kotlinExtension: Configuration
-    ) : VariantTaskCreationAction<PrepareKotlinCompileTask, BaseCreationConfig>(
-        creationConfig
+    ) : VariantTaskCreationAction<PrepareKotlinCompileTask, ComponentPropertiesImpl>(
+        componentProperties
     ) {
 
         override val name: String = computeTaskName("prepare", "KotlinCompileTask")

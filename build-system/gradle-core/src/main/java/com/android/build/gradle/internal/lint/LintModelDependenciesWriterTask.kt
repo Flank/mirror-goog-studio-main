@@ -56,8 +56,7 @@ abstract class LintModelDependenciesWriterTask : NonIncrementalTask() {
     abstract val artifactCollectionsInputs: Property<ArtifactCollectionsInputs>
 
     @get:Input
-    val variantNameInput: String
-        get() = variantName
+    abstract val variantNameInput: Property<String>
 
     override fun doTaskAction() {
         val modelBuilder = LintDependencyModelBuilder(
@@ -94,12 +93,12 @@ abstract class LintModelDependenciesWriterTask : NonIncrementalTask() {
                 outputDirectory.get().asFile
             )
 
-        LintModelSerialization.writeDependencies(model, adapter, variantName)
+        LintModelSerialization.writeDependencies(model, adapter, variantNameInput.get())
 
         LintModelSerialization.writeLibraries(
             model.getLibraryResolver(),
             adapter,
-            variantName
+            variantNameInput.get()
         )
     }
 
@@ -127,7 +126,10 @@ abstract class LintModelDependenciesWriterTask : NonIncrementalTask() {
         override fun configure(task: LintModelDependenciesWriterTask) {
             super.configure(task)
             task.libraryDependencyCacheBuildService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
+                getBuildService(
+                    creationConfig.services.buildServiceRegistry,
+                    LibraryDependencyCacheBuildService::class.java
+                )
             )
             task.artifactCollectionsInputs.set(
                 ArtifactCollectionsInputs(
@@ -138,6 +140,7 @@ abstract class LintModelDependenciesWriterTask : NonIncrementalTask() {
                     mavenCoordinatesCache = getBuildService(creationConfig.services.buildServiceRegistry)
                 )
             )
+            task.variantNameInput.setDisallowChanges(creationConfig.name)
         }
     }
 }

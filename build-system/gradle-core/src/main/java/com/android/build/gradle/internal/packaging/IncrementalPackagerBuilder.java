@@ -104,11 +104,6 @@ public class IncrementalPackagerBuilder {
     private boolean debuggableBuild;
 
     /**
-     * Will APK entries be ordered deterministically?
-     */
-    private boolean deterministicEntryOrder = true;
-
-    /**
      * Is v3 signing enabled?
      */
     private boolean enableV3Signing = false;
@@ -360,18 +355,6 @@ public class IncrementalPackagerBuilder {
     }
 
     /**
-     * Sets whether the APK entries will be ordered deterministically.
-     *
-     * @param deterministicEntryOrder will the APK entries be ordered deterministically?
-     * @return {@code this} for use with fluent-style notation
-     */
-    @NonNull
-    public IncrementalPackagerBuilder withDeterministicEntryOrder(boolean deterministicEntryOrder) {
-        this.deterministicEntryOrder = deterministicEntryOrder;
-        return this;
-    }
-
-    /**
      * Sets whether the build is JNI-debuggable or not.
      *
      * @param jniDebuggableBuild is the build JNI-debuggable?
@@ -516,7 +499,6 @@ public class IncrementalPackagerBuilder {
                     abiFilters,
                     jniDebuggableBuild,
                     debuggableBuild,
-                    deterministicEntryOrder,
                     enableV3Signing,
                     enableV4Signing,
                     apkCreatorType,

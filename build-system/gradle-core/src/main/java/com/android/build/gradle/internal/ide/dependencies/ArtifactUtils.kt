@@ -54,10 +54,7 @@ class ArtifactCollectionsInputs constructor(
 ) {
     enum class RuntimeType { FULL, PARTIAL }
 
-    constructor(
-        componentProperties: ComponentPropertiesImpl,
-        runtimeType: RuntimeType
-    ) : this(
+    constructor(componentProperties: ComponentPropertiesImpl, runtimeType: RuntimeType) : this(
         componentProperties.variantDependencies,
         componentProperties.globalScope.project.path,
         componentProperties.name,

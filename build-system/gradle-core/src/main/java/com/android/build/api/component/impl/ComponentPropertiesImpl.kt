@@ -64,12 +64,14 @@ import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.dexing.DexingType
 import com.android.builder.model.ApiVersion
+import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
+import org.gradle.api.Named
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.LibraryElements
@@ -83,7 +85,7 @@ import java.io.File
 import java.util.concurrent.Callable
 
 abstract class ComponentPropertiesImpl(
-    open val variant: ComponentImpl<out ComponentProperties>,
+    componentIdentity: ComponentIdentity,
     override val buildFeatures: BuildFeatureValues,
     override val variantDslInfo: VariantDslInfo,
     override val variantDependencies: VariantDependencies,
@@ -91,13 +93,13 @@ abstract class ComponentPropertiesImpl(
     override val paths: VariantPathHelper,
     override val artifacts: ArtifactsImpl,
     override val variantScope: VariantScope,
-    override val variantData: BaseVariantData,
+    val variantData: BaseVariantData,
     override val transformManager: TransformManager,
     protected val internalServices: VariantPropertiesApiServices,
     override val services: TaskCreationServices,
     @Deprecated("Do not use if you can avoid it. Check if services has what you need")
     override val globalScope: GlobalScope
-): ComponentProperties, BaseCreationConfig, ComponentIdentity by variant {
+): ComponentProperties, BaseCreationConfig, ComponentIdentity by componentIdentity {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -118,6 +120,9 @@ abstract class ComponentPropertiesImpl(
 
     override val variantType: VariantType
         get() = variantDslInfo.variantType
+
+    override val minSdkVersion: AndroidVersion
+        get() = variantDslInfo.minSdkVersion
 
     override val maxSdkVersion: Int?
         get() = variantDslInfo.maxSdkVersion
@@ -245,10 +250,10 @@ abstract class ComponentPropertiesImpl(
 
     // Precomputed file paths.
     @JvmOverloads
-    override fun getJavaClasspath(
+    fun getJavaClasspath(
         configType: ConsumedConfigType,
         classesType: AndroidArtifacts.ArtifactType,
-        generatedBytecodeKey: Any?
+        generatedBytecodeKey: Any? = null
     ): FileCollection {
         var mainCollection = variantDependencies
             .getArtifactFileCollection(configType, ArtifactScope.ALL, classesType)
@@ -363,7 +368,7 @@ abstract class ComponentPropertiesImpl(
      *
      * Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
      */
-    override val javaSources: List<ConfigurableFileTree>
+    val javaSources: List<ConfigurableFileTree>
         get() {
             // Shortcut for the common cases, otherwise we build the full list below.
             if (variantData.extraGeneratedSourceFileTrees == null
@@ -599,4 +604,7 @@ abstract class ComponentPropertiesImpl(
     fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory) {
         asmClassVisitorsRegistry.configureAndLock(objectFactory, asmApiVersion)
     }
+
+    internal fun <T : Named> named(type: Class<T>, name: String): T =
+        internalServices.named(type, name)
 }

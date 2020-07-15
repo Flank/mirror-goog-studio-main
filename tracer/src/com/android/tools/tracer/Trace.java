@@ -21,7 +21,7 @@ import java.util.List;
  * Public API to trace events. Unless the application is instrumented, these calls are all no-ops.
  * To enable tracing add:
  *
- * <p>-javaagent=-javaagent:$WORKSPACE/bazel-bin/tools/base/tracer/trace_agent.jar
+ * <p>-javaagent=-javaagent:$WORKSPACE/bazel-genfiles/tools/base/tracer/trace_agent.jar
  *
  * <p>to your start up options. Tracing can be performed via this API, via the @Trace annotation, or
  * via a profile file. See tools/base/tracer/README.md for more information.

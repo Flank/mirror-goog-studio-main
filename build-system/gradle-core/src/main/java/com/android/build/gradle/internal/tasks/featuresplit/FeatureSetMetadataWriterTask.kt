@@ -18,8 +18,8 @@
 
 package com.android.build.gradle.internal.tasks.featuresplit
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -107,9 +107,9 @@ abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: VariantCreationConfig) :
-        VariantTaskCreationAction<FeatureSetMetadataWriterTask, VariantCreationConfig>(
-            creationConfig
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<FeatureSetMetadataWriterTask, ComponentPropertiesImpl>(
+            componentProperties
         ) {
 
         override val name: String

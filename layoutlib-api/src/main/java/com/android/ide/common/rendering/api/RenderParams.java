@@ -17,6 +17,8 @@ package com.android.ide.common.rendering.api;
 
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.SessionParams.Key;
+import com.android.resources.Density;
+import com.android.resources.ScreenSize;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -212,6 +214,46 @@ public abstract class RenderParams {
         return mTargetSdkVersion;
     }
 
+    /**
+     * @deprecated Use {@link #getHardwareConfig()}
+     */
+    @Deprecated
+    public int getScreenWidth() {
+        return mHardwareConfig.getScreenWidth();
+    }
+
+    /**
+     * @deprecated Use {@link #getHardwareConfig()}
+     */
+    @Deprecated
+    public int getScreenHeight() {
+        return mHardwareConfig.getScreenHeight();
+    }
+
+    /**
+     * @deprecated Use {@link #getHardwareConfig()}
+     */
+    @Deprecated
+    public Density getDensity() {
+        return mHardwareConfig.getDensity();
+    }
+
+    /**
+     * @deprecated Use {@link #getHardwareConfig()}
+     */
+    @Deprecated
+    public float getXdpi() {
+        return mHardwareConfig.getXdpi();
+    }
+
+    /**
+     * @deprecated Use {@link #getHardwareConfig()}
+     */
+    @Deprecated
+    public float getYdpi() {
+        return mHardwareConfig.getYdpi();
+    }
+
     public RenderResources getResources() {
         return mRenderResources;
     }
@@ -236,12 +278,36 @@ public abstract class RenderParams {
         return mSetTransparentBackground;
     }
 
+    /** @deprecated use {@link #isTransparentBackground()} instead */
+    @Deprecated
+    public boolean isBgColorOverridden() {
+        return mSetTransparentBackground;
+    }
+
+    /**
+     * @deprecated background color may only be overridden with transparent background. If for some
+     *     reason in the future one wants to override background with a specific color one can do it
+     *     in studio and drawing the image with transparent background on top.
+     */
+    @Deprecated
+    public int getOverrideBgColor() {
+        return 0;
+    }
+
     public long getTimeout() {
         return mTimeout;
     }
 
     public IImageFactory getImageFactory() {
         return mImageFactory;
+    }
+
+    /**
+     * @deprecated Use {@link #getHardwareConfig()}
+     */
+    @Deprecated
+    public ScreenSize getConfigScreenSize() {
+        return mHardwareConfig.getScreenSize();
     }
 
     /** Returns the application icon resource, or null if there is no icon. */

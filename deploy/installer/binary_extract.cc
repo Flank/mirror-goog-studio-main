@@ -21,7 +21,6 @@
 
 #include "tools/base/bazel/native/matryoshka/doll.h"
 #include "tools/base/deploy/common/event.h"
-#include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/utils.h"
 
 namespace {
@@ -42,7 +41,7 @@ bool ExtractBinaries(const std::string& target_dir,
     const std::string tmp_path = target_dir + file;
 
     // If we've already extracted the file, we don't need to re-extract.
-    if (IO::access(tmp_path, F_OK) == 0) {
+    if (access(tmp_path.c_str(), F_OK) == 0) {
       continue;
     }
 
@@ -71,7 +70,7 @@ bool ExtractBinaries(const std::string& target_dir,
 bool WriteArrayToDisk(const unsigned char* array, uint64_t array_len,
                       const std::string& dst_path) {
   Phase p("WriteArrayToDisk");
-  int fd = IO::open(dst_path, O_WRONLY | O_CREAT, kRwFileMode);
+  int fd = open(dst_path.c_str(), O_WRONLY | O_CREAT, kRwFileMode);
   if (fd == -1) {
     ErrEvent("WriteArrayToDisk, open: "_s + strerror(errno));
     return false;
@@ -88,7 +87,7 @@ bool WriteArrayToDisk(const unsigned char* array, uint64_t array_len,
     return false;
   }
 
-  IO::chmod(dst_path, kRxFileMode);
+  chmod(dst_path.c_str(), kRxFileMode);
   return true;
 }
 

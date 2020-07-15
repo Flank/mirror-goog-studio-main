@@ -24,4 +24,5 @@ import org.gradle.api.provider.MapProperty
  */
 interface AndroidTestCreationConfig: TestComponentCreationConfig, ApkCreationConfig {
 
+    val buildConfigFields: MapProperty<String, BuildConfigField<out java.io.Serializable>>
 }

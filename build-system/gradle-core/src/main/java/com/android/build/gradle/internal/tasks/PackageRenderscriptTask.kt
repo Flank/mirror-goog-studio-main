@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.DirectoryProperty
@@ -41,9 +41,9 @@ abstract class PackageRenderscriptTask : Sync(), VariantAwareTask {
     @Internal
     override lateinit var variantName: String
 
-    class CreationAction(creationConfig: VariantCreationConfig) :
-        VariantTaskCreationAction<PackageRenderscriptTask, VariantCreationConfig>(
-            creationConfig
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<PackageRenderscriptTask, ComponentPropertiesImpl>(
+            componentProperties
         ) {
 
         override val name: String

@@ -20,19 +20,16 @@ import static com.android.build.api.transform.QualifiedContent.DefaultContentTyp
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
-import com.android.build.api.variant.VariantProperties;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ApplicationCreationConfig;
-import com.android.build.gradle.internal.component.BaseCreationConfig;
 import com.android.build.gradle.internal.feature.BundleAllClasses;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -72,7 +69,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 
 /** TaskManager for creating tasks in an Android application project. */
 public abstract class AbstractAppTaskManager<
-                VariantT extends VariantImpl<? extends VariantProperties>,
+                VariantT extends VariantImpl<VariantPropertiesT>,
                 VariantPropertiesT extends VariantPropertiesImpl>
         extends TaskManager<VariantT, VariantPropertiesT> {
 
@@ -81,7 +78,8 @@ public abstract class AbstractAppTaskManager<
             @NonNull
                     List<
                                     ComponentInfo<
-                                            TestComponentImpl<? extends TestComponentProperties>,
+                                            TestComponentImpl<
+                                                    ? extends TestComponentPropertiesImpl>,
                                             TestComponentPropertiesImpl>>
                             testComponents,
             boolean hasFlavors,
@@ -145,8 +143,8 @@ public abstract class AbstractAppTaskManager<
         createAidlTask(appVariantProperties);
 
         // Add external native build tasks
-        createExternalNativeBuildJsonGenerators(variant.getVariant(), appVariantProperties);
-        createExternalNativeBuildTasks(variant.getVariant(), appVariantProperties);
+        createExternalNativeBuildJsonGenerators(appVariantProperties);
+        createExternalNativeBuildTasks(appVariantProperties);
 
         // Add a task to merge the jni libs folders
         createMergeJniLibFoldersTasks(appVariantProperties);
@@ -190,31 +188,32 @@ public abstract class AbstractAppTaskManager<
     }
 
     @Override
-    protected void postJavacCreation(@NonNull BaseCreationConfig creationConfig) {
-        final Provider<Directory> javacOutput = creationConfig.getArtifacts().get(JAVAC.INSTANCE);
+    protected void postJavacCreation(@NonNull ComponentPropertiesImpl componentProperties) {
+        final Provider<Directory> javacOutput =
+                componentProperties.getArtifacts().get(JAVAC.INSTANCE);
         final FileCollection preJavacGeneratedBytecode =
-                creationConfig.getVariantData().getAllPreJavacGeneratedBytecode();
+                componentProperties.getVariantData().getAllPreJavacGeneratedBytecode();
         final FileCollection postJavacGeneratedBytecode =
-                creationConfig.getVariantData().getAllPostJavacGeneratedBytecode();
+                componentProperties.getVariantData().getAllPostJavacGeneratedBytecode();
 
-        taskFactory.register(new BundleAllClasses.CreationAction(creationConfig));
+        taskFactory.register(new BundleAllClasses.CreationAction(componentProperties));
 
         // create a lighter weight version for usage inside the same module (unit tests basically)
         ConfigurableFileCollection files =
-                creationConfig
+                componentProperties
                         .getServices()
                         .fileCollection(
                                 javacOutput, preJavacGeneratedBytecode, postJavacGeneratedBytecode);
-        creationConfig.getArtifacts().appendToAllClasses(files);
+        componentProperties.getArtifacts().appendToAllClasses(files);
     }
 
     @Override
-    protected void createVariantPreBuildTask(@NonNull BaseCreationConfig creationConfig) {
-        final VariantType variantType = creationConfig.getVariantType();
+    protected void createVariantPreBuildTask(@NonNull ComponentPropertiesImpl componentProperties) {
+        final VariantType variantType = componentProperties.getVariantType();
 
         if (variantType.isApk()) {
             boolean useDependencyConstraints =
-                    creationConfig
+                    componentProperties
                             .getServices()
                             .getProjectOptions()
                             .get(BooleanOption.USE_DEPENDENCY_CONSTRAINTS);
@@ -225,41 +224,42 @@ public abstract class AbstractAppTaskManager<
                 task =
                         taskFactory.register(
                                 new TestPreBuildTask.CreationAction(
-                                        (TestComponentPropertiesImpl) creationConfig));
+                                        (TestComponentPropertiesImpl) componentProperties));
                 if (useDependencyConstraints) {
                     task.configure(t -> t.setEnabled(false));
                 }
             } else {
                 //noinspection unchecked
-                task = taskFactory.register(AppPreBuildTask.getCreationAction(creationConfig));
+                task = taskFactory.register(AppPreBuildTask.getCreationAction(componentProperties));
             }
 
             if (!useDependencyConstraints) {
                 TaskProvider<AppClasspathCheckTask> classpathCheck =
                         taskFactory.register(
-                                new AppClasspathCheckTask.CreationAction(creationConfig));
+                                new AppClasspathCheckTask.CreationAction(componentProperties));
                 TaskFactoryUtils.dependsOn(task, classpathCheck);
             }
 
             if (variantType.isBaseModule() && globalScope.hasDynamicFeatures()) {
                 TaskProvider<CheckMultiApkLibrariesTask> checkMultiApkLibrariesTask =
                         taskFactory.register(
-                                new CheckMultiApkLibrariesTask.CreationAction(creationConfig));
+                                new CheckMultiApkLibrariesTask.CreationAction(componentProperties));
 
                 TaskFactoryUtils.dependsOn(task, checkMultiApkLibrariesTask);
             }
             return;
         }
 
-        super.createVariantPreBuildTask(creationConfig);
+        super.createVariantPreBuildTask(componentProperties);
     }
 
     @NonNull
     @Override
     protected Set<ScopeType> getJavaResMergingScopes(
-            @NonNull BaseCreationConfig creationConfig,
+            @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull QualifiedContent.ContentType contentType) {
-        if (creationConfig.getVariantScope().consumesFeatureJars() && contentType == RESOURCES) {
+        if (componentProperties.getVariantScope().consumesFeatureJars()
+                && contentType == RESOURCES) {
             return TransformManager.SCOPE_FULL_WITH_FEATURES;
         }
         return TransformManager.SCOPE_FULL_PROJECT;

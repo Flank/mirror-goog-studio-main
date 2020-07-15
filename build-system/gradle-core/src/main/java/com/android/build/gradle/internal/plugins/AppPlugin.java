@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.plugins;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.dsl.ApplicationExtension;
@@ -41,7 +40,6 @@ import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.builder.model.v2.ide.ProjectType;
 import com.android.builder.profile.Recorder;
 import java.util.List;
 import javax.inject.Inject;
@@ -125,7 +123,8 @@ public class AppPlugin
             @NonNull
                     List<
                                     ComponentInfo<
-                                            TestComponentImpl<? extends TestComponentProperties>,
+                                            TestComponentImpl<
+                                                    ? extends TestComponentPropertiesImpl>,
                                             TestComponentPropertiesImpl>>
                             testComponents,
             boolean hasFlavors,
@@ -141,10 +140,5 @@ public class AppPlugin
     protected ApplicationVariantFactory createVariantFactory(
             @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
         return new ApplicationVariantFactory(projectServices, globalScope);
-    }
-
-    @Override
-    protected ProjectType getProjectTypeV2() {
-        return ProjectType.APPLICATION;
     }
 }

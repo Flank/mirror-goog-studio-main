@@ -55,7 +55,7 @@ kotlin_test(
         "src/test/java/**/*.java",
     ]),
     jvm_flags = [
-        "-Dtest.suite.jar=framework_tests.jar",
+        "-Dtest.suite.jar=/framework_tests.jar",
     ],
     resources = glob(["src/test/resources/**"]),
     test_class = "com.android.testutils.JarTestSuite",

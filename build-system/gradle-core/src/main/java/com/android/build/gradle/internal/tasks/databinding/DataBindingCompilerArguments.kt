@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.CompilerArguments
 import com.android.build.api.artifact.impl.DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
@@ -148,22 +148,22 @@ class DataBindingCompilerArguments constructor(
 
         @JvmStatic
         fun createArguments(
-            creationConfig: BaseCreationConfig,
+            componentProperties: ComponentPropertiesImpl,
             enableDebugLogs: Boolean,
             printEncodedErrorLogs: Boolean
         ): DataBindingCompilerArguments {
-            val globalScope = creationConfig.globalScope
-            val artifacts = creationConfig.artifacts
+            val globalScope = componentProperties.globalScope
+            val artifacts = componentProperties.artifacts
 
             return DataBindingCompilerArguments(
-                incremental = creationConfig.services.projectOptions
+                incremental = componentProperties.services.projectOptions
                     .get(BooleanOption.ENABLE_INCREMENTAL_DATA_BINDING),
-                artifactType = getModuleType(creationConfig),
-                packageName = creationConfig.packageName,
-                minApi = creationConfig.minSdkVersion.apiLevel,
+                artifactType = getModuleType(componentProperties),
+                packageName = componentProperties.packageName,
+                minApi = componentProperties.minSdkVersion.apiLevel,
                 sdkDir = globalScope.sdkComponents.flatMap { it.sdkDirectoryProvider }.get().asFile,
                 dependencyArtifactsDir = artifacts.get(DATA_BINDING_DEPENDENCY_ARTIFACTS),
-                layoutInfoDir = artifacts.get(getLayoutInfoArtifactType(creationConfig)),
+                layoutInfoDir = artifacts.get(getLayoutInfoArtifactType(componentProperties)),
                 classLogDir = artifacts.get(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
                 baseFeatureInfoDir = artifacts.get(
                     FEATURE_DATA_BINDING_BASE_FEATURE_INFO
@@ -186,7 +186,7 @@ class DataBindingCompilerArguments constructor(
                 // locations immediately here rather than lazily, using internal API.
                 aarOutDir = artifacts.getOutputPath(DATA_BINDING_ARTIFACT),
                 exportClassListOutFile =
-                        if (creationConfig.variantType.isExportDataBindingClassList) {
+                        if (componentProperties.variantType.isExportDataBindingClassList) {
                             artifacts.getOutputPath(
                                 DATA_BINDING_EXPORT_CLASS_LIST,
                                 DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS
@@ -194,7 +194,7 @@ class DataBindingCompilerArguments constructor(
                         } else null,
                 enableDebugLogs = enableDebugLogs,
                 printEncodedErrorLogs = printEncodedErrorLogs,
-                isTestVariant = creationConfig.variantType.isTestComponent,
+                isTestVariant = componentProperties.variantType.isTestComponent,
                 isEnabledForTests = globalScope.extension.dataBinding.isEnabledForTests,
                 isEnableV2 = true
             )
@@ -205,10 +205,10 @@ class DataBindingCompilerArguments constructor(
          * of the tested variant.
          */
         @JvmStatic
-        fun getModuleType(creationConfig: BaseCreationConfig): CompilerArguments.Type {
-            val component = creationConfig.onTestedConfig {
+        fun getModuleType(componentProperties: ComponentPropertiesImpl): CompilerArguments.Type {
+            val component = componentProperties.onTestedConfig {
                 it
-            } ?: creationConfig
+            } ?: componentProperties
 
             return if (component.variantType.isAar) {
                 CompilerArguments.Type.LIBRARY
@@ -226,8 +226,8 @@ class DataBindingCompilerArguments constructor(
          * trigger unnecessary computations (see bug 133092984 and 110412851).
          */
         @JvmStatic
-        fun getLayoutInfoArtifactType(creationConfig: BaseCreationConfig): InternalArtifactType<Directory> {
-            return if (creationConfig.variantType.isAar) {
+        fun getLayoutInfoArtifactType(componentProperties: ComponentPropertiesImpl): InternalArtifactType<Directory> {
+            return if (componentProperties.variantType.isAar) {
                 DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE
             } else {
                 DATA_BINDING_LAYOUT_INFO_TYPE_MERGE
