@@ -121,7 +121,10 @@ void OverlaySwapCommand::BuildOverlayUpdateRequest(
     proto::OverlayUpdateRequest* request) {
   request->set_overlay_id(request_.overlay_id());
   request->set_expected_overlay_id(request_.expected_overlay_id());
-  request->set_overlay_path("code_cache");
+
+  const std::string overlay_path =
+      "/data/data/" + request_.package_name() + "/code_cache";
+  request->set_overlay_path(overlay_path);
 
   for (auto clazz : request_.new_classes()) {
     auto file = request->add_files_to_write();
