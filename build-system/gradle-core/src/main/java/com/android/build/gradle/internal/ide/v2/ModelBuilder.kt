@@ -199,7 +199,7 @@ class ModelBuilder<
         // gather the default config
         val defaultConfigData = variantInputs.defaultConfigData
         val defaultConfig = ProductFlavorContainerImpl(
-            productFlavor = defaultConfigData.defaultConfig.convert(),
+            productFlavor = defaultConfigData.defaultConfig.convert(buildFeatures),
             sourceProvider = defaultConfigData.sourceSet.convert(buildFeatures),
             androidTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
             unitTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures)
@@ -210,7 +210,7 @@ class ModelBuilder<
         for (buildType in variantInputs.buildTypes.values) {
             buildTypes.add(
                 BuildTypeContainerImpl(
-                    buildType = buildType.buildType.convert(),
+                    buildType = buildType.buildType.convert(buildFeatures),
                     sourceProvider = buildType.sourceSet.convert(buildFeatures),
                     androidTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
                     unitTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures)
@@ -223,7 +223,7 @@ class ModelBuilder<
         for (flavor in variantInputs.productFlavors.values) {
             productFlavors.add(
                 ProductFlavorContainerImpl(
-                    productFlavor = flavor.productFlavor.convert(),
+                    productFlavor = flavor.productFlavor.convert(buildFeatures),
                     sourceProvider = flavor.sourceSet.convert(buildFeatures),
                     androidTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
                     unitTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures)
@@ -436,7 +436,9 @@ class ModelBuilder<
 
         return AndroidArtifactImpl(
             variantSourceProvider = sourceProviders.variantSourceProvider?.convert(features),
-            multiFlavorSourceProvider = sourceProviders.multiFlavorSourceProvider?.convert(features),
+            multiFlavorSourceProvider = sourceProviders.multiFlavorSourceProvider?.convert(
+                features
+            ),
 
             signingConfigName = component.variantDslInfo.signingConfig?.name,
             isSigned = component.variantDslInfo.signingConfig != null,
@@ -454,7 +456,10 @@ class ModelBuilder<
             generatedSourceFolders = ModelBuilder.getGeneratedSourceFolders(component),
             generatedResourceFolders = ModelBuilder.getGeneratedResourceFolders(component),
             classesFolders = classesFolders,
-            assembleTaskOutputListingFile = component.artifacts.get(APK_IDE_MODEL).get().asFile
+            assembleTaskOutputListingFile = if (component.variantType.isApk)
+                component.artifacts.get(APK_IDE_MODEL).get().asFile
+            else
+                null
         )
     }
 
@@ -478,7 +483,7 @@ class ModelBuilder<
         }
         // The separately compile R class, if applicable.
         if (!globalScope.extension.aaptOptions.namespaced) {
-            classesFolders.add(variantScope.rJarForUnitTests.get().asFile)
+            variantScope.rJarForUnitTests.orNull?.let { classesFolders.add(it.asFile) }
         }
 
         return JavaArtifactImpl(

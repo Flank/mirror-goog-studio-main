@@ -23,10 +23,10 @@ import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.VariantDependencies
 import com.android.builder.model.v2.models.ndk.NativeModule
+import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.io.Resources
 import com.google.common.truth.Truth
-import org.junit.Assert.fail
 import java.io.File
 
 /**
@@ -175,12 +175,9 @@ open class ModelComparator {
 
             val fullPath = "$root${sep}src${sep}test${sep}resources${sep}${path}_$name.txt"
 
-            val file = File(fullPath)
-            if (!file.isFile) {
-                fail("GoldenFile not found: $fullPath")
+            return File(fullPath).also {
+                FileUtils.mkdirs(it.parentFile)
             }
-
-            return file
         }
 
         private fun loadGoldenFile(name: String) = Resources.toString(

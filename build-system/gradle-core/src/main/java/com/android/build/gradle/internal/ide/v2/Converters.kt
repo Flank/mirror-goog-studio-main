@@ -39,7 +39,7 @@ import com.android.builder.model.CodeShrinker as CodeShrinkerV1
 
 // Converts DSL items into v2 model instances
 
-internal fun DslDefaultConfig.convert() = ProductFlavorImpl(
+internal fun DslDefaultConfig.convert(features: BuildFeatureValues) = ProductFlavorImpl(
     name = name,
     dimension = dimension,
     applicationId = applicationId,
@@ -63,8 +63,8 @@ internal fun DslDefaultConfig.convert() = ProductFlavorImpl(
     wearAppUnbundled = wearAppUnbundled,
     applicationIdSuffix = applicationIdSuffix,
     versionNameSuffix = versionNameSuffix,
-    buildConfigFields = buildConfigFields.convert(),
-    resValues = resValues.convert(),
+    buildConfigFields = buildConfigFields.convertBuildConfig(features),
+    resValues = resValues.convertResValues(features),
     proguardFiles = proguardFiles,
     consumerProguardFiles = consumerProguardFiles,
     testProguardFiles = testProguardFiles,
@@ -74,7 +74,7 @@ internal fun DslDefaultConfig.convert() = ProductFlavorImpl(
     multiDexKeepProguard = multiDexKeepProguard
 )
 
-internal fun DslProductFlavor.convert() = ProductFlavorImpl(
+internal fun DslProductFlavor.convert(features: BuildFeatureValues) = ProductFlavorImpl(
     name = name,
     dimension = dimension,
     applicationId = applicationId,
@@ -98,8 +98,8 @@ internal fun DslProductFlavor.convert() = ProductFlavorImpl(
     wearAppUnbundled = wearAppUnbundled,
     applicationIdSuffix = applicationIdSuffix,
     versionNameSuffix = versionNameSuffix,
-    buildConfigFields = buildConfigFields.convert(),
-    resValues = resValues.convert(),
+    buildConfigFields = buildConfigFields.convertBuildConfig(features),
+    resValues = resValues.convertResValues(features),
     proguardFiles = proguardFiles,
     consumerProguardFiles = consumerProguardFiles,
     testProguardFiles = testProguardFiles,
@@ -109,7 +109,7 @@ internal fun DslProductFlavor.convert() = ProductFlavorImpl(
     multiDexKeepProguard = multiDexKeepProguard
  )
 
-internal fun DslBuildType.convert() = BuildTypeImpl(
+internal fun DslBuildType.convert(features: BuildFeatureValues) = BuildTypeImpl(
     name = name,
     isDebuggable = isDebuggable,
     isTestCoverageEnabled = isTestCoverageEnabled,
@@ -123,8 +123,8 @@ internal fun DslBuildType.convert() = BuildTypeImpl(
     signingConfig = signingConfig?.name,
     applicationIdSuffix = applicationIdSuffix,
     versionNameSuffix = versionNameSuffix,
-    buildConfigFields = buildConfigFields.convert(),
-    resValues = resValues.convert(),
+    buildConfigFields = buildConfigFields.convertBuildConfig(features),
+    resValues = resValues.convertResValues(features),
     proguardFiles = proguardFiles,
     consumerProguardFiles = consumerProguardFiles,
     testProguardFiles = testProguardFiles,
@@ -146,9 +146,21 @@ internal fun DslSigningConfig.convert() = SigningConfigImpl(
     enableV4Signing = enableV4Signing
 )
 
-private fun Map<String, DslClassField>.convert(): Map<String, ClassField> {
-    return asSequence().map { it.key to it.value.convert() }.toMap()
-}
+private fun Map<String, DslClassField>.convertBuildConfig(
+    features: BuildFeatureValues
+): Map<String, ClassField>? =
+    if (features.buildConfig)
+        asSequence().map { it.key to it.value.convert() }.toMap()
+    else
+        null
+
+private fun Map<String, DslClassField>.convertResValues(
+    features: BuildFeatureValues
+): Map<String, ClassField>? =
+    if (features.resValues)
+        asSequence().map { it.key to it.value.convert() }.toMap()
+    else
+        null
 
 private fun DslClassField.convert() = ClassFieldImpl(
     type = type,

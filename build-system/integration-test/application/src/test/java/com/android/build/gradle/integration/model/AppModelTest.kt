@@ -16,42 +16,240 @@
 
 package com.android.build.gradle.integration.model
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.model.ModelComparator
+import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
+import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
+import com.android.build.gradle.integration.common.fixture.testprojects.prebuilts.setUpHelloWorld
 import com.android.builder.model.v2.ide.SyncIssue
-import org.gradle.api.JavaVersion
 import org.junit.Rule
 import org.junit.Test
 
-class AppModelTest: ModelComparator() {
+class HelloWorldAppModelTest: ModelComparator() {
 
     @get:Rule
-    val project = builder()
-        .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-        .create()
+    val project = createGradleProject {
+        configureRoot {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                setUpHelloWorld()
+            }
+        }
+    }
 
     @Test
-    fun `default AndroidProject model`() {
+    fun `test AndroidProject model`() {
         val result = project.modelV2()
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchAndroidProjects()
 
         with(result).compare(
             model = result.container.singleModel,
-            goldenFile = "Default_AndroidProject_Model"
+            goldenFile = "AndroidProject"
         )
     }
 
     @Test
-    fun `default VariantDependencies model`() {
+    fun `test VariantDependencies model`() {
         val result = project.modelV2()
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchVariantDependencies("debug")
 
         with(result).compare(
             model = result.container.singleModel,
-            goldenFile = "Default_VariantDependencies_Model"
+            goldenFile = "VariantDependencies"
+        )
+    }
+}
+
+class ApplicationIdInAppModelTest: ModelComparator() {
+    @get:Rule
+    val project = createGradleProject {
+        configureRoot {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                setUpHelloWorld()
+
+                applicationId = "customized.application.id"
+            }
+        }
+    }
+
+    @Test
+    fun `test AndroidProject model`() {
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchAndroidProjects()
+
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "AndroidProject"
+        )
+    }
+}
+
+class DisabledAidlInAppModelTest: ModelComparator() {
+    @get:Rule
+    val project = createGradleProject {
+        configureRoot {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                setUpHelloWorld()
+
+                buildFeatures {
+                    aidl = false
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test AndroidProject model`() {
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchAndroidProjects()
+
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "AndroidProject"
+        )
+    }
+}
+class DisabledRenderScriptInAppModelTest: ModelComparator() {
+    @get:Rule
+    val project = createGradleProject {
+        configureRoot {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                setUpHelloWorld()
+
+                buildFeatures {
+                    renderScript = false
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test AndroidProject model`() {
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchAndroidProjects()
+
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "AndroidProject"
+        )
+    }
+}
+
+class DisabledResValuesInAppModelTest: ModelComparator() {
+    @get:Rule
+    val project = createGradleProject {
+        configureRoot {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                setUpHelloWorld()
+
+                buildFeatures {
+                    resValues = false
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test AndroidProject model`() {
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchAndroidProjects()
+
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "AndroidProject"
+        )
+    }
+}
+
+class DisabledShadersInAppModelTest: ModelComparator() {
+    @get:Rule
+    val project = createGradleProject {
+        configureRoot {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                setUpHelloWorld()
+
+                buildFeatures {
+                    shaders = false
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test AndroidProject model`() {
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchAndroidProjects()
+
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "AndroidProject"
+        )
+    }
+}
+
+class DisabledBuildConfigInAppModelTest: ModelComparator() {
+    @get:Rule
+    val project = createGradleProject {
+        configureRoot {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                setUpHelloWorld()
+
+                buildFeatures {
+                    buildConfig = false
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test AndroidProject model`() {
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchAndroidProjects()
+
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "AndroidProject"
+        )
+    }
+}
+
+class EnabledMlModelBindingInAppModelTest: ModelComparator() {
+    @get:Rule
+    val project = createGradleProject {
+        configureRoot {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                setUpHelloWorld()
+
+                buildFeatures {
+                    mlModelBinding = true
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test AndroidProject model`() {
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchAndroidProjects()
+
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "AndroidProject"
         )
     }
 }

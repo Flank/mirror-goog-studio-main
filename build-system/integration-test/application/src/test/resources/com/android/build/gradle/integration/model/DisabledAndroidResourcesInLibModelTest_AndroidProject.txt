@@ -1,7 +1,7 @@
 > AndroidProject:
     - modelVersion      = "n/a"
     - apiVersion        = 3
-    - projectType       = "APPLICATION"
+    - projectType       = "LIBRARY"
     - path              = ":"
     - groupId           = ""
     - defaultVariant    = "debug"
@@ -10,7 +10,7 @@
     - buildFolder       = {PROJECT}/build{!}
     - resourcePrefix    = (null)
     - buildToolsVersion = "30.0.2"
-    - dynamicFeatures   = []
+    - dynamicFeatures   = (null)
     > bootClasspath:
        * {ANDROID_SDK}/platforms/android-30/android.jar{F}
     < bootClasspath
@@ -42,12 +42,12 @@
           - renderscriptSupportModeBlasEnabled = (null)
           - renderscriptNdkModeEnabled         = (null)
           - testApplicationId                  = (null)
-          - testInstrumentationRunner          = "android.support.test.runner.AndroidJUnitRunner"
+          - testInstrumentationRunner          = (null)
           - testInstrumentationRunnerArguments = []
           - testHandleProfiling                = (null)
           - testFunctionalTest                 = (null)
           - resourceConfigurations             = []
-          - signingConfig                      = (null)
+          - signingConfig                      = "debug"
           - wearAppUnbundled                   = (null)
           - vectorDrawables:
              * generatedDensities = ["hdpi", "ldpi", "mdpi", "xhdpi", "xxhdpi", "xxxhdpi"]
@@ -72,9 +72,7 @@
           > renderscriptDirectories:
              * {PROJECT}/src/main/rs{!}
           < renderscriptDirectories
-          > resDirectories:
-             * {PROJECT}/src/main/res{D}
-          < resDirectories
+          - resDirectories      = (null)
           > assetsDirectories:
              * {PROJECT}/src/main/assets{!}
           < assetsDirectories
@@ -90,10 +88,10 @@
           - name                = "androidTest"
           - manifestFile        = {PROJECT}/src/androidTest/AndroidManifest.xml{!}
           > javaDirectories:
-             * {PROJECT}/src/androidTest/java{D}
+             * {PROJECT}/src/androidTest/java{!}
           < javaDirectories
           > kotlinDirectories:
-             * {PROJECT}/src/androidTest/java{D}
+             * {PROJECT}/src/androidTest/java{!}
              * {PROJECT}/src/androidTest/kotlin{!}
           < kotlinDirectories
           > resourcesDirectories:
@@ -105,9 +103,7 @@
           > renderscriptDirectories:
              * {PROJECT}/src/androidTest/rs{!}
           < renderscriptDirectories
-          > resDirectories:
-             * {PROJECT}/src/androidTest/res{!}
-          < resDirectories
+          - resDirectories      = (null)
           > assetsDirectories:
              * {PROJECT}/src/androidTest/assets{!}
           < assetsDirectories
@@ -138,9 +134,7 @@
           > renderscriptDirectories:
              * {PROJECT}/src/test/rs{!}
           < renderscriptDirectories
-          > resDirectories:
-             * {PROJECT}/src/test/res{!}
-          < resDirectories
+          - resDirectories      = (null)
           > assetsDirectories:
              * {PROJECT}/src/test/assets{!}
           < assetsDirectories
@@ -198,9 +192,7 @@
              > renderscriptDirectories:
                 * {PROJECT}/src/debug/rs{!}
              < renderscriptDirectories
-             > resDirectories:
-                * {PROJECT}/src/debug/res{!}
-             < resDirectories
+             - resDirectories      = (null)
              > assetsDirectories:
                 * {PROJECT}/src/debug/assets{!}
              < assetsDirectories
@@ -231,9 +223,7 @@
              > renderscriptDirectories:
                 * {PROJECT}/src/androidTestDebug/rs{!}
              < renderscriptDirectories
-             > resDirectories:
-                * {PROJECT}/src/androidTestDebug/res{!}
-             < resDirectories
+             - resDirectories      = (null)
              > assetsDirectories:
                 * {PROJECT}/src/androidTestDebug/assets{!}
              < assetsDirectories
@@ -264,9 +254,7 @@
              > renderscriptDirectories:
                 * {PROJECT}/src/testDebug/rs{!}
              < renderscriptDirectories
-             > resDirectories:
-                * {PROJECT}/src/testDebug/res{!}
-             < resDirectories
+             - resDirectories      = (null)
              > assetsDirectories:
                 * {PROJECT}/src/testDebug/assets{!}
              < assetsDirectories
@@ -323,9 +311,7 @@
              > renderscriptDirectories:
                 * {PROJECT}/src/release/rs{!}
              < renderscriptDirectories
-             > resDirectories:
-                * {PROJECT}/src/release/res{!}
-             < resDirectories
+             - resDirectories      = (null)
              > assetsDirectories:
                 * {PROJECT}/src/release/assets{!}
              < assetsDirectories
@@ -356,9 +342,7 @@
              > renderscriptDirectories:
                 * {PROJECT}/src/androidTestRelease/rs{!}
              < renderscriptDirectories
-             > resDirectories:
-                * {PROJECT}/src/androidTestRelease/res{!}
-             < resDirectories
+             - resDirectories      = (null)
              > assetsDirectories:
                 * {PROJECT}/src/androidTestRelease/assets{!}
              < assetsDirectories
@@ -389,9 +373,7 @@
              > renderscriptDirectories:
                 * {PROJECT}/src/testRelease/rs{!}
              < renderscriptDirectories
-             > resDirectories:
-                * {PROJECT}/src/testRelease/res{!}
-             < resDirectories
+             - resDirectories      = (null)
              > assetsDirectories:
                 * {PROJECT}/src/testRelease/assets{!}
              < assetsDirectories
@@ -432,7 +414,6 @@
              - compileTaskName               = "compileDebugSources"
              - assembleTaskName              = "assembleDebug"
              > classesFolders:
-                * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar{!}
                 * {PROJECT}/build/intermediates/javac/debug/classes{!}
              < classesFolders
              - ideSetupTaskNames             = ["generateDebugSources"]
@@ -449,13 +430,9 @@
              - sourceGenTaskName             = "generateDebugSources"
              - generatedResourceFolders      = [{PROJECT}/build/generated/res/resValues/debug{!}, {PROJECT}/build/generated/res/rs/debug{!}]
              - abiFilters                    = []
-             - assembleTaskOutputListingFile = {PROJECT}/build/outputs/apk/debug/output-metadata.json{!}
+             - assembleTaskOutputListingFile = (null)
              - testInfo                      = (null)
-             - bundleInfo:
-                * bundleTaskName                     = "bundleDebug"
-                * bundleTaskOutputListingFile        = {PROJECT}/build/intermediates/bundle_ide_model/debug/output-metadata.json{!}
-                * apkFromBundleTaskName              = "extractApksForDebug"
-                * apkFromBundleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_from_bundle_ide_model/debug/output-metadata.json{!}
+             - bundleInfo                    = (null)
              - codeShrinker                  = (null)
           < mainArtifact
           > androidTestArtifact:
@@ -492,7 +469,6 @@
              - compileTaskName           = "compileDebugUnitTestSources"
              - assembleTaskName          = "assembleDebugUnitTest"
              > classesFolders:
-                * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar{!}
                 * {PROJECT}/build/intermediates/javac/debugUnitTest/classes{!}
              < classesFolders
              - ideSetupTaskNames         = ["createMockableJar"]
@@ -517,7 +493,6 @@
              - compileTaskName               = "compileReleaseSources"
              - assembleTaskName              = "assembleRelease"
              > classesFolders:
-                * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/release/R.jar{!}
                 * {PROJECT}/build/intermediates/javac/release/classes{!}
              < classesFolders
              - ideSetupTaskNames             = ["generateReleaseSources"]
@@ -529,18 +504,14 @@
              < generatedSourceFolders
              - variantSourceProvider         = (null)
              - multiFlavorSourceProvider     = (null)
-             - isSigned                      = false
-             - signingConfigName             = (null)
+             - isSigned                      = true
+             - signingConfigName             = "debug"
              - sourceGenTaskName             = "generateReleaseSources"
              - generatedResourceFolders      = [{PROJECT}/build/generated/res/resValues/release{!}, {PROJECT}/build/generated/res/rs/release{!}]
              - abiFilters                    = []
-             - assembleTaskOutputListingFile = {PROJECT}/build/outputs/apk/release/output-metadata.json{!}
+             - assembleTaskOutputListingFile = (null)
              - testInfo                      = (null)
-             - bundleInfo:
-                * bundleTaskName                     = "bundleRelease"
-                * bundleTaskOutputListingFile        = {PROJECT}/build/intermediates/bundle_ide_model/release/output-metadata.json{!}
-                * apkFromBundleTaskName              = "extractApksForRelease"
-                * apkFromBundleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_from_bundle_ide_model/release/output-metadata.json{!}
+             - bundleInfo                    = (null)
              - codeShrinker                  = (null)
           < mainArtifact
           - androidTestArtifact    = (null)
@@ -548,7 +519,6 @@
              - compileTaskName           = "compileReleaseUnitTestSources"
              - assembleTaskName          = "assembleReleaseUnitTest"
              > classesFolders:
-                * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/release/R.jar{!}
                 * {PROJECT}/build/intermediates/javac/releaseUnitTest/classes{!}
              < classesFolders
              - ideSetupTaskNames         = ["createMockableJar"]
@@ -591,7 +561,7 @@
        - xmlOutput               = (null)
        - sarifReport             = false
        - sarifOutput             = (null)
-       - isCheckReleaseBuilds    = false
+       - isCheckReleaseBuilds    = true
        - isCheckDependencies     = false
        - baselineFile            = (null)
        - severityOverrides       = (null)
@@ -603,9 +573,7 @@
        * isCoreLibraryDesugaringEnabled = false
     - viewBindingOptions:
        * isEnabled = false
-    - dependenciesInfo:
-       * includeInApk    = true
-       * includeInBundle = true
+    - dependenciesInfo  = (null)
     > flags:
        * APPLICATION_R_CLASS_CONSTANT_IDS -> true
        * JETPACK_COMPOSE                  -> false

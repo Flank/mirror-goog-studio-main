@@ -249,7 +249,7 @@ private fun BaseConfig.dumpBaseConfig(builder: DumpBuilder) {
         item("name", name)
         item("applicationIdSuffix", applicationIdSuffix)
         item("versionNameSuffix", versionNameSuffix)
-        multiLineList("buildConfigFields", buildConfigFields.entries.sortedBy { it.key }) {
+        multiLineList("buildConfigFields", buildConfigFields?.entries?.sortedBy { it.key }) {
             struct("field", it.value) { field ->
                 item("name", field.name)
                 item("type", field.type)
@@ -258,7 +258,7 @@ private fun BaseConfig.dumpBaseConfig(builder: DumpBuilder) {
                 list("annotations", field.annotations.sorted())
             }
         }
-        multiLineList("resValues", resValues.entries.sortedBy { it.key }) {
+        multiLineList("resValues", resValues?.entries?.sortedBy { it.key }) {
             struct("value", it.value) { field ->
                 item("name", field.name)
                 item("type", field.type)
