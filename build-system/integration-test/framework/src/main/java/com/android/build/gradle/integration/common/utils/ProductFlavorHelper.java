@@ -104,7 +104,6 @@ public final class ProductFlavorHelper {
     }
 
     public void test() {
-        assertEquals(name + ":applicationId", applicationId, productFlavor.getApplicationId());
         assertEquals(name + ":VersionCode", versionCode, productFlavor.getVersionCode());
         assertEquals(name + ":VersionName", versionName, productFlavor.getVersionName());
         assertEquals(name + ":minSdkVersion", minSdkVersion, productFlavor.getMinSdkVersion());

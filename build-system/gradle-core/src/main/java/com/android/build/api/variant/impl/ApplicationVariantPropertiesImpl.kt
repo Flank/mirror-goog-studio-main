@@ -72,8 +72,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     override val debuggable: Boolean
         get() = variantDslInfo.isDebuggable
 
-    override val applicationId: Property<String> =
-        internalServices.propertyOf(String::class.java, variantDslInfo.applicationId)
+    override val applicationId: Property<String> = variantDslInfo.applicationId
 
     override val embedsMicroApp: Boolean
         get() = variantDslInfo.isEmbedMicroApp
