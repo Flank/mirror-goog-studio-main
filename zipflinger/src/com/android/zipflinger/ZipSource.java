@@ -73,6 +73,8 @@ public class ZipSource {
         }
         Source entrySource = newZipSourceEntryFor(newName, entry, compressionLevel);
         entrySource.align(alignment);
+        entrySource.versionMadeBy = entry.getVersionMadeBy();
+        entrySource.externalAttributes = entry.getExternalAttributes();
         selectedEntries.add(entrySource);
     }
 

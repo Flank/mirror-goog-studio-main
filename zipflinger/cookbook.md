@@ -94,3 +94,22 @@ can be done only once by providing the same ZipMap to each ZipSource.
  }
 
 ```
+
+# Add files to a zip and preserve executable permission
+```
+try(ZipArchive zip = new ZipArchive("archive.zip")) {
+  String p = "/path/x";
+  int c = Deflater.NO_COMPRESSION;
+  zip.add(new FullFileSource(p, "x", c));
+}
+```
+
+# Add symbolic links to a zip
+```
+try(ZipArchive zip = new ZipArchive("archive.zip")) {
+  String p = "/path/x";
+  int c = Deflater.NO_COMPRESSION;
+  FullFileSource.Symlink perm = FullFileSource.Symlink.DO_NOT_FOLLOW;
+  zip.add(new FullFileSource(p  , "x", c, perm));
+}
+```

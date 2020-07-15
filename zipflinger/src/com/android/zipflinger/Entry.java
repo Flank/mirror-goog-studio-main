@@ -35,6 +35,8 @@ public class Entry {
     private long compressedSize;
     private long uncompressedSize;
     private short compressionFlag;
+    private short versionMadeBy;
+    private int externalAttributes;
 
     Entry() {}
 
@@ -111,5 +113,21 @@ public class Entry {
 
     void setLocation(@NonNull Location location) {
         this.location = location;
+    }
+
+    void setVersionMadeBy(short versionMadeByFlag) {
+        this.versionMadeBy = versionMadeByFlag;
+    }
+
+    void setExternalAttributes(int externalAttributes) {
+        this.externalAttributes = externalAttributes;
+    }
+
+    short getVersionMadeBy() {
+        return versionMadeBy;
+    }
+
+    int getExternalAttributes() {
+        return externalAttributes;
     }
 }

@@ -206,9 +206,8 @@ public class ZipMap {
             throws IOException {
         long cdEntryStart = (long) buf.position() - 4;
 
-        buf.position(buf.position() + 4);
-        //short versionMadeBy = buf.getShort();
-        //short versionNeededToExtract = buf.getShort();
+        entry.setVersionMadeBy(buf.getShort());
+        buf.getShort(); // versionNeededToExtract
         short flags = buf.getShort();
         short compressionFlag = buf.getShort();
         entry.setCompressionFlag(compressionFlag);
@@ -225,10 +224,10 @@ public class ZipMap {
         int pathLength = Ints.ushortToInt(buf.getShort());
         int extraLength = Ints.ushortToInt(buf.getShort());
         int commentLength = Ints.ushortToInt(buf.getShort());
-        buf.position(buf.position() + 8);
+        buf.position(buf.position() + 4);
         // short diskNumber = buf.getShort();
         // short intAttributes = buf.getShort();
-        // int extAttributes = bug.getInt();
+        entry.setExternalAttributes(buf.getInt());
 
         entry.setLocation(new Location(Ints.uintToLong(buf.getInt()), 0));
 

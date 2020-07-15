@@ -710,7 +710,7 @@ public class TestZipFlinger extends TestBase {
 
     @Test
     // Regression test for b/141861587
-    public void testVersionMadeByZero() throws Exception {
+    public void testAttributes() throws Exception {
         int fileSize = 4;
         Path dst = getTestPath("testMadeByZero.zip");
         try (ZipArchive archive = new ZipArchive(dst.toFile())) {
@@ -724,7 +724,7 @@ public class TestZipFlinger extends TestBase {
 
         // Check version Made-kby
         short versionMadeBy = cd.getShort();
-        Assert.assertEquals("Version Made-By field in CD[0] = 0", versionMadeBy, 0);
+        Assert.assertEquals("Version Made-By field", versionMadeBy, Source.MADE_BY_UNIX);
 
         // Just to make sure we have the right record, skip to size and usize and check there
         cd.position(cd.position() + 14);
@@ -734,6 +734,21 @@ public class TestZipFlinger extends TestBase {
 
         int ucompressedSize = cd.getInt();
         Assert.assertEquals("Bad USize", fileSize, ucompressedSize);
+
+        cd.position(cd.position() + 10);
+        int externalAttributes = cd.getInt();
+        int expectedAttributes = Source.PERMISSION_DEFAULT;
+        Assert.assertEquals("External Attributes", expectedAttributes, externalAttributes);
+    }
+
+    @Test
+    public void testFullFileSource() throws Exception {
+        // TODO
+    }
+
+    @Test
+    public void testZipMergingAttributes() throws Exception {
+        // TODO
     }
 
     // Regression test for b/144189353 (JD9 treats zero time/data stamp as invalid).

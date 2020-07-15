@@ -32,9 +32,39 @@ public abstract class Source {
     protected int crc;
     protected short compressionFlag;
 
+    protected short versionMadeBy;
+    static final short MADE_BY_UNIX = 3 << 8;
+
+    // For more of these magical values, see zipinfo.c in unzip source code.
+    // All these values are shifted left 16 bits because this is where they
+    // are expected in the zip external attribute field.
+    private static final int TYPE_FREG = 0100000; // Regular File
+    private static final int TYPE_FLNK = 0120000; // Symbolic link
+
+    private static final int UNX_IRUSR = 00400; /* Unix read    : owner */
+    private static final int UNX_IWUSR = 00200; /* Unix write   : owner */
+    private static final int UNX_IXUSR = 00100; /* Unix execute : owner */
+    private static final int UNX_IRGRP = 00040; /* Unix read    : group */
+    private static final int UNX_IWGRP = 00020; /* Unix write   : group */
+    private static final int UNX_IXGRP = 00010; /* Unix execute : group */
+    private static final int UNX_IROTH = 00004; /* Unix read    : other */
+    private static final int UNX_IWOTH = 00002; /* Unix write   : other */
+    private static final int UNX_IXOTH = 00001; /* Unix execute : other */
+    private static final int UNX_IRALL = UNX_IRUSR | UNX_IRGRP | UNX_IROTH;
+    private static final int UNX_IWALL = UNX_IWUSR | UNX_IWGRP | UNX_IWOTH;
+
+    static final int PERMISSION_RW = (UNX_IRALL | UNX_IWALL) << 16;
+    static final int PERMISSION_EXEC = (UNX_IXUSR | UNX_IXGRP | UNX_IXOTH) << 16;
+    static final int PERMISSION_LINK = TYPE_FLNK << 16;
+    static final int PERMISSION_DEFAULT = (TYPE_FREG << 16) | PERMISSION_RW;
+
+    protected int externalAttributes;
+
     protected Source(@NonNull String name) {
         this.name = name;
         nameBytes = name.getBytes(StandardCharsets.UTF_8);
+        versionMadeBy = MADE_BY_UNIX;
+        externalAttributes = PERMISSION_DEFAULT;
     }
 
     @NonNull
@@ -73,6 +103,14 @@ public abstract class Source {
 
     short getCompressionFlag() {
         return compressionFlag;
+    }
+
+    short getVersionMadeBy() {
+        return versionMadeBy;
+    }
+
+    int getExternalAttributes() {
+        return externalAttributes;
     }
 
     // Guaranteed to be called before writeTo. After this method has been called, every fields
