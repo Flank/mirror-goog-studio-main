@@ -16,55 +16,96 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.builder.internal.compiler.AidlProcessor
-import com.google.common.collect.ImmutableSet
+import com.android.build.gradle.internal.fixtures.FakeGradleExecOperations
+import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
+import com.android.build.gradle.internal.fixtures.FakeInjectableService
+import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.StripDebugSymbolsRunnable
+import com.android.build.gradle.tasks.AidlCompile.Companion.aidlCompileDelegate
+import com.android.utils.FileUtils
 import com.google.common.truth.Truth
+import org.gradle.testfixtures.ProjectBuilder
+import org.gradle.workers.WorkerExecutor
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.ArgumentCaptor
-import org.mockito.Mockito
 import java.io.File
-import java.nio.file.Path
-import java.util.stream.Collectors
+import kotlin.reflect.jvm.javaMethod
 
 class AidlCompileTest {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
-    private fun createFile(name: String, parent: File) {
-        File(parent.path + File.separator + name).createNewFile()
+    private val execOperations = FakeGradleExecOperations()
+
+    private lateinit var workers: WorkerExecutor
+    private lateinit var instantiatorTask: AndroidVariantTask
+
+    private fun createFile(name: String, parent: File): File {
+        val newFile = parent.resolve(name)
+        newFile.createNewFile()
+        return newFile
+    }
+
+    @Before
+    fun setup() {
+        with(ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build()) {
+            workers = FakeGradleWorkExecutor(
+                objects, temporaryFolder.newFolder(), listOf(
+                    FakeInjectableService(
+                        StripDebugSymbolsRunnable::execOperations.getter.javaMethod!!,
+                        execOperations
+                    )
+                )
+            )
+            instantiatorTask = tasks.create("task", AndroidVariantTask::class.java)
+        }
     }
 
     @Test
     fun testAidlCompileRunnable() {
         val sourceFolder = temporaryFolder.newFolder()
-        createFile("1.aidl", sourceFolder)
-        createFile("2.aidl", sourceFolder)
-        createFile("3.aidl", sourceFolder)
-        createFile("noise.txt", sourceFolder)
+        val file1 = createFile("1.aidl", sourceFolder)
+        val file2 = createFile("2.aidl", sourceFolder)
+        val file3 = createFile("3.aidl", sourceFolder)
+        val noise = createFile("noise.txt", sourceFolder)
 
-        val fileNames = ImmutableSet.of("1.aidl", "2.aidl", "3.aidl")
+        val outputDir = temporaryFolder.newFolder("outputDir")
 
-        val processor = Mockito.mock(AidlProcessor::class.java)
-        val startDirCaptor = ArgumentCaptor.forClass(Path::class.java)
-        val pathCaptor = ArgumentCaptor.forClass(Path::class.java)
+        val fakeExe = temporaryFolder.newFile("fake.exe")
 
-        val task =
-            AidlCompile.AidlCompileRunnable(AidlCompile.AidlCompileParams(sourceFolder, processor))
-        task.run()
+        val fakeFramework = temporaryFolder.newFolder("fakeFramework")
 
-        Mockito.verify(processor, Mockito.times(3))
-            .call(startDirCaptor.capture(), pathCaptor.capture())
+        aidlCompileDelegate(
+            workers,
+            fakeExe,
+            fakeFramework,
+            outputDir,
+            null,
+            null,
+            listOf(sourceFolder),
+            listOf(),
+            instantiatorTask
+        )
 
-        startDirCaptor.allValues.forEach {
-            Truth.assertThat(it.toString()).isEqualTo(sourceFolder.toString())
+        // Check that executable only runs for aidl files, and properly locates the framework
+        // and output dir
+        Truth.assertThat(execOperations.capturedExecutions).named("number of invocations").hasSize(3)
+        for (processInfo in execOperations.capturedExecutions) {
+            Truth.assertThat(processInfo.executable).isEqualTo(fakeExe.absolutePath)
+
+            Truth.assertThat(processInfo.args).containsAtLeast(
+                "-p" + fakeFramework.absolutePath,
+            "-o" + outputDir.absolutePath)
+
+            Truth.assertThat(processInfo.args).containsAnyOf(
+                file1.absolutePath,
+                file2.absolutePath,
+                file3.absolutePath
+            )
+
+            Truth.assertThat(processInfo.args).doesNotContain(noise.absolutePath)
         }
-
-        Truth.assertThat(
-            pathCaptor.allValues.stream().map { it.fileName.toString() }.collect(
-                Collectors.toSet()
-            ) as Set<*>
-        ).containsExactlyElementsIn(fileNames)
     }
 }

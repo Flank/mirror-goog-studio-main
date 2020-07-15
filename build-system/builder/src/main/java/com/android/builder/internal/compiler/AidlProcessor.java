@@ -41,25 +41,8 @@ import java.util.List;
 /**
  * A Source File processor for AIDL files. This compiles each aidl file found by the SourceSearcher.
  */
-public class AidlProcessor implements DirectoryWalker.FileAction {
-
-    private final String mAidlExecutable;
-    @NonNull
-    private final String mFrameworkLocation;
-    @NonNull private final Iterable<File> mImportFolders;
-    @NonNull
-    private final File mSourceOutputDir;
-    @Nullable
-    private final File mPackagedOutputDir;
-    @NonNull private final Collection<String> mPackagedList;
-    @NonNull
-    private final DependencyFileProcessor mDependencyFileProcessor;
-    @NonNull
-    private final ProcessExecutor mProcessExecutor;
-    @NonNull
-    private  final ProcessOutputHandler mProcessOutputHandler;
-
-    public AidlProcessor(
+public class AidlProcessor {
+    public static void call(
             @NonNull String aidlExecutable,
             @NonNull String frameworkLocation,
             @NonNull Iterable<File> importFolders,
@@ -68,33 +51,27 @@ public class AidlProcessor implements DirectoryWalker.FileAction {
             @Nullable Collection<String> packagedList,
             @NonNull DependencyFileProcessor dependencyFileProcessor,
             @NonNull ProcessExecutor processExecutor,
-            @NonNull ProcessOutputHandler processOutputHandler) {
-        mAidlExecutable = aidlExecutable;
-        mFrameworkLocation = frameworkLocation;
-        mImportFolders = importFolders;
-        mSourceOutputDir = sourceOutputDir;
-        mPackagedOutputDir = packagedOutputDir;
-        if (packagedList == null) {
-            mPackagedList = ImmutableSet.of();
-        } else {
-            mPackagedList = Collections.unmodifiableSet(Sets.newHashSet(packagedList));
-        }
-        mDependencyFileProcessor = dependencyFileProcessor;
-        mProcessExecutor = processExecutor;
-        mProcessOutputHandler = processOutputHandler;
-    }
+            @NonNull ProcessOutputHandler processOutputHandler,
+            @NonNull Path startDir,
+            @NonNull Path inputFilePath)
+            throws IOException {
 
-    @Override
-    public void call(@NonNull Path startDir, @NonNull Path inputFilePath) throws IOException {
+        @NonNull final Collection<String> nonNullPackagedList;
+        if (packagedList == null) {
+            nonNullPackagedList = ImmutableSet.of();
+        } else {
+            nonNullPackagedList = Collections.unmodifiableSet(Sets.newHashSet(packagedList));
+        }
+
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
 
-        builder.setExecutable(mAidlExecutable);
+        builder.setExecutable(aidlExecutable);
 
-        builder.addArgs("-p" + mFrameworkLocation);
-        builder.addArgs("-o" + mSourceOutputDir.getAbsolutePath());
+        builder.addArgs("-p" + frameworkLocation);
+        builder.addArgs("-o" + sourceOutputDir.getAbsolutePath());
 
         // add all the library aidl folders to access parcelables that are in libraries
-        for (File f : mImportFolders) {
+        for (File f : importFolders) {
             builder.addArgs("-I" + f.getAbsolutePath());
         }
 
@@ -104,8 +81,8 @@ public class AidlProcessor implements DirectoryWalker.FileAction {
 
         builder.addArgs(inputFilePath.toAbsolutePath().toString());
 
-        ProcessResult result = mProcessExecutor.execute(
-                builder.createProcess(), mProcessOutputHandler);
+        ProcessResult result =
+                processExecutor.execute(builder.createProcess(), processOutputHandler);
 
         try {
             result.rethrowFailure().assertNormalExitValue();
@@ -119,7 +96,7 @@ public class AidlProcessor implements DirectoryWalker.FileAction {
                                 startDir.toFile(), inputFilePath.toFile(), FileOpUtils.create()));
 
         // send the dependency file to the processor.
-        DependencyData data = mDependencyFileProcessor.processFile(depFile);
+        DependencyData data = dependencyFileProcessor.processFile(depFile);
 
         if (data != null) {
             // As of build tools 29.0.2, Aidl no longer produces an empty list of output files
@@ -143,13 +120,13 @@ public class AidlProcessor implements DirectoryWalker.FileAction {
                 }
             }
 
-            boolean isPackaged = mPackagedList.contains(relativeInputFile);
+            boolean isPackaged = nonNullPackagedList.contains(relativeInputFile);
 
-            if (mPackagedOutputDir != null && (isParcelable || isPackaged)) {
+            if (packagedOutputDir != null && (isParcelable || isPackaged)) {
                 // looks like a parcelable or is listed for packaging
                 // Store it in the secondary output of the DependencyData object.
 
-                File destFile = new File(mPackagedOutputDir, relativeInputFile);
+                File destFile = new File(packagedOutputDir, relativeInputFile);
                 //noinspection ResultOfMethodCallIgnored
                 destFile.getParentFile().mkdirs();
                 Files.copy(inputFilePath.toFile(), destFile);
@@ -159,5 +136,4 @@ public class AidlProcessor implements DirectoryWalker.FileAction {
 
         FileUtils.delete(depFile);
     }
-
 }

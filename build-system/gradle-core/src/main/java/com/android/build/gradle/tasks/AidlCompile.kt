@@ -16,32 +16,34 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.AIDL
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.process.GradleProcessExecutor
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.AIDL
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.compiling.DependencyFileProcessor
 import com.android.builder.internal.compiler.AidlProcessor
 import com.android.builder.internal.compiler.DirectoryWalker
+import com.android.builder.internal.compiler.DirectoryWalker.FileAction
 import com.android.builder.internal.incremental.DependencyData
 import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.utils.FileUtils
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Preconditions
-import java.io.File
-import java.io.IOException
-import java.io.Serializable
-import javax.inject.Inject
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -58,16 +60,15 @@ import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.util.PatternSet
 import org.gradle.process.ExecOperations
+import org.gradle.workers.WorkerExecutor
+import java.io.File
+import java.io.IOException
+import java.io.Serializable
+import java.nio.file.Path
+import javax.inject.Inject
 
 /**
  * Task to compile aidl files. Supports incremental update.
- *
- *
- * TODO(b/124424292)
- *
- *
- * We can not use gradle worker in this task as we use [GradleProcessExecutor] for
- * compiling aidl files, which should not be serialized.
  */
 @CacheableTask
 abstract class AidlCompile : NonIncrementalTask() {
@@ -83,9 +84,6 @@ abstract class AidlCompile : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var importDirs: FileCollection
         private set
-
-    @get:Inject
-    abstract val execOperations: ExecOperations
 
     // Given the same version, the path or contents of the AIDL tool may change across platforms,
     // but it would still produce the same output (given the same inputs)---see bug 138920846.
@@ -137,6 +135,8 @@ abstract class AidlCompile : NonIncrementalTask() {
 
     override fun doTaskAction() {
         // this is full run, clean the previous output
+        val aidlExecutable = sdkBuildService.get().aidlExecutableProvider.get().absoluteFile
+        val frameworkLocation = getAidlFrameworkProvider().get().absoluteFile
         val destinationDir = sourceOutputDir.get().asFile
         val parcelableDir = packagedDir.orNull
         FileUtils.cleanOutputDir(destinationDir)
@@ -144,28 +144,22 @@ abstract class AidlCompile : NonIncrementalTask() {
             FileUtils.cleanOutputDir(parcelableDir.asFile)
         }
 
-        getWorkerFacadeWithThreads(false).use { workers ->
-            val sourceFolders = sourceDirs.get()
-            val importFolders = importDirs.files
+        val sourceFolders = sourceDirs.get()
+        val importFolders = importDirs.files
 
-            val fullImportList = sourceFolders + importFolders
+        val fullImportList = sourceFolders + importFolders
 
-            val processor = AidlProcessor(
-                sdkBuildService.get().aidlExecutableProvider.get().absolutePath,
-                getAidlFrameworkProvider().get().absolutePath,
-                fullImportList,
-                destinationDir,
-                parcelableDir?.asFile,
-                packagedList,
-                DepFileProcessor(),
-                GradleProcessExecutor(execOperations::exec),
-                LoggedProcessOutputHandler(LoggerWrapper(logger))
-            )
-
-            for (dir in sourceFolders) {
-                workers.submit(AidlCompileRunnable::class.java, AidlCompileParams(dir, processor))
-            }
-        }
+        aidlCompileDelegate(
+            workerExecutor,
+            aidlExecutable,
+            frameworkLocation,
+            destinationDir,
+            parcelableDir?.asFile,
+            packagedList,
+            sourceFolders,
+            fullImportList,
+            this
+        )
     }
 
     class CreationAction(
@@ -205,8 +199,6 @@ abstract class AidlCompile : NonIncrementalTask() {
 
             val variantSources = creationConfig.variantSources
 
-            val sdkComponents = globalScope.sdkComponents
-
             task
                 .sourceDirs
                 .set(project.provider { variantSources.aidlSourceList })
@@ -233,27 +225,93 @@ abstract class AidlCompile : NonIncrementalTask() {
         }
     }
 
-    internal class AidlCompileRunnable @Inject
-    constructor(private val params: AidlCompileParams) : Runnable {
+    internal class ProcessingRequest(val root: File, val file: File) : Serializable
+
+    abstract class AidlCompileRunnable : ProfileAwareWorkAction<AidlCompileRunnable.Params>() {
+
+        abstract class Params: ProfileAwareWorkAction.Parameters() {
+            abstract val aidlExecutable: RegularFileProperty
+            abstract val frameworkLocation: DirectoryProperty
+            abstract val importFolders: ConfigurableFileCollection
+            abstract val sourceOutputDir: DirectoryProperty
+            abstract val packagedOutputDir: DirectoryProperty
+            abstract val packagedList: ListProperty<String>
+            abstract val dir: Property<File>
+        }
+
+        @get:Inject
+        abstract val execOperations: ExecOperations
 
         override fun run() {
+            // Collect all aidl files in the directory then process them
+            val processingRequests = mutableListOf<ProcessingRequest>()
+
+            val collector =
+                FileAction { root: Path, file: Path ->
+                    processingRequests.add(ProcessingRequest(root.toFile(), file.toFile()))
+                }
+
             try {
                 DirectoryWalker.builder()
-                    .root(params.dir.toPath())
+                    .root(parameters.dir.get().toPath())
                     .extensions("aidl")
-                    .action(params.processor)
+                    .action(collector)
                     .build()
                     .walk()
             } catch (e: IOException) {
                 throw RuntimeException(e)
             }
 
+            val depFileProcessor = DepFileProcessor()
+            val executor = GradleProcessExecutor(execOperations::exec)
+            val logger = LoggedProcessOutputHandler(
+                LoggerWrapper.getLogger(AidlCompileRunnable::class.java))
+
+            for (request in processingRequests) {
+                AidlProcessor.call(
+                    parameters.aidlExecutable.get().asFile.canonicalPath,
+                    parameters.frameworkLocation.get().asFile.canonicalPath,
+                    parameters.importFolders.asIterable(),
+                    parameters.sourceOutputDir.get().asFile,
+                    parameters.packagedOutputDir.orNull?.asFile,
+                    parameters.packagedList.orNull,
+                    depFileProcessor,
+                    executor,
+                    logger,
+                    request.root.toPath(),
+                    request.file.toPath()
+                )
+            }
         }
     }
 
-    internal class AidlCompileParams(val dir: File, val processor: AidlProcessor): Serializable
-
     companion object {
         private val PATTERN_SET = PatternSet().include("**/*.aidl")
+
+        @VisibleForTesting
+        fun aidlCompileDelegate(
+            workerExecutor: WorkerExecutor,
+            aidlExecutable: File,
+            frameworkLocation: File,
+            destinationDir: File,
+            parcelableDir: File?,
+            packagedList: Collection<String>?,
+            sourceFolders: Collection<File>,
+            fullImportList: Collection<File>,
+            instantiator: AndroidVariantTask
+        ) {
+            for (dir in sourceFolders) {
+                workerExecutor.noIsolation().submit(AidlCompileRunnable::class.java) {
+                    it.initializeFromAndroidVariantTask(instantiator)
+                    it.aidlExecutable.set(aidlExecutable)
+                    it.frameworkLocation.set(frameworkLocation)
+                    it.importFolders.from(fullImportList)
+                    it.sourceOutputDir.set(destinationDir)
+                    it.packagedOutputDir.set(parcelableDir)
+                    it.packagedList.set(packagedList)
+                    it.dir.set(dir)
+                }
+            }
+        }
     }
 }
