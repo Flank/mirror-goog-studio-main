@@ -506,14 +506,14 @@ class ModelBuilder<
             projectPath = globalScope.project.path,
             variantName = component.name,
             runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
-            mavenCoordinatesCache = mavenCoordinatesBuildService
+            mavenCoordinatesCache = mavenCoordinatesBuildService,
+            buildMapping = buildMapping
         )
 
         graphBuilder.createDependencies(
             modelBuilder = modelBuilder,
             artifactCollectionsProvider = inputs,
             withFullDependency = true,
-            buildMapping = buildMapping,
             issueReporter = syncIssueReporter
         )
 

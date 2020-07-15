@@ -83,7 +83,6 @@ abstract class LintModelDependenciesWriterTask : NonIncrementalTask() {
             modelBuilder = modelBuilder,
             artifactCollectionsProvider = artifactCollectionsInputs.get(),
             withFullDependency = true,
-            buildMapping = ImmutableMap.of(),
             issueReporter = issueReporter
         )
 
@@ -135,6 +134,7 @@ abstract class LintModelDependenciesWriterTask : NonIncrementalTask() {
                     projectPath = creationConfig.globalScope.project.path,
                     variantName = creationConfig.name,
                     runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
+                    buildMapping = ImmutableMap.of(),
                     mavenCoordinatesCache = getBuildService(creationConfig.services.buildServiceRegistry)
                 )
             )

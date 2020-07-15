@@ -78,7 +78,7 @@ abstract class ArtifactHandler<DependencyItemT> protected constructor(
             }
         } else {
             val buildId = id.getBuildId(artifact.buildMapping)
-                ?: throw RuntimeException("Failed to find matching buildId for artifact '${artifact.buildMapping}")
+                ?: throw RuntimeException("Failed to find matching buildId for artifact '${artifact.componentIdentifier}'. Build mapping is '${artifact.buildMapping}'")
 
             if (artifact.dependencyType === ResolvedArtifact.DependencyType.ANDROID) {
                 val lintJar = lintJarMap?.get(id)

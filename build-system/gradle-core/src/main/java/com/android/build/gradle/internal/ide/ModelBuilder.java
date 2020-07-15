@@ -834,12 +834,13 @@ public class ModelBuilder<Extension extends BaseExtension>
                                 componentProperties.getServices().getBuildServiceRegistry());
                 ArtifactCollectionsInputs artifactCollectionsInputs =
                         new ArtifactCollectionsInputs(
-                                componentProperties, ArtifactCollectionsInputs.RuntimeType.FULL);
+                                componentProperties,
+                                ArtifactCollectionsInputs.RuntimeType.FULL,
+                                buildMapping);
                 graphBuilder.createDependencies(
                         modelBuilder,
                         artifactCollectionsInputs,
                         modelWithFullDependency,
-                        buildMapping,
                         syncIssueReporter);
                 result = Pair.of(DependenciesImpl.EMPTY, modelBuilder.createModel());
             } else {
@@ -848,13 +849,14 @@ public class ModelBuilder<Extension extends BaseExtension>
                                 componentProperties.getServices().getBuildServiceRegistry());
                 ArtifactCollectionsInputs artifactCollectionsInputs =
                         new ArtifactCollectionsInputs(
-                                componentProperties, ArtifactCollectionsInputs.RuntimeType.PARTIAL);
+                                componentProperties,
+                                ArtifactCollectionsInputs.RuntimeType.PARTIAL,
+                                buildMapping);
 
                 graphBuilder.createDependencies(
                         modelBuilder,
                         artifactCollectionsInputs,
                         modelWithFullDependency,
-                        buildMapping,
                         syncIssueReporter);
                 result = Pair.of(modelBuilder.createModel(), EmptyDependencyGraphs.EMPTY);
             }
