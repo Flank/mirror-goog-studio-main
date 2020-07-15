@@ -29,6 +29,8 @@ import com.android.tools.lint.checks.NonAndroidIssueRegistry
 import com.android.tools.lint.checks.UnusedResourceDetector
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintBaseline
+import com.android.tools.lint.client.api.LintClient
+import com.android.tools.lint.client.api.LintClient.Companion.clientName
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.gradle.api.LintExecutionRequest
 import com.android.tools.lint.gradle.api.VariantInputs
@@ -57,6 +59,7 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
     // intended to be used via reflection. Everything else should be private:
     @Throws(IOException::class)
     fun analyze() {
+        clientName = LintClient.CLIENT_GRADLE
         if (descriptor.android) {
             val variantName = descriptor.variantName
             if (variantName != null) {

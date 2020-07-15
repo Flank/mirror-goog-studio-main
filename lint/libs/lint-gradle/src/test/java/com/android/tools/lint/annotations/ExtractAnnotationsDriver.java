@@ -23,6 +23,7 @@ import static java.io.File.pathSeparatorChar;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.UastEnvironment;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.utils.SdkUtils;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
@@ -241,6 +242,7 @@ public class ExtractAnnotationsDriver {
                 new Extractor(database, rmTypeDefs, verbose, !skipClassRetention, true);
         extractor.setListIgnored(listFiltered);
 
+        LintClient.setClientName(LintClient.CLIENT_UNIT_TESTS);
         List<File> sourceRoots = findSourceRoots(sources);
         List<File> joined = Lists.newArrayList(sourceRoots);
         joined.addAll(classpath);

@@ -17,6 +17,7 @@ package com.android.tools.lint.checks.infrastructure;
 
 import com.android.SdkConstants;
 import com.android.testutils.TestUtils;
+import com.android.tools.lint.client.api.LintClient;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
@@ -46,6 +47,22 @@ public abstract class BaseLintDetectorTest extends TestCase implements TestResou
 
     private static File sTempDir = null;
     protected static final Set<File> sCleanDirs = Sets.newHashSet();
+
+    static {
+        LintClient.setClientName(LintClient.CLIENT_UNIT_TESTS);
+    }
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        LintClient.setClientName(LintClient.CLIENT_UNIT_TESTS);
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        LintClient.Companion.resetClientName();
+        super.tearDown();
+    }
 
     @SuppressWarnings("MethodMayBeStatic")
     protected String getTestDataRelPath() {
