@@ -22,28 +22,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TestLogger implements ILogger {
-    List<String> errors = new ArrayList<>();
-    List<String> warnings = new ArrayList<>();
-    List<String> infos = new ArrayList<>();
-    List<String> verboses = new ArrayList<>();
+    List<String> log = new ArrayList<>();
 
     @Override
     public void error(@Nullable Throwable t, @Nullable String msgFormat, Object... args) {
-        errors.add(String.format(msgFormat, args));
+        log.add("E " + String.format(msgFormat, args));
+        System.out.println(log.get(log.size() - 1));
     }
 
     @Override
     public void warning(@NonNull String msgFormat, Object... args) {
-        warnings.add(String.format(msgFormat, args));
+        log.add("W " + String.format(msgFormat, args));
+        System.out.println(log.get(log.size() - 1));
     }
 
     @Override
     public void info(@NonNull String msgFormat, Object... args) {
-        infos.add(String.format(msgFormat, args));
+        log.add("I " + String.format(msgFormat, args));
+        System.out.println(log.get(log.size() - 1));
     }
 
     @Override
     public void verbose(@NonNull String msgFormat, Object... args) {
-        verboses.add(String.format(msgFormat, args));
+        log.add("V " + String.format(msgFormat, args));
+        System.out.println(log.get(log.size() - 1));
     }
 }

@@ -49,9 +49,12 @@ class FakeAppImpl final : public FakeApp::Service {
       AgentOnLoadFunction f = (AgentOnLoadFunction)sym;
       (*f)(&java_vm, options.c_str(), nullptr);
     };
-    {
+
+    if (!request->blocking()) {
       std::unique_lock<std::mutex> lock(edt_mutex);
       events.push_back(callback);
+    } else {
+      callback();
     }
 
     condition.notify_all();

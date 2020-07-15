@@ -17,12 +17,33 @@
 #ifndef DEPLOY_UTILS_H
 #define DEPLOY_UTILS_H
 
+#include <fcntl.h>
 #include <stddef.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <sstream>
 #include <string>
+#include <type_traits>
 
 #include "tools/base/deploy/common/event.h"
+#include "tools/base/deploy/common/io.h"
+#include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
+
+namespace {
+
+template <typename T>
+using is_string = std::is_same<T, std::string>;
+
+template <typename T>
+struct is_vector : public std::false_type {};
+
+template <typename T>
+struct is_vector<std::vector<T>> : public std::true_type {};
+
+}  // namespace
 
 namespace deploy {
 
@@ -47,11 +68,79 @@ std::string to_string(const T& n) {
   return stm.str();
 }
 
-bool ReadFile(const std::string& file_path, std::string* content);
+// Reads a file from the specified path with to the specified container.
+//
+// This method currently only supports reading to strings or vectors.
+template <typename T>
+bool ReadFile(const std::string& file_path, T* content) {
+  static_assert(
+      is_string<T>::value || is_vector<T>::value,
+      "Template parameter 'T' must be of type std::vector or std::string");
+  int fd = IO::open(file_path, O_RDONLY);
+  if (fd == -1) {
+    ErrEvent("Could not open file at '" + file_path + "': " + strerror(errno));
+    return false;
+  }
+
+  struct stat st;
+  if (fstat(fd, &st) != 0) {
+    ErrEvent("Could not stat file at '" + file_path + "': " + strerror(errno));
+    return false;
+  }
+
+  content->resize(st.st_size);
+
+  ssize_t len;
+  size_t bytes_read = 0;
+  while ((len = read(fd, &(*content)[0] + bytes_read,
+                     st.st_size - bytes_read)) > 0) {
+    bytes_read += len;
+  }
+  close(fd);
+
+  if (bytes_read < st.st_size) {
+    ErrEvent("Could not read file at '" + file_path + "'");
+    return false;
+  }
+
+  return true;
+}
 
 // Writes a file to the specified path with the specified content. Overwrites
 // any existing file at that path.
-bool WriteFile(const std::string& file_path, const std::string& content);
+//
+// This method currently only supports writing strings or vectors.
+template <typename T>
+bool WriteFile(const std::string& file_path, const T& content) {
+  static_assert(
+      is_string<T>::value || is_vector<T>::value,
+      "Template parameter 'T' must have type std::vector or std::string");
+  int fd = IO::creat(file_path, S_IRWXU);
+  if (fd == -1) {
+    ErrEvent("Could not create file at '" + file_path +
+             "': " + strerror(errno));
+    return false;
+  }
+
+  size_t count = 0;
+  while (count < content.size()) {
+    ssize_t len = write(fd, content.data() + count, content.size() - count);
+    if (len < 0) {
+      ErrEvent("Could not write to file at '" + file_path +
+               "': " + strerror(errno));
+      break;
+    }
+    count += len;
+  }
+
+  close(fd);
+  if (count < content.size()) {
+    ErrEvent("Failed to write all bytes of file '" + file_path + "'");
+    return false;
+  }
+
+  return true;
+}
 
 // Get the path where the agent will write exception logs.
 // TODO: This probably shouldn't live here.

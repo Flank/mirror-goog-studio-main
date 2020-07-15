@@ -279,10 +279,22 @@ public class FakeDevice {
         }
         if (app != null && !running) {
             int pid = runProcess(app.user.uid, app.packageName);
-            processes.add(new AndroidProcess(pid, app));
+            AndroidProcess process = new AndroidProcess(pid, app);
+            processes.add(process);
             // TODO: get proper user, and pass proper boolean for isWaiting (support wait-for-debugger)
             if (deviceState != null) {
                 deviceState.startClient(pid, app.user.uid, pkgName, pkgName, false);
+            }
+            File data = new File(getStorage(), app.dataPath);
+            File agents = new File(data, "code_cache/startup_agents");
+            if (supportsStartupAgents() && agents.exists()) {
+                for (File agent : agents.listFiles()) {
+                    // We need to re-create this because of how FakeDevice native code handles the
+                    // test environment root. TODO: Fix this.
+                    String path = app.dataPath + "/code_cache/startup_agents/" + agent.getName();
+                    // Need a blocking request so we wait until the instrumentation completes.
+                    process.attachAgentBlocking(path + "=" + app.dataPath);
+                }
             }
             return true;
         }
@@ -399,6 +411,14 @@ public class FakeDevice {
         File appDir = new File(getStorage(), appPath);
         appDir.mkdirs();
 
+        String dataPath = "/data/data/" + packageName;
+        File dataDir = new File(getStorage(), dataPath);
+        FileUtils.deleteRecursivelyIfExists(dataDir);
+        dataDir.mkdirs();
+
+        File codeCache = new File(dataDir, "code_cache");
+        codeCache.mkdir();
+
         List<Apk> apks = new ArrayList<>();
         for (Map.Entry<String, byte[]> entry : stage.entrySet()) {
             String fileName = entry.getKey();
@@ -409,7 +429,7 @@ public class FakeDevice {
         // Using a similar numbering and naming scheme as android:
         // See https://android.googlesource.com/platform/system/core/+/master/libcutils/include/private/android_filesystem_config.h
         User user = addUser(10000 + id, "u0_a" + id);
-        Application app = new Application(packageName, apks, appPath, user, versionCode);
+        Application app = new Application(packageName, apks, appPath, dataPath, user, versionCode);
         apps.put(packageName, app);
         return new InstallResult(InstallResult.Error.SUCCESS, 0, versionCode);
     }
@@ -435,6 +455,10 @@ public class FakeDevice {
 
     public boolean supportsJvmti() {
         return getApi() >= 26;
+    }
+
+    public boolean supportsStartupAgents() {
+        return getApi() >= 30;
     }
 
     public int getApi() {
@@ -528,15 +552,22 @@ public class FakeDevice {
     public static class Application {
         public final String packageName;
         public final String path;
+        public final String dataPath;
         public final User user;
         public final List<Apk> apks;
         public final int versionCode;
 
         public Application(
-                String packageName, List<Apk> apks, String path, User user, int versionCode) {
+                String packageName,
+                List<Apk> apks,
+                String path,
+                String dataPath,
+                User user,
+                int versionCode) {
             this.packageName = packageName;
             this.apks = apks;
             this.path = path;
+            this.dataPath = dataPath;
             this.user = user;
             this.versionCode = versionCode;
         }
@@ -626,14 +657,14 @@ public class FakeDevice {
         }
 
         public boolean attachAgent(String agent) {
-            final Proto.AttachAgentRequest.Builder req = Proto.AttachAgentRequest.newBuilder();
-            final int i = agent.indexOf('=');
-            if (i >= 0) {
-                req.setPath(agent.substring(0, i));
-                req.setOptions(agent.substring(i + 1));
-            } else {
-                req.setPath(agent);
-            }
+            final Proto.AttachAgentRequest.Builder req = makeAgentRequest(agent);
+            stub.attachAgent(req.build());
+            return true;
+        }
+
+        public boolean attachAgentBlocking(String agent) {
+            final Proto.AttachAgentRequest.Builder req = makeAgentRequest(agent);
+            req.setBlocking(true);
             stub.attachAgent(req.build());
             return true;
         }
@@ -648,6 +679,18 @@ public class FakeDevice {
             } catch (InterruptedException e) {
                 System.err.println("Channel did not terminate properly: " + e.getMessage());
             }
+        }
+
+        private Proto.AttachAgentRequest.Builder makeAgentRequest(String agent) {
+            final Proto.AttachAgentRequest.Builder req = Proto.AttachAgentRequest.newBuilder();
+            final int i = agent.indexOf('=');
+            if (i >= 0) {
+                req.setPath(agent.substring(0, i));
+                req.setOptions(agent.substring(i + 1));
+            } else {
+                req.setPath(agent);
+            }
+            return req;
         }
     }
 }
