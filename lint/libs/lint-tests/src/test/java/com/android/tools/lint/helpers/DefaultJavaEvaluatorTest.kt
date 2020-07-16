@@ -31,10 +31,10 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UVariable
-import org.jetbrains.uast.asRecursiveLogString
 import org.junit.Test
 
 /**
@@ -94,58 +94,58 @@ class DefaultJavaEvaluatorTest {
             .run()
             .expect(
                 """
-                src/foo/test.kt:4: Warning: Error with arguments but no receiver [Order]
+                src/foo/test.kt:4: Warning: Error with arguments but no receiver [_Order]
                     bean.setFoo("value")
                          ~~~~~~~~~~~~~~~
-                src/foo/test.kt:4: Warning: Error with receiver and arguments [Order]
+                src/foo/test.kt:4: Warning: Error with receiver and arguments [_Order]
                     bean.setFoo("value")
                     ~~~~~~~~~~~~~~~~~~~~
-                src/foo/test.kt:4: Warning: Error with receiver and no arguments [Order]
+                src/foo/test.kt:4: Warning: Error with receiver and no arguments [_Order]
                     bean.setFoo("value")
                     ~~~~~~~~~~~
-                src/foo/test.kt:5: Warning: Error with arguments but no receiver [Order]
+                src/foo/test.kt:5: Warning: Error with arguments but no receiver [_Order]
                     bean.foo = "value"
                          ~~~~~~~~~~~~~
-                src/foo/test.kt:5: Warning: Error with receiver and arguments [Order]
+                src/foo/test.kt:5: Warning: Error with receiver and arguments [_Order]
                     bean.foo = "value"
                     ~~~~~~~~~~~~~~~~~~
-                src/foo/test.kt:5: Warning: Error with receiver and no arguments [Order]
+                src/foo/test.kt:5: Warning: Error with receiver and no arguments [_Order]
                     bean.foo = "value"
                     ~~~~~~~~
-                src/foo/test.kt:6: Warning: Error with arguments but no receiver [Order]
+                src/foo/test.kt:6: Warning: Error with arguments but no receiver [_Order]
                     bean.foo = "valu" + 'e'
                          ~~~~~~~~~~~~~~~~~~
-                src/foo/test.kt:6: Warning: Error with receiver and arguments [Order]
+                src/foo/test.kt:6: Warning: Error with receiver and arguments [_Order]
                     bean.foo = "valu" + 'e'
                     ~~~~~~~~~~~~~~~~~~~~~~~
-                src/foo/test.kt:6: Warning: Error with receiver and no arguments [Order]
+                src/foo/test.kt:6: Warning: Error with receiver and no arguments [_Order]
                     bean.foo = "valu" + 'e'
                     ~~~~~~~~
-                src/foo/test.kt:7: Warning: Error with arguments but no receiver [Order]
+                src/foo/test.kt:7: Warning: Error with arguments but no receiver [_Order]
                     bean.foo = ""${'"'}value""${'"'}
                          ~~~~~~~~~~~~~~~~~
-                src/foo/test.kt:7: Warning: Error with receiver and arguments [Order]
+                src/foo/test.kt:7: Warning: Error with receiver and arguments [_Order]
                     bean.foo = ""${'"'}value""${'"'}
                     ~~~~~~~~~~~~~~~~~~~~~~
-                src/foo/test.kt:7: Warning: Error with receiver and no arguments [Order]
+                src/foo/test.kt:7: Warning: Error with receiver and no arguments [_Order]
                     bean.foo = ""${'"'}value""${'"'}
                     ~~~~~~~~
-                src/foo/test.kt:8: Warning: Error with arguments but no receiver [Order]
+                src/foo/test.kt:8: Warning: Error with arguments but no receiver [_Order]
                     bean.foo = s.toString()
                          ~~~~~~~~~~~~~~~~~~
-                src/foo/test.kt:8: Warning: Error with receiver and arguments [Order]
+                src/foo/test.kt:8: Warning: Error with receiver and arguments [_Order]
                     bean.foo = s.toString()
                     ~~~~~~~~~~~~~~~~~~~~~~~
-                src/foo/test.kt:8: Warning: Error with receiver and no arguments [Order]
+                src/foo/test.kt:8: Warning: Error with receiver and no arguments [_Order]
                     bean.foo = s.toString()
                     ~~~~~~~~
-                src/foo/test.kt:9: Warning: Error with arguments but no receiver [Order]
+                src/foo/test.kt:9: Warning: Error with arguments but no receiver [_Order]
                     bean.foo = s
                          ~~~~~~~
-                src/foo/test.kt:9: Warning: Error with receiver and arguments [Order]
+                src/foo/test.kt:9: Warning: Error with receiver and arguments [_Order]
                     bean.foo = s
                     ~~~~~~~~~~~~
-                src/foo/test.kt:9: Warning: Error with receiver and no arguments [Order]
+                src/foo/test.kt:9: Warning: Error with receiver and no arguments [_Order]
                     bean.foo = s
                     ~~~~~~~~
                 0 errors, 18 warnings
@@ -156,7 +156,7 @@ class DefaultJavaEvaluatorTest {
     class TestAnnotationLookupDetector : Detector(), SourceCodeScanner {
         companion object Issues {
             val ISSUE = Issue.create(
-                "Order",
+                "_Order",
                 "Sample test detector summary",
                 "Sample test detector explanation",
 
@@ -177,7 +177,6 @@ class DefaultJavaEvaluatorTest {
             }
 
             override fun visitMethod(node: UMethod) {
-                val x = node.asRecursiveLogString()
                 processAnnotations(node)
             }
 
@@ -203,8 +202,73 @@ class DefaultJavaEvaluatorTest {
             }
         }
 
-        override fun createUastHandler(context: JavaContext): UElementHandler? {
+        override fun createUastHandler(context: JavaContext): UElementHandler {
             return AnnotationOrderVisitor(context)
+        }
+    }
+
+    @Test
+    fun testFieldPosition() {
+        // Regression test for https://groups.google.com/g/lint-dev/c/yWcp7gv83_8
+        lint().files(
+            kotlin(
+                """
+                    package test.pkg
+                    class FakeDetectorProofKT {
+                        val myTestString = ""
+                    }
+                """
+            ).indented()
+        )
+            .sdkHome(TestUtils.getSdk().toFile())
+            .issues(RangeTestDetector.ISSUE).run().expect(
+                """
+                src/test/pkg/FakeDetectorProofKT.kt:3: Error: Fake issue [_MyFakeIssueId]
+                    val myTestString = ""
+                    ~~~~~~~~~~~~~~~~~~~~~
+                1 errors, 0 warnings
+                """
+            )
+    }
+
+    @Suppress("UnstableApiUsage")
+    class RangeTestDetector : Detector(), Detector.UastScanner {
+
+        override fun getApplicableUastTypes(): List<Class<out UElement>> {
+            return listOf<Class<out UElement>>(UClass::class.java)
+        }
+
+        override fun createUastHandler(context: JavaContext): UElementHandler {
+            return object : UElementHandler() {
+                override fun visitClass(node: UClass) {
+                    for (field in node.fields) {
+                        if (field.name.contains("test", ignoreCase = true)) {
+                            context.report(
+                                ISSUE,
+                                node,
+                                context.getLocation(field),
+                                "Fake issue"
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        companion object {
+            @JvmField
+            val ISSUE = Issue.create(
+                "_MyFakeIssueId",
+                "Fake issue description",
+                "Fake issue explanation",
+                Category.CORRECTNESS,
+                6,
+                Severity.ERROR,
+                Implementation(
+                    RangeTestDetector::class.java,
+                    Scope.JAVA_FILE_SCOPE
+                )
+            )
         }
     }
 }

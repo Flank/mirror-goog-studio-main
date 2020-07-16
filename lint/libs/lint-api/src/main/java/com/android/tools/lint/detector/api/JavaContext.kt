@@ -127,7 +127,7 @@ open class JavaContext(
         to: UDeclaration,
         toDelta: Int
     ): Location =
-        uastParser.getRangeLocation(this, from as PsiElement, fromDelta, to, toDelta)
+        uastParser.getRangeLocation(this, from as UElement, fromDelta, to, toDelta)
 
     /**
      * Returns a location for the given node range (from the starting
@@ -224,10 +224,10 @@ open class JavaContext(
     }
 
     fun getLocation(element: UMethod): Location =
-        uastParser.getLocation(this, element as PsiMethod)
+        uastParser.getLocation(this, element as UElement)
 
     fun getLocation(element: UField): Location =
-        uastParser.getLocation(this, element as PsiField)
+        uastParser.getLocation(this, element as UElement)
 
     /**
      * Creates a location for the given call.
