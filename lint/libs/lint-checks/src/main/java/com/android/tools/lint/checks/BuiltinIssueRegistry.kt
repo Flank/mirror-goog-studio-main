@@ -453,7 +453,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
             when {
                 scope.contains(Scope.JAVA_FILE) -> initialSize += 150
                 scope.contains(Scope.CLASS_FILE) -> initialSize += 16
-                scope.contains(Scope.MANIFEST) -> initialSize += 60
+                scope.contains(Scope.MANIFEST) -> initialSize += 70
                 scope.contains(Scope.GRADLE_FILE) -> initialSize += 22
             }
             initialSize

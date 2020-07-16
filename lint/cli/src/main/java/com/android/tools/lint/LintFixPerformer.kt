@@ -63,27 +63,11 @@ open class LintFixPerformer constructor(
         val location = getLocation(incident)
         val file = location.file
         return fileMap[file] ?: run {
-            val source = client.getSourceText(incident.file)
+            val source = client.getSourceText(file)
             val fileData = PendingEditFile(client, file, source.toString())
             fileMap[file] = fileData
             fileData
         }
-    }
-
-    private fun getLocation(incident: Incident): Location {
-        val fix = incident.fix
-        if (fix is ReplaceString) {
-            val range = fix.range
-            if (range != null) {
-                return range
-            }
-        } else if (fix is SetAttribute) {
-            val range = fix.range
-            if (range != null) {
-                return range
-            }
-        }
-        return incident.location
     }
 
     private fun registerFix(
@@ -92,7 +76,7 @@ open class LintFixPerformer constructor(
         lintFix: LintFix
     ) {
         val fileData = getFileData(fileMap, incident)
-        if (addEdits(fileData, incident.location, lintFix)) {
+        if (addEdits(fileData, getLocation(incident), lintFix)) {
             incident.wasAutoFixed = true
         }
     }
@@ -551,6 +535,22 @@ open class LintFixPerformer constructor(
     }
 
     companion object {
+        fun getLocation(incident: Incident): Location {
+            val fix = incident.fix
+            if (fix is ReplaceString) {
+                val range = fix.range
+                if (range != null) {
+                    return range
+                }
+            } else if (fix is SetAttribute) {
+                val range = fix.range
+                if (range != null) {
+                    return range
+                }
+            }
+            return incident.location
+        }
+
         /** Not all fixes are eligible for auto-fix; this function checks whether a given fix is. */
         fun canAutoFix(lintFix: LintFix): Boolean {
             if (lintFix is LintFixGroup) {
