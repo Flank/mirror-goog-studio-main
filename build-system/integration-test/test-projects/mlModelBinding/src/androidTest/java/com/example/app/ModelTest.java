@@ -5,12 +5,15 @@ import static org.junit.Assert.*;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.RectF;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 import com.example.app.ml.MobilenetQuantMetadata;
+import com.example.app.ml.SsdMobilenetOdtMetadataV12;
 import com.example.app.ml.StylePredictQuantMetadata;
 import com.example.app.ml.StyleTransferQuantMetadata;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -118,5 +121,38 @@ public class ModelTest {
         assertNotNull(bitmap);
         assertEquals("Bitmap width should be 384.", bitmap.getWidth(), 384);
         assertEquals("Bitmap height should be 384.", bitmap.getHeight(), 384);
+    }
+
+    @Test
+    public void verifyObjectDetectionModel() throws IOException {
+        // Context of the app under test.
+        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+
+        SsdMobilenetOdtMetadataV12 model =
+                SsdMobilenetOdtMetadataV12.newInstance(
+                        appContext, new Model.Options.Builder().build());
+        TensorImage image =
+                TensorImage.fromBitmap(
+                        BitmapFactory.decodeResource(appContext.getResources(), R.drawable.chairs));
+
+        SsdMobilenetOdtMetadataV12.Outputs outputs = model.process(image);
+        List<SsdMobilenetOdtMetadataV12.DetectionResult> results = outputs.getDetectionResultList();
+
+        assertEquals(10, results.size());
+        SsdMobilenetOdtMetadataV12.DetectionResult result =
+                results.stream()
+                        .max(
+                                Comparator.comparing(
+                                        SsdMobilenetOdtMetadataV12.DetectionResult
+                                                ::getScoresAsFloat))
+                        .get();
+
+        assertEquals("chair", result.getClassesAsString());
+        assertEquals(0.824f, result.getScoresAsFloat(), 0.2f);
+        RectF boundingBox = result.getLocationsAsRectF();
+        assertEquals(503.2682f, boundingBox.left, 150f);
+        assertEquals(152.63864f, boundingBox.top, 150f);
+        assertEquals(1126.391f, boundingBox.right, 150f);
+        assertEquals(1135.8333f, boundingBox.bottom, 150f);
     }
 }

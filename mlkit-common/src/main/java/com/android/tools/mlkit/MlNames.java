@@ -42,6 +42,10 @@ public class MlNames {
                 + StringHelper.usLocaleCapitalize(type);
     }
 
+    public static String formatGroupGetterName(String propertyName) {
+        return "get" + StringHelper.usLocaleCapitalize(propertyName) + "List";
+    }
+
     @NonNull
     public static String computeModelClassName(@NonNull String relativeModelFilePath) {
         Path filePath = Paths.get(relativeModelFilePath);

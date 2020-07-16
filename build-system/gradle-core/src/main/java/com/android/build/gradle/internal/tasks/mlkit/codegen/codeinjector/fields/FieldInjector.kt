@@ -13,14 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector
+package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.fields
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.CodeInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getIdentifierFromFileName
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getImageHeightFieldName
+import com.android.build.gradle.internal.tasks.mlkit.codegen.getImageWidthFieldName
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getProcessorName
 import com.android.tools.mlkit.TensorInfo
 import com.google.common.base.Strings
 import com.squareup.javapoet.FieldSpec
+import com.squareup.javapoet.TypeName
 import com.squareup.javapoet.TypeSpec
 import javax.lang.model.element.Modifier
 
@@ -44,14 +48,31 @@ class FieldInjector : CodeInjector<TypeSpec.Builder, TensorInfo> {
 
         // Add preprocessor and postprocessor fields.
         if (tensorInfo.isRGBImage) {
-            val fieldName = FieldSpec.builder(
+            // Add processor and image fields.
+            val processorField = FieldSpec.builder(
                 ClassNames.IMAGE_PROCESSOR,
                 getProcessorName(tensorInfo)
             )
                 .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                 .addAnnotation(ClassNames.NON_NULL)
                 .build()
-            classBuilder.addField(fieldName)
+            classBuilder.addField(processorField)
+
+            val imageHeightField = FieldSpec.builder(
+                TypeName.INT,
+                getImageHeightFieldName(tensorInfo)
+            )
+                .addModifiers(Modifier.PRIVATE)
+                .build()
+            classBuilder.addField(imageHeightField)
+
+            val imageWidthField = FieldSpec.builder(
+                TypeName.INT,
+                getImageWidthFieldName(tensorInfo)
+            )
+                .addModifiers(Modifier.PRIVATE)
+                .build()
+            classBuilder.addField(imageWidthField)
         } else {
             val fieldName = FieldSpec.builder(
                 ClassNames.TENSOR_PROCESSOR,

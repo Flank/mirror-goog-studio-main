@@ -106,11 +106,11 @@ class MlGeneratedClassTest {
             )
         val outputsMethods: Set<MethodReference> =
             ImmutableSet.of(
-                createOutputGetterMethodReference(
+                createGetterMethodReference(
                     MODEL_OUTPUT_SUB,
                     "getProbabilityAsCategoryList", LIST
                 ),
-                createOutputGetterMethodReference(
+                createGetterMethodReference(
                     MODEL_OUTPUT_SUB,
                     "getProbabilityAsTensorBuffer", TENSOR_BUFFER
                 )
@@ -119,6 +119,7 @@ class MlGeneratedClassTest {
             "mobilenet_quant_metadata.tflite",
             modelMethods,
             outputsMethods,
+            null,
             true
         )
     }
@@ -259,6 +260,55 @@ class MlGeneratedClassTest {
 
     @Test
     @Throws(IOException::class, InterruptedException::class)
+    fun testSsdOdtModelClass_v2() {
+        val modelMethods: Set<MethodReference> =
+            ImmutableSet.of(
+                createNewInstanceMethodReference(),
+                createNewInstanceWithOptionsMethodReference(MODEL),
+                createProcessMethodReference(TENSOR_IMAGE),
+                createProcessMethodReference(TENSOR_BUFFER),
+                createCloseMethodReference(MODEL)
+            )
+        val outputsMethods: Set<MethodReference> =
+            ImmutableSet.of(
+                createOutputGetterMethodReference(
+                    "getClassesAsTensorBuffer", TENSOR_BUFFER
+                ),
+                createOutputGetterMethodReference(
+                    "getLocationsAsTensorBuffer", TENSOR_BUFFER
+                ),
+                createOutputGetterMethodReference(
+                    "getNumberOfDetectionsAsTensorBuffer", TENSOR_BUFFER
+                ),
+                createOutputGetterMethodReference(
+                    "getScoresAsTensorBuffer", TENSOR_BUFFER
+                ),
+                createOutputGetterMethodReference(
+                    "getDetectionResultList", LIST
+                )
+            )
+        val groupClassMethods: Set<MethodReference> =
+            ImmutableSet.of(
+                createGetterMethodReference(
+                    MODEL_DETECTION_RESULT, "getClassesAsString", STRING
+                ),
+                createGetterMethodReference(
+                    MODEL_DETECTION_RESULT, "getLocationsAsRectF", RECT_F
+                ),
+                createGetterMethodReference(
+                    MODEL_DETECTION_RESULT, "getScoresAsFloat", "F"
+                )
+            )
+        verifyModelClass(
+            "ssd_mobilenet_odt_metadata_v1.2.tflite",
+            modelMethods,
+            outputsMethods,
+            GroupClassInfo(MODEL_DETECTION_RESULT, groupClassMethods)
+        )
+    }
+
+    @Test
+    @Throws(IOException::class, InterruptedException::class)
     fun testStyleTransferModelClass() {
         val modelMethods: Set<MethodReference> =
             ImmutableSet.of(
@@ -284,22 +334,9 @@ class MlGeneratedClassTest {
     private fun verifyModelClass(
         modelFileName: String,
         expectedModelMethods: Set<MethodReference>,
-        expectedOutputMethods: Set<MethodReference>
-    ) {
-        verifyModelClass(
-            modelFileName,
-            expectedModelMethods,
-            expectedOutputMethods,
-            false
-        )
-    }
-
-    @Throws(IOException::class, InterruptedException::class)
-    private fun verifyModelClass(
-        modelFileName: String,
-        expectedModelMethods: Set<MethodReference>,
         expectedOutputMethods: Set<MethodReference>,
-        verifySubFolder: Boolean
+        groupClassInfo: GroupClassInfo? = null,
+        verifySubFolder: Boolean = false
     ) {
         val dstModelFilePath = if(verifySubFolder) "src/main/ml/sub/mobilenet_model.tflite" else "src/main/ml/model.tflite"
         val modelClass = if(verifySubFolder) MODEL_SUB else MODEL
@@ -322,6 +359,12 @@ class MlGeneratedClassTest {
             expectedOutputMethods
         )
 
+        if (groupClassInfo != null) {
+            assertThat(apk.getClass(groupClassInfo.className)!!.methods).containsAtLeastElementsIn(
+                groupClassInfo.methods
+            )
+        }
+
         // Check model.tflite is uncompressed (Issue 152875817)
         val entry = ZipArchive.listEntries(apk.file.toFile())[apkModelFile]
         assertThat(entry?.compressionFlag).isEqualTo(ZipEntry.STORED)
@@ -331,6 +374,7 @@ class MlGeneratedClassTest {
         private const val MODEL = "Lcom/android/app/ml/Model;"
         private const val MODEL_SUB = "Lcom/android/app/ml/MobilenetModel219;"
         private const val MODEL_OUTPUT = "Lcom/android/app/ml/Model\$Outputs;"
+        private const val MODEL_DETECTION_RESULT = "Lcom/android/app/ml/Model\$DetectionResult;"
         private const val MODEL_OUTPUT_SUB = "Lcom/android/app/ml/MobilenetModel219\$Outputs;"
         private const val TENSOR_IMAGE = "Lorg/tensorflow/lite/support/image/TensorImage;"
         private const val TENSOR_BUFFER =
@@ -338,6 +382,10 @@ class MlGeneratedClassTest {
         private const val LIST = "Ljava/util/List;"
         private const val CONTEXT = "Landroid/content/Context;"
         private const val MODEL_OPTIONS = "Lorg/tensorflow/lite/support/model/Model\$Options;"
+        private const val STRING = "Ljava/lang/String;"
+        private const val RECT_F = "Landroid/graphics/RectF;"
+
+        data class GroupClassInfo(val className:String, val methods: Set<MethodReference>)
 
         private fun createNewInstanceMethodReference(): MethodReference {
             return createNewInstanceMethodReference(MODEL)
@@ -399,10 +447,10 @@ class MlGeneratedClassTest {
             name: String,
             returnType: String
         ): MethodReference {
-            return createOutputGetterMethodReference(MODEL_OUTPUT, name, returnType)
+            return createGetterMethodReference(MODEL_OUTPUT, name, returnType)
         }
 
-        private fun createOutputGetterMethodReference(
+        private fun createGetterMethodReference(
             definingClass: String,
             name: String,
             returnType: String

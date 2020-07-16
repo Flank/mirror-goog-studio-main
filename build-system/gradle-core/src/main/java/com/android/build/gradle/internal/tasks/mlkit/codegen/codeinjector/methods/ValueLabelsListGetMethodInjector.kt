@@ -26,8 +26,8 @@ import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.TypeSpec
 import javax.lang.model.element.Modifier
 
-/** Injects a get method to get List<Category>. */
-class CategoryListGetMethodInjector : MethodInjector() {
+/** Injects a getter method to get List<String>. */
+class ValueLabelsGetMethodInjector : MethodInjector() {
     override fun inject(classBuilder: TypeSpec.Builder, tensorInfo: TensorInfo) {
         val returnType = getOutputParameterType(tensorInfo)
         val methodSpec = MethodSpec.methodBuilder(
@@ -35,15 +35,14 @@ class CategoryListGetMethodInjector : MethodInjector() {
                 tensorInfo.identifierName, getOutputParameterTypeName(tensorInfo)
             )
         )
-            .addModifiers(Modifier.PUBLIC)
+            .addModifiers(Modifier.PRIVATE)
             .addAnnotation(ClassNames.NON_NULL)
             .returns(returnType)
             .addStatement(
-                "return new \$T(\$L, \$L.process(\$L)).getCategoryList()",
-                ClassNames.TENSOR_LABEL,
-                getIdentifierFromFileName(tensorInfo.fileName),
-                getProcessorName(tensorInfo),
-                tensorInfo.identifierName
+                "return \$T.mapValueToLabels(\$L, \$L, 0)",
+                ClassNames.LABEL_UTIL,
+                tensorInfo.identifierName,
+                getIdentifierFromFileName(tensorInfo.fileName)
             )
             .build()
         classBuilder.addMethod(methodSpec)
