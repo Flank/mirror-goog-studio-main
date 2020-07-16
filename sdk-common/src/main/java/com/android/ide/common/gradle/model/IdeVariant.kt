@@ -15,9 +15,7 @@
  */
 package com.android.ide.common.gradle.model
 
-import java.io.Serializable
-
-interface IdeVariant : Serializable {
+interface IdeVariant {
   val name: String
   val displayName: String
   val mainArtifact: IdeAndroidArtifact
