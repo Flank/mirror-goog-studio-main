@@ -15,6 +15,8 @@
  */
 package com.android.tools.deployer;
 
+import static com.android.tools.deployer.InstallerResponseHandler.RedefinitionCapability;
+
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.InstallerResponseHandler.SuccessStatus;
 import com.android.tools.deployer.model.ApkEntry;
@@ -200,7 +202,11 @@ public class OptimisticApkSwapper {
             Deploy.OverlaySwapRequest request, ClassRedefiner redefiner) throws DeployerException {
         Deploy.SwapResponse swapResponse = redefiner.redefine(request);
         metrics.add(swapResponse.getAgentLogsList());
-        return new InstallerResponseHandler().handle(swapResponse);
+        return new InstallerResponseHandler(
+                        options.useStructuralRedefinition
+                                ? RedefinitionCapability.ALLOW_ADD_FIELD
+                                : RedefinitionCapability.MOFIFY_CODE_ONLY)
+                .handle(swapResponse);
     }
 
     public static class SwapResult {

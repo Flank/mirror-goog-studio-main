@@ -23,11 +23,21 @@ import com.google.common.base.Optional;
 import java.util.List;
 
 public class InstallerResponseHandler {
+    private final boolean canAddFields;
 
     enum SuccessStatus {
         OK, // Everything succeeded.
         SWAP_FAILED_BUT_APP_UPDATED // Swap failed, but we're updating the app for a
         // followup restart.
+    }
+
+    enum RedefinitionCapability {
+        MOFIFY_CODE_ONLY,
+        ALLOW_ADD_FIELD,
+    }
+
+    InstallerResponseHandler(RedefinitionCapability capability) {
+        this.canAddFields = capability == RedefinitionCapability.ALLOW_ADD_FIELD;
     }
 
     public SuccessStatus handle(SwapResponse response) throws DeployerException {
@@ -106,7 +116,8 @@ public class InstallerResponseHandler {
         if (jvmtiError.getDetailsCount() == 0) {
             Optional<JvmtiErrorCode> errorCode =
                     Enums.getIfPresent(JvmtiErrorCode.class, jvmtiError.getErrorCode());
-            throw DeployerException.jvmtiError(errorCode.or(JvmtiErrorCode.UNKNOWN_JVMTI_ERROR));
+            throw DeployerException.jvmtiError(
+                    errorCode.or(JvmtiErrorCode.UNKNOWN_JVMTI_ERROR), canAddFields);
         }
 
         // TODO: Currently, all detailed errors are add/remove resource related. Revisit.

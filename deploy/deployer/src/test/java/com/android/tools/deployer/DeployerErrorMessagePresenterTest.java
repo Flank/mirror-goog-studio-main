@@ -25,10 +25,27 @@ public class DeployerErrorMessagePresenterTest {
         DeployerException deployerException =
                 DeployerException.jvmtiError(
                         JvmtiErrorCode
-                                .JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_MODIFIERS_CHANGED);
+                                .JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_MODIFIERS_CHANGED,
+                        true);
         Assert.assertEquals(
                 deployerException.getError(),
                 DeployerException.Error.CANNOT_CHANGE_METHOD_MODIFIERS);
+    }
+
+    @Test
+    public void testStructuralRedefMessage() {
+        DeployerException deployerException =
+                DeployerException.jvmtiError(
+                        JvmtiErrorCode.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_SCHEMA_CHANGED, true);
+        Assert.assertEquals(
+                "Removing a field requires an app restart.", deployerException.getMessage());
+
+        deployerException =
+                DeployerException.jvmtiError(
+                        JvmtiErrorCode.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_SCHEMA_CHANGED, false);
+        Assert.assertEquals(
+                "Adding or removing a field requires an app restart.",
+                deployerException.getMessage());
     }
 
     @Test
