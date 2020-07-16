@@ -44,13 +44,9 @@ public class OptimisticApkSwapper {
 
     private final Installer installer;
     private final boolean restart;
-    private final boolean alwaysUpdateOverlay;
     private final Map<Integer, ClassRedefiner> redefiners;
     private final MetricsRecorder metrics;
-
-    // Temp flag.
-    private final boolean useStructuralRedefinition;
-    private final boolean useVariableReinitialization;
+    private final DeployerOption options;
 
     /**
      * @param installer used to perform swaps on device.
@@ -62,16 +58,12 @@ public class OptimisticApkSwapper {
             Installer installer,
             Map<Integer, ClassRedefiner> redefiners,
             boolean restart,
-            boolean useStructuralRedefinition,
-            boolean useVariableReinitialization,
-            boolean alwaysUpdateOverlay,
+            DeployerOption options,
             MetricsRecorder metrics) {
         this.installer = installer;
         this.redefiners = redefiners;
         this.restart = restart;
-        this.useStructuralRedefinition = useStructuralRedefinition;
-        this.useVariableReinitialization = useVariableReinitialization;
-        this.alwaysUpdateOverlay = alwaysUpdateOverlay;
+        this.options = options;
         this.metrics = metrics;
     }
 
@@ -101,7 +93,7 @@ public class OptimisticApkSwapper {
                         .setExpectedOverlayId(
                                 expectedOverlayId.isBaseInstall() ? "" : expectedOverlayId.getSha())
                         .setOverlayId(nextOverlayId.getSha())
-                        .setAlwaysUpdateOverlay(alwaysUpdateOverlay);
+                        .setAlwaysUpdateOverlay(options.fastRestartOnSwapFail);
 
         boolean hasDebuggerAttached = false;
         for (Integer pid : pids) {
@@ -140,8 +132,8 @@ public class OptimisticApkSwapper {
                             .setContent(entry.getValue()));
         }
 
-        request.setStructuralRedefinition(useStructuralRedefinition);
-        request.setVariableReinitialization(useVariableReinitialization);
+        request.setStructuralRedefinition(options.useStructuralRedefinition);
+        request.setVariableReinitialization(options.useVariableReinitialization);
 
         Deploy.OverlaySwapRequest swapRequest = request.build();
 
