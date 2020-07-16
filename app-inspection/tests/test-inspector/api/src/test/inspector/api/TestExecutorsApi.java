@@ -21,7 +21,9 @@ public class TestExecutorsApi {
         FAIL_ON_PRIMARY_EXECUTOR,
         COMPLETE_ON_PRIMARY_EXECUTOR,
         FAIL_ON_HANDLER,
-        COMPLETE_ON_HANDLER;
+        COMPLETE_ON_HANDLER,
+        FAIL_ON_IO,
+        COMPLETE_ON_IO;
 
         public byte[] toByteArray() {
             return new byte[] {(byte) ordinal()};

@@ -691,6 +691,12 @@ public final class AppInspectionTest {
                 TestExecutorsApi.Command.FAIL_ON_PRIMARY_EXECUTOR);
     }
 
+    @Test
+    public void testInspectorExecutorsIO() throws Exception {
+        testInspectorExecutors(
+                TestExecutorsApi.Command.COMPLETE_ON_IO, TestExecutorsApi.Command.FAIL_ON_IO);
+    }
+
     private void testInspectorExecutors(
             TestExecutorsApi.Command completeCommand, TestExecutorsApi.Command failCommand)
             throws Exception {

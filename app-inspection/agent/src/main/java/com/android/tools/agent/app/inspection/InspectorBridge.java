@@ -16,11 +16,15 @@
 
 package com.android.tools.agent.app.inspection;
 
+import static com.android.tools.agent.app.inspection.concurrent.AppInspectionExecutors.newDelegateExecutor;
+import static com.android.tools.agent.app.inspection.concurrent.AppInspectionExecutors.newHandlerThreadExecutor;
+
 import android.util.Log;
 import androidx.annotation.NonNull;
 import com.android.tools.agent.app.inspection.InspectorContext.CrashListener;
 import com.android.tools.agent.app.inspection.concurrent.AppInspectionExecutors;
 import com.android.tools.agent.app.inspection.concurrent.HandlerThreadExecutor;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -76,32 +80,36 @@ public final class InspectorBridge {
             @NonNull String inspectorId,
             @NonNull String project,
             @NonNull CrashListener crashListener) {
-        HandlerThreadExecutor executor =
-                AppInspectionExecutors.newHandlerThreadExecutor(
-                        inspectorId,
-                        new Consumer<Throwable>() {
-                            private AtomicBoolean mCrashed = new AtomicBoolean();
+        Consumer<Throwable> crashConsumer =
+                new Consumer<Throwable>() {
+                    private AtomicBoolean mCrashed = new AtomicBoolean();
 
-                            @Override
-                            public void accept(Throwable throwable) {
-                                Log.e(LOG_TAG, "Inspector " + inspectorId + " crashed", throwable);
-                                // If we've already crashed no need to report it to studio, because
-                                // it is probably cascade effect
-                                // from the first failure.
+                    @Override
+                    public void accept(Throwable throwable) {
+                        Log.e(LOG_TAG, "Inspector " + inspectorId + " crashed", throwable);
+                        // If we've already crashed no need to report it to studio, because
+                        // it is probably cascade effect from the first failure.
 
-                                if (mCrashed.compareAndSet(false, true)) {
-                                    String message =
-                                            "Inspector "
-                                                    + inspectorId
-                                                    + " crashed due to: "
-                                                    + throwable.getMessage();
-                                    crashListener.onInspectorCrashed(inspectorId, message);
-                                }
-                            }
-                        });
+                        if (mCrashed.compareAndSet(false, true)) {
+                            String message =
+                                    "Inspector "
+                                            + inspectorId
+                                            + " crashed due to: "
+                                            + throwable.getMessage();
+                            crashListener.onInspectorCrashed(inspectorId, message);
+                        }
+                    }
+                };
+        HandlerThreadExecutor primaryExecutor =
+                newHandlerThreadExecutor(inspectorId, crashConsumer);
+        Executor ioExecutor =
+                newDelegateExecutor(AppInspectionExecutors.DISK_IO_EXECUTOR, crashConsumer);
         InspectorContext context =
-                new InspectorContext(inspectorId, project, new InspectorExecutorsImpl(executor));
+                new InspectorContext(
+                        inspectorId,
+                        project,
+                        new InspectorExecutorsImpl(primaryExecutor, ioExecutor));
 
-        return new InspectorBridge(executor, context);
+        return new InspectorBridge(primaryExecutor, context);
     }
 }
