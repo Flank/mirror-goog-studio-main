@@ -300,7 +300,7 @@ class LintModelFactory : LintModelModuleLoader {
         }
     }
 
-    private fun getBuildType(project: IdeAndroidProject, variant: Variant): BuildType {
+    private fun getBuildType(project: IdeAndroidProject, variant: IdeVariant): BuildType {
         val buildTypeName = variant.buildType
         return project.buildTypes.first { it.buildType.name == buildTypeName }.buildType
     }
@@ -336,7 +336,7 @@ class LintModelFactory : LintModelModuleLoader {
         )
     }
 
-    private fun getMergedResourceConfigurations(variant: Variant): Collection<String> {
+    private fun getMergedResourceConfigurations(variant: IdeVariant): Collection<String> {
         // Are there any splits that specify densities?
         /* Hotfix for b/148602190
         if (relevantDensities.isEmpty()) {
@@ -373,7 +373,7 @@ class LintModelFactory : LintModelModuleLoader {
 
     private fun computeSourceProviders(
         project: IdeAndroidProject,
-        variant: Variant
+        variant: IdeVariant
     ): List<LintModelSourceProvider> {
         val providers = mutableListOf<LintModelSourceProvider>()
 
@@ -468,7 +468,7 @@ class LintModelFactory : LintModelModuleLoader {
      */
     private fun computeTestSourceProviders(
         project: IdeAndroidProject,
-        variant: Variant
+        variant: IdeVariant
     ): List<LintModelSourceProvider> {
         val providers = mutableListOf<LintModelSourceProvider>()
 
@@ -615,7 +615,7 @@ class LintModelFactory : LintModelModuleLoader {
         return project.buildTypes.none { it.buildType.isMinifyEnabled }
     }
 
-    private fun useSupportLibraryVectorDrawables(variant: Variant): Boolean {
+    private fun useSupportLibraryVectorDrawables(variant: IdeVariant): Boolean {
         return try {
             variant.mergedFlavor.vectorDrawables.useSupportLibrary == true
         } catch (e: Throwable) {
@@ -796,7 +796,7 @@ class LintModelFactory : LintModelModuleLoader {
             get() = variant.name
         override val useSupportLibraryVectorDrawables: Boolean
             get() = useSupportLibraryVectorDrawables(variant)
-        override val oldVariant: Variant?
+        override val oldVariant: IdeVariant?
             get() = variant
         override val `package`: String?
             get() = null // no in the old builder model
