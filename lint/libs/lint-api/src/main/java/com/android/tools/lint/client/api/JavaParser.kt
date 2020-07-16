@@ -13,43 +13,67 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:Suppress("unused")
 
-package com.android.tools.lint.client.api;
+package com.android.tools.lint.client.api
 
-import com.google.common.annotations.Beta;
+/** Temporarily here for compat purposes  */
+@Deprecated(message = "Deprecated, use package level constants in com.android.tools.lint.client.api")
+object JavaParser {
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_OBJECT"))
+    const val TYPE_OBJECT = com.android.tools.lint.client.api.TYPE_OBJECT
 
-/** Temporarily here for compat purposes */
-@SuppressWarnings({"deprecation", "unused"})
-@Beta
-@Deprecated
-public abstract class JavaParser {
-    @Deprecated public static final String TYPE_OBJECT = JavaEvaluatorKt.TYPE_OBJECT;
-    @Deprecated public static final String TYPE_STRING = JavaEvaluatorKt.TYPE_STRING;
-    @Deprecated public static final String TYPE_INT = JavaEvaluatorKt.TYPE_INT;
-    @Deprecated public static final String TYPE_LONG = JavaEvaluatorKt.TYPE_LONG;
-    @Deprecated public static final String TYPE_CHAR = JavaEvaluatorKt.TYPE_CHAR;
-    @Deprecated public static final String TYPE_FLOAT = JavaEvaluatorKt.TYPE_FLOAT;
-    @Deprecated public static final String TYPE_DOUBLE = JavaEvaluatorKt.TYPE_DOUBLE;
-    @Deprecated public static final String TYPE_BOOLEAN = JavaEvaluatorKt.TYPE_BOOLEAN;
-    @Deprecated public static final String TYPE_SHORT = JavaEvaluatorKt.TYPE_SHORT;
-    @Deprecated public static final String TYPE_BYTE = JavaEvaluatorKt.TYPE_BYTE;
-    @Deprecated public static final String TYPE_NULL = JavaEvaluatorKt.TYPE_NULL;
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_STRING"))
+    const val TYPE_STRING = com.android.tools.lint.client.api.TYPE_STRING
 
-    @Deprecated
-    public static final String TYPE_INTEGER_WRAPPER = JavaEvaluatorKt.TYPE_INTEGER_WRAPPER;
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_INT"))
+    const val TYPE_INT = com.android.tools.lint.client.api.TYPE_INT
 
-    @Deprecated
-    public static final String TYPE_BOOLEAN_WRAPPER = JavaEvaluatorKt.TYPE_BOOLEAN_WRAPPER;
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_LONG"))
+    const val TYPE_LONG = com.android.tools.lint.client.api.TYPE_LONG
 
-    @Deprecated public static final String TYPE_BYTE_WRAPPER = JavaEvaluatorKt.TYPE_BYTE_WRAPPER;
-    @Deprecated public static final String TYPE_SHORT_WRAPPER = JavaEvaluatorKt.TYPE_SHORT_WRAPPER;
-    @Deprecated public static final String TYPE_LONG_WRAPPER = JavaEvaluatorKt.TYPE_LONG_WRAPPER;
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_CHAR"))
+    const val TYPE_CHAR = com.android.tools.lint.client.api.TYPE_CHAR
 
-    @Deprecated
-    public static final String TYPE_DOUBLE_WRAPPER = JavaEvaluatorKt.TYPE_DOUBLE_WRAPPER;
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_FLOAT"))
+    const val TYPE_FLOAT = com.android.tools.lint.client.api.TYPE_FLOAT
 
-    @Deprecated public static final String TYPE_FLOAT_WRAPPER = JavaEvaluatorKt.TYPE_FLOAT_WRAPPER;
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_DOUBLE"))
+    const val TYPE_DOUBLE = com.android.tools.lint.client.api.TYPE_DOUBLE
 
-    @Deprecated
-    public static final String TYPE_CHARACTER_WRAPPER = JavaEvaluatorKt.TYPE_CHARACTER_WRAPPER;
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_BOOLEAN"))
+    const val TYPE_BOOLEAN = com.android.tools.lint.client.api.TYPE_BOOLEAN
+
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_SHORT"))
+    const val TYPE_SHORT = com.android.tools.lint.client.api.TYPE_SHORT
+
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_BYTE"))
+    const val TYPE_BYTE = com.android.tools.lint.client.api.TYPE_BYTE
+
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_NULL"))
+    const val TYPE_NULL = com.android.tools.lint.client.api.TYPE_NULL
+
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_INTEGER_WRAPPER"))
+    const val TYPE_INTEGER_WRAPPER = com.android.tools.lint.client.api.TYPE_INTEGER_WRAPPER
+
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_BOOLEAN_WRAPPER"))
+    const val TYPE_BOOLEAN_WRAPPER = com.android.tools.lint.client.api.TYPE_BOOLEAN_WRAPPER
+
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_BYTE_WRAPPER"))
+    const val TYPE_BYTE_WRAPPER = com.android.tools.lint.client.api.TYPE_BYTE_WRAPPER
+
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_SHORT_WRAPPER"))
+    const val TYPE_SHORT_WRAPPER = com.android.tools.lint.client.api.TYPE_SHORT_WRAPPER
+
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_LONG_WRAPPER"))
+    const val TYPE_LONG_WRAPPER = com.android.tools.lint.client.api.TYPE_LONG_WRAPPER
+
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_DOUBLE_WRAPPER"))
+    const val TYPE_DOUBLE_WRAPPER = com.android.tools.lint.client.api.TYPE_DOUBLE_WRAPPER
+
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_FLOAT_WRAPPER"))
+    const val TYPE_FLOAT_WRAPPER = com.android.tools.lint.client.api.TYPE_FLOAT_WRAPPER
+
+    @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_CHARACTER_WRAPPER"))
+    const val TYPE_CHARACTER_WRAPPER = com.android.tools.lint.client.api.TYPE_CHARACTER_WRAPPER
 }
