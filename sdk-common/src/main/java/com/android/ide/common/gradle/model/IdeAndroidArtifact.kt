@@ -13,16 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.gradle.model;
+package com.android.ide.common.gradle.model
 
-import com.android.annotations.NonNull;
-import com.android.builder.model.AndroidArtifact;
-import java.io.Serializable;
-import java.util.Set;
+import com.android.builder.model.AndroidArtifact
+import java.io.Serializable
 
-public interface IdeAndroidArtifact extends Serializable, IdeBaseArtifact, AndroidArtifact {
-
-    @NonNull
-    @Override
-    Set<String> getAbiFilters();
+interface IdeAndroidArtifact : Serializable, IdeBaseArtifact, AndroidArtifact {
+  override fun getAbiFilters(): Set<String>
 }
