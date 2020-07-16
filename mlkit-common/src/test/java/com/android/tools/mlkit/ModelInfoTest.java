@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import org.junit.Test;
 
 public class ModelInfoTest {
@@ -149,9 +150,32 @@ public class ModelInfoTest {
     }
 
     @Test
+    public void testV2ObjectDetectionModelGroupMetadataExtractedCorrectly()
+            throws TfliteModelException, IOException {
+        ModelInfo modelInfo =
+                ModelInfo.buildFrom(
+                        extractByteBufferFromModel(
+                                "prebuilts/tools/common/mlkit/testData/models/ssd_mobilenet_odt_metadata_v1.2.tflite"));
+
+        assertEquals(1, modelInfo.getInputs().size());
+        assertEquals(4, modelInfo.getOutputs().size());
+        assertTrue(modelInfo.isMetadataExisted());
+
+        assertEquals(0, modelInfo.getInputTensorGroups().size());
+        assertEquals(1, modelInfo.getOutputTensorGroups().size());
+        TensorGroupInfo outputTensorGroupInfo = modelInfo.getOutputTensorGroups().get(0);
+        assertEquals("detection result", outputTensorGroupInfo.getName());
+        assertEquals(
+                Arrays.asList("locations", "classes", "scores"),
+                outputTensorGroupInfo.getTensorNames());
+    }
+
+    @Test
     public void testModelInfoSerialization() throws TfliteModelException, IOException {
         testModelInfoSerialization("prebuilts/tools/common/mlkit/testData/models/mobilenet_quant_metadata.tflite");
         testModelInfoSerialization("prebuilts/tools/common/mlkit/testData/models/ssd_mobilenet_odt_metadata.tflite");
+        testModelInfoSerialization(
+                "prebuilts/tools/common/mlkit/testData/models/ssd_mobilenet_odt_metadata_v1.2.tflite");
     }
 
     private static void testModelInfoSerialization(String modelPath)

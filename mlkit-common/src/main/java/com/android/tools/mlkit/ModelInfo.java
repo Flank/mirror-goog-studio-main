@@ -15,7 +15,9 @@
  */
 package com.android.tools.mlkit;
 
+import static com.android.tools.mlkit.DataInputOutputUtils.readTensorGroupInfoList;
 import static com.android.tools.mlkit.DataInputOutputUtils.readTensorInfoList;
+import static com.android.tools.mlkit.DataInputOutputUtils.writeTensorGroupInfoList;
 import static com.android.tools.mlkit.DataInputOutputUtils.writeTensorInfoList;
 
 import com.android.annotations.NonNull;
@@ -30,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.tensorflow.lite.support.metadata.MetadataExtractor;
 import org.tensorflow.lite.support.metadata.schema.ModelMetadata;
+import org.tensorflow.lite.support.metadata.schema.SubGraphMetadata;
 
 /** Stores necessary data for one model. */
 public class ModelInfo {
@@ -47,6 +50,8 @@ public class ModelInfo {
 
     @NonNull private final List<TensorInfo> inputs;
     @NonNull private final List<TensorInfo> outputs;
+    @NonNull private final List<TensorGroupInfo> inputTensorGroupInfos;
+    @NonNull private final List<TensorGroupInfo> outputTensorGroupInfos;
 
     public ModelInfo(
             long modelSize, @NonNull String modelHash, @NonNull MetadataExtractor extractor) {
@@ -75,6 +80,8 @@ public class ModelInfo {
         }
         inputs = new ArrayList<>();
         outputs = new ArrayList<>();
+        inputTensorGroupInfos = new ArrayList<>();
+        outputTensorGroupInfos = new ArrayList<>();
     }
 
     public ModelInfo(@NonNull DataInput in) throws IOException {
@@ -90,6 +97,8 @@ public class ModelInfo {
         minParserVersion = in.readUTF();
         inputs = readTensorInfoList(in);
         outputs = readTensorInfoList(in);
+        inputTensorGroupInfos = readTensorGroupInfoList(in);
+        outputTensorGroupInfos = readTensorGroupInfoList(in);
     }
 
     public void save(DataOutput out) throws IOException {
@@ -105,6 +114,8 @@ public class ModelInfo {
         out.writeUTF(minParserVersion);
         writeTensorInfoList(out, inputs);
         writeTensorInfoList(out, outputs);
+        writeTensorGroupInfoList(out, inputTensorGroupInfos);
+        writeTensorGroupInfoList(out, outputTensorGroupInfos);
     }
 
     public long getModelSize() {
@@ -165,6 +176,16 @@ public class ModelInfo {
         return outputs;
     }
 
+    @NonNull
+    public List<TensorGroupInfo> getInputTensorGroups() {
+        return inputTensorGroupInfos;
+    }
+
+    @NonNull
+    public List<TensorGroupInfo> getOutputTensorGroups() {
+        return outputTensorGroupInfos;
+    }
+
     @Override
     public boolean equals(@Nullable Object o) {
         if (this == o) return true;
@@ -180,7 +201,9 @@ public class ModelInfo {
                 && modelLicense.equals(that.modelLicense)
                 && minParserVersion.equals(that.minParserVersion)
                 && inputs.equals(that.inputs)
-                && outputs.equals(that.outputs);
+                && outputs.equals(that.outputs)
+                && inputTensorGroupInfos.equals(that.inputTensorGroupInfos)
+                && outputTensorGroupInfos.equals(that.outputTensorGroupInfos);
     }
 
     @Override
@@ -202,6 +225,22 @@ public class ModelInfo {
         for (int i = 0; i < outputLength; i++) {
             modelInfo.outputs.add(TensorInfo.parseFrom(extractor, TensorInfo.Source.OUTPUT, i));
         }
+
+        if (extractor.hasMetadata()) {
+            ModelMetadata modelMetadata = extractor.getModelMetadata();
+            SubGraphMetadata subGraphMetadata = modelMetadata.subgraphMetadata(0);
+            int inputGroupLen = subGraphMetadata.inputTensorGroupsLength();
+            for (int i = 0; i < inputGroupLen; i++) {
+                modelInfo.inputTensorGroupInfos.add(
+                        new TensorGroupInfo(subGraphMetadata.inputTensorGroups(i)));
+            }
+            int outputGroupLen = subGraphMetadata.outputTensorGroupsLength();
+            for (int i = 0; i < outputGroupLen; i++) {
+                modelInfo.outputTensorGroupInfos.add(
+                        new TensorGroupInfo(subGraphMetadata.outputTensorGroups(i)));
+            }
+        }
+
         return modelInfo;
     }
 }
