@@ -25,8 +25,10 @@ abstract class ResourceCompilerRunnable : ProfileAwareWorkAction<ResourceCompile
     fun compileSingleResource(request: CompileResourceRequest) {
       val options = ResourceCompilerOptions(
         pseudolocalize = request.isPseudoLocalize,
+        partialRFile = request.partialRFile,
         legacyMode = true,
         sourcePath = request.sourcePath)
+
       // TODO: find a way to re-use the blame logger between requests
       val blameLogger = blameLoggerFor(request, LoggerWrapper.getLogger(this::class.java))
       compileResource(request.inputFile, request.outputDirectory, options, blameLogger)

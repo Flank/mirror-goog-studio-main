@@ -70,7 +70,7 @@ class WorkerExecutorResourceCompilationService(
 
         // First remove all JVM res compiler compatible files to be consumed by the kotlin compiler.
         val jvmRequests = requests.filter {
-            canCompileResourceInJvm(it.inputFile, it.isPngCrunching) && it.partialRFile == null
+            canCompileResourceInJvm(it.inputFile, it.isPngCrunching)
         }
         requests.removeAll(jvmRequests)
 

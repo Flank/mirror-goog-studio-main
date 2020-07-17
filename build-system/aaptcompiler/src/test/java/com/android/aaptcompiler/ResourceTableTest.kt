@@ -80,6 +80,61 @@ class ResourceTableTest {
   }
 
   @Test
+  fun testStyleables() {
+    // Styleable children are nested deep under ResourceEntry, so the ResourceGroup.getStyleable()
+    // method was introduce. This test checks that it works correctly.
+    val table = ResourceTable()
+
+    val styleableOne = Styleable()
+    styleableOne.entries.add(0, Reference(ResourceName("", AaptResourceType.ATTR, "child_one")))
+    styleableOne.entries.add(1, Reference(ResourceName("android", AaptResourceType.ATTR, "child_two")))
+
+    Truth.assertThat(
+            table.addResource(
+                    ResourceName("", AaptResourceType.STYLEABLE, "styleable_parent_one"),
+                    ConfigDescription(),
+                    "",
+                    styleableOne)).isTrue()
+
+    val styleableTwo = Styleable()
+    styleableTwo.entries.add(0, Reference(ResourceName("", AaptResourceType.ATTR, "child_one")))
+    styleableTwo.entries.add(1, Reference(ResourceName("android", AaptResourceType.ATTR, "child_three")))
+
+    Truth.assertThat(
+            table.addResource(
+                    ResourceName("", AaptResourceType.STYLEABLE, "styleable_parent_two"),
+                    ConfigDescription(),
+                    "",
+                    styleableTwo)).isTrue()
+
+    Truth.assertThat(getValue(table, "styleable/styleable_parent_one")).isNotNull()
+    Truth.assertThat(getValue(table, "styleable/styleable_parent_two")).isNotNull()
+
+    Truth.assertThat(table.packages).hasSize(1)
+
+    Truth.assertThat(table.packages[0].groups).hasSize(1)
+    val styleableGroup = table.packages[0].groups[0]
+
+    Truth.assertThat(styleableGroup.entries).hasSize(2)
+
+    val styleableEntryOne = styleableGroup.entries.entries.toList()[0]
+    Truth.assertThat(styleableEntryOne).isNotNull()
+    Truth.assertThat(styleableEntryOne.value.values.first().name).isEqualTo("styleable_parent_one")
+    val children = table.packages[0].groups[0].getStyleable(styleableEntryOne).entries
+    Truth.assertThat(children).hasSize(2)
+    Truth.assertThat(children[0].name.toString()).isEqualTo("attr/child_one")
+    Truth.assertThat(children[1].name.toString()).isEqualTo("android:attr/child_two")
+
+    val styleableEntryTwo = styleableGroup.entries.entries.toList()[1]
+    Truth.assertThat(styleableEntryTwo).isNotNull()
+    Truth.assertThat(styleableEntryTwo.value.values.first().name).isEqualTo("styleable_parent_two")
+    val children_two = table.packages[0].groups[0].getStyleable(styleableEntryTwo).entries
+    Truth.assertThat(children_two).hasSize(2)
+    Truth.assertThat(children_two[0].name.toString()).isEqualTo("attr/child_one")
+    Truth.assertThat(children_two[1].name.toString()).isEqualTo("android:attr/child_three")
+  }
+
+  @Test
   fun testAddMultipleResource() {
     val table = ResourceTable()
     val config = ConfigDescription()
@@ -230,33 +285,29 @@ class ResourceTableTest {
     Truth.assertThat(table.setVisibility(name, visibility)).isTrue()
     visibilityOfResourceTest(table, name, ResourceVisibility.PRIVATE, "private")
 
-    // Public visibility overrides private visibility.
+    // Public visibility clashes with previously defined private visibility.
     visibility = Visibility(comment = "public", level = ResourceVisibility.PUBLIC)
-    Truth.assertThat(table.setVisibility(name, visibility)).isTrue()
-    visibilityOfResourceTest(table, name, ResourceVisibility.PUBLIC, "public")
+    Truth.assertThat(table.setVisibility(name, visibility)).isFalse()
 
-    // Private visibility will not override public visibility.
-    visibility = Visibility(comment = "private", level = ResourceVisibility.PRIVATE)
-    Truth.assertThat(table.setVisibility(name, visibility)).isTrue()
-    visibilityOfResourceTest(table, name, ResourceVisibility.PUBLIC, "public")
   }
 
   @Test
   fun testSetVisibilityWithId() {
     val table = ResourceTable()
-    val name = parseResourceName("android:string/foo")!!.resourceName
 
-    val visibility1 = Visibility(comment = "private", level = ResourceVisibility.PRIVATE)
+    var name = parseResourceName("android:string/foo")!!.resourceName
+    val visibility1 = Visibility(comment = "default", level = ResourceVisibility.UNDEFINED)
     Truth.assertThat(table.setVisibilityWithId(name, visibility1, 0)).isTrue()
-    visibilityOfResourceTest(table, name, ResourceVisibility.PRIVATE, "private")
+    visibilityOfResourceTest(table, name, ResourceVisibility.UNDEFINED, "default")
 
     val visibility2 = Visibility(comment = "public", level = ResourceVisibility.PUBLIC)
     Truth.assertThat(table.setVisibilityWithId(name, visibility2, 0x01020000)).isTrue()
     visibilityOfResourceTest(table, name, ResourceVisibility.PUBLIC, "public")
 
+    name = parseResourceName("android:string/foobar")!!.resourceName
     val visibility3 = Visibility(comment = "private2", level = ResourceVisibility.PRIVATE)
     Truth.assertThat(table.setVisibilityWithId(name, visibility3, 0)).isTrue()
-    visibilityOfResourceTest(table, name, ResourceVisibility.PUBLIC, "public")
+    visibilityOfResourceTest(table, name, ResourceVisibility.PRIVATE, "private2")
   }
 
   @Test

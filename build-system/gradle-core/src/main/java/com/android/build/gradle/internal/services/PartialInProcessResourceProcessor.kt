@@ -33,14 +33,14 @@ import javax.annotation.concurrent.ThreadSafe
 class PartialInProcessResourceProcessor (val delegate: Aapt2):
     Aapt2 {
     override fun compile(request: CompileResourceRequest, logger: ILogger) {
-        // TODO(b/160949546): merge partial r support to work in the same invocation,
-        //                    rather than falling back to calling AAPT
-        if (canCompileResourceInJvm(request.inputFile, request.isPngCrunching) && request.partialRFile == null) {
+        if (canCompileResourceInJvm(request.inputFile, request.isPngCrunching)) {
             val options = ResourceCompilerOptions(
                     pseudolocalize = request.isPseudoLocalize,
                     legacyMode = true,
                     sourcePath = request.sourcePath,
+                    partialRFile = request.partialRFile,
             )
+
             val blameLogger = blameLoggerFor(request, LoggerWrapper.getLogger(this::class.java))
             compileResource(request.inputFile, request.outputDirectory, options, blameLogger)
         } else {

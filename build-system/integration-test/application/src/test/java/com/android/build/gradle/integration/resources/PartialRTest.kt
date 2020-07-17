@@ -92,12 +92,10 @@ class PartialRTest {
         assertThat(publicR).exists()
         assertThat(symbolsR).exists()
 
-        assertThat(stringsR).contains(
-                "" +
-                        "default int string default_string\n" +
-                        "default int string private_string\n" +
-                        "default int string public_string\n"
-        )
+        assertThat(stringsR).contains("default int string default_string")
+        assertThat(stringsR).contains("default int string private_string")
+        assertThat(stringsR).contains("default int string public_string")
+        
         assertThat(publicR).contains("public int string public_string")
         assertThat(symbolsR).contains("private int string private_string")
 
