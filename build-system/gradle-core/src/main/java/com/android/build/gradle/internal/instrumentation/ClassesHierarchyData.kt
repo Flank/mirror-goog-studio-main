@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.instrumentation
 
 import com.android.SdkConstants.DOT_CLASS
-import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.io.ByteStreams
 import org.objectweb.asm.ClassReader
@@ -36,27 +35,29 @@ import java.util.zip.ZipFile
  * Each class is represented via its internal name.
  */
 class ClassesHierarchyData(private val asmApiVersion: Int) {
-    private val classesData: MutableMap<String, ClassData> = mutableMapOf()
+    private val sourceDirs: MutableList<File> = mutableListOf()
+    private val sourceJars: MutableList<File> = mutableListOf()
+    private val loadedClassesData: MutableMap<String, ClassData> = mutableMapOf()
 
     fun addClassesFromDir(dir: File) {
-        FileUtils.getAllFiles(dir).filter { it!!.name.endsWith(DOT_CLASS) }.forEach { classFile ->
-            addClass(classFile.inputStream().buffered())
-        }
+        sourceDirs.add(dir)
     }
 
     fun addClassesFromJar(jarFile: File) {
-        ZipFile(jarFile).use { inputJar ->
-            val entries = inputJar.entries()
-            while (entries.hasMoreElements()) {
-                val entry = entries.nextElement()
-                if (entry.name.endsWith(DOT_CLASS)) {
-                    addClass(inputJar.getInputStream(entry))
-                }
-            }
-        }
+        sourceJars.add(jarFile)
     }
 
-    private fun addClass(classInputStream: InputStream) {
+    @VisibleForTesting
+    fun addClass(className: String, superClass: String?, interfaces: List<String>) {
+        loadedClassesData[className] = ClassData(superClass, interfaces)
+    }
+
+    private fun addClass(className: String, classData: ClassData) {
+        loadedClassesData[className] = classData
+    }
+
+    private fun addClass(classInputStream: InputStream): ClassData {
+        var classData: ClassData? = null
         classInputStream.use { inputStream ->
             val classReader = ClassReader(ByteStreams.toByteArray(inputStream))
             classReader.accept(object : ClassVisitor(asmApiVersion) {
@@ -68,15 +69,36 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
                     superName: String?,
                     interfaces: Array<out String>?
                 ) {
-                    addClass(name!!, superName, interfaces?.toList() ?: emptyList())
+                    classData = ClassData(superName, interfaces?.toList() ?: emptyList())
+                    addClass(name!!, classData!!)
                 }
             }, SKIP_CODE or SKIP_FRAMES or SKIP_DEBUG)
         }
+        return classData!!
     }
 
-    @VisibleForTesting
-    fun addClass(className: String, superClass: String?, interfaces: List<String>) {
-        classesData[className] = ClassData(superClass, interfaces)
+    private fun loadClassData(className: String): ClassData {
+        return loadedClassesData.computeIfAbsent(className, this::computeClassData)
+    }
+
+    private fun computeClassData(className: String): ClassData {
+        val classFileName = className + DOT_CLASS
+        sourceJars.forEach { jar ->
+            ZipFile(jar).use { jarFile ->
+                jarFile.getEntry(classFileName)?.let { entry ->
+                    return addClass(jarFile.getInputStream(entry))
+                }
+            }
+        }
+
+        sourceDirs.forEach { dir ->
+            val classFile = dir.resolve(classFileName)
+            if (classFile.exists()) {
+                return addClass(classFile.inputStream().buffered())
+            }
+        }
+
+        throw RuntimeException("Unable to find classes hierarchy for class $className")
     }
 
     /**
@@ -112,7 +134,7 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
     }
 
     private fun doGetAllSuperClasses(className: String): MutableList<String> {
-        val classData = classesData[className]!!
+        val classData = loadClassData(className)
         if (classData.superClass == null) {
             return mutableListOf()
         }
@@ -120,14 +142,15 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
     }
 
     private fun doGetAllInterfaces(className: String): MutableSet<String> {
-        val classData = classesData[className]!!
+        val classData = loadClassData(className)
         return mutableSetOf<String>().apply {
             if (classData.superClass != null) {
                 addAll(doGetAllInterfaces(classData.superClass))
             }
-            addAll(classData.interfaces)
-            classData.interfaces.forEach {
-                addAll(getAllInterfaces(it))
+            classData.interfaces.forEach { interfaceClass ->
+                if (add(interfaceClass)) {
+                    addAll(doGetAllInterfaces(interfaceClass))
+                }
             }
         }
     }
