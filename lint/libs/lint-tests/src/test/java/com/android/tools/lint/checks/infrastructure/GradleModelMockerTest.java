@@ -34,7 +34,6 @@ import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
-import com.android.builder.model.Variant;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.ide.common.gradle.model.level2.IdeDependencies;
@@ -266,7 +265,7 @@ public class GradleModelMockerTest {
                                 + "}");
 
         IdeAndroidProject project = mocker.getProject();
-        Variant variant = mocker.getVariant();
+        IdeVariant variant = mocker.getVariant();
 
         assertThat(project.getCompileTarget()).isEqualTo("android-25");
         assertThat(project.getBuildToolsVersion()).isEqualTo("25.0.0");
@@ -307,7 +306,7 @@ public class GradleModelMockerTest {
                                 + "    }\n"
                                 + "}");
         IdeAndroidProject project = mocker.getProject();
-        Variant variant = mocker.getVariant();
+        IdeVariant variant = mocker.getVariant();
         BuildType buildType = findBuildType(mocker, "debug");
         assertThat(buildType).isNotNull();
         assertThat(buildType.getName()).isEqualTo("debug");
@@ -438,7 +437,7 @@ public class GradleModelMockerTest {
                                 + "    useSupportLibrary = true\n"
                                 + "}");
 
-        Variant variant = mocker.getVariant();
+        IdeVariant variant = mocker.getVariant();
         assertThat(variant.getMergedFlavor().getVectorDrawables().getUseSupportLibrary()).isTrue();
     }
 
@@ -561,7 +560,7 @@ public class GradleModelMockerTest {
                                 + "     }\n"
                                 + "}");
 
-        Variant variant = mocker.getVariant();
+        IdeVariant variant = mocker.getVariant();
         assertThat(variant.getName()).isEqualTo("flavor1Debug");
         assertThat(variant.getBuildType()).isEqualTo("debug");
         assertThat(variant.getProductFlavors()).containsExactly("flavor1");

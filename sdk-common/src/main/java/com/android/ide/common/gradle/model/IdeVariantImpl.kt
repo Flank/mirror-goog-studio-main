@@ -28,17 +28,17 @@ import java.util.Objects
 
 /** Creates a deep copy of a [Variant].  */
 class IdeVariantImpl : IdeVariant, Serializable {
-  private val name: String
-  private val displayName: String
-  private val mainArtifact: IdeAndroidArtifact
-  private val extraAndroidArtifacts: Collection<IdeAndroidArtifact>
-  private val extraJavaArtifacts: Collection<IdeJavaArtifact>
-  private val buildType: String
-  private val productFlavors: List<String>
-  private val mergedFlavor: ProductFlavor
-  private val testedTargetVariants: Collection<TestedTargetVariant>
+  override val name: String
+  override val displayName: String
+  override val mainArtifact: IdeAndroidArtifact
+  override val extraAndroidArtifacts: List<IdeAndroidArtifact>
+  override val extraJavaArtifacts: List<IdeJavaArtifact>
+  override val buildType: String
+  override val productFlavors: List<String>
+  override val mergedFlavor: IdeProductFlavor
+  override val testedTargetVariants: List<IdeTestedTargetVariant>
   private val hashCode: Int
-  private val instantAppCompatible: Boolean
+  override val instantAppCompatible: Boolean
   private val desugaredMethods: List<String>
 
   // Used for serialization by the IDE.
@@ -84,35 +84,13 @@ class IdeVariantImpl : IdeVariant, Serializable {
     hashCode = calculateHashCode()
   }
 
-  override fun getName(): String = name
-
-  override fun getDisplayName(): String = displayName
-
-  override fun getMainArtifact(): IdeAndroidArtifact = mainArtifact
-
-  override fun getExtraAndroidArtifacts(): Collection<IdeAndroidArtifact> = extraAndroidArtifacts
-
-  override fun getExtraJavaArtifacts(): Collection<IdeJavaArtifact> = extraJavaArtifacts
-
-  override fun getBuildType(): String = buildType
-
-  override fun getProductFlavors(): List<String> = productFlavors
-
-  override fun getMergedFlavor(): ProductFlavor = mergedFlavor
-
-  override fun getTestedTargetVariants(): Collection<TestedTargetVariant> = testedTargetVariants
-
-  override val testArtifacts: Collection<IdeBaseArtifact>
+  override val testArtifacts: List<IdeBaseArtifact>
     get() = ImmutableList.copyOf(
       (extraAndroidArtifacts.asSequence() + extraJavaArtifacts.asSequence()).filter { it.isTestArtifact }.asIterable())
 
   override val androidTestArtifact: IdeAndroidArtifact? get() = extraAndroidArtifacts.firstOrNull { it.isTestArtifact }
 
   override val unitTestArtifact: IdeJavaArtifact? get() = extraJavaArtifacts.firstOrNull { it.isTestArtifact }
-
-  override fun isInstantAppCompatible(): Boolean = instantAppCompatible
-
-  override fun getDesugaredMethods(): List<String> = desugaredMethods
 
   override fun equals(other: Any?): Boolean {
     if (this === other) {
@@ -162,7 +140,7 @@ class IdeVariantImpl : IdeVariant, Serializable {
     // Increase the value when adding/removing fields or when changing the
     // serialization/deserialization mechanism.
     private const val serialVersionUID = 4L
-    private fun getTestedTargetVariants(variant: Variant, modelCache: ModelCache): Collection<TestedTargetVariant> {
+    private fun getTestedTargetVariants(variant: Variant, modelCache: ModelCache): List<IdeTestedTargetVariant> {
       return try {
         IdeModel.copy(variant.testedTargetVariants, modelCache) { targetVariant: TestedTargetVariant ->
           IdeTestedTargetVariant(targetVariant)

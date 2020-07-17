@@ -404,7 +404,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
 
     @NonNull
     private static ImmutableList<String> computeVariantNames(Collection<IdeVariant> variants) {
-        return variants.stream().map(Variant::getName).collect(ImmutableList.toImmutableList());
+        return variants.stream().map(IdeVariant::getName).collect(ImmutableList.toImmutableList());
     }
 
     private static int getProjectType(
@@ -624,7 +624,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
 
     @Override
     public void forEachVariant(@NonNull Consumer<IdeVariant> action) {
-        for (Variant variant : myVariants) {
+        for (IdeVariant variant : myVariants) {
             action.accept((IdeVariant) variant);
         }
     }
