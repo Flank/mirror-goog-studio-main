@@ -21,6 +21,8 @@ import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.ComponentProperties
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
+import com.android.build.api.instrumentation.InstrumentationParameters
+import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
@@ -105,6 +107,18 @@ abstract class ComponentPropertiesImpl(
     override val packageName: Provider<String> =
         internalServices.providerOf(String::class.java, variantDslInfo.packageName)
 
+    override fun <ParamT : InstrumentationParameters> transformClassesWith(
+        classVisitorFactoryImplClass: Class<out AsmClassVisitorFactory<ParamT>>,
+        scope: InstrumentationScope,
+        instrumentationParamsConfig: (ParamT) -> Unit
+    ) {
+        asmClassVisitorsRegistry.register(
+            classVisitorFactoryImplClass,
+            scope,
+            instrumentationParamsConfig
+        )
+    }
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
@@ -180,7 +194,7 @@ abstract class ComponentPropertiesImpl(
     // ---------------------------------------------------------------------------------------------
 
     private val variantOutputs = mutableListOf<VariantOutputImpl>()
-    protected val asmClassVisitorsRegistry = AsmClassVisitorsFactoryRegistry(services.issueReporter)
+    private val asmClassVisitorsRegistry = AsmClassVisitorsFactoryRegistry(services.issueReporter)
 
     // FIXME make internal
     fun addVariantOutput(

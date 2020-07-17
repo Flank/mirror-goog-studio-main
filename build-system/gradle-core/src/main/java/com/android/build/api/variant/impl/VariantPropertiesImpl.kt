@@ -18,9 +18,6 @@ package com.android.build.api.variant.impl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.instrumentation.AsmClassVisitorFactory
-import com.android.build.api.instrumentation.InstrumentationParameters
-import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
@@ -120,18 +117,6 @@ abstract class VariantPropertiesImpl(
             String::class.java,
             variantDslInfo.manifestPlaceholders,
             "$name:manifestPlaceholders"
-        )
-    }
-
-    override fun <ParamT : InstrumentationParameters> transformClassesWith(
-        classVisitorFactoryImplClass: Class<out AsmClassVisitorFactory<ParamT>>,
-        scope: InstrumentationScope,
-        instrumentationParamsConfig: (ParamT) -> Unit
-    ) {
-        asmClassVisitorsRegistry.register(
-            classVisitorFactoryImplClass,
-            scope,
-            instrumentationParamsConfig
         )
     }
 
