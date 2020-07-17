@@ -76,6 +76,7 @@ def _iml_module_jar_impl(
         form_deps,
         exports,
         friends,
+        module_name,
         transitive_compile_time_jars,
         transitive_runtime_jars):
     jars = []
@@ -101,7 +102,7 @@ def _iml_module_jar_impl(
     if kotlin_srcs:
         kotlin_compile(
             ctx = ctx,
-            name = name,
+            name = module_name,
             srcs = java_srcs + kotlin_srcs,
             deps = transitive_compile_time_jars,
             friends = friends,
@@ -256,6 +257,8 @@ def _iml_module_impl(ctx):
 
     transitive_data = depset(ctx.files.iml_files + ctx.files.data, transitive = [transitive_data])
 
+    # If multiple modules we use the label, otherwise use the exact module name
+    module_name = names[0] if len(names) == 1 else ctx.label.name
     main_provider, main_forms = _iml_module_jar_impl(
         ctx,
         ctx.label.name,
@@ -272,6 +275,7 @@ def _iml_module_impl(ctx):
         form_deps,
         exports,
         [],
+        module_name,
         transitive_compile_time_jars,
         transitive_runtime_jars,
     )
@@ -292,6 +296,7 @@ def _iml_module_impl(ctx):
         test_form_deps,
         exports + test_exports,
         [ctx.outputs.production_jar] + ctx.files.test_friends,
+        module_name,
         transitive_test_compile_time_jars,
         transitive_test_runtime_jars,
     )
