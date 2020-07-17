@@ -37,8 +37,9 @@ class ComposeTreeTest {
             id = 77,
             name = "Column",
             fileName = "MainActivity.kt",
+            packageHash = 1777,
+            offset = 400,
             lineNumber = 26,
-            functionName = "com.example.mycompose.MainActivity\$onCreate$1$1.invoke",
             left = 55,
             top = 121,
             width = 421,
@@ -49,8 +50,9 @@ class ComposeTreeTest {
                     id = -2,
                     name = "Text",
                     fileName = "MainActivity.kt",
+                    packageHash = 1777,
+                    offset = 420,
                     lineNumber = 27,
-                    functionName = "com.example.mycompose.MainActivity\$onCreate$1$1$1.invoke",
                     left = 55,
                     top = 121,
                     width = 189,
@@ -62,8 +64,9 @@ class ComposeTreeTest {
                     id = -3,
                     name = "Button",
                     fileName = "MainActivity.kt",
+                    packageHash = 1777,
+                    offset = 845,
                     lineNumber = 36,
-                    functionName = "com.example.mycompose.MainActivity\$onCreate$1$1$1.invoke",
                     left = 55,
                     top = 291,
                     width = 176,
@@ -109,10 +112,10 @@ class ComposeTreeTest {
     ) {
         val name = "Mismatch for compose node: ${expected.name}"
         assertThat(table[view.className]).isEqualTo(expected.name)
-        val actualInvocation = "${table[view.composePackage]}.${table[view.composeInvocation]}"
-        assertThat(actualInvocation).named(name).isEqualTo(expected.functionName)
         assertThat(view.drawId).named(name).isEqualTo(expected.id)
         assertThat(table[view.composeFilename]).named(name).isEqualTo(expected.fileName)
+        assertThat(view.composePackageHash).named(name).isEqualTo(expected.packageHash)
+        assertThat(view.composeOffset).named(name).isEqualTo(expected.offset)
         assertThat(view.composeLineNumber).named(name).isEqualTo(expected.lineNumber)
         assertThat(view.x).named(name).isEqualTo(expected.left)
         assertThat(view.y).named(name).isEqualTo(expected.top)

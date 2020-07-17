@@ -98,8 +98,8 @@ message View {
   int32 text_value = 10;          // the value of the text property if it exists
   int32 layout_flags = 11;
   int32 compose_filename = 12;    // name of file where invocation is found
-  int32 compose_invocation = 13;  // name of method of lambda invocation
-  int32 compose_package = 14;     // package part of lambda invocation
+  int32 compose_package_hash = 13;// name of method of lambda invocation
+  int32 compose_offset = 14;      // package part of lambda invocation
   int32 compose_line_number = 15; // line number of lambda invocation
   repeated View sub_view = 16;
 }

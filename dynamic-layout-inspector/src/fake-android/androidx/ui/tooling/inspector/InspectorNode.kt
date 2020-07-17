@@ -37,14 +37,19 @@ class InspectorNode(
     val fileName: String,
 
     /**
+     * A hash of the package name to help disambiguate duplicate [fileName] values.
+     */
+    val packageHash: Int,
+
+    /**
+     * The UTF-16 offset in the file where the Composable was called.
+     */
+    val offset: Int,
+
+    /**
      * The line number where the Composable was called.
      */
     val lineNumber: Int,
-
-    /**
-     * The name of the function that called the Composable.
-     */
-    val functionName: String,
 
     /**
      * Left side of the Composable in pixels.

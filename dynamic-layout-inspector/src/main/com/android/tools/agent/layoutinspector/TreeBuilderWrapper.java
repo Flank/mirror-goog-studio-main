@@ -37,8 +37,9 @@ class TreeBuilderWrapper {
     private final Method mGetId;
     private final Method mGetName;
     private final Method mGetFileName;
+    private final Method mGetPackageHash;
     private final Method mGetLineNumber;
-    private final Method mGetFunctionName;
+    private final Method mGetOffset;
     private final Method mGetLeft;
     private final Method mGetTop;
     private final Method mGetWidth;
@@ -61,8 +62,9 @@ class TreeBuilderWrapper {
         mGetId = nodeClass.getDeclaredMethod("getId");
         mGetName = nodeClass.getDeclaredMethod("getName");
         mGetFileName = nodeClass.getDeclaredMethod("getFileName");
+        mGetPackageHash = nodeClass.getDeclaredMethod("getPackageHash");
         mGetLineNumber = nodeClass.getDeclaredMethod("getLineNumber");
-        mGetFunctionName = nodeClass.getDeclaredMethod("getFunctionName");
+        mGetOffset = nodeClass.getDeclaredMethod("getOffset");
         mGetLeft = nodeClass.getDeclaredMethod("getLeft");
         mGetTop = nodeClass.getDeclaredMethod("getTop");
         mGetWidth = nodeClass.getDeclaredMethod("getWidth");
@@ -75,7 +77,7 @@ class TreeBuilderWrapper {
         mGetParamElements = paramClass.getDeclaredMethod("getElements");
     }
 
-    /** @See documentation for androidx.compose.tooling.inspector.LayoutInspectorTree */
+    /** See documentation for androidx.compose.tooling.inspector.LayoutInspectorTree */
     public List<InspectorNodeWrapper> convert(@NonNull View view)
             throws ReflectiveOperationException {
         //noinspection unchecked
@@ -98,7 +100,7 @@ class TreeBuilderWrapper {
         return parameters;
     }
 
-    /** @See documentation for androidx.compose.tooling.inspector.InspectorNode */
+    /** See documentation for androidx.compose.tooling.inspector.InspectorNode */
     class InspectorNodeWrapper {
         private final Object mInstance;
 
@@ -120,13 +122,16 @@ class TreeBuilderWrapper {
             return (String) mGetFileName.invoke(mInstance);
         }
 
+        public int getPackageHash() throws ReflectiveOperationException {
+            return (int) mGetPackageHash.invoke(mInstance);
+        }
+
         public int getLineNumber() throws ReflectiveOperationException {
             return (int) mGetLineNumber.invoke(mInstance);
         }
 
-        @NonNull
-        public String getFunctionName() throws ReflectiveOperationException {
-            return (String) mGetFunctionName.invoke(mInstance);
+        public int getOffset() throws ReflectiveOperationException {
+            return (int) mGetOffset.invoke(mInstance);
         }
 
         public int getLeft() throws ReflectiveOperationException {
@@ -158,7 +163,7 @@ class TreeBuilderWrapper {
         }
     }
 
-    /** @See documentation for androidx.compose.tooling.inspector.NodeParameterWrapper */
+    /** See documentation for androidx.compose.tooling.inspector.NodeParameterWrapper */
     public class NodeParameterWrapper {
         private final Object mInstance;
 
