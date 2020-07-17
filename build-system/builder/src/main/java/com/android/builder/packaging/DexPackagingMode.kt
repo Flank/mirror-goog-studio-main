@@ -16,9 +16,8 @@
 
 package com.android.builder.packaging
 
-enum class PackageEmbeddedDex(val isCompressed: Boolean) {
-    DEFAULT(true),
-    COMPRESSED(true),
-    UNCOMPRESSED(false),
+enum class DexPackagingMode {
+    COMPRESSED,
+    UNCOMPRESSED,
     ;
 }

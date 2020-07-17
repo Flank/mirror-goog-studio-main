@@ -17,6 +17,8 @@
 package com.android.builder.packaging
 
 import com.android.builder.core.ManifestAttributeSupplier
+import com.android.sdklib.AndroidVersion.VersionCodes.O
+import com.android.sdklib.AndroidVersion.VersionCodes.P
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.google.common.truth.BooleanSubject
@@ -156,10 +158,10 @@ class PackagingUtilsTest {
     }
 
     @Test
-    fun testGetNoCompressPredicate_dontCompressNativeLibsOrDex() {
+    fun testGetNoCompressPredicate_doNotCompressNativeLibsOrDex() {
         Mockito.`when`(manifest.extractNativeLibs).thenReturn(false)
         Mockito.`when`(manifest.useEmbeddedDex).thenReturn(true)
-        PackagingUtils.getNoCompressPredicate(listOf("oo"), manifest).run {
+        PackagingUtils.getNoCompressPredicate(listOf("oo"), manifest, 1).run {
             // check aaptOptionsNoCompress
             assertThatTest("foo").isTrue()
             // check .tflite (Issue 152875817)
@@ -175,7 +177,7 @@ class PackagingUtilsTest {
     fun testGetNoCompressPredicate_compressNativeLibsAndDex() {
         Mockito.`when`(manifest.extractNativeLibs).thenReturn(true)
         Mockito.`when`(manifest.useEmbeddedDex).thenReturn(false)
-        PackagingUtils.getNoCompressPredicate(listOf("oo"), manifest).run {
+        PackagingUtils.getNoCompressPredicate(listOf("oo"), manifest, 1).run {
             // check aaptOptionsNoCompress
             assertThatTest("foo").isTrue()
             // check .tflite (Issue 152875817)
@@ -184,6 +186,24 @@ class PackagingUtilsTest {
             assertThatTest("picture.jpg").isTrue()
             assertThatTest("native.so").isFalse()
             assertThatTest("classes.dex").isFalse()
+        }
+    }
+
+    @Test
+    fun testGetNoCompressPredicate_compressDexWhenMinSdkO() {
+        Mockito.`when`(manifest.extractNativeLibs).thenReturn(null)
+        Mockito.`when`(manifest.useEmbeddedDex).thenReturn(null)
+        PackagingUtils.getNoCompressPredicate(listOf(), manifest, O).run {
+            assertThatTest("classes.dex").isFalse()
+        }
+    }
+
+    @Test
+    fun testGetNoCompressPredicate_doNotCompressDexWhenMinSdkP() {
+        Mockito.`when`(manifest.extractNativeLibs).thenReturn(null)
+        Mockito.`when`(manifest.useEmbeddedDex).thenReturn(null)
+        PackagingUtils.getNoCompressPredicate(listOf(), manifest, P).run {
+            assertThatTest("classes.dex").isTrue()
         }
     }
 
