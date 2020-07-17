@@ -96,9 +96,10 @@ public class TaskRunnerTest {
         Task<String> add = runner.create(Tasks.TASK3, (a, b) -> a + "." + b, task1, task2);
         try {
             runner.run();
+            add.get();
             fail();
-        } catch (Exception de) {
-            assertEquals("java.lang.RuntimeException: abc", de.getCause().getMessage());
+        } catch (DeployerException de) {
+            assertTrue((de.getDetails().contains("abc")));
         }
         service.shutdown();
 
@@ -398,5 +399,28 @@ public class TaskRunnerTest {
     }
 
     @Test
-    public void testComplexBranchFallback() {}
+    public void testRuntimeException() {
+        String input = "text";
+
+        ExecutorService service = Executors.newFixedThreadPool(2);
+
+        TaskRunner runner = new TaskRunner(service);
+        Task<String> start = runner.create(input);
+        Task<String> add =
+                runner.create(
+                        Tasks.TASK1,
+                        a -> {
+                            throw new RuntimeException("oh no");
+                        },
+                        start);
+        runner.run();
+        String output = null;
+        try {
+            output = add.get();
+        } catch (DeployerException e) {
+            return;
+        }
+        System.out.println(output);
+        Assert.fail("Unreachable: Should have handled all exceptions");
+    }
 }

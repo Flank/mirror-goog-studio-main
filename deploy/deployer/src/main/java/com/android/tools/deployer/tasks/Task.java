@@ -67,7 +67,7 @@ public class Task<T> {
             if (e.getCause() instanceof DeployerException) {
                 throw (DeployerException) e.getCause();
             } else {
-                throw new IllegalStateException(e);
+                throw DeployerException.runtimeException(e);
             }
         }
     }
