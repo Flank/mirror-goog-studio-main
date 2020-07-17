@@ -17,6 +17,7 @@ package com.android.build.gradle.internal
 
 import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
+import com.android.SdkConstants.DATA_BINDING_KTX_LIB_ARTIFACT
 import com.android.SdkConstants.DOT_JAR
 import com.android.build.api.artifact.Artifact.SingleArtifact
 import com.android.build.api.artifact.ArtifactType
@@ -2662,10 +2663,53 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                         + ":"
                                         + dataBindingBuilder.getBaseAdaptersVersion(version))
             }
+
+            addDataBindingKtxIfNecessary(project, dataBindingOptions, dataBindingBuilder, version,
+                useAndroidX)
+
             project.pluginManager
                     .withPlugin(KOTLIN_KAPT_PLUGIN_ID) {
                         configureKotlinKaptTasksForDataBinding(project, version)
                     }
+        }
+    }
+
+    private fun addDataBindingKtxIfNecessary(
+        project: Project,
+        dataBindingOptions: DataBindingOptions,
+        dataBindingBuilder: DataBindingBuilder,
+        version: String,
+        useAndroidX: Boolean
+    ) {
+        val ktxDataBindingDslValue: Boolean? = dataBindingOptions.addKtx
+        val ktxGradlePropertyValue = globalScope.dslServices.projectOptions
+            .get(BooleanOption.ENABLE_DATABINDING_KTX)
+
+        val enableKtx = ktxDataBindingDslValue ?: ktxGradlePropertyValue
+        if (enableKtx) {
+            // Add Ktx dependency if AndroidX and Kotlin is used
+            if (useAndroidX && isKotlinPluginApplied(project)) {
+                project.dependencies
+                    .add(
+                        "api",
+                        DATA_BINDING_KTX_LIB_ARTIFACT
+                                + ":"
+                                + dataBindingBuilder.getLibraryVersion(version))
+            } else {
+                // Warn if user manually enabled Ktx via the DSL option and
+                // it's not a Kotlin or AndroidX project.
+                if (ktxDataBindingDslValue == true) {
+                    globalScope
+                        .dslServices
+                        .issueReporter
+                        .reportWarning(
+                            IssueReporter.Type.GENERIC,
+                            "The `android.dataBinding.addKtx` DSL option has no effect because " +
+                                    "the `android.useAndroidX` property is not enabled or " +
+                                    "the project does not use Kotlin."
+                        )
+                }
+            }
         }
     }
 

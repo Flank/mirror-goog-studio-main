@@ -67,6 +67,9 @@ enum class BooleanOption(
     BUILD_FEATURE_VIEWBINDING("android.defaults.buildfeatures.viewbinding", false, ApiStage.Stable),
     BUILD_FEATURE_ANDROID_RESOURCES("android.library.defaults.buildfeatures.androidresources", true, ApiStage.Stable),
 
+    // DSLs default values
+    ENABLE_DATABINDING_KTX("android.defaults.databinding.addKtx", true, ApiStage.Stable),
+
     // AndroidX & Jetifier
     USE_ANDROID_X("android.useAndroidX", false, ApiStage.Stable),
     ENABLE_JETIFIER("android.enableJetifier", false, ApiStage.Stable),

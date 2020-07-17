@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.dsl.ApplicationBuildFeatures;
 import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures;
@@ -24,6 +25,7 @@ import com.android.build.api.dsl.LibraryBuildFeatures;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.options.BooleanOption;
+
 import java.util.function.Supplier;
 import javax.inject.Inject;
 
@@ -35,6 +37,7 @@ public class DataBindingOptions
     @NonNull private final DslServices dslServices;
     private String version;
     private boolean addDefaultAdapters = true;
+    private Boolean addKtx = null;
     private boolean enabledForTests = false;
 
     @Inject
@@ -117,6 +120,18 @@ public class DataBindingOptions
     @Override
     public void setAddDefaultAdapters(boolean addDefaultAdapters) {
         this.addDefaultAdapters = addDefaultAdapters;
+    }
+
+    /** Whether to add the data binding KTX features. */
+    @Override
+    @Nullable
+    public Boolean getAddKtx() {
+        return addKtx;
+    }
+
+    @Override
+    public void setAddKtx(@Nullable Boolean addKtx) {
+        this.addKtx = addKtx;
     }
 
     /**
