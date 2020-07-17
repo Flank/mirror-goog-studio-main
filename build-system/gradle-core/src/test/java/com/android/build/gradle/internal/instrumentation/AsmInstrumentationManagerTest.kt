@@ -96,7 +96,12 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
             classesHierarchyData.addClassesFromJar(inputJar)
         }
 
-        classesHierarchyData.addClass(Type.getInternalName(Object::class.java), null, emptyList())
+        classesHierarchyData.addClass(
+            Type.getInternalName(Object::class.java),
+            emptyList(),
+            null,
+            emptyList()
+        )
     }
 
     private fun AsmInstrumentationManager.instrument() {
@@ -154,34 +159,47 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
 
         assertThat(classDataList).hasSize(6)
         classDataList[0].assertEquals(
-            ClassExtendsAClassThatExtendsAnotherClassAndImplementsTwoInterfaces::class.java.name,
-            listOf(InterfaceExtendsI::class.java.name, I::class.java.name),
-            listOf(
+            className = ClassExtendsAClassThatExtendsAnotherClassAndImplementsTwoInterfaces::class.java.name,
+            annotations = listOf(Instrument::class.java.name),
+            interfaces = listOf(InterfaceExtendsI::class.java.name, I::class.java.name),
+            superClasses = listOf(
                 ClassExtendsOneClassAndImplementsTwoInterfaces::class.java.name,
                 ClassWithNoInterfacesOrSuperclasses::class.java.name,
                 Object::class.java.name
             )
         )
         classDataList[1].assertEquals(
-            ClassExtendsOneClassAndImplementsTwoInterfaces::class.java.name,
-            listOf(InterfaceExtendsI::class.java.name, I::class.java.name),
-            listOf(ClassWithNoInterfacesOrSuperclasses::class.java.name, Object::class.java.name)
+            className = ClassExtendsOneClassAndImplementsTwoInterfaces::class.java.name,
+            annotations = listOf(),
+            interfaces = listOf(InterfaceExtendsI::class.java.name, I::class.java.name),
+            superClasses = listOf(
+                ClassWithNoInterfacesOrSuperclasses::class.java.name,
+                Object::class.java.name
+            )
         )
         classDataList[2].assertEquals(
-            ClassImplementsI::class.java.name,
-            listOf(I::class.java.name),
-            listOf(Object::class.java.name)
+            className = ClassImplementsI::class.java.name,
+            annotations = listOf(Instrument::class.java.name),
+            interfaces = listOf(I::class.java.name),
+            superClasses = listOf(Object::class.java.name)
         )
         classDataList[3].assertEquals(
-            ClassWithNoInterfacesOrSuperclasses::class.java.name,
-            listOf(),
-            listOf(Object::class.java.name)
+            className = ClassWithNoInterfacesOrSuperclasses::class.java.name,
+            annotations = listOf(),
+            interfaces = listOf(),
+            superClasses = listOf(Object::class.java.name)
         )
-        classDataList[4].assertEquals(I::class.java.name, listOf(), listOf(Object::class.java.name))
+        classDataList[4].assertEquals(
+            className = I::class.java.name,
+            annotations = listOf(),
+            interfaces = listOf(),
+            superClasses = listOf(Object::class.java.name)
+        )
         classDataList[5].assertEquals(
-            InterfaceExtendsI::class.java.name,
-            listOf(I::class.java.name),
-            listOf(Object::class.java.name)
+            className = InterfaceExtendsI::class.java.name,
+            annotations = listOf(Instrument::class.java.name),
+            interfaces = listOf(I::class.java.name),
+            superClasses = listOf(Object::class.java.name)
         )
     }
 
@@ -332,10 +350,12 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
 
     private fun ClassData.assertEquals(
         className: String,
+        annotations: List<String>,
         interfaces: List<String>,
         superClasses: List<String>
     ) {
         assertThat(this.className).isEqualTo(className)
+        assertThat(this.classAnnotations).containsExactlyElementsIn(annotations)
         assertThat(this.interfaces).containsExactlyElementsIn(interfaces)
         assertThat(this.superClasses).containsExactlyElementsIn(superClasses)
     }

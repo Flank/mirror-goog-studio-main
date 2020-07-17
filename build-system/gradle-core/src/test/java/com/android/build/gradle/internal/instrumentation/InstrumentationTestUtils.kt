@@ -36,14 +36,19 @@ fun getClassContentDiff(before: ByteArray?, after: ByteArray?): String {
 
 // test data
 
+@Target(AnnotationTarget.CLASS)
+annotation class Instrument
+
 interface I {
     fun f1()
 }
 
+@Instrument
 interface InterfaceExtendsI : I {
     fun f2()
 }
 
+@Instrument
 class ClassImplementsI : I {
     override fun f1() {}
     fun f2() {}
@@ -59,6 +64,7 @@ open class ClassExtendsOneClassAndImplementsTwoInterfaces : InterfaceExtendsI,
     fun f3() {}
 }
 
+@Instrument
 class ClassExtendsAClassThatExtendsAnotherClassAndImplementsTwoInterfaces :
     ClassExtendsOneClassAndImplementsTwoInterfaces() {
     fun f4() {}

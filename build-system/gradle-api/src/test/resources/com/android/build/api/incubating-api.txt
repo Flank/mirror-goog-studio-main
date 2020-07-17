@@ -744,6 +744,7 @@ com.android.build.api.instrumentation.AsmClassVisitorFactory.getInstrumentationC
 com.android.build.api.instrumentation.AsmClassVisitorFactory.getParameters: org.gradle.api.provider.Property<ParametersT> ()
 com.android.build.api.instrumentation.AsmClassVisitorFactory.isInstrumentable: boolean (com.android.build.api.instrumentation.ClassData)
 com.android.build.api.instrumentation.ClassData
+com.android.build.api.instrumentation.ClassData.getClassAnnotations: java.util.List<java.lang.String> ()
 com.android.build.api.instrumentation.ClassData.getClassName: java.lang.String ()
 com.android.build.api.instrumentation.ClassData.getInterfaces: java.util.List<java.lang.String> ()
 com.android.build.api.instrumentation.ClassData.getSuperClasses: java.util.List<java.lang.String> ()

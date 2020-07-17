@@ -29,6 +29,11 @@ interface ClassData {
     val className: String
 
     /**
+     * List of the annotations the class has.
+     */
+    val classAnnotations: List<String>
+
+    /**
      * List of all the interfaces that this class or a superclass of this class implements.
      */
     val interfaces: List<String>

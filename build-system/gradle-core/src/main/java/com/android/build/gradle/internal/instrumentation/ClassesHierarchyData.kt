@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.instrumentation
 import com.android.SdkConstants.DOT_CLASS
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.io.ByteStreams
+import org.objectweb.asm.AnnotationVisitor
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassReader.SKIP_CODE
 import org.objectweb.asm.ClassReader.SKIP_DEBUG
@@ -48,8 +49,13 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
     }
 
     @VisibleForTesting
-    fun addClass(className: String, superClass: String?, interfaces: List<String>) {
-        loadedClassesData[className] = ClassData(superClass, interfaces)
+    fun addClass(
+        className: String,
+        annotations: List<String>,
+        superClass: String?,
+        interfaces: List<String>
+    ) {
+        loadedClassesData[className] = ClassData(annotations, superClass, interfaces)
     }
 
     private fun addClass(className: String, classData: ClassData) {
@@ -57,10 +63,24 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
     }
 
     private fun addClass(classInputStream: InputStream): ClassData {
-        var classData: ClassData? = null
+        var className: String? = null
+        var superclassName: String? = null
+        val annotationsList = mutableListOf<String>()
+        val interfacesList = mutableListOf<String>()
         classInputStream.use { inputStream ->
             val classReader = ClassReader(ByteStreams.toByteArray(inputStream))
             classReader.accept(object : ClassVisitor(asmApiVersion) {
+
+                override fun visitAnnotation(
+                    descriptor: String?,
+                    visible: Boolean
+                ): AnnotationVisitor? {
+                    if (descriptor != "Lkotlin/Metadata;") {
+                        annotationsList.add(descriptor!!.substring(1, descriptor.length - 1))
+                    }
+                    return null
+                }
+
                 override fun visit(
                     version: Int,
                     access: Int,
@@ -69,12 +89,15 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
                     superName: String?,
                     interfaces: Array<out String>?
                 ) {
-                    classData = ClassData(superName, interfaces?.toList() ?: emptyList())
-                    addClass(name!!, classData!!)
+                    className = name
+                    superclassName = superName
+                    interfacesList.addAll(interfaces!!)
                 }
             }, SKIP_CODE or SKIP_FRAMES or SKIP_DEBUG)
         }
-        return classData!!
+        val classData = ClassData(annotationsList, superclassName, interfacesList)
+        addClass(className!!, classData)
+        return classData
     }
 
     private fun loadClassData(className: String): ClassData {
@@ -101,6 +124,10 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
         throw RuntimeException("Unable to find classes hierarchy for class $className")
     }
 
+    fun getAnnotations(className: String): List<String> {
+        return loadClassData(className).annotations.map { it.replace('/', '.') }
+    }
+
     /**
      * Returns a list of the superclasses of a certain class in the order of the class hierarchy.
      *
@@ -111,10 +138,10 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
      *
      * when invoking getAllSuperClasses(A)
      *
-     * the method will return {B, C, java/lang/Object}
+     * the method will return {B, C, java.lang.Object}
      */
     fun getAllSuperClasses(className: String): List<String> {
-        return doGetAllSuperClasses(className).reversed()
+        return doGetAllSuperClasses(className).reversed().map { it.replace('/', '.') }
     }
 
     /**
@@ -130,7 +157,7 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
      * the method will return {B, C}
      */
     fun getAllInterfaces(className: String): List<String> {
-        return doGetAllInterfaces(className).sorted()
+        return doGetAllInterfaces(className).sorted().map { it.replace('/', '.') }
     }
 
     private fun doGetAllSuperClasses(className: String): MutableList<String> {
@@ -155,5 +182,9 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
         }
     }
 
-    private data class ClassData(val superClass: String?, val interfaces: List<String>)
+    private data class ClassData(
+        val annotations: List<String>,
+        val superClass: String?,
+        val interfaces: List<String>
+    )
 }

@@ -114,10 +114,9 @@ class AsmInstrumentationManager(
 
         val classData = ClassDataImpl(
             classFullName,
-            classesHierarchyData.getAllInterfaces(classInternalName)
-                .map { it.replace('/', '.') },
+            classesHierarchyData.getAnnotations(classInternalName),
+            classesHierarchyData.getAllInterfaces(classInternalName),
             classesHierarchyData.getAllSuperClasses(classInternalName)
-                .map { it.replace('/', '.') }
         )
 
         // Reversing the visitors as they will be chained from the end, and so the visiting
