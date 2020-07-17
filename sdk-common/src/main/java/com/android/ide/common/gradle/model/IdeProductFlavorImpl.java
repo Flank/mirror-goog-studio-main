@@ -29,8 +29,9 @@ import java.util.Map;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link ProductFlavor}. */
-public final class IdeProductFlavor extends IdeBaseConfig implements ProductFlavor {
-    // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
+public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements IdeProductFlavor {
+    // Increase the value when adding/removing fields or when changing the
+    // serialization/deserialization mechanism.
     private static final long serialVersionUID = 4L;
 
     @NonNull private final Map<String, String> myTestInstrumentationRunnerArguments;
@@ -51,7 +52,7 @@ public final class IdeProductFlavor extends IdeBaseConfig implements ProductFlav
     private final int myHashCode;
 
     // Used for serialization by the IDE.
-    IdeProductFlavor() {
+    IdeProductFlavorImpl() {
         super();
 
         myTestInstrumentationRunnerArguments = Collections.emptyMap();
@@ -73,7 +74,7 @@ public final class IdeProductFlavor extends IdeBaseConfig implements ProductFlav
         myHashCode = 0;
     }
 
-    public IdeProductFlavor(@NonNull ProductFlavor flavor, @NonNull ModelCache modelCache) {
+    public IdeProductFlavorImpl(@NonNull ProductFlavor flavor, @NonNull ModelCache modelCache) {
         super(flavor, modelCache);
 
         myTestInstrumentationRunnerArguments =
@@ -257,13 +258,13 @@ public final class IdeProductFlavor extends IdeBaseConfig implements ProductFlav
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeProductFlavor)) {
+        if (!(o instanceof IdeProductFlavorImpl)) {
             return false;
         }
         if (!super.equals(o)) {
             return false;
         }
-        IdeProductFlavor flavor = (IdeProductFlavor) o;
+        IdeProductFlavorImpl flavor = (IdeProductFlavorImpl) o;
         return flavor.canEqual(this)
                 && Objects.equals(
                         myTestInstrumentationRunnerArguments,
@@ -286,7 +287,7 @@ public final class IdeProductFlavor extends IdeBaseConfig implements ProductFlav
 
     @Override
     public boolean canEqual(Object other) {
-        return other instanceof IdeProductFlavor;
+        return other instanceof IdeProductFlavorImpl;
     }
 
     @Override

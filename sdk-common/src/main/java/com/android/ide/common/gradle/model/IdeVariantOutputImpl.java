@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link VariantOutput}. */
-public abstract class IdeVariantOutput implements VariantOutput, Serializable {
+public abstract class IdeVariantOutputImpl implements IdeVariantOutput, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
@@ -40,7 +40,7 @@ public abstract class IdeVariantOutput implements VariantOutput, Serializable {
     private final int hashCode;
 
     // Used for serialization by the IDE.
-    IdeVariantOutput() {
+    IdeVariantOutputImpl() {
         myOutputs = Collections.emptyList();
         myFilterTypes = Collections.emptyList();
         myFilters = null;
@@ -51,7 +51,7 @@ public abstract class IdeVariantOutput implements VariantOutput, Serializable {
         hashCode = 0;
     }
 
-    public IdeVariantOutput(@NonNull VariantOutput output, @NonNull ModelCache modelCache) {
+    public IdeVariantOutputImpl(@NonNull VariantOutput output, @NonNull ModelCache modelCache) {
         //noinspection deprecation
         myOutputs =
                 IdeModel.copy(
@@ -134,10 +134,10 @@ public abstract class IdeVariantOutput implements VariantOutput, Serializable {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeVariantOutput)) {
+        if (!(o instanceof IdeVariantOutputImpl)) {
             return false;
         }
-        IdeVariantOutput output = (IdeVariantOutput) o;
+        IdeVariantOutputImpl output = (IdeVariantOutputImpl) o;
         return output.canEquals(this)
                 && myVersionCode == output.myVersionCode
                 && Objects.equals(myMainOutputFile, output.myMainOutputFile)
@@ -148,7 +148,7 @@ public abstract class IdeVariantOutput implements VariantOutput, Serializable {
     }
 
     protected boolean canEquals(Object other) {
-        return other instanceof IdeVariantOutput;
+        return other instanceof IdeVariantOutputImpl;
     }
 
     @Override

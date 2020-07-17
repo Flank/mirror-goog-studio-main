@@ -155,7 +155,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
             return IdeModel.copy(
                     outputs,
                     modelCache,
-                    output -> new IdeAndroidArtifactOutput(output, modelCache));
+                    output -> new IdeAndroidArtifactOutputImpl(output, modelCache));
         } catch (RuntimeException e) {
             System.err.println("Caught exception: " + e);
             // See http://b/64305584

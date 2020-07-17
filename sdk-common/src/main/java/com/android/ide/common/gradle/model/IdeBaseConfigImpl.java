@@ -30,8 +30,9 @@ import java.util.Map;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link BaseConfig}. */
-public abstract class IdeBaseConfig implements BaseConfig, Serializable {
-    // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
+public abstract class IdeBaseConfigImpl implements IdeBaseConfig, Serializable {
+    // Increase the value when adding/removing fields or when changing the
+    // serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
     @NonNull private final String myName;
@@ -45,7 +46,7 @@ public abstract class IdeBaseConfig implements BaseConfig, Serializable {
     private final int hashCode;
 
     // Used for serialization by the IDE.
-    IdeBaseConfig() {
+    IdeBaseConfigImpl() {
         myName = "";
         myResValues = Collections.emptyMap();
         myProguardFiles = Collections.emptyList();
@@ -58,7 +59,7 @@ public abstract class IdeBaseConfig implements BaseConfig, Serializable {
         hashCode = 0;
     }
 
-    protected IdeBaseConfig(@NonNull BaseConfig config, @NonNull ModelCache modelCache) {
+    protected IdeBaseConfigImpl(@NonNull BaseConfig config, @NonNull ModelCache modelCache) {
         myName = config.getName();
         myResValues =
                 IdeModel.copy(
@@ -67,13 +68,13 @@ public abstract class IdeBaseConfig implements BaseConfig, Serializable {
                         classField -> new IdeClassField(classField));
         myProguardFiles = ImmutableList.copyOf(config.getProguardFiles());
         myConsumerProguardFiles = ImmutableList.copyOf(config.getConsumerProguardFiles());
-        // AGP may return internal Groovy GString implementation as a value in manifestPlaceholders map. It cannot be serialized
-        // with IDEA's external system serialization. We convert values to String to make them usable as they are converted to String by
+        // AGP may return internal Groovy GString implementation as a value in manifestPlaceholders
+        // map. It cannot be serialized
+        // with IDEA's external system serialization. We convert values to String to make them
+        // usable as they are converted to String by
         // the manifest merger anyway.
         myManifestPlaceholders =
-                config.getManifestPlaceholders()
-                        .entrySet()
-                        .stream()
+                config.getManifestPlaceholders().entrySet().stream()
                         .collect(toImmutableMap(it -> it.getKey(), it -> it.getValue().toString()));
         myApplicationIdSuffix = config.getApplicationIdSuffix();
         myVersionNameSuffix = IdeModel.copyNewProperty(config::getVersionNameSuffix, null);
@@ -159,10 +160,10 @@ public abstract class IdeBaseConfig implements BaseConfig, Serializable {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeBaseConfig)) {
+        if (!(o instanceof IdeBaseConfigImpl)) {
             return false;
         }
-        IdeBaseConfig config = (IdeBaseConfig) o;
+        IdeBaseConfigImpl config = (IdeBaseConfigImpl) o;
         return config.canEqual(this)
                 && Objects.equals(myName, config.myName)
                 && Objects.deepEquals(myResValues, config.myResValues)
@@ -176,7 +177,7 @@ public abstract class IdeBaseConfig implements BaseConfig, Serializable {
 
     public boolean canEqual(Object other) {
         // See: http://www.artima.com/lejava/articles/equality.html
-        return other instanceof IdeBaseConfig;
+        return other instanceof IdeBaseConfigImpl;
     }
 
     @Override

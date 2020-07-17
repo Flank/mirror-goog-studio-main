@@ -22,8 +22,8 @@ import java.io.File;
 import java.util.Objects;
 
 /** Creates a deep copy of an {@link AndroidArtifactOutput}. */
-public final class IdeAndroidArtifactOutput extends IdeVariantOutput
-        implements AndroidArtifactOutput {
+public final class IdeAndroidArtifactOutputImpl extends IdeVariantOutputImpl
+        implements IdeAndroidArtifactOutput {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
@@ -33,7 +33,7 @@ public final class IdeAndroidArtifactOutput extends IdeVariantOutput
 
     // Used for serialization by the IDE.
     @SuppressWarnings("unused")
-    IdeAndroidArtifactOutput() {
+    IdeAndroidArtifactOutputImpl() {
         super();
 
         myOutputFile = null;
@@ -42,7 +42,7 @@ public final class IdeAndroidArtifactOutput extends IdeVariantOutput
         myHashCode = 0;
     }
 
-    public IdeAndroidArtifactOutput(
+    public IdeAndroidArtifactOutputImpl(
             @NonNull AndroidArtifactOutput output, @NonNull ModelCache modelCache) {
         super(output, modelCache);
         String assembleTaskName;
@@ -93,13 +93,13 @@ public final class IdeAndroidArtifactOutput extends IdeVariantOutput
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeAndroidArtifactOutput)) {
+        if (!(o instanceof IdeAndroidArtifactOutputImpl)) {
             return false;
         }
         if (!super.equals(o)) {
             return false;
         }
-        IdeAndroidArtifactOutput output = (IdeAndroidArtifactOutput) o;
+        IdeAndroidArtifactOutputImpl output = (IdeAndroidArtifactOutputImpl) o;
         return output.canEquals(this)
                 && Objects.equals(myAssembleTaskName, output.myAssembleTaskName)
                 && Objects.equals(myOutputFile, output.myOutputFile);
@@ -107,7 +107,7 @@ public final class IdeAndroidArtifactOutput extends IdeVariantOutput
 
     @Override
     protected boolean canEquals(Object other) {
-        return other instanceof IdeAndroidArtifactOutput;
+        return other instanceof IdeAndroidArtifactOutputImpl;
     }
 
     @Override

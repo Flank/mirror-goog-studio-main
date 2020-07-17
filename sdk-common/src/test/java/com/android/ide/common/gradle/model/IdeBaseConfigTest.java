@@ -21,23 +21,23 @@ import com.android.builder.model.BaseConfig;
 import com.android.ide.common.gradle.model.stubs.BaseConfigStub;
 import org.junit.Test;
 
-/** Tests for {@link IdeBaseConfig}. */
+/** Tests for {@link IdeBaseConfigImpl}. */
 public class IdeBaseConfigTest {
     @Test
     public void constructor() throws Throwable {
         BaseConfig original = new BaseConfigStub();
-        IdeBaseConfig copy = new IdeBaseConfig(original, new ModelCache()) {};
+        IdeBaseConfigImpl copy = new IdeBaseConfigImpl(original, new ModelCache()) {};
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeBaseConfig.class, "hashCode")
-                .withRedefinedSubclass(IdeBuildType.class)
+        createEqualsVerifier(IdeBaseConfigImpl.class, "hashCode")
+                .withRedefinedSubclass(IdeBuildTypeImpl.class)
                 .verify();
-        createEqualsVerifier(IdeBaseConfig.class, "hashCode")
-                .withRedefinedSubclass(IdeProductFlavor.class)
+        createEqualsVerifier(IdeBaseConfigImpl.class, "hashCode")
+                .withRedefinedSubclass(IdeProductFlavorImpl.class)
                 .verify();
     }
 }

@@ -37,7 +37,7 @@ public final class IdeProductFlavorContainer implements ProductFlavorContainer, 
 
     // Used for serialization by the IDE.
     IdeProductFlavorContainer() {
-        myProductFlavor = new IdeProductFlavor();
+        myProductFlavor = new IdeProductFlavorImpl();
         mySourceProvider = new IdeSourceProvider();
         myExtraSourceProviders = Collections.emptyList();
 
@@ -49,7 +49,7 @@ public final class IdeProductFlavorContainer implements ProductFlavorContainer, 
         myProductFlavor =
                 modelCache.computeIfAbsent(
                         container.getProductFlavor(),
-                        flavor -> new IdeProductFlavor(flavor, modelCache));
+                        flavor -> new IdeProductFlavorImpl(flavor, modelCache));
         mySourceProvider =
                 modelCache.computeIfAbsent(
                         container.getSourceProvider(),

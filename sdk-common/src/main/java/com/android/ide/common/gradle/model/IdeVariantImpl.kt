@@ -51,7 +51,7 @@ class IdeVariantImpl : IdeVariant, Serializable {
     extraJavaArtifacts = mutableListOf()
     buildType = ""
     productFlavors = mutableListOf()
-    mergedFlavor = IdeProductFlavor()
+    mergedFlavor = IdeProductFlavorImpl()
     testedTargetVariants = mutableListOf()
     instantAppCompatible = false
     desugaredMethods = mutableListOf()
@@ -72,7 +72,12 @@ class IdeVariantImpl : IdeVariant, Serializable {
     }
     buildType = variant.buildType
     productFlavors = ImmutableList.copyOf(variant.productFlavors)
-    mergedFlavor = modelCache.computeIfAbsent(variant.mergedFlavor) { flavor: ProductFlavor -> IdeProductFlavor(flavor, modelCache) }
+    mergedFlavor = modelCache.computeIfAbsent(variant.mergedFlavor) { flavor: ProductFlavor ->
+      IdeProductFlavorImpl(
+        flavor,
+        modelCache
+      )
+    }
     testedTargetVariants = getTestedTargetVariants(variant, modelCache)
     instantAppCompatible = (modelVersion != null && modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) && variant.isInstantAppCompatible)
     desugaredMethods = ImmutableList.copyOf(IdeModel.copyNewPropertyNonNull({ variant.desugaredMethods }, emptyList()))

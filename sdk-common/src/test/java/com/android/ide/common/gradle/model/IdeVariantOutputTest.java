@@ -21,20 +21,20 @@ import com.android.build.VariantOutput;
 import com.android.ide.common.gradle.model.stubs.VariantOutputStub;
 import org.junit.Test;
 
-/** Tests for {@link IdeVariantOutput}. */
+/** Tests for {@link IdeVariantOutputImpl}. */
 public class IdeVariantOutputTest {
     @Test
     public void constructor() throws Throwable {
         VariantOutput original = new VariantOutputStub();
-        IdeVariantOutput copy = new IdeVariantOutput(original, new ModelCache()) {};
+        IdeVariantOutputImpl copy = new IdeVariantOutputImpl(original, new ModelCache()) {};
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeVariantOutput.class, "hashCode")
-                .withRedefinedSubclass(IdeAndroidArtifactOutput.class)
+        createEqualsVerifier(IdeVariantOutputImpl.class, "hashCode")
+                .withRedefinedSubclass(IdeAndroidArtifactOutputImpl.class)
                 .verify();
     }
 }

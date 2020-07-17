@@ -469,7 +469,7 @@
         id="FileComparisons"
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
-            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidArtifactOutput.java"
+            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidArtifactOutputImpl.java"
             line="105"/>
     </issue>
 

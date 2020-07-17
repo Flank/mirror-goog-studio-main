@@ -22,8 +22,9 @@ import com.android.builder.model.SigningConfig;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link BuildType}. */
-public final class IdeBuildType extends IdeBaseConfig implements BuildType {
-    // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
+public final class IdeBuildTypeImpl extends IdeBaseConfigImpl implements IdeBuildType {
+    // Increase the value when adding/removing fields or when changing the
+    // serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
     private final boolean myDebuggable;
@@ -35,7 +36,7 @@ public final class IdeBuildType extends IdeBaseConfig implements BuildType {
     private final int myHashCode;
 
     // Used for serialization by the IDE.
-    IdeBuildType() {
+    IdeBuildTypeImpl() {
         myDebuggable = false;
         myJniDebuggable = false;
         myRenderscriptDebuggable = false;
@@ -46,7 +47,7 @@ public final class IdeBuildType extends IdeBaseConfig implements BuildType {
         myHashCode = 0;
     }
 
-    public IdeBuildType(@NonNull BuildType buildType, @NonNull ModelCache modelCache) {
+    public IdeBuildTypeImpl(@NonNull BuildType buildType, @NonNull ModelCache modelCache) {
         super(buildType, modelCache);
         myDebuggable = buildType.isDebuggable();
         myJniDebuggable = buildType.isJniDebuggable();
@@ -114,13 +115,13 @@ public final class IdeBuildType extends IdeBaseConfig implements BuildType {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeBuildType)) {
+        if (!(o instanceof IdeBuildTypeImpl)) {
             return false;
         }
         if (!super.equals(o)) {
             return false;
         }
-        IdeBuildType type = (IdeBuildType) o;
+        IdeBuildTypeImpl type = (IdeBuildTypeImpl) o;
         return type.canEqual(this)
                 && myDebuggable == type.myDebuggable
                 && myJniDebuggable == type.myJniDebuggable
@@ -132,7 +133,7 @@ public final class IdeBuildType extends IdeBaseConfig implements BuildType {
 
     @Override
     public boolean canEqual(Object other) {
-        return other instanceof IdeBuildType;
+        return other instanceof IdeBuildTypeImpl;
     }
 
     @Override
