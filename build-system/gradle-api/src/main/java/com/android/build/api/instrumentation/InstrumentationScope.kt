@@ -29,6 +29,9 @@ enum class InstrumentationScope {
 
     /**
      * Instrument the classes of the current project and its library dependencies.
+     *
+     * This can't be applied to library projects, as instrumenting library dependencies will have no
+     * effect on library consumers.
      */
     ALL
 }
