@@ -42,10 +42,10 @@ import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.KOTLIN_COMPILER_ENVIRONMENT_KEEPALIVE_PROPERTY
 import org.jetbrains.kotlin.cli.common.messages.GradleStyleMessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
+import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.CliModuleAnnotationsResolver
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles.JVM_CONFIG_FILES
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
-import org.jetbrains.kotlin.cli.jvm.compiler.NoScopeRecordCliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM
 import org.jetbrains.kotlin.cli.jvm.config.JavaSourceRoot
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
@@ -56,11 +56,14 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.config.languageVersionSettings
+import org.jetbrains.kotlin.diagnostics.Diagnostic
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.ModuleAnnotationsResolver
 import org.jetbrains.kotlin.resolve.diagnostics.DiagnosticSuppressor
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import org.jetbrains.kotlin.scripting.compiler.plugin.ScriptingCompilerConfigurationComponentRegistrar
+import org.jetbrains.kotlin.util.slicedMap.WritableSlice
 import org.jetbrains.uast.UastContext
 import org.jetbrains.uast.UastLanguagePlugin
 import org.jetbrains.uast.evaluation.UEvaluatorExtension
@@ -222,7 +225,7 @@ class UastEnvironment private constructor(
         TopDownAnalyzerFacadeForJVM.analyzeFilesWithJavaIntegration(
             ideaProject,
             ktPsiFiles,
-            NoScopeRecordCliBindingTrace(),
+            CliBindingTraceForLint(),
             kotlinCompilerConfig,
             kotlinCompilerEnv::createPackagePartProvider
         )
@@ -393,6 +396,26 @@ private fun configureApplicationEnvironment(appEnv: CoreApplicationEnvironment) 
     Disposer.register(appEnv.parentDisposable, Disposable {
         appConfigured = false
     })
+}
+
+// A Kotlin compiler BindingTrace optimized for Lint.
+private class CliBindingTraceForLint : CliBindingTrace() {
+    override fun <K, V> record(slice: WritableSlice<K, V>, key: K, value: V) {
+        // Copied from NoScopeRecordCliBindingTrace.
+        when (slice) {
+            BindingContext.LEXICAL_SCOPE,
+            BindingContext.DATA_FLOW_INFO_BEFORE -> return
+        }
+        super.record(slice, key, value)
+    }
+
+    // Lint does not need compiler checks, so disable them to improve performance slightly.
+    override fun wantsDiagnostics(): Boolean = false
+
+    override fun report(diagnostic: Diagnostic) {
+        // Even with wantsDiagnostics=false, some diagnostics still come through. Ignore them.
+        // Note: this is a great place to debug errors such as unresolved references.
+    }
 }
 
 // Most Logger.error() calls exist to trigger bug reports but are
