@@ -20,7 +20,6 @@ import com.android.SdkConstants.DOT_KT
 import com.android.SdkConstants.DOT_KTS
 import com.android.SdkConstants.DOT_SRCJAR
 import com.android.tools.lint.UastEnvironment.Companion.disposeApplicationEnvironment
-import com.android.tools.lint.client.api.LintClient
 import com.intellij.codeInsight.CustomExceptionHandler
 import com.intellij.codeInsight.ExternalAnnotationsManager
 import com.intellij.codeInsight.InferredAnnotationsManager
@@ -401,7 +400,7 @@ private fun configureApplicationEnvironment(appEnv: CoreApplicationEnvironment) 
 // Thus we want to log errors to stderr but not throw exceptions (similar to the IDE).
 private class IdeaLoggerForLint(category: String) : DefaultLogger(category) {
     override fun error(message: String?, t: Throwable?, vararg details: String?) {
-        if (LintClient.isUnitTest) {
+        if (IdeaLoggerForLint::class.java.desiredAssertionStatus()) {
             throw AssertionError(message, t)
         } else {
             dumpExceptionsToStderr(message + attachmentsToString(t), t, *details)
