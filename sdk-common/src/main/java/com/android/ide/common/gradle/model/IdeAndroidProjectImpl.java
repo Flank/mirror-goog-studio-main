@@ -629,7 +629,6 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         }
     }
 
-    @Override
     public void addVariants(@NonNull Collection<IdeVariant> variants) {
         Set<String> variantNames =
                 myVariants.stream().map(variant -> variant.getName()).collect(Collectors.toSet());
@@ -637,18 +636,6 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             // Add cached IdeVariant only if it is not contained in the current model.
             if (!variantNames.contains(variant.getName())) {
                 myVariants.add(variant);
-            }
-        }
-    }
-
-    @Override
-    public void addSyncIssues(@NonNull Collection<SyncIssue> syncIssues) {
-        Set<SyncIssue> currentSyncIssues = new HashSet<>(mySyncIssues);
-        for (SyncIssue issue : syncIssues) {
-            // Only add the sync issues that are not seen from previous sync.
-            IdeSyncIssue newSyncIssue = new IdeSyncIssue(issue);
-            if (!currentSyncIssues.contains(newSyncIssue)) {
-                mySyncIssues.add(newSyncIssue);
             }
         }
     }

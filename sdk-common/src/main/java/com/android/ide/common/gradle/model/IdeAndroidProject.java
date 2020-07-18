@@ -280,21 +280,6 @@ public interface IdeAndroidProject extends Serializable {
     void forEachVariant(@NonNull Consumer<IdeVariant> action);
 
     /**
-     * Add variant models obtained from previous Gradle Sync.
-     *
-     * @param variants List of IdeVariant models obtained from previous Sync.
-     */
-    void addVariants(@NonNull Collection<IdeVariant> variants);
-
-    /**
-     * Add sync issues from Variant-Only Sync.
-     *
-     * @param syncIssues List of SyncIssue from the AndroidProject model obtained by Variant-Only
-     *     Sync.
-     */
-    void addSyncIssues(@NonNull Collection<SyncIssue> syncIssues);
-
-    /**
      * Returns the minimal information of variants for this project, excluding test related
      * variants.
      *

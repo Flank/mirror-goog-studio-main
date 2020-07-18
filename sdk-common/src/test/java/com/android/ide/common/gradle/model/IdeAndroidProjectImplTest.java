@@ -137,37 +137,6 @@ public class IdeAndroidProjectImplTest {
     }
 
     @Test
-    public void addSyncIssues() throws Throwable {
-        AndroidProject original = new AndroidProjectStub("3.2.0");
-        SyncIssue defaultIssue = new SyncIssueStub();
-
-        IdeAndroidProjectImpl copy =
-                IdeAndroidProjectImpl.create(
-                        original,
-                        myModelCache,
-                        myDependenciesFactory,
-                        null,
-                        ImmutableList.of(defaultIssue));
-
-        // Confirm SyncIssues contain one default issue.
-        Collection<SyncIssue> issues = copy.getSyncIssues();
-        assertThat(issues).hasSize(1);
-        assertThat(issues).contains(defaultIssue);
-
-        // Add SyncIssues.
-        SyncIssue newIssue = new SyncIssueStub("new_message", "new_data", 1, 2);
-        copy.addSyncIssues(asList(defaultIssue, newIssue));
-
-        // Verify that duplicated SyncIssue is not added, and new SyncIssue is added.
-        Collection<SyncIssue> updatedIssues = copy.getSyncIssues();
-        assertThat(updatedIssues).hasSize(2);
-        assertThat(updatedIssues.stream().map(SyncIssue::getData).collect(toList()))
-                .containsExactly("data", "new_data");
-
-        verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
     public void addVariants() throws Throwable {
         AndroidProject original = new AndroidProjectStub("3.2.0");
         original.getVariants().clear();
