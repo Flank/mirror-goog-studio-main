@@ -41,6 +41,7 @@ import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.KOTLIN_COMPILER_ENVIRONMENT_KEEPALIVE_PROPERTY
 import org.jetbrains.kotlin.cli.common.messages.GradleStyleMessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
+import org.jetbrains.kotlin.cli.jvm.compiler.CliModuleAnnotationsResolver
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles.JVM_CONFIG_FILES
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.NoScopeRecordCliBindingTrace
@@ -53,6 +54,7 @@ import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.resolve.ModuleAnnotationsResolver
 import org.jetbrains.kotlin.resolve.diagnostics.DiagnosticSuppressor
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import org.jetbrains.kotlin.scripting.compiler.plugin.ScriptingCompilerConfigurationComponentRegistrar
@@ -185,6 +187,14 @@ class UastEnvironment private constructor(
         //  Note: srcjars are tested by ApiDetectorTest.testSourceJars() and testSourceJarsKotlin().
         addKtFilesFromSrcJars(ktPsiFiles)
 
+        // TODO: This is a hack needed because TopDownAnalyzerFacadeForJVM calls
+        //  KotlinCoreEnvironment.createPackagePartProvider(), which permanently adds additional
+        //  PackagePartProviders to the environment. This significantly slows down resolve over
+        //  time. The root issue is that KotlinCoreEnvironment was not designed to be reused
+        //  repeatedly for multiple analyses---which we do when checkDependencies=true. This hack
+        //  should be removed when we move to a model where UastEnvironment is used only once.
+        resetPackagePartProviders()
+
         val perfManager = kotlinCompilerConfig.get(CLIConfigurationKeys.PERF_MANAGER)
         perfManager?.notifyAnalysisStarted()
 
@@ -229,6 +239,25 @@ class UastEnvironment private constructor(
                 }
                 true // Continues the traversal.
             }
+        }
+    }
+
+    private fun resetPackagePartProviders() {
+        run {
+            // Clear KotlinCoreEnvironment.packagePartProviders.
+            val field = KotlinCoreEnvironment::class.java.getDeclaredField("packagePartProviders")
+            field.isAccessible = true
+            val list = field.get(kotlinCompilerEnv) as MutableList<*>
+            list.clear()
+        }
+        run {
+            // Clear CliModuleAnnotationsResolver.packagePartProviders.
+            val field =
+                CliModuleAnnotationsResolver::class.java.getDeclaredField("packagePartProviders")
+            field.isAccessible = true
+            val instance = ModuleAnnotationsResolver.getInstance(ideaProject)
+            val list = field.get(instance) as MutableList<*>
+            list.clear()
         }
     }
 
