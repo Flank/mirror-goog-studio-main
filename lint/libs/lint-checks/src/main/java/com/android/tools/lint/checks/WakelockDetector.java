@@ -33,6 +33,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
+import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import java.util.Arrays;
 import java.util.Collections;
@@ -53,7 +54,7 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
  * unnecessary battery usage.
  */
 public class WakelockDetector extends Detector implements ClassScanner, SourceCodeScanner {
-    public static final String ANDROID_APP_ACTIVITY = "android/app/Activity";
+    public static final String ANDROID_APP_ACTIVITY = "android.app.Activity";
 
     /** Problems using wakelocks */
     public static final Issue ISSUE =
@@ -166,16 +167,20 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
             } else if (name.equals(RELEASE_METHOD)) {
                 mHasRelease = true;
 
-                // See if the release is happening in an onDestroy method, in an
-                // activity.
-                if ("onDestroy".equals(method.name)
-                        && context.getDriver().isSubclassOf(classNode, ANDROID_APP_ACTIVITY)) {
-                    context.report(
-                            ISSUE,
-                            method,
-                            call,
-                            context.getLocation(call),
-                            "Wakelocks should be released in `onPause`, not `onDestroy`");
+                // See if the release is happening in an onDestroy method, in an activity.
+                if ("onDestroy".equals(method.name)) {
+                    PsiClass psiClass = context.findPsiClass(classNode);
+                    PsiClass activityClass = context.findPsiClass(ANDROID_APP_ACTIVITY);
+                    if (psiClass != null
+                            && activityClass != null
+                            && psiClass.isInheritor(activityClass, true)) {
+                        context.report(
+                                ISSUE,
+                                method,
+                                call,
+                                context.getLocation(call),
+                                "Wakelocks should be released in `onPause`, not `onDestroy`");
+                    }
                 }
             }
         } else if (call.owner.equals(POWER_MANAGER)) {

@@ -27,6 +27,9 @@ import com.android.tools.lint.detector.api.Location.SearchDirection.FORWARD
 import com.android.tools.lint.detector.api.Location.SearchHints
 import com.google.common.annotations.Beta
 import com.google.common.base.Splitter
+import com.intellij.psi.JavaPsiFacade
+import com.intellij.psi.PsiClass
+import com.intellij.psi.search.GlobalSearchScope
 import org.objectweb.asm.Type
 import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.ClassNode
@@ -494,6 +497,16 @@ class ClassContext(
 
         val line = findLineNumber(instruction)
         return getLocationForLine(line, pattern, null, hints)
+    }
+
+    fun findPsiClass(classNode: ClassNode): PsiClass? {
+        return findPsiClass(getFqcn(classNode.name))
+    }
+
+    fun findPsiClass(qualifiedName: String): PsiClass? {
+        val ideaProject = project.ideaProject ?: return null
+        val psiFacade = JavaPsiFacade.getInstance(ideaProject) ?: return null
+        return psiFacade.findClass(qualifiedName, GlobalSearchScope.allScope(ideaProject))
     }
 
     companion object {
