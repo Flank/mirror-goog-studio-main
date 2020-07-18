@@ -12,7 +12,7 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools/idea/.idea/libraries:jsr305",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/idea/.idea/libraries:Guava",
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
@@ -26,7 +26,7 @@ coverage_java_library(
     srcs = glob(["binary-resources/src/main/java/**"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/third_party:com.google.code.findbugs_jsr305",
+        "//tools/base/annotations",
         "//tools/base/third_party:com.google.guava_guava",
     ],
 )
@@ -61,7 +61,7 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/adt/idea/.idea/libraries:unb.jsr305",
+        "//tools/base/annotations:unb.studio.android.sdktools.android-annotations[module]",
         "//tools/adt/idea/.idea/libraries:unb.Guava",
         "//tools/adt/idea/.idea/libraries:unb.truth[test]",
         "//tools/base/testutils:unb.studio.android.sdktools.testutils[module, test]",

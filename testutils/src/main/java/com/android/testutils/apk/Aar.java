@@ -25,7 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.annotation.CheckReturnValue;
+import org.mockito.CheckReturnValue;
 
 @Immutable
 public final class Aar extends AndroidArchive {

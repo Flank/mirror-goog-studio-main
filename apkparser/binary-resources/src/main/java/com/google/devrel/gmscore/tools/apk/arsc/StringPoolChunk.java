@@ -16,6 +16,7 @@
 
 package com.google.devrel.gmscore.tools.apk.arsc;
 
+import com.android.annotations.Nullable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.io.LittleEndianDataOutputStream;
@@ -25,7 +26,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.*;
-import javax.annotation.Nullable;
 
 /** Represents a string pool structure. */
 public final class StringPoolChunk extends Chunk {

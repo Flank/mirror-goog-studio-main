@@ -24,8 +24,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import javax.annotation.CheckReturnValue;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
+import org.mockito.CheckReturnValue;
 
 @Immutable
 public abstract class DexAndroidArchive extends AndroidArchive {

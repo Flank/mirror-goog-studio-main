@@ -16,9 +16,8 @@
 
 package com.google.devrel.gmscore.tools.apk.arsc;
 
+import com.android.annotations.Nullable;
 import java.nio.ByteBuffer;
-
-import javax.annotation.Nullable;
 
 /** The common superclass for the various types of XML nodes. */
 public abstract class XmlNodeChunk extends Chunk {

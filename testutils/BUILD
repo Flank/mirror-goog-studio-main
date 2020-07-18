@@ -19,7 +19,6 @@ iml_module(
         "//tools/idea/.idea/libraries:jimfs[test]",
         "//tools/idea/.idea/libraries:asm-tools[test]",
         "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8[test]",
-        "//tools/idea/.idea/libraries:jsr305[test]",
         "//tools/idea/.idea/libraries:javax.annotation-api[test]",
     ],
 )
@@ -124,7 +123,6 @@ iml_module(
         "//tools/adt/idea/.idea/libraries:unb.jimfs[test]",
         "//tools/adt/idea/.idea/libraries:unb.asm-tools[test]",
         "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8[test]",
-        "//tools/adt/idea/.idea/libraries:unb.jsr305[test]",
     ],
 )
 

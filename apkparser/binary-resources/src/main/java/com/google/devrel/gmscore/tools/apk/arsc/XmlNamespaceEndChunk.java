@@ -16,9 +16,8 @@
 
 package com.google.devrel.gmscore.tools.apk.arsc;
 
+import com.android.annotations.Nullable;
 import java.nio.ByteBuffer;
-
-import javax.annotation.Nullable;
 
 /** Represents the ending tag of a namespace in an XML document. */
 public final class XmlNamespaceEndChunk extends XmlNamespaceChunk {

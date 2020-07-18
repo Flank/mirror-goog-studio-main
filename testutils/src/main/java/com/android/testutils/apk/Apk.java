@@ -25,7 +25,7 @@ import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import javax.annotation.CheckReturnValue;
+import org.mockito.CheckReturnValue;
 
 @Immutable
 public class Apk extends DexAndroidArchive {

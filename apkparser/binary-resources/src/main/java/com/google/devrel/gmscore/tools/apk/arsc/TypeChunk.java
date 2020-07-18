@@ -16,18 +16,16 @@
 
 package com.google.devrel.gmscore.tools.apk.arsc;
 
+import com.android.annotations.Nullable;
 import com.google.common.base.Preconditions;
 import com.google.common.io.LittleEndianDataOutputStream;
 import com.google.common.primitives.UnsignedBytes;
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.*;
-
-import javax.annotation.Nullable;
 
 /**
  * Represents a type chunk, which contains the resource values for a specific resource type and

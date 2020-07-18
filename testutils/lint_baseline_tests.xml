@@ -1,12 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 4.1.0-dev">
-
-    <issue
-        id="CheckResult"
-        message="The result of `containsClass` is not used">
-        <location
-            file="src/test/java/com/android/testutils/apk/AarTest.java"
-            line="75"/>
-    </issue>
+<issues format="5" by="lint 4.2.0-dev">
 
 </issues>
