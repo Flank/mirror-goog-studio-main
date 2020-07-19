@@ -18,23 +18,12 @@ package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
 
+/** Packaging options for Dex (Android Dalvik Executable) files */
 @Incubating
-interface PackagingOptions {
-    /** PackagingOptions for dex */
-    val dex: DexPackagingOptions
-
-    /** PackagingOptions for dex */
-    fun dex(action: DexPackagingOptions.() -> Unit)
-
-    /** PackagingOptions for jniLibs */
-    val jniLibs: JniLibsPackagingOptions
-
-    /** PackagingOptions for jniLibs */
-    fun jniLibs(action: JniLibsPackagingOptions.() -> Unit)
-
-    /** PackagingOptions for java resources */
-    val resources: ResourcesPackagingOptions
-
-    /** PackagingOptions for java resources */
-    fun resources(action: ResourcesPackagingOptions.() -> Unit)
+interface DexPackagingOptions {
+    /**
+     * Whether to use the legacy convention of compressing all dex files in the APK. If null, dex
+     * files will be uncompressed when minSdk >= 28.
+     */
+    val legacyPackaging: Boolean?
 }

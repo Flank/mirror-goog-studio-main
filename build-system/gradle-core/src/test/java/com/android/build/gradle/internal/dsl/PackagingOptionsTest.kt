@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.dsl.PackagingOptions
 import com.google.common.collect.Sets
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
@@ -24,6 +23,7 @@ import org.junit.Test
 /** Test for the mutablitly of   */
 class PackagingOptionsTest {
 
+    // TODO (Issue 149770867) add similar tests for com.android.build.api.dsl.PackagingOptions
     private lateinit var packagingOptions: PackagingOptions
 
     @Before
