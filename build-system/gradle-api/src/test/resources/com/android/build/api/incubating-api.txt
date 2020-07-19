@@ -433,6 +433,8 @@ com.android.build.api.dsl.DependenciesInfo.setIncludeInBundle: void (boolean)
 com.android.build.api.dsl.Device implements org.gradle.api.Named
 com.android.build.api.dsl.DeviceGroup implements org.gradle.api.Named
 com.android.build.api.dsl.DeviceGroup.getTargetDevices: org.gradle.api.DomainObjectSet<com.android.build.api.dsl.Device> ()
+com.android.build.api.dsl.DexPackagingOptions
+com.android.build.api.dsl.DexPackagingOptions.getLegacyPackaging: java.lang.Boolean ()
 com.android.build.api.dsl.DynamicDelivery
 com.android.build.api.dsl.DynamicDelivery.getDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.dsl.DynamicDelivery.getInstantDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
@@ -487,6 +489,11 @@ com.android.build.api.dsl.JacocoOptions.setVersion: void (java.lang.String)
 com.android.build.api.dsl.JavaCompileOptions
 com.android.build.api.dsl.JavaCompileOptions.annotationProcessorOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AnnotationProcessorOptions, kotlin.Unit>)
 com.android.build.api.dsl.JavaCompileOptions.getAnnotationProcessorOptions: com.android.build.api.dsl.AnnotationProcessorOptions ()
+com.android.build.api.dsl.JniLibsPackagingOptions
+com.android.build.api.dsl.JniLibsPackagingOptions.getExcludes: java.util.Set<java.lang.String> ()
+com.android.build.api.dsl.JniLibsPackagingOptions.getKeepDebugSymbols: java.util.Set<java.lang.String> ()
+com.android.build.api.dsl.JniLibsPackagingOptions.getLegacyPackaging: java.lang.Boolean ()
+com.android.build.api.dsl.JniLibsPackagingOptions.getPickFirsts: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.LibraryBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.LibraryVariantDimension
 com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.LibraryBuildFeatures.getAndroidResources: java.lang.Boolean ()
@@ -617,14 +624,20 @@ com.android.build.api.dsl.NdkBuild.path: void (java.lang.Object)
 com.android.build.api.dsl.NdkBuild.setBuildStagingDirectory: void (java.io.File)
 com.android.build.api.dsl.NdkBuild.setPath: void (java.io.File)
 com.android.build.api.dsl.PackagingOptions
+com.android.build.api.dsl.PackagingOptions.dex: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DexPackagingOptions, kotlin.Unit>)
 com.android.build.api.dsl.PackagingOptions.doNotStrip: void (java.lang.String)
 com.android.build.api.dsl.PackagingOptions.exclude: void (java.lang.String)
+com.android.build.api.dsl.PackagingOptions.getDex: com.android.build.api.dsl.DexPackagingOptions ()
 com.android.build.api.dsl.PackagingOptions.getDoNotStrip: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.PackagingOptions.getExcludes: java.util.Set<java.lang.String> ()
+com.android.build.api.dsl.PackagingOptions.getJniLibs: com.android.build.api.dsl.JniLibsPackagingOptions ()
 com.android.build.api.dsl.PackagingOptions.getMerges: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.PackagingOptions.getPickFirsts: java.util.Set<java.lang.String> ()
+com.android.build.api.dsl.PackagingOptions.getResources: com.android.build.api.dsl.ResourcesPackagingOptions ()
+com.android.build.api.dsl.PackagingOptions.jniLibs: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.JniLibsPackagingOptions, kotlin.Unit>)
 com.android.build.api.dsl.PackagingOptions.merge: void (java.lang.String)
 com.android.build.api.dsl.PackagingOptions.pickFirst: void (java.lang.String)
+com.android.build.api.dsl.PackagingOptions.resources: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ResourcesPackagingOptions, kotlin.Unit>)
 com.android.build.api.dsl.PrefabPackagingOptions
 com.android.build.api.dsl.PrefabPackagingOptions.getHeaders: java.lang.String ()
 com.android.build.api.dsl.PrefabPackagingOptions.getLibraryName: java.lang.String ()
@@ -636,6 +649,10 @@ com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named, com.and
 com.android.build.api.dsl.ProductFlavor.getDimension: java.lang.String ()
 com.android.build.api.dsl.ProductFlavor.getMatchingFallbacks: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.ProductFlavor.setDimension: void (java.lang.String)
+com.android.build.api.dsl.ResourcesPackagingOptions
+com.android.build.api.dsl.ResourcesPackagingOptions.getExcludes: java.util.Set<java.lang.String> ()
+com.android.build.api.dsl.ResourcesPackagingOptions.getMerges: java.util.Set<java.lang.String> ()
+com.android.build.api.dsl.ResourcesPackagingOptions.getPickFirsts: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.SdkComponents
 com.android.build.api.dsl.SdkComponents.getAdb: org.gradle.api.provider.Provider<org.gradle.api.file.RegularFile> ()
 com.android.build.api.dsl.SdkComponents.getNdkDirectory: org.gradle.api.provider.Provider<org.gradle.api.file.Directory> ()
