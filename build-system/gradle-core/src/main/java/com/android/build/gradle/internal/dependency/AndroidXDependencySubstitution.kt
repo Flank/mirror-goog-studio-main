@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.Version
+import com.android.build.gradle.options.BooleanOption
 import com.android.tools.build.jetifier.core.config.ConfigParser
 import com.android.tools.build.jetifier.processor.Processor
 import org.gradle.api.Project
@@ -50,7 +51,7 @@ object AndroidXDependencySubstitution {
     /**
      * Replaces old support libraries with AndroidX.
      */
-    fun replaceOldSupportLibraries(project: Project, reasonToReplace: String) {
+    fun replaceOldSupportLibraries(project: Project) {
         // TODO (AGP): This is a quick fix to work around Gradle bug with dependency
         // substitution (https://github.com/gradle/gradle/issues/5174). Once Gradle has fixed
         // this issue, this should be removed.
@@ -62,19 +63,29 @@ object AndroidXDependencySubstitution {
                     val oldDeps = mutableSetOf<DirectDependencyMetadata>()
                     val newDeps = mutableListOf<String>()
                     metadata.forEach {
-                        val oldDep = "${it.group}:${it.name}"
                         // Data binding base library will be handled later
-                        val newDep = androidXMappingsWithoutDataBindingBaseLibrary[oldDep]
+                        val newDep =
+                            androidXMappingsWithoutDataBindingBaseLibrary["${it.group}:${it.name}"]
                         if (newDep != null) {
                             oldDeps.add(it)
                             newDeps.add(newDep)
                         }
                     }
-                    metadata.removeAll(oldDeps)
-                    newDeps.forEach{ metadata.add(it) }
+                    // Using metadata.removeAll(oldDeps) doesn't work for some reason, we need
+                    // to use this for loop.
+                    for (oldDep in oldDeps.map { it -> "${it.group}:${it.name}" }) {
+                        metadata.removeIf { it -> "${it.group}:${it.name}" == oldDep }
+                    }
+                    for (newDep in newDeps) {
+                        metadata.add(newDep)
+                    }
                 }
             }
         }
+
+        // Create the reason string here to avoid too many strings being created in the rules below
+        // (as Gradle keeps these strings in memory).
+        val becauseJetifierIsOn ="${BooleanOption.ENABLE_JETIFIER.propertyName}=true"
 
         project.configurations.all { configuration ->
             // Apply the rules just before the configurations are resolved because too many rules
@@ -94,7 +105,7 @@ object AndroidXDependencySubstitution {
                         // entry.key is in the form of "group:module" (without a version), and
                         // Gradle accepts that form.
                         it.substitute(it.module(entry.key))
-                            .because(reasonToReplace)
+                            .because(becauseJetifierIsOn)
                             .with(it.module(entry.value))
                     }
                 }
