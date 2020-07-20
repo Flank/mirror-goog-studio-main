@@ -55,7 +55,7 @@ public class AspectsLoggerTest {
 
         // Log file set. Method ignored.
         AspectsLogger.aspectsAgentLog = log;
-        String baseline = "Test2.blockingMethod|sun.reflect.NativeMethodAccessorImpl.invoke0";
+        String baseline = "Test2.blockingMethod|" + TestUtils.getReflectInvokeMethod();
         Baseline.getInstance(true).parse(new ByteArrayInputStream(baseline.getBytes()));
         callMethod(instance, "blockingMethod");
         content = Files.readAllLines(log.toPath());
@@ -66,8 +66,6 @@ public class AspectsLoggerTest {
         callMethod(instance, "blockingMethod");
         content = Files.readAllLines(log.toPath());
         assertEquals(1, content.size());
-        assertEquals(
-                "Test2.blockingMethod|sun.reflect.NativeMethodAccessorImpl.invoke0",
-                content.get(0));
+        assertEquals("Test2.blockingMethod|" + TestUtils.getReflectInvokeMethod(), content.get(0));
     }
 }
