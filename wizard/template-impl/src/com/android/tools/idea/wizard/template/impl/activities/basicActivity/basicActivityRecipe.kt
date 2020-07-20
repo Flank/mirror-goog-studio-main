@@ -63,7 +63,7 @@ fun RecipeExecutor.generateBasicActivity(
 
   addDependency("com.android.support:appcompat-v7:$appCompatVersion.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
-  save(fragmentSimpleXml(useAndroidX, moduleData.isNewModule), moduleData.resDir.resolve("layout/$simpleLayoutName.xml"))
+  save(fragmentSimpleXml(useAndroidX), moduleData.resDir.resolve("layout/$simpleLayoutName.xml"))
   if (moduleData.isNewModule) {
     generateSimpleMenu(packageName, activityClass, moduleData.resDir, menuName)
   }
