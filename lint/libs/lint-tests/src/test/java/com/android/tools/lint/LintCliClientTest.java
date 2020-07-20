@@ -108,7 +108,6 @@ public class LintCliClientTest extends AbstractCheckTest {
         ProjectDescription project = new ProjectDescription(mGetterTest);
         project.setType(ProjectDescription.Type.LIBRARY);
 
-        System.setProperty("user.dir", tempDir.getAbsolutePath());
         lint().projects(project)
                 .rootDirectory(projectDir)
                 .client(client)
