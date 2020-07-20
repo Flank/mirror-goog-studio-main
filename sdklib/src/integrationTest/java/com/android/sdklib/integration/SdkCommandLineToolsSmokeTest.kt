@@ -51,9 +51,6 @@ class SdkCommandLineToolsSmokeTest {
             .redirectOutput(outFile)
             .command("sh", sdkManagerBinary.toString(), "--help")
 
-        processBuilder.environment()["JAVA_HOME"] =
-            TestUtils.getWorkspaceFile("prebuilts/studio/jdk/linux").path
-
         val returnCode = processBuilder.start().waitFor()
         assertThat(returnCode).named("returnCode").isEqualTo(1)
 
