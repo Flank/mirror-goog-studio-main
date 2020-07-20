@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.AndroidJarInput
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfiguration
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -97,11 +97,11 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl,
+        creationConfig: VariantCreationConfig,
         private val enableDexingArtifactTransform: Boolean,
         private val separateFileDependenciesDexingTask: Boolean
-    ) : VariantTaskCreationAction<L8DexDesugarLibTask, ComponentPropertiesImpl>(
-        componentProperties
+    ) : VariantTaskCreationAction<L8DexDesugarLibTask, VariantCreationConfig>(
+        creationConfig
     ) {
         override val name = computeTaskName("l8DexDesugarLib")
         override val type = L8DexDesugarLibTask::class.java

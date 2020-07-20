@@ -20,6 +20,7 @@
 #include <unistd.h>
 
 #include "tools/base/deploy/common/event.h"
+#include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/utils.h"
 
 namespace {
@@ -98,10 +99,9 @@ namespace deploy {
 bool PatchApplier::ApplyPatchToFD(const proto::PatchInstruction& patch,
                                   int dst_fd) const noexcept {
   const std::string& src_absolute_path = patch.src_absolute_path();
-  std::string full_path = root_directory_ + src_absolute_path;
-  int src_fd = open(full_path.c_str(), O_RDONLY);
+  int src_fd = IO::open(src_absolute_path.c_str(), O_RDONLY);
   if (src_fd == -1) {
-    ErrEvent("Unable to open : '"_s + full_path + "'");
+    ErrEvent("Unable to open : '"_s + src_absolute_path + "'");
     return false;
   }
 

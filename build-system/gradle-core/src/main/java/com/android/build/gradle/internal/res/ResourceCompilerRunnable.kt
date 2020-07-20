@@ -1,23 +1,23 @@
 package com.android.build.gradle.internal.res
 
 
-import com.android.aaptcompiler.compileResource
 import com.android.aaptcompiler.ResourceCompilerOptions
+import com.android.aaptcompiler.compileResource
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.ide.common.resources.CompileResourceRequest
-import java.io.Serializable
-import javax.inject.Inject
+import org.gradle.api.provider.ListProperty
 
-class ResourceCompilerRunnable @Inject constructor(
-  private val params: Params
-) : Runnable {
+abstract class ResourceCompilerRunnable : ProfileAwareWorkAction<ResourceCompilerRunnable.Params>() {
 
   override fun run() {
-    compileSingleResource(params.request)
+    parameters.request.get().forEach {
+      compileSingleResource(it)
+    }
   }
 
-  class Params(
-    val request: CompileResourceRequest
-  ) : Serializable
+  abstract class Params: ProfileAwareWorkAction.Parameters() {
+    abstract val request: ListProperty<CompileResourceRequest>
+  }
 
   companion object {
     @JvmStatic

@@ -68,7 +68,6 @@ coverage_report(
         "tools/base/usb-devices",
     ],
     tests = [
-        "//tools/adt/idea/android-kotlin:intellij.android.kotlin.tests_tests",  # 5 shard 1 exec
         "//tools/base/build-system/integration-test/application:automatic-tests",  # 8 shard 2 exec
         "//tools/base/lint/libs/lint-tests:tests.test",  # 1 shard 1 exec
     ],
@@ -517,7 +516,8 @@ coverage_report(
         "//tools/adt/idea/android-adb:intellij.android.adb.tests_tests",
         "//tools/adt/idea/android-common:intellij.android.common_tests",
         "//tools/adt/idea/android-debuggers:intellij.android.debuggers.tests_tests",
-        "//tools/adt/idea/android-kotlin:intellij.android.kotlin.tests_tests",
+        #TODO(b/155257347) too flaky for coverage runs
+        #"//tools/adt/idea/android-kotlin:intellij.android.kotlin.tests_tests",
         "//tools/adt/idea/android-lang:intellij.android.lang.tests_tests",
         "//tools/adt/idea/android-lang-databinding:intellij.android.lang-databinding.tests_tests",
         "//tools/adt/idea/android-layout-inspector:android-layout-inspector-test_tests",
@@ -593,7 +593,7 @@ coverage_report(
         "//tools/base/build-system/gradle-api:tests.test",
         "//tools/base/build-system/gradle-core:tests.test",
         "//tools/base/build-system/integration-test/application:automatic-tests",
-        "//tools/base/build-system/integration-test/application:tests",
+        "//tools/base/build-system/integration-test/application:coupled_tests",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/gradlecompat:GradleVersionCheckTest",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/sanity:tests",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/sdk:sdk_tests",

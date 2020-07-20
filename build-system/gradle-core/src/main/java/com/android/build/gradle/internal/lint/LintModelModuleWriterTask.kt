@@ -436,7 +436,7 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
 
                 variantInput.packageName.setDisallowChanges(properties.packageName)
 
-                variantInput.minSdkVersion.setDisallowChanges(properties.variantDslInfo.minSdkVersion.convert())
+                variantInput.minSdkVersion.setDisallowChanges(properties.variant.minSdkVersion.convert())
                 variantInput.targetSdkVersion.setDisallowChanges(properties.variantDslInfo.targetSdkVersion.convert())
 
                 // FIXME resvalue
@@ -490,11 +490,10 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
                 it.additionalClasses.disallowChanges()
             }
 
-        private fun AndroidVersion.convert(): SdkVersion = globalScope.dslServices.newInstance(
-            SdkVersion::class.java
-        ).also {
-            it.apiLevel.setDisallowChanges(apiLevel)
-            it.codeName.setDisallowChanges(codename)
+        private fun com.android.build.api.variant.AndroidVersion.convert(): SdkVersion =
+            globalScope.dslServices.newInstance(SdkVersion::class.java).also {
+                it.apiLevel.setDisallowChanges(apiLevel)
+                it.codeName.setDisallowChanges(codename)
         }
 
         private fun ApiVersion.convert(): SdkVersion = globalScope.dslServices.newInstance(

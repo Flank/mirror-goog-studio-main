@@ -7,6 +7,12 @@ group = 'com.android.tools.lint'
 archivesBaseName = 'lint-gradle'
 version = rootProject.ext.baseVersion
 
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
 dependencies {
     // NOTE NOTE NOTE - before changing this, note that lint dependencies
     // must also be reflected in [LintClassLoaderProvider#computeUrls] as well

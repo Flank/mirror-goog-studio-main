@@ -58,19 +58,20 @@ open class LintFixPerformer constructor(
 ) {
     private fun getFileData(
         fileMap: MutableMap<File, PendingEditFile>,
-        warning: Warning
+        incident: Incident
     ): PendingEditFile {
-        val location = getLocation(warning)
+        val location = getLocation(incident)
         val file = location.file
         return fileMap[file] ?: run {
-            val fileData = PendingEditFile(client, file, warning.fileContents.toString())
+            val source = client.getSourceText(incident.file)
+            val fileData = PendingEditFile(client, file, source.toString())
             fileMap[file] = fileData
             fileData
         }
     }
 
-    private fun getLocation(warning: Warning): Location {
-        val fix = warning.quickfixData
+    private fun getLocation(incident: Incident): Location {
+        val fix = incident.fix
         if (fix is ReplaceString) {
             val range = fix.range
             if (range != null) {
@@ -82,22 +83,22 @@ open class LintFixPerformer constructor(
                 return range
             }
         }
-        return warning.location
+        return incident.location
     }
 
     private fun registerFix(
         fileMap: MutableMap<File, PendingEditFile>,
-        warning: Warning,
+        incident: Incident,
         lintFix: LintFix
     ) {
-        val fileData = getFileData(fileMap, warning)
-        if (addEdits(fileData, warning.location, lintFix)) {
-            warning.wasAutoFixed = true
+        val fileData = getFileData(fileMap, incident)
+        if (addEdits(fileData, incident.location, lintFix)) {
+            incident.wasAutoFixed = true
         }
     }
 
-    fun fix(warnings: List<Warning>): Boolean {
-        val files = findApplicableFixes(warnings)
+    fun fix(incidents: List<Incident>): Boolean {
+        val files = findApplicableFixes(incidents)
         return applyEdits(files)
     }
 
@@ -170,7 +171,7 @@ open class LintFixPerformer constructor(
             writer.println("Applied $appliedEditCount edits across $editedFileCount files for this fix: ${editMap.keys.first()}")
         } else {
             writer.println("Applied $appliedEditCount edits across $editedFileCount files")
-            editMap.forEach { name, count ->
+            editMap.forEach { (name, count) ->
                 writer.println("$count: $name")
             }
         }
@@ -183,10 +184,10 @@ open class LintFixPerformer constructor(
         file.file.writeText(contents, Charsets.UTF_8)
     }
 
-    private fun findApplicableFixes(warnings: List<Warning>): List<PendingEditFile> {
+    private fun findApplicableFixes(incidents: List<Incident>): List<PendingEditFile> {
         val fileMap = mutableMapOf<File, PendingEditFile>()
-        for (warning in warnings) {
-            val data = warning.quickfixData ?: continue
+        for (incident in incidents) {
+            val data = incident.fix ?: continue
             if (data is LintFixGroup) {
                 if (data.type == GroupType.COMPOSITE) {
                     // separated out again in applyFix
@@ -199,14 +200,14 @@ open class LintFixPerformer constructor(
                     }
                     if (all) {
                         for (sub in data.fixes) {
-                            registerFix(fileMap, warning, sub)
+                            registerFix(fileMap, incident, sub)
                         }
                     }
                 }
                 // else: for GroupType.ALTERNATIVES, we don't auto fix: user must pick
                 // which one to apply.
             } else if (canAutoFix(data)) {
-                registerFix(fileMap, warning, data)
+                registerFix(fileMap, incident, data)
             }
         }
         return fileMap.values.toList()
@@ -268,11 +269,11 @@ open class LintFixPerformer constructor(
 
         val document = file.getXmlDocument() ?: return false
 
-        var node = PositionXmlParser.findNodeAtOffset(document, start.offset)
+        var node: Node? = PositionXmlParser.findNodeAtOffset(document, start.offset)
             ?: error("No node found at offset " + start.offset)
-        if (node.nodeType == Node.ATTRIBUTE_NODE) {
+        if (node != null && node.nodeType == Node.ATTRIBUTE_NODE) {
             node = (node as Attr).ownerElement
-        } else if (node.nodeType != Node.ELEMENT_NODE) {
+        } else if (node != null && node.nodeType != Node.ELEMENT_NODE) {
             // text, comments
             node = node.parentNode
         }
@@ -334,7 +335,7 @@ open class LintFixPerformer constructor(
                     val root = document.documentElement
                     var index = 1
                     while (true) {
-                        prefix = base + if (index == 1) "" else Integer.toString(index)
+                        prefix = base + if (index == 1) "" else index.toString()
                         if (!root.hasAttribute(XMLNS_PREFIX + prefix)) {
                             break
                         }
@@ -441,9 +442,8 @@ open class LintFixPerformer constructor(
 
             // See if there's nothing left on the line; if so, delete the whole line
             var allSpace = true
-            for (offset in 0 until replacement.length) {
-                val c = contents[offset]
-                if (!Character.isWhitespace(c)) {
+            for (element in replacement) {
+                if (!Character.isWhitespace(element)) {
                     allSpace = false
                     break
                 }
@@ -544,9 +544,9 @@ open class LintFixPerformer constructor(
         return true
     }
 
-    fun computeEdits(warning: Warning, lintFix: LintFix): List<PendingEditFile>? {
+    fun computeEdits(incident: Incident, lintFix: LintFix): List<PendingEditFile>? {
         val fileMap = mutableMapOf<File, PendingEditFile>()
-        registerFix(fileMap, warning, lintFix)
+        registerFix(fileMap, incident, lintFix)
         return fileMap.values.toList()
     }
 
@@ -554,11 +554,11 @@ open class LintFixPerformer constructor(
         /** Not all fixes are eligible for auto-fix; this function checks whether a given fix is. */
         fun canAutoFix(lintFix: LintFix): Boolean {
             if (lintFix is LintFixGroup) {
-                when {
-                    lintFix.type == GroupType.ALTERNATIVES ->
+                when (lintFix.type) {
+                    GroupType.ALTERNATIVES ->
                         // More than one type: we don't know which to apply
                         return false
-                    lintFix.type == GroupType.COMPOSITE -> {
+                    GroupType.COMPOSITE -> {
                         // All nested fixes must be auto-fixable
                         for (nested in lintFix.fixes) {
                             if (!canAutoFix(nested)) {

@@ -87,4 +87,4 @@ fun createVariantPropertiesApiServices(
 @JvmOverloads
 fun createTaskCreationServices(
     projectServices: ProjectServices = createProjectServices()
-): TaskCreationServices = TaskCreationServicesImpl(projectServices)
+): TaskCreationServices = TaskCreationServicesImpl(createVariantPropertiesApiServices(projectServices), projectServices)

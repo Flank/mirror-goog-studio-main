@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2019 The Android Open Source Project
  *
@@ -18,8 +19,8 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.build.api.artifact.ArtifactTransformationRequest
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getAapt2Executable
@@ -49,7 +50,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.io.Serializable
 import javax.inject.Inject
 
 /**
@@ -101,7 +101,7 @@ abstract class OptimizeResourcesTask : NonIncrementalTask() {
         }
     }
 
-    interface OptimizeResourcesParams : DecoratedWorkParameters, Serializable {
+    interface OptimizeResourcesParams : DecoratedWorkParameters {
         val aapt2Executable: RegularFileProperty
         val inputResFile: RegularFileProperty
         val enableResourceObfuscation: Property<Boolean>
@@ -114,8 +114,8 @@ abstract class OptimizeResourcesTask : NonIncrementalTask() {
     }
 
     class CreateAction(
-            componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<OptimizeResourcesTask, ComponentPropertiesImpl>(componentProperties) {
+            creationConfig: BaseCreationConfig
+    ) : VariantTaskCreationAction<OptimizeResourcesTask, BaseCreationConfig>(creationConfig) {
         override val name: String
             get() = computeTaskName("optimize", "Resources")
         override val type: Class<OptimizeResourcesTask>

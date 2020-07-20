@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.prefs.AndroidLocation;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
@@ -33,6 +34,7 @@ import java.security.InvalidParameterException;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,6 +64,7 @@ public final class EmulatorConsole {
 
     private static final String COMMAND_PING = "help\r\n"; //$NON-NLS-1$
     private static final String COMMAND_AVD_NAME = "avd name\r\n"; //$NON-NLS-1$
+    private static final String COMMAND_AVD_PATH = "avd path\r\n";
     private static final String COMMAND_KILL = "kill\r\n"; //$NON-NLS-1$
     private static final String COMMAND_GSM_STATUS = "gsm status\r\n"; //$NON-NLS-1$
     private static final String COMMAND_GSM_CALL = "gsm call %1$s\r\n"; //$NON-NLS-1$
@@ -367,28 +370,64 @@ public final class EmulatorConsole {
         sendCommand(COMMAND_KILL);
     }
 
+    /**
+     * @return the AVD name. If the command failed returns the error message after "KO: " or null.
+     */
+    @Nullable
     public synchronized String getAvdName() {
-        if (sendCommand(COMMAND_AVD_NAME)) {
-            String[] result = readLines();
-            // qemu2's readline implementation sends some formatting characters in the first line
-            // let's make sure that only the last two lines are fine
-            if (result != null && result.length >= 2) { // this should be the name on the (length - 1)th line,
-                                                        // and ok on last one
-                return result[result.length - 2];
-            } else {
-                // try to see if there's a message after KO
-                Matcher m = RE_KO.matcher(result[result.length-1]);
-                if (m.matches()) {
-                    return m.group(1);
-                }
-                Log.w(LOG_TAG, "avd name result did not match expected");
-                for (int i=0; i < result.length; i++) {
-                    Log.d(LOG_TAG, result[i]);
-                }
+        try {
+            return getOutput(COMMAND_AVD_NAME);
+        } catch (CommandFailedException exception) {
+            return exception.getMessage();
+        } catch (Exception exception) {
+            // noinspection ConstantConditions
+            if (exception instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
             }
+
+            return null;
+        }
+    }
+
+    /**
+     * Returns the absolute path to the virtual device in the file system. The path is operating
+     * system dependent; it will have / name separators on Linux and \ separators on Windows.
+     *
+     * @throws CommandFailedException If the subcommand failed or if the emulator's version is older
+     *     than 30.0.18
+     */
+    @NonNull
+    public synchronized String getAvdPath() throws CommandFailedException {
+        return getOutput(COMMAND_AVD_PATH);
+    }
+
+    @NonNull
+    private String getOutput(@NonNull String command) throws CommandFailedException {
+        if (!sendCommand(command)) {
+            throw new CommandFailedException();
         }
 
-        return null;
+        return processOutput(Objects.requireNonNull(readLines()));
+    }
+
+    @NonNull
+    @VisibleForTesting
+    static String processOutput(@NonNull String[] lines) throws CommandFailedException {
+        if (lines.length == 0) {
+            throw new IllegalArgumentException();
+        }
+
+        Matcher matcher = RE_KO.matcher(lines[lines.length - 1]);
+
+        if (matcher.matches()) {
+            throw new CommandFailedException(matcher.group(1));
+        }
+
+        if (lines.length >= 2 && lines[lines.length - 1].equals("OK")) {
+            return lines[lines.length - 2];
+        }
+
+        throw new IllegalArgumentException(String.join(System.lineSeparator(), lines));
     }
 
     /**

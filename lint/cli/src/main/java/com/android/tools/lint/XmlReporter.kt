@@ -37,7 +37,6 @@ import kotlin.math.min
 /**
  * A reporter which emits lint results into an XML report.
  *
- *
  * **NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.**
  */
@@ -47,9 +46,7 @@ class XmlReporter
  * Constructs a new [XmlReporter]
  *
  * @param client the client
- *
  * @param output the output file
- *
  * @throws IOException if an error occurs
  */
 @Throws(IOException::class)
@@ -81,7 +78,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
     }
 
     @Throws(IOException::class)
-    override fun write(stats: LintStats, issues: List<Warning>) {
+    override fun write(stats: LintStats, issues: List<Incident>) {
         writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
         // Format 4: added urls= attribute with all more info links, comma separated
         writer.write("<issues format=\"5\"")
@@ -97,37 +94,37 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         writer.write(">\n")
 
         if (issues.isNotEmpty()) {
-            writeIssues(issues)
+            writeIncidents(issues)
         }
 
         writer.write("\n</issues>\n")
         writer.close()
 
-        if (!client.flags.isQuiet && (stats.errorCount > 0 || stats.warningCount > 0)) {
+        if (!client.flags.isQuiet && output != null && (stats.errorCount > 0 || stats.warningCount > 0)) {
             val url = SdkUtils.fileToUrlString(output.absoluteFile)
             println(String.format("Wrote XML report to %1\$s", url))
         }
     }
 
-    private fun writeIssues(issues: List<Warning>) {
-        for (warning in issues) {
-            writeIssue(warning)
+    private fun writeIncidents(issues: List<Incident>) {
+        for (incident in issues) {
+            writeIncident(incident)
         }
     }
 
-    private fun writeIssue(warning: Warning) {
+    private fun writeIncident(incident: Incident) {
         writer.write('\n'.toInt())
         indent(1)
         writer.write("<issue")
-        val issue = warning.issue
+        val issue = incident.issue
         writeAttribute(writer, 2, "id", issue.id)
         if (!isIntendedForBaseline) {
             writeAttribute(
                 writer, 2, "severity",
-                warning.severity.description
+                incident.severity.description
             )
         }
-        writeAttribute(writer, 2, "message", warning.message)
+        writeAttribute(writer, 2, "message", incident.message)
 
         if (!isIntendedForBaseline) {
             writeAttribute(writer, 2, "category", issue.category.fullName)
@@ -143,57 +140,54 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
                 writeAttribute(writer, 2, "urls", Joiner.on(',').join(issue.moreInfo))
             }
         }
-        if (warning.errorLine != null && warning.errorLine.isNotEmpty()) {
-            val line = warning.errorLine
-            val index1 = line.indexOf('\n')
-            if (index1 != -1) {
-                val index2 = line.indexOf('\n', index1 + 1)
-                if (index2 != -1) {
-                    val line1 = line.substring(0, index1)
-                    val line2 = line.substring(index1 + 1, index2)
-                    writeAttribute(writer, 2, "errorLine1", line1)
-                    writeAttribute(writer, 2, "errorLine2", line2)
+        if (client.flags.isShowSourceLines) {
+            val line = incident.getErrorLines(textProvider = { client.getSourceText(it) })
+            if (line != null && line.isNotEmpty()) {
+                val index1 = line.indexOf('\n')
+                if (index1 != -1) {
+                    val index2 = line.indexOf('\n', index1 + 1)
+                    if (index2 != -1) {
+                        val line1 = line.substring(0, index1)
+                        val line2 = line.substring(index1 + 1, index2)
+                        writeAttribute(writer, 2, "errorLine1", line1)
+                        writeAttribute(writer, 2, "errorLine2", line2)
+                    }
                 }
             }
         }
 
-        if (warning.isVariantSpecific) {
+        val applicableVariants = incident.applicableVariants
+        if (applicableVariants != null && applicableVariants.variantSpecific) {
             writeAttribute(
                 writer,
                 2,
                 "includedVariants",
-                Joiner.on(',').join(warning.includedVariantNames)
+                Joiner.on(',').join(applicableVariants.includedVariantNames)
             )
             writeAttribute(
                 writer,
                 2,
                 "excludedVariants",
-                Joiner.on(',').join(warning.excludedVariantNames)
+                Joiner.on(',').join(applicableVariants.excludedVariantNames)
             )
         }
 
         if (!isIntendedForBaseline && includeFixes &&
-            (warning.quickfixData != null || hasAutoFix(issue))
+            (incident.fix != null || hasAutoFix(issue))
         ) {
             writeAttribute(writer, 2, "quickfix", "studio")
         }
 
-        assert(warning.file != null == (warning.location != null))
-
-        if (warning.file != null) {
-            assert(warning.location.file === warning.file)
-        }
-
         var hasChildren = false
 
-        val fixData = warning.quickfixData
+        val fixData = incident.fix
         if (includeFixes && fixData != null) {
             writer.write(">\n")
-            emitFixes(warning, fixData)
+            emitFixes(incident, fixData)
             hasChildren = true
         }
 
-        var location: Location? = warning.location
+        var location: Location? = incident.location
         if (location != null) {
             if (!hasChildren) {
                 writer.write(">\n")
@@ -202,7 +196,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
                 indent(2)
                 writer.write("<location")
                 val path = client.getDisplayPath(
-                    warning.project,
+                    incident.project,
                     location.file,
                     // Don't use absolute paths in baseline files
                     client.flags.isFullPath && !isIntendedForBaseline
@@ -238,18 +232,18 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         }
     }
 
-    private fun emitFixes(warning: Warning, lintFix: LintFix) {
+    private fun emitFixes(incident: Incident, lintFix: LintFix) {
         val fixes = if (lintFix is LintFixGroup && lintFix.type == ALTERNATIVES) {
             lintFix.fixes
         } else {
             listOf(lintFix)
         }
         for (fix in fixes) {
-            emitFix(warning, fix)
+            emitFix(incident, fix)
         }
     }
 
-    private fun emitFix(warning: Warning, lintFix: LintFix) {
+    private fun emitFix(incident: Incident, lintFix: LintFix) {
         indent(2)
         writer.write("<fix")
         lintFix.displayName?.let {
@@ -263,7 +257,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         var haveChildren = false
 
         val performer = LintFixPerformer(client, false)
-        val files = performer.computeEdits(warning, lintFix)
+        val files = performer.computeEdits(incident, lintFix)
         if (files != null && files.isNotEmpty()) {
             haveChildren = true
             writer.write(">\n")
@@ -274,7 +268,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
                     writer.write("<edit")
 
                     val path = client.getDisplayPath(
-                        warning.project,
+                        incident.project,
                         file.file,
                         // Don't use absolute paths in baseline files
                         client.flags.isFullPath && !isIntendedForBaseline

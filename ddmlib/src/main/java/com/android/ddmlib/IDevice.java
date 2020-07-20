@@ -171,6 +171,16 @@ public interface IDevice extends IShellEnabledDevice {
     @Nullable
     String getAvdName();
 
+    /**
+     * Returns the absolute path to the virtual device in the file system. The path is operating
+     * system dependent; it will have / name separators on Linux and \ separators on Windows.
+     *
+     * @return the AVD path or null if this is a physical device, the emulator console subcommand
+     *     failed, or the emulator's version is older than 30.0.18
+     */
+    @Nullable
+    String getAvdPath();
+
     /** Returns the state of the device. */
     DeviceState getState();
 

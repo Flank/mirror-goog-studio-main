@@ -102,7 +102,7 @@ class ApplicationVariantFactory(
             .objectFactory
             .newInstance(
                 ApplicationVariantPropertiesImpl::class.java,
-                componentIdentity,
+                variant,
                 buildFeatures,
                 variantDslInfo,
                 variantDependencies,

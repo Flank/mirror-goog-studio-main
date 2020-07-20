@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
@@ -71,15 +71,15 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
         }
     }
 
-    private class EmptyCreationAction(componentProperties: ComponentPropertiesImpl) :
-        TaskManager.AbstractPreBuildCreationAction<AndroidVariantTask>(componentProperties) {
+    private class EmptyCreationAction(creationConfig: BaseCreationConfig) :
+        TaskManager.AbstractPreBuildCreationAction<AndroidVariantTask>(creationConfig) {
 
         override val type: Class<AndroidVariantTask>
             get() = AndroidVariantTask::class.java
     }
 
-    private class CheckCreationAction(componentProperties: ComponentPropertiesImpl) :
-        TaskManager.AbstractPreBuildCreationAction<AppPreBuildTask>(componentProperties) {
+    private class CheckCreationAction(creationConfig: BaseCreationConfig) :
+        TaskManager.AbstractPreBuildCreationAction<AppPreBuildTask>(creationConfig) {
 
         override val type: Class<AppPreBuildTask>
             get() = AppPreBuildTask::class.java
@@ -104,11 +104,11 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
     companion object {
         @JvmStatic
         fun getCreationAction(
-            componentProperties: ComponentPropertiesImpl
+            creationConfig: BaseCreationConfig
         ): TaskManager.AbstractPreBuildCreationAction<*> {
-            return if (componentProperties.variantType.isBaseModule && componentProperties.globalScope.hasDynamicFeatures()) {
-                CheckCreationAction(componentProperties)
-            } else EmptyCreationAction(componentProperties)
+            return if (creationConfig.variantType.isBaseModule && creationConfig.globalScope.hasDynamicFeatures()) {
+                CheckCreationAction(creationConfig)
+            } else EmptyCreationAction(creationConfig)
 
         }
     }

@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.res.Aapt2CompileRunnable
+import com.android.build.gradle.internal.res.runAapt2Compile
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.services.getErrorFormatMode
 import com.android.build.gradle.internal.services.registerAaptService
@@ -239,13 +239,8 @@ abstract class AutoNamespaceTransform : TransformAction<AutoNamespaceParameters>
 
         // TODO: Performance: This is single threaded (but multiple AARs could be being
         //       auto-namespaced in parallel), investigate whether it can be improved.
-        Aapt2CompileRunnable(
-            Aapt2CompileRunnable.Params(
-                aapt2ServiceKey,
-                requestList,
-                parameters.aapt2.getErrorFormatMode()  // TODO(b/152323103) this should be implicit
-            )
-        ).run()
+        // TODO(b/152323103) errorFormatMode should be implicit
+        runAapt2Compile(aapt2ServiceKey, requestList, parameters.aapt2.getErrorFormatMode(), false)
 
         linkAndroidResources(
             manifestFile,
@@ -289,13 +284,8 @@ abstract class AutoNamespaceTransform : TransformAction<AutoNamespaceParameters>
             intermediateDir = aaptIntermediateDir.toFile()
         )
 
-        Aapt2LinkRunnable(
-            Aapt2LinkRunnable.Params(
-                aapt2ServiceKey,
-                request,
-                parameters.aapt2.getErrorFormatMode() // TODO(b/152323103) this should be implicit
-            )
-        ).run()
+        // TODO(b/152323103) this should be implicit
+        runAapt2Link(aapt2ServiceKey, request, parameters.aapt2.getErrorFormatMode())
 
         outputAar.putNextEntry(ZipEntry(SdkConstants.FN_RESOURCE_STATIC_LIBRARY))
         Files.copy(staticLibApk, outputAar)

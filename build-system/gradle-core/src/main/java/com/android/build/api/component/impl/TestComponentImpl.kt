@@ -18,10 +18,11 @@ package com.android.build.api.component.impl
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.TestComponent
+import com.android.build.api.component.TestComponentProperties
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.VariantApiServices
 
-abstract class TestComponentImpl<PropertiesT : TestComponentPropertiesImpl>(
+abstract class TestComponentImpl<PropertiesT : TestComponentProperties>(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity,
     variantApiServices: VariantApiServices

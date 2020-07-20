@@ -19,12 +19,13 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.SdkConstants.DOT_DBG
 import com.android.SdkConstants.DOT_SYM
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.process.GradleProcessExecutor
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.NATIVE_DEBUG_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.NATIVE_SYMBOL_TABLES
@@ -32,15 +33,15 @@ import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.process.LoggedProcessOutputHandler
-import com.android.ide.common.process.ProcessExecutor
 import com.android.ide.common.process.ProcessInfoBuilder
-import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.repository.Revision
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileTree
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -53,6 +54,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.process.ExecOperations
+import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import javax.inject.Inject
@@ -91,23 +93,23 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
     val inputFiles: FileTree
         get() = inputDir.asFileTree
 
+    private val maxWorkerCount = project.gradle.startParameter.maxWorkerCount
+
     override fun doTaskAction() {
-        getWorkerFacadeWithThreads(useGradleExecutor = false).use { workers ->
-            ExtractNativeDebugMetadataDelegate(
-                workers,
-                inputDir.get().asFile,
-                outputDir.get().asFile,
-                sdkBuildService.get().objcopyExecutableMapProvider.get(),
-                debugSymbolLevel,
-                GradleProcessExecutor(execOperations::exec)
-            ).run()
+        workerExecutor.noIsolation().submit(ExtractNativeDebugMetadataWorkAction::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.inputDir.set(inputDir)
+            it.outputDir.set(outputDir)
+            it.objcopyExecutableMap.set(sdkBuildService.flatMap { it.objcopyExecutableMapProvider })
+            it.debugSymbolLevel.set(debugSymbolLevel)
+            it.maxWorkerCount.set(maxWorkerCount)
         }
     }
 
     abstract class CreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<ExtractNativeDebugMetadataTask, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: VariantCreationConfig
+    ) : VariantTaskCreationAction<ExtractNativeDebugMetadataTask, VariantCreationConfig>(
+        creationConfig
     ) {
 
         override val type: Class<ExtractNativeDebugMetadataTask>
@@ -124,8 +126,8 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
     }
 
     class FullCreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : CreationAction(componentProperties) {
+        creationConfig: VariantCreationConfig
+    ) : CreationAction(creationConfig) {
 
         override val name: String
             get() = computeTaskName("extract", "NativeDebugMetadata")
@@ -147,8 +149,8 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
     }
 
     class SymbolTableCreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : CreationAction(componentProperties) {
+        creationConfig: VariantCreationConfig
+    ) : CreationAction(creationConfig) {
 
         override val name: String
             get() = computeTaskName("extract", "NativeSymbolTables")
@@ -176,26 +178,35 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
  * Delegate to extract debug metadata from native libraries
  */
 @VisibleForTesting
-class ExtractNativeDebugMetadataDelegate(
-    val workers: WorkerExecutorFacade,
-    val inputDir: File,
-    val outputDir: File,
-    private val objcopyExecutableMap: Map<Abi, File>,
-    private val debugSymbolLevel: DebugSymbolLevel,
-    val processExecutor: ProcessExecutor
-) {
+abstract class ExtractNativeDebugMetadataWorkAction :
+    ProfileAwareWorkAction<ExtractNativeDebugMetadataWorkAction.Parameters>() {
+
+    abstract class Parameters: ProfileAwareWorkAction.Parameters() {
+        abstract val inputDir: DirectoryProperty
+        abstract val outputDir: DirectoryProperty
+        abstract val objcopyExecutableMap: MapProperty<Abi, File>
+        abstract val debugSymbolLevel: Property<DebugSymbolLevel>
+        abstract val maxWorkerCount: Property<Int>
+    }
+
+    @get:Inject
+    abstract val workerExecutor: WorkerExecutor
+
     private val logger : LoggerWrapper
         get() = LoggerWrapper(Logging.getLogger(ExtractNativeDebugMetadataTask::class.java))
 
-    fun run() {
+    override fun run() {
+        val outputDir = parameters.outputDir.asFile.get()
         FileUtils.cleanOutputDir(outputDir)
-        for (inputFile in FileUtils.getAllFiles(inputDir)) {
+
+        val allRequests = mutableListOf<ExtractNativeDebugMetadataRunnable.SingleRequest>()
+        for (inputFile in FileUtils.getAllFiles(parameters.inputDir.asFile.get())) {
             if (!inputFile.name.endsWith(SdkConstants.DOT_NATIVE_LIBS, ignoreCase = true)) {
                 continue
             }
             val outputFile: File
             val objcopyArgs: List<String>
-            when (debugSymbolLevel) {
+            when (parameters.debugSymbolLevel.get()) {
                 DebugSymbolLevel.FULL -> {
                     outputFile =
                         File(outputDir, "${inputFile.parentFile.name}/${inputFile.name}$DOT_DBG")
@@ -211,7 +222,7 @@ class ExtractNativeDebugMetadataDelegate(
                         "NativeDebugMetadataMode.NONE not supported in ${this.javaClass.name}"
                     )
             }
-            val objcopyExecutable = objcopyExecutableMap[Abi.getByName(inputFile.parentFile.name)]
+            val objcopyExecutable = parameters.objcopyExecutableMap.get()[Abi.getByName(inputFile.parentFile.name)]
             if (objcopyExecutable == null) {
                 logger.warning(
                     "Unable to extract native debug metadata from ${inputFile.absolutePath} " +
@@ -220,17 +231,19 @@ class ExtractNativeDebugMetadataDelegate(
                 )
                 continue
             }
-            workers.submit(
-                ExtractNativeDebugMetadataRunnable::class.java,
-                ExtractNativeDebugMetadataRunnable.Params(
-                    inputFile,
-                    outputFile,
-                    objcopyExecutable,
-                    objcopyArgs,
-                    processExecutor
-                )
-            )
+            allRequests.add(ExtractNativeDebugMetadataRunnable.SingleRequest(inputFile, outputFile, objcopyExecutable, objcopyArgs))
+        }
 
+        // split them into maxWorkersCount buckets
+        var ord = 0
+        allRequests.groupBy { (ord++) % parameters.maxWorkerCount.get() }.values.forEach { requests ->
+            if (requests.isNotEmpty()) {
+                workerExecutor.noIsolation()
+                    .submit(ExtractNativeDebugMetadataRunnable::class.java) {
+                        it.initializeFromProfileAwareWorkAction(parameters)
+                        it.requests.set(requests)
+                    }
+            }
         }
     }
 }
@@ -238,23 +251,33 @@ class ExtractNativeDebugMetadataDelegate(
 /**
  * Runnable to extract debug metadata from a native library
  */
-private class ExtractNativeDebugMetadataRunnable @Inject constructor(val params: Params): Runnable {
+abstract class ExtractNativeDebugMetadataRunnable : ProfileAwareWorkAction<ExtractNativeDebugMetadataRunnable.Params>() {
 
     private val logger : LoggerWrapper
         get() = LoggerWrapper(Logging.getLogger(ExtractNativeDebugMetadataTask::class.java))
 
+    @get:Inject
+    abstract val execOperations: ExecOperations
+
     override fun run() {
-        FileUtils.mkdirs(params.outputFile.parentFile)
+        val processExecutor = GradleProcessExecutor(execOperations::exec)
+        parameters.requests.get().forEach {
+            processSingle(it.inputFile, it.outputFile, it.objcopyExecutable, it.objcopyArgs, processExecutor)
+        }
+    }
+
+    private fun processSingle(inputFile: File, outputFile: File, objcopyExecutable: File, objcopyArgs: List<String>, processExecutor: GradleProcessExecutor) {
+        FileUtils.mkdirs(outputFile.parentFile)
 
         val builder = ProcessInfoBuilder()
-        builder.setExecutable(params.objcopyExecutable)
-        builder.addArgs(params.objcopyArgs)
+        builder.setExecutable(objcopyExecutable)
+        builder.addArgs(objcopyArgs)
         builder.addArgs(
-            params.inputFile.toString(),
-            params.outputFile.toString()
+            inputFile.toString(),
+            outputFile.toString()
         )
         val result =
-            params.processExecutor.execute(
+            processExecutor.execute(
                 builder.createProcess(),
                 LoggedProcessOutputHandler(
                     LoggerWrapper(Logging.getLogger(ExtractNativeDebugMetadataTask::class.java))
@@ -262,17 +285,20 @@ private class ExtractNativeDebugMetadataRunnable @Inject constructor(val params:
             )
         if (result.exitValue != 0) {
             logger.warning(
-                "Unable to extract native debug metadata from ${params.inputFile.absolutePath} " +
+                "Unable to extract native debug metadata from ${inputFile.absolutePath} " +
                         "because of non-zero exit value from objcopy."
             )
         }
     }
 
-    data class Params(
+    data class SingleRequest(
         val inputFile: File,
         val outputFile: File,
         val objcopyExecutable: File,
-        val objcopyArgs: List<String>,
-        val processExecutor: ProcessExecutor
+        val objcopyArgs: List<String>
     ): Serializable
+
+    abstract class Params: ProfileAwareWorkAction.Parameters() {
+        abstract val requests: ListProperty<SingleRequest>
+    }
 }

@@ -48,16 +48,6 @@ public class SessionParams extends RenderParams {
             mVertAction = vertAction;
         }
 
-        @Deprecated
-        public boolean isHorizExpand() {
-            return mHorizAction == SizeAction.EXPAND;
-        }
-
-        @Deprecated
-        public boolean isVertExpand() {
-            return mVertAction == SizeAction.EXPAND;
-        }
-
         public SizeAction getHorizAction() {
             return mHorizAction;
         }

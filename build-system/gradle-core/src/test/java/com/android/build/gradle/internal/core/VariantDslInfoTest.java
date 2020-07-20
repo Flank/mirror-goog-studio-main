@@ -71,11 +71,11 @@ public class VariantDslInfoTest {
 
         // SigningConfig doesn't compare the name, so put some content.
         SigningConfig debugSigning = new SigningConfig("debug");
-        debugSigning.setStorePassword("debug");
+        debugSigning.storePassword("debug");
         buildType.setSigningConfig(debugSigning);
 
         SigningConfig override = new SigningConfig("override");
-        override.setStorePassword("override");
+        override.storePassword("override");
 
         VariantDslInfo variant = getVariant(override);
 
@@ -88,11 +88,11 @@ public class VariantDslInfoTest {
 
         // SigningConfig doesn't compare the name, so put some content.
         SigningConfig defaultSigning = new SigningConfig("defaultConfig");
-        defaultSigning.setStorePassword("debug");
+        defaultSigning.storePassword("debug");
         defaultConfig.setSigningConfig(defaultSigning);
 
         SigningConfig override = new SigningConfig("override");
-        override.setStorePassword("override");
+        override.storePassword("override");
 
         VariantDslInfo variant = getVariant(override);
 
@@ -104,7 +104,7 @@ public class VariantDslInfoTest {
         initNoDeviceApiInjection();
 
         ApiVersion minSdkVersion = DefaultApiVersion.create(5);
-        defaultConfig.setMinSdkVersion(minSdkVersion);
+        defaultConfig.setMinSdkVersion(minSdkVersion.getApiLevel());
 
         VariantDslInfo variant = getVariant();
 
@@ -193,7 +193,7 @@ public class VariantDslInfoTest {
         initNoDeviceApiInjection();
 
         ApiVersion targetSdkVersion = DefaultApiVersion.create(9);
-        defaultConfig.setTargetSdkVersion(targetSdkVersion);
+        defaultConfig.setTargetSdkVersion(targetSdkVersion.getApiLevel());
 
         VariantDslInfo variant = getVariant();
 
@@ -213,8 +213,8 @@ public class VariantDslInfoTest {
     public void testGetMinSdkVersion_MultiDexEnabledNonDebuggable() {
         initWithInjectedDeviceApi(18);
 
-        defaultConfig.setMinSdkVersion(new DefaultApiVersion(16));
-        defaultConfig.setTargetSdkVersion(new DefaultApiVersion(20));
+        defaultConfig.setMinSdkVersion(16);
+        defaultConfig.setTargetSdkVersion(20);
         buildType.setMultiDexEnabled(true);
         buildType.setDebuggable(false);
 
@@ -228,8 +228,8 @@ public class VariantDslInfoTest {
     public void testGetMinSdkVersion_MultiDexDisabledIsDebuggable() {
         initWithInjectedDeviceApi(18);
 
-        defaultConfig.setMinSdkVersion(new DefaultApiVersion(16));
-        defaultConfig.setTargetSdkVersion(new DefaultApiVersion(20));
+        defaultConfig.setMinSdkVersion(16);
+        defaultConfig.setTargetSdkVersion(20);
         buildType.setMultiDexEnabled(false);
         buildType.setDebuggable(true);
 
@@ -243,8 +243,8 @@ public class VariantDslInfoTest {
     public void testGetMinSdkVersion_deviceApiLessSdkVersion() {
         initWithInjectedDeviceApi(18);
 
-        defaultConfig.setMinSdkVersion(new DefaultApiVersion(16));
-        defaultConfig.setTargetSdkVersion(new DefaultApiVersion(20));
+        defaultConfig.setMinSdkVersion(16);
+        defaultConfig.setTargetSdkVersion(20);
         buildType.setMultiDexEnabled(true);
         buildType.setDebuggable(true);
 
@@ -258,8 +258,8 @@ public class VariantDslInfoTest {
     public void testGetMinSdkVersion_deviceApiGreaterSdkVersion() {
         initWithInjectedDeviceApi(22);
 
-        defaultConfig.setMinSdkVersion(new DefaultApiVersion(16));
-        defaultConfig.setTargetSdkVersion(new DefaultApiVersion(20));
+        defaultConfig.setMinSdkVersion(16);
+        defaultConfig.setTargetSdkVersion(20);
         buildType.setMultiDexEnabled(true);
         buildType.setDebuggable(true);
 
@@ -273,8 +273,8 @@ public class VariantDslInfoTest {
     public void testEmptyApplicationIdSuffix() {
         initNoDeviceApiInjection();
 
-        defaultConfig.setApplicationId("com.example.mapp");
-        buildType.setApplicationIdSuffix("");
+        defaultConfig.applicationId("com.example.mapp");
+        buildType.applicationIdSuffix("");
 
         VariantDslInfo variant = getVariant();
         assertThat(variant.getApplicationId().get()).isEqualTo("com.example.mapp");
@@ -354,7 +354,7 @@ public class VariantDslInfoTest {
 
         defaultConfig = new DefaultConfig("main", dslServices);
         flavorConfig = new ProductFlavor("flavor", dslServices);
-        flavorConfig.setDimension("dimension1");
+        flavorConfig.dimension("dimension1");
         buildType = new BuildType("debug", dslServices);
     }
 }

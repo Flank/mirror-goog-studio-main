@@ -28,8 +28,8 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.testutils.TestUtils;
+import com.android.tools.lint.Incident;
 import com.android.tools.lint.LintCliFlags;
-import com.android.tools.lint.Warning;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.JavaTestFile;
@@ -778,14 +778,14 @@ public class TestLintTask {
             }
 
             TestLintClient lintClient = createClient();
-            Pair<String, List<Warning>> result = checkLint(lintClient, rootDir, projectDirs);
+            Pair<String, List<Incident>> result = checkLint(lintClient, rootDir, projectDirs);
             String output = result.getFirst();
-            List<Warning> warnings = result.getSecond();
+            List<Incident> incidents = result.getSecond();
 
             // Test both with and without UInjectionHost
             if (checkUInjectionHost && haveKotlinTestFiles()) {
                 setForceUiInjection(true);
-                Pair<String, List<Warning>> result2 =
+                Pair<String, List<Incident>> result2 =
                         checkLint(createClient(), rootDir, projectDirs);
                 String output2 = result2.getFirst();
                 setForceUiInjection(false);
@@ -801,7 +801,7 @@ public class TestLintTask {
                         output2);
             }
 
-            return new TestLintResult(this, output, lintClient.firstThrowable, warnings);
+            return new TestLintResult(this, output, lintClient.firstThrowable, incidents);
         } catch (Throwable e) {
             return new TestLintResult(this, null, e, Collections.emptyList());
         } finally {
@@ -863,7 +863,7 @@ public class TestLintTask {
     }
 
     @NonNull
-    private Pair<String, List<Warning>> checkLint(
+    private Pair<String, List<Incident>> checkLint(
             @NonNull TestLintClient lintClient, @NonNull File rootDir, @NonNull List<File> files)
             throws Exception {
         lintClient.addCleanupDir(rootDir);

@@ -16,14 +16,16 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.ide.common.workers.ExecutorServiceAdapter
-import com.android.ide.common.workers.WorkerExecutorFacade
+import com.android.build.gradle.internal.fixtures.ExecutionMode
+import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
+import com.android.build.gradle.internal.tasks.DesugarWorkerItem.DesugarActionParams
 import com.google.common.truth.Truth.assertThat
-import com.google.common.util.concurrent.MoreExecutors
+import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.mockito.MockitoAnnotations
 import java.io.File
 
 class DesugarTaskDelegateTest {
@@ -32,19 +34,18 @@ class DesugarTaskDelegateTest {
     var tmp = TemporaryFolder()
 
     private lateinit var output: File
-    private val submittedConfigurations = mutableSetOf<WorkerExecutorFacade.Configuration>()
-    private val executor =
-        object : ExecutorServiceAdapter("test", ":test", MoreExecutors.newDirectExecutorService()) {
-            override fun submit(
-                actionClass: Class<out Runnable>,
-                configuration: WorkerExecutorFacade.Configuration
-            ) {
-                submittedConfigurations.add(configuration)
-            }
-        }
+    private lateinit var task: AndroidVariantTask
+    lateinit var executor: FakeGradleWorkExecutor
 
     @Before
     fun setUp() {
+        MockitoAnnotations.initMocks(this)
+        val project = ProjectBuilder.builder().withProjectDir(tmp.newFolder()).build()
+        task = project.tasks.create("task", AndroidVariantTask::class.java)
+
+        executor =  FakeGradleWorkExecutor(
+            project.objects, tmp.newFolder(), executionMode = ExecutionMode.CAPTURING
+        )
         output = tmp.newFolder()
     }
 
@@ -53,6 +54,7 @@ class DesugarTaskDelegateTest {
         val jar = tmp.newFile("input.jar")
 
         DesugarTaskDelegate(
+            initiator = task,
             projectClasses = setOf(jar),
             subProjectClasses = emptySet(),
             externaLibsClasses = emptyList(),
@@ -65,7 +67,7 @@ class DesugarTaskDelegateTest {
             minSdk = 19,
             enableBugFixForJacoco = false,
             verbose = true,
-            executorFacade = executor
+            workerExecutor = executor
         ).doProcess()
 
         assertThat(getFromArgs("--input")).containsExactly(jar.toString())
@@ -78,6 +80,7 @@ class DesugarTaskDelegateTest {
         val dir = tmp.newFolder()
 
         DesugarTaskDelegate(
+            initiator = task,
             projectClasses = setOf(jar, dir),
             subProjectClasses = emptySet(),
             externaLibsClasses = emptyList(),
@@ -90,7 +93,7 @@ class DesugarTaskDelegateTest {
             minSdk = 19,
             enableBugFixForJacoco = false,
             verbose = true,
-            executorFacade = executor
+            workerExecutor = executor
         ).doProcess()
 
         assertThat(getFromArgs("--input")).containsExactly(jar.toString(), dir.toString())
@@ -103,6 +106,7 @@ class DesugarTaskDelegateTest {
         val externalLibsJar = tmp.newFile("external-libsinput.jar")
 
         DesugarTaskDelegate(
+            initiator = task,
             projectClasses = setOf(projectJar),
             subProjectClasses = setOf(subProjectJar),
             externaLibsClasses = listOf(externalLibsJar),
@@ -115,7 +119,7 @@ class DesugarTaskDelegateTest {
             minSdk = 19,
             enableBugFixForJacoco = false,
             verbose = true,
-            executorFacade = executor
+            workerExecutor = executor
         ).doProcess()
 
         assertThat(getFromArgs("--input")).containsExactly(
@@ -132,6 +136,7 @@ class DesugarTaskDelegateTest {
         val classpath2 = tmp.newFile("classpath2.jar")
 
         DesugarTaskDelegate(
+            initiator = task,
             projectClasses = setOf(projectJar),
             subProjectClasses = emptySet(),
             externaLibsClasses = emptyList(),
@@ -144,7 +149,7 @@ class DesugarTaskDelegateTest {
             minSdk = 19,
             enableBugFixForJacoco = false,
             verbose = true,
-            executorFacade = executor
+            workerExecutor = executor
         ).doProcess()
 
         assertThat(getFromArgs("--input")).containsExactly(projectJar.toString())
@@ -156,12 +161,11 @@ class DesugarTaskDelegateTest {
     }
 
     private fun getFromArgs(argName: String): List<String> {
-        return submittedConfigurations.map {
-            it.parameter as DesugarWorkerItem.DesugarActionParams
-        }.flatMap { argsList ->
+        @Suppress("UNCHECKED_CAST")
+        return (executor.capturedParameters as List<DesugarActionParams>).flatMap { argsList ->
             val indices =
-                argsList.args.mapIndexedNotNull { index, elem -> (index + 1).takeIf { elem == argName } }
-            indices.map { argsList.args[it] }
+                argsList.args.get().mapIndexedNotNull { index, elem -> (index + 1).takeIf { elem == argName } }
+            indices.map { argsList.args.get()[it] }
         }
     }
 }

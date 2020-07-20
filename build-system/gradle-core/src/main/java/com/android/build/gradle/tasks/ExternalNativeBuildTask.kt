@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.attribution.generateChromeTrace
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
@@ -519,10 +519,10 @@ abstract class ExternalNativeBuildTask @Inject constructor(private val ops: Exec
 
     class CreationAction(
         private val configurationModel : CxxConfigurationModel,
-        componentProperties: ComponentPropertiesImpl,
+        creationConfig: VariantCreationConfig,
         private val generateTask: TaskProvider<out Task>
-    ) : VariantTaskCreationAction<ExternalNativeBuildTask, ComponentPropertiesImpl>(
-        componentProperties
+    ) : VariantTaskCreationAction<ExternalNativeBuildTask, VariantCreationConfig>(
+        creationConfig
     ) {
 
         override val name: String

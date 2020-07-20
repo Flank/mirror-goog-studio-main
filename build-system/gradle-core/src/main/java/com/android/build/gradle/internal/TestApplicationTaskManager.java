@@ -20,14 +20,16 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.ArtifactType;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
+import com.android.build.gradle.internal.component.BaseCreationConfig;
 import com.android.build.gradle.internal.component.TestCreationConfig;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
@@ -62,8 +64,7 @@ public class TestApplicationTaskManager
             @NonNull
                     List<
                                     ComponentInfo<
-                                            TestComponentImpl<
-                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentImpl<? extends TestComponentProperties>,
                                             TestComponentPropertiesImpl>>
                             testComponents,
             boolean hasFlavors,
@@ -98,6 +99,8 @@ public class TestApplicationTaskManager
 
         configureTestData(testVariantProperties, testData);
 
+        createValidateSigningTask(testVariantProperties);
+
         // create the test connected check task.
         TaskProvider<DeviceProviderInstrumentTestTask> instrumentTestTask =
                 taskFactory.register(
@@ -119,7 +122,7 @@ public class TestApplicationTaskManager
     }
 
     @Override
-    protected void postJavacCreation(@NonNull ComponentPropertiesImpl componentProperties) {
+    protected void postJavacCreation(@NonNull BaseCreationConfig creationConfig) {
         // do nothing.
     }
 
@@ -143,19 +146,18 @@ public class TestApplicationTaskManager
     }
 
     @Override
-    protected void maybeCreateJavaCodeShrinkerTask(
-            @NonNull ComponentPropertiesImpl componentProperties) {
-        final CodeShrinker codeShrinker = componentProperties.getVariantScope().getCodeShrinker();
+    protected void maybeCreateJavaCodeShrinkerTask(@NonNull VariantCreationConfig creationConfig) {
+        final CodeShrinker codeShrinker = creationConfig.getVariantScope().getCodeShrinker();
         if (codeShrinker != null) {
             doCreateJavaCodeShrinkerTask(
-                    componentProperties, Objects.requireNonNull(codeShrinker), true);
+                    creationConfig, Objects.requireNonNull(codeShrinker), true);
         } else {
             TaskProvider<CheckTestedAppObfuscation> checkObfuscation =
                     taskFactory.register(
-                            new CheckTestedAppObfuscation.CreationAction(componentProperties));
-            Preconditions.checkNotNull(componentProperties.getTaskContainer().getJavacTask());
+                            new CheckTestedAppObfuscation.CreationAction(creationConfig));
+            Preconditions.checkNotNull(creationConfig.getTaskContainer().getJavacTask());
             TaskFactoryUtils.dependsOn(
-                    componentProperties.getTaskContainer().getJavacTask(), checkObfuscation);
+                    creationConfig.getTaskContainer().getJavacTask(), checkObfuscation);
         }
     }
 
@@ -169,7 +171,7 @@ public class TestApplicationTaskManager
     }
 
     @Override
-    protected void createVariantPreBuildTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        createDefaultPreBuildTask(componentProperties);
+    protected void createVariantPreBuildTask(@NonNull BaseCreationConfig creationConfig) {
+        createDefaultPreBuildTask(creationConfig);
     }
 }

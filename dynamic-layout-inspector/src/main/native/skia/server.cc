@@ -23,9 +23,10 @@ class SkiaParserServiceImpl final
       ::grpc::ServerContext* context,
       const ::layoutinspector::proto::GetViewTreeRequest* request,
       ::layoutinspector::proto::GetViewTreeResponse* response) override {
-    TreeBuildingCanvas::ParsePicture(request->skp().data(),
-                                     request->skp().length(),
-                                     response->mutable_root());
+    TreeBuildingCanvas::ParsePicture(
+        request->skp().data(), request->skp().length(), request->version(),
+        &request->known_ids(), response->mutable_root());
+    response->set_version(std::min(1, request->version()));
     return ::grpc::Status::OK;
   }
 };

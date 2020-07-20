@@ -190,7 +190,7 @@ open class LintCliClient : LintClient {
     var ideaProject: com.intellij.openapi.project.Project? = null
         private set
     private var projectDisposer: Disposable? = null
-    protected val warnings: MutableList<Warning> = ArrayList()
+    protected val incidents: MutableList<Incident> = ArrayList()
     private var hasErrors = false
     protected var errorCount = 0
     protected var warningCount = 0
@@ -255,11 +255,11 @@ open class LintCliClient : LintClient {
         validateIssueIds()
         driver.analyze()
         kotlinPerformanceManager?.report(lintRequest)
-        warnings.sort()
+        incidents.sort()
         val baseline = driver.baseline
-        val stats = create(warnings, baseline)
+        val stats = create(incidents, baseline)
         for (reporter in flags.reporters) {
-            reporter.write(stats, warnings)
+            reporter.write(stats, incidents)
         }
         var projects: Collection<Project>? = lintRequest.getProjects()
         if (projects == null) {
@@ -267,12 +267,12 @@ open class LintCliClient : LintClient {
         }
         if (!projects.isEmpty()) {
             val analytics = LintBatchAnalytics()
-            analytics.logSession(registry, flags, driver, projects, warnings)
+            analytics.logSession(registry, flags, driver, projects, incidents)
         }
         if (flags.isAutoFix) {
             val statistics = !flags.isQuiet
             val performer = LintFixPerformer(this, statistics)
-            val fixed = performer.fix(warnings)
+            val fixed = performer.fix(incidents)
             if (fixed && isGradle) {
                 val message =
                     """
@@ -296,9 +296,14 @@ open class LintCliClient : LintClient {
             if (!ok) {
                 System.err.println("Couldn't create baseline folder $dir")
             } else {
-                val reporter = Reporter.createXmlReporter(this, baselineFile, true, false)
+                val reporter = Reporter.createXmlReporter(
+                    this,
+                    baselineFile,
+                    intendedForBaseline = true,
+                    includeFixes = false
+                )
                 reporter.setBaselineAttributes(this, baselineVariantName)
-                reporter.write(stats, warnings)
+                reporter.write(stats, incidents)
                 System.err.println(getBaselineCreationMessage(baselineFile))
                 return ERRNO_CREATED_BASELINE
             }
@@ -501,11 +506,19 @@ open class LintCliClient : LintClient {
     }
 
     /** File content cache  */
-    private val fileContents: MutableMap<File, CharSequence> = HashMap(100)
+    private val fileContentCache: MutableMap<File, CharSequence> = HashMap(100)
 
     /** Read the contents of the given file, possibly cached  */
-    private fun getContents(file: File): CharSequence {
-        return fileContents.computeIfAbsent(file) { readFile(file) }
+    fun getSourceText(file: File): CharSequence {
+        return fileContentCache.computeIfAbsent(file) { readFile(file) }
+    }
+
+    /**
+     * Records the given source text as the source to be used for the given file when
+     * looked up via [getSourceText].
+     */
+    fun setSourceText(file: File, text: CharSequence?) {
+        text?.let { fileContentCache[file] = it }
     }
 
     override fun getUastParser(project: Project?): UastParser = LintCliUastParser(project)
@@ -527,78 +540,25 @@ open class LintCliClient : LintClient {
         } else if (severity === Severity.WARNING) { // Don't count informational as a warning
             warningCount++
         }
+
         // Store the message in the raw format internally such that we can
         // convert it to text for the text reporter, HTML for the HTML reporter
         // and so on.
         val rawMessage = format.convertTo(message, TextFormat.RAW)
-        val warning = Warning(issue, rawMessage, severity, context.project)
-        warnings.add(warning)
-        warning.location = location
-        val file = location.file
-        warning.file = file
-        warning.path = getDisplayPath(context.project, file)
-        warning.quickfixData = fix
-        val startPosition = location.start
-        if (startPosition != null) {
-            val line = startPosition.line
-            warning.line = line
-            warning.offset = startPosition.offset
-            val endPosition = location.end
-            if (endPosition != null) {
-                warning.endOffset = endPosition.offset
-            }
-            if (line >= 0) {
-                if (context.file === location.file) {
-                    warning.fileContents = context.getContents()
-                }
-                if (warning.fileContents == null) {
-                    warning.fileContents = getContents(location.file)
-                }
-                if (flags.isShowSourceLines) {
-                    // Compute error line contents
-                    warning.errorLine = getLine(warning.fileContents, line)
-                    if (warning.errorLine != null) {
-                        // Replace tabs with spaces such that the column
-                        // marker (^) lines up properly:
-                        warning.errorLine = warning.errorLine.replace('\t', ' ')
-                        var column = startPosition.column
-                        if (column < 0) {
-                            column = 0
-                            var i = 0
-                            while (i < warning.errorLine.length) {
-                                if (!Character.isWhitespace(warning.errorLine[i])) {
-                                    break
-                                }
-                                i++
-                                column++
-                            }
-                        }
-                        val sb = StringBuilder(100)
-                        sb.append(warning.errorLine)
-                        sb.append('\n')
-                        for (i in 0 until column) {
-                            sb.append(' ')
-                        }
-                        var displayCaret = true
-                        if (endPosition != null) {
-                            val endLine = endPosition.line
-                            val endColumn = endPosition.column
-                            if (endLine == line && endColumn > column) {
-                                for (i in column until endColumn) {
-                                    sb.append('~')
-                                }
-                                displayCaret = false
-                            }
-                        }
-                        if (displayCaret) {
-                            sb.append('^')
-                        }
-                        sb.append('\n')
-                        warning.errorLine = sb.toString()
-                    }
-                }
-            }
+        val incident = Incident(issue, rawMessage, location, fix).apply {
+            this.project = context.project
+            this.severity = severity
         }
+
+        // noinspection FileComparisons
+        if (context.file === location.file && (location.start?.line ?: -1) >= 0) {
+            // Common scenario: the error is in the current source file;
+            // we already have that source so make sure we can look it up cheaply when
+            // generating the reports
+            setSourceText(context.file, context.getContents())
+        }
+
+        incidents.add(incident)
     }
 
     override fun readFile(file: File): CharSequence {
@@ -934,11 +894,22 @@ open class LintCliClient : LintClient {
         }
     }
 
-    fun getDisplayPath(project: Project, file: File): String {
+    override fun getDisplayPath(file: File, project: Project?, format: TextFormat): String {
+        return if (project != null) {
+            val path = getDisplayPath(project, file)
+            TextFormat.TEXT.convertTo(path, format)
+        } else {
+            super.getDisplayPath(file, project, format)
+        }
+    }
+
+    /** Like getDisplayPath(File, project, format), but emits in TextFormat.TEXT */
+    fun getDisplayPath(project: Project?, file: File): String {
         return getDisplayPath(project, file, flags.isFullPath)
     }
 
-    fun getDisplayPath(project: Project, file: File, fullPath: Boolean): String {
+    fun getDisplayPath(project: Project?, file: File, fullPath: Boolean): String {
+        project ?: return file.path
         var path = file.path
         if (!fullPath && path.startsWith(project.referenceDir.path)) {
             var chop = project.referenceDir.path.length
@@ -1226,7 +1197,7 @@ open class LintCliClient : LintClient {
 
     @VisibleForTesting
     open fun reset() {
-        warnings.clear()
+        incidents.clear()
         errorCount = 0
         warningCount = 0
         projectDirs.clear()
@@ -1324,6 +1295,7 @@ open class LintCliClient : LintClient {
                 .withFileStreamProvider(object : FileStreamProvider() {
                     @Throws(FileNotFoundException::class)
                     override fun getInputStream(file: File): InputStream {
+                        // noinspection FileComparisons
                         if (injectedFile == file) {
                             return CharSequences.getInputStream(injectedXml.toString())
                         }
@@ -1440,39 +1412,6 @@ open class LintCliClient : LintClient {
                 }
             }
             return baselineVariantName
-        }
-
-        /** Look up the contents of the given line  */
-        fun getLine(contents: CharSequence, line: Int): String? {
-            val index = getLineOffset(contents, line)
-            return if (index != -1) {
-                getLineOfOffset(contents, index)
-            } else {
-                null
-            }
-        }
-
-        private fun getLineOfOffset(contents: CharSequence, offset: Int): String {
-            var end = CharSequences.indexOf(contents, '\n', offset)
-            if (end == -1) {
-                end = CharSequences.indexOf(contents, '\r', offset)
-            } else if (end > 0 && contents[end - 1] == '\r') {
-                end--
-            }
-            return contents.subSequence(offset, if (end != -1) end else contents.length).toString()
-        }
-
-        /** Look up the contents of the given line  */
-        private fun getLineOffset(contents: CharSequence, line: Int): Int {
-            var index = 0
-            for (i in 0 until line) {
-                index = CharSequences.indexOf(contents, '\n', index)
-                if (index == -1) {
-                    return -1
-                }
-                index++
-            }
-            return index
         }
 
         /**

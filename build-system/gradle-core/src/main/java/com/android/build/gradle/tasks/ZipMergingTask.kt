@@ -17,7 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants.FN_INTERMEDIATE_FULL_JAR
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -88,9 +88,9 @@ abstract class ZipMergingTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<ZipMergingTask, ComponentPropertiesImpl>(
-            componentProperties
+    class CreationAction(creationConfig: VariantCreationConfig) :
+        VariantTaskCreationAction<ZipMergingTask, VariantCreationConfig>(
+            creationConfig
         ) {
 
         override val name: String

@@ -25,6 +25,7 @@
 #include <sys/wait.h>
 
 #include "tools/base/deploy/common/event.h"
+#include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/executor/runas_executor.h"
 #include "tools/base/deploy/installer/overlay/overlay.h"
@@ -35,8 +36,6 @@ using ServerResponse = proto::InstallServerResponse;
 namespace deploy {
 
 namespace {
-
-const std::string kRunAsExecFailed = "exec failed";
 
 enum class StartResult { SUCCESS, TRY_COPY, FAILURE };
 
@@ -80,12 +79,7 @@ std::unique_ptr<InstallClient> TryStartServer(const Executor& executor,
 
   if (count > 0) {
     std::string error_message(err_buffer, 0, count);
-    if (error_message.find(kRunAsExecFailed)) {
-      *result = StartResult::TRY_COPY;
-      return nullptr;
-    }
-
-    ErrEvent("Unable to startup install-server, output: '"_s + error_message +
+    ErrEvent("Unable to startup install-server, output: '" + error_message +
              "'");
   }
 
@@ -163,7 +157,7 @@ void InstallServer::HandleCheckSetup(
     const proto::CheckSetupRequest& request,
     proto::CheckSetupResponse* response) const {
   for (const std::string& file : request.files()) {
-    if (access(file.c_str(), F_OK) != 0) {
+    if (IO::access(file, F_OK) != 0) {
       response->add_missing_files(file);
     }
   }
@@ -175,10 +169,11 @@ void InstallServer::HandleOverlayUpdate(
   const std::string overlay_folder = request.overlay_path() + "/.overlay"_s;
 
   if (request.wipe_all_files()) {
-    if (nftw(overlay_folder.c_str(),
-             [](const char* path, const struct stat* sbuf, int type,
-                struct FTW* ftwb) { return remove(path); },
-             10 /*max FD*/, FTW_DEPTH | FTW_MOUNT | FTW_PHYS) != 0) {
+    if (nftw(
+            overlay_folder.c_str(),
+            [](const char* path, const struct stat* sbuf, int type,
+               struct FTW* ftwb) { return remove(path); },
+            10 /*max FD*/, FTW_DEPTH | FTW_MOUNT | FTW_PHYS) != 0) {
       response->set_status(proto::OverlayUpdateResponse::UPDATE_FAILED);
       response->set_error_message("Could not wipe existing overlays");
     }
@@ -226,7 +221,7 @@ void InstallServer::HandleGetAgentExceptionLog(
     const proto::GetAgentExceptionLogRequest& request,
     proto::GetAgentExceptionLogResponse* response) const {
   const std::string log_dir = GetAgentExceptionLogDir(request.package_name());
-  DIR* dir = opendir(log_dir.c_str());
+  DIR* dir = IO::opendir(log_dir);
   if (dir == nullptr) {
     return;
   }
@@ -236,13 +231,12 @@ void InstallServer::HandleGetAgentExceptionLog(
       continue;
     }
     const std::string log_path = log_dir + "/" + entry->d_name;
-
     struct stat info;
-    if (stat(log_path.c_str(), &info) != 0) {
+    if (IO::stat(log_path, &info) != 0) {
       continue;
     }
 
-    int fd = open(log_path.c_str(), O_RDONLY);
+    int fd = IO::open(log_path, O_RDONLY);
     if (fd < 0) {
       continue;
     }
@@ -252,7 +246,7 @@ void InstallServer::HandleGetAgentExceptionLog(
     if (read(fd, bytes.data(), info.st_size) == info.st_size) {
       response->add_logs()->ParseFromArray(bytes.data(), info.st_size);
     }
-    unlink(log_path.c_str());
+    IO::unlink(log_path);
   }
   closedir(dir);
 }
@@ -285,7 +279,7 @@ bool TryCopyServer(const RunasExecutor& run_as, const std::string& server_path,
 bool InstallServer::DoesOverlayIdMatch(const std::string& overlay_folder,
                                        const std::string& expected_id) const {
   // If the overlay folder is not present, expected id must be empty.
-  if (access(overlay_folder.c_str(), F_OK) != 0) {
+  if (IO::access(overlay_folder, F_OK) != 0) {
     return expected_id.empty();
   }
 
@@ -302,13 +296,15 @@ std::unique_ptr<InstallClient> StartInstallServer(
 
   StartResult result;
   auto client = TryStartServer(run_as, exec_path + exec_name, &result);
+  if (result == StartResult::SUCCESS) {
+    return client;
+  }
 
-  if (result == StartResult::TRY_COPY &&
-      TryCopyServer(run_as, server_path, exec_path, exec_name)) {
+  if (TryCopyServer(run_as, server_path, exec_path, exec_name)) {
     return TryStartServer(run_as, exec_path + exec_name, &result);
   }
 
-  return client;
+  return nullptr;
 }
 
 }  // namespace deploy

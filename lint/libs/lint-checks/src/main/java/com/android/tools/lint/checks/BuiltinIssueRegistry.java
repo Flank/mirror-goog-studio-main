@@ -32,7 +32,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    public static final int INITIAL_CAPACITY = 382;
+    public static final int INITIAL_CAPACITY = 383;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -332,6 +332,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(RtlDetector.USE_START);
         issues.add(SamDetector.ISSUE);
         issues.add(SQLiteDetector.ISSUE);
+        issues.add(ScopedStorageDetector.ISSUE);
         issues.add(ScrollViewChildDetector.ISSUE);
         issues.add(SdCardDetector.ISSUE);
         issues.add(SecureRandomDetector.ISSUE);

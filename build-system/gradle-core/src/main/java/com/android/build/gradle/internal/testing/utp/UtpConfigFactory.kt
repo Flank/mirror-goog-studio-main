@@ -22,27 +22,25 @@ import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVIC
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_LOCAL
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DRIVER_INSTRUMENTATION
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN
+import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_DEVICE_INFO_PLUGIN
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN_HOST_RETENTION
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.BuildToolInfo
 import com.google.protobuf.Any
-import com.google.test.platform.config.v1.proto.AdbDeviceControllerProto
-import com.google.test.platform.config.v1.proto.DeviceControllerProto
-import com.google.test.platform.config.v1.proto.DeviceProto
-import com.google.test.platform.config.v1.proto.DeviceProviderProto
-import com.google.test.platform.config.v1.proto.EnvironmentProto
-import com.google.test.platform.config.v1.proto.ExecutorProto
-import com.google.test.platform.config.v1.proto.FixtureProto
-import com.google.test.platform.config.v1.proto.HostPluginProto
-import com.google.test.platform.config.v1.proto.LocalAndroidDeviceProviderProto
-import com.google.test.platform.config.v1.proto.AndroidInstrumentationDriverProto
-import com.google.test.platform.config.v1.proto.RunnerConfigProto
-import com.google.test.platform.plugin.android.icebox.host.proto.IceboxPluginProto.IceboxPlugin
-import com.google.test.platform.core.proto.ExtensionProto
-import com.google.test.platform.core.proto.PathProto
-import com.google.test.platform.core.proto.TestArtifactProto
-import com.google.test.platform.server.proto.ServerConfigProto
-import org.gradle.api.artifacts.ConfigurationContainer
+import com.google.testing.platform.plugin.android.icebox.host.proto.IceboxPluginProto.IceboxPlugin
+import com.google.testing.platform.proto.api.config.AdbDeviceControllerProto
+import com.google.testing.platform.proto.api.config.AndroidInstrumentationDriverProto
+import com.google.testing.platform.proto.api.config.DeviceProto
+import com.google.testing.platform.proto.api.config.EnvironmentProto
+import com.google.testing.platform.proto.api.config.ExecutorProto
+import com.google.testing.platform.proto.api.config.FixtureProto
+import com.google.testing.platform.proto.api.config.LocalAndroidDeviceProviderProto
+import com.google.testing.platform.proto.api.config.RunnerConfigProto
+import com.google.testing.platform.proto.api.core.ExtensionProto
+import com.google.testing.platform.proto.api.core.LabelProto
+import com.google.testing.platform.proto.api.core.PathProto
+import com.google.testing.platform.proto.api.core.TestArtifactProto
+import com.google.testing.platform.server.proto.ServerConfigProto
 import java.io.File
 
 // This is an arbitrary string. This ID is used to lookup test results from UTP.
@@ -118,30 +116,36 @@ class UtpConfigFactory {
     private fun createLocalDeviceProvider(
         device: DeviceConnector,
         utpDependencies: UtpDependencies
-    ): DeviceProviderProto.DeviceProvider {
-        return DeviceProviderProto.DeviceProvider.newBuilder().apply {
-            providerClass = ANDROID_DEVICE_PROVIDER_LOCAL.mainClass
-            addAllProviderJar(utpDependencies.deviceProviderLocal.files.map {
+    ): ExtensionProto.Extension {
+        return ExtensionProto.Extension.newBuilder().apply {
+            label = LabelProto.Label.newBuilder().apply {
+                label = "local_android_device_provider"
+            }.build()
+            className = ANDROID_DEVICE_PROVIDER_LOCAL.mainClass
+            addAllJar(utpDependencies.deviceProviderLocal.files.map {
                 PathProto.Path.newBuilder().apply {
                     path = it.absolutePath
                 }.build()
             })
-            deviceProviderConfig =
+            config =
                 Any.pack(LocalAndroidDeviceProviderProto.LocalAndroidDeviceProvider.newBuilder().apply {
                     serial = device.serialNumber
                 }.build())
         }.build()
     }
 
-    private fun createAdbDeviceController(utpDependencies: UtpDependencies): DeviceControllerProto.DeviceController {
-        return DeviceControllerProto.DeviceController.newBuilder().apply {
-            controllerClass = ANDROID_DEVICE_CONTROLLER_ADB.mainClass
-            addAllControllerJar(utpDependencies.deviceControllerAdb.map {
+    private fun createAdbDeviceController(utpDependencies: UtpDependencies): ExtensionProto.Extension {
+        return ExtensionProto.Extension.newBuilder().apply {
+            label = LabelProto.Label.newBuilder().apply {
+                label = "device_controller"
+            }.build()
+            className = ANDROID_DEVICE_CONTROLLER_ADB.mainClass
+            addAllJar(utpDependencies.deviceControllerAdb.map {
                 PathProto.Path.newBuilder().apply {
                     path = it.absolutePath
                 }.build()
             })
-            deviceControllerConfig =
+            config =
                 Any.pack(AdbDeviceControllerProto.AdbDeviceController.getDefaultInstance())
         }.build()
     }
@@ -186,15 +190,18 @@ class UtpConfigFactory {
                         .toMutableMap()
                         .apply { put("debug", "true") })
                 testDriver = createTestDriver(retentionTestData, utpDependencies)
-                addHostPlugin(HostPluginProto.HostPlugin.newBuilder().apply {
-                    pluginClass = ANDROID_TEST_PLUGIN_HOST_RETENTION.mainClass
-                    pluginConfig = Any.pack(IceboxPlugin.newBuilder().apply {
+                addHostPlugin(ExtensionProto.Extension.newBuilder().apply {
+                    label = LabelProto.Label.newBuilder().apply {
+                        label = "icebox_plugin"
+                    }.build()
+                    className = ANDROID_TEST_PLUGIN_HOST_RETENTION.mainClass
+                    config = Any.pack(IceboxPlugin.newBuilder().apply {
                         appPackage = testData.testedApplicationId
                         // TODO(155308548): query device for the following fields
                         emulatorGrpcAddress = DEFAULT_EMULATOR_GRPC_ADDRESS
                         emulatorGrpcPort = findGrpcPort(device.serialNumber)
                     }.build())
-                    addAllPluginJar(
+                    addAllJar(
                         utpDependencies.testPluginHostRetention.files.map {
                             PathProto.Path.newBuilder().apply {
                                 path = it.absolutePath
@@ -205,6 +212,7 @@ class UtpConfigFactory {
                 testDriver = createTestDriver(testData, utpDependencies)
             }
             addHostPlugin(createAndroidTestPlugin(utpDependencies))
+            addHostPlugin(createAndroidTestDeviceInfoPlugin(utpDependencies))
         }.build()
     }
 
@@ -279,10 +287,27 @@ class UtpConfigFactory {
         }.build()
     }
 
-    private fun createAndroidTestPlugin(utpDependencies: UtpDependencies): HostPluginProto.HostPlugin {
-        return HostPluginProto.HostPlugin.newBuilder().apply {
-            pluginClass = ANDROID_TEST_PLUGIN.mainClass
-            addAllPluginJar(utpDependencies.testPlugin.files.map {
+    private fun createAndroidTestPlugin(utpDependencies: UtpDependencies): ExtensionProto.Extension {
+        return ExtensionProto.Extension.newBuilder().apply {
+            label = LabelProto.Label.newBuilder().apply {
+                label = "android_device_plugin"
+            }.build()
+            className = ANDROID_TEST_PLUGIN.mainClass
+            addAllJar(utpDependencies.testPlugin.files.map {
+                PathProto.Path.newBuilder().apply {
+                    path = it.absolutePath
+                }.build()
+            })
+        }.build()
+    }
+
+    private fun createAndroidTestDeviceInfoPlugin(utpDependencies: UtpDependencies): ExtensionProto.Extension {
+        return ExtensionProto.Extension.newBuilder().apply {
+            label = LabelProto.Label.newBuilder().apply {
+                label = "android_test_device_info_plugin"
+            }.build()
+            className = ANDROID_TEST_DEVICE_INFO_PLUGIN.mainClass
+            addAllJar(utpDependencies.testDeviceInfoPlugin.files.map {
                 PathProto.Path.newBuilder().apply {
                     path = it.absolutePath
                 }.build()

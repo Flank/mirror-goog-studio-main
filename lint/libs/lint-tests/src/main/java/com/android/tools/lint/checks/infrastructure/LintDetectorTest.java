@@ -38,6 +38,7 @@ import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.testutils.TestUtils;
+import com.android.tools.lint.Incident;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.LintExternalAnnotationsManager;
@@ -45,7 +46,6 @@ import com.android.tools.lint.LintStats;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
 import com.android.tools.lint.UastEnvironment;
-import com.android.tools.lint.Warning;
 import com.android.tools.lint.checks.ApiLookup;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestFile.BinaryTestFile;
@@ -734,8 +734,10 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
         @NonNull
         @Override
-        public String getDisplayPath(File file) {
-            return file.getPath().replace(File.separatorChar, '/'); // stable tests
+        public String getDisplayPath(
+                @NonNull File file, @Nullable Project project, @NonNull TextFormat format) {
+            String path = super.getDisplayPath(file, project, format);
+            return path.replace(File.separatorChar, '/'); // stable tests
         }
 
         @Nullable
@@ -909,11 +911,12 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             super.report(context, issue, severity, location, message, format, fix);
 
             // Make sure errors are unique!
-            Warning prev = null;
-            for (Warning warning : getWarnings()) {
-                assertNotSame(warning, prev);
-                assert prev == null || !warning.equals(prev) : warning;
-                prev = warning;
+            Incident prev = null;
+            for (Incident incident : getIncidents()) {
+                assertNotSame(incident, prev);
+                //noinspection PointlessNullCheck
+                assert prev == null || !incident.equals(prev) : incident;
+                prev = incident;
             }
         }
 
@@ -1181,41 +1184,41 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             driver.analyze();
 
             // Check compare contract
-            Warning prev = null;
-            List<Warning> warnings = getWarnings();
-            for (Warning warning : warnings) {
+            Incident prev = null;
+            List<Incident> incidents = getIncidents();
+            for (Incident incident : incidents) {
                 if (prev != null) {
-                    boolean equals = warning.equals(prev);
-                    assertEquals(equals, prev.equals(warning));
-                    int compare = warning.compareTo(prev);
+                    boolean equals = incident.equals(prev);
+                    assertEquals(equals, prev.equals(incident));
+                    int compare = incident.compareTo(prev);
                     assertEquals(equals, compare == 0);
-                    assertEquals(-compare, prev.compareTo(warning));
+                    assertEquals(-compare, prev.compareTo(incident));
                 }
-                prev = warning;
+                prev = incident;
             }
 
-            Collections.sort(warnings);
+            Collections.sort(incidents);
 
             // Check compare contract and transitivity
-            Warning prev2 = prev;
+            Incident prev2 = prev;
             prev = null;
-            for (Warning warning : warnings) {
+            for (Incident incident : incidents) {
                 if (prev != null && prev2 != null) {
-                    assertTrue(warning.compareTo(prev) >= 0);
+                    assertTrue(incident.compareTo(prev) >= 0);
                     assertTrue(prev.compareTo(prev2) >= 0);
-                    assertTrue(warning.compareTo(prev2) >= 0);
+                    assertTrue(incident.compareTo(prev2) >= 0);
 
-                    assertTrue(prev.compareTo(warning) <= 0);
+                    assertTrue(prev.compareTo(incident) <= 0);
                     assertTrue(prev2.compareTo(prev) <= 0);
-                    assertTrue(prev2.compareTo(warning) <= 0);
+                    assertTrue(prev2.compareTo(incident) <= 0);
                 }
                 prev2 = prev;
-                prev = warning;
+                prev = incident;
             }
 
             LintStats stats = LintStats.Companion.create(getErrorCount(), getWarningCount());
             for (Reporter reporter : getFlags().getReporters()) {
-                reporter.write(stats, warnings);
+                reporter.write(stats, incidents);
             }
 
             mOutput.append(writer.toString());

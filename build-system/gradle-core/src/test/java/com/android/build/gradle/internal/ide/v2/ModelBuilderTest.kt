@@ -1,0 +1,251 @@
+/*
+ * Copyright (C) 2020 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.build.gradle.internal.ide.v2
+
+import com.android.build.api.component.impl.TestComponentPropertiesImpl
+import com.android.build.api.dsl.ApplicationBuildFeatures
+import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.variant.ApplicationVariant
+import com.android.build.api.variant.ApplicationVariantProperties
+import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.dependency.SourceSetManager
+import com.android.build.gradle.internal.dsl.ApplicationExtensionImpl
+import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.DefaultConfig
+import com.android.build.gradle.internal.dsl.ProductFlavor
+import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.errors.SyncIssueReporter
+import com.android.build.gradle.internal.errors.SyncIssueReporterImpl
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
+import com.android.build.gradle.internal.fixtures.FakeLogger
+import com.android.build.gradle.internal.fixtures.ProjectFactory
+import com.android.build.gradle.internal.scope.DelayedActionsExecutor
+import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.services.ProjectServices
+import com.android.build.gradle.internal.services.createDslServices
+import com.android.build.gradle.internal.services.createProjectServices
+import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
+import com.android.build.gradle.internal.variant.LegacyVariantInputManager
+import com.android.build.gradle.internal.variant.VariantInputModelBuilder
+import com.android.build.gradle.internal.variant.VariantModel
+import com.android.build.gradle.internal.variant.VariantModelImpl
+import com.android.build.gradle.options.SyncOptions
+import com.android.builder.core.VariantTypeImpl
+import com.android.builder.errors.IssueReporter
+import com.android.builder.model.v2.ide.ProjectType
+import com.android.builder.model.v2.ide.SyncIssue
+import com.android.builder.model.v2.models.AndroidProject
+import com.android.builder.model.v2.models.GlobalLibraryMap
+import com.android.builder.model.v2.models.ModelBuilderParameter
+import com.android.builder.model.v2.models.ProjectSyncIssues
+import com.android.builder.model.v2.models.VariantDependencies
+import com.google.common.io.Files
+import com.google.common.truth.Truth
+import org.gradle.api.Project
+import org.gradle.api.component.SoftwareComponentFactory
+import org.gradle.testfixtures.ProjectBuilder
+import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.ExpectedException
+import org.mockito.Mockito
+
+class ModelBuilderTest {
+
+    @get:Rule
+    val thrown: ExpectedException = ExpectedException.none()
+
+    private lateinit var project: Project
+    private val projectServices: ProjectServices = createProjectServices(
+        issueReporter = SyncIssueReporterImpl(SyncOptions.EvaluationMode.IDE, FakeLogger())
+    )
+
+    @Before
+    fun setUp() {
+    }
+
+    @Test
+    fun `test canBuild`() {
+        fun testModel(name: String) {
+            Truth.assertThat(createApplicationModelBuilder().canBuild(name))
+                .named("can build '$name")
+                .isTrue()
+        }
+
+        testModel(AndroidProject::class.java.name)
+        testModel(GlobalLibraryMap::class.java.name)
+        testModel(VariantDependencies::class.java.name)
+        testModel(ProjectSyncIssues::class.java.name)
+    }
+
+    @Test
+    fun `test wrong model`() {
+        val modelBuilder = createApplicationModelBuilder()
+
+        Truth.assertThat(modelBuilder.canBuild("com.FooModel"))
+            .named("can build com.FooModel")
+            .isFalse()
+
+        thrown.expect(RuntimeException::class.java)
+        thrown.expectMessage("Does not support model 'com.FooModel'")
+        modelBuilder.buildAll("com.FooModel", project)
+    }
+
+    @Test
+    fun `test wrong query with VariantDependencies`() {
+        thrown.expect(RuntimeException::class.java)
+        thrown.expectMessage("Please use parameterized Tooling API to obtain VariantDependencies model.")
+        createApplicationModelBuilder().buildAll(VariantDependencies::class.java.name, project)
+    }
+
+    @Test
+    fun `test wrong query with AndroidProject`() {
+        thrown.expect(RuntimeException::class.java)
+        val name = AndroidProject::class.java.name
+        thrown.expectMessage("Please use non-parameterized Tooling API to obtain $name model.")
+        createApplicationModelBuilder().buildAll(name, FakeModelBuilderParameter(), project)
+    }
+
+    @Test
+    fun `test wrong query with GlobalLibraryMap`() {
+        thrown.expect(RuntimeException::class.java)
+        val name = GlobalLibraryMap::class.java.name
+        thrown.expectMessage("Please use non-parameterized Tooling API to obtain $name model.")
+        createApplicationModelBuilder().buildAll(name, FakeModelBuilderParameter(), project)
+    }
+
+    @Test
+    fun `test wrong query with ProjectSyncIssues`() {
+        thrown.expect(RuntimeException::class.java)
+        val name = ProjectSyncIssues::class.java.name
+        thrown.expectMessage("Please use non-parameterized Tooling API to obtain $name model.")
+        createApplicationModelBuilder().buildAll(name, FakeModelBuilderParameter(), project)
+    }
+
+    @Test
+    fun `test issueReporter`() {
+        projectServices.issueReporter.reportWarning(IssueReporter.Type.GENERIC, "warning!")
+
+        val model = createApplicationModelBuilder().query(ProjectSyncIssues::class.java, project)
+
+        Truth.assertThat(model.syncIssues).hasSize(1)
+        val issue = model.syncIssues.single()
+        Truth.assertThat(issue.severity).named("severity").isEqualTo(SyncIssue.SEVERITY_WARNING)
+        Truth.assertThat(issue.type).named("type").isEqualTo(SyncIssue.TYPE_GENERIC)
+        Truth.assertThat(issue.message).named("message").isEqualTo("warning!")
+    }
+
+    @Test
+    fun `test issueReporter lockdown`() {
+        thrown.expect(IllegalStateException::class.java)
+        thrown.expectMessage("Issue registered after handler locked.")
+
+        // This should lock down the issue handler.
+        createApplicationModelBuilder().buildAll(ProjectSyncIssues::class.java.name, project)
+
+        // And then trying to report anything after fetching the sync issues model should throw.
+        projectServices.issueReporter.reportWarning(IssueReporter.Type.GENERIC, "Should Fail")
+    }
+
+    //---------------
+
+    fun <T> ModelBuilder<*,*,*,*,*,*,*,*,*>.query(modelClass: Class<T>, project: Project) : T {
+        return modelClass.cast(buildAll(modelClass.name, project))
+    }
+
+    private val variantList: MutableList<VariantPropertiesImpl> = mutableListOf()
+    private val testComponentList: MutableList<TestComponentPropertiesImpl> = mutableListOf()
+
+    private fun createApplicationModelBuilder(
+    ): ModelBuilder<
+            AndroidSourceSet,
+            ApplicationBuildFeatures,
+            BuildType,
+            DefaultConfig,
+            ProductFlavor,
+            SigningConfig,
+            ApplicationVariant<ApplicationVariantProperties>,
+            ApplicationVariantProperties,
+            ApplicationExtension<AndroidSourceSet, BuildType, DefaultConfig, ProductFlavor, SigningConfig>> {
+
+        // for now create an app extension
+        val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
+        Mockito.`when`(sdkComponents.adbExecutableProvider).thenReturn(FakeGradleProvider(null))
+        Mockito.`when`(sdkComponents.ndkDirectoryProvider).thenReturn(FakeGradleProvider(null))
+        Mockito.`when`(sdkComponents.sdkDirectoryProvider).thenReturn(FakeGradleProvider(null))
+
+        val sdkComponentProvider = FakeGradleProvider(sdkComponents)
+        val dslServices = createDslServices(
+            projectServices = projectServices,
+            sdkComponents = sdkComponentProvider
+        )
+
+        val variantInputModel = LegacyVariantInputManager(
+            dslServices,
+            VariantTypeImpl.BASE_APK,
+            SourceSetManager(
+                ProjectFactory.project,
+                false,
+                dslServices,
+                DelayedActionsExecutor()
+            )
+        )
+
+        val extension = ApplicationExtensionImpl(
+            dslServices = dslServices,
+            dslContainers = variantInputModel
+        )
+
+        project = ProjectBuilder.builder().withProjectDir(Files.createTempDir()).build()
+
+        // make sure the global issue reporter is registered
+        SyncIssueReporterImpl.GlobalSyncIssueService.RegistrationAction(
+            project, SyncOptions.EvaluationMode.IDE
+        ).execute()
+
+        return ModelBuilder(
+            GlobalScope(
+                project,
+                "",
+                dslServices,
+                sdkComponentProvider,
+                Mockito.mock(ToolingModelBuilderRegistry::class.java),
+                NoOpMessageReceiver(),
+                Mockito.mock(SoftwareComponentFactory::class.java)
+            ),
+            createVariantModel(),
+            extension,
+            dslServices.issueReporter as SyncIssueReporter,
+            ProjectType.APPLICATION)
+    }
+
+    private fun createVariantModel() : VariantModel = VariantModelImpl(
+        VariantInputModelBuilder(createDslServices()).toModel(),
+        { "debug" },
+        { variantList },
+        { testComponentList },
+        projectServices.issueReporter
+    )
+
+    data class FakeModelBuilderParameter(
+        override val variantName: String = "foo",
+        override val abiName: String? = null
+    ) : ModelBuilderParameter
+}

@@ -108,6 +108,7 @@ cc_binary(
         "windows": ["Ws2_32.lib"],
         "//conditions:default": ["-ldl"],
     }),
+    linkstatic = 1,
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/dynamic-layout-inspector/proto:layout_inspector_cc_proto",
@@ -118,11 +119,22 @@ cc_binary(
 flat_archive(
     name = "skiaparser",
     ext = "zip",
-    deps = {
-        "version-map.xml": "skiaparser",
-        ":skia-grpc-server": "skiaparser",
-        "source.properties": "skiaparser",
-    },
+    deps = select({
+        "windows": {
+            "files/version-map.xml": "skiaparser",
+            ":skia-grpc-server": "skiaparser",
+            "files/source.properties": "skiaparser",
+            "files/vcruntime140.dll": "skiaparser",
+            "files/vcruntime140_1.dll": "skiaparser",
+            "files/msvcp140.dll": "skiaparser",
+            "files/NOTICE.txt": "skiaparser",
+        },
+        "//conditions:default": {
+            "files/version-map.xml": "skiaparser",
+            ":skia-grpc-server": "skiaparser",
+            "files/source.properties": "skiaparser",
+        },
+    }),
 )
 
 cc_library(

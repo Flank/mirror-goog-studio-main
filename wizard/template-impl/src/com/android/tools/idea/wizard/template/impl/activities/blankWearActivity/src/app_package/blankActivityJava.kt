@@ -23,11 +23,11 @@ fun blankActivityJava(
 ) = """
 package ${packageName};
 
+import android.app.Activity;
 import android.os.Bundle;
-import android.support.wearable.activity.WearableActivity;
 import android.widget.TextView;
 
-public class ${activityClass} extends WearableActivity {
+public class ${activityClass} extends Activity {
 
     private TextView mTextView;
 
@@ -37,9 +37,6 @@ public class ${activityClass} extends WearableActivity {
         setContentView(R.layout.${layoutName});
 
         mTextView = (TextView) findViewById(R.id.text);
-
-        // Enables Always-on
-        setAmbientEnabled();
     }
 }
 """

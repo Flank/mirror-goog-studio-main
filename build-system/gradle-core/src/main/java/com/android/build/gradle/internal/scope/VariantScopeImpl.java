@@ -80,7 +80,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -93,7 +92,6 @@ import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.SelfResolvingDependency;
-import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
@@ -439,9 +437,11 @@ public class VariantScopeImpl implements VariantScope {
      * </ul>
      *
      * <p>This value can be overridden by the OptionalBooleanOption.IDE_TEST_ONLY property.
+     *
+     * @param variantProperties {@link VariantPropertiesImpl} for this variant scope.
      */
     @Override
-    public boolean isTestOnly() {
+    public boolean isTestOnly(VariantPropertiesImpl variantProperties) {
         ProjectOptions projectOptions = globalScope.getProjectOptions();
         Boolean isTestOnlyOverride = projectOptions.get(OptionalBooleanOption.IDE_TEST_ONLY);
 
@@ -453,7 +453,7 @@ public class VariantScopeImpl implements VariantScope {
                 || !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY))
                 || projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API) != null
                 || isPreviewTargetPlatform()
-                || variantDslInfo.getMinSdkVersion().getCodename() != null
+                || variantProperties.getVariant().getMinSdkVersion().getCodename() != null
                 || variantDslInfo.getTargetSdkVersion().getCodename() != null;
     }
 

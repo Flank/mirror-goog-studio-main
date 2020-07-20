@@ -16,7 +16,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES
 import com.android.build.api.transform.QualifiedContent.Scope.PROJECT
@@ -25,6 +24,7 @@ import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.InternalScope.FEATURES
 import com.android.build.gradle.internal.InternalScope.LOCAL_DEPS
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -123,24 +123,19 @@ abstract class MergeJavaResourceTask
     private lateinit var unfilteredProjectJavaRes: FileCollection
 
     override fun doFullTaskAction() {
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                MergeJavaResRunnable::class.java,
-                MergeJavaResRunnable.Params(
-                    unfilteredProjectJavaRes.files,
-                    subProjectJavaRes?.files,
-                    externalLibJavaRes?.files,
-                    featureJavaRes?.files,
-                    outputFile.get().asFile,
-                    packagingOptions,
-                    incrementalStateFile,
-                    false,
-                    cacheDir,
-                    null,
-                    RESOURCES,
-                    noCompress.orNull ?: listOf()
-                )
-            )
+        workerExecutor.noIsolation().submit(MergeJavaResWorkAction::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.projectJavaRes.from(unfilteredProjectJavaRes)
+            it.subProjectJavaRes.from(subProjectJavaRes)
+            it.externalLibJavaRes.from(externalLibJavaRes)
+            it.featureJavaRes.from(featureJavaRes)
+            it.outputFile.set(outputFile)
+            it.packagingOptions.set(packagingOptions)
+            it.incrementalStateFile.set(incrementalStateFile)
+            it.incremental.set(false)
+            it.cacheDir.set(cacheDir)
+            it.contentType.set(RESOURCES)
+            it.noCompress.set(noCompress)
         }
     }
 
@@ -149,32 +144,28 @@ abstract class MergeJavaResourceTask
             doFullTaskAction()
             return
         }
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                MergeJavaResRunnable::class.java,
-                MergeJavaResRunnable.Params(
-                    unfilteredProjectJavaRes.files,
-                    subProjectJavaRes?.files,
-                    externalLibJavaRes?.files,
-                    featureJavaRes?.files,
-                    outputFile.get().asFile,
-                    packagingOptions,
-                    incrementalStateFile,
-                    true,
-                    cacheDir,
-                    changedInputs,
-                    RESOURCES,
-                    noCompress.orNull ?: listOf()
-                )
-            )
+        workerExecutor.noIsolation().submit(MergeJavaResWorkAction::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.projectJavaRes.from(unfilteredProjectJavaRes)
+            it.subProjectJavaRes.from(subProjectJavaRes)
+            it.externalLibJavaRes.from(externalLibJavaRes)
+            it.featureJavaRes.from(featureJavaRes)
+            it.outputFile.set(outputFile)
+            it.packagingOptions.set(packagingOptions)
+            it.incrementalStateFile.set(incrementalStateFile)
+            it.incremental.set(true)
+            it.cacheDir.set(cacheDir)
+            it.changedInputs.set(changedInputs)
+            it.contentType.set(RESOURCES)
+            it.noCompress.set(noCompress)
         }
     }
 
     class CreationAction(
         private val mergeScopes: Collection<ScopeType>,
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<MergeJavaResourceTask, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: VariantCreationConfig
+    ) : VariantTaskCreationAction<MergeJavaResourceTask, VariantCreationConfig>(
+        creationConfig
     ) {
 
         private val projectJavaResFromStreams: FileCollection?
@@ -186,15 +177,15 @@ abstract class MergeJavaResourceTask
             get() = MergeJavaResourceTask::class.java
 
         init {
-            if (componentProperties.variantScope.needsJavaResStreams) {
+            if (creationConfig.variantScope.needsJavaResStreams) {
                 // Because ordering matters for Transform pipeline, we need to fetch the java res
                 // as soon as this creation action is instantiated, if needed.
                 projectJavaResFromStreams =
-                    componentProperties.transformManager
+                    creationConfig.transformManager
                         .getPipelineOutputAsFileCollection(PROJECT_RESOURCES)
                 // We must also consume corresponding streams to avoid duplicates; any downstream
                 // transforms will use the merged-java-res stream instead.
-                componentProperties.transformManager
+                creationConfig.transformManager
                     .consumeStreams(mutableSetOf(PROJECT), setOf(RESOURCES))
             } else {
                 projectJavaResFromStreams = null
@@ -286,37 +277,37 @@ abstract class MergeJavaResourceTask
 }
 
 fun getProjectJavaRes(
-    componentProperties: ComponentPropertiesImpl
+    creationConfig: VariantCreationConfig
 ): FileCollection {
-    val javaRes = componentProperties.services.fileCollection()
-    javaRes.from(componentProperties.artifacts.get(JAVA_RES))
+    val javaRes = creationConfig.services.fileCollection()
+    javaRes.from(creationConfig.artifacts.get(JAVA_RES))
     // use lazy file collection here in case an annotationProcessor dependency is add via
     // Configuration.defaultDependencies(), for example.
     javaRes.from(
         Callable {
-            if (projectHasAnnotationProcessors(componentProperties)) {
-                componentProperties.artifacts.get(JAVAC)
+            if (projectHasAnnotationProcessors(creationConfig)) {
+                creationConfig.artifacts.get(JAVAC)
             } else {
                 listOf<File>()
             }
         }
     )
-    javaRes.from(componentProperties.variantData.allPreJavacGeneratedBytecode)
-    javaRes.from(componentProperties.variantData.allPostJavacGeneratedBytecode)
-    if (componentProperties.globalScope.extension.aaptOptions.namespaced) {
-        javaRes.from(componentProperties.artifacts.get(RUNTIME_R_CLASS_CLASSES))
+    javaRes.from(creationConfig.variantData.allPreJavacGeneratedBytecode)
+    javaRes.from(creationConfig.variantData.allPostJavacGeneratedBytecode)
+    if (creationConfig.globalScope.extension.aaptOptions.namespaced) {
+        javaRes.from(creationConfig.artifacts.get(RUNTIME_R_CLASS_CLASSES))
     }
     return javaRes
 }
 
 private fun getExternalLibJavaRes(
-    componentProperties: ComponentPropertiesImpl,
+    creationConfig: VariantCreationConfig,
     mergeScopes: Collection<ScopeType>
 ): FileCollection {
-    val externalLibJavaRes = componentProperties.services.fileCollection()
+    val externalLibJavaRes = creationConfig.services.fileCollection()
     if (mergeScopes.contains(EXTERNAL_LIBRARIES)) {
         externalLibJavaRes.from(
-            componentProperties.variantDependencies.getArtifactFileCollection(
+            creationConfig.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.EXTERNAL,
                 AndroidArtifacts.ArtifactType.JAVA_RES
@@ -324,13 +315,13 @@ private fun getExternalLibJavaRes(
         )
     }
     if (mergeScopes.contains(LOCAL_DEPS)) {
-        externalLibJavaRes.from(componentProperties.variantScope.localPackagedJars)
+        externalLibJavaRes.from(creationConfig.variantScope.localPackagedJars)
     }
     return externalLibJavaRes
 }
 
 /** Returns true if anything's been added to the annotation processor configuration. */
-fun projectHasAnnotationProcessors(componentProperties: ComponentPropertiesImpl): Boolean {
-    val config = componentProperties.variantDependencies.annotationProcessorConfiguration
+fun projectHasAnnotationProcessors(creationConfig: VariantCreationConfig): Boolean {
+    val config = creationConfig.variantDependencies.annotationProcessorConfiguration
     return config.incoming.dependencies.isNotEmpty()
 }

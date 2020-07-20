@@ -85,7 +85,6 @@ public class NdkBuildAndroidMkLibraryTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldJniApp.builder().build())
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .addFile(includedAndroidMkFoo)
                     .addFile(includedAndroidMkBar)

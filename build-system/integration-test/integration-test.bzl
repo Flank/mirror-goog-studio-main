@@ -82,3 +82,35 @@ def single_gradle_integration_test(name, deps, data, maven_repos, srcs = "", run
         tags = tags,
         **kwargs
     )
+
+# Given a glob, this will create integration gradle test target for each of the sources in the glob.
+def single_gradle_integration_test_per_source(name, deps, data, maven_repos, srcs, runtime_deps = [], tags = [], **kwargs):
+    split_targets = []
+
+    # need case-insensitive target names because of case-insensitive FS e.g. on Windows
+    lowercase_split_targets = []
+    for src in srcs:
+        start_index = src.rfind("/")
+        end_index = src.rfind(".")
+        target_name = src[start_index + 1:end_index]
+        if target_name.lower() in lowercase_split_targets:
+            # prepend part of package name to make unique
+            target_name = src.split("/")[-2] + "." + target_name
+        split_targets.append(target_name)
+        lowercase_split_targets.append(target_name.lower())
+
+        gradle_integration_test(
+            name = target_name,
+            srcs = [src],
+            deps = deps,
+            data = data,
+            shard_count = None,
+            maven_repos = maven_repos,
+            runtime_deps = runtime_deps,
+            tags = tags,
+            **kwargs
+        )
+    native.test_suite(
+        name = name,
+        tests = split_targets,
+    )

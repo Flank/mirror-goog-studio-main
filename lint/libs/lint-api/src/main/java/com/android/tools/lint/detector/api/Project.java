@@ -687,18 +687,7 @@ public class Project {
      */
     @NonNull
     public String getDisplayPath(@NonNull File file) {
-        String path = file.getPath();
-        String referencePath = referenceDir.getPath();
-        if (path.startsWith(referencePath)) {
-            int length = referencePath.length();
-            if (path.length() > length && path.charAt(length) == File.separatorChar) {
-                length++;
-            }
-
-            return client.getDisplayPath(new File(path.substring(length)));
-        }
-
-        return client.getDisplayPath(file);
+        return client.getDisplayPath(file, this, TextFormat.TEXT);
     }
 
     /**

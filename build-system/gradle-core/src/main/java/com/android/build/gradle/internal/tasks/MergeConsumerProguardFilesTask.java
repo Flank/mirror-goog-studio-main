@@ -20,7 +20,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.GENER
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
@@ -77,10 +77,10 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
 
     public static class CreationAction
             extends VariantTaskCreationAction<
-                    MergeConsumerProguardFilesTask, ComponentPropertiesImpl> {
+                    MergeConsumerProguardFilesTask, VariantCreationConfig> {
 
-        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
-            super(componentProperties);
+        public CreationAction(@NonNull VariantCreationConfig creationConfig) {
+            super(creationConfig);
         }
 
         @NonNull

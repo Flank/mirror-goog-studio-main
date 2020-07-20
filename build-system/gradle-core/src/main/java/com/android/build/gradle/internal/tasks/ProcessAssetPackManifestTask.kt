@@ -17,12 +17,14 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -32,8 +34,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.io.Serializable
-import javax.inject.Inject
 
 @CacheableTask
 abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
@@ -52,18 +52,16 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
 
     override fun doTaskAction() {
         for (assetPackManifest: File in assetPackManifests.files) {
-            val assetPackName = assetPackNames.first { assetPackName -> assetPackManifest.absolutePath.contains(assetPackName) }
+            val assetPackName = assetPackNames.first { assetPackName ->
+                assetPackManifest.absolutePath.contains(assetPackName)
+            }
 
-            getWorkerFacadeWithWorkers().use {
-                it.submit(
-                    ProcessAssetPackManifestRunnable::class.java,
-                    ProcessAssetPackManifestRunnable.Params(
-                        assetPackManifest,
-                        assetPackName,
-                        applicationId.get(),
-                        processedManifests.get().asFile
-                    )
-                )
+            workerExecutor.noIsolation().submit(ProcessAssetPackManifestWorkAction::class.java) {
+                it.initializeFromAndroidVariantTask(this)
+                it.assetPackManifest.set(assetPackManifest)
+                it.assetPackName.set(assetPackName)
+                it.applicationId.set(applicationId)
+                it.processedManifestsDir.set(processedManifests)
             }
         }
     }
@@ -100,22 +98,28 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
     }
 }
 
-class ProcessAssetPackManifestRunnable @Inject constructor(private val params: Params) : Runnable {
+abstract class ProcessAssetPackManifestWorkAction :
+    ProfileAwareWorkAction<ProcessAssetPackManifestWorkAction.Params>() {
     override fun run() {
         // Write application ID in manifest.
-        val manifest = params.assetPackManifest.readText()
+        val assetPackManifest = parameters.assetPackManifest.asFile.get()
+        val manifest = assetPackManifest.readText()
 
-        val processedManifest = manifest.replace("package=\"basePackage\"", "package=\"${params.applicationId}\"")
-        val processedManifestDir = File(params.processedManifestsDir, params.assetPackName)
+        val processedManifest = manifest.replace(
+            "package=\"basePackage\"",
+            "package=\"${parameters.applicationId.get()}\""
+        )
+        val processedManifestDir =
+            File(parameters.processedManifestsDir.asFile.get(), parameters.assetPackName.get())
         processedManifestDir.mkdirs()
-        val processedManifestFile = File(processedManifestDir, params.assetPackManifest.name)
+        val processedManifestFile = File(processedManifestDir, assetPackManifest.name)
         processedManifestFile.writeText(processedManifest)
     }
 
-    class Params(
-        val assetPackManifest: File,
-        val assetPackName: String,
-        val applicationId: String,
-        val processedManifestsDir: File
-    ) : Serializable
+    abstract class Params : ProfileAwareWorkAction.Parameters() {
+        abstract val assetPackManifest: RegularFileProperty
+        abstract val assetPackName: Property<String>
+        abstract val applicationId: Property<String>
+        abstract val processedManifestsDir: DirectoryProperty
+    }
 }

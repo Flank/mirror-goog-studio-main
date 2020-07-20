@@ -20,6 +20,7 @@ import com.android.SdkConstants
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -73,8 +74,8 @@ abstract class ProcessManifestForBundleTask: NonIncrementalTask() {
             target = bundleManifest.get().asFile, overwrite = true)
     }
 
-    class CreationAction(creationConfig: BaseCreationConfig) :
-        VariantTaskCreationAction<ProcessManifestForBundleTask, BaseCreationConfig>(
+    class CreationAction(creationConfig: VariantCreationConfig) :
+        VariantTaskCreationAction<ProcessManifestForBundleTask, VariantCreationConfig>(
             creationConfig = creationConfig
         ) {
         override val name: String

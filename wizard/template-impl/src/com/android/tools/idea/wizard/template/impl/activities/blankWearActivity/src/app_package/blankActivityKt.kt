@@ -25,17 +25,14 @@ fun blankActivityKt(
 ) = """
 package ${escapeKotlinIdentifier(packageName)}
 
+import android.app.Activity
 import android.os.Bundle
-import android.support.wearable.activity.WearableActivity
 
-class ${activityClass} : WearableActivity() {
+class ${activityClass} : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.${layoutName})
-
-        // Enables Always-on
-        setAmbientEnabled()
     }
 }
 """

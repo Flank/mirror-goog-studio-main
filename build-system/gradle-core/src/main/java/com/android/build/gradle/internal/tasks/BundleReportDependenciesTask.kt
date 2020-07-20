@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -126,9 +126,9 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
 
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<BundleReportDependenciesTask, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: VariantCreationConfig
+    ) : VariantTaskCreationAction<BundleReportDependenciesTask, VariantCreationConfig>(
+        creationConfig
     ) {
         override val name: String = computeTaskName("configure", "Dependencies")
         override val type: Class<BundleReportDependenciesTask> = BundleReportDependenciesTask::class.java

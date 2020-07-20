@@ -22,6 +22,7 @@ import com.android.build.api.component.UnitTest
 import com.android.build.api.component.UnitTestProperties
 import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.UnitTestImpl
+import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.DelayedActionExecutor
@@ -41,7 +42,7 @@ abstract class AnalyticsEnabledVariant<PropertiesT: VariantProperties>(
     private val androidTestActions = DelayedActionExecutor<AndroidTest<AndroidTestProperties>>()
     private val androidTestPropertiesOperations = DelayedActionExecutor<AndroidTestProperties>()
 
-    override var minSdkVersion: Int
+    override var minSdkVersion: AndroidVersion
         get() = delegate.minSdkVersion
         set(value) {
             stats.variantApiAccessBuilder.addVariantAccessBuilder().type =

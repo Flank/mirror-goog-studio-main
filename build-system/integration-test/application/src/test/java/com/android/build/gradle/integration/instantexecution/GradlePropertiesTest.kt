@@ -116,7 +116,5 @@ class GradlePropertiesTest {
         }
     }
 
-    private fun executor(): GradleTaskExecutor =
-        project.executor()
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
+    private fun executor(): GradleTaskExecutor = project.executor()
 }

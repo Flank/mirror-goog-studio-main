@@ -46,7 +46,6 @@ import com.android.annotations.Nullable;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
-import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
@@ -97,7 +96,9 @@ public class RequiredAttributeDetector extends LayoutDetector implements SourceC
                                     EnumSet.of(Scope.JAVA_FILE, Scope.ALL_RESOURCE_FILES)))
                     // This detector has a lot of false positives in Gradle projects when
                     // checkDependencies are off; see b/71693758, b/32714429, b/37138580
-                    .setEnabledByDefault(!LintClient.isGradle());
+                    // TODO: We'd like to enable this detector in the IDE, but unfortunately
+                    //  LintClient.clientName is not yet initialized when this code runs.
+                    .setEnabledByDefault(false);
 
     public static final String PERCENT_RELATIVE_LAYOUT =
             "android.support.percent.PercentRelativeLayout";

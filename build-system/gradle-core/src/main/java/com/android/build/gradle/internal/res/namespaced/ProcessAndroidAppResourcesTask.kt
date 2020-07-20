@@ -16,9 +16,9 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.AndroidJarInput
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -104,17 +103,17 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
                 intermediateDir = aaptIntermediateDir)
 
         val aapt2ServiceKey = aapt2.registerAaptService()
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                Aapt2LinkRunnable::class.java,
-                Aapt2LinkRunnable.Params(aapt2ServiceKey, config, aapt2.getErrorFormatMode())
-            )
+        workerExecutor.noIsolation().submit(Aapt2LinkRunnable::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.aapt2ServiceKey.set(aapt2ServiceKey)
+            it.request.set(config)
+            it.errorFormatMode.set(aapt2.getErrorFormatMode())
         }
     }
 
-    class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<ProcessAndroidAppResourcesTask, ComponentPropertiesImpl>(
-            componentProperties
+    class CreationAction(creationConfig: BaseCreationConfig) :
+        VariantTaskCreationAction<ProcessAndroidAppResourcesTask, BaseCreationConfig>(
+            creationConfig
         ) {
 
         override val name: String

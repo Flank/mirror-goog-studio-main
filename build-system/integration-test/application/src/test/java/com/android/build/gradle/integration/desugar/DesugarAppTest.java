@@ -355,21 +355,21 @@ public class DesugarAppTest {
     }
 
     private GradleTaskExecutor getProjectExecutor() {
-        BaseGradleExecutor.ConfigurationCaching configurationCaching;
+        GradleTaskExecutor executor =
+                project.executor()
+                        .with(BooleanOption.ENABLE_D8_DESUGARING, java8LangSupport == D8)
+                        .with(
+                                BooleanOption.ENABLE_GRADLE_WORKERS,
+                                gradleWorkers == GradleWorkers.ENABLED)
+                        .with(BooleanOption.ENABLE_R8_DESUGARING, java8LangSupport == R8)
+                        .with(OptionalBooleanOption.ENABLE_R8, java8LangSupport == R8)
+                        .with(
+                                BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM,
+                                artifactTransforms == ArtifactTransform.WITH_DESUGARING);
         if (java8LangSupport == DESUGAR && artifactTransforms == ArtifactTransform.NO_DESUGARING) {
             // https://github.com/gradle/gradle/issues/13200
-            configurationCaching = BaseGradleExecutor.ConfigurationCaching.OFF;
-        } else {
-            configurationCaching = BaseGradleExecutor.ConfigurationCaching.ON;
+            executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
         }
-        return project.executor()
-                .with(BooleanOption.ENABLE_D8_DESUGARING, java8LangSupport == D8)
-                .with(BooleanOption.ENABLE_GRADLE_WORKERS, gradleWorkers == GradleWorkers.ENABLED)
-                .with(BooleanOption.ENABLE_R8_DESUGARING, java8LangSupport == R8)
-                .with(OptionalBooleanOption.ENABLE_R8, java8LangSupport == R8)
-                .withConfigurationCaching(configurationCaching)
-                .with(
-                        BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM,
-                        artifactTransforms == ArtifactTransform.WITH_DESUGARING);
+        return executor;
     }
 }

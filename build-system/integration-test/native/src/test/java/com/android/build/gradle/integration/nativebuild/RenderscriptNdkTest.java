@@ -41,7 +41,6 @@ public class RenderscriptNdkTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("renderscriptNdk")
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .create();
 

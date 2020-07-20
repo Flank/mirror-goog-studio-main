@@ -16,8 +16,9 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -46,8 +47,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.io.Serializable
-import javax.inject.Inject
 
 abstract class DexFileDependenciesTask: NonIncrementalTask() {
 
@@ -82,53 +81,48 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
 
     // TODO: make incremental
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().use { workerExecutorFacade ->
-            val inputs = classes.files.toList()
-            val totalClasspath = inputs + classpath.files
-            val outDir = outputDirectory.get().asFile
-            inputs.forEachIndexed { index, input ->
-                // Desugar each jar with reference to all the others
-                workerExecutorFacade.submit(
-                    DexFileDependenciesWorkerAction::class.java,
-                    DexFileDependenciesWorkerActionParams(
-                        minSdkVersion = minSdkVersion.get(),
-                        debuggable = debuggable.get(),
-                        bootClasspath = bootClasspath.files,
-                        classpath = totalClasspath,
-                        input = input,
-                        outputFile = outDir.resolve("${index}_${input.name}"),
-                        errorFormatMode = errorFormatMode,
-                        libConfiguration = libConfiguration.orNull,
-                        outputKeepRules = outputKeepRules.asFile.orNull
-                    )
-                )
+        val inputs = classes.files.toList()
+        val totalClasspath = inputs + classpath.files
+
+        inputs.forEachIndexed { index, input ->
+            // Desugar each jar with reference to all the others
+            workerExecutor.noIsolation().submit(DexFileDependenciesWorkerAction::class.java) {
+                it.initializeFromAndroidVariantTask(this)
+                it.minSdkVersion.set(minSdkVersion)
+                it.debuggable.set(debuggable)
+                it.bootClasspath.from(bootClasspath)
+                it.classpath.from(totalClasspath)
+                it.input.set(input)
+                it.outputFile.set(outputDirectory.dir("${index}_${input.name}"))
+                it.errorFormatMode.set(errorFormatMode)
+                it.libConfiguration.set(libConfiguration)
+                it.outputKeepRules.set(outputKeepRules)
             }
         }
     }
 
-    data class DexFileDependenciesWorkerActionParams(
-        val minSdkVersion: Int,
-        val debuggable: Boolean,
-        val bootClasspath: Collection<File>,
-        val classpath: Collection<File>,
-        val input: File,
-        val outputFile: File,
-        val errorFormatMode: SyncOptions.ErrorFormatMode,
-        val libConfiguration: String?,
-        val outputKeepRules: File?
-    ) : Serializable
+    abstract class WorkerActionParams: ProfileAwareWorkAction.Parameters() {
+        abstract val minSdkVersion: Property<Int>
+        abstract val debuggable: Property<Boolean>
+        abstract val bootClasspath: ConfigurableFileCollection
+        abstract val classpath: ConfigurableFileCollection
+        abstract val input: Property<File>
+        abstract val outputFile: DirectoryProperty
+        abstract val errorFormatMode: Property<SyncOptions.ErrorFormatMode>
+        abstract val libConfiguration: Property<String>
+        abstract val outputKeepRules: RegularFileProperty
+    }
 
-    class DexFileDependenciesWorkerAction @Inject constructor(private val params: DexFileDependenciesWorkerActionParams) :
-        Runnable {
+    abstract class DexFileDependenciesWorkerAction : ProfileAwareWorkAction<WorkerActionParams>() {
 
         override fun run() {
-            val bootClasspath = params.bootClasspath.map(File::toPath)
-            val classpath = params.classpath.map(File::toPath)
+            val bootClasspath = parameters.bootClasspath.map(File::toPath)
+            val classpath = parameters.classpath.map(File::toPath)
             Closer.create().use { closer ->
                 val d8DexBuilder = DexArchiveBuilder.createD8DexBuilder(
                     DexParameters(
-                        minSdkVersion = params.minSdkVersion,
-                        debuggable = params.debuggable,
+                        minSdkVersion = parameters.minSdkVersion.get(),
+                        debuggable = parameters.debuggable.get(),
                         dexPerClass = false,
                         withDesugaring = true,
                         desugarBootclasspath = ClassFileProviderFactory(bootClasspath).also {
@@ -137,21 +131,21 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
                         desugarClasspath = ClassFileProviderFactory(classpath).also {
                             closer.register(it)
                         },
-                        coreLibDesugarConfig = params.libConfiguration,
-                        coreLibDesugarOutputKeepRuleFile = params.outputKeepRules,
+                        coreLibDesugarConfig = parameters.libConfiguration.orNull,
+                        coreLibDesugarOutputKeepRuleFile = parameters.outputKeepRules.asFile.orNull,
                         messageReceiver = MessageReceiverImpl(
-                            errorFormatMode = params.errorFormatMode,
+                            errorFormatMode = parameters.errorFormatMode.get(),
                             logger = Logging.getLogger(DexFileDependenciesWorkerAction::class.java)
                         )
                     )
                 )
 
 
-                ClassFileInputs.fromPath(params.input.toPath()).use { classFileInput ->
+                ClassFileInputs.fromPath(parameters.input.get().toPath()).use { classFileInput ->
                     classFileInput.entries { _, _ -> true }.use { classesInput ->
                         d8DexBuilder.convert(
                             classesInput,
-                            params.outputFile.toPath()
+                            parameters.outputFile.asFile.get().toPath()
                         )
                     }
                 }
@@ -159,9 +153,9 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
         }
     }
 
-    class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<DexFileDependenciesTask, ComponentPropertiesImpl>(
-            componentProperties
+    class CreationAction(creationConfig: VariantCreationConfig) :
+        VariantTaskCreationAction<DexFileDependenciesTask, VariantCreationConfig>(
+            creationConfig
         ) {
         override val name: String = computeTaskName("desugar", "FileDependencies")
         override val type = DexFileDependenciesTask::class.java

@@ -20,6 +20,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.AndroidTestProperties
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.impl.ResValue
 import com.android.build.api.variant.impl.VariantPropertiesImpl
@@ -40,10 +41,11 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.Serializable
+import java.lang.RuntimeException
 import javax.inject.Inject
 
 open class AndroidTestPropertiesImpl @Inject constructor(
-    componentIdentity: ComponentIdentity,
+    componentIdentity: AndroidTestImpl,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
@@ -80,6 +82,9 @@ open class AndroidTestPropertiesImpl @Inject constructor(
 
     override val debuggable: Boolean
         get() = variantDslInfo.isDebuggable
+
+    override val minSdkVersion: AndroidVersion
+        get() = testedVariant.variant.minSdkVersion
 
     override val applicationId: Property<String> = internalServices.propertyOf(
         String::class.java,

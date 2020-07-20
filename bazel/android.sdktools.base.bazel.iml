@@ -39,6 +39,7 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="jps-build-script-dependencies-bootstrap" level="project" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -134,7 +135,6 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="jps-build-script-dependencies-bootstrap" level="project" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -144,5 +144,6 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module" module-name="android.sdktools.zipflinger" scope="TEST" />
   </component>
 </module>

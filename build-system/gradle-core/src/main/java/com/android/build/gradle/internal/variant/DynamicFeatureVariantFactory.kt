@@ -83,7 +83,7 @@ internal class DynamicFeatureVariantFactory(
             .objectFactory
             .newInstance(
                 DynamicFeatureVariantPropertiesImpl::class.java,
-                componentIdentity,
+                variant,
                 buildFeatures,
                 variantDslInfo,
                 variantDependencies,

@@ -20,5 +20,6 @@
     <orderEntry type="module" module-name="android.sdktools.repository" />
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
+    <orderEntry type="library" name="jaxb-api" level="project" />
   </component>
 </module>

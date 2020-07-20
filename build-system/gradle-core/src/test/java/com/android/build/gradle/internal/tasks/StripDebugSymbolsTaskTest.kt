@@ -16,46 +16,34 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.stripping.SymbolStripExecutableFinder
+import com.android.build.gradle.internal.fixtures.FakeGradleExecOperations
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
-import com.android.build.gradle.internal.process.GradleProcessExecutor
-import com.android.ide.common.process.ProcessInfo
-import com.android.ide.common.process.ProcessResult
+import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
+import com.android.build.gradle.internal.fixtures.FakeInjectableService
 import com.android.ide.common.resources.FileStatus
-import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.provider.Provider
+import org.gradle.testfixtures.ProjectBuilder
+import org.gradle.workers.WorkerExecutor
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.ArgumentCaptor
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.Mockito.any
-import org.mockito.Mockito.verify
-import org.mockito.MockitoAnnotations
 import java.io.File
-import java.io.Serializable
+import kotlin.reflect.jvm.javaMethod
 
 /**
  * Unit tests for [StripDebugSymbolsTask].
  */
 class StripDebugSymbolsTaskTest {
 
-    @Mock
-    private lateinit var processExecutor: GradleProcessExecutor
-    @Mock
-    private lateinit var processResult: ProcessResult
-    @Mock
-    private lateinit var logger: LoggerWrapper
-
     @get: Rule
     val temporaryFolder = TemporaryFolder()
+    private val execOperations = FakeGradleExecOperations()
 
     private lateinit var inputDir: File
     private lateinit var x86Foo: File
@@ -65,14 +53,11 @@ class StripDebugSymbolsTaskTest {
     private lateinit var outputDir: File
     private lateinit var fakeExe: File
     private lateinit var stripToolFinderProvider: Provider<SymbolStripExecutableFinder>
-    private lateinit var workers: WorkerExecutorFacade
+    private lateinit var workers: WorkerExecutor
+    private lateinit var instantiatorTask: AndroidVariantTask
 
     @Before
     fun setUp() {
-        MockitoAnnotations.initMocks(this)
-        Mockito.`when`(processExecutor.execute(any(), any())).thenReturn(processResult)
-        Mockito.`when`(processResult.exitValue).thenReturn(1)
-
         // create input dir with lib/x86/foo.so, lib/x86/doNotStrip.so, lib/armeabi/foo.so,
         // and lib/armeabi/doNotStrip.so files
         inputDir = temporaryFolder.newFolder("inputDir")
@@ -96,7 +81,17 @@ class StripDebugSymbolsTaskTest {
             SymbolStripExecutableFinder(mapOf(Pair(Abi.X86, fakeExe), Pair(Abi.ARMEABI, fakeExe)))
         )
 
-        workers = testWorkers
+        with(ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build()) {
+            workers = FakeGradleWorkExecutor(
+                objects, temporaryFolder.newFolder(), listOf(
+                    FakeInjectableService(
+                        StripDebugSymbolsRunnable::execOperations.getter.javaMethod!!,
+                        execOperations
+                    )
+                )
+            )
+            instantiatorTask = tasks.create("task", AndroidVariantTask::class.java)
+        }
     }
 
     @Test
@@ -109,15 +104,13 @@ class StripDebugSymbolsTaskTest {
             outputDir,
             excludePatterns,
             stripToolFinderProvider,
-            processExecutor,
-            null
+            null,
+            instantiatorTask
         ).run()
 
         // Check that executable only runs for x86Foo and armeabiFoo (not doNotStrip files)
-        val processInfos = ArgumentCaptor.forClass(ProcessInfo::class.java)
-        verify(processExecutor, Mockito.times(2)).execute(processInfos.capture(), any())
-        assertThat(processInfos.allValues).hasSize(2)
-        for (processInfo in processInfos.allValues) {
+        assertThat(execOperations.capturedExecutions).named("number of invocations").hasSize(2)
+        for (processInfo in execOperations.capturedExecutions) {
             assertThat(processInfo.executable).isEqualTo(fakeExe.absolutePath)
             if (processInfo.args.contains(x86Foo.toString())) {
                 val path = FileUtils.relativePossiblyNonExistingPath(x86Foo, inputDir)
@@ -162,17 +155,18 @@ class StripDebugSymbolsTaskTest {
             outputDir,
             excludePatterns,
             stripToolFinderProvider,
-            processExecutor,
-            changedInputs
+            changedInputs,
+            instantiatorTask
         ).run()
 
         // Check that executable only runs for x86Foo
-        val processInfos = ArgumentCaptor.forClass(ProcessInfo::class.java)
-        verify(processExecutor, Mockito.times(1)).execute(processInfos.capture(), any())
-        assertThat(processInfos.value.executable).isEqualTo(fakeExe.absolutePath)
+        // Check that executable only runs for x86Foo and armeabiFoo (not doNotStrip files)
+        assertThat(execOperations.capturedExecutions).named("number of invocations").hasSize(1)
+        val execSpec = execOperations.capturedExecutions.single()
+        assertThat(execSpec.executable).isEqualTo(fakeExe.absolutePath)
         val x86FooPath = FileUtils.relativePossiblyNonExistingPath(x86Foo, inputDir)
         val x86FooOutputFile = File(outputDir, x86FooPath)
-        assertThat(processInfos.value.args)
+        assertThat(execSpec.args)
             .containsExactly(
                 "--strip-unneeded", "-o", x86FooOutputFile.toString(), x86Foo.toString()
             )
@@ -189,21 +183,4 @@ class StripDebugSymbolsTaskTest {
         val armeabiFooPath = FileUtils.relativePossiblyNonExistingPath(armeabiFoo, inputDir)
         assertThat(File(outputDir, armeabiFooPath)).doesNotExist()
     }
-}
-
-val testWorkers = object: WorkerExecutorFacade {
-    override fun submit(actionClass: Class<out Runnable>, parameter: Serializable) {
-        val configuration =
-            WorkerExecutorFacade.Configuration(
-                parameter, WorkerExecutorFacade.IsolationMode.NONE, listOf()
-            )
-        val action =
-            actionClass.getConstructor(configuration.parameter.javaClass)
-                .newInstance(configuration.parameter)
-        action.run()
-    }
-
-    override fun await() {}
-
-    override fun close() {}
 }

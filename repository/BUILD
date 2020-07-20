@@ -27,6 +27,7 @@ iml_module(
         "//tools/idea/.idea/libraries:mockito[test]",
         "//tools/idea/.idea/libraries:Objenesis[test]",
         "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",
+        "//tools/idea/.idea/libraries:jaxb-api",
         "//tools/idea/.idea/libraries:jaxb-runtime",
     ],
 )
@@ -61,6 +62,7 @@ kotlin_library(
     deps = [
         "//tools/base/annotations",
         "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:jakarta.xml.bind_jakarta.xml.bind-api",
         "//tools/base/third_party:org.apache.commons_commons-compress",
         "//tools/base/third_party:org.glassfish.jaxb_jaxb-runtime",
     ],
@@ -88,6 +90,7 @@ java_library(
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:com.google.truth_truth",
+        "//tools/base/third_party:jakarta.xml.bind_jakarta.xml.bind-api",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.apache.commons_commons-compress",
         "//tools/base/third_party:org.mockito_mockito-core",

@@ -16,6 +16,7 @@
  */
 package com.android.build.api.component.analytics
 import com.android.build.api.variant.VariantProperties
+import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.tools.build.gradle.internal.profile.VariantMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -38,12 +39,12 @@ class AnalyticsEnabledVariantTest {
     }
     @Test
     fun setMinSdkVersion() {
-        proxy.minSdkVersion = 23
-        verify(delegate, times(1)).minSdkVersion = 23
+        val newVersion = AndroidVersionImpl(23)
+        proxy.minSdkVersion = newVersion
         Truth.assertThat(stats.variantApiAccess.variantAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantAccessList.first().type
         ).isEqualTo(VariantMethodType.MIN_SDK_VERSION_VALUE_VALUE)
-        verify(delegate, times(1)).minSdkVersion = 23
+        verify(delegate, times(1)).minSdkVersion = newVersion
     }
 }

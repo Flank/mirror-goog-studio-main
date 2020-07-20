@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.ClientTracker;
+import com.android.ddmlib.CommandFailedException;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.EmulatorConsole;
 import com.android.ddmlib.IDevice;
@@ -252,7 +253,7 @@ public final class DeviceMonitor implements ClientTracker {
         }
 
         for (DeviceImpl device : newlyOnline) {
-            queryAvdName(device);
+            setProperties(device);
 
             // Initiate a property fetch so that future requests can be served out of this cache.
             // This is necessary for backwards compatibility
@@ -274,16 +275,26 @@ public final class DeviceMonitor implements ClientTracker {
         }
     }
 
-    private static void queryAvdName(@NonNull DeviceImpl device) {
+    private static void setProperties(@NonNull DeviceImpl device) {
         if (!device.isEmulator()) {
             return;
         }
 
         EmulatorConsole console = EmulatorConsole.getConsole(device);
-        if (console != null) {
-            device.setAvdName(console.getAvdName());
-            console.close();
+
+        if (console == null) {
+            return;
         }
+
+        device.setAvdName(console.getAvdName());
+
+        try {
+            device.setAvdPath(console.getAvdPath());
+        } catch (CommandFailedException exception) {
+            Log.e("DeviceMonitor", exception);
+        }
+
+        console.close();
     }
 
     private class DeviceListUpdateListener implements DeviceListMonitorTask.UpdateListener {

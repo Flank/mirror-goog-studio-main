@@ -148,6 +148,7 @@ public class IrModule extends IrNode {
     }
 
     public enum Scope {
+        PROVIDED,
         COMPILE,
         TEST,
         RUNTIME,

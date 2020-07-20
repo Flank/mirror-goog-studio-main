@@ -57,6 +57,7 @@ public class BuildConfigTest {
                         + "    buildConfigField \"int\", \"VALUE_DEBUG\",   \"1\"\n"
                         + "    buildConfigField \"java.util.OptionalInt\", \"VALUE_EXPRESSION\", \"java.util.OptionalInt.empty()\"\n"
                         + "    buildConfigField \"String[]\", \"VALUE_STRING_ARRAY\", 'new String[]{\"hello\", \"world\"}'\n"
+                        + "    buildConfigField \"String[]\", \"CALCULATED_STRING\", 'String.format(\"VALUE_DEFAULT=%1$d\", VALUE_DEFAULT)'\n"
                         + "    buildConfigField \"long\", \"VALUE_LONG\", \"50L\"\n"
                         + "    buildConfigField \"int\", \"VALUE_FLAVOR\",  \"1\"\n"
                         + "    buildConfigField \"float\", \"VALUE_FLOAT\", \"5f\"\n"
@@ -113,6 +114,7 @@ public class BuildConfigTest {
         map.put("VALUE_DEBUG", "1");
         map.put("VALUE_DEFAULT", "1");
         map.put("VALUE_EXPRESSION", "java.util.OptionalInt.empty()");
+        map.put("CALCULATED_STRING", "String.format(\"VALUE_DEFAULT=%1$d\", VALUE_DEFAULT)");
         map.put("VALUE_STRING_ARRAY", "new String[]{\"hello\", \"world\"}");
         map.put("VALUE_FLAVOR", "1");
         map.put("VALUE_FLOAT", "5f");
@@ -139,6 +141,8 @@ public class BuildConfigTest {
                         + "  public static final String FLAVOR = \"flavor1\";\n"
                         + "  public static final int VERSION_CODE = 1;\n"
                         + "  public static final String VERSION_NAME = \"1.0\";\n"
+                        + "  // Field from default config.\n"
+                        + "  public static final String[] CALCULATED_STRING = String.format(\"VALUE_DEFAULT=%1$d\", VALUE_DEFAULT);\n"
                         + "  // Field from build type: debug\n"
                         + "  public static final int VALUE_DEBUG = 100;\n"
                         + "  // Field from default config.\n"
@@ -183,6 +187,8 @@ public class BuildConfigTest {
                         + "  public static final String FLAVOR = \"flavor2\";\n"
                         + "  public static final int VERSION_CODE = 1;\n"
                         + "  public static final String VERSION_NAME = \"1.0\";\n"
+                        + "  // Field from default config.\n"
+                        + "  public static final String[] CALCULATED_STRING = String.format(\"VALUE_DEFAULT=%1$d\", VALUE_DEFAULT);\n"
                         + "  // Field from build type: debug\n"
                         + "  public static final int VALUE_DEBUG = 100;\n"
                         + "  // Field from default config.\n"
@@ -226,6 +232,8 @@ public class BuildConfigTest {
                         + "  public static final String FLAVOR = \"flavor1\";\n"
                         + "  public static final int VERSION_CODE = 1;\n"
                         + "  public static final String VERSION_NAME = \"1.0\";\n"
+                        + "  // Field from default config.\n"
+                        + "  public static final String[] CALCULATED_STRING = String.format(\"VALUE_DEFAULT=%1$d\", VALUE_DEFAULT);\n"
                         + "  // Field from product flavor: flavor1\n"
                         + "  public static final int VALUE_DEBUG = 10;\n"
                         + "  // Field from default config.\n"
@@ -270,6 +278,8 @@ public class BuildConfigTest {
                         + "  public static final String FLAVOR = \"flavor2\";\n"
                         + "  public static final int VERSION_CODE = 1;\n"
                         + "  public static final String VERSION_NAME = \"1.0\";\n"
+                        + "  // Field from default config.\n"
+                        + "  public static final String[] CALCULATED_STRING = String.format(\"VALUE_DEFAULT=%1$d\", VALUE_DEFAULT);\n"
                         + "  // Field from product flavor: flavor2\n"
                         + "  public static final int VALUE_DEBUG = 20;\n"
                         + "  // Field from default config.\n"

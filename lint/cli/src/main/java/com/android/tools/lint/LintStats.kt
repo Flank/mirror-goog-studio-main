@@ -18,6 +18,7 @@ package com.android.tools.lint
 
 import com.android.tools.lint.client.api.LintBaseline
 import com.android.tools.lint.detector.api.Severity
+import kotlin.math.max
 
 /**
  * Value object passed to [Reporter] instances providing statistics to include in the
@@ -39,9 +40,9 @@ class LintStats constructor(
     }
 
     companion object {
-        fun create(mergedWarnings: List<Warning>, baseline: LintBaseline?): LintStats {
+        fun create(mergedIncidents: List<Incident>, baseline: LintBaseline?): LintStats {
             return create(
-                mergedWarnings, if (baseline != null)
+                mergedIncidents, if (baseline != null)
                     listOf(baseline)
                 else
                     emptyList()
@@ -53,24 +54,24 @@ class LintStats constructor(
         }
 
         fun create(
-            warnings: List<Warning>,
+            incidents: List<Incident>,
             baselines: List<LintBaseline>
         ): LintStats {
             var errorCount = 0
             var warningCount = 0
             var autofixed = 0
             var hasAutoFixCount = 0
-            for (warning in warnings) {
-                if (warning.severity === Severity.ERROR || warning.severity === Severity.FATAL) {
+            for (incident in incidents) {
+                if (incident.severity === Severity.ERROR || incident.severity === Severity.FATAL) {
                     errorCount++
-                } else if (warning.severity === Severity.WARNING) {
+                } else if (incident.severity === Severity.WARNING) {
                     warningCount++
                 }
 
-                if (warning.wasAutoFixed) {
+                if (incident.wasAutoFixed) {
                     autofixed++
                 }
-                if (warning.hasAutoFix()) {
+                if (incident.hasAutoFix()) {
                     hasAutoFixCount++
                 }
             }
@@ -87,15 +88,15 @@ class LintStats constructor(
             var baselineErrorCount = 0
             var baselineWarningCount = 0
             var baselineFixedCount = 0
-            if (!baselines.isEmpty()) {
+            if (baselines.isNotEmpty()) {
                 // Figure out the actual overlap; later I could stash these into temporary
                 // objects to compare
                 // For now just combine them in a dumb way
                 for (baseline in baselines) {
-                    baselineErrorCount = Math.max(baselineErrorCount, baseline.foundErrorCount)
+                    baselineErrorCount = max(baselineErrorCount, baseline.foundErrorCount)
                     baselineWarningCount =
-                            Math.max(baselineWarningCount, baseline.foundWarningCount)
-                    baselineFixedCount = Math.max(baselineFixedCount, baseline.fixedCount)
+                            max(baselineWarningCount, baseline.foundWarningCount)
+                    baselineFixedCount = max(baselineFixedCount, baseline.fixedCount)
                 }
             }
 

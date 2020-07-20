@@ -93,7 +93,7 @@ public class ImlToIr {
     // mock it or write another implementation.
     @SuppressWarnings("MethodMayBeStatic")
     public IrProject convert(
-            Path workspace, String projectPath, String imlGraph, BazelToolsLogger logger)
+            Configuration config, Path workspace, String projectPath, BazelToolsLogger logger)
             throws IOException {
         String id = PROJECT_IDS.getOrDefault(projectPath, "");
         projectPath = workspace.resolve(projectPath).toString();
@@ -172,8 +172,15 @@ public class ImlToIr {
                         extension.getScope().equals(JpsJavaDependencyScope.TEST);
                 boolean isRuntime = (extension != null) &&
                         extension.getScope().equals(JpsJavaDependencyScope.RUNTIME);
+                boolean isProvided =
+                        (extension != null)
+                                && extension.getScope().equals(JpsJavaDependencyScope.PROVIDED);
                 boolean isExported = (extension != null) && !isRuntime && extension.isExported();
-                IrModule.Scope scope = isTest ? IrModule.Scope.TEST : isRuntime ? IrModule.Scope.RUNTIME : IrModule.Scope.COMPILE;
+                IrModule.Scope scope;
+                if (isTest) scope = IrModule.Scope.TEST;
+                else if (isRuntime) scope = IrModule.Scope.RUNTIME;
+                else if (isProvided) scope = IrModule.Scope.PROVIDED;
+                else scope = IrModule.Scope.COMPILE;
 
                 if (dependency instanceof JpsLibraryDependency) {
                     // A dependency to a jar file
@@ -196,43 +203,53 @@ public class ImlToIr {
                     if (resolved instanceof JpsModule) {
                         owner = imlToIr.get(resolved);
                     }
-                    IrLibrary irLibrary = new IrLibrary(library.getName(), owner);
-                    List<File> files = library.getFiles(JpsOrderRootType.COMPILED);
-                    // Library files are sometimes returned in file system order. Which changes
-                    // across systems. Choose alphabetical always:
-                    Collections.sort(files);
-                    for (File file : files) {
-                        // "KotlinPlugin" is the library that upstream IntelliJ uses that points to
-                        // files under idea/build that we usually don't create, they are copied
-                        // there by build_studio.sh that most developers don't run. Instead, Android
-                        // Studio has its own library, called "kotlin-plugin" that points to files
-                        // in prebuilts. Here we ignore entries in the "KotlinPlugin" library that
-                        // point to non-existing files. If the files exists, they are ignored later
-                        // in IrToBazel.
-                        if (!file.exists() && !"KotlinPlugin".equals(library.getName())) {
-                            String libraryName = library.getName();
-                            String dependencyDescription;
-                            if (libraryName.equals("#")) {
-                                dependencyDescription =
-                                        "Module library in "
-                                                + libraryDependency.getContainingModule().getName();
-                            } else {
-                                dependencyDescription = "Library " + libraryName;
+                    IrLibrary irLibrary = libraryToIr.get(library);
+                    if (irLibrary == null) {
+                        irLibrary = new IrLibrary(library.getName(), owner);
+                        List<File> files = library.getFiles(JpsOrderRootType.COMPILED);
+                        // Library files are sometimes returned in file system order. Which changes
+                        // across systems. Choose alphabetical always:
+                        Collections.sort(files);
+                        for (File file : files) {
+                            // "KotlinPlugin" is the library that upstream IntelliJ uses that points
+                            // to
+                            // files under idea/build that we usually don't create, they are copied
+                            // there by build_studio.sh that most developers don't run. Instead,
+                            // Android
+                            // Studio has its own library, called "kotlin-plugin" that points to
+                            // files
+                            // in prebuilts. Here we ignore entries in the "KotlinPlugin" library
+                            // that
+                            // point to non-existing files. If the files exists, they are ignored
+                            // later
+                            // in IrToBazel.
+                            if (!file.exists() && !"KotlinPlugin".equals(library.getName())) {
+                                String libraryName = library.getName();
+                                String dependencyDescription;
+                                if (libraryName.equals("#")) {
+                                    dependencyDescription =
+                                            "Module library in "
+                                                    + libraryDependency
+                                                            .getContainingModule()
+                                                            .getName();
+                                } else {
+                                    dependencyDescription = "Library " + libraryName;
+                                }
+                                logger.warning(
+                                        dependencyDescription
+                                                + " points to non existing file: "
+                                                + file);
                             }
-                            logger.warning(
-                                    dependencyDescription
-                                            + " points to non existing file: "
-                                            + file);
+                            if (!file.exists()
+                                    || !Files.getFileExtension(file.getName()).equals("jar")
+                                    || file.getName().endsWith("-sources.jar")) {
+                                continue;
+                            }
+                            irLibrary.addFile(file);
                         }
-                        if (!file.exists() ||
-                                !Files.getFileExtension(file.getName()).equals("jar") ||
-                                file.getName().endsWith("-sources.jar")) {
-                            continue;
-                        }
-                        irLibrary.addFile(file);
+                        libraryToIr.put(library, irLibrary);
                     }
                     module.addDependency(irLibrary, isExported, scope);
-                    libraryToIr.put(library, irLibrary);
                 } else if (dependency instanceof JpsModuleDependency) {
                     // A dependency to another module
                     JpsModuleDependency moduleDependency = (JpsModuleDependency) dependency;
@@ -326,8 +343,8 @@ public class ImlToIr {
             }
         }
 
-        if (imlGraph != null) {
-            dot.saveTo(new File(imlGraph));
+        if (config.imlGraph != null) {
+            dot.saveTo(new File(config.imlGraph));
         }
 
         return irProject;
@@ -380,6 +397,8 @@ public class ImlToIr {
             case TEST: return "green";
             case RUNTIME: return "blue";
             case TEST_RUNTIME: return "green:blue";
+            case PROVIDED:
+                return "red";
         }
         return "";
     }

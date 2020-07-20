@@ -110,7 +110,7 @@ public class LibraryPluginDslTest {
      */
     @Test
     public void testDebugSigningConfig() throws Exception {
-        android.getSigningConfigs().getByName("debug", debug -> debug.setStorePassword("foo"));
+        android.getSigningConfigs().getByName("debug", debug -> debug.storePassword("foo"));
 
         SigningConfig signingConfig = android.getBuildTypes().getByName("debug").getSigningConfig();
 

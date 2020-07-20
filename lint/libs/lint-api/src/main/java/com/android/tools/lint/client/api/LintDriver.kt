@@ -2217,7 +2217,8 @@ class LintDriver
         ): Configuration =
             delegate.getConfiguration(project, driver)
 
-        override fun getDisplayPath(file: File): String = delegate.getDisplayPath(file)
+        override fun getDisplayPath(file: File, project: Project?, format: TextFormat): String =
+            delegate.getDisplayPath(file, project, format)
 
         override fun log(
             severity: Severity,

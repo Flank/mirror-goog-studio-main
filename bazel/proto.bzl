@@ -181,7 +181,8 @@ def java_proto_library(
         visibility = visibility,
     )
 
-    java_deps = list(java_deps)
+    grpc_extra_deps = ["@//prebuilts/tools/common/m2/repository/javax/annotation/javax.annotation-api/1.3.2:jar"]
+    java_deps = list(java_deps) + (grpc_extra_deps if grpc_support else [])
     java_deps += proto_java_runtime_library
 
     if pom:

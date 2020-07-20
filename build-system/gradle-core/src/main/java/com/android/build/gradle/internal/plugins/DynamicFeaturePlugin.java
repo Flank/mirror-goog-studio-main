@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
+import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.variant.impl.DynamicFeatureVariantImpl;
@@ -38,6 +39,7 @@ import com.android.build.gradle.internal.tasks.DynamicFeatureTaskManager;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.DynamicFeatureVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.model.v2.ide.ProjectType;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.util.List;
@@ -59,6 +61,11 @@ public class DynamicFeaturePlugin
     @Override
     protected int getProjectType() {
         return AndroidProjectTypes.PROJECT_TYPE_DYNAMIC_FEATURE;
+    }
+
+    @Override
+    protected ProjectType getProjectTypeV2() {
+        return ProjectType.DYNAMIC_FEATURE;
     }
 
     @NonNull
@@ -120,8 +127,7 @@ public class DynamicFeaturePlugin
             @NonNull
                     List<
                                     ComponentInfo<
-                                            TestComponentImpl<
-                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentImpl<? extends TestComponentProperties>,
                                             TestComponentPropertiesImpl>>
                             testComponents,
             boolean hasFlavors,

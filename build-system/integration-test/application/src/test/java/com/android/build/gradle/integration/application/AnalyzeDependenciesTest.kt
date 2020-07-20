@@ -14,12 +14,9 @@ import com.android.utils.usLocaleCapitalize
 import com.google.common.io.Resources
 import com.google.common.truth.Truth.assertThat
 import com.google.gson.Gson
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import sun.tools.jar.resources.jar
-import java.io.File
 import java.nio.charset.Charset
 
 /**

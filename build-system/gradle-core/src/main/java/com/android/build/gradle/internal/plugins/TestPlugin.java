@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
+import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.variant.impl.TestVariantImpl;
@@ -38,6 +39,7 @@ import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.model.v2.ide.ProjectType;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.util.List;
@@ -58,6 +60,11 @@ public class TestPlugin extends BasePlugin<TestVariantImpl, TestVariantPropertie
     @Override
     protected int getProjectType() {
         return AndroidProjectTypes.PROJECT_TYPE_TEST;
+    }
+
+    @Override
+    protected ProjectType getProjectTypeV2() {
+        return ProjectType.TEST;
     }
 
     @NonNull
@@ -109,8 +116,7 @@ public class TestPlugin extends BasePlugin<TestVariantImpl, TestVariantPropertie
             @NonNull
                     List<
                                     ComponentInfo<
-                                            TestComponentImpl<
-                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentImpl<? extends TestComponentProperties>,
                                             TestComponentPropertiesImpl>>
                             testComponents,
             boolean hasFlavors,

@@ -3,6 +3,7 @@ package com.android.build.gradle.integration.testing;
 import static com.android.build.gradle.integration.common.fixture.TestVersions.SUPPORT_LIB_VERSION;
 import static com.android.build.gradle.integration.common.fixture.TestVersions.TEST_SUPPORT_LIB_VERSION;
 import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
+import static com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -93,7 +94,8 @@ public class SeparateTestModuleTest {
     @Test
     public void checkDependenciesBetweenTasks() throws Exception {
         // Check :test:assembleDebug succeeds on its own, i.e. compiles the app module.
-        project.execute("clean", ":test:assembleDebug");
+        GradleBuildResult result = project.executor().run("clean", ":test:assembleDebug");
+        assertThat(result.getTask(":test:validateSigningDebug")).didWork();
         // check dependencies is not compatible
         project.executor()
                 .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)

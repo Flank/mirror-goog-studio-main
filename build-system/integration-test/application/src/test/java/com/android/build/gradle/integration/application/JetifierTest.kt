@@ -55,10 +55,10 @@ class JetifierTest(private val withKotlin: Boolean) {
     val project = GradleTestProject.builder()
         .fromTestProject("jetifier")
         .withKotlinGradlePlugin(withKotlin)
-        // http://b/158092419
-        .withConfigurationCaching(
-            if (withKotlin) BaseGradleExecutor.ConfigurationCaching.OFF else BaseGradleExecutor.ConfigurationCaching.ON
-        )
+        .also {
+            // http://b/158092419
+            if (withKotlin) it.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        }
         .create()
 
     @Before

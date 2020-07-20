@@ -16,13 +16,14 @@
 package com.android.tools.lint.gradle
 
 import com.android.SdkConstants
+import com.android.tools.lint.ApplicableVariants
+import com.android.tools.lint.Incident
 import com.android.tools.lint.LintCliClient.Companion.continueAfterBaseLineCreated
 import com.android.tools.lint.LintCliFlags
 import com.android.tools.lint.LintFixPerformer
 import com.android.tools.lint.LintStats.Companion.create
 import com.android.tools.lint.Reporter
 import com.android.tools.lint.TextReporter
-import com.android.tools.lint.Warning
 import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.checks.NonAndroidIssueRegistry
 import com.android.tools.lint.checks.UnusedResourceDetector
@@ -81,7 +82,7 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
 
     private fun abort(
         client: LintGradleClient?,
-        warnings: List<Warning>?,
+        incidents: List<Incident>?,
         isAndroid: Boolean
     ) {
         var message: String = if (isAndroid) {
@@ -127,10 +128,10 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
             ...
             """.trimIndent()
         }
-        if (warnings != null && client != null && // See if there aren't any text reporters
+        if (incidents != null && client != null && // See if there aren't any text reporters
             client.flags.reporters.asSequence().none { reporter -> reporter is TextReporter }
         ) {
-            var errors = warnings.asSequence()
+            var errors = incidents.asSequence()
                 .filter { warning -> warning.severity.isError }
                 .toList()
             if (errors.isNotEmpty()) {
@@ -143,7 +144,10 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
                 }
                 val flags = client.flags
                 flags.isExplainIssues = false
-                val reporter = Reporter.createTextReporter(client, flags, null, writer, false)
+                val reporter = Reporter.createTextReporter(
+                    client, flags, null, writer,
+                    close = false
+                )
                 try {
                     val stats = create(errors.size, 0)
                     reporter.setWriteStats(false)
@@ -164,7 +168,7 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
         isAndroid: Boolean,
         allowFix: Boolean,
         dispose: Boolean
-    ): Pair<List<Warning>, LintBaseline?> {
+    ): Pair<List<Incident>, LintBaseline?> {
         val registry: IssueRegistry = createIssueRegistry(isAndroid)
         val flags = LintCliFlags()
         val client = LintGradleClient(
@@ -209,7 +213,8 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
             // Set up some default reporters
             flags.reporters.add(
                 Reporter.createTextReporter(
-                    client, flags, null, PrintWriter(System.out, true), false
+                    client, flags, null, PrintWriter(System.out, true),
+                    close = false
                 )
             )
             if (!autoFixing) {
@@ -238,7 +243,10 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
                     flags.reporters
                         .add(
                             Reporter.createXmlReporter(
-                                client, xml, false, flags.isIncludeXmlFixes
+                                client,
+                                xml,
+                                intendedForBaseline = false,
+                                includeFixes = flags.isIncludeXmlFixes
                             )
                         )
                 } catch (e: IOException) {
@@ -250,7 +258,7 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
             flags.isQuiet = true
         }
         flags.isWriteBaselineIfMissing = report && !fatalOnly && !autoFixing
-        val warnings: Pair<List<Warning>, LintBaseline?>
+        val warnings: Pair<List<Incident>, LintBaseline?>
         if (autoFixing) {
             flags.isAutoFix = true
             flags.isSetExitCode = false
@@ -307,7 +315,7 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
         // attribute unused resources to each variant, so don't make
         // each variant run go and inspect the inactive variant sources
         UnusedResourceDetector.sIncludeInactiveReferences = false
-        val warningMap: MutableMap<String, List<Warning>> = mutableMapOf()
+        val warningMap: MutableMap<String, List<Incident>> = mutableMapOf()
         val baselines: MutableList<LintBaseline> = mutableListOf()
         var first = true
         for (variantName in variantNames) {
@@ -414,8 +422,8 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
                     val reporter = Reporter.createXmlReporter(
                         client,
                         baselineFile,
-                        true,
-                        false
+                        intendedForBaseline = true,
+                        includeFixes = false
                     )
                     reporter.setBaselineAttributes(
                         client,
@@ -450,9 +458,9 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
      * @return a merged list of issues
      */
     private fun mergeWarnings(
-        warningMap: Map<String, List<Warning>>,
-        allVariants: Set<String?>
-    ): List<Warning> {
+        warningMap: Map<String, List<Incident>>,
+        allVariants: Set<String>
+    ): List<Incident> {
         // Easy merge?
         if (warningMap.size == 1) {
             return warningMap.values.first()
@@ -465,63 +473,61 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
         if (maxCount == 0) {
             return emptyList()
         }
-        val merged: MutableList<Warning> = Lists.newArrayListWithExpectedSize(2 * maxCount)
+        val merged: MutableList<Incident> = Lists.newArrayListWithExpectedSize(2 * maxCount)
 
         // Map from issue to message to line number to column number to
         // file name to canonical warning
-        val map: MutableMap<Issue, MutableMap<String, MutableMap<Int, MutableMap<Int, MutableMap<String, Warning>>>>> =
+        val map: MutableMap<Issue, MutableMap<String, MutableMap<Int, MutableMap<Int, MutableMap<String, Incident>>>>> =
             Maps.newHashMapWithExpectedSize(2 * maxCount)
         for ((variantName, warnings) in warningMap) {
-            for (warning in warnings) {
-                val messageMap = map[warning.issue] ?: run {
-                    val new: MutableMap<String, MutableMap<Int, MutableMap<Int, MutableMap<String, Warning>>>> =
+            for (incident in warnings) {
+                val messageMap = map[incident.issue] ?: run {
+                    val new: MutableMap<String, MutableMap<Int, MutableMap<Int, MutableMap<String, Incident>>>> =
                         mutableMapOf()
-                    map[warning.issue] = new
+                    map[incident.issue] = new
                     new
                 }
-                val lineMap = messageMap[warning.message] ?: run {
-                    val new: MutableMap<Int, MutableMap<Int, MutableMap<String, Warning>>> =
+                val lineMap = messageMap[incident.message] ?: run {
+                    val new: MutableMap<Int, MutableMap<Int, MutableMap<String, Incident>>> =
                         mutableMapOf()
-                    messageMap[warning.message] = new
+                    messageMap[incident.message] = new
                     new
                 }
-                val columnMap = lineMap[warning.line] ?: run {
-                    val new: MutableMap<Int, MutableMap<String, Warning>> = mutableMapOf()
-                    lineMap[warning.line] = new
+                val columnMap = lineMap[incident.line] ?: run {
+                    val new: MutableMap<Int, MutableMap<String, Incident>> = mutableMapOf()
+                    lineMap[incident.line] = new
                     new
                 }
-                val fileMap = columnMap[warning.offset] ?: run {
-                    val new: MutableMap<String, Warning> = mutableMapOf()
-                    columnMap[warning.offset] = new
+                val fileMap = columnMap[incident.startOffset] ?: run {
+                    val new: MutableMap<String, Incident> = mutableMapOf()
+                    columnMap[incident.startOffset] = new
                     new
                 }
-                val file = warning.file
-                val fileName = if (file != null) {
+                val file = incident.file
+                val fileName = run {
                     val parent = file.parentFile
                     if (parent != null) {
                         parent.name + "/" + file.name
                     } else {
                         file.name
                     }
-                } else {
-                    "<unknown>"
                 }
                 val canonical = fileMap[fileName] ?: run {
-                    fileMap[fileName] = warning
-                    warning.variants = Sets.newHashSet()
-                    warning.allVariants = allVariants
-                    merged.add(warning)
-                    warning
+                    fileMap[fileName] = incident
+                    incident.applicableVariants = ApplicableVariants(allVariants)
+                    merged.add(incident)
+                    incident
                 }
-                canonical.variants.add(variantName)
+                canonical.applicableVariants!!.addVariant(variantName)
             }
         }
 
         // Clear out variants on any nodes that define all
-        for (warning in merged) {
-            if (warning.variants != null && warning.variants.size == allVariants.size) {
-                // If this error is present in all variants, just clear it out
-                warning.variants = null
+        for (incident in merged) {
+            val applicableVariants = incident.applicableVariants ?: continue
+            // If this error is present in all variants, just clear it out
+            if (!applicableVariants.variantSpecific) {
+                incident.applicableVariants = null
             }
         }
 

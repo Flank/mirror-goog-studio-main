@@ -73,7 +73,7 @@ kotlin_library(
         "//tools/base/third_party:com.google.auto.value_auto-value",
         "//tools/base/third_party:com.google.auto.value_auto-value-annotations",
         "//tools/base/third_party:com.google.crypto.tink_tink",
-        "//tools/base/third_party:com.google.test.platform_core-proto",
+        "//tools/base/third_party:com.google.testing.platform_core-proto",
         "//tools/base/third_party:com.android.tools.build.jetifier_jetifier-core",
         "//tools/base/third_party:com.android.tools.build.jetifier_jetifier-processor",
         "//tools/base/third_party:com.android.tools.build_aapt2-proto",
@@ -102,6 +102,7 @@ kotlin_library(
         "//tools/data-binding:tools.compilerCommon",
         "//tools/base/third_party:org.tensorflow_tensorflow-lite-metadata",  # For mlkit-common
         "//tools/base/third_party:com.google.flatbuffers_flatbuffers-java",  # For mlkit-common
+        "//tools/base/third_party:jakarta.xml.bind_jakarta.xml.bind-api",
     ],
 )
 

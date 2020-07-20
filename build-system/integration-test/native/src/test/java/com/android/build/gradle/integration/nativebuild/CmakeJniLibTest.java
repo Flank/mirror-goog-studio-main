@@ -46,7 +46,6 @@ public class CmakeJniLibTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("ndkJniLib")
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.ON)
                     .addFile(HelloWorldJniApp.cmakeLists("lib"))
                     .setCmakeVersion("3.10.4819442")
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)

@@ -4,6 +4,7 @@ cc_library(
     name = "common_lib",
     srcs = [
         "event.cc",
+        "io.cc",
         "message_pipe_wrapper.cc",
         "size_buffer.h",
         "socket.cc",
@@ -12,6 +13,7 @@ cc_library(
     ],
     hdrs = [
         "event.h",
+        "io.h",
         "message_pipe_wrapper.h",
         "proto_pipe.h",
         "socket.h",

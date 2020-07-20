@@ -17,10 +17,10 @@
 package com.android.tools.lint.checks.infrastructure
 
 import com.android.SdkConstants.DOT_XML
+import com.android.tools.lint.Incident
 import com.android.tools.lint.LintStats
 import com.android.tools.lint.Reporter
 import com.android.tools.lint.UastEnvironment
-import com.android.tools.lint.Warning
 import com.android.tools.lint.XmlReporter
 import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.client.api.LintBaseline
@@ -35,6 +35,7 @@ import com.google.common.collect.Maps
 import com.google.common.io.Files
 import com.intellij.util.ArrayUtil
 import org.intellij.lang.annotations.Language
+import org.jetbrains.kotlin.utils.addToStdlib.firstNotNullResult
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -62,7 +63,7 @@ class TestLintResult internal constructor(
     private val task: TestLintTask,
     private val output: String?,
     private val throwable: Throwable?,
-    private val warnings: List<Warning>
+    private val incidents: List<Incident>
 ) {
     private var maxLineLength: Int = 0
 
@@ -216,10 +217,10 @@ class TestLintResult internal constructor(
                     val positionMap = Maps.newHashMap<Int, javax.swing.text.Position>()
 
                     // Find any errors reported in this document
-                    val matches = findWarnings(targetPath)
+                    val matches = findIncidents(targetPath)
 
-                    for (warning in matches) {
-                        val location = warning.location
+                    for (incident in matches) {
+                        val location = incident.location
                         val start = location.start
                         val end = location.end
 
@@ -237,8 +238,8 @@ class TestLintResult internal constructor(
                     stripMarkers(isXml, doc, contents)
 
                     // Finally write the expected errors back in
-                    for (warning in matches) {
-                        val location = warning.location
+                    for (incident in matches) {
+                        val location = incident.location
 
                         val start = location.start
                         val end = location.end
@@ -251,7 +252,7 @@ class TestLintResult internal constructor(
 
                         val startMarker: String
                         val endMarker: String
-                        var message = warning.message
+                        var message = incident.message
 
                         if (!useRaw) {
                             // Use plain ascii in the test golden files for now. (This also ensures
@@ -260,7 +261,7 @@ class TestLintResult internal constructor(
                             message = TextFormat.RAW.convertTo(message, TextFormat.TEXT)
                         }
                         if (isXml) {
-                            val tag = warning.severity.description.toLowerCase(Locale.ROOT)
+                            val tag = incident.severity.description.toLowerCase(Locale.ROOT)
                             startMarker = "<?$tag message=\"$message\"?>"
                             endMarker = "<?$tag?>"
                         } else {
@@ -287,16 +288,16 @@ class TestLintResult internal constructor(
         return this
     }
 
-    private fun findWarnings(targetFile: String): List<Warning> {
+    private fun findIncidents(targetFile: String): List<Incident> {
         // The target file should be platform neutral (/, not \ as separator)
         assertTrue(targetFile, !targetFile.contains("\\"))
 
         // Find any errors reported in this document
-        val matches = Lists.newArrayList<Warning>()
-        for (warning in warnings) {
-            val path = warning.file.path.replace(File.separatorChar, '/')
+        val matches = Lists.newArrayList<Incident>()
+        for (incident in incidents) {
+            val path = incident.file.path.replace(File.separatorChar, '/')
             if (path.endsWith(targetFile)) {
-                matches.add(warning)
+                matches.add(incident)
             }
         }
 
@@ -387,8 +388,8 @@ class TestLintResult internal constructor(
      */
     fun expectCount(expectedCount: Int, vararg severities: Severity): TestLintResult {
         var count = 0
-        for (warning in warnings) {
-            if (ArrayUtil.contains(warning.severity, *severities)) {
+        for (incident in incidents) {
+            if (ArrayUtil.contains(incident.severity, *severities)) {
                 count++
             }
         }
@@ -411,7 +412,7 @@ class TestLintResult internal constructor(
 
     /** Verify quick fixes  */
     fun verifyFixes(): LintFixVerifier {
-        return LintFixVerifier(task, warnings)
+        return LintFixVerifier(task, incidents)
     }
 
     /**
@@ -593,15 +594,10 @@ class TestLintResult internal constructor(
                 } else {
                     File.createTempFile(name, extension)
                 }
-            var client: TestLintClient? = null
-            if (warnings.isNotEmpty()) {
-                val testClient = warnings[0].project.client
-                if (testClient is TestLintClient) {
-                    client = testClient
-                }
+            val client = incidents.firstNotNullResult {
+                it.project?.client as? TestLintClient
             }
-            if (client == null) {
-                client = object : TestLintClient() {
+                ?: object : TestLintClient() {
                     override fun getClientRevision(): String? {
                         // HACK
                         if (registry == null) {
@@ -609,9 +605,9 @@ class TestLintResult internal constructor(
                         }
                         return super.getClientRevision()
                     }
+                }.apply {
+                    getClientRevision() // force registry initialization
                 }
-                client.getClientRevision() // force registry initialization
-            }
 
             val reporter = if (html)
                 Reporter.createHtmlReporter(client, file, client.flags)
@@ -627,8 +623,8 @@ class TestLintResult internal constructor(
             if (fullPaths) {
                 client.flags.isFullPath = true
             }
-            val stats = LintStats.create(warnings, null as LintBaseline?)
-            reporter.write(stats, warnings)
+            val stats = LintStats.create(incidents, null as LintBaseline?)
+            reporter.write(stats, incidents)
             val actual = Files.asCharSource(file, Charsets.UTF_8).read()
             val transformed = transformer.transform(actual)
             for (checker in checkers) {
@@ -641,7 +637,7 @@ class TestLintResult internal constructor(
                     val document = PositionXmlParser.parse(actual)
                     assertNotNull(document)
                     assertEquals(
-                        warnings.size.toLong(),
+                        incidents.size.toLong(),
                         document.getElementsByTagName("issue").length.toLong()
                     )
                 } catch (t: Throwable) {
@@ -728,6 +724,6 @@ class TestLintResult internal constructor(
 
     companion object {
         private const val TRUNCATION_MARKER = "\u2026"
-        val comparator: Comparator<Warning> = Comparator { o1, o2 -> o2.offset - o1.offset }
+        val comparator: Comparator<Incident> = Comparator { o1, o2 -> o2.startOffset - o1.startOffset }
     }
 }

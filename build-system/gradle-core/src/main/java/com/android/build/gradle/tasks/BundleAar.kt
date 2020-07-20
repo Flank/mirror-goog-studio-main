@@ -19,13 +19,12 @@ package com.android.build.gradle.tasks
 import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI
 import com.android.build.gradle.internal.tasks.AarMetadataTask
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.BuilderConstants
 import org.gradle.api.Action
 import org.gradle.api.file.ConfigurableFileCollection
@@ -76,9 +75,9 @@ abstract class BundleAar : Zip(), VariantAwareTask {
         }
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<BundleAar, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: VariantCreationConfig
+    ) : VariantTaskCreationAction<BundleAar, VariantCreationConfig>(
+        creationConfig
     ) {
 
         override val name: String

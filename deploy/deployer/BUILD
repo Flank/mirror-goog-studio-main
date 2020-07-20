@@ -154,6 +154,11 @@ iml_module(
     bundle_data = [
         "//tools/base/deploy/installer:android-installer",
     ],
+    bundled_deps = [
+        "//tools/base/deploy/deployer:unb.deploy_java_proto",
+        "//prebuilts/r8:unb.r8",
+        "//tools/base/deploy/deployer:unb.libjava_version",
+    ],
     iml_files = ["android.sdktools.deployer.iml"],
     lint_baseline = "lint_baseline.xml",
     tags = [
@@ -173,7 +178,7 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
-        "//tools/base/deploy/proto:deploy_java_proto",
+        "//tools/base/deploy/deployer:unb.deploy_java_proto",
         "//tools/adt/idea/.idea/libraries:unb.protobuf",
     ],
     # do not sort: must match IML order
@@ -184,18 +189,51 @@ iml_module(
         "//tools/base/testutils:unb.studio.android.sdktools.testutils[module, test]",
         "//tools/base/apkparser:unb.studio.android.sdktools.binary-resources[module]",
         "//tools/adt/idea/.idea/libraries:unb.Guava",
-        "//tools/base/deploy/proto:deploy_java_proto",
+        "//tools/base/deploy/deployer:unb.deploy_java_proto",
         "//tools/adt/idea/.idea/libraries:unb.protobuf",
         "//prebuilts/r8:unb.r8",
-        "//tools/base/deploy/deployer:java_version",
+        "//tools/base/deploy/deployer:unb.libjava_version",
         "//tools/adt/idea/.idea/libraries:unb.sqlite",
         "//tools/adt/idea/.idea/libraries:unb.mockito[test]",
         "//tools/base/tracer:unb.studio.android.sdktools.tracer[module]",
         "//tools/base/fakeadbserver:unb.studio.android.sdktools.fakeadbserver[module, test]",
         "//tools/adt/idea/.idea/libraries:unb.studio-proto",
         "//tools/base/perf-logger:unb.studio.perf-logger[module, test]",
-        "//tools/base/deploy/installer/tests:fake_device_proto[test]",
+        "//tools/base/deploy/deployer:unb.fake_device_proto[test]",
         "//tools/adt/idea/.idea/libraries:unb.studio-grpc[test]",
         "//tools/base/zipflinger:unb.studio.android.sdktools.zipflinger[module]",
     ],
+)
+
+# managed by go/iml_to_build [unb]
+java_import(
+    name = "unb.deploy_java_proto",
+    jars = ["//tools/base/deploy/proto:deploy_java_proto.jar"],
+    tags = [
+        "manual",
+        "unb",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# managed by go/iml_to_build [unb]
+java_import(
+    name = "unb.libjava_version",
+    jars = ["//tools/base/deploy/deployer:libjava_version.jar"],
+    tags = [
+        "manual",
+        "unb",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# managed by go/iml_to_build [unb]
+java_import(
+    name = "unb.fake_device_proto",
+    jars = ["//tools/base/deploy/installer/tests:fake_device_proto.jar"],
+    tags = [
+        "manual",
+        "unb",
+    ],
+    visibility = ["//visibility:public"],
 )

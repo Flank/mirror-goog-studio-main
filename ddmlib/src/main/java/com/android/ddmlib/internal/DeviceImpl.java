@@ -80,6 +80,8 @@ public final class DeviceImpl implements IDevice {
     /** Name of the AVD */
     private String mAvdName = null;
 
+    @Nullable private String mAvdPath;
+
     /** State of the device. */
     private DeviceState mState;
 
@@ -170,6 +172,20 @@ public final class DeviceImpl implements IDevice {
         }
 
         mAvdName = avdName;
+    }
+
+    @Nullable
+    @Override
+    public String getAvdPath() {
+        return mAvdPath;
+    }
+
+    void setAvdPath(@NonNull String avdPath) {
+        if (!isEmulator()) {
+            throw new IllegalStateException();
+        }
+
+        mAvdPath = avdPath;
     }
 
     @Override
@@ -772,7 +788,7 @@ public final class DeviceImpl implements IDevice {
                 String.format("%s:%s", namespace.getType(), remoteSocketName)); //$NON-NLS-1$
     }
 
-    @VisibleForTesting
+    // @VisibleForTesting
     public DeviceImpl(ClientTracker clientTracer, String serialNumber, DeviceState deviceState) {
         mClientTracer = clientTracer;
         mSerialNumber = serialNumber;

@@ -28,7 +28,6 @@ import static com.android.builder.model.TestOptions.Execution.ANDROIDX_TEST_ORCH
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.LoggerWrapper;
@@ -417,7 +416,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
     public static class CreationAction
             extends VariantTaskCreationAction<
-                    DeviceProviderInstrumentTestTask, ComponentPropertiesImpl> {
+                    DeviceProviderInstrumentTestTask, VariantCreationConfig> {
 
         private static final String CONNECTED_DEVICE_PROVIDER = "connected";
 
@@ -433,10 +432,10 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
         /** Creation action for AGP {@link ConnectedDeviceProvider} device providers. */
         public CreationAction(
-                @NonNull ComponentPropertiesImpl componentProperties,
+                @NonNull VariantCreationConfig creationConfig,
                 @NonNull AbstractTestDataImpl testData) {
             this(
-                    componentProperties,
+                    creationConfig,
                     null,
                     CONNECTED_DEVICE_PROVIDER,
                     Type.INTERNAL_CONNECTED_DEVICE_PROVIDER,
@@ -445,11 +444,11 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
         /** Creation action for custom (non-AGP) device providers. */
         public CreationAction(
-                @NonNull ComponentPropertiesImpl componentProperties,
+                @NonNull VariantCreationConfig creationConfig,
                 @NonNull DeviceProvider deviceProvider,
                 @NonNull AbstractTestDataImpl testData) {
             this(
-                    componentProperties,
+                    creationConfig,
                     deviceProvider,
                     deviceProvider.getName(),
                     Type.CUSTOM_DEVICE_PROVIDER,
@@ -457,12 +456,12 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         }
 
         private CreationAction(
-                @NonNull ComponentPropertiesImpl componentProperties,
+                @NonNull VariantCreationConfig creationConfig,
                 @Nullable DeviceProvider deviceProvider,
                 @NonNull String deviceProviderName,
                 @NonNull Type type,
                 @NonNull AbstractTestDataImpl testData) {
-            super(componentProperties);
+            super(creationConfig);
             this.deviceProvider = deviceProvider;
             this.deviceProviderName = deviceProviderName;
             this.type = type;
@@ -657,6 +656,13 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         .from(
                                 configurations.getByName(
                                         UtpDependency.ANDROID_TEST_PLUGIN.getConfigurationName()));
+                task.getTestRunnerFactory()
+                        .getUtpDependencies()
+                        .getTestDeviceInfoPlugin()
+                        .from(
+                                configurations.getByName(
+                                        UtpDependency.ANDROID_TEST_DEVICE_INFO_PLUGIN
+                                                .getConfigurationName()));
                 task.getTestRunnerFactory()
                         .getUtpDependencies()
                         .getTestPluginHostRetention()

@@ -18,10 +18,10 @@ package com.android.build.gradle.internal.transforms
 
 import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat
 import com.android.build.gradle.internal.res.shrinker.LoggerAndFileDebugReporter
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerImpl
@@ -64,7 +64,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.io.Serializable
 import javax.inject.Inject
 
 /**
@@ -162,9 +161,9 @@ abstract class ShrinkResourcesNewShrinkerTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<ShrinkResourcesNewShrinkerTask, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: VariantCreationConfig
+    ) : VariantTaskCreationAction<ShrinkResourcesNewShrinkerTask, VariantCreationConfig>(
+        creationConfig
     ) {
         override val type = ShrinkResourcesNewShrinkerTask::class.java
         override val name = computeTaskName("shrink", "Res")
@@ -223,7 +222,7 @@ abstract class ShrinkResourcesNewShrinkerTask : NonIncrementalTask() {
     }
 }
 
-abstract class ShrinkProtoResourcesParams : DecoratedWorkParameters, Serializable {
+abstract class ShrinkProtoResourcesParams : DecoratedWorkParameters {
     abstract val usePreciseShrinking: Property<Boolean>
     abstract val requiresInitialConversionToProto: Property<Boolean>
 

@@ -29,6 +29,7 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.profile.Recorder;
+import com.android.builder.profile.ThreadRecorder;
 import com.android.ide.common.util.ReferenceHolder;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -41,18 +42,21 @@ import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionTyp
 import com.google.wireless.android.sdk.stats.GradleTransformExecution;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.gradle.api.Task;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.LoggingManager;
 import org.gradle.api.provider.Property;
+import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -73,7 +77,6 @@ import org.gradle.workers.WorkerExecutor;
 public abstract class TransformTask extends StreamBasedTask {
 
     private Transform transform;
-    private Recorder recorder;
     Collection<SecondaryFile> secondaryFiles = null;
     List<FileCollection> secondaryInputFiles = null;
 
@@ -175,6 +178,7 @@ public abstract class TransformTask extends StreamBasedTask {
                         .setTransformClassName(transform.getClass().getName())
                         .build();
 
+        Recorder recorder = ThreadRecorder.get();
         recorder.record(
                 ExecutionType.TASK_TRANSFORM_PREPARATION,
                 preExecutionInfo,
@@ -581,13 +585,13 @@ public abstract class TransformTask extends StreamBasedTask {
             task.referencedInputStreams = referencedInputStreams;
             task.outputStream = outputStream;
             task.setVariantName(variantName);
-            task.recorder = recorder;
+            boolean cachingEnabled = transform.isCacheable();
             task.getOutputs()
                     .cacheIf(
                             "Transform "
                                     + transform.getClass().getName()
                                     + " declares itself as cacheable",
-                            t -> transform.isCacheable());
+                            (Spec<? super Task> & Serializable) (t -> cachingEnabled));
             task.registerConsumedAndReferencedStreamInputs();
             task.getProjectPath().set(task.getProject().getPath());
             task.secondaryInputFiles =

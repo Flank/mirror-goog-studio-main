@@ -1252,6 +1252,11 @@ allprojects { proj ->
         return applyOptions(ModelBuilder(this, projectConnection))
     }
 
+    /** Fluent method to get the model.  */
+    fun modelV2(): ModelBuilderV2 {
+        return applyOptions(ModelBuilderV2(this, projectConnection))
+    }
+
     private fun <T : BaseGradleExecutor<T>> applyOptions(executor: T): T {
         for ((option, value) in booleanOptions) {
             executor.with(option, value)
