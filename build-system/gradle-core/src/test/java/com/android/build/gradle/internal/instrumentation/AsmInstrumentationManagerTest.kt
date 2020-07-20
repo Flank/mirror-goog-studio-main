@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.instrumentation
 import com.android.SdkConstants.DOT_CLASS
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.ClassData
+import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.testutils.TestInputsGenerator
@@ -33,6 +34,8 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.Opcodes.ACC_PUBLIC
+import org.objectweb.asm.Opcodes.ARETURN
 import org.objectweb.asm.Opcodes.ASM7
 import org.objectweb.asm.Type
 import java.io.File
@@ -67,6 +70,12 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
     private lateinit var inputJar: File
     private lateinit var outputDir: File
     private lateinit var classes: Map<String, ByteArray>
+
+    /**
+     * As we're setting maxs to -1, and the value is stored in an unsigned 16 bit integer, the
+     * stored value will be (2^16) - 1
+     */
+    private val invalidMaxsValue = (1 shl 16) - 1
 
     @Before
     fun setUp() {
@@ -104,10 +113,11 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
         )
     }
 
-    private fun AsmInstrumentationManager.instrument() {
+    private fun AsmInstrumentationManager.instrument(inputDir: File, outputDir: File) {
         if (testMode == TestMode.DIR) {
             instrumentClassesFromDirectoryToDirectory(inputDir, outputDir)
         } else {
+            val inputJar = inputDir.listFiles()!![0]
             instrumentClassesFromJarToJar(inputJar, File(outputDir, inputJar.name))
         }
     }
@@ -118,8 +128,9 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
         AsmInstrumentationManager(
             listOf(),
             apiVersion,
-            classesHierarchyData
-        ).instrument()
+            classesHierarchyData,
+            FramesComputationMode.COPY_FRAMES
+        ).instrument(inputDir, outputDir)
 
         // Then the classes should be copied to the destination
 
@@ -141,8 +152,9 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
         AsmInstrumentationManager(
             listOf(visitorFactory),
             apiVersion,
-            classesHierarchyData
-        ).instrument()
+            classesHierarchyData,
+            FramesComputationMode.COPY_FRAMES
+        ).instrument(inputDir, outputDir)
 
         val outputClasses = getOutputClassesByteArrayMap()
         assertThat(outputClasses).hasSize(classes.size)
@@ -219,8 +231,9 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
                 getConfiguredVisitorFactory(SecondVisitorAnnotationAddingFactory::class.java)
             ),
             apiVersion,
-            classesHierarchyData
-        ).instrument()
+            classesHierarchyData,
+            FramesComputationMode.COPY_FRAMES
+        ).instrument(inputDir, outputDir)
 
         val instrumentedClassesLoader = if (testMode == TestMode.DIR) {
             InstrumentedClassesLoader(
@@ -296,6 +309,94 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
                 "f4" to listOf(SecondVisitorAnnotation::class.java.name)
             )
         )
+    }
+
+    private fun invalidateInputClassesMaxs(): File {
+        val newInputDir = temporaryFolder.newFolder()
+        AsmInstrumentationManager(
+            listOf(getConfiguredVisitorFactory(MaxsInvalidatingVisitorFactory::class.java)),
+            apiVersion,
+            classesHierarchyData,
+            FramesComputationMode.COPY_FRAMES
+        ).instrument(inputDir, newInputDir)
+        return newInputDir
+    }
+
+    @Test
+    fun testCopyFramesMode() {
+        // First invalidate the maxs of ClassImplementsI
+        val newInputDir = invalidateInputClassesMaxs()
+
+        // The invalid maxs should be just copied
+        var classContent =
+            dumpClassContent(getOutputClassesByteArrayMap(newInputDir)[ClassImplementsI::class.java.name])
+
+        // The existing methods (<init>, f1, f2) should have invalid maxs
+        assertThat(classContent.count { it.contains("MAXSTACK = $invalidMaxsValue") }).isEqualTo(3)
+        assertThat(classContent.count { it.contains("MAXLOCALS = $invalidMaxsValue") }).isEqualTo(3)
+
+        // Given a visitor that injects a method to ClassImplementsI
+        // When the instrumentation manager is invoked with COPY_FRAMES mode
+
+        AsmInstrumentationManager(
+            listOf(getConfiguredVisitorFactory(MethodInjectingVisitorFactory::class.java)),
+            apiVersion,
+            classesHierarchyData,
+            FramesComputationMode.COPY_FRAMES
+        ).instrument(newInputDir, outputDir)
+
+        // Then all existing and injected methods should have invalid maxs
+        classContent =
+            dumpClassContent(getOutputClassesByteArrayMap()[ClassImplementsI::class.java.name])
+
+        assertThat(classContent.count { it.contains("MAXSTACK = $invalidMaxsValue") }).isEqualTo(4)
+        assertThat(classContent.count { it.contains("MAXLOCALS = $invalidMaxsValue") }).isEqualTo(4)
+    }
+
+    @Test
+    fun testFramesComputationForInstrumentedMethodsOnly() {
+        // First invalidate the maxs of ClassImplementsI
+        val newInputDir = invalidateInputClassesMaxs()
+
+        // Given a visitor that injects a method to ClassImplementsI
+        // When the instrumentation manager is invoked with COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS
+        // mode
+        AsmInstrumentationManager(
+            listOf(getConfiguredVisitorFactory(MethodInjectingVisitorFactory::class.java)),
+            apiVersion,
+            classesHierarchyData,
+            FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS
+        ).instrument(newInputDir, outputDir)
+
+        // Then only the existing methods (<init>, f1, f2) should have invalid maxs
+        val classContent =
+            dumpClassContent(getOutputClassesByteArrayMap()[ClassImplementsI::class.java.name])
+
+        assertThat(classContent.count { it.contains("MAXSTACK = $invalidMaxsValue") }).isEqualTo(3)
+        assertThat(classContent.count { it.contains("MAXLOCALS = $invalidMaxsValue") }).isEqualTo(3)
+    }
+
+    @Test
+    fun testFramesComputationForInstrumentedClasses() {
+        // First invalidate the maxs of ClassImplementsI
+        val newInputDir = invalidateInputClassesMaxs()
+
+        // Given a visitor that injects a method to ClassImplementsI
+        // When the instrumentation manager is invoked with COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES
+        // mode
+        AsmInstrumentationManager(
+            listOf(getConfiguredVisitorFactory(MethodInjectingVisitorFactory::class.java)),
+            apiVersion,
+            classesHierarchyData,
+            FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES
+        ).instrument(newInputDir, outputDir)
+
+        // Then all methods should have their maxs fixed
+        val classContent =
+            dumpClassContent(getOutputClassesByteArrayMap()[ClassImplementsI::class.java.name])
+
+        assertThat(classContent.count { it.contains("MAXSTACK = $invalidMaxsValue") }).isEqualTo(0)
+        assertThat(classContent.count { it.contains("MAXLOCALS = $invalidMaxsValue") }).isEqualTo(0)
     }
 
     class InstrumentedClassesLoader(urls: Array<URL>, parent: ClassLoader) :
@@ -387,7 +488,7 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
         return result
     }
 
-    private fun getOutputClassesByteArrayMap(): Map<String, ByteArray> {
+    private fun getOutputClassesByteArrayMap(outputDir: File = this.outputDir): Map<String, ByteArray> {
         if (testMode == TestMode.JAR) {
             return getClassesByteArrayMapFromJar(outputDir.listFiles()!![0])
         }
@@ -482,6 +583,85 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
                 }
             }
             return super.visitMethod(access, name, descriptor, signature, exceptions)
+        }
+    }
+
+    class MaxsInvalidatingClassVisitor(
+        val apiVersion: Int,
+        classVisitor: ClassVisitor
+    ) : ClassVisitor(apiVersion, classVisitor) {
+
+        override fun visitMethod(
+            access: Int,
+            name: String?,
+            descriptor: String?,
+            signature: String?,
+            exceptions: Array<out String>?
+        ): MethodVisitor {
+            val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
+            return object : MethodVisitor(apiVersion, mv) {
+                override fun visitMaxs(maxStack: Int, maxLocals: Int) {
+                    super.visitMaxs(-1, -1)
+                }
+            }
+        }
+    }
+
+    abstract class MaxsInvalidatingVisitorFactory : AsmClassVisitorFactory<Params> {
+        override fun createClassVisitor(
+            classData: ClassData,
+            nextClassVisitor: ClassVisitor
+        ): ClassVisitor {
+            return MaxsInvalidatingClassVisitor(
+                instrumentationContext.apiVersion.get(),
+                nextClassVisitor
+            )
+        }
+
+        override fun isInstrumentable(classData: ClassData): Boolean {
+            return classData.classAnnotations.contains(Instrument::class.java.name) &&
+                    classData.className.endsWith("ClassImplementsI")
+        }
+    }
+
+    class MethodInjectingClassVisitor(
+        val apiVersion: Int,
+        classVisitor: ClassVisitor
+    ) : ClassVisitor(apiVersion, classVisitor) {
+
+        override fun visitEnd() {
+            visitMethod(
+                ACC_PUBLIC,
+                "injectedMethod",
+                "()Ljava/lang/String;",
+                null,
+                null
+            ).also { methodVisitor ->
+                methodVisitor.visitCode()
+                methodVisitor.visitLdcInsn("This is an injected method")
+                methodVisitor.visitInsn(ARETURN)
+                methodVisitor.visitMaxs(-1, -1)
+                methodVisitor.visitEnd()
+            }
+
+            super.visitEnd()
+        }
+    }
+
+    abstract class MethodInjectingVisitorFactory : AsmClassVisitorFactory<Params> {
+        override fun createClassVisitor(
+            classData: ClassData,
+            nextClassVisitor: ClassVisitor
+        ): ClassVisitor {
+            return MethodInjectingClassVisitor(
+                instrumentationContext.apiVersion.get(),
+                nextClassVisitor
+            )
+        }
+
+        override fun isInstrumentable(classData: ClassData): Boolean {
+            return classData.classAnnotations.contains(Instrument::class.java.name) &&
+                    classData.className.endsWith("ClassImplementsI")
         }
     }
 
