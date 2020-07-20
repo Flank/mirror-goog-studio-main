@@ -25,7 +25,6 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
-
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -36,9 +35,7 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
 import junit.framework.TestCase;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.Attributes;
@@ -111,14 +108,16 @@ public class DeviceSchemaTest extends TestCase {
     }
 
     public void testNoHardware() throws Exception {
-        String regex = "Error: cvc-complex-type.2.4.a: Invalid content was found starting with "
-                + "element 'd:software'.*";
+        String regex =
+                "Error: cvc-complex-type.2.4.a: Invalid content was found starting with "
+                        + "element '\\{?[^']*:software\\}?'.*";
         checkFailure("devices_no_hardware.xml", regex);
     }
 
     public void testNoSoftware() throws Exception {
-        String regex = "Error: cvc-complex-type.2.4.a: Invalid content was found starting with "
-                + "element 'd:state'.*";
+        String regex =
+                "Error: cvc-complex-type.2.4.a: Invalid content was found starting with "
+                        + "element '\\{?[^']*:state\\}?'.*";
         checkFailure("devices_no_software.xml", regex);
     }
 
