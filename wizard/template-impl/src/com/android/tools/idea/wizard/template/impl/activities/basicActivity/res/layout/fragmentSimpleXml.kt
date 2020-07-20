@@ -18,10 +18,18 @@ package com.android.tools.idea.wizard.template.impl.activities.basicActivity.res
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.renderIf
 
-fun fragmentSimpleXml(useAndroidX: Boolean, isNewModule: Boolean): String {
+fun fragmentSimpleXml(useAndroidX: Boolean): String {
   val layout = getMaterialComponentName("android.support.constraint.ConstraintLayout", useAndroidX)
-  val newModuleBlock = renderIf(isNewModule) {
-    """
+
+  return """
+<?xml version="1.0" encoding="utf-8"?>
+<$layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
     <fragment
         android:id="@+id/nav_host_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
@@ -33,18 +41,6 @@ fun fragmentSimpleXml(useAndroidX: Boolean, isNewModule: Boolean): String {
         app:layout_constraintBottom_toBottomOf="parent"
         app:defaultNavHost="true"
         app:navGraph="@navigation/nav_graph" />
-      """
-  }
-
-  return """
-<?xml version="1.0" encoding="utf-8"?>
-<$layout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    app:layout_behavior="@string/appbar_scrolling_view_behavior">
-$newModuleBlock
 </$layout>
 """
 }
