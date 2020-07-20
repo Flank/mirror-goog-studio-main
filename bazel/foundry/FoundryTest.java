@@ -105,24 +105,6 @@ public final class FoundryTest {
         }
     }
 
-    @Test
-    public void testJdkVersion() throws IOException {
-        if (REMOTE_PROP) {
-            String javaVersionInUse = System.getProperty("java.version");
-            // Get the java version from our prebuilts jdk.
-            ProcessBuilder builder =
-                    new ProcessBuilder("prebuilts/studio/jdk/linux/bin/java", "-version");
-            builder.redirectErrorStream(true);
-            Process p = builder.start();
-            BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String firstLine = r.readLine(); // e.g. openjdk version "1.8.0_152-release"
-            int lastQuote = firstLine.lastIndexOf("\"");
-            int openQuote = firstLine.substring(0, lastQuote).lastIndexOf("\"");
-            String prebuiltsJavaVersion = firstLine.substring(openQuote + 1, lastQuote);
-            assertEquals(javaVersionInUse, prebuiltsJavaVersion);
-        }
-    }
-
     private void execute(String command) {
         execute(command, null, 0);
     }
