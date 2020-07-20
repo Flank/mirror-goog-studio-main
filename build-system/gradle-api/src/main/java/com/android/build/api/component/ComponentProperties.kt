@@ -18,6 +18,7 @@ package com.android.build.api.component
 
 import com.android.build.api.artifact.Artifacts
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
+import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
 import org.gradle.api.Incubating
@@ -43,6 +44,7 @@ interface ComponentProperties: ComponentIdentity,
      *                           InstrumentationScope.Project) { params ->
      *          params.x = "value"
      *      }
+     *      setAsmFramesComputationMode(COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS)
      *  }
      * ```
      *
@@ -61,4 +63,13 @@ interface ComponentProperties: ComponentIdentity,
         scope: InstrumentationScope,
         instrumentationParamsConfig: (ParamT) -> Unit
     )
+
+    /**
+     * Sets the frame computation mode that will be applied to the bytecode of the classes
+     * instrumented by ASM visitors registered through [transformClassesWith]. The default mode is
+     * to [copy frames][FramesComputationMode.COPY_FRAMES].
+     *
+     * When setting this multiple times, the mode with the highest enum value will be selected.
+     */
+    fun setAsmFramesComputationMode(mode: FramesComputationMode)
 }

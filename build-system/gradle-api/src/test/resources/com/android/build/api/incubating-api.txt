@@ -93,6 +93,7 @@ com.android.build.api.component.ComponentIdentity.getFlavorName: java.lang.Strin
 com.android.build.api.component.ComponentIdentity.getProductFlavors: java.util.List<kotlin.Pair<java.lang.String, java.lang.String>> ()
 com.android.build.api.component.ComponentProperties implements com.android.build.api.component.ComponentIdentity, com.android.build.api.component.ActionableComponentObject
 com.android.build.api.component.ComponentProperties.getArtifacts: com.android.build.api.artifact.Artifacts ()
+com.android.build.api.component.ComponentProperties.setAsmFramesComputationMode: void (com.android.build.api.instrumentation.FramesComputationMode)
 com.android.build.api.component.ComponentProperties.transformClassesWith: void (java.lang.Class<? extends com.android.build.api.instrumentation.AsmClassVisitorFactory<ParamT>>, com.android.build.api.instrumentation.InstrumentationScope, kotlin.jvm.functions.Function1<? super ParamT, kotlin.Unit>)
 com.android.build.api.component.FilteredComponentActionRegistrar
 com.android.build.api.component.FilteredComponentActionRegistrar.withBuildType: com.android.build.api.component.BuildTypedComponentActionRegistrar<ComponentT> (java.lang.String)
@@ -748,6 +749,9 @@ com.android.build.api.instrumentation.ClassData.getClassAnnotations: java.util.L
 com.android.build.api.instrumentation.ClassData.getClassName: java.lang.String ()
 com.android.build.api.instrumentation.ClassData.getInterfaces: java.util.List<java.lang.String> ()
 com.android.build.api.instrumentation.ClassData.getSuperClasses: java.util.List<java.lang.String> ()
+com.android.build.api.instrumentation.FramesComputationMode extends java.lang.Enum
+com.android.build.api.instrumentation.FramesComputationMode.valueOf: com.android.build.api.instrumentation.FramesComputationMode (java.lang.String)
+com.android.build.api.instrumentation.FramesComputationMode.values: com.android.build.api.instrumentation.FramesComputationMode[] ()
 com.android.build.api.instrumentation.InstrumentationContext implements java.io.Serializable
 com.android.build.api.instrumentation.InstrumentationContext.getApiVersion: org.gradle.api.provider.Property<java.lang.Integer> ()
 com.android.build.api.instrumentation.InstrumentationParameters implements java.io.Serializable
