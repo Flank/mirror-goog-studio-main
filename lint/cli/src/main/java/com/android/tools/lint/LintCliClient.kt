@@ -77,6 +77,7 @@ import com.intellij.util.lang.UrlClassLoader
 import org.jetbrains.jps.model.java.impl.JavaSdkUtil
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys.PERF_MANAGER
 import org.jetbrains.kotlin.cli.common.CommonCompilerPerformanceManager
+import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.util.PerformanceCounter.Companion.resetAllCounters
@@ -176,6 +177,7 @@ open class LintCliClient : LintClient {
 
     private var validatedIds = false
     private var kotlinPerformanceManager: LintCliKotlinPerformanceManager? = null
+    private var jdkHome: File? = null
     protected var overrideConfiguration: DefaultConfiguration? = null
     var uastEnvironment: UastEnvironment? = null
     val ideaProject: MockProject? get() = uastEnvironment?.ideaProject
@@ -1017,6 +1019,10 @@ open class LintCliClient : LintClient {
         config.addSourceRoots(sourceRoots.toList())
         config.addClasspathRoots(classpathRoots.toList())
         config.kotlinCompilerConfig.putIfNotNull(PERF_MANAGER, kotlinPerformanceManager)
+        jdkHome?.let {
+            config.kotlinCompilerConfig.put(JVMConfigurationKeys.JDK_HOME, it)
+            config.kotlinCompilerConfig.put(JVMConfigurationKeys.NO_JDK, false)
+        }
 
         val env = UastEnvironment.create(config)
         uastEnvironment = env
@@ -1054,6 +1060,10 @@ open class LintCliClient : LintClient {
                 }
             }
 
+            // TODO: When the JRE/JDK distinction no longer applies, simplify the jdkHome setup.
+            if (!isJre) {
+                this.jdkHome = jdkHome
+            }
             return true
         }
 
