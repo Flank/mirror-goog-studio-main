@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.AarSubject
 import com.android.build.gradle.integration.common.utils.getDebugVariant
+import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.AndroidProject
 import com.android.testutils.truth.FileSubject.assertThat
 import com.google.common.truth.Truth.assertThat
@@ -117,8 +118,12 @@ class NamespacedAarTest {
 
     @Test
     fun checkBuilds() {
-        project.executor().run(":publishedLib:assembleRelease")
-        project.executor().run(":lib:assembleDebug", ":app:assembleDebug")
+        project.executor()
+            .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false) // b/160949546
+            .run(":publishedLib:assembleRelease")
+        project.executor()
+            .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false) // b/160949546
+            .run(":lib:assembleDebug", ":app:assembleDebug")
 
         run {
             // Check model level 3

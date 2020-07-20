@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.FileSubject
 import org.junit.Ignore
@@ -277,6 +278,7 @@ class NamespacedDynamicFeatureIntegrationTest {
     @Test
     fun testApkContentsAndPackageIds() {
         project.executor()
+            .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false) // b/160949546
             .run(
                 ":otherFeature1:assembleDebug",
                 ":otherFeature1:assembleDebugAndroidTest",

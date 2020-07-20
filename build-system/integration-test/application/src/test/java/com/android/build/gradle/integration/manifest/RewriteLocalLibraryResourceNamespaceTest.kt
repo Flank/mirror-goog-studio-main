@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.manifest
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
@@ -110,7 +111,9 @@ class RewriteLocalLibraryResourceNamespaceTest {
 
     @Test
     fun build() {
-        project.executor().run("assembleDebug")
+        project.executor()
+            .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false) // b/160949546
+            .run("assembleDebug")
 
         val libraryManifest =
             project.getSubproject("library")

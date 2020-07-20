@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.resources
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
@@ -71,7 +72,9 @@ class PartialRTest {
 
     @Test
     fun checkBuilds() {
-        project.executor().run(":app:assembleDebug")
+        project.executor()
+            .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false) // b/160949546
+            .run(":app:assembleDebug")
 
         val stringsR = FileUtils.join(
                 project.getSubproject("app").intermediatesDir,
@@ -131,7 +134,9 @@ class PartialRTest {
         assertThat(strings2).exists()
 
         // Incremental build.
-        project.executor().run(":app:assembleDebug")
+        project.executor()
+            .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false) // b/160949546
+            .run(":app:assembleDebug")
 
         // Partial file for the removed file should have been removed too.
         assertThat(strings2).doesNotExist()
