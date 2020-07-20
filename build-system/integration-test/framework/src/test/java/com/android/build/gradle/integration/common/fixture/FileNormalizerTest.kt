@@ -20,6 +20,7 @@ import com.google.common.truth.Truth
 import org.gradle.tooling.model.BuildIdentifier
 import org.junit.Test
 import java.io.File
+import java.nio.file.Paths
 
 class FileNormalizerTest {
 
@@ -27,51 +28,62 @@ class FileNormalizerTest {
         buildId = BuildIdentifierImpl(File("/path/to/Project")),
         gradleUserHome = File("/path/to/Gradle"),
         androidSdk = File("/path/to/Sdk"),
-        androidHome = File("/path/to/Home")
+        androidHome = File("/path/to/Home"),
+        localRepos = listOf(Paths.get("/path/to/localRepo1"), Paths.get("/path/to/localRepo2"))
     )
 
     @Test
     fun `Test Outside Paths`() {
         Truth.assertThat(normalizer.normalize(File("/wrong/path")))
-            .isEqualTo(File("/wrong/path"))
+            .isEqualTo("/wrong/path{!}")
     }
 
     @Test
     fun `Test Project Paths`() {
         Truth.assertThat(normalizer.normalize(File("/path/to/Project/foo")))
-            .isEqualTo(File("{PROJECT}/foo"))
+            .isEqualTo("{PROJECT}/foo{!}")
 
         Truth.assertThat(normalizer.normalize(File("/wrong/path")))
-            .isEqualTo(File("/wrong/path"))
+            .isEqualTo("/wrong/path{!}")
     }
 
     @Test
     fun `Test Gradle User Home`() {
         Truth.assertThat(normalizer.normalize(File("/path/to/Gradle/foo")))
-            .isEqualTo(File("{GRADLE}/foo"))
+            .isEqualTo("{GRADLE}/foo{!}")
     }
 
     @Test
     fun `Test Gradle Transform Cache`() {
-        Truth.assertThat(normalizer.normalize(
-            File("/path/to/Gradle/caches/transforms-2/files-2.1/12345678901234567890123456789012/foo")
-        ))
-            .isEqualTo(File("{GRADLE}/caches/transforms-2/{CHECKSUM}/foo"))
+        Truth.assertThat(
+            normalizer.normalize(
+                File("/path/to/Gradle/caches/transforms-2/files-2.1/12345678901234567890123456789012/foo")
+            )
+        )
+            .isEqualTo("{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/foo{!}")
+    }
+
+    @Test
+    fun `Test local repos`() {
+        Truth.assertThat(normalizer.normalize(File("/path/to/localRepo1/blah")))
+            .isEqualTo("{LOCAL_REPO}/blah{!}")
+        Truth.assertThat(normalizer.normalize(File("/path/to/localRepo2/blah")))
+            .isEqualTo("{LOCAL_REPO}/blah{!}")
     }
 
     @Test
     fun `Test android Sdk`() {
         Truth.assertThat(normalizer.normalize(File("/path/to/Sdk/foo")))
-            .isEqualTo(File("{SDK}/foo"))
+            .isEqualTo("{SDK}/foo{!}")
     }
 
     @Test
     fun `Test android Home`() {
         Truth.assertThat(normalizer.normalize(File("/path/to/Home/foo")))
-            .isEqualTo(File("{ANDROID_HOME}/foo"))
+            .isEqualTo("{ANDROID_HOME}/foo{!}")
     }
 
-    private class BuildIdentifierImpl(private val rootDir: File): BuildIdentifier {
+    private class BuildIdentifierImpl(private val rootDir: File) : BuildIdentifier {
         override fun getRootDir(): File {
             return rootDir
         }

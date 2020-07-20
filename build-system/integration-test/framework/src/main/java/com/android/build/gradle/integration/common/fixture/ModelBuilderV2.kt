@@ -17,6 +17,7 @@ package com.android.build.gradle.integration.common.fixture
 
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor.runBuild
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.FetchResult
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2.ModelInfo
 import com.android.build.gradle.integration.common.fixture.model.FileNormalizer
 import com.android.build.gradle.options.BooleanOption
@@ -38,6 +39,7 @@ import org.junit.Assert
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.nio.file.Path
 import java.util.function.Consumer
 
 /**
@@ -98,7 +100,8 @@ class ModelBuilderV2 : BaseGradleExecutor<ModelBuilderV2> {
                 container.rootBuildId,
                 GradleTestProject.getGradleUserHome(GradleTestProject.BUILD_DIR).toFile(),
                 project?.androidHome,
-                androidSdkHome
+                androidSdkHome,
+                GradleTestProject.localRepositories
             )
         )
     }
@@ -121,7 +124,8 @@ class ModelBuilderV2 : BaseGradleExecutor<ModelBuilderV2> {
                 container.rootBuildId,
                 GradleTestProject.getGradleUserHome(GradleTestProject.BUILD_DIR).toFile(),
                 project?.androidHome,
-                androidSdkHome
+                androidSdkHome,
+                GradleTestProject.localRepositories
             )
         )
     }
@@ -244,7 +248,8 @@ class FileNormalizerImpl(
     buildId: BuildIdentifier,
     gradleUserHome: File,
     androidSdk: File?,
-    androidHome: File?
+    androidHome: File?,
+    localRepos: List<Path>
 ): FileNormalizer {
 
     private data class RootData(
@@ -282,7 +287,7 @@ class FileNormalizerImpl(
             mutableList.add(RootData(it, "ANDROID_HOME"))
         }
 
-        GradleTestProject.localRepositories.asSequence().map { it.toFile()}.forEach {
+        localRepos.asSequence().map { it.toFile() }.forEach {
             mutableList.add(RootData(it, "LOCAL_REPO"))
         }
 
@@ -302,14 +307,20 @@ class FileNormalizerImpl(
             val result = file.relativeToOrNull(
                 rootData.root,
                 rootData.varName,
-                rootData.stringModifier)
+                rootData.stringModifier
+            )
 
             if (result != null) {
                 return result + suffix
             }
         }
 
-        return file.toString() + suffix
+        return if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+            // Normalize path separator for files that don't contain any special roots.
+            file.toString().replace("\\", "/")
+        } else {
+            file.toString()
+        } + suffix
     }
 
     override fun toString(): String {
