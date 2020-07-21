@@ -907,7 +907,7 @@ class LintModelFactory : LintModelModuleLoader {
 
         @Suppress("unused") // Used from the lint-gradle module in AGP
         @JvmStatic
-        fun getLintOptions(options: LintOptions): LintModelLintOptions {
+        fun getLintOptions(options: LintOptions): DefaultLintModelLintOptions {
             val severityOverrides = options.severityOverrides?.let { source ->
                 val map = LinkedHashMap<String, LintModelSeverity>()
                 for ((id, severityInt) in source.entries) {

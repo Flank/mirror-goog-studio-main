@@ -24,7 +24,6 @@ import com.android.build.api.component.impl.UnitTestPropertiesImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
-import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -44,6 +43,7 @@ import com.android.tools.lint.model.DefaultLintModelDependencies
 import com.android.tools.lint.model.DefaultLintModelDependencyGraph
 import com.android.tools.lint.model.DefaultLintModelJavaArtifact
 import com.android.tools.lint.model.DefaultLintModelLibraryResolver
+import com.android.tools.lint.model.DefaultLintModelLintOptions
 import com.android.tools.lint.model.DefaultLintModelMavenName
 import com.android.tools.lint.model.DefaultLintModelModule
 import com.android.tools.lint.model.DefaultLintModelResourceField
@@ -66,9 +66,12 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import javax.inject.Inject
@@ -103,7 +106,7 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
     abstract val buildDirectory: Property<File>
 
     @get:Input
-    abstract val lintOptions: Property<LintOptions>
+    abstract val lintOptions: Property<DefaultLintModelLintOptions>
 
     @get:Input
     abstract val viewBinding: Property<Boolean>
@@ -148,7 +151,7 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
             mavenName = DefaultLintModelMavenName(groupId.get(), artifactId.get()),
             gradleVersion = GradleVersion.tryParse(Version.ANDROID_GRADLE_PLUGIN_VERSION),
             buildFolder = buildDirectory.get(),
-            lintOptions = LintModelFactory.getLintOptions(lintOptions.get()),
+            lintOptions = lintOptions.get(),
             lintRuleJars = listOf(),
             resourcePrefix = resourcePrefix.orNull,
             dynamicFeatures = dynamicFeatures.get(),
@@ -188,14 +191,14 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
         @get:Input
         val minifiedEnabled: Boolean
     ) {
-        @get:Input
+        @get:Nested
         abstract val mainArtifact: Property<AndroidArtifactInput>
 
-        @get:Input
+        @get:Nested
         @get:Optional
         abstract val testArtifact: Property<JavaArtifactInput>
 
-        @get:Input
+        @get:Nested
         @get:Optional
         abstract val androidTestArtifact: Property<AndroidArtifactInput>
 
@@ -351,7 +354,9 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
     abstract class ArtifactInput {
         @get:Input
         abstract val javacOutFolder: Property<File>
-        @get:Input
+
+        @get:InputFiles
+        @get:PathSensitive(PathSensitivity.ABSOLUTE)
         abstract val additionalClasses: ConfigurableFileCollection
     }
 
@@ -391,7 +396,7 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
             task.groupId.setDisallowChanges(project.group.toString())
             task.artifactId.setDisallowChanges(project.name)
             task.buildDirectory.setDisallowChanges(project.layout.buildDirectory.map { it.asFile })
-            task.lintOptions.setDisallowChanges(extension.lintOptions)
+            task.lintOptions.setDisallowChanges(LintModelFactory.getLintOptions(extension.lintOptions))
             task.viewBinding.setDisallowChanges(buildFeatures.viewBinding)
             task.coreLibraryDesugaringEnabled.setDisallowChanges(false) //FIXME
             task.namespacingMode.setDisallowChanges(LintModelNamespacingMode.DISABLED) // FIXME
