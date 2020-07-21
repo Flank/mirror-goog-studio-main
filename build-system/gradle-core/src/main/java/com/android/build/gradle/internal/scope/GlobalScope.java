@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Set;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.component.SoftwareComponentFactory;
@@ -270,10 +271,13 @@ public class GlobalScope {
     /**
      * Gets the lint JAR from the lint checking configuration.
      *
-     * @return the resolved lint.jar ArtifactFile from the lint checking configuration
+     * @param lenientMode whether to be lenient about missing dependencies. with <code>false</code>,
+     *     this will throw an exception on missings deps. Use <code>true</code>, when building the
+     *     IDE models.
+     * @return the resolved lint.jar artifact files from the lint checking configuration
      */
     @NonNull
-    public FileCollection getLocalCustomLintChecks() {
+    public ArtifactCollection getLocalCustomLintChecks(boolean lenientMode) {
         // Query for JAR instead of PROCESSED_JAR as we want to get the original lint.jar
         Action<AttributeContainer> attributes =
                 container ->
@@ -282,9 +286,12 @@ public class GlobalScope {
 
         return lintChecks
                 .getIncoming()
-                .artifactView(config -> config.attributes(attributes))
-                .getArtifacts()
-                .getArtifactFiles();
+                .artifactView(
+                        config -> {
+                            config.attributes(attributes);
+                            config.lenient(lenientMode);
+                        })
+                .getArtifacts();
     }
 
     /**
