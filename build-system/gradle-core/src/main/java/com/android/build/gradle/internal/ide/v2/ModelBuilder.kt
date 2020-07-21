@@ -233,10 +233,6 @@ class ModelBuilder<
         // gather variants
         val variantList = variants.map { createVariant(it, buildFeatures, instantAppResultMap) }
 
-        val lintJarCollection = globalScope.getLocalCustomLintChecks(true)
-        val lintJarFailures = lintJarCollection.failures
-        // FIXME handle this b/161774530
-
         return AndroidProjectImpl(
             modelVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION,
             apiVersion = Version.BUILDER_MODEL_API_VERSION,
@@ -272,7 +268,7 @@ class ModelBuilder<
             dependenciesInfo = dependenciesInfo,
 
             flags = getFlags(),
-            lintRuleJars = lintJarCollection.artifactFiles.files.toList()
+            lintRuleJars = globalScope.localCustomLintChecks.files.toList()
         )
     }
 
