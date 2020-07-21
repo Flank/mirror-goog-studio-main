@@ -26,7 +26,6 @@ import com.intellij.openapi.extensions.Extensions;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 
 public class LintCliClientTest extends AbstractCheckTest {
     public void testUnknownId() {
@@ -80,7 +79,7 @@ public class LintCliClientTest extends AbstractCheckTest {
 
     public void testMissingExtensionPoints() {
         // Regression test for 37817771
-        UastEnvironment env = UastEnvironment.create(Collections.emptyList());
+        UastEnvironment env = UastEnvironment.create(UastEnvironment.Configuration.create());
         Extensions.getExtensions(CustomExceptionHandler.KEY);
         env.dispose();
     }

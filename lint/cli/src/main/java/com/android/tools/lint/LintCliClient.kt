@@ -65,6 +65,7 @@ import com.android.utils.StdLogger
 import com.google.common.annotations.Beta
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Splitter
+import com.google.common.collect.Iterables
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import com.intellij.codeInsight.ExternalAnnotationsManager
@@ -963,19 +964,20 @@ open class LintCliClient : LintClient {
             allProjects.add(project)
             allProjects.addAll(project.allLibraries)
         }
-        val classpath: MutableSet<File> = LinkedHashSet(50)
+        val sourceRoots: MutableSet<File> = LinkedHashSet(10)
+        val classpathRoots: MutableSet<File> = LinkedHashSet(50)
         for (project in allProjects) {
             // Note that there could be duplicates here since we're including multiple library
             // dependencies that could have the same dependencies (e.g. lib1 and lib2 both
             // referencing guava.jar)
-            classpath.addAll(project.javaSourceFolders)
+            sourceRoots.addAll(project.javaSourceFolders)
             if (includeTests) {
-                classpath.addAll(project.testSourceFolders)
+                sourceRoots.addAll(project.testSourceFolders)
             }
-            classpath.addAll(project.generatedSourceFolders)
-            classpath.addAll(project.getJavaLibraries(true))
+            sourceRoots.addAll(project.generatedSourceFolders)
+            classpathRoots.addAll(project.getJavaLibraries(true))
             if (includeTests) {
-                classpath.addAll(project.testLibraries)
+                classpathRoots.addAll(project.testLibraries)
             }
             // Don't include all class folders:
             //  files.addAll(project.getJavaClassFolders());
@@ -987,17 +989,17 @@ open class LintCliClient : LintClient {
             // compiled libraries will not work; see
             // https://issuetracker.google.com/72032121
             if (project.isLibrary) {
-                classpath.addAll(project.javaClassFolders)
+                classpathRoots.addAll(project.javaClassFolders)
             } else if (project.isGradleProject) {
                 // As of 3.4, R.java is in a special jar file
                 for (f in project.javaClassFolders) {
                     if (f.name == SdkConstants.FN_R_CLASS_JAR) {
-                        classpath.add(f)
+                        classpathRoots.add(f)
                     }
                 }
             }
         }
-        addBootClassPath(knownProjects, classpath)
+        addBootClassPath(knownProjects, classpathRoots)
         var maxLevel = LanguageLevel.JDK_1_7
         for (project in knownProjects) {
             val level = project.javaLanguageLevel
@@ -1006,12 +1008,14 @@ open class LintCliClient : LintClient {
             }
         }
 
-        for (file in classpath) {
+        for (file in Iterables.concat(sourceRoots, classpathRoots)) {
             // IntelliJ expects absolute file paths, otherwise resolution can fail in subtle ways.
             require(file.isAbsolute) { "Relative Path found: $file. All paths should be absolute." }
         }
 
-        val config = UastEnvironment.Configuration.create(classpath.toList())
+        val config = UastEnvironment.Configuration.create()
+        config.addSourceRoots(sourceRoots.toList())
+        config.addClasspathRoots(classpathRoots.toList())
         val kotlinConfig = config.kotlinCompilerConfig
         kotlinConfig.putIfNotNull(CLIConfigurationKeys.PERF_MANAGER, kotlinPerformanceManager)
 

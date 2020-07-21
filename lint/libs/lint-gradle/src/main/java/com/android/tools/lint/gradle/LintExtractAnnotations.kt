@@ -34,9 +34,14 @@ class LintExtractAnnotations {
         val classDir = request.classDir
         val output = request.output
         val sourceFiles = request.sourceFiles
-        val roots = request.roots
+        val sourceRoots = request.sourceRoots
+        val classpathRoots = request.classpathRoots
 
-        val env = UastEnvironment.create(roots)
+        val config = UastEnvironment.Configuration.create()
+        config.addSourceRoots(sourceRoots)
+        config.addClasspathRoots(classpathRoots)
+
+        val env = UastEnvironment.create(config)
         try {
             val parsedUnits = Extractor.createUnitsForFiles(env.ideaProject, sourceFiles)
 

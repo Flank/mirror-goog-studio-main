@@ -203,14 +203,14 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
             return;
         }
 
-        List<File> roots = fileVisitor.getSourceRoots();
+        List<File> classpathRoots = new ArrayList<>();
         FileCollection classpath = getClasspath();
         if (classpath != null) {
             for (File jar : classpath) {
-                roots.add(jar);
+                classpathRoots.add(jar);
             }
         }
-        roots.addAll(getBootClasspath().getFiles());
+        classpathRoots.addAll(getBootClasspath().getFiles());
 
         ExtractAnnotationRequest request =
                 new ExtractAnnotationRequest(
@@ -219,7 +219,8 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                         getClassDir(),
                         getOutput().get().getAsFile(),
                         sourceFiles,
-                        roots);
+                        fileVisitor.getSourceRoots(),
+                        classpathRoots);
         FileCollection lintClassPath = getLintClassPath();
         if (lintClassPath != null) {
             new ReflectiveLintRunner()

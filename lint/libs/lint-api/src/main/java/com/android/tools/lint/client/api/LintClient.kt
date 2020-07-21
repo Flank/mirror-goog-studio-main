@@ -699,10 +699,10 @@ abstract class LintClient {
                 val jars = libs.listFiles()
                 if (jars != null) {
                     for (jar in jars) {
-                        if ((endsWith(jar.path, DOT_JAR) || endsWith(jar.path, DOT_SRCJAR)) &&
-                            !libraries.contains(jar)
-                        ) {
+                        if (endsWith(jar.path, DOT_JAR) && !libraries.contains(jar)) {
                             libraries.add(jar)
+                        } else if (endsWith(jar.path, DOT_SRCJAR) && !sources.contains(jar)) {
+                            sources.add(jar)
                         }
                     }
                 }

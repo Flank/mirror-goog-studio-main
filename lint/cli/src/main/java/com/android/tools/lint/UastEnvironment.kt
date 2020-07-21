@@ -101,9 +101,18 @@ class UastEnvironment private constructor(
     class Configuration private constructor(val kotlinCompilerConfig: CompilerConfiguration) {
         companion object {
             @JvmStatic
-            fun create(classpath: List<File>): Configuration {
-                return Configuration(createKotlinCompilerConfig(classpath))
-            }
+            fun create(): Configuration = Configuration(createKotlinCompilerConfig())
+        }
+
+        fun addSourceRoots(sourceRoots: List<File>) {
+            kotlinCompilerConfig.addJavaSourceRoots(sourceRoots)
+            // Note: the Kotlin compiler would normally add KotlinSourceRoots to the configuration
+            // too, to be used by KotlinCoreEnvironment when computing the set of KtFiles to
+            // analyze. However, Lint already computes the list of KtFiles on its own in LintDriver.
+        }
+
+        fun addClasspathRoots(classpathRoots: List<File>) {
+            kotlinCompilerConfig.addJvmClasspathRoots(classpathRoots)
         }
     }
 
@@ -131,12 +140,6 @@ class UastEnvironment private constructor(
             val parentDisposable = Disposer.newDisposable("UastEnvironment.create")
             val kotlinEnv = createKotlinCompilerEnv(parentDisposable, config.kotlinCompilerConfig)
             return UastEnvironment(kotlinEnv, parentDisposable)
-        }
-
-        /** Convenience method to create a [UastEnvironment] with the default configuration. */
-        @JvmStatic
-        fun create(classpath: List<File>): UastEnvironment {
-            return create(Configuration.create(classpath))
         }
 
         /**
@@ -266,7 +269,7 @@ class UastEnvironment private constructor(
     }
 }
 
-private fun createKotlinCompilerConfig(classpath: List<File>): CompilerConfiguration {
+private fun createKotlinCompilerConfig(): CompilerConfiguration {
     val config = CompilerConfiguration()
 
     config.put(CommonConfigurationKeys.MODULE_NAME, "lint-module")
@@ -286,18 +289,6 @@ private fun createKotlinCompilerConfig(classpath: List<File>): CompilerConfigura
         ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS,
         ScriptingCompilerConfigurationComponentRegistrar()
     )
-
-    // TODO: We should not be "guessing" which roots are source and which are binary.
-    //  In particular, we should ensure that sourceRoots and binaryRoots are non-overlapping.
-    val sourceRoots = classpath.filter { it.isDirectory || it.name.endsWith(DOT_SRCJAR) }
-    val binaryRoots = classpath.filterNot { it.name.endsWith(DOT_SRCJAR) }
-    config.addJavaSourceRoots(sourceRoots)
-    config.addJvmClasspathRoots(binaryRoots)
-
-    // Note: the Kotlin compiler would normally add KotlinSourceRoots to the configuration too,
-    // to be used by KotlinCoreEnvironment when computing the set of KtFiles to analyze.
-    // However, Lint already computes the list of KtFiles on its own in LintDriver. Plus,
-    // when checkDependencies=true, the set of KtFiles to analyze changes over time.
 
     return config
 }

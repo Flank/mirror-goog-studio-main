@@ -243,11 +243,12 @@ public class ExtractAnnotationsDriver {
         extractor.setListIgnored(listFiltered);
 
         LintClient.setClientName(LintClient.CLIENT_UNIT_TESTS);
-        List<File> sourceRoots = findSourceRoots(sources);
-        List<File> joined = Lists.newArrayList(sourceRoots);
-        joined.addAll(classpath);
 
-        UastEnvironment env = UastEnvironment.create(joined);
+        UastEnvironment.Configuration config = UastEnvironment.Configuration.create();
+        config.addSourceRoots(findSourceRoots(sources));
+        config.addClasspathRoots(classpath);
+
+        UastEnvironment env = UastEnvironment.create(config);
         MockProject project = env.getIdeaProject();
 
         List<File> allSourceFiles = Extractor.gatherSources(sources);

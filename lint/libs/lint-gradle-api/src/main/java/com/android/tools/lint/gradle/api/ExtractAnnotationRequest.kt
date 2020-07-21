@@ -46,5 +46,8 @@ class ExtractAnnotationRequest(
     val sourceFiles: List<File>,
 
     /** The roots from the source files */
-    val roots: List<File>
+    val sourceRoots: List<File>,
+
+    /** The roots from the classpath */
+    val classpathRoots: List<File>
 )
