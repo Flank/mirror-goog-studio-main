@@ -408,7 +408,8 @@ public class ModelBuilder<Extension extends BaseExtension>
                 ImmutableList.of(),
                 extension.getCompileOptions(),
                 lintOptions,
-                ImmutableList.copyOf(globalScope.getLocalCustomLintChecks().getFiles()),
+                ImmutableList.copyOf(
+                        globalScope.getLocalCustomLintChecks(true).getArtifactFiles().getFiles()),
                 project.getBuildDir(),
                 extension.getResourcePrefix(),
                 ImmutableList.of(),

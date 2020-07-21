@@ -302,7 +302,9 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
             allInputs = globalScope.getProject().files();
 
             FileCollection localLintJarCollection;
-            allInputs.from(localLintJarCollection = globalScope.getLocalCustomLintChecks());
+            allInputs.from(
+                    localLintJarCollection =
+                            globalScope.getLocalCustomLintChecks(false).getArtifactFiles());
             FileCollection dependencyLintJarCollection;
             allInputs.from(
                     dependencyLintJarCollection =

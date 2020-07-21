@@ -406,7 +406,9 @@ public abstract class TaskManager<
         // create a lifecycle task to build the lintChecks dependencies
         taskFactory.register(
                 COMPILE_LINT_CHECKS_TASK,
-                task -> task.dependsOn(globalScope.getLocalCustomLintChecks()));
+                task ->
+                        task.dependsOn(
+                                globalScope.getLocalCustomLintChecks(false).getArtifactFiles()));
 
         // Create top level test tasks.
         createTopLevelTestTasks();
