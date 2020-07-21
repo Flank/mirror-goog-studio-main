@@ -110,14 +110,10 @@ internal class DynamicFeatureVariantFactory(
         buildFeatures: BuildFeatures,
         projectOptions: ProjectOptions
     ): BuildFeatureValues {
-        val features = buildFeatures as? DynamicFeatureBuildFeatures
+        buildFeatures as? DynamicFeatureBuildFeatures
             ?: throw RuntimeException("buildFeatures not of type DynamicFeatureBuildFeatures")
 
-        return BuildFeatureValuesImpl(
-            buildFeatures,
-            dataBinding = features.dataBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_DATABINDING],
-            mlModelBinding = features.mlModelBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_MLMODELBINDING],
-            projectOptions = projectOptions)
+        return BuildFeatureValuesImpl(buildFeatures, projectOptions)
     }
 
     override fun createTestBuildFeatureValues(
@@ -125,16 +121,18 @@ internal class DynamicFeatureVariantFactory(
         dataBindingOptions: DataBindingOptions,
         projectOptions: ProjectOptions
     ): BuildFeatureValues {
-        val features = buildFeatures as? DynamicFeatureBuildFeatures
+        buildFeatures as? DynamicFeatureBuildFeatures
             ?: throw RuntimeException("buildFeatures not of type DynamicFeatureBuildFeatures")
-
-        val dataBinding =
-            features.dataBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_DATABINDING]
 
         return BuildFeatureValuesImpl(
             buildFeatures,
-            dataBinding = dataBinding && dataBindingOptions.isEnabledForTests,
-            projectOptions = projectOptions)
+            projectOptions,
+            dataBindingOverride = if (!dataBindingOptions.isEnabledForTests) {
+                false
+            } else {
+                null // means whatever is default.
+            }
+        )
     }
 
     override fun getVariantType(): VariantType {

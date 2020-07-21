@@ -49,7 +49,6 @@ import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.TaskCreationServices;
 import com.android.build.gradle.internal.services.VariantApiServices;
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
@@ -135,30 +134,11 @@ public class LibraryVariantFactory
             @NonNull BuildFeatures buildFeatures, @NonNull ProjectOptions projectOptions) {
 
         if (buildFeatures instanceof LibraryBuildFeatures) {
-            LibraryBuildFeatures features = (LibraryBuildFeatures) buildFeatures;
-
-            Boolean androidResources = features.getAndroidResources();
-            if (androidResources == null) {
-                androidResources =
-                        projectOptions.get(BooleanOption.BUILD_FEATURE_ANDROID_RESOURCES);
-            }
-
-            Boolean dataBinding = features.getDataBinding();
-            if (dataBinding == null) {
-                dataBinding = projectOptions.get(BooleanOption.BUILD_FEATURE_DATABINDING);
-            }
-
-            Boolean mlModelBinding = features.getMlModelBinding();
-            if (mlModelBinding == null) {
-                mlModelBinding = projectOptions.get(BooleanOption.BUILD_FEATURE_MLMODELBINDING);
-            }
-
             return new BuildFeatureValuesImpl(
                     buildFeatures,
-                    androidResources,
-                    dataBinding && androidResources,
-                    mlModelBinding,
-                    projectOptions);
+                    projectOptions,
+                    null /*dataBindingOverride*/,
+                    null /*mlModelBindingOverride*/);
         } else {
             throw new RuntimeException("buildFeatures not of type DynamicFeatureBuildFeatures");
         }
@@ -170,8 +150,11 @@ public class LibraryVariantFactory
             @NonNull BuildFeatures buildFeatures,
             @NonNull DataBindingOptions dataBindingOptions,
             @NonNull ProjectOptions projectOptions) {
-        // no difference with the main component
-        return createBuildFeatureValues(buildFeatures, projectOptions);
+        return new BuildFeatureValuesImpl(
+                buildFeatures,
+                projectOptions,
+                null, /* dataBindingOverride */
+                null /* mlModelBindingOverride */);
     }
 
     @NonNull
