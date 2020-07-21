@@ -306,12 +306,11 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
     ) {
         val annotatedMethods =
             instrumentedClassesLoader.loadClass(className).methods
-                .filter { it.annotations.isNotEmpty() }
                 .map {
-                    it.name to it.annotations.map { annotation ->
-                        annotation.annotationClass.jvmName
+                    it.name to it.annotations.mapNotNull { annotation ->
+                        annotation.annotationClass.jvmName.takeIf { name -> name != "jdk.internal.HotSpotIntrinsicCandidate" }
                     }
-                }
+                }.filter { it.second.isNotEmpty() }
 
         assertThat(annotatedMethods).containsExactlyElementsIn(expectedAnnotatedMethods)
     }

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.manifest
 
+import com.android.build.gradle.internal.utils.IssueSubject.assertThat
 import com.android.builder.model.SyncIssue
 import org.junit.Test
 import java.io.File
@@ -85,23 +86,14 @@ internal class LazyManifestParserFileTest : LazyManifestParserBaseTest() {
             earlyManifestParsingCheck = true
         }
 
+        withIssueChecker {
+            val onlyIssue = it.single()
+            assertThat(onlyIssue).hasMessageThatContains("The manifest is being parsed during configuration. Please either remove android.disableConfigurationManifestParsing from build.gradle or remove any build configuration rules that read the android manifest file.\n")
+            assertThat(onlyIssue).hasSeverity(SyncIssue.SEVERITY_WARNING)
+            assertThat(onlyIssue).hasType(SyncIssue.TYPE_MANIFEST_PARSED_DURING_CONFIGURATION)
+        }
         expect {
-            issue {
-                severity = SyncIssue.SEVERITY_WARNING
-                type = SyncIssue.TYPE_MANIFEST_PARSED_DURING_CONFIGURATION
-                message =
-                    """
-                        The manifest is being parsed during configuration. Please either remove android.disableConfigurationManifestParsing from build.gradle or remove any build configuration rules that read the android manifest file.
-                        com.android.testutils.AbstractGivenExpectTest.runTest(AbstractGivenExpectTest.kt:58)
-                        com.android.testutils.AbstractBuildGivenBuildExpectTest.expect(AbstractBuildGivenBuildExpectTest.kt:67)
-                        sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-                        sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-                        sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-                        java.lang.reflect.Method.invoke(Method.java:498)
-                        org.junit.runners.model.FrameworkMethod${'$'}1.runReflectiveCall(FrameworkMethod.java:59)
-                        org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
-                        org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)""".trimIndent()
-            }
+            // already checked in withIssueChecker block
         }
     }
 
