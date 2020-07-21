@@ -517,7 +517,7 @@ fun verifyJavaStringFormat(string: String): Boolean {
 
 fun consumeDigits(string: String): Int {
   var currentIndex = 0
-  while (string[currentIndex].isDigit()) {
+  while (currentIndex < string.length && string[currentIndex].isDigit()) {
     ++currentIndex
   }
   return currentIndex

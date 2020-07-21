@@ -322,6 +322,16 @@ class TableExtractorTest {
   }
 
   @Test
+  fun testParseUnformattedString() {
+      assertThat(testParse("""<string name="tested">%10</string>""")).isTrue()
+  }
+
+  @Test
+  fun testNonAsciiString() {
+      assertThat(testParse("""<string name="theme_light_default">डिफ़ॉल्ट</string>""")).isTrue()
+  }
+
+  @Test
   fun testParseStyledString() {
     val input =
       "<string name=\"foo\">This is my aunt\u2019s <b>fickle <small>string</small></b></string>"
