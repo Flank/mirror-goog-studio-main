@@ -743,12 +743,93 @@ public class TestZipFlinger extends TestBase {
 
     @Test
     public void testFullFileSource() throws Exception {
-        // TODO
+        // Create an executable file
+        Path execFilePath = getTestPath("x.exe");
+        Files.createFile(execFilePath);
+        execFilePath.toFile().setExecutable(true);
+
+        // Create a symbolic link
+        Path symbFilePath = getTestPath("symb");
+        Files.createSymbolicLink(symbFilePath, execFilePath);
+
+        // Create an archive dst containing both + a followed symbolic link
+        Path dst = getTestPath("testFullFileSource.zip");
+        try(ZipArchive archive = new ZipArchive(dst.toFile())) {
+            FullFileSource fs = new FullFileSource(execFilePath.toString(), "x", Deflater.NO_COMPRESSION);
+            archive.add(fs);
+
+            fs = new FullFileSource(symbFilePath.toString(), "s", Deflater.NO_COMPRESSION, FullFileSource.Symlink.DO_NOT_FOLLOW);
+            archive.add(fs);
+
+            fs = new FullFileSource(symbFilePath.toString(), "f", Deflater.NO_COMPRESSION);
+            archive.add(fs);
+        }
+
+        ZipMap map = ZipMap.from(dst.toFile());
+
+        // Check executable
+        Entry x = map.getEntries().get("x");
+        boolean isExecutable = (x.getExternalAttributes() & Source.PERMISSION_EXEC) == Source.PERMISSION_EXEC;
+        Assert.assertTrue("Executable attribute preserved", isExecutable);
+
+        // Check symbolic link was not followed
+        Entry s = map.getEntries().get("s");
+        boolean isSymbolicLink = (s.getExternalAttributes() & Source.PERMISSION_LINK) == Source.PERMISSION_LINK;
+        Assert.assertTrue("SymbolicLink attribute preserved", isSymbolicLink);
+
+        //  Check symbolic link was followed
+        Entry f = map.getEntries().get("f");
+        isSymbolicLink = (f.getExternalAttributes() & Source.PERMISSION_LINK) == Source.PERMISSION_LINK;
+        Assert.assertFalse("SymbolicLink attribute preserved", isSymbolicLink);
     }
 
     @Test
     public void testZipMergingAttributes() throws Exception {
-        // TODO
+        // Create an executable file
+        Path execFilePath = getTestPath("x.exe");
+        Files.createFile(execFilePath);
+        execFilePath.toFile().setExecutable(true);
+
+        // Create a symbolic link
+        Path symbFilePath = getTestPath("symb");
+        Files.createSymbolicLink(symbFilePath, execFilePath);
+
+        // Create an archive src containing both + a followed symbolic link
+        Path src = getTestPath("testZipMergingAttributesSrc.zip");
+        try(ZipArchive archive = new ZipArchive(src.toFile())) {
+            FullFileSource fs = new FullFileSource(execFilePath.toString(), "x", Deflater.NO_COMPRESSION);
+            archive.add(fs);
+
+            fs = new FullFileSource(symbFilePath.toString(), "s", Deflater.NO_COMPRESSION, FullFileSource.Symlink.DO_NOT_FOLLOW);
+            archive.add(fs);
+
+            fs = new FullFileSource(symbFilePath.toString(), "f", Deflater.NO_COMPRESSION);
+            archive.add(fs);
+        }
+
+        // Transfer entries from one archive to an archive "dst"
+        Path dst = getTestPath("testZipMergingAttributesDst.zip");
+        try(ZipArchive archive = new ZipArchive(dst.toFile())) {
+           ZipSource zipSource = ZipSource.selectAll(src.toFile());
+           archive.add(zipSource);
+        }
+
+        ZipMap map = ZipMap.from(dst.toFile());
+
+        // Check executable
+        Entry x = map.getEntries().get("x");
+        boolean isExecutable = (x.getExternalAttributes() & Source.PERMISSION_EXEC) == Source.PERMISSION_EXEC;
+        Assert.assertTrue("Executable attribute preserved", isExecutable);
+
+        // Check symbolic link was not followed
+        Entry s = map.getEntries().get("s");
+        boolean isSymbolicLink = (s.getExternalAttributes() & Source.PERMISSION_LINK) == Source.PERMISSION_LINK;
+        Assert.assertTrue("SymbolicLink attribute preserved", isSymbolicLink);
+
+        //  Check symbolic link was followed
+        Entry f = map.getEntries().get("f");
+        isSymbolicLink = (f.getExternalAttributes() & Source.PERMISSION_LINK) == Source.PERMISSION_LINK;
+        Assert.assertFalse("SymbolicLink attribute preserved", isSymbolicLink);
     }
 
     // Regression test for b/144189353 (JD9 treats zero time/data stamp as invalid).
