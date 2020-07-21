@@ -319,7 +319,7 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
             Provider<? extends FileSystemLocation> tmpMergedManifest =
                     artifacts.get(PACKAGED_MANIFESTS.INSTANCE);
             if (!tmpMergedManifest.isPresent()) {
-                tmpMergedManifest = artifacts.get(ArtifactType.LIBRARY_MANIFEST.INSTANCE);
+                tmpMergedManifest = artifacts.get(ArtifactType.MERGED_MANIFEST.INSTANCE);
             }
             if (!tmpMergedManifest.isPresent()) {
                 throw new RuntimeException(

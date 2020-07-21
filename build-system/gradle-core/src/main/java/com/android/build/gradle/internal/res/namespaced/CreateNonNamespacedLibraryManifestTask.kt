@@ -81,7 +81,7 @@ abstract class CreateNonNamespacedLibraryManifestTask : NonIncrementalTask() {
         ) {
             super.configure(task)
             creationConfig.artifacts.setTaskInputToFinalProduct(
-                ArtifactType.LIBRARY_MANIFEST, task.libraryManifest
+                ArtifactType.MERGED_MANIFEST, task.libraryManifest
             )
         }
     }

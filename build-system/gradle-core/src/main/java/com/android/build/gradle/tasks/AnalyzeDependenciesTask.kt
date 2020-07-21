@@ -229,7 +229,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
 
             creationConfig
                     .artifacts
-                    .setTaskInputToFinalProduct(ArtifactType.APPLICATION_MANIFEST, task.mergedManifest)
+                    .setTaskInputToFinalProduct(ArtifactType.MERGED_MANIFEST, task.mergedManifest)
         }
 
         override fun handleProvider(

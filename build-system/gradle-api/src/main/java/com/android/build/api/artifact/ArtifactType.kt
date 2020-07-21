@@ -58,26 +58,14 @@ sealed class ArtifactType<T : FileSystemLocation>(
      * This will only be available on modules applying one of the following plugins :
      *      com.android.application
      *      com.android.dynamic-feature
+     *      com.android.library
      *      com.android.test
      *
      * For each module, unit test and android test variants will not have a manifest file
      * available.
      */
     @Incubating
-    object APPLICATION_MANIFEST:
-        ArtifactType<RegularFile>(FILE, Category.INTERMEDIATES, FileNames.ANDROID_MANIFEST_XML),
-        Replaceable,
-        Transformable
-
-    /**
-     * Merged manifest file that will be packaged in the AAR files.
-     * This will only be available on modules applying the com.android.library plugin.
-     *
-     * For each module, unit test and android test variants will not have a manifest file
-     * available.
-     */
-    @Incubating
-    object LIBRARY_MANIFEST:
+    object MERGED_MANIFEST:
         ArtifactType<RegularFile>(FILE, Category.INTERMEDIATES, FileNames.ANDROID_MANIFEST_XML),
         Replaceable,
         Transformable

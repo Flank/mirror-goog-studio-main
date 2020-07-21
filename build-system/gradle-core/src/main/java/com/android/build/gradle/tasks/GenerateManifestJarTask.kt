@@ -85,7 +85,7 @@ abstract class GenerateManifestJarTask : NonIncrementalTask() {
             creationConfig
                     .artifacts
                     .setTaskInputToFinalProduct(
-                            ArtifactType.APPLICATION_MANIFEST,
+                            ArtifactType.MERGED_MANIFEST,
                             task.mergedManifests
                     )
             task.packageName.setDisallowChanges(creationConfig.packageName)

@@ -20,6 +20,7 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 
+import com.android.build.api.artifact.ArtifactType;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -81,7 +82,9 @@ public class ManifestMergingTest {
                 libsTest.file(
                         "libapp/build/"
                                 + FD_INTERMEDIATES
-                                + "/library_manifest/debug/AndroidManifest.xml");
+                                + File.separator
+                                + ArtifactType.MERGED_MANIFEST.INSTANCE.getFolderName()
+                                + "/debug/AndroidManifest.xml");
 
         assertThat(fileOutput).isFile();
 
@@ -89,7 +92,9 @@ public class ManifestMergingTest {
                 libsTest.file(
                         "libapp/build/"
                                 + FD_INTERMEDIATES
-                                + "/library_manifest/release/AndroidManifest.xml");
+                                + File.separator
+                                + ArtifactType.MERGED_MANIFEST.INSTANCE.getFolderName()
+                                + "/release/AndroidManifest.xml");
 
         assertThat(fileOutput).isFile();
     }
@@ -264,7 +269,10 @@ public class ManifestMergingTest {
 
         File manifestFile =
                 navigation.file(
-                        "library/build/intermediates/library_manifest/debug/AndroidManifest.xml");
+                        "library/build/intermediates"
+                                + File.separator
+                                + ArtifactType.MERGED_MANIFEST.INSTANCE.getFolderName()
+                                + "/debug/AndroidManifest.xml");
         // Deep links from nav graph are NOT resolved into intent filters at the lib level
         assertThat(manifestFile).contains("nav-graph android:value=\"@navigation/nav1\"");
     }
