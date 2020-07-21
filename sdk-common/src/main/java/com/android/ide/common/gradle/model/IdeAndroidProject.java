@@ -18,6 +18,7 @@ package com.android.ide.common.gradle.model;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AaptOptions;
+import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.JavaCompileOptions;
@@ -42,6 +43,44 @@ public interface IdeAndroidProject extends Serializable {
     int PROJECT_TYPE_INSTANTAPP = 4; // Instant App Bundle
     int PROJECT_TYPE_FEATURE = 5; // com.android.feature module
     int PROJECT_TYPE_DYNAMIC_FEATURE = 6; // com.android.dynamic-feature module
+
+    String ARTIFACT_MAIN = AndroidProject.ARTIFACT_MAIN;
+    String ARTIFACT_ANDROID_TEST = AndroidProject.ARTIFACT_ANDROID_TEST;
+    String ARTIFACT_UNIT_TEST = AndroidProject.ARTIFACT_UNIT_TEST;
+    String FD_GENERATED = AndroidProject.FD_GENERATED;
+    String FD_INTERMEDIATES = AndroidProject.FD_INTERMEDIATES;
+
+    int MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD =
+            AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD;
+
+    String PROPERTY_ANDROID_SUPPORT_VERSION = AndroidProject.PROPERTY_ANDROID_SUPPORT_VERSION;
+    String PROPERTY_APK_LOCATION = AndroidProject.PROPERTY_APK_LOCATION;
+    String PROPERTY_APK_SELECT_CONFIG = AndroidProject.PROPERTY_APK_SELECT_CONFIG;
+    String PROPERTY_ATTRIBUTION_FILE_LOCATION = AndroidProject.PROPERTY_ATTRIBUTION_FILE_LOCATION;
+    String PROPERTY_BUILD_ABI = AndroidProject.PROPERTY_BUILD_ABI;
+    String PROPERTY_BUILD_API = AndroidProject.PROPERTY_BUILD_API;
+    String PROPERTY_BUILD_API_CODENAME = AndroidProject.PROPERTY_BUILD_API_CODENAME;
+    String PROPERTY_BUILD_DENSITY = AndroidProject.PROPERTY_BUILD_DENSITY;
+    String PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD =
+            AndroidProject.PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD;
+    String PROPERTY_BUILD_MODEL_ONLY = AndroidProject.PROPERTY_BUILD_MODEL_ONLY;
+    String PROPERTY_BUILD_MODEL_ONLY_ADVANCED = AndroidProject.PROPERTY_BUILD_MODEL_ONLY_ADVANCED;
+    String PROPERTY_BUILD_MODEL_ONLY_VERSIONED = AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED;
+    String PROPERTY_BUILD_WITH_STABLE_IDS = AndroidProject.PROPERTY_BUILD_WITH_STABLE_IDS;
+    String PROPERTY_DEPLOY_AS_INSTANT_APP = AndroidProject.PROPERTY_DEPLOY_AS_INSTANT_APP;
+    String PROPERTY_EXTRACT_INSTANT_APK = AndroidProject.PROPERTY_EXTRACT_INSTANT_APK;
+    String PROPERTY_GENERATE_SOURCES_ONLY = AndroidProject.PROPERTY_GENERATE_SOURCES_ONLY;
+    String PROPERTY_INJECTED_DYNAMIC_MODULES_LIST =
+            AndroidProject.PROPERTY_INJECTED_DYNAMIC_MODULES_LIST;
+    String PROPERTY_INVOKED_FROM_IDE = AndroidProject.PROPERTY_INVOKED_FROM_IDE;
+    String PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL =
+            AndroidProject.PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL;
+    String PROPERTY_SIGNING_KEY_ALIAS = AndroidProject.PROPERTY_SIGNING_KEY_ALIAS;
+    String PROPERTY_SIGNING_KEY_PASSWORD = AndroidProject.PROPERTY_SIGNING_KEY_PASSWORD;
+    String PROPERTY_SIGNING_STORE_FILE = AndroidProject.PROPERTY_SIGNING_STORE_FILE;
+    String PROPERTY_SIGNING_STORE_PASSWORD = AndroidProject.PROPERTY_SIGNING_STORE_PASSWORD;
+    String PROPERTY_SIGNING_V1_ENABLED = AndroidProject.PROPERTY_SIGNING_V1_ENABLED;
+    String PROPERTY_SIGNING_V2_ENABLED = AndroidProject.PROPERTY_SIGNING_V2_ENABLED;
 
     /**
      * Returns the model version. This is a string in the format X.Y.Z
