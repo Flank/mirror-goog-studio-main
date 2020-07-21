@@ -66,7 +66,7 @@ class DataBindingCompilerArguments constructor(
     // annotate it with @Internal, expecting that the directory's contents should be stable and this
     // won't affect correctness.
     @get:Internal
-    val sdkDir: File,
+    val sdkDir: Provider<Directory>,
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -123,7 +123,7 @@ class DataBindingCompilerArguments constructor(
             artifactType = artifactType,
             modulePackage = packageName.get(),
             minApi = minApi,
-            sdkDir = sdkDir,
+            sdkDir = sdkDir.get().asFile,
             dependencyArtifactsDir = dependencyArtifactsDir.get().asFile,
             layoutInfoDir = layoutInfoDir.get().asFile,
             classLogDir = classLogDir.get().asFile,
@@ -161,7 +161,7 @@ class DataBindingCompilerArguments constructor(
                 artifactType = getModuleType(creationConfig),
                 packageName = creationConfig.packageName,
                 minApi = creationConfig.minSdkVersion.apiLevel,
-                sdkDir = globalScope.sdkComponents.flatMap { it.sdkDirectoryProvider }.get().asFile,
+                sdkDir = globalScope.sdkComponents.flatMap { it.sdkDirectoryProvider },
                 dependencyArtifactsDir = artifacts.get(DATA_BINDING_DEPENDENCY_ARTIFACTS),
                 layoutInfoDir = artifacts.get(getLayoutInfoArtifactType(creationConfig)),
                 classLogDir = artifacts.get(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
