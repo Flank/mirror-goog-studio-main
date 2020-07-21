@@ -31,13 +31,14 @@ interface NativeAbi : Serializable {
     val name: String
 
     /**
-     * Standard compile command file in JSON format that contains the compiler commands.
+     * File containing compiler flags.
      *
-     * See https://clang.llvm.org/docs/JSONCompilationDatabase.html for details of the format.
+     * As for now this file is always a compile_commands.json. See
+     * https://clang.llvm.org/docs/JSONCompilationDatabase.html for details of the format.
      *
      * This file is generated if requested in [NativeModelBuilderParameter].
      */
-    val compileCommandsJsonFile: File
+    val sourceFlagsFile: File
 
     /**
      * Text file containing a list of folders that contains shared libraries used by the APK.
