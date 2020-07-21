@@ -29,12 +29,14 @@ import com.intellij.mock.MockProject
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.DefaultLogger
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.roots.LanguageLevelProjectExtension
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.impl.ZipHandler
+import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.PsiManager
 import com.intellij.util.io.URLUtil.JAR_SEPARATOR
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
@@ -53,6 +55,8 @@ import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
+import org.jetbrains.kotlin.config.LanguageVersionSettings
+import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.ModuleAnnotationsResolver
 import org.jetbrains.kotlin.resolve.diagnostics.DiagnosticSuppressor
@@ -114,6 +118,16 @@ class UastEnvironment private constructor(
         fun addClasspathRoots(classpathRoots: List<File>) {
             kotlinCompilerConfig.addJvmClasspathRoots(classpathRoots)
         }
+
+        // Defaults to LanguageLevel.HIGHEST.
+        var javaLanguageLevel: LanguageLevel? = null
+
+        // Defaults to LanguageVersionSettingsImpl.DEFAULT.
+        var kotlinLanguageLevel: LanguageVersionSettings
+            get() = kotlinCompilerConfig.languageVersionSettings
+            set(value) {
+                kotlinCompilerConfig.languageVersionSettings = value
+            }
     }
 
     companion object {
@@ -138,7 +152,7 @@ class UastEnvironment private constructor(
         @JvmStatic
         fun create(config: Configuration): UastEnvironment {
             val parentDisposable = Disposer.newDisposable("UastEnvironment.create")
-            val kotlinEnv = createKotlinCompilerEnv(parentDisposable, config.kotlinCompilerConfig)
+            val kotlinEnv = createKotlinCompilerEnv(parentDisposable, config)
             return UastEnvironment(kotlinEnv, parentDisposable)
         }
 
@@ -295,15 +309,19 @@ private fun createKotlinCompilerConfig(): CompilerConfiguration {
 
 private fun createKotlinCompilerEnv(
     parentDisposable: Disposable,
-    config: CompilerConfiguration
+    config: UastEnvironment.Configuration
 ): KotlinCoreEnvironment {
-    val env = KotlinCoreEnvironment.createForProduction(parentDisposable, config, JVM_CONFIG_FILES)
+    val env = KotlinCoreEnvironment
+        .createForProduction(parentDisposable, config.kotlinCompilerConfig, JVM_CONFIG_FILES)
     appLock.withLock { configureApplicationEnvironment(env.projectEnvironment.environment) }
-    configureProjectEnvironment(env.projectEnvironment.project)
+    configureProjectEnvironment(env.projectEnvironment.project, config)
     return env
 }
 
-private fun configureProjectEnvironment(project: MockProject) {
+private fun configureProjectEnvironment(
+    project: MockProject,
+    config: UastEnvironment.Configuration
+) {
     // UAST support.
     @Suppress("DEPRECATION") // TODO: Migrate to using UastFacade instead.
     project.registerService(UastContext::class.java, UastContext(project))
@@ -322,6 +340,12 @@ private fun configureProjectEnvironment(project: MockProject) {
         InferredAnnotationsManager::class.java,
         LintInferredAnnotationsManager::class.java
     )
+
+    // Java language level.
+    val javaLanguageLevel = config.javaLanguageLevel
+    if (javaLanguageLevel != null) {
+        LanguageLevelProjectExtension.getInstance(project).languageLevel = javaLanguageLevel
+    }
 }
 
 // In parallel builds the Kotlin compiler will reuse the application environment

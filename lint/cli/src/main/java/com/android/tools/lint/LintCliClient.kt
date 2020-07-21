@@ -70,13 +70,12 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import com.intellij.codeInsight.ExternalAnnotationsManager
 import com.intellij.mock.MockProject
-import com.intellij.openapi.roots.LanguageLevelProjectExtension
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.PsiManager
 import com.intellij.util.lang.UrlClassLoader
 import org.jetbrains.jps.model.java.impl.JavaSdkUtil
-import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
+import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys.PERF_MANAGER
 import org.jetbrains.kotlin.cli.common.CommonCompilerPerformanceManager
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.config.languageVersionSettings
@@ -1014,20 +1013,14 @@ open class LintCliClient : LintClient {
         }
 
         val config = UastEnvironment.Configuration.create()
+        config.javaLanguageLevel = maxLevel
         config.addSourceRoots(sourceRoots.toList())
         config.addClasspathRoots(classpathRoots.toList())
-        val kotlinConfig = config.kotlinCompilerConfig
-        kotlinConfig.putIfNotNull(CLIConfigurationKeys.PERF_MANAGER, kotlinPerformanceManager)
+        config.kotlinCompilerConfig.putIfNotNull(PERF_MANAGER, kotlinPerformanceManager)
 
         val env = UastEnvironment.create(config)
         uastEnvironment = env
         kotlinPerformanceManager?.notifyCompilerInitialized()
-
-        val languageLevelProjectExtension =
-            env.ideaProject.getComponent(LanguageLevelProjectExtension::class.java)
-        if (languageLevelProjectExtension != null) {
-            languageLevelProjectExtension.languageLevel = maxLevel
-        }
 
         for (project in allProjects) {
             project.ideaProject = env.ideaProject
