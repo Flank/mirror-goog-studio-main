@@ -323,7 +323,7 @@ class GradleModelConverter(
                 mergedConfig = mergedConfig.mergeWith(config.config)
             }
 
-            if (this is AndroidArtifact) {
+            if (this is IdeAndroidArtifact) {
                 mergedConfig = mergedConfig.copy(
                     manifestValues = mergedConfig.manifestValues.copy(
                         applicationId = applicationId

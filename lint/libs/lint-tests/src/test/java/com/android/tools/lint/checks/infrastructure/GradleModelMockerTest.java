@@ -24,8 +24,6 @@ import static org.junit.Assert.fail;
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.BuildTypeContainer;
@@ -34,6 +32,8 @@ import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
+import com.android.ide.common.gradle.model.IdeAndroidArtifact;
+import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.ide.common.gradle.model.level2.IdeDependencies;
@@ -732,8 +732,8 @@ public class GradleModelMockerTest {
                                 + "    }\n"
                                 + "}\n");
 
-        AndroidArtifact mainArtifact = mocker.getVariant().getMainArtifact();
-        Collection<AndroidArtifactOutput> outputs = mainArtifact.getOutputs();
+        IdeAndroidArtifact mainArtifact = mocker.getVariant().getMainArtifact();
+        List<IdeAndroidArtifactOutput> outputs = mainArtifact.getOutputs();
         assertThat(outputs).hasSize(10);
         List<Pair<String, String>> generatedSplits =
                 outputs.stream()

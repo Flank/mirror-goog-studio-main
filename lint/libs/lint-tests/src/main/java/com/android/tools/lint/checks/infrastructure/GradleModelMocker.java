@@ -37,7 +37,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.builder.model.AaptOptions;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
@@ -60,6 +59,7 @@ import com.android.builder.model.ViewBindingOptions;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
+import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeJavaArtifact;
 import com.android.ide.common.gradle.model.IdeLintOptions;
@@ -484,7 +484,7 @@ public class GradleModelMocker {
 
         when(project.getBuildFolder()).thenReturn(new File(projectDir, "build"));
 
-        Collection<AndroidArtifactOutput> outputs = Lists.newArrayList();
+        List<IdeAndroidArtifactOutput> outputs = Lists.newArrayList();
         outputs.add(createAndroidArtifactOutput("", ""));
         for (Map.Entry<String, String> entry : splits.entries()) {
             outputs.add(createAndroidArtifactOutput(entry.getKey(), entry.getValue()));
@@ -1739,9 +1739,9 @@ public class GradleModelMocker {
     }
 
     @NonNull
-    private static AndroidArtifactOutput createAndroidArtifactOutput(
+    private static IdeAndroidArtifactOutput createAndroidArtifactOutput(
             @NonNull String filterType, @NonNull String identifier) {
-        AndroidArtifactOutput artifactOutput = mock(AndroidArtifactOutput.class);
+        IdeAndroidArtifactOutput artifactOutput = mock(IdeAndroidArtifactOutput.class);
 
         if (filterType.isEmpty()) {
             when(artifactOutput.getFilterTypes()).thenReturn(Collections.emptyList());

@@ -21,7 +21,6 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.CodeShrinker;
-import com.android.builder.model.InstantRun;
 import com.android.builder.model.NativeLibrary;
 import com.android.builder.model.TestOptions;
 import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
@@ -30,8 +29,10 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -43,11 +44,11 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 5L;
 
-    @NonNull private final Collection<AndroidArtifactOutput> myOutputs;
+    @NonNull private final List<IdeAndroidArtifactOutput> myOutputs;
     @NonNull private final String myApplicationId;
     @NonNull private final String mySourceGenTaskName;
-    @NonNull private final Collection<File> myGeneratedResourceFolders;
-    @NonNull private final Collection<File> myAdditionalRuntimeApks;
+    @NonNull private final List<File> myGeneratedResourceFolders;
+    @NonNull private final List<File> myAdditionalRuntimeApks;
     @Nullable private final IdeInstantRun myInstantRun;
     @Nullable private final String mySigningConfigName;
     @NonNull private final Set<String> myAbiFilters;
@@ -106,7 +107,8 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         mySigned = artifact.isSigned();
         myAdditionalRuntimeApks =
                 IdeModel.copyNewPropertyNonNull(
-                        artifact::getAdditionalRuntimeApks, Collections.emptySet());
+                        () -> new ArrayList<>(artifact.getAdditionalRuntimeApks()),
+                        Collections.emptyList());
         myTestOptions =
                 IdeModel.copyNewProperty(
                         modelCache, artifact::getTestOptions, IdeTestOptions::new, null);
@@ -141,7 +143,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     }
 
     @NonNull
-    private static Collection<AndroidArtifactOutput> copyOutputs(
+    private static List<IdeAndroidArtifactOutput> copyOutputs(
             @NonNull AndroidArtifact artifact,
             @NonNull ModelCache modelCache,
             @Nullable GradleVersion agpVersion) {
@@ -149,9 +151,9 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         if (agpVersion != null && agpVersion.compareIgnoringQualifiers("4.0.0") >= 0) {
             return Collections.emptyList();
         }
-        Collection<AndroidArtifactOutput> outputs;
+        List<AndroidArtifactOutput> outputs;
         try {
-            outputs = artifact.getOutputs();
+            outputs = new ArrayList<>(artifact.getOutputs());
             return IdeModel.copy(
                     outputs,
                     modelCache,
@@ -165,7 +167,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
 
     @Override
     @NonNull
-    public Collection<AndroidArtifactOutput> getOutputs() {
+    public List<IdeAndroidArtifactOutput> getOutputs() {
         return myOutputs;
     }
 
@@ -177,25 +179,19 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
 
     @Override
     @NonNull
-    public String getSourceGenTaskName() {
-        return mySourceGenTaskName;
-    }
-
-    @Override
-    @NonNull
-    public Collection<File> getGeneratedResourceFolders() {
+    public List<File> getGeneratedResourceFolders() {
         return myGeneratedResourceFolders;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Map<String, ClassField> getResValues() {
         return Collections.emptyMap();
     }
 
     @Override
     @NonNull
-    public InstantRun getInstantRun() {
+    public IdeInstantRun getInstantRun() {
         if (myInstantRun != null) {
             return myInstantRun;
         }
@@ -203,9 +199,9 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 "Unsupported method: AndroidArtifact.getInstantRun()");
     }
 
-    @NonNull
     @Override
-    public Collection<File> getAdditionalRuntimeApks() {
+    @NonNull
+    public List<File> getAdditionalRuntimeApks() {
         return myAdditionalRuntimeApks;
     }
 
@@ -215,38 +211,32 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         return myTestOptions;
     }
 
-    @Nullable
     @Override
-    public String getInstrumentedTestTaskName() {
-        return myInstrumentedTestTaskName;
-    }
-
     @Nullable
-    @Override
     public String getBundleTaskName() {
         return myBundleTaskName;
     }
 
-    @Nullable
     @Override
+    @Nullable
     public String getBundleTaskOutputListingFile() {
         return myPostBundleTaskModelFile;
     }
 
-    @Nullable
     @Override
+    @Nullable
     public String getApkFromBundleTaskName() {
         return myApkFromBundleTaskName;
     }
 
-    @Nullable
     @Override
+    @Nullable
     public String getApkFromBundleTaskOutputListingFile() {
         return myPostApkFromBundleTaskModelFile;
     }
 
-    @Nullable
     @Override
+    @Nullable
     public CodeShrinker getCodeShrinker() {
         return myCodeShrinker;
     }
@@ -263,7 +253,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         return myAbiFilters;
     }
 
-    @Override
     @Nullable
     @Deprecated // This is for ndk-compile, which has long been deprecated
     public Collection<NativeLibrary> getNativeLibraries() {

@@ -90,16 +90,6 @@ public class IdeAndroidArtifactImplTest {
         expectUnsupportedOperationException(artifact::getInstantRun);
     }
 
-    @Test
-    public void constructor() throws Throwable {
-        AndroidArtifact original = new AndroidArtifactStub();
-        IdeAndroidArtifactImpl copy =
-                new IdeAndroidArtifactImpl(
-                        original, myModelCache, myDependenciesFactory, myGradleVersion);
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
-    }
-
     // See http://b/64305584
     @Test
     public void withNpeInGetOutputs() throws Throwable {

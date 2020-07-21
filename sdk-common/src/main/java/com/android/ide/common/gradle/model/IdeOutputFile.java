@@ -58,6 +58,24 @@ public final class IdeOutputFile implements OutputFile, Serializable {
         myHashCode = 0;
     }
 
+    public IdeOutputFile(
+            @NonNull String outputType,
+            @NonNull Collection<String> filterTypes,
+            @NonNull Collection<FilterData> filters,
+            @NonNull File outputFile,
+            @NonNull Collection<? extends OutputFile> outputs,
+            @Nullable OutputFile mainOutputFile,
+            @Nullable Integer versionCode) {
+        myOutputType = outputType;
+        myFilterTypes = filterTypes;
+        myFilters = filters;
+        myOutputFile = outputFile;
+        myOutputs = outputs;
+        myMainOutputFile = mainOutputFile;
+        myVersionCode = versionCode;
+        myHashCode = calculateHashCode();
+    }
+
     public IdeOutputFile(@NonNull OutputFile file, @NonNull ModelCache modelCache) {
         myOutputType = file.getOutputType();
         myFilterTypes = ImmutableList.copyOf(file.getFilterTypes());
