@@ -293,19 +293,7 @@ public class ZipArchive implements Archive {
         Location payloadLocation = new Location(payloadStart, payloadSize);
 
         // Update Central Directory record
-        // TODO: Refactor CentralDirectoryRecord constructor to take a source as parameter instead
-        // of a million parameters.
-        CentralDirectoryRecord cdRecord =
-                new CentralDirectoryRecord(
-                        source.getNameBytes(),
-                        source.getCrc(),
-                        source.getCompressedSize(),
-                        source.getUncompressedSize(),
-                        loc,
-                        source.getCompressionFlag(),
-                        payloadLocation,
-                        source.getVersionMadeBy(),
-                        source.getExternalAttributes());
+        CentralDirectoryRecord cdRecord = new CentralDirectoryRecord(source, loc, payloadLocation);
         cd.add(source.getName(), cdRecord);
 
         checkPolicy(source, loc, payloadLocation);
