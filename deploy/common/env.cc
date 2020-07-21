@@ -10,6 +10,7 @@ int port_;
 std::string root_;
 std::string logcat_;
 std::string shell_;
+std::string build_type_;
 int api_level_;
 int uid_;
 
@@ -31,6 +32,9 @@ void Init() {
 
   char* api_level = getenv("FAKE_DEVICE_API_LEVEL");
   api_level_ = api_level == nullptr ? 21 : atoi(api_level);
+
+  char* build_type = getenv("FAKE_BUILD_TYPE");
+  build_type_ = build_type == nullptr ? "" : build_type;
 
   char* uid = getenv("FAKE_DEVICE_UID");
   uid_ = uid == nullptr ? 0 : atoi(uid);
@@ -59,6 +63,11 @@ std::string Env::logcat() {
 std::string Env::shell() {
   Init();
   return shell_;
+}
+
+std::string Env::build_type() {
+  Init();
+  return build_type_;
 }
 
 int Env::api_level() {

@@ -20,6 +20,7 @@
 #include <sys/wait.h>
 
 #include "tools/base/bazel/native/matryoshka/doll.h"
+#include "tools/base/deploy/common/env.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "tools/base/deploy/common/socket.h"
@@ -35,6 +36,11 @@ namespace {
 // changed since 2012.
 const int kFirstAppUid = 10000;
 const int kLastAppUid = 19999;
+
+bool isUserDebug() {
+  return deploy::Env::build_type().find("userdebug") != std::string::npos;
+}
+
 }  // namespace
 
 namespace deploy {
@@ -54,7 +60,12 @@ void BaseSwapCommand::Run(proto::InstallerResponse* response) {
       package_name_, kInstallServer + "-" + workspace_.GetVersion());
 
   if (!client_) {
-    swap_response->set_status(proto::SwapResponse::START_SERVER_FAILED);
+    if (isUserDebug()) {
+      swap_response->set_status(
+          proto::SwapResponse::START_SERVER_FAILED_USERDEBUG);
+    } else {
+      swap_response->set_status(proto::SwapResponse::START_SERVER_FAILED);
+    }
     swap_response->set_extra(kInstallServer);
     return;
   }
@@ -85,7 +96,12 @@ void BaseSwapCommand::Swap(const proto::SwapRequest& request,
   int read_fd, write_fd, agent_server_pid, status;
   if (!StartAgentServer(process_ids_.size() + extra_agents_count_,
                         &agent_server_pid, &read_fd, &write_fd)) {
-    response->set_status(proto::SwapResponse::START_SERVER_FAILED);
+    if (isUserDebug()) {
+      response->set_status(proto::SwapResponse::START_SERVER_FAILED_USERDEBUG);
+    } else {
+      response->set_status(proto::SwapResponse::START_SERVER_FAILED);
+    }
+
     EndPhase();
     return;
   }
