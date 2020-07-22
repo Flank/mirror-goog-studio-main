@@ -21,9 +21,15 @@ import com.android.fakeadbserver.FakeAdbServer
 import java.io.IOException
 import java.io.InputStream
 import java.net.Socket
+import java.nio.charset.Charset
 import java.util.regex.Pattern
 
 class ExecCommandHandler : DeviceCommandHandler("exec") {
+  companion object {
+    const val PING_EXEC = "ping"
+    const val PING_EXEC_OUTPUT = "pong"
+  }
+
   override fun invoke(server: FakeAdbServer, socket: Socket, device: DeviceState, args: String) {
     try {
       val output = socket.getOutputStream()
@@ -32,6 +38,7 @@ class ExecCommandHandler : DeviceCommandHandler("exec") {
 
       val response: String = when {
         args.startsWith("cmd package install-write") -> installWrite(args, socket.getInputStream())
+        args.equals(PING_EXEC) -> PING_EXEC_OUTPUT
         else -> ""
       }
 

@@ -24,6 +24,7 @@ import com.google.common.base.Strings;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.SocketChannel;
@@ -56,6 +57,56 @@ public final class AdbHelper {
      * do not instantiate
      */
     private AdbHelper() {}
+
+    /**
+     * Invoke the host:exec service on a remote device. Return a socket channel that is connected to
+     * the executing process. Note that exec service does not differentiate stdout and stderr so
+     * whatever is read from the socket can come from either output and be interleaved.
+     *
+     * <p>ddlmib relinquishes ownership of the returned SocketChannel and must be explicitly closed
+     * after use.
+     *
+     * @param socketAddress
+     * @param device the device to connect to. Can be null in which case the connection will be to
+     *     the first available device.
+     * @param executable the absolute path of the executable to run
+     * @param parameters the parameters to get given upon execing the executable
+     * @return
+     * @throws IOException
+     * @throws TimeoutException
+     * @throws AdbCommandRejectedException
+     */
+    public static SocketChannel rawExec(
+            InetSocketAddress socketAddress, IDevice device, String executable, String[] parameters)
+            throws IOException, TimeoutException, AdbCommandRejectedException {
+        SocketChannel adbChan = SocketChannel.open(socketAddress);
+        try {
+            adbChan.socket().setTcpNoDelay(true);
+            adbChan.configureBlocking(false);
+            adbChan.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+            setDevice(adbChan, device);
+
+            StringBuilder command = new StringBuilder(executable);
+            for (String parameter : parameters) {
+                command.append(" ");
+                command.append(parameter);
+            }
+
+            String serviceName = AdbService.EXEC.name().toLowerCase(Locale.US);
+            byte[] request = formAdbRequest(serviceName + ":" + command);
+            write(adbChan, request);
+
+            AdbResponse resp = readAdbResponse(adbChan, false);
+            if (!resp.okay) {
+                Log.e("ddms", "ADB rejected exec command (" + command + "): " + resp.message);
+                throw new AdbCommandRejectedException(resp.message);
+            }
+        } catch (Exception e) {
+            adbChan.close();
+            throw e;
+        }
+        return adbChan;
+    }
 
     /**
      * Response from ADB.
