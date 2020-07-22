@@ -51,12 +51,6 @@ public final class IdeJavaArtifactImpl extends IdeBaseArtifactImpl implements Id
     }
 
     @Override
-    @Nullable
-    public File getMockablePlatformJar() {
-        return myMockablePlatformJar;
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -87,6 +81,7 @@ public final class IdeJavaArtifactImpl extends IdeBaseArtifactImpl implements Id
         return Objects.hash(super.calculateHashCode(), myMockablePlatformJar);
     }
 
+
     @Override
     public String toString() {
         return "IdeJavaArtifact{"
@@ -94,5 +89,11 @@ public final class IdeJavaArtifactImpl extends IdeBaseArtifactImpl implements Id
                 + ", myMockablePlatformJar="
                 + myMockablePlatformJar
                 + "}";
+    }
+
+    @Nullable
+    @Override
+    public File getMockablePlatformJar() {
+        return myMockablePlatformJar;
     }
 }

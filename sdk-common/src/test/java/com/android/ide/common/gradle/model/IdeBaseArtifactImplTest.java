@@ -55,19 +55,6 @@ public class IdeBaseArtifactImplTest {
     }
 
     @Test
-    public void constructor() throws Throwable {
-        BaseArtifact original = new BaseArtifactStub();
-        IdeBaseArtifactImpl copy =
-                new IdeBaseArtifactImpl(
-                        original,
-                        new ModelCache(),
-                        myDependenciesFactory,
-                        GradleVersion.parse("2.3.0")) {};
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
     public void model1_dot_5() {
         BaseArtifact original =
                 new BaseArtifactStub() {
@@ -99,8 +86,6 @@ public class IdeBaseArtifactImplTest {
                         new ModelCache(),
                         myDependenciesFactory,
                         GradleVersion.parse("1.5.0")) {};
-        expectUnsupportedOperationException(artifact::getCompileDependencies);
-        expectUnsupportedOperationException(artifact::getDependencyGraphs);
         expectUnsupportedOperationException(artifact::getJavaResourcesFolder);
     }
 

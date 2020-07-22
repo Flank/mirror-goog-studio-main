@@ -15,10 +15,8 @@
  */
 package com.android.ide.common.gradle.model;
 
-import static com.android.ide.common.gradle.model.IdeModelTestUtils.assertEqualsOrSimilar;
 import static com.android.ide.common.gradle.model.IdeModelTestUtils.createEqualsVerifier;
 import static com.android.ide.common.gradle.model.IdeModelTestUtils.expectUnsupportedOperationException;
-import static com.android.ide.common.gradle.model.IdeModelTestUtils.verifyUsageOfImmutableCollections;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
