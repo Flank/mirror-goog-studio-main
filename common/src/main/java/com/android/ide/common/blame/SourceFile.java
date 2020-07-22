@@ -22,6 +22,8 @@ import com.android.annotations.concurrency.Immutable;
 import com.google.common.base.Objects;
 import java.io.File;
 import java.io.Serializable;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Represents a source file. Note: Since the same file may have different representations (eg a/b vs
@@ -34,46 +36,65 @@ public final class SourceFile implements Serializable {
     @NonNull
     public static final SourceFile UNKNOWN = new SourceFile();
 
-    @Nullable
-    private final File mSourceFile;
+    /** The absolute file path to the file, used for accessing the file contents. */
+    @Nullable private final String mFilePath;
+
+    /**
+     * The path used as reference to the source file. If null, the mFilePath is used as the main
+     * source path. If mSourcePath is set, properties should only expose the mSourcePath, unless the
+     * file itself is being accessed.
+     */
+    @Nullable private String mSourcePath;
 
     /**
      * A human readable description
      *
-     * Usually the file name is OK for the short output, but for the manifest merger,
-     * where all of the files will be named AndroidManifest.xml the variant name is more useful.
+     * <p>Usually the file name is OK for the short output, but for the manifest merger, where all
+     * of the files will be named AndroidManifest.xml the variant name is more useful.
      */
-    @Nullable
-    private final String mDescription;
+    @Nullable private final String mDescription;
 
     @SuppressWarnings("NullableProblems")
-    public SourceFile(
-            @NonNull File sourceFile,
-            @NonNull String description) {
-        mSourceFile = sourceFile;
+    public SourceFile(@NonNull File sourceFile, @Nullable String description) {
+        mFilePath = sourceFile.getAbsolutePath();
         mDescription = description;
     }
 
-    public SourceFile(
-            @SuppressWarnings("NullableProblems") @NonNull File sourceFile) {
-        mSourceFile = sourceFile;
-        mDescription = null;
+    public SourceFile(@SuppressWarnings("NullableProblems") @NonNull File sourceFile) {
+        this(sourceFile, null);
     }
 
-    public SourceFile(
-            @SuppressWarnings("NullableProblems") @NonNull String description) {
-        mSourceFile = null;
+    public SourceFile(@SuppressWarnings("NullableProblems") @NonNull String description) {
+        mFilePath = null;
         mDescription = description;
     }
 
     private SourceFile() {
-        mSourceFile = null;
+        mFilePath = null;
         mDescription = null;
+    }
+
+    public void setOverrideSourcePath(@NonNull String value) {
+        mSourcePath = value;
     }
 
     @Nullable
     public File getSourceFile() {
-        return mSourceFile;
+        if (mFilePath != null) {
+            return new File(mFilePath);
+        }
+        return null;
+    }
+
+    @Nullable
+    public Path getSourcePath() {
+        if (mSourcePath != null) {
+            return Paths.get(mSourcePath);
+        }
+        if (mFilePath != null) {
+            return Paths.get(mFilePath);
+        }
+        return null;
     }
 
     @Nullable
@@ -91,13 +112,14 @@ public final class SourceFile implements Serializable {
         }
         SourceFile other = (SourceFile) obj;
 
-        return Objects.equal(mDescription, other.mDescription) &&
-                Objects.equal(mSourceFile, other.mSourceFile);
+        return Objects.equal(mDescription, other.mDescription)
+                && Objects.equal(mFilePath, other.mFilePath)
+                && Objects.equal(mSourcePath, other.mSourcePath);
     }
 
     @Override
     public int hashCode() {
-        String filePath = mSourceFile != null ? mSourceFile.getPath() : null;
+        String filePath = getSourcePath() != null ? getSourcePath().toString() : null;
         return Objects.hashCode(filePath, mDescription);
     }
 
@@ -109,19 +131,23 @@ public final class SourceFile implements Serializable {
 
     @NonNull
     public String print(boolean shortFormat) {
-        if (mSourceFile == null) {
+        String path;
+        if (mSourcePath != null) {
+            path = mSourcePath;
+        } else if (mFilePath != null) {
+            path = mFilePath;
+        } else {
             if (mDescription == null) {
                 return "Unknown source file";
             }
             return mDescription;
         }
-        String fileName = mSourceFile.getName();
-        String fileDisplayName = shortFormat ? fileName : mSourceFile.getAbsolutePath();
+        String fileName = new File(path).getName();
+        String fileDisplayName = shortFormat ? fileName : path;
         if (mDescription == null || mDescription.equals(fileName)) {
             return fileDisplayName;
         } else {
             return String.format("[%1$s] %2$s", mDescription, fileDisplayName);
         }
     }
-
 }

@@ -20,17 +20,15 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
+import java.io.File;
+import java.util.Arrays;
+import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
 
 @RunWith(Enclosed.class)
 public class SourceFileJsonTypeAdapterTest {
@@ -44,12 +42,18 @@ public class SourceFileJsonTypeAdapterTest {
         @Parameterized.Parameters(name = "{0}")
         public static Collection<Object[]> data() {
             // Note: On Windows the root '/' is transformed to 'C:/', so we call getAbsoluteFile()
-            return Arrays.asList(new Object[][]{
-                    {new SourceFile(new File("/path/to/a/file.java").getAbsoluteFile())},
-                    {new SourceFile(new File("/path/to/a/file.java").getAbsoluteFile(), "Description")},
-                    {new SourceFile("Description")},
-                    {SourceFile.UNKNOWN},
-            });
+            return Arrays.asList(
+                    new Object[][] {
+                        {new SourceFile(new File("/path/to/a/file.java").getAbsoluteFile())},
+                        {
+                            new SourceFile(
+                                    new File("/path/to/a/file.java").getAbsoluteFile(),
+                                    "Description")
+                        },
+                        {new SourceFile(new File("to/c/file.java"), "Description")},
+                        {new SourceFile("Description")},
+                        {SourceFile.UNKNOWN},
+                    });
         }
 
         @Parameterized.Parameter
@@ -78,40 +82,24 @@ public class SourceFileJsonTypeAdapterTest {
 
         @Parameterized.Parameters(name = "fromJson(\"{1}\") should be {0}")
         public static Collection<Object[]> data() {
-            return Arrays.asList(new Object[][]{
-                    {
-                            new SourceFile(new File("/path/file.java")),
-                            "\"/path/file.java\""
-                    },
-                    {
-                            new SourceFile(new File("/path/f.java")),
-                            "{\"path\":\"/path/f.java\"}"
-                    },
-                    {
+            return Arrays.asList(
+                    new Object[][] {
+                        {new SourceFile(new File("/path/file.java")), "\"/path/file.java\""},
+                        {new SourceFile(new File("/path/f.java")), "{\"path\":\"/path/f.java\"}"},
+                        {
                             new SourceFile(new File("/path/file.java"), "Description"),
                             "{\"description\":\"Description\", \"path\":\"/path/file.java\"}"
-                    },
-                    {
-                            new SourceFile("Description"),
-                            "{\"description\":\"Description\"}"
-                    },
-                    {
-                            SourceFile.UNKNOWN,
-                            "{}"
-                    },
-                    {
-                            SourceFile.UNKNOWN,
-                            "\"\""
-                    },
-                    {
-                            SourceFile.UNKNOWN,
-                            "{\"foo\":\"\"}"
-                    },
-                    {
-                            SourceFile.UNKNOWN,
-                            "{\"foo\": {\"bar\" : \":)\"}}"
-                    },
-            });
+                        },
+                        {new SourceFile("Description"), "{\"description\":\"Description\"}"},
+                        {
+                            new SourceFile(new File("x/file.java"), "Description"),
+                            "{\"description\":\"Description\", \"path\":\"x/file.java\"}"
+                        },
+                        {SourceFile.UNKNOWN, "{}"},
+                        {SourceFile.UNKNOWN, "\"\""},
+                        {SourceFile.UNKNOWN, "{\"foo\":\"\"}"},
+                        {SourceFile.UNKNOWN, "{\"foo\": {\"bar\" : \":)\"}}"},
+                    });
         }
 
         @Parameterized.Parameter(value = 0)

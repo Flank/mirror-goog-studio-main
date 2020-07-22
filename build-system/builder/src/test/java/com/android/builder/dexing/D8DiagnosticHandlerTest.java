@@ -71,7 +71,7 @@ public class D8DiagnosticHandlerTest {
         assertThat(message.getText()).isEqualTo(text);
         SourceFilePosition position = getSourceFilePosition(message);
         assertThat(position.getFile().getSourceFile()).isNotNull();
-        assertThat(position.getFile().getSourceFile()).isEqualTo(path.toFile());
+        assertThat(position.getFile().getSourceFile()).isEqualTo(path.toAbsolutePath().toFile());
         assertThat(position.getPosition().getStartLine()).isEqualTo(1);
         assertThat(position.getPosition().getEndLine()).isEqualTo(2);
         assertThat(position.getPosition().getStartOffset()).isEqualTo(12);
@@ -90,7 +90,7 @@ public class D8DiagnosticHandlerTest {
         assertThat(message.getText()).isEqualTo(text);
         SourceFilePosition position = getSourceFilePosition(message);
         assertThat(position.getFile().getSourceFile()).isNotNull();
-        assertThat(position.getFile().getSourceFile()).isEqualTo(path.toFile());
+        assertThat(position.getFile().getSourceFile()).isEqualTo(path.toAbsolutePath().toFile());
         assertThat(position.getPosition().getStartLine()).isEqualTo(1);
         assertThat(position.getPosition().getEndLine()).isEqualTo(1);
         assertThat(position.getPosition().getStartOffset()).isEqualTo(12);
@@ -109,7 +109,7 @@ public class D8DiagnosticHandlerTest {
         assertThat(message.getText()).isEqualTo(text);
         SourceFilePosition position = getSourceFilePosition(message);
         assertThat(position.getFile().getSourceFile()).isNotNull();
-        assertThat(position.getFile().getSourceFile()).isEqualTo(path.toFile());
+        assertThat(position.getFile().getSourceFile()).isEqualTo(path.toAbsolutePath().toFile());
         assertThat(position.getPosition()).isEqualTo(SourcePosition.UNKNOWN);
     }
 
@@ -125,7 +125,7 @@ public class D8DiagnosticHandlerTest {
         assertThat(message.getText()).contains(text);
         SourceFilePosition position = getSourceFilePosition(message);
         assertThat(position.getFile().getSourceFile()).isNotNull();
-        assertThat(position.getFile().getSourceFile()).isEqualTo(path.toFile());
+        assertThat(position.getFile().getSourceFile()).isEqualTo(path.toAbsolutePath().toFile());
         assertThat(position.getPosition()).isEqualTo(SourcePosition.UNKNOWN);
     }
 
@@ -141,7 +141,7 @@ public class D8DiagnosticHandlerTest {
         assertThat(message.getText()).contains(text);
         SourceFilePosition position = getSourceFilePosition(message);
         assertThat(position.getFile().getSourceFile()).isNotNull();
-        assertThat(position.getFile().getSourceFile()).isEqualTo(path.toFile());
+        assertThat(position.getFile().getSourceFile()).isEqualTo(path.toAbsolutePath().toFile());
         assertThat(position.getPosition()).isEqualTo(SourcePosition.UNKNOWN);
     }
 

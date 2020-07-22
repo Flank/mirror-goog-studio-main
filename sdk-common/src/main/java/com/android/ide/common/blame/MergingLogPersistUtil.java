@@ -211,7 +211,7 @@ public class MergingLogPersistUtil {
 
                     out.beginObject();
                     out.name(KEY_SOURCE)
-                            .value(sourceFileListEntry.getKey().getSourceFile().getAbsolutePath());
+                            .value(sourceFileListEntry.getKey().getSourcePath().toString());
 
                     Pair<SourcePositionsSerializer, SourcePositionsSerializer> serializerPair =
                             sourceFileListEntry.getValue();
@@ -525,8 +525,7 @@ public class MergingLogPersistUtil {
             throws IOException {
         File file = getSingleFile(folder, shard);
         file.getParentFile().mkdir();
-        JsonWriter out = new JsonWriter(Files.newWriter(file, Charsets.UTF_8));
-        try {
+        try (JsonWriter out = new JsonWriter(Files.newWriter(file, Charsets.UTF_8))) {
             out.setIndent(INDENT_STRING);
             out.beginArray();
             for (Map.Entry<SourceFile, SourceFile> entry : map.entrySet()) {
@@ -538,8 +537,6 @@ public class MergingLogPersistUtil {
                 out.endObject();
             }
             out.endArray();
-        } finally {
-            out.close();
         }
     }
 
