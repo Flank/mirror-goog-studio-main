@@ -217,16 +217,17 @@ public class MergingLogTest {
         File tempDir = mTemporaryFolder.newFolder();
         MergingLog mergingLog = new MergingLog(tempDir);
 
+        File destinationFile = absoluteFile("merged/layout/a");
         mergingLog.logCopy(
                 absoluteFile("exploded/layout/a"),
                 "alternative/layout/a",
-                absoluteFile("merged/layout/a"));
+                destinationFile,
+                "alternativeMerge/layout/a");
 
         Map<SourcePosition, SourceFilePosition> map = Maps.newLinkedHashMap();
         SourcePosition sourcePosition = new SourcePosition(1, 2, 3, 7, 1, 120);
         map.put(sourcePosition, position1);
         mergingLog.logSource(new SourceFile(absoluteFile("merged/values/values.xml")), map);
-
         mergingLog.write();
         assertThat(map.get(sourcePosition).toString())
                 .isEqualTo("alternative/a/values/values.xml:8:9");

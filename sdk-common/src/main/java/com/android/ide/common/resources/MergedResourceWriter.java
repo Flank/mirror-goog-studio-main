@@ -210,11 +210,15 @@ public class MergedResourceWriter
                     File fileToCompile = request.getInputFile();
 
                     if (mMergingLog != null) {
-                        mMergingLog.logCopy(
-                                fileToCompile,
+                        File destination =
                                 mergeWriterRequest
                                         .getResourceCompilationService()
-                                        .compileOutputFor(request));
+                                        .compileOutputFor(request);
+                        mMergingLog.logCopy(
+                                fileToCompile,
+                                getSourceFilePath(fileToCompile),
+                                destination,
+                                getSourceFilePath(destination));
                     }
 
                     if (mergeWriterRequest.getDataBindingExpressionRemover() != null
@@ -241,7 +245,11 @@ public class MergedResourceWriter
                         if (removedDataBinding) {
                             // Remember in case AAPT compile or link fails.
                             if (mMergingLog != null) {
-                                mMergingLog.logCopy(request.getInputFile(), strippedLayout);
+                                mMergingLog.logCopy(
+                                        request.getInputFile(),
+                                        getSourceFilePath(request.getInputFile()),
+                                        strippedLayout,
+                                        getSourcePath(strippedLayout));
                             }
                             fileToCompile = strippedLayout;
                         } else {
@@ -315,6 +323,13 @@ public class MergedResourceWriter
         } catch (IOException e) {
             throw new ConsumerException(e);
         }
+    }
+
+    private String getSourceFilePath(File inputFile) {
+        return mergeWriterRequest.getModuleSourceSets().isEmpty()
+                ? inputFile.getAbsolutePath()
+                : RelativeResourceUtils.getRelativeSourceSetPath(
+                        inputFile, mergeWriterRequest.getModuleSourceSets());
     }
 
     @Override
@@ -405,8 +420,7 @@ public class MergedResourceWriter
 
     @Override
     public void removeItem(
-            @NonNull ResourceMergerItem removedItem, @Nullable ResourceMergerItem replacedBy)
-            throws ConsumerException {
+            @NonNull ResourceMergerItem removedItem, @Nullable ResourceMergerItem replacedBy) {
         ResourceFile.FileType removedType = removedItem.getSourceType();
         ResourceFile.FileType replacedType = replacedBy != null
                 ? replacedBy.getSourceType()
@@ -573,14 +587,14 @@ public class MergedResourceWriter
                     }
 
                     if (blame != null) {
-                        mMergingLog.logSource(
-                                new SourceFile(
-                                        mergeWriterRequest
-                                                .getResourceCompilationService()
-                                                .compileOutputFor(request)),
-                                blame);
+                        File file =
+                                mergeWriterRequest
+                                        .getResourceCompilationService()
+                                        .compileOutputFor(request);
+                        mMergingLog.logSource(new SourceFile(file), getSourcePath(file), blame);
 
-                        mMergingLog.logSource(new SourceFile(outFile), blame);
+                        String sourcePath = getSourceFilePath(outFile);
+                        mMergingLog.logSource(new SourceFile(outFile), sourcePath, blame);
                     }
 
                     mergeWriterRequest.getResourceCompilationService().submitCompile(request);
@@ -646,6 +660,13 @@ public class MergedResourceWriter
                             .getResourceCompilationService()
                             .compileOutputFor(compileResourceRequest));
         }
+    }
+
+    private String getSourcePath(File file) {
+        return mergeWriterRequest.getModuleSourceSets().isEmpty()
+                ? file.getAbsolutePath()
+                : RelativeResourceUtils.getRelativeSourceSetPath(
+                        file, mergeWriterRequest.getModuleSourceSets());
     }
 
     /**
@@ -728,7 +749,10 @@ public class MergedResourceWriter
      */
     private boolean removeOutFile(@NonNull File fileToRemove) {
         if (mMergingLog != null) {
-            mMergingLog.logRemove(new SourceFile(fileToRemove));
+            SourceFile removeSourceFile = new SourceFile(fileToRemove);
+            String sourcePath = getSourceFilePath(fileToRemove);
+            removeSourceFile.setOverrideSourcePath(sourcePath);
+            mMergingLog.logRemove(removeSourceFile);
         }
 
         return fileToRemove.delete();

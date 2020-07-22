@@ -50,7 +50,7 @@ public class SourceFileJsonTypeAdapterTest {
                                     new File("/path/to/a/file.java").getAbsoluteFile(),
                                     "Description")
                         },
-                        {new SourceFile(new File("to/c/file.java"), "Description")},
+                        {new SourceFile(new File("to/c/file.java").getAbsoluteFile(), "Description")},
                         {new SourceFile("Description")},
                         {SourceFile.UNKNOWN},
                     });
@@ -118,6 +118,7 @@ public class SourceFileJsonTypeAdapterTest {
 
         @Test
         public void test() {
+            SourceFile sf = sGson.fromJson(jsonString, SourceFile.class);
             assertEquals(mSourceFile, sGson.fromJson(jsonString, SourceFile.class));
         }
 

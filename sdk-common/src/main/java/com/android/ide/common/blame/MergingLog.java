@@ -107,10 +107,15 @@ public class MergingLog {
      * @param destination the destination.
      */
     public void logCopy(
-            @NonNull File source, @NonNull String sourcePath, @NonNull File destination) {
+            @NonNull File source,
+            @NonNull String sourcePath,
+            @NonNull File destination,
+            @NonNull String destinationPath) {
         SourceFile sourceFile = new SourceFile(source);
         sourceFile.setOverrideSourcePath(sourcePath);
-        logCopy(sourceFile, new SourceFile(destination));
+        SourceFile destinationSource = new SourceFile(destination);
+        destinationSource.setOverrideSourcePath(destinationPath);
+        logCopy(sourceFile, destinationSource);
     }
 
     /** Remove a merged file from the merging log. */
@@ -132,6 +137,13 @@ public class MergingLog {
         getMergedFileMap(mergedFile).put(mergedFile, map);
     }
 
+    public void logSource(
+            @NonNull SourceFile mergedFile,
+            @NonNull String mergedFilePath,
+            @NonNull Map<SourcePosition, SourceFilePosition> map) {
+        mergedFile.setOverrideSourcePath(mergedFilePath);
+        getMergedFileMap(mergedFile).put(mergedFile, map);
+    }
 
     @NonNull
     private Map<SourceFile, SourceFile> getWholeFileMap(@NonNull SourceFile file) {

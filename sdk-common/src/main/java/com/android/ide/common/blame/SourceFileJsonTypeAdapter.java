@@ -44,11 +44,11 @@ public class SourceFileJsonTypeAdapter extends TypeAdapter<SourceFile> {
 
     @Override
     public void write(JsonWriter out, SourceFile src) throws IOException {
-        Path path = src.getSourcePath();
+        String path = src.getSourcePath();
         String description = src.getDescription();
 
         if (description == null && path != null) {
-            out.value(path.toString());
+            out.value(path);
             return;
         }
         out.beginObject();
@@ -56,7 +56,7 @@ public class SourceFileJsonTypeAdapter extends TypeAdapter<SourceFile> {
             out.name(DESCRIPTION).value(description);
         }
         if (path != null) {
-            out.name(PATH).value(path.toString());
+            out.name(PATH).value(path);
         }
         out.endObject();
     }
@@ -81,11 +81,16 @@ public class SourceFileJsonTypeAdapter extends TypeAdapter<SourceFile> {
                 in.endObject();
                 if (!Strings.isNullOrEmpty(filePath)) {
                     File file = new File(filePath);
+                    SourceFile sf;
                     if (!Strings.isNullOrEmpty(description)) {
-                        return new SourceFile(file, description);
+                        sf = new SourceFile(file, description);
                     } else {
-                        return new SourceFile(file);
+                        sf = new SourceFile(file);
                     }
+                    if (filePath.contains(":")) {
+                        sf.setOverrideSourcePath(filePath);
+                    }
+                    return sf;
                 } else {
                     if (!Strings.isNullOrEmpty(description)) {
                         return new SourceFile(description);
@@ -98,7 +103,11 @@ public class SourceFileJsonTypeAdapter extends TypeAdapter<SourceFile> {
                 if (Strings.isNullOrEmpty(fileName)) {
                     return SourceFile.UNKNOWN;
                 }
-                return new SourceFile(new File(fileName));
+                SourceFile sf = new SourceFile(new File(fileName));
+                if (fileName.contains(":")) {
+                    sf.setOverrideSourcePath(fileName);
+                }
+                return sf;
             default:
                 return SourceFile.UNKNOWN;
         }

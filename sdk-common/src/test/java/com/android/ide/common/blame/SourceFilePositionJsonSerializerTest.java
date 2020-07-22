@@ -72,7 +72,7 @@ public class SourceFilePositionJsonSerializerTest {
             // Note: On Windows the root '/' is transformed to 'C:/', so we call getAbsoluteFile()
             return Arrays.asList(allPairings(new SourceFile[]{
                             new SourceFile(new File("/path/to/a/file.java").getAbsoluteFile()),
-                            new SourceFile(new File("/path/to/a/file.java").getAbsoluteFile(), "Description"),
+                            new SourceFile(new File("/path/to/a/file.java"), "Description"),
                             new SourceFile("Description"),
                             SourceFile.UNKNOWN},
                     SourcePositionJsonTypeAdapterTest.mExamples));

@@ -210,8 +210,7 @@ public class MergingLogPersistUtil {
                         sourceFileListEntry : sourceFileListMap.entrySet()) {
 
                     out.beginObject();
-                    out.name(KEY_SOURCE)
-                            .value(sourceFileListEntry.getKey().getSourcePath().toString());
+                    out.name(KEY_SOURCE).value(sourceFileListEntry.getKey().getSourcePath());
 
                     Pair<SourcePositionsSerializer, SourcePositionsSerializer> serializerPair =
                             sourceFileListEntry.getValue();
