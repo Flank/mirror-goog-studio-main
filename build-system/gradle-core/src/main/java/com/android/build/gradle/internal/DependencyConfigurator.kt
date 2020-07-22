@@ -92,7 +92,12 @@ class DependencyConfigurator(
     fun configureDependencySubstitutions(): DependencyConfigurator {
         // If Jetifier is enabled, replace old support libraries with AndroidX.
         if (globalScope.projectOptions.get(BooleanOption.ENABLE_JETIFIER)) {
-            replaceOldSupportLibraries(project)
+            replaceOldSupportLibraries(
+                project,
+                // Inline the property name for a slight memory improvement (so that the JVM doesn't
+                // create a new string every time this code is executed, which could be many when
+                // there are many subprojects).
+                reasonToReplace = "android.enableJetifier=true")
         }
         return this
     }
