@@ -300,6 +300,9 @@ public class BenchmarkTest {
                         "-Pandroid.injected.build.api=10000"); // as high as possible so we never need to change it.
                 gradle.addArgument("-Pandroid.injected.build.abi=arm64-v8a");
                 gradle.addArgument("-Pandroid.injected.build.density=xhdpi");
+                gradle.addArgument(
+                        "-Pandroid.injected.attribution.file.location="
+                                + new File(out, "attribution_out").getAbsolutePath());
             }
             if (failOnWarning) {
                 gradle.addArgument("--warning-mode=fail");
