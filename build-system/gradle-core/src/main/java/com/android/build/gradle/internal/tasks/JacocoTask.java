@@ -149,10 +149,17 @@ public abstract class JacocoTask extends NewIncrementalTask {
     }
 
     private void processJars(InputChanges inputChanges) {
-        Map<File, FileInfo> jarsInfo =
-                getJarsWithIdentity().getMappingState(inputChanges).getJarsInfo();
+        JarsIdentityMapping mappingState = getJarsWithIdentity().getMappingState(inputChanges);
 
-        for (Map.Entry<File, FileInfo> fileToInfo : jarsInfo.entrySet()) {
+        if (mappingState.getReprocessAll()) {
+            try {
+                FileUtils.deleteDirectoryContents(getOutputForJars().get().getAsFile());
+            } catch (IOException ex) {
+                throw new UncheckedIOException(ex);
+            }
+        }
+
+        for (Map.Entry<File, FileInfo> fileToInfo : mappingState.getJarsInfo().entrySet()) {
             FileInfo fileInfo = fileToInfo.getValue();
             if (fileInfo.getHasChanged()) {
                 File instrumentedJar =
