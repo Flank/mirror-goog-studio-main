@@ -111,7 +111,12 @@ public class ProguardAarPackagingTest {
                         + "    }\n"
                         + "}");
 
-        TestFileUtils.appendToFile(libraryInJarProject.getBuildFile(), "apply plugin: 'java'");
+        TestFileUtils.appendToFile(
+                libraryInJarProject.getBuildFile(),
+                "\n"
+                        + "apply plugin: 'java'\n"
+                        + "java.sourceCompatibility = JavaVersion.VERSION_1_8\n"
+                        + "java.targetCompatibility = JavaVersion.VERSION_1_8\n");
         libraryInJarProject.execute("assemble");
 
         // Copy the generated jar into the android project.
