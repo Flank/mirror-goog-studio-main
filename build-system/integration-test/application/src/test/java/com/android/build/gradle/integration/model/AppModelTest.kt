@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.model.dump
 import com.android.build.gradle.integration.common.utils.goldenFile
 import com.android.builder.model.v2.ide.SyncIssue
 import com.google.common.truth.Truth
+import org.gradle.api.JavaVersion
 import org.junit.Rule
 import org.junit.Test
 
@@ -38,9 +39,10 @@ class AppModelTest {
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchAndroidProjects()
 
+        val fileName = if (JavaVersion.current().isJava11Compatible) "Default_AndroidProject_Model_jdk11" else "Default_AndroidProject_Model"
         Truth.assertWithMessage("Dumped AndroidProject (full version in stdout)")
             .that(result.container.singleModel.dump(result.normalizer))
-            .isEqualTo(goldenFile("Default_AndroidProject_Model"))
+            .isEqualTo(goldenFile(fileName))
     }
 
     @Test
