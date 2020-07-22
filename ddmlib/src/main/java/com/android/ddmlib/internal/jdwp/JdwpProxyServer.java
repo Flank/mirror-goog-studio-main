@@ -149,7 +149,9 @@ public class JdwpProxyServer implements Runnable {
 
     public void stop() {
         mQuit = true;
-        mSelector.wakeup();
+        if (mSelector != null) {
+            mSelector.wakeup();
+        }
         synchronized (myChannelLock) {
             if (mFallbackChannel != null) {
                 try {
