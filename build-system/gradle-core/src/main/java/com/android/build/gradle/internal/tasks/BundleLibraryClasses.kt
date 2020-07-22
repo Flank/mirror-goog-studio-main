@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ClassesDirF
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ClassesDirFormat.CONTAINS_SINGLE_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
@@ -39,8 +40,10 @@ import com.android.builder.dexing.isJarFile
 import com.android.builder.files.SerializableFileChanges
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -48,6 +51,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -69,6 +73,7 @@ interface BundleLibraryClassesInputs {
     val namespace: Property<String>
 
     @get:Classpath
+    @get:Optional
     val classes: ConfigurableFileCollection
 
     @get:Input
@@ -89,11 +94,13 @@ private fun BundleLibraryClassesInputs.configure(
 ) {
     namespace.setDisallowChanges(creationConfig.namespace)
     classes.from(inputs)
-    this.packageRClass.set(packageRClass)
     if (packageRClass) {
-        classes.from(creationConfig.artifacts.get(InternalArtifactType.COMPILE_R_CLASS_JAR))
+        classes.from(
+                creationConfig.artifacts.get(InternalArtifactType.COMPILE_R_CLASS_JAR)
+        )
     }
-    jarCreatorType.set(creationConfig.variantScope.jarCreatorType)
+    this.packageRClass.setDisallowChanges(packageRClass)
+    jarCreatorType.setDisallowChanges(creationConfig.variantScope.jarCreatorType)
 
     dataBindingExcludeDelegate.configureFrom(creationConfig)
 }
@@ -103,6 +110,7 @@ private fun BundleLibraryClassesInputs.configureWorkerActionParams(
     inputChanges: InputChanges?,
     output: Provider<File>
 ) {
+
     val incrementalChanges = if (inputChanges?.isIncremental == true) {
         inputChanges.getFileChanges(classes)
     } else {
