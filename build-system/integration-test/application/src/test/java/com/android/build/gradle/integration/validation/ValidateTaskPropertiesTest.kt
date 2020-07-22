@@ -27,7 +27,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
-import java.net.URLClassLoader
 
 /**
  * Runs Gradle's task properties validation task on the Android Gradle Plugin.
@@ -52,9 +51,11 @@ class ValidateTaskPropertiesTest {
                 .map { it.load() }
         TestInputsGenerator.pathWithClasses(classes.toPath(), classesList)
 
-        val classpath = (classLoader as URLClassLoader).urLs.joinToString(",") {
-            "'" + File(it.toURI()).invariantSeparatorsPath + "'"
-        }
+        val classpath =
+            System.getProperty("java.class.path").split(System.getProperty("path.separator"))
+                .joinToString {
+                    "'" + File(it).invariantSeparatorsPath + "'"
+                }
 
         project.buildFile.appendText("\n" +
                 """
