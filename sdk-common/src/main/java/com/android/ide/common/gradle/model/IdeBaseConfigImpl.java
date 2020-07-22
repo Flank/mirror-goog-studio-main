@@ -65,7 +65,7 @@ public abstract class IdeBaseConfigImpl implements IdeBaseConfig, Serializable {
                 IdeModel.copy(
                         config.getResValues(),
                         modelCache,
-                        classField -> new IdeClassField(classField));
+                        classField -> new IdeClassFieldImpl(classField));
         myProguardFiles = ImmutableList.copyOf(config.getProguardFiles());
         myConsumerProguardFiles = ImmutableList.copyOf(config.getConsumerProguardFiles());
         // AGP may return internal Groovy GString implementation as a value in manifestPlaceholders

@@ -59,7 +59,7 @@ public final class IdeBuildTypeContainer implements BuildTypeContainer, Serializ
                         container.getExtraSourceProviders(),
                         modelCache,
                         sourceProviderContainer ->
-                                new IdeSourceProviderContainer(
+                                new IdeSourceProviderContainerImpl(
                                         sourceProviderContainer, modelCache));
 
         myHashCode = calculateHashCode();

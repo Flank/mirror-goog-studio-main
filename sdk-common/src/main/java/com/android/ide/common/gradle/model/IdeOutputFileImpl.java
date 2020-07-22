@@ -30,7 +30,7 @@ import java.util.Iterator;
 import java.util.Objects;
 
 /** Creates a deep copy of an {@link OutputFile}. */
-public final class IdeOutputFile implements OutputFile, Serializable {
+public final class IdeOutputFileImpl implements IdeOutputFile, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
@@ -45,7 +45,7 @@ public final class IdeOutputFile implements OutputFile, Serializable {
 
     // Used for serialization by the IDE.
     @SuppressWarnings("unused")
-    IdeOutputFile() {
+    IdeOutputFileImpl() {
         myOutputType = "";
         myFilterTypes = Collections.emptyList();
         myFilters = Collections.emptyList();
@@ -58,7 +58,7 @@ public final class IdeOutputFile implements OutputFile, Serializable {
         myHashCode = 0;
     }
 
-    public IdeOutputFile(
+    public IdeOutputFileImpl(
             @NonNull String outputType,
             @NonNull Collection<String> filterTypes,
             @NonNull Collection<FilterData> filters,
@@ -76,10 +76,11 @@ public final class IdeOutputFile implements OutputFile, Serializable {
         myHashCode = calculateHashCode();
     }
 
-    public IdeOutputFile(@NonNull OutputFile file, @NonNull ModelCache modelCache) {
+    public IdeOutputFileImpl(@NonNull OutputFile file, @NonNull ModelCache modelCache) {
         myOutputType = file.getOutputType();
         myFilterTypes = ImmutableList.copyOf(file.getFilterTypes());
-        myFilters = IdeModel.copy(file.getFilters(), modelCache, data -> new IdeFilterData(data));
+        myFilters =
+                IdeModel.copy(file.getFilters(), modelCache, data -> new IdeFilterDataImpl(data));
         myOutputFile = file.getOutputFile();
         myMainOutputFile = copyMainOutputFile(file, modelCache);
         //noinspection deprecation
@@ -90,7 +91,7 @@ public final class IdeOutputFile implements OutputFile, Serializable {
     }
 
     @Nullable
-    private IdeOutputFile copyMainOutputFile(
+    private IdeOutputFileImpl copyMainOutputFile(
             @NonNull OutputFile file, @NonNull ModelCache modelCache) {
         try {
             if (file == file.getMainOutputFile()) {
@@ -102,7 +103,7 @@ public final class IdeOutputFile implements OutputFile, Serializable {
         return IdeModel.copyNewProperty(
                 modelCache,
                 file::getMainOutputFile,
-                outputFile -> new IdeOutputFile(outputFile, modelCache),
+                outputFile -> new IdeOutputFileImpl(outputFile, modelCache),
                 null);
     }
 
@@ -111,13 +112,12 @@ public final class IdeOutputFile implements OutputFile, Serializable {
             @NonNull OutputFile file, @NonNull ModelCache modelCache) {
         try {
             //noinspection deprecation
-            return file.getOutputs()
-                    .stream()
+            return file.getOutputs().stream()
                     .map(
                             outputFile ->
                                     outputFile == file
                                             ? this
-                                            : new IdeOutputFile(outputFile, modelCache))
+                                            : new IdeOutputFileImpl(outputFile, modelCache))
                     .collect(toImmutableList());
         } catch (UnsupportedOperationException ignored) {
             return Collections.emptyList();
@@ -176,11 +176,11 @@ public final class IdeOutputFile implements OutputFile, Serializable {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeOutputFile)) {
+        if (!(o instanceof IdeOutputFileImpl)) {
             return false;
         }
 
-        IdeOutputFile file = (IdeOutputFile) o;
+        IdeOutputFileImpl file = (IdeOutputFileImpl) o;
         return Objects.equals(myVersionCode, file.myVersionCode)
                 && Objects.equals(myOutputType, file.myOutputType)
                 && Objects.equals(myFilterTypes, file.myFilterTypes)
@@ -190,7 +190,7 @@ public final class IdeOutputFile implements OutputFile, Serializable {
                 && mainOutputFileEquals(file);
     }
 
-    private boolean areOutputsEqual(@NonNull IdeOutputFile other) {
+    private boolean areOutputsEqual(@NonNull IdeOutputFileImpl other) {
         if (myOutputs == other.myOutputs) {
             return true;
         }
@@ -215,7 +215,7 @@ public final class IdeOutputFile implements OutputFile, Serializable {
         return !iterator2.hasNext();
     }
 
-    private boolean mainOutputFileEquals(@NonNull IdeOutputFile file) {
+    private boolean mainOutputFileEquals(@NonNull IdeOutputFileImpl file) {
         // Avoid stack overflow.
         return myMainOutputFile == this
                 ? file.myMainOutputFile == file

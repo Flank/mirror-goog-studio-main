@@ -73,12 +73,12 @@ public final class IdeNativeVariantAbi implements NativeVariantAbi, Serializable
                 IdeModel.copy(
                         variantAbi.getToolChains(),
                         modelCache,
-                        toolchain -> new IdeNativeToolchain(toolchain));
+                        toolchain -> new IdeNativeToolchainImpl(toolchain));
         mySettings =
                 IdeModel.copy(
                         variantAbi.getSettings(),
                         modelCache,
-                        settings -> new IdeNativeSettings(settings));
+                        settings -> new IdeNativeSettingsImpl(settings));
         myFileExtensions = ImmutableMap.copyOf(variantAbi.getFileExtensions());
         myVariantName = variantAbi.getVariantName();
         myAbi = variantAbi.getAbi();

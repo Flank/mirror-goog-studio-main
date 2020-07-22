@@ -26,7 +26,7 @@ import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeTestedTargetVariant}. */
+/** Tests for {@link IdeTestedTargetVariantImpl}. */
 public class IdeTestedTargetVariantTest {
     private ModelCache myModelCache;
 
@@ -37,13 +37,13 @@ public class IdeTestedTargetVariantTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeTestedTargetVariant.class).isAssignableTo(Serializable.class);
+        assertThat(IdeTestedTargetVariantImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeTestedTargetVariant targetVariant =
-                new IdeTestedTargetVariant(new TestedTargetVariantStub());
+        IdeTestedTargetVariantImpl targetVariant =
+                new IdeTestedTargetVariantImpl(new TestedTargetVariantStub());
         byte[] bytes = Serialization.serialize(targetVariant);
         Object o = Serialization.deserialize(bytes);
         assertEquals(targetVariant, o);
@@ -52,13 +52,13 @@ public class IdeTestedTargetVariantTest {
     @Test
     public void constructor() throws Throwable {
         TestedTargetVariant original = new TestedTargetVariantStub();
-        IdeTestedTargetVariant copy = new IdeTestedTargetVariant(original);
+        IdeTestedTargetVariantImpl copy = new IdeTestedTargetVariantImpl(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeTestedTargetVariant.class).verify();
+        createEqualsVerifier(IdeTestedTargetVariantImpl.class).verify();
     }
 }

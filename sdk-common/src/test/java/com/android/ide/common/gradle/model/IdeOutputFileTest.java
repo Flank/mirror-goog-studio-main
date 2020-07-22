@@ -29,7 +29,7 @@ import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeOutputFile}. */
+/** Tests for {@link IdeOutputFileImpl}. */
 public class IdeOutputFileTest {
     private ModelCache myModelCache;
 
@@ -40,12 +40,12 @@ public class IdeOutputFileTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeOutputFile.class).isAssignableTo(Serializable.class);
+        assertThat(IdeOutputFileImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeOutputFile outputFile = new IdeOutputFile(createStub(), myModelCache);
+        IdeOutputFileImpl outputFile = new IdeOutputFileImpl(createStub(), myModelCache);
         byte[] bytes = serialize(outputFile);
         Object o = deserialize(bytes);
         assertEquals(outputFile, o);
@@ -54,7 +54,7 @@ public class IdeOutputFileTest {
     @Test
     public void constructor() throws Throwable {
         OutputFile original = createStub();
-        IdeOutputFile copy = new IdeOutputFile(original, myModelCache);
+        IdeOutputFileImpl copy = new IdeOutputFileImpl(original, myModelCache);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
@@ -66,7 +66,7 @@ public class IdeOutputFileTest {
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeOutputFile.class);
+        createEqualsVerifier(IdeOutputFileImpl.class);
     }
 
     @Test
@@ -74,7 +74,7 @@ public class IdeOutputFileTest {
         OutputFileStub file = new OutputFileStub();
         file.addOutputFile(file);
 
-        IdeOutputFile outputFile = new IdeOutputFile(file, myModelCache);
+        IdeOutputFileImpl outputFile = new IdeOutputFileImpl(file, myModelCache);
         String text = outputFile.toString();
         System.out.println(text);
         assertThat(text).contains("this");

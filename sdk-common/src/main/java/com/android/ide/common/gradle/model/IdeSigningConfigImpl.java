@@ -23,7 +23,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link SigningConfig}. */
-public final class IdeSigningConfig implements SigningConfig, Serializable {
+public final class IdeSigningConfigImpl implements IdeSigningConfig, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 3L;
 
@@ -36,7 +36,7 @@ public final class IdeSigningConfig implements SigningConfig, Serializable {
 
     // Used for serialization by the IDE.
     @SuppressWarnings("unused")
-    IdeSigningConfig() {
+    IdeSigningConfigImpl() {
         myName = "";
         myStoreFile = null;
         myStorePassword = null;
@@ -46,7 +46,7 @@ public final class IdeSigningConfig implements SigningConfig, Serializable {
         myHashCode = 0;
     }
 
-    public IdeSigningConfig(@NonNull SigningConfig config) {
+    public IdeSigningConfigImpl(@NonNull SigningConfig config) {
         myName = config.getName();
         myStoreFile = config.getStoreFile();
         myStorePassword = config.getStorePassword();
@@ -116,10 +116,10 @@ public final class IdeSigningConfig implements SigningConfig, Serializable {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeSigningConfig)) {
+        if (!(o instanceof IdeSigningConfigImpl)) {
             return false;
         }
-        IdeSigningConfig config = (IdeSigningConfig) o;
+        IdeSigningConfigImpl config = (IdeSigningConfigImpl) o;
         return Objects.equals(myV1SigningEnabled, config.myV1SigningEnabled)
                 && Objects.equals(myName, config.myName)
                 && Objects.equals(myStoreFile, config.myStoreFile)

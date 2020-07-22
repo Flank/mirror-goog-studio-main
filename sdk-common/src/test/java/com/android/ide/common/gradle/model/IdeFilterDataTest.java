@@ -25,7 +25,7 @@ import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeFilterData}. */
+/** Tests for {@link IdeFilterDataImpl}. */
 public class IdeFilterDataTest {
     private ModelCache myModelCache;
 
@@ -36,12 +36,12 @@ public class IdeFilterDataTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeFilterData.class).isAssignableTo(Serializable.class);
+        assertThat(IdeFilterDataImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeFilterData filterData = new IdeFilterData(new FilterDataStub());
+        IdeFilterDataImpl filterData = new IdeFilterDataImpl(new FilterDataStub());
         byte[] bytes = Serialization.serialize(filterData);
         Object o = Serialization.deserialize(bytes);
         assertEquals(filterData, o);
@@ -50,13 +50,13 @@ public class IdeFilterDataTest {
     @Test
     public void constructor() throws Throwable {
         FilterDataStub original = new FilterDataStub();
-        IdeFilterData copy = new IdeFilterData(original);
+        IdeFilterDataImpl copy = new IdeFilterDataImpl(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeFilterData.class).verify();
+        createEqualsVerifier(IdeFilterDataImpl.class).verify();
     }
 }

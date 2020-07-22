@@ -93,7 +93,7 @@ public final class IdeLibraries {
     }
 
     @NonNull
-    public static IdeMavenCoordinates computeResolvedCoordinate(
+    public static IdeMavenCoordinatesImpl computeResolvedCoordinate(
             @NonNull Library library, @NonNull ModelCache modelCache) {
         // Although getResolvedCoordinates is annotated with @NonNull, it can return null for plugin 1.5,
         // when the library dependency is from local jar.
@@ -101,7 +101,7 @@ public final class IdeLibraries {
         if (library.getResolvedCoordinates() != null) {
             return modelCache.computeIfAbsent(
                     library.getResolvedCoordinates(),
-                    coordinates -> new IdeMavenCoordinates(coordinates));
+                    coordinates -> new IdeMavenCoordinatesImpl(coordinates));
         } else {
             File jarFile;
             if (library instanceof JavaLibrary) {
@@ -109,16 +109,16 @@ public final class IdeLibraries {
             } else {
                 jarFile = ((AndroidLibrary) library).getBundle();
             }
-            return new IdeMavenCoordinates(jarFile);
+            return new IdeMavenCoordinatesImpl(jarFile);
         }
     }
 
     @Nullable
-    public static IdeMavenCoordinates computeRequestedCoordinate(@NonNull Library library) {
+    public static IdeMavenCoordinatesImpl computeRequestedCoordinate(@NonNull Library library) {
         MavenCoordinates requestedCoordinates = library.getRequestedCoordinates();
         if (requestedCoordinates == null) {
             return null;
         }
-        return new IdeMavenCoordinates(requestedCoordinates);
+        return new IdeMavenCoordinatesImpl(requestedCoordinates);
     }
 }

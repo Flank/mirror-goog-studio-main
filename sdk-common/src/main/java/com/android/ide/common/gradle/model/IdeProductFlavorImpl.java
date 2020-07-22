@@ -57,7 +57,7 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
 
         myTestInstrumentationRunnerArguments = Collections.emptyMap();
         myResourceConfigurations = Collections.emptyList();
-        myVectorDrawables = new IdeVectorDrawablesOptions();
+        myVectorDrawables = new IdeVectorDrawablesOptionsImpl();
         myDimension = null;
         myApplicationId = null;
         myVersionCode = null;
@@ -107,14 +107,15 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
             return null;
         }
         return modelCache.computeIfAbsent(
-                vectorDrawables, options -> new IdeVectorDrawablesOptions(options));
+                vectorDrawables, options -> new IdeVectorDrawablesOptionsImpl(options));
     }
 
     @Nullable
-    private static IdeApiVersion copy(
+    private static IdeApiVersionImpl copy(
             @NonNull ModelCache modelCache, @Nullable ApiVersion apiVersion) {
         if (apiVersion != null) {
-            return modelCache.computeIfAbsent(apiVersion, version -> new IdeApiVersion(version));
+            return modelCache.computeIfAbsent(
+                    apiVersion, version -> new IdeApiVersionImpl(version));
         }
         return null;
     }
@@ -124,7 +125,7 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
             @NonNull ModelCache modelCache, @Nullable SigningConfig signingConfig) {
         if (signingConfig != null) {
             return modelCache.computeIfAbsent(
-                    signingConfig, config -> new IdeSigningConfig(config));
+                    signingConfig, config -> new IdeSigningConfigImpl(config));
         }
         return null;
     }

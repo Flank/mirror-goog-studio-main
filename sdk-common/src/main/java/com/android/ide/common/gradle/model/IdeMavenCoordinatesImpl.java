@@ -23,7 +23,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link MavenCoordinates}. */
-public final class IdeMavenCoordinates implements MavenCoordinates, Serializable {
+public final class IdeMavenCoordinatesImpl implements IdeMavenCoordinates, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 3L;
     public static final String LOCAL_AARS = "__local_aars__";
@@ -36,7 +36,7 @@ public final class IdeMavenCoordinates implements MavenCoordinates, Serializable
     private final int myHashCode;
 
     // Used for serialization by the IDE.
-    IdeMavenCoordinates() {
+    IdeMavenCoordinatesImpl() {
         myGroupId = "";
         myArtifactId = "";
         myVersion = "";
@@ -46,7 +46,7 @@ public final class IdeMavenCoordinates implements MavenCoordinates, Serializable
         myHashCode = 0;
     }
 
-    public IdeMavenCoordinates(@NonNull MavenCoordinates coordinates) {
+    public IdeMavenCoordinatesImpl(@NonNull MavenCoordinates coordinates) {
         myGroupId = coordinates.getGroupId();
         myArtifactId = coordinates.getArtifactId();
         myVersion = coordinates.getVersion();
@@ -56,7 +56,7 @@ public final class IdeMavenCoordinates implements MavenCoordinates, Serializable
         myHashCode = calculateHashCode();
     }
 
-    public IdeMavenCoordinates(@NonNull File localJar) {
+    public IdeMavenCoordinatesImpl(@NonNull File localJar) {
         myGroupId = LOCAL_AARS;
         myArtifactId = localJar.getPath();
         myVersion = "unspecified";
@@ -106,10 +106,10 @@ public final class IdeMavenCoordinates implements MavenCoordinates, Serializable
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeMavenCoordinates)) {
+        if (!(o instanceof IdeMavenCoordinatesImpl)) {
             return false;
         }
-        IdeMavenCoordinates that = (IdeMavenCoordinates) o;
+        IdeMavenCoordinatesImpl that = (IdeMavenCoordinatesImpl) o;
         return Objects.equals(myGroupId, that.myGroupId)
                 && Objects.equals(myArtifactId, that.myArtifactId)
                 && Objects.equals(myVersion, that.myVersion)

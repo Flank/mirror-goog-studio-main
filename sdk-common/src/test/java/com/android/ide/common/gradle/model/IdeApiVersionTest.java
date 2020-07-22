@@ -25,7 +25,7 @@ import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeApiVersion}. */
+/** Tests for {@link IdeApiVersionImpl}. */
 public class IdeApiVersionTest {
     private ModelCache myModelCache;
 
@@ -36,12 +36,12 @@ public class IdeApiVersionTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeApiVersion.class).isAssignableTo(Serializable.class);
+        assertThat(IdeApiVersionImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeApiVersion apiVersion = new IdeApiVersion(new ApiVersionStub());
+        IdeApiVersionImpl apiVersion = new IdeApiVersionImpl(new ApiVersionStub());
         byte[] bytes = Serialization.serialize(apiVersion);
         Object o = Serialization.deserialize(bytes);
         assertEquals(apiVersion, o);
@@ -50,13 +50,13 @@ public class IdeApiVersionTest {
     @Test
     public void constructor() throws Throwable {
         ApiVersion original = new ApiVersionStub();
-        IdeApiVersion copy = new IdeApiVersion(original);
+        IdeApiVersionImpl copy = new IdeApiVersionImpl(original);
         IdeModelTestUtils.assertEqualsOrSimilar(original, copy);
         IdeModelTestUtils.verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        IdeModelTestUtils.createEqualsVerifier(IdeApiVersion.class).verify();
+        IdeModelTestUtils.createEqualsVerifier(IdeApiVersionImpl.class).verify();
     }
 }

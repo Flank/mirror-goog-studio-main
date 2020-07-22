@@ -21,7 +21,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.Objects;
 
-public final class IdeNativeFile implements NativeFile, Serializable {
+public final class IdeNativeFileImpl implements IdeNativeFile, Serializable {
     private final File myFilePath;
     private final String mySettingsName;
     private final File myWorkingDirectory;
@@ -29,7 +29,7 @@ public final class IdeNativeFile implements NativeFile, Serializable {
 
     // Used for serialization by the IDE.
     @SuppressWarnings("unused")
-    public IdeNativeFile() {
+    public IdeNativeFileImpl() {
         myFilePath = null;
         mySettingsName = "";
         myWorkingDirectory = null;
@@ -37,7 +37,7 @@ public final class IdeNativeFile implements NativeFile, Serializable {
         myHashCode = 0;
     }
 
-    public IdeNativeFile(@NonNull NativeFile file) {
+    public IdeNativeFileImpl(@NonNull NativeFile file) {
         myFilePath = file.getFilePath();
         mySettingsName = file.getSettingsName();
         myWorkingDirectory = file.getWorkingDirectory();
@@ -66,10 +66,10 @@ public final class IdeNativeFile implements NativeFile, Serializable {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeNativeFile)) {
+        if (!(o instanceof IdeNativeFileImpl)) {
             return false;
         }
-        IdeNativeFile file = (IdeNativeFile) o;
+        IdeNativeFileImpl file = (IdeNativeFileImpl) o;
         return Objects.equals(myFilePath, file.myFilePath)
                 && Objects.equals(mySettingsName, file.mySettingsName)
                 && Objects.equals(myWorkingDirectory, file.myWorkingDirectory);

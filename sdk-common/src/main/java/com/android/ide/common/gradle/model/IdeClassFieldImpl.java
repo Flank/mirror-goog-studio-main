@@ -16,38 +16,45 @@
 package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.builder.model.NativeToolchain;
-import java.io.File;
+import com.android.builder.model.ClassField;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.Set;
 
-/** Creates a deep copy of a {@link NativeToolchain}. */
-public final class IdeNativeToolchain implements NativeToolchain, Serializable {
+/** Creates a deep copy of a {@link ClassField}. */
+public final class IdeClassFieldImpl implements IdeClassField, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
     @NonNull private final String myName;
-    @Nullable private final File myCCompilerExecutable;
-    @Nullable private final File myCppCompilerExecutable;
+    @NonNull private final String myType;
+    @NonNull private final String myValue;
     private final int myHashCode;
 
     // Used for serialization by the IDE.
+    @VisibleForTesting
     @SuppressWarnings("unused")
-    public IdeNativeToolchain() {
+    public IdeClassFieldImpl() {
         myName = "";
-        myCCompilerExecutable = null;
-        myCppCompilerExecutable = null;
+        myType = "";
+        myValue = "";
 
         myHashCode = 0;
     }
 
-    public IdeNativeToolchain(@NonNull NativeToolchain toolchain) {
-        myName = toolchain.getName();
-        myCCompilerExecutable = toolchain.getCCompilerExecutable();
-        myCppCompilerExecutable = toolchain.getCppCompilerExecutable();
+    public IdeClassFieldImpl(@NonNull ClassField classField) {
+        myName = classField.getName();
+        myType = classField.getType();
+        myValue = classField.getValue();
 
         myHashCode = calculateHashCode();
+    }
+
+    @Override
+    @NonNull
+    public String getType() {
+        return myType;
     }
 
     @Override
@@ -57,15 +64,21 @@ public final class IdeNativeToolchain implements NativeToolchain, Serializable {
     }
 
     @Override
-    @Nullable
-    public File getCCompilerExecutable() {
-        return myCCompilerExecutable;
+    @NonNull
+    public String getValue() {
+        return myValue;
     }
 
     @Override
-    @Nullable
-    public File getCppCompilerExecutable() {
-        return myCppCompilerExecutable;
+    @NonNull
+    public String getDocumentation() {
+        throw new UnusedModelMethodException("getDocumentation");
+    }
+
+    @Override
+    @NonNull
+    public Set<String> getAnnotations() {
+        throw new UnusedModelMethodException("getAnnotations");
     }
 
     @Override
@@ -73,13 +86,13 @@ public final class IdeNativeToolchain implements NativeToolchain, Serializable {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeNativeToolchain)) {
+        if (!(o instanceof IdeClassFieldImpl)) {
             return false;
         }
-        IdeNativeToolchain toolchain = (IdeNativeToolchain) o;
-        return Objects.equals(myName, toolchain.myName)
-                && Objects.equals(myCCompilerExecutable, toolchain.myCCompilerExecutable)
-                && Objects.equals(myCppCompilerExecutable, toolchain.myCppCompilerExecutable);
+        IdeClassFieldImpl field = (IdeClassFieldImpl) o;
+        return Objects.equals(myName, field.myName)
+                && Objects.equals(myType, field.myType)
+                && Objects.equals(myValue, field.myValue);
     }
 
     @Override
@@ -88,19 +101,21 @@ public final class IdeNativeToolchain implements NativeToolchain, Serializable {
     }
 
     private int calculateHashCode() {
-        return Objects.hash(myName, myCCompilerExecutable, myCppCompilerExecutable);
+        return Objects.hash(myName, myType, myValue);
     }
 
     @Override
     public String toString() {
-        return "IdeNativeToolchain{"
+        return "IdeClassField{"
                 + "myName='"
                 + myName
                 + '\''
-                + ", myCCompilerExecutable="
-                + myCCompilerExecutable
-                + ", myCppCompilerExecutable="
-                + myCppCompilerExecutable
-                + "}";
+                + ", myType='"
+                + myType
+                + '\''
+                + ", myValue='"
+                + myValue
+                + '\''
+                + '}';
     }
 }

@@ -23,21 +23,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public final class IdeNativeSettings implements NativeSettings, Serializable {
+public final class IdeNativeSettingsImpl implements IdeNativeSettings, Serializable {
     private final String myName;
     private final List<String> myCompilerFlags;
     private final int myHashCode;
 
     // Used for serialization by the IDE.
     @SuppressWarnings("unused")
-    public IdeNativeSettings() {
+    public IdeNativeSettingsImpl() {
         myName = "";
         myCompilerFlags = Collections.emptyList();
 
         myHashCode = 0;
     }
 
-    public IdeNativeSettings(@NonNull NativeSettings settings) {
+    public IdeNativeSettingsImpl(@NonNull NativeSettings settings) {
         myName = settings.getName();
 
         List<String> compilerFlags = settings.getCompilerFlags();
@@ -66,10 +66,10 @@ public final class IdeNativeSettings implements NativeSettings, Serializable {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeNativeSettings)) {
+        if (!(o instanceof IdeNativeSettingsImpl)) {
             return false;
         }
-        IdeNativeSettings settings = (IdeNativeSettings) o;
+        IdeNativeSettingsImpl settings = (IdeNativeSettingsImpl) o;
         return Objects.equals(myName, settings.myName)
                 && Objects.equals(myCompilerFlags, settings.myCompilerFlags);
     }

@@ -31,7 +31,7 @@ import com.android.ide.common.gradle.model.IdeAndroidProject
 import com.android.ide.common.gradle.model.IdeBaseArtifact
 import com.android.ide.common.gradle.model.IdeJavaArtifact
 import com.android.ide.common.gradle.model.IdeLintOptions
-import com.android.ide.common.gradle.model.IdeMavenCoordinates
+import com.android.ide.common.gradle.model.IdeMavenCoordinatesImpl
 import com.android.ide.common.gradle.model.IdeVariant
 import com.android.ide.common.gradle.model.level2.IdeLibrary
 import com.android.ide.common.repository.GradleVersion
@@ -45,7 +45,7 @@ import java.io.File
 class LintModelFactory : LintModelModuleLoader {
     init {
         // We're just copying by value so make sure our constants match
-        assert(LintModelMavenName.LOCAL_AARS == IdeMavenCoordinates.LOCAL_AARS)
+        assert(LintModelMavenName.LOCAL_AARS == IdeMavenCoordinatesImpl.LOCAL_AARS)
     }
 
     private val libraryResolverMap = mutableMapOf<String, LintModelLibrary>()

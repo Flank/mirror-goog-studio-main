@@ -39,7 +39,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -132,7 +131,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                         container -> new IdeProductFlavorContainer(container, modelCache));
 
         Collection<SyncIssue> syncIssuesCopy =
-                new ArrayList<>(IdeModel.copy(syncIssues, modelCache, IdeSyncIssue::new));
+                new ArrayList<>(IdeModel.copy(syncIssues, modelCache, IdeSyncIssueImpl::new));
 
         Collection<IdeVariant> variantsCopy =
                 new ArrayList<IdeVariant>(
@@ -167,13 +166,13 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 IdeModel.copy(
                         project.getNativeToolchains(),
                         modelCache,
-                        toolChain -> new IdeNativeToolchain(toolChain));
+                        toolChain -> new IdeNativeToolchainImpl(toolChain));
 
         Collection<SigningConfig> signingConfigsCopy =
                 IdeModel.copy(
                         project.getSigningConfigs(),
                         modelCache,
-                        config -> new IdeSigningConfig(config));
+                        config -> new IdeSigningConfigImpl(config));
 
         IdeLintOptions lintOptionsCopy =
                 modelCache.computeIfAbsent(
@@ -186,14 +185,14 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         Set<String> unresolvedDependenciesCopy =
                 ImmutableSet.copyOf(project.getUnresolvedDependencies());
 
-        IdeJavaCompileOptions javaCompileOptionsCopy =
+        IdeJavaCompileOptionsImpl javaCompileOptionsCopy =
                 modelCache.computeIfAbsent(
                         project.getJavaCompileOptions(),
-                        options -> new IdeJavaCompileOptions(options));
+                        options -> new IdeJavaCompileOptionsImpl(options));
 
-        IdeAaptOptions aaptOptionsCopy =
+        IdeAaptOptionsImpl aaptOptionsCopy =
                 modelCache.computeIfAbsent(
-                        project.getAaptOptions(), options -> new IdeAaptOptions(options));
+                        project.getAaptOptions(), options -> new IdeAaptOptionsImpl(options));
 
         Collection<String> dynamicFeaturesCopy =
                 ImmutableList.copyOf(
@@ -297,8 +296,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myLintOptions = new IdeLintOptions();
         myLintRuleJars = Collections.emptyList();
         myUnresolvedDependencies = Collections.emptySet();
-        myJavaCompileOptions = new IdeJavaCompileOptions();
-        myAaptOptions = new IdeAaptOptions();
+        myJavaCompileOptions = new IdeJavaCompileOptionsImpl();
+        myAaptOptions = new IdeAaptOptionsImpl();
         //noinspection ConstantConditions
         myBuildFolder = null;
         myDynamicFeatures = Collections.emptyList();

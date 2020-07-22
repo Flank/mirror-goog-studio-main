@@ -23,7 +23,8 @@ import java.util.Objects;
 import java.util.Set;
 
 /** Creates a deep copy of a {@link VectorDrawablesOptions}. */
-public final class IdeVectorDrawablesOptions implements VectorDrawablesOptions, Serializable {
+public final class IdeVectorDrawablesOptionsImpl
+        implements IdeVectorDrawablesOptions, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
@@ -32,14 +33,14 @@ public final class IdeVectorDrawablesOptions implements VectorDrawablesOptions, 
     private final int myHashCode;
 
     // Used for serialization by the IDE.
-    IdeVectorDrawablesOptions() {
+    IdeVectorDrawablesOptionsImpl() {
         myGeneratedDensities = null;
         myUseSupportLibrary = null;
 
         myHashCode = 0;
     }
 
-    public IdeVectorDrawablesOptions(@NonNull VectorDrawablesOptions options) {
+    public IdeVectorDrawablesOptionsImpl(@NonNull VectorDrawablesOptions options) {
         myGeneratedDensities = IdeModel.copy(options.getGeneratedDensities());
         myUseSupportLibrary = options.getUseSupportLibrary();
 
@@ -63,10 +64,10 @@ public final class IdeVectorDrawablesOptions implements VectorDrawablesOptions, 
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeVectorDrawablesOptions)) {
+        if (!(o instanceof IdeVectorDrawablesOptionsImpl)) {
             return false;
         }
-        IdeVectorDrawablesOptions options = (IdeVectorDrawablesOptions) o;
+        IdeVectorDrawablesOptionsImpl options = (IdeVectorDrawablesOptionsImpl) o;
         return Objects.equals(myGeneratedDensities, options.myGeneratedDensities)
                 && Objects.equals(myUseSupportLibrary, options.myUseSupportLibrary);
     }

@@ -23,19 +23,19 @@ import com.google.common.annotations.VisibleForTesting;
 import java.io.Serializable;
 import java.util.Objects;
 
-public class IdeAaptOptions implements AaptOptions, Serializable {
+public class IdeAaptOptionsImpl implements IdeAaptOptions, Serializable {
 
     @NonNull private final Namespacing namespacing;
 
     // Used for serialization by the IDE.
-    IdeAaptOptions() {
+    IdeAaptOptionsImpl() {
         namespacing = DISABLED;
     }
 
     // copyNewProperty won't return null for a non-null getter with a non-null default value.
     @SuppressWarnings("ConstantConditions")
     @VisibleForTesting
-    public IdeAaptOptions(@NonNull AaptOptions original) {
+    public IdeAaptOptionsImpl(@NonNull AaptOptions original) {
         namespacing = IdeModel.copyNewProperty(original::getNamespacing, DISABLED);
     }
 
@@ -53,7 +53,7 @@ public class IdeAaptOptions implements AaptOptions, Serializable {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        IdeAaptOptions that = (IdeAaptOptions) o;
+        IdeAaptOptionsImpl that = (IdeAaptOptionsImpl) o;
         return namespacing == that.namespacing;
     }
 

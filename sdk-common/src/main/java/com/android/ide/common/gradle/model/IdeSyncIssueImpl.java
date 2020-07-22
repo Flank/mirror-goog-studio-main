@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link SyncIssue}. */
-public final class IdeSyncIssue implements SyncIssue, Serializable {
+public final class IdeSyncIssueImpl implements IdeSyncIssue, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 3L;
 
@@ -36,7 +36,7 @@ public final class IdeSyncIssue implements SyncIssue, Serializable {
 
     // Used for serialization by the IDE.
     @SuppressWarnings("unused")
-    public IdeSyncIssue() {
+    public IdeSyncIssueImpl() {
         myMessage = "";
         myData = "";
         myMultiLineMessage = null;
@@ -46,7 +46,7 @@ public final class IdeSyncIssue implements SyncIssue, Serializable {
         myHashCode = 0;
     }
 
-    public IdeSyncIssue(@NonNull SyncIssue issue) {
+    public IdeSyncIssueImpl(@NonNull SyncIssue issue) {
         myMessage = issue.getMessage();
         myMultiLineMessage = IdeModel.copyNewProperty(issue::getMultiLineMessage, null);
         myData = issue.getData();
@@ -89,10 +89,10 @@ public final class IdeSyncIssue implements SyncIssue, Serializable {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeSyncIssue)) {
+        if (!(o instanceof IdeSyncIssueImpl)) {
             return false;
         }
-        IdeSyncIssue issue = (IdeSyncIssue) o;
+        IdeSyncIssueImpl issue = (IdeSyncIssueImpl) o;
         return mySeverity == issue.mySeverity
                 && myType == issue.myType
                 && Objects.equals(myMessage, issue.myMessage)

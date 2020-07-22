@@ -16,54 +16,47 @@
 package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.InstantRun;
-import java.io.File;
+import com.android.builder.model.TestedTargetVariant;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.Serializable;
 import java.util.Objects;
 
-/** Creates a deep copy of an {@link InstantRun}. */
-public final class IdeInstantRun implements InstantRun, Serializable {
+/** Creates a deep copy of a {@link TestedTargetVariant}. */
+public final class IdeTestedTargetVariantImpl implements IdeTestedTargetVariant, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
-    @NonNull private final File myInfoFile;
-    private final boolean mySupportedByArtifact;
-    private final int mySupportStatus;
+    @NonNull private final String myTargetProjectPath;
+    @NonNull private final String myTargetVariant;
     private final int myHashCode;
 
     // Used for serialization by the IDE.
+    @VisibleForTesting
     @SuppressWarnings("unused")
-    IdeInstantRun() {
-        //noinspection ConstantConditions
-        myInfoFile = null;
-        mySupportedByArtifact = false;
-        mySupportStatus = 0;
+    public IdeTestedTargetVariantImpl() {
+        myTargetProjectPath = "";
+        myTargetVariant = "";
 
         myHashCode = 0;
     }
 
-    public IdeInstantRun(@NonNull InstantRun run) {
-        myInfoFile = run.getInfoFile();
-        mySupportedByArtifact = run.isSupportedByArtifact();
-        mySupportStatus = run.getSupportStatus();
+    public IdeTestedTargetVariantImpl(@NonNull TestedTargetVariant variant) {
+        myTargetProjectPath = variant.getTargetProjectPath();
+        myTargetVariant = variant.getTargetVariant();
 
         myHashCode = calculateHashCode();
     }
 
     @Override
     @NonNull
-    public File getInfoFile() {
-        return myInfoFile;
+    public String getTargetProjectPath() {
+        return myTargetProjectPath;
     }
 
     @Override
-    public boolean isSupportedByArtifact() {
-        return mySupportedByArtifact;
-    }
-
-    @Override
-    public int getSupportStatus() {
-        return mySupportStatus;
+    @NonNull
+    public String getTargetVariant() {
+        return myTargetVariant;
     }
 
     @Override
@@ -71,13 +64,12 @@ public final class IdeInstantRun implements InstantRun, Serializable {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeInstantRun)) {
+        if (!(o instanceof IdeTestedTargetVariantImpl)) {
             return false;
         }
-        IdeInstantRun run = (IdeInstantRun) o;
-        return mySupportedByArtifact == run.mySupportedByArtifact
-                && mySupportStatus == run.mySupportStatus
-                && Objects.equals(myInfoFile, run.myInfoFile);
+        IdeTestedTargetVariantImpl variants = (IdeTestedTargetVariantImpl) o;
+        return Objects.equals(myTargetProjectPath, variants.myTargetProjectPath)
+                && Objects.equals(myTargetVariant, variants.myTargetVariant);
     }
 
     @Override
@@ -86,18 +78,18 @@ public final class IdeInstantRun implements InstantRun, Serializable {
     }
 
     private int calculateHashCode() {
-        return Objects.hash(myInfoFile, mySupportedByArtifact, mySupportStatus);
+        return Objects.hash(myTargetProjectPath, myTargetVariant);
     }
 
     @Override
     public String toString() {
-        return "IdeInstantRun{"
-                + "myInfoFile="
-                + myInfoFile
-                + ", mySupportedByArtifact="
-                + mySupportedByArtifact
-                + ", mySupportStatus="
-                + mySupportStatus
+        return "IdeTestedTargetVariants{"
+                + "myTargetProjectPath='"
+                + myTargetProjectPath
+                + '\''
+                + ", myTargetVariant='"
+                + myTargetVariant
+                + '\''
                 + "}";
     }
 }

@@ -21,7 +21,8 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link SourceProviderContainer}. */
-public final class IdeSourceProviderContainer implements SourceProviderContainer, Serializable {
+public final class IdeSourceProviderContainerImpl
+        implements IdeSourceProviderContainer, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
@@ -30,14 +31,14 @@ public final class IdeSourceProviderContainer implements SourceProviderContainer
     private final int myHashCode;
 
     // Used for serialization by the IDE.
-    IdeSourceProviderContainer() {
+    IdeSourceProviderContainerImpl() {
         myArtifactName = "";
         mySourceProvider = new IdeSourceProvider();
 
         myHashCode = 0;
     }
 
-    public IdeSourceProviderContainer(
+    public IdeSourceProviderContainerImpl(
             @NonNull SourceProviderContainer container, @NonNull ModelCache modelCache) {
         myArtifactName = container.getArtifactName();
         mySourceProvider =
@@ -66,10 +67,10 @@ public final class IdeSourceProviderContainer implements SourceProviderContainer
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeSourceProviderContainer)) {
+        if (!(o instanceof IdeSourceProviderContainerImpl)) {
             return false;
         }
-        IdeSourceProviderContainer container = (IdeSourceProviderContainer) o;
+        IdeSourceProviderContainerImpl container = (IdeSourceProviderContainerImpl) o;
         return Objects.equals(myArtifactName, container.myArtifactName)
                 && Objects.equals(mySourceProvider, container.mySourceProvider);
     }

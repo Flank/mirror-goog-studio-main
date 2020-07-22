@@ -57,7 +57,7 @@ public abstract class IdeVariantOutputImpl implements IdeVariantOutput, Serializ
                 IdeModel.copy(
                         output.getOutputs(),
                         modelCache,
-                        outputFile -> new IdeOutputFile(outputFile, modelCache));
+                        outputFile -> new IdeOutputFileImpl(outputFile, modelCache));
         myFilterTypes =
                 IdeModel.copyNewProperty(
                         () -> ImmutableList.copyOf(output.getFilterTypes()),
@@ -67,7 +67,7 @@ public abstract class IdeVariantOutputImpl implements IdeVariantOutput, Serializ
                 IdeModel.copyNewProperty(
                         modelCache,
                         output::getMainOutputFile,
-                        file -> new IdeOutputFile(file, modelCache),
+                        file -> new IdeOutputFileImpl(file, modelCache),
                         null);
         myOutputType = IdeModel.copyNewProperty(output::getOutputType, null);
         myVersionCode = output.getVersionCode();
@@ -79,7 +79,8 @@ public abstract class IdeVariantOutputImpl implements IdeVariantOutput, Serializ
     private static Collection<FilterData> copyFilters(
             @NonNull VariantOutput output, @NonNull ModelCache modelCache) {
         try {
-            return IdeModel.copy(output.getFilters(), modelCache, data -> new IdeFilterData(data));
+            return IdeModel.copy(
+                    output.getFilters(), modelCache, data -> new IdeFilterDataImpl(data));
         } catch (UnsupportedOperationException ignored) {
             return null;
         }

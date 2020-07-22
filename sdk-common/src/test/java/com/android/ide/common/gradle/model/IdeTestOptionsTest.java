@@ -36,12 +36,12 @@ public class IdeTestOptionsTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeTestOptions.class).isAssignableTo(Serializable.class);
+        assertThat(IdeTestOptionsImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeTestOptions testOptions = new IdeTestOptions(new TestOptionsStub());
+        IdeTestOptionsImpl testOptions = new IdeTestOptionsImpl(new TestOptionsStub());
         byte[] bytes = Serialization.serialize(testOptions);
         Object o = Serialization.deserialize(bytes);
         assertEquals(testOptions, o);
@@ -50,13 +50,13 @@ public class IdeTestOptionsTest {
     @Test
     public void constructor() throws Throwable {
         TestOptions original = new TestOptionsStub();
-        IdeTestOptions copy = new IdeTestOptions(original);
+        IdeTestOptionsImpl copy = new IdeTestOptionsImpl(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeTestOptions.class).verify();
+        createEqualsVerifier(IdeTestOptionsImpl.class).verify();
     }
 }

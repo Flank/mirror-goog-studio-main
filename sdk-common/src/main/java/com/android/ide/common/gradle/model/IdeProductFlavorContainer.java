@@ -60,7 +60,7 @@ public final class IdeProductFlavorContainer implements ProductFlavorContainer, 
                         container.getExtraSourceProviders(),
                         modelCache,
                         sourceProviderContainer ->
-                                new IdeSourceProviderContainer(
+                                new IdeSourceProviderContainerImpl(
                                         sourceProviderContainer, modelCache));
 
         myHashCode = calculateHashCode();

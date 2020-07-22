@@ -16,69 +16,47 @@
 package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.ClassField;
+import com.android.build.FilterData;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.Set;
 
-/** Creates a deep copy of a {@link ClassField}. */
-public final class IdeClassField implements ClassField, Serializable {
+/** Creates a deep copy of a {@link FilterData}. */
+public final class IdeFilterDataImpl implements IdeFilterData, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
-    @NonNull private final String myName;
-    @NonNull private final String myType;
-    @NonNull private final String myValue;
+    @NonNull private final String myIdentifier;
+    @NonNull private final String myFilterType;
     private final int myHashCode;
 
     // Used for serialization by the IDE.
     @VisibleForTesting
     @SuppressWarnings("unused")
-    public IdeClassField() {
-        myName = "";
-        myType = "";
-        myValue = "";
+    public IdeFilterDataImpl() {
+        myIdentifier = "";
+        myFilterType = "";
 
         myHashCode = 0;
     }
 
-    public IdeClassField(@NonNull ClassField classField) {
-        myName = classField.getName();
-        myType = classField.getType();
-        myValue = classField.getValue();
+    public IdeFilterDataImpl(@NonNull FilterData data) {
+        myIdentifier = data.getIdentifier();
+        myFilterType = data.getFilterType();
 
         myHashCode = calculateHashCode();
     }
 
     @Override
     @NonNull
-    public String getType() {
-        return myType;
+    public String getIdentifier() {
+        return myIdentifier;
     }
 
     @Override
     @NonNull
-    public String getName() {
-        return myName;
-    }
-
-    @Override
-    @NonNull
-    public String getValue() {
-        return myValue;
-    }
-
-    @Override
-    @NonNull
-    public String getDocumentation() {
-        throw new UnusedModelMethodException("getDocumentation");
-    }
-
-    @Override
-    @NonNull
-    public Set<String> getAnnotations() {
-        throw new UnusedModelMethodException("getAnnotations");
+    public String getFilterType() {
+        return myFilterType;
     }
 
     @Override
@@ -86,13 +64,12 @@ public final class IdeClassField implements ClassField, Serializable {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeClassField)) {
+        if (!(o instanceof IdeFilterDataImpl)) {
             return false;
         }
-        IdeClassField field = (IdeClassField) o;
-        return Objects.equals(myName, field.myName)
-                && Objects.equals(myType, field.myType)
-                && Objects.equals(myValue, field.myValue);
+        IdeFilterDataImpl data = (IdeFilterDataImpl) o;
+        return Objects.equals(myIdentifier, data.myIdentifier)
+                && Objects.equals(myFilterType, data.myFilterType);
     }
 
     @Override
@@ -101,21 +78,18 @@ public final class IdeClassField implements ClassField, Serializable {
     }
 
     private int calculateHashCode() {
-        return Objects.hash(myName, myType, myValue);
+        return Objects.hash(myIdentifier, myFilterType);
     }
 
     @Override
     public String toString() {
-        return "IdeClassField{"
-                + "myName='"
-                + myName
+        return "IdeFilterData{"
+                + "myIdentifier='"
+                + myIdentifier
                 + '\''
-                + ", myType='"
-                + myType
+                + ", myFilterType='"
+                + myFilterType
                 + '\''
-                + ", myValue='"
-                + myValue
-                + '\''
-                + '}';
+                + "}";
     }
 }

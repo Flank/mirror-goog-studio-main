@@ -26,7 +26,7 @@ import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeMavenCoordinates}. */
+/** Tests for {@link IdeMavenCoordinatesImpl}. */
 public class IdeMavenCoordinatesTest {
     private ModelCache myModelCache;
 
@@ -37,12 +37,13 @@ public class IdeMavenCoordinatesTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeMavenCoordinates.class).isAssignableTo(Serializable.class);
+        assertThat(IdeMavenCoordinatesImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeMavenCoordinates coordinates = new IdeMavenCoordinates(new MavenCoordinatesStub());
+        IdeMavenCoordinatesImpl coordinates =
+                new IdeMavenCoordinatesImpl(new MavenCoordinatesStub());
         byte[] bytes = Serialization.serialize(coordinates);
         Object o = Serialization.deserialize(bytes);
         assertEquals(coordinates, o);
@@ -51,13 +52,13 @@ public class IdeMavenCoordinatesTest {
     @Test
     public void constructor() throws Throwable {
         MavenCoordinates original = new MavenCoordinatesStub();
-        IdeMavenCoordinates copy = new IdeMavenCoordinates(original);
+        IdeMavenCoordinatesImpl copy = new IdeMavenCoordinatesImpl(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeMavenCoordinates.class).verify();
+        createEqualsVerifier(IdeMavenCoordinatesImpl.class).verify();
     }
 }

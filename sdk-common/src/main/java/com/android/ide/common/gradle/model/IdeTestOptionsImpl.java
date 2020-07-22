@@ -22,23 +22,23 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link TestOptions}. */
-public class IdeTestOptions implements TestOptions, Serializable {
+public class IdeTestOptionsImpl implements IdeTestOptions, Serializable {
     private static final long serialVersionUID = 2L;
 
     private final boolean myAnimationsDisabled;
-    @Nullable private final Execution myExecutionEnum;
+    @Nullable private final TestOptions.Execution myExecutionEnum;
     private final int myHashCode;
 
     // Used for serialization by the IDE.
     @SuppressWarnings("unused")
-    IdeTestOptions() {
+    IdeTestOptionsImpl() {
         myAnimationsDisabled = false;
         myExecutionEnum = null;
 
         myHashCode = 0;
     }
 
-    public IdeTestOptions(@NonNull TestOptions testOptions) {
+    public IdeTestOptionsImpl(@NonNull TestOptions testOptions) {
         myAnimationsDisabled = testOptions.getAnimationsDisabled();
         myExecutionEnum = testOptions.getExecution();
         myHashCode = calculateHashCode();
@@ -60,10 +60,10 @@ public class IdeTestOptions implements TestOptions, Serializable {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeTestOptions)) {
+        if (!(o instanceof IdeTestOptionsImpl)) {
             return false;
         }
-        IdeTestOptions options = (IdeTestOptions) o;
+        IdeTestOptionsImpl options = (IdeTestOptionsImpl) o;
         return myAnimationsDisabled == options.myAnimationsDisabled
                 && myExecutionEnum == options.myExecutionEnum;
     }

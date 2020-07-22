@@ -98,7 +98,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         myGeneratedResourceFolders = ImmutableList.copyOf(artifact.getGeneratedResourceFolders());
         myInstantRun =
                 IdeModel.copyNewProperty(
-                        modelCache, artifact::getInstantRun, IdeInstantRun::new, null);
+                        modelCache, artifact::getInstantRun, IdeInstantRunImpl::new, null);
         mySigningConfigName = artifact.getSigningConfigName();
         // In AGP 4.0 and below abiFilters was nullable, normalize null to empty set.
         myAbiFilters =
@@ -111,7 +111,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                         Collections.emptyList());
         myTestOptions =
                 IdeModel.copyNewProperty(
-                        modelCache, artifact::getTestOptions, IdeTestOptions::new, null);
+                        modelCache, artifact::getTestOptions, IdeTestOptionsImpl::new, null);
         myInstrumentedTestTaskName =
                 IdeModel.copyNewProperty(
                         modelCache,

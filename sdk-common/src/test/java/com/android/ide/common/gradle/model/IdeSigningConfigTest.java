@@ -26,7 +26,7 @@ import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeSigningConfig}. */
+/** Tests for {@link IdeSigningConfigImpl}. */
 public class IdeSigningConfigTest {
     private ModelCache myModelCache;
 
@@ -37,12 +37,12 @@ public class IdeSigningConfigTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeSigningConfig.class).isAssignableTo(Serializable.class);
+        assertThat(IdeSigningConfigImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeSigningConfig signingConfig = new IdeSigningConfig(new SigningConfigStub());
+        IdeSigningConfigImpl signingConfig = new IdeSigningConfigImpl(new SigningConfigStub());
         byte[] bytes = Serialization.serialize(signingConfig);
         Object o = Serialization.deserialize(bytes);
         assertEquals(signingConfig, o);
@@ -51,13 +51,13 @@ public class IdeSigningConfigTest {
     @Test
     public void constructor() throws Throwable {
         SigningConfig original = new SigningConfigStub();
-        IdeSigningConfig copy = new IdeSigningConfig(original);
+        IdeSigningConfigImpl copy = new IdeSigningConfigImpl(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeSigningConfig.class).verify();
+        createEqualsVerifier(IdeSigningConfigImpl.class).verify();
     }
 }

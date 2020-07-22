@@ -140,10 +140,10 @@ class IdeVariantImpl : IdeVariant, Serializable {
     // Increase the value when adding/removing fields or when changing the
     // serialization/deserialization mechanism.
     private const val serialVersionUID = 4L
-    private fun getTestedTargetVariants(variant: Variant, modelCache: ModelCache): List<IdeTestedTargetVariant> {
+    private fun getTestedTargetVariants(variant: Variant, modelCache: ModelCache): List<IdeTestedTargetVariantImpl> {
       return try {
         IdeModel.copy(variant.testedTargetVariants, modelCache) { targetVariant: TestedTargetVariant ->
-          IdeTestedTargetVariant(targetVariant)
+          IdeTestedTargetVariantImpl(targetVariant)
         }
       }
       catch (e: UnsupportedOperationException) {

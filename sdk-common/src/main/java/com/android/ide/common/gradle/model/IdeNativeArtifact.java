@@ -59,7 +59,7 @@ public final class IdeNativeArtifact implements NativeArtifact, Serializable {
         myGroupName = artifact.getGroupName();
         mySourceFiles =
                 IdeModel.copy(
-                        artifact.getSourceFiles(), modelCache, file -> new IdeNativeFile(file));
+                        artifact.getSourceFiles(), modelCache, file -> new IdeNativeFileImpl(file));
         myExportedHeaders = ImmutableList.copyOf(artifact.getExportedHeaders());
         myAbi = IdeModel.copyNewProperty(artifact::getAbi, null);
         myTargetName = IdeModel.copyNewProperty(artifact::getTargetName, null);

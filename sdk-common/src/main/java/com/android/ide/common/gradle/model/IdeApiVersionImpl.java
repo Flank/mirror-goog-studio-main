@@ -16,47 +16,54 @@
 package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.TestedTargetVariant;
-import com.google.common.annotations.VisibleForTesting;
+import com.android.annotations.Nullable;
+import com.android.builder.model.ApiVersion;
 import java.io.Serializable;
 import java.util.Objects;
 
-/** Creates a deep copy of a {@link TestedTargetVariant}. */
-public final class IdeTestedTargetVariant implements TestedTargetVariant, Serializable {
+/** Creates a deep copy of an {@link ApiVersion}. */
+public final class IdeApiVersionImpl implements IdeApiVersion, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
-    @NonNull private final String myTargetProjectPath;
-    @NonNull private final String myTargetVariant;
+    @NonNull private final String myApiString;
+    @Nullable private final String myCodename;
+    private final int myApiLevel;
     private final int myHashCode;
 
     // Used for serialization by the IDE.
-    @VisibleForTesting
     @SuppressWarnings("unused")
-    public IdeTestedTargetVariant() {
-        myTargetProjectPath = "";
-        myTargetVariant = "";
+    IdeApiVersionImpl() {
+        myApiString = "";
+        myCodename = null;
+        myApiLevel = 0;
 
         myHashCode = 0;
     }
 
-    public IdeTestedTargetVariant(@NonNull TestedTargetVariant variant) {
-        myTargetProjectPath = variant.getTargetProjectPath();
-        myTargetVariant = variant.getTargetVariant();
+    public IdeApiVersionImpl(@NonNull ApiVersion version) {
+        myApiString = version.getApiString();
+        myCodename = version.getCodename();
+        myApiLevel = version.getApiLevel();
 
         myHashCode = calculateHashCode();
     }
 
     @Override
     @NonNull
-    public String getTargetProjectPath() {
-        return myTargetProjectPath;
+    public String getApiString() {
+        return myApiString;
     }
 
     @Override
-    @NonNull
-    public String getTargetVariant() {
-        return myTargetVariant;
+    @Nullable
+    public String getCodename() {
+        return myCodename;
+    }
+
+    @Override
+    public int getApiLevel() {
+        return myApiLevel;
     }
 
     @Override
@@ -64,12 +71,13 @@ public final class IdeTestedTargetVariant implements TestedTargetVariant, Serial
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeTestedTargetVariant)) {
+        if (!(o instanceof IdeApiVersionImpl)) {
             return false;
         }
-        IdeTestedTargetVariant variants = (IdeTestedTargetVariant) o;
-        return Objects.equals(myTargetProjectPath, variants.myTargetProjectPath)
-                && Objects.equals(myTargetVariant, variants.myTargetVariant);
+        IdeApiVersionImpl version = (IdeApiVersionImpl) o;
+        return myApiLevel == version.myApiLevel
+                && Objects.equals(myApiString, version.myApiString)
+                && Objects.equals(myCodename, version.myCodename);
     }
 
     @Override
@@ -78,18 +86,20 @@ public final class IdeTestedTargetVariant implements TestedTargetVariant, Serial
     }
 
     private int calculateHashCode() {
-        return Objects.hash(myTargetProjectPath, myTargetVariant);
+        return Objects.hash(myApiString, myCodename, myApiLevel);
     }
 
     @Override
     public String toString() {
-        return "IdeTestedTargetVariants{"
-                + "myTargetProjectPath='"
-                + myTargetProjectPath
+        return "IdeApiVersion{"
+                + "myApiString='"
+                + myApiString
                 + '\''
-                + ", myTargetVariant='"
-                + myTargetVariant
+                + ", myCodename='"
+                + myCodename
                 + '\''
-                + "}";
+                + ", myApiLevel="
+                + myApiLevel
+                + '}';
     }
 }

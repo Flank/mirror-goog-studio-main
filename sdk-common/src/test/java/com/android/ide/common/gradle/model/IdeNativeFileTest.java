@@ -26,7 +26,7 @@ import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeNativeFile}. */
+/** Tests for {@link IdeNativeFileImpl}. */
 public class IdeNativeFileTest {
     private ModelCache myModelCache;
 
@@ -37,12 +37,12 @@ public class IdeNativeFileTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeNativeFile.class).isAssignableTo(Serializable.class);
+        assertThat(IdeNativeFileImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeNativeFile nativeFile = new IdeNativeFile(new NativeFileStub());
+        IdeNativeFileImpl nativeFile = new IdeNativeFileImpl(new NativeFileStub());
         byte[] bytes = Serialization.serialize(nativeFile);
         Object o = Serialization.deserialize(bytes);
         assertEquals(nativeFile, o);
@@ -51,13 +51,13 @@ public class IdeNativeFileTest {
     @Test
     public void constructor() throws Throwable {
         NativeFile original = new NativeFileStub();
-        IdeNativeFile copy = new IdeNativeFile(original);
+        IdeNativeFileImpl copy = new IdeNativeFileImpl(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeNativeFile.class).verify();
+        createEqualsVerifier(IdeNativeFileImpl.class).verify();
     }
 }

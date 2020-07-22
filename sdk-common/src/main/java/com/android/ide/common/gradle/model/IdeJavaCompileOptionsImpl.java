@@ -21,7 +21,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link JavaCompileOptions}. */
-public final class IdeJavaCompileOptions implements JavaCompileOptions, Serializable {
+public final class IdeJavaCompileOptionsImpl implements IdeJavaCompileOptions, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 3L;
 
@@ -32,7 +32,7 @@ public final class IdeJavaCompileOptions implements JavaCompileOptions, Serializ
     private final int myHashCode;
 
     // Used for serialization by the IDE.
-    IdeJavaCompileOptions() {
+    IdeJavaCompileOptionsImpl() {
         myEncoding = "";
         mySourceCompatibility = "";
         myTargetCompatibility = "";
@@ -41,7 +41,7 @@ public final class IdeJavaCompileOptions implements JavaCompileOptions, Serializ
         myHashCode = 0;
     }
 
-    public IdeJavaCompileOptions(@NonNull JavaCompileOptions options) {
+    public IdeJavaCompileOptionsImpl(@NonNull JavaCompileOptions options) {
         myEncoding = options.getEncoding();
         mySourceCompatibility = options.getSourceCompatibility();
         myTargetCompatibility = options.getTargetCompatibility();
@@ -80,10 +80,10 @@ public final class IdeJavaCompileOptions implements JavaCompileOptions, Serializ
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeJavaCompileOptions)) {
+        if (!(o instanceof IdeJavaCompileOptionsImpl)) {
             return false;
         }
-        IdeJavaCompileOptions options = (IdeJavaCompileOptions) o;
+        IdeJavaCompileOptionsImpl options = (IdeJavaCompileOptionsImpl) o;
         return Objects.equals(myEncoding, options.myEncoding)
                 && Objects.equals(mySourceCompatibility, options.mySourceCompatibility)
                 && Objects.equals(myTargetCompatibility, options.myTargetCompatibility)
