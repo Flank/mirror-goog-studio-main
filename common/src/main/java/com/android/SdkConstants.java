@@ -88,6 +88,11 @@ public final class SdkConstants {
     public static final String AAR_METADATA_VERSION_PROPERTY = "aarMetadataVersion";
     public static final String MIN_COMPILE_SDK_PROPERTY = "minCompileSdk";
 
+    /** Properties in app-metadata.properties file */
+    public static final String APP_METADATA_VERSION_PROPERTY = "appMetadataVersion";
+    public static final String ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY =
+            "androidGradlePluginVersion";
+
     /**
      * The encoding we strive to use for all files we write.
      *

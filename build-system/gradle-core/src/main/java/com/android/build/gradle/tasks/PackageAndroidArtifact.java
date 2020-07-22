@@ -39,6 +39,7 @@ import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.api.variant.impl.VariantOutputListKt;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
+import com.android.build.gradle.internal.component.ApplicationCreationConfig;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dependency.AndroidAttributes;
@@ -156,7 +157,14 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     @InputFiles
     @PathSensitive(PathSensitivity.NAME_ONLY)
     @Optional
-    public abstract ConfigurableFileCollection getAppMetadata();
+    public abstract ConfigurableFileCollection getBaseModuleMetadata();
+
+    /** App metadata to be packaged in the APK. */
+    @InputFile
+    @Incremental
+    @PathSensitive(PathSensitivity.NAME_ONLY)
+    @Optional
+    public abstract RegularFileProperty getAppMetadata();
 
     @OutputDirectory
     public abstract DirectoryProperty getIncrementalFolder();
@@ -424,17 +432,29 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     .set(
                             IncrementalChangesUtils.getChangesInSerializableForm(
                                     changes, getJniFolders()));
+            if (getAppMetadata().isPresent()) {
+                parameter
+                        .getAppMetadataFiles()
+                        .set(
+                                IncrementalChangesUtils.getChangesInSerializableForm(
+                                        changes, getAppMetadata()));
+            } else {
+                parameter
+                        .getAppMetadataFiles()
+                        .set(new SerializableInputChanges(ImmutableList.of(), ImmutableSet.of()));
+            }
             parameter.getManifestType().set(manifestType);
             parameter.getSigningConfig().set(signingConfig.convertToParams());
 
-            if (getAppMetadata().isEmpty()) {
+            if (getBaseModuleMetadata().isEmpty()) {
                 parameter.getAbiFilters().set(getAbiFilters());
             } else {
                 // Dynamic feature
                 List<String> appAbiFilters;
                 try {
                     appAbiFilters =
-                            ModuleMetadata.load(getAppMetadata().getSingleFile()).getAbiFilters();
+                            ModuleMetadata.load(getBaseModuleMetadata().getSingleFile())
+                                    .getAbiFilters();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -548,6 +568,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         public abstract Property<SerializableInputChanges> getJavaResourceFiles();
 
         @NonNull
+        public abstract Property<SerializableInputChanges> getAppMetadataFiles();
+
+        @NonNull
         public abstract Property<Artifact<Directory>> getManifestType();
 
         @Optional
@@ -641,6 +664,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
      * @param changedAssets incremental assets
      * @param changedAndroidResources incremental Android resource
      * @param changedNLibs incremental native libraries changed
+     * @param changedAppMetadata incremental app metadata
      * @throws IOException failed to package the APK
      */
     private static void doTask(
@@ -653,6 +677,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             @NonNull Collection<SerializableChange> changedAssets,
             @NonNull Map<RelativeFile, FileStatus> changedAndroidResources,
             @NonNull Map<RelativeFile, FileStatus> changedNLibs,
+            @NonNull Collection<SerializableChange> changedAppMetadata,
             @NonNull SplitterParams params)
             throws IOException {
 
@@ -715,6 +740,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .withChangedAssets(changedAssets)
                         .withChangedAndroidResources(changedAndroidResources)
                         .withChangedNativeLibs(changedNLibs)
+                        .withChangedAppMetadata(changedAppMetadata)
                         .build()) {
             packager.updateFiles();
         }
@@ -873,6 +899,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         params.getAssetsFiles().get().getChanges(),
                         changedAndroidResources,
                         changedJniLibs,
+                        params.getAppMetadataFiles().get().getChanges(),
                         params);
 
                 /*
@@ -1008,6 +1035,11 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 packageAndroidArtifact.getFeatureDexFolder().from(featureDexFolder);
             }
             packageAndroidArtifact.getJavaResourceFiles().from(getJavaResources(creationConfig));
+            if (creationConfig instanceof ApplicationCreationConfig) {
+                creationConfig.getArtifacts().setTaskInputToFinalProduct(
+                        InternalArtifactType.APP_METADATA.INSTANCE,
+                        packageAndroidArtifact.getAppMetadata());
+            }
 
             packageAndroidArtifact
                     .getAssets()
@@ -1032,14 +1064,14 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             : null;
             if (creationConfig.getVariantType().isDynamicFeature()) {
                 packageAndroidArtifact
-                        .getAppMetadata()
+                        .getBaseModuleMetadata()
                         .from(
                                 creationConfig
                                         .getVariantDependencies()
                                         .getArtifactFileCollection(
                                                 COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA));
             }
-            packageAndroidArtifact.getAppMetadata().disallowChanges();
+            packageAndroidArtifact.getBaseModuleMetadata().disallowChanges();
             if (!variantDslInfo.getSupportedAbis().isEmpty()) {
                 // If the build author has set the supported Abis that is respected
                 packageAndroidArtifact.getAbiFilters().set(variantDslInfo.getSupportedAbis());

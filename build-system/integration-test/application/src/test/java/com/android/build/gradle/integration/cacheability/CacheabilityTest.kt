@@ -74,7 +74,8 @@ class CacheabilityTest {
                 ":app:processDebugManifest",
                 ":app:processDebugManifestForPackage",
                 ":app:testDebugUnitTest",
-                ":app:validateSigningDebug"
+                ":app:validateSigningDebug",
+                ":app:writeDebugAppMetadata"
             ),
             /*
              * The following tasks are either not yet cacheable, or not intended to be cacheable
@@ -141,6 +142,7 @@ class CacheabilityTest {
                     ":app:processReleaseManifest",
                     ":app:processReleaseManifestForPackage",
                     ":app:testReleaseUnitTest",
+                    ":app:writeReleaseAppMetadata"
             ),
             DID_WORK to setOf(
                     ":app:analyticsRecordingRelease",
@@ -151,7 +153,7 @@ class CacheabilityTest {
                     ":app:packageRelease",
                     ":app:processReleaseResources",
                     ":app:sdkReleaseDependencyData",
-                    ":app:writeReleaseApplicationId",
+                    ":app:writeReleaseApplicationId"
             ),
             UP_TO_DATE to setOf(
                     ":app:clean",

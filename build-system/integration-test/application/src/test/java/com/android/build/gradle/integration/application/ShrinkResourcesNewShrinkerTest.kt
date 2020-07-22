@@ -258,7 +258,8 @@ class ShrinkResourcesNewShrinkerTest {
                 "res/TF.xml",
                 "res/5P.html",
                 "res/lu.png",
-                "res/6f.js"
+                "res/6f.js",
+                "META-INF/com/android/build/gradle/app-metadata.properties"
         )
 
         // As AAPT optimize shortens file paths including shrunk resource file names,

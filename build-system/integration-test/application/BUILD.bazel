@@ -260,6 +260,7 @@ single_gradle_integration_test_per_source(
         "//tools/base/build-system/previous-versions:3.5.0",
         "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
+    package_name = "tools/base/build-system/integration-test/application",
     resources = glob(["src/test/resources/**"]),
     deps = TEST_DEPS,
 )

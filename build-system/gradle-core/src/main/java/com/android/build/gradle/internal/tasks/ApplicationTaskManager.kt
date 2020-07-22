@@ -74,8 +74,10 @@ class ApplicationTaskManager(
 
         createValidateSigningTask(variantProperties)
         // Add a task to produce the signing config file.
-        // Add a task to produce the signing config file.
         taskFactory.register(SigningConfigWriterTask.CreationAction(variantProperties))
+
+        // Add a task to produce the app-metadata.properties file
+        taskFactory.register(AppMetadataTask.CreationAction(variantProperties))
 
         if ((extension as BaseAppModuleExtension).assetPacks.isNotEmpty()) {
             createAssetPackTasks(variantProperties)
@@ -97,7 +99,6 @@ class ApplicationTaskManager(
 
         handleMicroApp(variantProperties)
 
-        // do not publish the APK(s) if there are dynamic feature.
         // do not publish the APK(s) if there are dynamic feature.
         if (!variantProperties.globalScope.hasDynamicFeatures()) {
             createSoftwareComponent(

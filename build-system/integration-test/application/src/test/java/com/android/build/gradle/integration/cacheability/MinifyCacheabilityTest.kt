@@ -77,7 +77,8 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             ":mergeMinifiedNativeLibs",
             ":mergeMinifiedShaders",
             ":processMinifiedManifestForPackage",
-            ":validateSigningMinified"
+            ":validateSigningMinified",
+            ":writeMinifiedAppMetadata"
         ).plus(
             if (shrinker == CodeShrinker.R8) {
                 setOf(":minifyMinifiedWithR8")

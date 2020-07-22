@@ -147,6 +147,7 @@ public class IncrementalPackagerBuilder {
     @NonNull private List<SerializableChange> changedAssets = new ArrayList<>();
     @NonNull private Map<RelativeFile, FileStatus> changedAndroidResources = new HashMap<>();
     @NonNull private Map<RelativeFile, FileStatus> changedNativeLibs = new HashMap<>();
+    @NonNull private List<SerializableChange> changedAppMetadata = new ArrayList<>();
 
     /** Creates a new builder. */
     public IncrementalPackagerBuilder(@NonNull BuildType buildType) {
@@ -466,6 +467,18 @@ public class IncrementalPackagerBuilder {
     }
 
     /**
+     * Sets the changed app metadata
+     *
+     * @param changedAppMetadata the changed app metadata
+     * @return {@code this} for use with fluent-style notation
+     */
+    public IncrementalPackagerBuilder withChangedAppMetadata(
+            @NonNull Collection<SerializableChange> changedAppMetadata) {
+        this.changedAppMetadata = ImmutableList.copyOf(changedAppMetadata);
+        return this;
+    }
+
+    /**
      * Creates the packager, verifying that all the minimum data has been provided. The required
      * information are:
      *
@@ -518,7 +531,8 @@ public class IncrementalPackagerBuilder {
                     changedJavaResources,
                     changedAssets,
                     changedAndroidResources,
-                    changedNativeLibs);
+                    changedNativeLibs,
+                    changedAppMetadata);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
