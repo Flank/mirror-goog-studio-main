@@ -1099,7 +1099,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
 
         result.add(componentProperties.getPaths().getRenderscriptResOutputDir());
-
+        result.add(componentProperties.getPaths().getGeneratedResOutputDir());
         return result;
     }
 
