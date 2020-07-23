@@ -14,15 +14,8 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl;
+package com.android.build.gradle.internal.dsl
 
-import com.android.annotations.NonNull;
-import com.google.common.collect.Sets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import javax.inject.Inject;
-import org.gradle.api.tasks.Input;
 
 /**
  * DSL object for configuring APK packaging options.
@@ -141,139 +134,102 @@ import org.gradle.api.tasks.Input;
  * }
  * </pre>
  */
-public class PackagingOptions
-        implements com.android.builder.model.PackagingOptions,
-                com.android.build.api.dsl.PackagingOptions {
+open class PackagingOptions : com.android.builder.model.PackagingOptions,
+    com.android.build.api.dsl.PackagingOptions {
 
-    @Inject
-    public PackagingOptions() {
+    override val excludes: MutableSet<String> = mutableSetOf(
         // ATTENTION - keep this in sync with JavaDoc above.
-        exclude("/META-INF/LICENSE");
-        exclude("/META-INF/LICENSE.txt");
-        exclude("/META-INF/MANIFEST.MF");
-        exclude("/META-INF/NOTICE");
-        exclude("/META-INF/NOTICE.txt");
-        exclude("/META-INF/*.DSA");
-        exclude("/META-INF/*.EC");
-        exclude("/META-INF/*.SF");
-        exclude("/META-INF/*.RSA");
-        exclude("/META-INF/maven/**");
-        exclude("/META-INF/proguard/*");
-        exclude("/META-INF/com.android.tools/**");
-        exclude("/NOTICE");
-        exclude("/NOTICE.txt");
-        exclude("/LICENSE.txt");
-        exclude("/LICENSE");
-
+        "/META-INF/LICENSE",
+        "/META-INF/LICENSE.txt",
+        "/META-INF/MANIFEST.MF",
+        "/META-INF/NOTICE",
+        "/META-INF/NOTICE.txt",
+        "/META-INF/*.DSA",
+        "/META-INF/*.EC",
+        "/META-INF/*.SF",
+        "/META-INF/*.RSA",
+        "/META-INF/maven/**",
+        "/META-INF/proguard/*",
+        "/META-INF/com.android.tools/**",
+        "/NOTICE",
+        "/NOTICE.txt",
+        "/LICENSE.txt",
+        "/LICENSE",
 
         // Exclude version control folders.
-        exclude("**/.svn/**");
-        exclude("**/CVS/**");
-        exclude("**/SCCS/**");
+        "**/.svn/**",
+        "**/CVS/**",
+        "**/SCCS/**",
 
         // Exclude hidden and backup files.
-        exclude("**/.*/**");
-        exclude("**/.*");
-        exclude("**/*~");
+        "**/.*/**",
+        "**/.*",
+        "**/*~",
 
         // Exclude index files
-        exclude("**/thumbs.db");
-        exclude("**/picasa.ini");
+        "**/thumbs.db",
+        "**/picasa.ini",
 
         // Exclude javadoc files
-        exclude("**/about.html");
-        exclude("**/package.html");
-        exclude("**/overview.html");
+        "**/about.html",
+        "**/package.html",
+        "**/overview.html",
 
         // Exclude protobuf metadata files
-        exclude("**/protobuf.meta");
+        "**/protobuf.meta",
 
         // Exclude stuff for unknown reasons
-        exclude("**/_*");
-        exclude("**/_*/**");
+        "**/_*",
+        "**/_*/**",
 
         // Exclude kotlin metadata files
-        exclude("**/*.kotlin_metadata");
+        "**/*.kotlin_metadata"
+    )
 
-        // Merge services
-        merge("/META-INF/services/**");
+    fun setExcludes(patterns: Set<String>) {
+        val newExcludes = patterns.toList()
+        excludes.clear()
+        excludes.addAll(newExcludes)
     }
 
-    private final Set<String> excludes = Sets.newHashSet();
-    private final Set<String> pickFirsts = Sets.newHashSet();
-    private final Set<String> merges = Sets.newHashSet();
-    private final Set<String> doNotStrip = Sets.newHashSet();
-
-    /** Returns the list of excluded paths. */
-    @Override
-    @NonNull
-    @Input
-    public Set<String> getExcludes() {
-        return excludes;
-    }
-
-    public void setExcludes(@NonNull Set<String> excludes) {
-        List<String> newExcludes = new ArrayList<>(excludes);
-        this.excludes.clear();
-        this.excludes.addAll(newExcludes);
-    }
-
-    @Override
-    public void exclude(@NonNull String pattern) {
+    override fun exclude(pattern: String) {
         excludes.add(pattern);
     }
 
-    @Override
-    @NonNull
-    @Input
-    public Set<String> getPickFirsts() {
-        return pickFirsts;
+    override val pickFirsts: MutableSet<String> = mutableSetOf()
+
+    fun setPickFirsts(patterns: Set<String>) {
+        val newPickFirsts = patterns.toList()
+        pickFirsts.clear()
+        pickFirsts.addAll(newPickFirsts)
     }
 
-    @Override
-    public void pickFirst(@NonNull String pattern) {
+    override fun pickFirst(pattern: String) {
         pickFirsts.add(pattern);
     }
 
-    public void setPickFirsts(@NonNull Set<String> pickFirsts) {
-        List<String> newPickFirsts = new ArrayList<>(pickFirsts);
-        this.pickFirsts.clear();
-        this.pickFirsts.addAll(newPickFirsts);
+    // ATTENTION - keep this in sync with JavaDoc above.
+    override val merges: MutableSet<String> = mutableSetOf("/META-INF/services/**")
+
+    fun setMerges(patterns: Set<String>) {
+        val newMerges = patterns.toList()
+        merges.clear()
+        merges.addAll(newMerges)
     }
 
-    @Override
-    @NonNull
-    @Input
-    public Set<String> getMerges() {
-        return merges;
-    }
-
-    public void setMerges(@NonNull Set<String> merges) {
-        List<String> newMerges = new ArrayList<>(merges);
-        this.merges.clear();
-        this.merges.addAll(newMerges);
-    }
-
-    @Override
-    public void merge(@NonNull String pattern) {
+    override fun merge(pattern: String) {
         merges.add(pattern);
     }
 
-    @Override
-    @NonNull
-    @Input
-    public Set<String> getDoNotStrip() {
-        return doNotStrip;
+    override val doNotStrip: MutableSet<String> = mutableSetOf()
+
+    fun setDoNotStrip(patterns: Set<String>) {
+        val newDoNotStrip = patterns.toList()
+        doNotStrip.clear()
+        doNotStrip.addAll(newDoNotStrip)
     }
 
-    public void setDoNotStrip(@NonNull Set<String> doNotStrip) {
-        List<String> newDoNotStrip = new ArrayList<>(doNotStrip);
-        this.doNotStrip.clear();
-        this.doNotStrip.addAll(newDoNotStrip);
-    }
-
-    @Override
-    public void doNotStrip(@NonNull String pattern) {
+    override fun doNotStrip(pattern: String) {
         doNotStrip.add(pattern);
     }
 }

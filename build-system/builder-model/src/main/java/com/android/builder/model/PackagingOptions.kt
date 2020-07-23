@@ -13,46 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.android.builder.model;
-
-import com.android.annotations.NonNull;
-import java.util.Set;
+package com.android.builder.model
 
 /**
  * Options for APK packaging.
  */
-public interface PackagingOptions {
-
+interface PackagingOptions {
     /**
      * Glob patterns to exclude from packaging.
      *
      * @return a set of glob pattern that use forward slash as a separator
      */
-    @NonNull
-    Set<String> getExcludes();
+    val excludes: Set<String>
 
     /**
      * Glob patterns to pick first.
      *
      * @return a set of glob pattern that use forward slash as a separator
      */
-    @NonNull
-    Set<String> getPickFirsts();
+    val pickFirsts: Set<String>
 
     /**
      * Glob patterns to merge.
      *
      * @return a set of glob pattern that use forward slash as a separator
      */
-    @NonNull
-    Set<String> getMerges();
+    val merges: Set<String>
 
     /**
      * Glob patterns to exclude native libraries from being stripped.
      *
      * @return a set of glob pattern that use forward slash as a separator
      */
-    @NonNull
-    Set<String> getDoNotStrip();
+    val doNotStrip: Set<String>
 }
