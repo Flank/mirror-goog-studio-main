@@ -10,6 +10,7 @@ iml_module(
     iml_files = ["libs/lint-model/android.sdktools.lint-model.iml"],
     lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
     visibility = ["//visibility:public"],
+    runtime_deps = ["//tools/idea/.idea/libraries:javax.activation"],
     # do not sort: must match IML order
     deps = [
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
@@ -102,6 +103,7 @@ iml_module(
     ],
     # do not sort: must match IML order
     runtime_deps = [
+        "//tools/idea/.idea/libraries:javax.activation",
         "//tools/idea/.idea/libraries:delight-rhino-sandbox",
         "//tools/idea/.idea/libraries:rhino",
         "//tools/idea/.idea/libraries:netty-handler-proxy",
@@ -223,6 +225,7 @@ iml_module(
     exports = ["//tools/base/lint:studio.android.sdktools.lint-api"],
     # do not sort: must match IML order
     runtime_deps = [
+        "//tools/idea/.idea/libraries:javax.activation",
         "//tools/idea/.idea/libraries:delight-rhino-sandbox",
         "//tools/idea/.idea/libraries:rhino",
         "//tools/idea/.idea/libraries:netty-handler-proxy",

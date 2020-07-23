@@ -22,6 +22,7 @@ iml_module(
         "//tools/idea/.idea/libraries:kxml2",
         "//tools/idea/.idea/libraries:gson",
     ],
+    runtime_deps = ["//tools/idea/.idea/libraries:javax.activation"],
     # do not sort: must match IML order
     deps = [
         "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api[module]",

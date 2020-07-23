@@ -16,6 +16,7 @@ iml_module(
         "src/testFixtures/java",
     ],
     visibility = ["//visibility:public"],
+    runtime_deps = ["//tools/idea/.idea/libraries:javax.activation"],
     # do not sort: must match IML order
     deps = [
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
