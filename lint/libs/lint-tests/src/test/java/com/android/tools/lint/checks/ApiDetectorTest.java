@@ -4569,8 +4569,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     @SuppressWarnings("all") // sample code
     public void testSdkSuppress() {
-        // Regression test for b/31799926
-        //noinspection all // Sample code
+        // Regression test for b/31799926 and 35968791
         lint().files(
                         java(
                                 "src/test/pkg/MainActivity.java",
@@ -4594,6 +4593,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        UserManager userManager = (UserManager) getSystemService(Context.USER_SERVICE);\n"
                                         + "    }\n"
                                         + "\n"
+                                        + "    @androidx.test.filters.SdkSuppress(minSdkVersion = 17)\n"
+                                        + "    public void test() {\n"
+                                        + "        UserManager userManager = (UserManager) getSystemService(Context.USER_SERVICE);\n"
+                                        + "    }\n"
                                         + "}"))
                 .checkMessage(this::checkReportedError)
                 .run()

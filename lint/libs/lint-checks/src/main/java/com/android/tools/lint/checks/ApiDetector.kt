@@ -2029,6 +2029,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         val REQUIRES_API_ANNOTATION = AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "RequiresApi")
 
         private const val SDK_SUPPRESS_ANNOTATION = "android.support.test.filters.SdkSuppress"
+        private const val ANDROIDX_SDK_SUPPRESS_ANNOTATION = "androidx.test.filters.SdkSuppress"
 
         /** Accessing an unsupported API */
         @JvmField
@@ -2224,6 +2225,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             return fqcn == FQCN_TARGET_API ||
                     isRequiresApiAnnotation(fqcn) ||
                     fqcn == SDK_SUPPRESS_ANNOTATION ||
+                    fqcn == ANDROIDX_SDK_SUPPRESS_ANNOTATION ||
                     fqcn == TARGET_API // with missing imports
         }
 
