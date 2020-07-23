@@ -40,7 +40,7 @@ class BasicModelV2Test: ModelComparator() {
 
         with(result).compare(
             model = result.container.singleModel,
-            goldenFile = if (JavaVersion.current().isJava11Compatible) "testProject_jdk11" else "testProject"
+            goldenFile = "testProject"
         )
     }
 

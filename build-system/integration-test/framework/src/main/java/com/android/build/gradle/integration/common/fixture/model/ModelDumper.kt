@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.common.fixture.model
 
-import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.builder.model.v2.dsl.BaseConfig
 import com.android.builder.model.v2.dsl.BuildType
 import com.android.builder.model.v2.dsl.ProductFlavor
@@ -32,7 +31,6 @@ import com.android.builder.model.v2.ide.Variant
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.VariantDependencies
-import java.io.File
 
 // --------------
 // dump fixtures specific to each model class
@@ -74,7 +72,6 @@ internal fun AndroidProject.writeToBuilder(builder: DumpBuilder) {
                 item("storePassword", config.storePassword)
                 item("keyAlias", config.keyAlias)
                 item("keyPassword", config.keyPassword)
-                item("storeType", config.storeType)
                 item("enableV1Signing", config.enableV1Signing)
                 item("enableV2Signing", config.enableV2Signing)
                 item("enableV3Signing", config.enableV3Signing)

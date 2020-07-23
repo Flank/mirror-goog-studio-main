@@ -471,7 +471,6 @@
           - storePassword   = "android"
           - keyAlias        = "AndroidDebugKey"
           - keyPassword     = "android"
-          - storeType       = "jks"
           - enableV1Signing = (null)
           - enableV2Signing = (null)
           - enableV3Signing = (null)

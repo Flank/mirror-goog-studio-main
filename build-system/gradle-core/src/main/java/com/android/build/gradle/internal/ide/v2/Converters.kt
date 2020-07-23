@@ -140,7 +140,6 @@ internal fun DslSigningConfig.convert() = SigningConfigImpl(
     storePassword = storePassword,
     keyAlias = keyAlias,
     keyPassword = keyPassword,
-    storeType = storeType,
     enableV1Signing = enableV1Signing,
     enableV2Signing = enableV2Signing,
     enableV3Signing = enableV3Signing,

@@ -29,7 +29,6 @@ data class SigningConfigImpl(
     override val storePassword: String?,
     override val keyAlias: String?,
     override val keyPassword: String?,
-    override val storeType: String?,
     override val enableV1Signing: Boolean?,
     override val enableV2Signing: Boolean?,
     override val enableV3Signing: Boolean?,
@@ -45,5 +44,4 @@ data class SigningConfigImpl(
                 storePassword != null &&
                 keyAlias != null &&
                 keyPassword != null
-
 }

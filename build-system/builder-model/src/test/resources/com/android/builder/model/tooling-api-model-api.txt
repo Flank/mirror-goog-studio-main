@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-c44abc4083acdbcdcc41a5fa57f4e22c7fc7d5776ffa999a2a29ffc8cdf990bb
+f0cae7346ed7c036ae62a6ab60227fbf9f627cc93894a9702513af9ec19e2b5b
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -543,7 +543,6 @@ com.android.builder.model.v2.dsl.SigningConfig.getKeyPassword: java.lang.String 
 com.android.builder.model.v2.dsl.SigningConfig.getName: java.lang.String ()
 com.android.builder.model.v2.dsl.SigningConfig.getStoreFile: java.io.File ()
 com.android.builder.model.v2.dsl.SigningConfig.getStorePassword: java.lang.String ()
-com.android.builder.model.v2.dsl.SigningConfig.getStoreType: java.lang.String ()
 com.android.builder.model.v2.dsl.SigningConfig.isSigningReady: boolean ()
 com.android.builder.model.v2.ide.AaptOptions implements com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.ide.AaptOptions$Namespacing extends java.lang.Enum
