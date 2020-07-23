@@ -73,6 +73,7 @@ import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService;
 import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService;
+import com.android.build.gradle.internal.services.ClassesHierarchyBuildService;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.DslServicesImpl;
 import com.android.build.gradle.internal.services.LintClassLoaderBuildService;
@@ -347,6 +348,7 @@ public abstract class BasePlugin<
                         .execute();
 
         new SymbolTableBuildService.RegistrationAction(project, projectOptions).execute();
+        new ClassesHierarchyBuildService.RegistrationAction(project).execute();
 
         projectOptions
                 .getAllOptions()

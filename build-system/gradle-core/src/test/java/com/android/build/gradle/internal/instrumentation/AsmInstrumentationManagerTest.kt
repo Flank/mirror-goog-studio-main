@@ -97,12 +97,12 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
             classes = classesFiles.mapValues {
                 ByteStreams.toByteArray(FileInputStream(it.value))
             }
-            classesHierarchyData.addClasses(setOf(inputDir))
+            classesHierarchyData.addSources(inputDir)
         } else {
             inputJar = File(inputDir, "classes.jar")
             TestInputsGenerator.pathWithClasses(inputJar.toPath(), srcClasses)
             classes = getClassesByteArrayMapFromJar(inputJar)
-            classesHierarchyData.addClasses(setOf(inputJar))
+            classesHierarchyData.addSources(inputJar)
         }
 
         classesHierarchyData.addClass(

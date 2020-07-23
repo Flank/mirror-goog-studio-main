@@ -20,8 +20,9 @@ import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.instrumentation.AsmInstrumentationManager
-import com.android.build.gradle.internal.instrumentation.ClassesHierarchyData
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
+import com.android.build.gradle.internal.services.getBuildService
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.InputArtifact
@@ -72,6 +73,10 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
                             creationConfig.registeredDependenciesClassesVisitors
                         )
                         parameters.bootClasspath.from(creationConfig.globalScope.fullBootClasspath)
+                        parameters.classesHierarchyBuildService.set(
+                            getBuildService(creationConfig.services.buildServiceRegistry)
+                        )
+                        parameters.variantName.set(creationConfig.name)
                     }
 
                     spec.from.attribute(
@@ -105,11 +110,14 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
     override fun transform(outputs: TransformOutputs) {
         //TODO(b/162813654) record transform execution span
         val inputFile = inputArtifact.get().asFile
-        // TODO: Share ClassesHierarchyData in a build service
-        val classesHierarchyData = ClassesHierarchyData(parameters.asmApiVersion.get())
-        classesHierarchyData.addClasses(setOf(inputArtifact.get().asFile))
-        classesHierarchyData.addClasses(classpath.files)
-        classesHierarchyData.addClasses(parameters.bootClasspath.files)
+
+        val classesHierarchyData = parameters.classesHierarchyBuildService.get()
+            .getClassesHierarchyData(parameters.projectName.get(), parameters.variantName.get())
+            .apply {
+                addSources(inputArtifact.get().asFile)
+                addSources(classpath.files)
+                addSources(parameters.bootClasspath.files)
+            }
 
         AsmInstrumentationManager(
             parameters.visitorsList.get(),
@@ -134,5 +142,11 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
 
         @get:CompileClasspath
         val bootClasspath: ConfigurableFileCollection
+
+        @get:Internal
+        val classesHierarchyBuildService: Property<ClassesHierarchyBuildService>
+
+        @get:Internal
+        val variantName: Property<String>
     }
 }

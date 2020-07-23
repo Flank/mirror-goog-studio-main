@@ -29,6 +29,7 @@ import org.objectweb.asm.ClassVisitor
 import java.io.File
 import java.io.InputStream
 import java.util.zip.ZipFile
+import javax.annotation.concurrent.GuardedBy
 
 /**
  * Contains data about the hierarchy of classes which includes, the superclass and the interfaces of
@@ -37,20 +38,33 @@ import java.util.zip.ZipFile
  * Each class is represented via its internal name.
  */
 class ClassesHierarchyData(private val asmApiVersion: Int) {
-    private val sourceDirs: MutableList<File> = mutableListOf()
-    private val sourceJars: MutableList<File> = mutableListOf()
+
+    @GuardedBy("lock")
+    private val sourceDirs: MutableSet<File> = mutableSetOf()
+
+    @GuardedBy("lock")
+    private val sourceJars: MutableSet<File> = mutableSetOf()
     private val loadedClassesData: MutableMap<String, ClassData> = mutableMapOf()
 
-    fun addClasses(files: Set<File>) {
-        files.forEach {
-            if (it.name.endsWith(DOT_JAR)) {
-                sourceJars.add(it)
-            } else {
-                sourceDirs.add(it)
+    private val lock = Any()
+
+    fun addSources(files: Set<File>) {
+        addSources(*files.toTypedArray())
+    }
+
+    fun addSources(vararg files: File) {
+        synchronized(lock) {
+            files.forEach {
+                if (it.name.endsWith(DOT_JAR)) {
+                    sourceJars.add(it)
+                } else {
+                    sourceDirs.add(it)
+                }
             }
         }
     }
 
+    @GuardedBy("lock")
     @VisibleForTesting
     fun addClass(
         className: String,
@@ -58,7 +72,9 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
         superClass: String?,
         interfaces: List<String>
     ) {
-        loadedClassesData[className] = ClassData(annotations, superClass, interfaces)
+        synchronized(lock) {
+            loadedClassesData[className] = ClassData(annotations, superClass, interfaces)
+        }
     }
 
     private fun addClass(classInputStream: InputStream): ClassData {
@@ -95,8 +111,11 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
         return ClassData(annotationsList, superclassName, interfacesList)
     }
 
+    @GuardedBy("lock")
     private fun loadClassData(className: String): ClassData {
-        return loadedClassesData.computeIfAbsent(className, this::computeClassData)
+        synchronized(lock) {
+            return loadedClassesData.computeIfAbsent(className, this::computeClassData)
+        }
     }
 
     private fun computeClassData(className: String): ClassData {

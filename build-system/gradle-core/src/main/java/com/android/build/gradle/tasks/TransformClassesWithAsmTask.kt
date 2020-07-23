@@ -21,9 +21,10 @@ import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.instrumentation.AsmInstrumentationManager
-import com.android.build.gradle.internal.instrumentation.ClassesHierarchyData
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.JarsClasspathInputsWithIdentity
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -37,6 +38,7 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
@@ -77,6 +79,9 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
 
     @get:OutputDirectory
     abstract val jarsOutputDir: DirectoryProperty
+
+    @get:Internal
+    abstract val classesHierarchyBuildService: Property<ClassesHierarchyBuildService>
 
     override fun doTaskAction(inputChanges: InputChanges) {
         if (inputChanges.isIncremental) {
@@ -136,12 +141,14 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
     }
 
     private fun getInstrumentationManager(): AsmInstrumentationManager {
-        val classesHierarchyData = ClassesHierarchyData(asmApiVersion.get())
-        classesHierarchyData.addClasses(inputClassesDir.files)
-        classesHierarchyData.addClasses(inputJarsWithIdentity.inputJars.files)
-        classesHierarchyData.addClasses(runtimeClasspath.files)
-        classesHierarchyData.addClasses(bootClasspath.files)
-
+        val classesHierarchyData =
+            classesHierarchyBuildService.get().getClassesHierarchyData(projectName, variantName)
+                .apply {
+                    addSources(inputClassesDir.files)
+                    addSources(inputJarsWithIdentity.inputJars.files)
+                    addSources(runtimeClasspath.files)
+                    addSources(bootClasspath.files)
+                }
         return AsmInstrumentationManager(
             visitors = visitorsList.get(),
             apiVersion = asmApiVersion.get(),
@@ -214,6 +221,10 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
                     AndroidArtifacts.ArtifactScope.ALL,
                     AndroidArtifacts.ArtifactType.CLASSES_JAR
                 )
+            )
+
+            task.classesHierarchyBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
             )
         }
     }
