@@ -8,8 +8,8 @@ package(default_visibility = ["//visibility:public"])
 platform(
     name = "rbe_ubuntu18",
     constraint_values = [
-        "@bazel_tools//platforms:x86_64",
-        "@bazel_tools//platforms:linux",
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
         "@bazel_tools//tools/cpp:clang",
         "@bazel_toolchains//constraints:xenial",
         "@bazel_toolchains//constraints/sanitizers:support_msan",
@@ -28,8 +28,8 @@ platform(
 platform(
     name = "rbe_windows2019_as",
     constraint_values = [
-        "@bazel_tools//platforms:x86_64",
-        "@bazel_tools//platforms:windows",
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
     ],
     exec_properties = create_rbe_exec_properties_dict(
         container_image = "docker://gcr.io/google.com/android-studio-alphasource/rbe-windows2019-as@sha256:64a7c97ac08d75b9efde179993adb55986869369af320d8fbe1b4dc16e678805",

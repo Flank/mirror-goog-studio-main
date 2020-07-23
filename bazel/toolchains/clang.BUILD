@@ -290,12 +290,12 @@ toolchain(
 toolchain(
     name = "cc-toolchain-x64_linux",
     exec_compatible_with = [
-        "@bazel_tools//platforms:x86_64",
-        "@bazel_tools//platforms:linux",
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
     ],
     target_compatible_with = [
-        "@bazel_tools//platforms:x86_64",
-        "@bazel_tools//platforms:linux",
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
     ],
     toolchain = ":cc-compiler-k8",
     toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
