@@ -138,6 +138,21 @@ open class GradleDetector : Detector(), GradleScanner {
     private var mAppliedKotlinKaptPlugin: Boolean = false
 
     /**
+     * If incrementally editing a single build.gradle file, tracks whether we have applied
+     * a java plugin (e.g. application, java-library)
+     */
+    private var mAppliedJavaPlugin: Boolean = false
+
+    data class JavaPluginInfo(
+        val cookie: Any
+    )
+
+    private var mJavaPluginInfo: JavaPluginInfo? = null
+
+    private var mDeclaredSourceCompatibility: Boolean = false
+    private var mDeclaredTargetCompatibility: Boolean = false
+
+    /**
      * If incrementally editing a single build.gradle file, tracks whether we have declared
      * the google maven repository in the buildscript block.
      */
@@ -404,6 +419,10 @@ open class GradleDetector : Detector(), GradleScanner {
                 if (plugin == "kotlin-kapt") {
                     mAppliedKotlinKaptPlugin = true
                 }
+                if (JAVA_PLUGIN_IDS.contains(plugin)) {
+                    mAppliedJavaPlugin = true
+                    mJavaPluginInfo = JavaPluginInfo(statementCookie)
+                }
             }
         } else if (parent == "dependencies") {
             if (value.startsWith("files('") && value.endsWith("')")) {
@@ -536,6 +555,10 @@ open class GradleDetector : Detector(), GradleScanner {
                     report(context, statementCookie, DATA_BINDING_WITHOUT_KAPT, message, null)
                 }
             }
+        } else if (parent == "java" && property == "sourceCompatibility") {
+            mDeclaredSourceCompatibility = true
+        } else if (parent == "java" && property == "targetCompatibility") {
+            mDeclaredTargetCompatibility = true
         }
     }
 
@@ -732,6 +755,10 @@ open class GradleDetector : Detector(), GradleScanner {
             }
             if (plugin == "kotlin-kapt") {
                 mAppliedKotlinKaptPlugin = true
+            }
+            if (JAVA_PLUGIN_IDS.contains(plugin)) {
+                mAppliedJavaPlugin = true
+                mJavaPluginInfo = JavaPluginInfo(cookie)
             }
         }
         if (statement == "google" && parent == "repositories" && parentParent == "buildscript") {
@@ -1628,6 +1655,42 @@ open class GradleDetector : Detector(), GradleScanner {
 
         // Check for disallowed dependencies
         checkBlockedDependencies(context, project)
+    }
+
+    override fun afterCheckFile(context: Context) {
+        if (mAppliedJavaPlugin && !(mDeclaredSourceCompatibility && mDeclaredTargetCompatibility)) {
+            val file = context.file
+            val contents = context.client.readFile(file).toString()
+            val message = when {
+                mDeclaredTargetCompatibility -> "no Java sourceCompatibility directive"
+                mDeclaredSourceCompatibility -> "no Java targetCompatibility directive"
+                else -> "no Java language level directives"
+            }
+            val fixDisplayName = when {
+                mDeclaredTargetCompatibility -> "Insert sourceCompatibility directive for JDK8"
+                mDeclaredSourceCompatibility -> "Insert targetCompatibility directive for JDK8"
+                else -> "Insert JDK8 language level directives"
+            }
+            val insertion = when {
+                // Note that these replacement texts must be valid in both Groovy and KotlinScript Gradle files
+                mDeclaredTargetCompatibility -> "\njava.sourceCompatibility = JavaVersion.VERSION_1_8"
+                mDeclaredSourceCompatibility -> "\njava.targetCompatibility = JavaVersion.VERSION_1_8"
+                else -> """
+
+                    java {
+                        sourceCompatibility = JavaVersion.VERSION_1_8
+                        targetCompatibility = JavaVersion.VERSION_1_8
+                    }
+                """.trimIndent()
+            }
+            val fix = LintFix.create().replace()
+                .name(fixDisplayName)
+                .range(Location.create(context.file, contents, 0, contents.length))
+                .end()
+                .with(insertion)
+                .build()
+            report(context, mJavaPluginInfo!!.cookie, JAVA_PLUGIN_LANGUAGE_LEVEL, message, fix)
+        }
     }
 
     private fun maybeReportAgpVersionIssue(context: Context) {
@@ -2693,6 +2756,10 @@ open class GradleDetector : Detector(), GradleScanner {
             severity = Severity.WARNING,
             implementation = IMPLEMENTATION
         )
+
+        /** Gradle plugin IDs based on the Java plugin */
+        val JAVA_PLUGIN_IDS = listOf("java", "java-library", "application")
+            .flatMap { listOf(it, "org.gradle.$it") }
 
         /** The Gradle plugin ID for Android applications */
         const val APP_PLUGIN_ID = "com.android.application"

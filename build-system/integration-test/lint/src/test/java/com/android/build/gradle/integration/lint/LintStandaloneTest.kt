@@ -54,7 +54,8 @@ class LintStandaloneTest(lintInvocationType: LintInvocationType) {
         val file = project.file("lint-results.txt")
         assertThat(file).exists()
         assertThat(file).contains("MyClass.java:5: Warning: Use Boolean.valueOf(true) instead")
-        assertThat(file).contains("0 errors, 1 warnings")
+        assertThat(file).contains("build.gradle:7: Warning: no Java language level directives")
+        assertThat(file).contains("0 errors, 2 warnings")
 
         // Check that lint re-runs if the options have changed.
         // Lint always re-runs at the moment, but we should fix this at some point. (b/117870210)
@@ -70,7 +71,8 @@ class LintStandaloneTest(lintInvocationType: LintInvocationType) {
         val secondFile = project.file("lint-results2.txt")
         assertThat(secondFile).exists()
         assertThat(secondFile).contains("MyClass.java:5: Warning: Use Boolean.valueOf(true) instead")
-        assertThat(secondFile).contains("0 errors, 1 warnings")
+        assertThat(secondFile).contains("build.gradle:7: Warning: no Java language level directives")
+        assertThat(secondFile).contains("0 errors, 2 warnings")
 
     }
 }
