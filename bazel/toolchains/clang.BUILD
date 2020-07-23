@@ -123,7 +123,7 @@ cc_toolchain_config(
     target_system_name = "local",
     tool_paths = {
         "ar": clang_latest_linux + "/bin/llvm-ar",
-        "ld": clang_latest_linux + "/bin/ld.lld)",
+        "ld": clang_latest_linux + "/bin/ld.lld",
         "cpp": clang_latest_linux + "/bin/clang++",
         "gcc": clang_latest_linux + "/bin/clang",
         "dwp": "None",
