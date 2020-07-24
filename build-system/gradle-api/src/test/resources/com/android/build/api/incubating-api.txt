@@ -430,6 +430,7 @@ com.android.build.api.dsl.DependenciesInfo.getIncludeInApk: boolean ()
 com.android.build.api.dsl.DependenciesInfo.getIncludeInBundle: boolean ()
 com.android.build.api.dsl.DependenciesInfo.setIncludeInApk: void (boolean)
 com.android.build.api.dsl.DependenciesInfo.setIncludeInBundle: void (boolean)
+com.android.build.api.dsl.Device implements org.gradle.api.Named
 com.android.build.api.dsl.DynamicDelivery
 com.android.build.api.dsl.DynamicDelivery.getDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.dsl.DynamicDelivery.getInstantDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
@@ -584,6 +585,15 @@ com.android.build.api.dsl.LintOptions.textOutput: void (java.io.File)
 com.android.build.api.dsl.LintOptions.textOutput: void (java.lang.String)
 com.android.build.api.dsl.LintOptions.warning: void (java.lang.String)
 com.android.build.api.dsl.LintOptions.warning: void (java.lang.String[])
+com.android.build.api.dsl.ManagedVirtualDevice implements com.android.build.api.dsl.Device
+com.android.build.api.dsl.ManagedVirtualDevice.getAbi: java.lang.String ()
+com.android.build.api.dsl.ManagedVirtualDevice.getApiLevel: int ()
+com.android.build.api.dsl.ManagedVirtualDevice.getDevice: java.lang.String ()
+com.android.build.api.dsl.ManagedVirtualDevice.getSystemImageSource: java.lang.String ()
+com.android.build.api.dsl.ManagedVirtualDevice.setAbi: void (java.lang.String)
+com.android.build.api.dsl.ManagedVirtualDevice.setApiLevel: void (int)
+com.android.build.api.dsl.ManagedVirtualDevice.setDevice: void (java.lang.String)
+com.android.build.api.dsl.ManagedVirtualDevice.setSystemImageSource: void (java.lang.String)
 com.android.build.api.dsl.Ndk
 com.android.build.api.dsl.Ndk.getAbiFilters: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.Ndk.getCFlags: java.lang.String ()
@@ -688,6 +698,7 @@ com.android.build.api.dsl.TestExtension.getTargetProjectPath: java.lang.String (
 com.android.build.api.dsl.TestExtension.setTargetProjectPath: void (java.lang.String)
 com.android.build.api.dsl.TestOptions
 com.android.build.api.dsl.TestOptions.getAnimationsDisabled: boolean ()
+com.android.build.api.dsl.TestOptions.getDevices: org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<com.android.build.api.dsl.Device> ()
 com.android.build.api.dsl.TestOptions.getExecution: java.lang.String ()
 com.android.build.api.dsl.TestOptions.getReportDir: java.lang.String ()
 com.android.build.api.dsl.TestOptions.getResultsDir: java.lang.String ()

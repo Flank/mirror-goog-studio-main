@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.services
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dsl.DslVariableFactory
 import org.gradle.api.DomainObjectSet
+import org.gradle.api.ExtensiblePolymorphicDomainObjectContainer
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.file.DirectoryProperty
@@ -42,6 +43,11 @@ class DslServicesImpl constructor(
         factory: NamedDomainObjectFactory<T>
     ): NamedDomainObjectContainer<T> =
         projectServices.objectFactory.domainObjectContainer(type, factory)
+
+    override fun <T> polymorphicDomainObjectContainer(
+        type: Class<T>
+    ): ExtensiblePolymorphicDomainObjectContainer<T> =
+        projectServices.objectFactory.polymorphicDomainObjectContainer(type)
 
     override fun <T> property(type: Class<T>): Property<T> = projectServices.objectFactory.property(type)
 

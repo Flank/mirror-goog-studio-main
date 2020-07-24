@@ -47,6 +47,13 @@ interface TestOptions {
     var animationsDisabled: Boolean
 
     /**
+     * List of test devices for this project
+     *
+     * These APIs are experimental and may change without notice.
+     */
+    val devices: org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<Device>
+
+    /**
      * Specifies whether to use on-device test orchestration.
      *
      * If you want to [use Android Test Orchestrator](https://developer.android.com/training/testing/junit-runner.html#using-android-test-orchestrator)
