@@ -1378,18 +1378,24 @@ class LintDriver
 
         // Actually run the detectors. Libraries should be called before the main classes.
 
-        if (!scopeDetectors[Scope.JAVA_LIBRARIES].isNullOrEmpty()) {
+        val libraryDetectors = scopeDetectors[Scope.JAVA_LIBRARIES]
+        if (libraryDetectors != null && libraryDetectors.isNotEmpty()) {
             val libraries = project.getJavaLibraries(false)
             val libraryEntries = ClassEntry.fromClassPath(client, libraries, true)
-            runClassDetectors(Scope.JAVA_LIBRARIES, libraryEntries, project, main)
+            runClassDetectors(libraryDetectors, libraryEntries, project, main, fromLibrary = true)
         }
 
         if (isCanceled) {
             return
         }
 
-        runClassDetectors(Scope.CLASS_FILE, classEntries, project, main)
-        runClassDetectors(Scope.ALL_CLASS_FILES, classEntries, project, main)
+        val classDetectors = union(
+            scopeDetectors[Scope.CLASS_FILE],
+            scopeDetectors[Scope.ALL_CLASS_FILES]
+        )
+        if (classDetectors != null && classDetectors.isNotEmpty()) {
+            runClassDetectors(classDetectors, classEntries, project, main, fromLibrary = false)
+        }
     }
 
     private fun checkIndividualClassFiles(
@@ -1408,13 +1414,11 @@ class LintDriver
             }
         }
 
-        val entries = ClassEntry.fromClassFiles(
-            client, classFiles, classFolders,
-            true
-        )
-        if (entries.isNotEmpty()) {
+        val entries = ClassEntry.fromClassFiles(client, classFiles, classFolders, true)
+        val classDetectors = scopeDetectors[Scope.CLASS_FILE]
+        if (classDetectors != null && classDetectors.isNotEmpty() && entries.isNotEmpty()) {
             entries.sort()
-            runClassDetectors(Scope.CLASS_FILE, entries, project, main)
+            runClassDetectors(classDetectors, entries, project, main, fromLibrary = false)
         }
     }
 
@@ -1427,118 +1431,118 @@ class LintDriver
     private var outerClasses: Deque<ClassNode>? = null
 
     private fun runClassDetectors(
-        scope: Scope,
+        classDetectors: List<Detector>,
         entries: List<ClassEntry>,
         project: Project,
-        main: Project?
+        main: Project?,
+        fromLibrary: Boolean
     ) {
-        if (this.scope.contains(scope)) {
-            val classDetectors = scopeDetectors[scope]
-            if (classDetectors != null && classDetectors.isNotEmpty() && entries.isNotEmpty()) {
-                val visitor = AsmVisitor(client, classDetectors)
-
-                var sourceContents: CharSequence? = null
-                var sourceName = ""
-                outerClasses = ArrayDeque<ClassNode>()
-                var prev: ClassEntry? = null
-                for (entry in entries) {
-                    if (prev != null && prev.compareTo(entry) == 0) {
-                        // Duplicate entries for some reason: ignore
-                        continue
-                    }
-                    prev = entry
-
-                    val reader: ClassReader
-                    val classNode: ClassNode
-                    try {
-                        reader = ClassReader(entry.bytes)
-                        classNode = ClassNode()
-                        reader.accept(classNode, 0 /* flags */)
-                    } catch (t: Throwable) {
-                        client.log(
-                            null,
-                            "Error processing ${entry.path()}: broken class file? (${t.message})"
-                        )
-                        continue
-                    }
-
-                    var peek: ClassNode?
-                    while (true) {
-                        peek = outerClasses?.peek()
-                        if (peek == null) {
-                            break
-                        }
-                        if (classNode.name.startsWith(peek.name)) {
-                            break
-                        } else {
-                            outerClasses?.pop()
-                        }
-                    }
-                    outerClasses?.push(classNode)
-
-                    if (isSuppressed(null, classNode)) {
-                        // Class was annotated with suppress all -- no need to look any further
-                        continue
-                    }
-
-                    if (sourceContents != null) {
-                        // Attempt to reuse the source buffer if initialized
-                        // This means making sure that the source files
-                        //    foo/bar/MyClass and foo/bar/MyClass$Bar
-                        //    and foo/bar/MyClass$3 and foo/bar/MyClass$3$1 have the same prefix.
-                        val newName = classNode.name
-                        var newRootLength = newName.indexOf('$')
-                        if (newRootLength == -1) {
-                            newRootLength = newName.length
-                        }
-                        var oldRootLength = sourceName.indexOf('$')
-                        if (oldRootLength == -1) {
-                            oldRootLength = sourceName.length
-                        }
-                        if (newRootLength != oldRootLength || !sourceName.regionMatches(
-                            0,
-                            newName,
-                            0,
-                            newRootLength
-                        )
-                        ) {
-                            sourceContents = null
-                        }
-                    }
-
-                    val context = ClassContext(
-                        this, project, main,
-                        entry.file, entry.jarFile, entry.binDir, entry.bytes,
-                        classNode, scope == Scope.JAVA_LIBRARIES /*fromLibrary*/,
-                        sourceContents
-                    )
-
-                    try {
-                        visitor.runClassDetectors(context)
-                    } catch (throwable: Throwable) {
-                        // Process canceled etc
-                        if (!handleDetectorError(context, this, throwable)) {
-                            cancel()
-                        }
-                    }
-
-                    // We're not counting class files even though technically lint has
-                    // to process them separately; this will essentially double the
-                    // observed file count (which is usually taken to mean source files)
-                    // and with lots of inner classes, more than double.
-                    // fileCount++
-
-                    if (isCanceled) {
-                        return
-                    }
-
-                    sourceContents = context.getSourceContents(false/*read*/)
-                    sourceName = classNode.name
-                }
-
-                outerClasses = null
-            }
+        if (classDetectors.isEmpty() || entries.isEmpty()) {
+            return
         }
+
+        val visitor = AsmVisitor(client, classDetectors)
+
+        var sourceContents: CharSequence? = null
+        var sourceName = ""
+        outerClasses = ArrayDeque<ClassNode>()
+        var prev: ClassEntry? = null
+        for (entry in entries) {
+            if (prev != null && prev.compareTo(entry) == 0) {
+                // Duplicate entries for some reason: ignore
+                continue
+            }
+            prev = entry
+
+            val reader: ClassReader
+            val classNode: ClassNode
+            try {
+                reader = ClassReader(entry.bytes)
+                classNode = ClassNode()
+                reader.accept(classNode, 0 /* flags */)
+            } catch (t: Throwable) {
+                client.log(
+                    null,
+                    "Error processing ${entry.path()}: broken class file? (${t.message})"
+                )
+                continue
+            }
+
+            var peek: ClassNode?
+            while (true) {
+                peek = outerClasses?.peek()
+                if (peek == null) {
+                    break
+                }
+                if (classNode.name.startsWith(peek.name)) {
+                    break
+                } else {
+                    outerClasses?.pop()
+                }
+            }
+            outerClasses?.push(classNode)
+
+            if (isSuppressed(null, classNode)) {
+                // Class was annotated with suppress all -- no need to look any further
+                continue
+            }
+
+            if (sourceContents != null) {
+                // Attempt to reuse the source buffer if initialized
+                // This means making sure that the source files
+                //    foo/bar/MyClass and foo/bar/MyClass$Bar
+                //    and foo/bar/MyClass$3 and foo/bar/MyClass$3$1 have the same prefix.
+                val newName = classNode.name
+                var newRootLength = newName.indexOf('$')
+                if (newRootLength == -1) {
+                    newRootLength = newName.length
+                }
+                var oldRootLength = sourceName.indexOf('$')
+                if (oldRootLength == -1) {
+                    oldRootLength = sourceName.length
+                }
+                if (newRootLength != oldRootLength || !sourceName.regionMatches(
+                    0,
+                    newName,
+                    0,
+                    newRootLength
+                )
+                ) {
+                    sourceContents = null
+                }
+            }
+
+            val context = ClassContext(
+                this, project, main,
+                entry.file, entry.jarFile, entry.binDir, entry.bytes,
+                classNode, fromLibrary,
+                sourceContents
+            )
+
+            try {
+                visitor.runClassDetectors(context)
+            } catch (throwable: Throwable) {
+                // Process canceled etc
+                if (!handleDetectorError(context, this, throwable)) {
+                    cancel()
+                }
+            }
+
+            // We're not counting class files even though technically lint has
+            // to process them separately; this will essentially double the
+            // observed file count (which is usually taken to mean source files)
+            // and with lots of inner classes, more than double.
+            // fileCount++
+
+            if (isCanceled) {
+                return
+            }
+
+            sourceContents = context.getSourceContents(false/*read*/)
+            sourceName = classNode.name
+        }
+
+        outerClasses = null
     }
 
     /** Returns the outer class node of the given class node
