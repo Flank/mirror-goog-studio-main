@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.annotationprocessor
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor.ConfigurationCaching
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject

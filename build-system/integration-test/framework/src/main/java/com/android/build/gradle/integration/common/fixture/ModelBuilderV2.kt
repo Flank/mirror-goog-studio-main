@@ -29,7 +29,6 @@ import com.android.builder.model.v2.models.ModelBuilderParameter
 import com.android.builder.model.v2.models.VariantDependencies
 import com.android.builder.model.v2.models.ndk.NativeModelBuilderParameter
 import com.android.builder.model.v2.models.ndk.NativeModule
-import com.android.utils.FileUtils
 import com.google.common.collect.Sets
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
@@ -56,23 +55,22 @@ import java.util.function.Consumer
  *
  * This returns the v2 model as a [FetchResult]
  */
-class ModelBuilderV2 : BaseGradleExecutor<ModelBuilderV2> {
+class ModelBuilderV2 internal constructor(
+    project: GradleTestProject,
+    projectConnection: ProjectConnection
+) : BaseGradleExecutor<ModelBuilderV2>(
+    project,
+    project.location,
+    projectConnection,
+    Consumer<GradleBuildResult> { lastBuildResult: GradleBuildResult? ->
+        project.setLastBuildResult(lastBuildResult!!)
+    },
+    project.getProfileDirectory(),
+    project.heapSize,
+    ConfigurationCaching.NONE
+) {
     private val explicitlyAllowedOptions = mutableSetOf<String>()
     private var maxSyncIssueSeverityLevel = 0
-
-    internal constructor(project: GradleTestProject, projectConnection: ProjectConnection) : super(
-        project,
-        projectConnection,
-        Consumer<GradleBuildResult> { lastBuildResult: GradleBuildResult? ->
-            project.setLastBuildResult(lastBuildResult!!)
-        },
-        project.testDir.toPath(),
-        project.buildFile.toPath(),
-        project.getProfileDirectory(),
-        project.heapSize,
-        ConfigurationCaching.NONE
-    ) {
-    }
 
     data class FetchResult<T>(
         val container: T,
@@ -165,8 +163,9 @@ class ModelBuilderV2 : BaseGradleExecutor<ModelBuilderV2> {
     private fun getFileNormalizer(buildIdentifier: BuildIdentifier): FileNormalizerImpl {
         return FileNormalizerImpl(
             buildId = buildIdentifier,
-            gradleUserHome = GradleTestProject.getGradleUserHome(GradleTestProject.BUILD_DIR).toFile(),
-            androidSdk = project?.androidSdkDir,
+            gradleUserHome = projectLocation.testLocation.gradleUserHome.toFile(),
+            gradleCacheDir = projectLocation.testLocation.gradleCacheDir,
+            androidSdkDir = project?.androidSdkDir,
             androidPrefsDir = preferencesRootDir,
             androidNdkSxSRoot = project?.androidNdkSxSRootSymlink,
             localRepos = GradleTestProject.localRepositories,
@@ -290,7 +289,8 @@ class ModelBuilderV2 : BaseGradleExecutor<ModelBuilderV2> {
 class FileNormalizerImpl(
     buildId: BuildIdentifier,
     gradleUserHome: File,
-    androidSdk: File?,
+    gradleCacheDir: File,
+    androidSdkDir: File?,
     androidPrefsDir: File?,
     androidNdkSxSRoot: File?,
     localRepos: List<Path>,
@@ -310,20 +310,11 @@ class FileNormalizerImpl(
 
         mutableList.add(RootData(buildId.rootDir, "PROJECT"))
 
-        // Custom root for Gradle's transform cache. We'll replace not the full path but
-        // re-inject the paths into it. The goal is to remove the checksum.
-        // Must be in the list before gradleUserHome
-        val gradleTransformCache: File = FileUtils.join(
-            gradleUserHome,
-            "caches", "transforms-2", "files-2.1"
-        )
-        mutableList.add(RootData(gradleTransformCache, "GRADLE") {
-            // re-inject the segments between {GRADLE} and the relative path
-            // and remove the actual checksum (size 32)
+        mutableList.add(RootData(gradleCacheDir, "GRADLE_CACHE") {
+            // Remove the actual checksum (size 32)
             // incoming string is "XXXX/..." so removing XXX leaves a leading /
-            "caches/transforms-2/files-2.1/{CHECKSUM}${it.substring(32)}"
+            "{CHECKSUM}${it.substring(32)}"
         })
-
         mutableList.add(RootData(gradleUserHome, "GRADLE"))
 
         androidNdkSxSRoot?.resolve(defaultNdkSideBySideVersion)?.let {
@@ -338,7 +329,7 @@ class FileNormalizerImpl(
             )
         }
 
-        androidSdk?.let {
+        androidSdkDir?.let {
             mutableList.add(RootData(it, "ANDROID_SDK"))
         }
         androidPrefsDir?.let {

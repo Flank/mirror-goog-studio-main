@@ -19,7 +19,7 @@ package com.android.build.gradle.integration.common.fixture;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
+import com.android.build.gradle.integration.common.fixture.gradle_project.ProjectLocation;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.Option;
@@ -34,7 +34,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -65,27 +64,24 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
     ModelBuilder(@NonNull GradleTestProject project, @NonNull ProjectConnection projectConnection) {
         super(
                 project,
+                project.getLocation(),
                 projectConnection,
                 project::setLastBuildResult,
-                project.getTestDir().toPath(),
-                project.getBuildFile().toPath(),
                 project.getProfileDirectory(),
                 project.getHeapSize(),
                 ConfigurationCaching.NONE);
     }
 
     public ModelBuilder(
+            @NonNull ProjectLocation projectLocation,
             @NonNull ProjectConnection projectConnection,
             @NonNull Consumer<GradleBuildResult> lastBuildResultConsumer,
-            @NonNull Path projectDirectory,
-            @Nullable Path buildDotGradleFile,
             @NonNull GradleTestProjectBuilder.MemoryRequirement heapSize) {
         super(
                 null,
+                projectLocation,
                 projectConnection,
                 lastBuildResultConsumer,
-                projectDirectory,
-                buildDotGradleFile,
                 null /*profileDirectory*/,
                 heapSize,
                 ConfigurationCaching.NONE);

@@ -77,8 +77,8 @@ public class AppWithClassifierDepTest {
         Library library = javaItems.asSingleLibrary();
         assertThat(library.getArtifact())
                 .named("jar location")
-                .isEqualTo(new File(
-                        project.getTestDir(), "repo/com/foo/sample/1.0/sample-1.0.jar"));
+                .isEqualTo(
+                        new File(project.getTestDir(), "repo/com/foo/sample/1.0/sample-1.0.jar"));
     }
 
     @Test
@@ -98,9 +98,10 @@ public class AppWithClassifierDepTest {
         Library library = getLibraryByCoordinate(libraries, "com.foo:sample:1.0:testlib@jar");
         assertThat(library.getArtifact())
                 .named("jar location")
-                .isEqualTo(new File(
-                        project.getTestDir(),
-                        "repo/com/foo/sample/1.0/sample-1.0-testlib.jar"));
+                .isEqualTo(
+                        new File(
+                                project.getTestDir(),
+                                "repo/com/foo/sample/1.0/sample-1.0-testlib.jar"));
 
         library = getLibraryByCoordinate(libraries, "com.foo:sample:1.0@jar");
         assertThat(library.getArtifact())

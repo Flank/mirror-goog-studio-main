@@ -80,7 +80,6 @@ public class NativeSoPackagingFromJarTest {
 "  compile files(\"libs/bar.jar\")\n" +
 "}\n");
 
-
         File appDir = appProject.getTestDir();
         createJarWithNativeLib(new File(appDir, "libs"), "foo.jar", false);
 

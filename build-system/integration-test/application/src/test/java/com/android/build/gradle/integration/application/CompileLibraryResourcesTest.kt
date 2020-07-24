@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatA
 import com.android.build.gradle.internal.res.shrinker.DummyContent
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
-import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils

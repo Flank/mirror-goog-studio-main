@@ -9,7 +9,6 @@ import com.android.build.gradle.integration.common.fixture.SourceSetContainerUti
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.SourceProviderHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;

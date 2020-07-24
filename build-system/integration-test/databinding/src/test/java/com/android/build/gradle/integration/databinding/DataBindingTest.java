@@ -51,7 +51,6 @@ public class DataBindingTest {
     }
     private final boolean myWithoutAdapters;
     private final boolean myLibrary;
-    private final String buildFile;
     private final String myDbPkg;
 
     public DataBindingTest(boolean library, boolean withoutAdapters, boolean useAndroidX) {
@@ -67,14 +66,16 @@ public class DataBindingTest {
             options.add("withoutadapters");
         }
         String androidX = BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX;
+
+        String buildFile =
+                options.isEmpty() ? null : "build." + Joiner.on('-').join(options) + ".gradle";
+
         project =
                 GradleTestProject.builder()
                         .fromTestProject("databinding")
+                        .withBuildFileName(buildFile)
                         .addGradleProperties(androidX)
                         .create();
-        buildFile = options.isEmpty()
-                ? null
-                : "build." + Joiner.on('-').join(options) + ".gradle";
     }
 
     @Rule
@@ -82,7 +83,6 @@ public class DataBindingTest {
 
     @Test
     public void checkApkContainsDataBindingClasses() throws Exception {
-        project.setBuildFile(buildFile);
         GradleBuildResult result = project.executor().run("assembleDebug");
 
         String bindingClass = "Landroid/databinding/testapp/databinding/ActivityMainBinding;";

@@ -19,13 +19,16 @@ package com.android.build.gradle.integration.common.fixture;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.integration.common.fixture.gradle_project.ProjectLocation;
 import com.android.build.gradle.integration.common.utils.JacocoAgent;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.Option;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.StringOption;
+import com.android.prefs.AndroidLocation;
 import com.android.testutils.TestUtils;
+import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
@@ -89,10 +92,10 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     @NonNull
     final ProjectConnection projectConnection;
     @Nullable protected final GradleTestProject project;
+    @NonNull protected final ProjectLocation projectLocation;
     @NonNull final Consumer<GradleBuildResult> lastBuildResultConsumer;
     @NonNull private final List<String> arguments = Lists.newArrayList();
     @NonNull private final ProjectOptionsBuilder options = new ProjectOptionsBuilder();
-    @NonNull final Path projectDirectory;
     @NonNull private final GradleTestProjectBuilder.MemoryRequirement memoryRequirement;
     @NonNull private LoggingLevel loggingLevel = LoggingLevel.INFO;
     private boolean offline = true;
@@ -103,20 +106,19 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     BaseGradleExecutor(
             @Nullable GradleTestProject project,
+            @NonNull ProjectLocation projectLocation,
             @NonNull ProjectConnection projectConnection,
             @NonNull Consumer<GradleBuildResult> lastBuildResultConsumer,
-            @NonNull Path projectDirectory,
-            @Nullable Path buildDotGradleFile,
             @Nullable Path profileDirectory,
             @NonNull GradleTestProjectBuilder.MemoryRequirement memoryRequirement,
             @NonNull ConfigurationCaching configurationCaching) {
         this.project = project;
+        this.projectLocation = projectLocation;
         this.lastBuildResultConsumer = lastBuildResultConsumer;
-        this.projectDirectory = projectDirectory;
         this.projectConnection = projectConnection;
-        if (buildDotGradleFile != null
-                && !buildDotGradleFile.getFileName().toString().equals("build.gradle")) {
-            arguments.add("--build-file=" + buildDotGradleFile.toString());
+        File buildFile = (project != null) ? project.getBuildFile() : null;
+        if (buildFile != null && !buildFile.getName().equals("build.gradle")) {
+            arguments.add("--build-file=" + buildFile.toString());
         }
         this.memoryRequirement = memoryRequirement;
         this.configurationCaching = configurationCaching;
@@ -128,7 +130,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     /** Return the default build cache location for a project. */
     public final File getBuildCacheDir() {
-        return new File(projectDirectory.toFile(), ".buildCache");
+        return new File(projectLocation.getProjectDir(), ".buildCache");
     }
 
     public final T with(@NonNull BooleanOption option, boolean value) {
@@ -263,27 +265,45 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         }
 
         if (!localPrefsRoot) {
-            Path preferencesRootDir;
+            File preferencesRootDir;
             if (perTestPrefsRoot) {
-                preferencesRootDir = projectDirectory.getParent().resolve("android_prefs_root");
+                preferencesRootDir =
+                        new File(
+                                projectLocation.getProjectDir().getParentFile(),
+                                "android_prefs_root");
             } else {
-                preferencesRootDir = GradleTestProject.ANDROID_PREFS_ROOT.toPath();
+                preferencesRootDir =
+                        new File(
+                                projectLocation.getTestLocation().getBuildDir(),
+                                "android_prefs_root");
             }
 
-            Files.createDirectories(preferencesRootDir);
+            FileUtils.mkdirs(preferencesRootDir);
 
-            this.preferencesRootDir = preferencesRootDir.toFile();
+            this.preferencesRootDir = preferencesRootDir;
 
             arguments.add(
                     String.format(
-                            "-D%s=%s", "ANDROID_PREFS_ROOT", preferencesRootDir.toAbsolutePath()));
+                            "-D%s=%s",
+                            AndroidLocation.ANDROID_PREFS_ROOT,
+                            preferencesRootDir.getAbsolutePath()));
         }
 
         return arguments;
     }
 
     /** Location of the Android Preferences folder (normally in ~/.android) */
-    @Nullable public File preferencesRootDir = null;
+    @Nullable private File preferencesRootDir = null;
+
+    @NonNull
+    public File getPreferencesRootDir() {
+        if (preferencesRootDir == null) {
+            throw new RuntimeException(
+                    "cannot call getPreferencesRootDir before it is initialized");
+        }
+
+        return preferencesRootDir;
+    }
 
     protected final Set<String> getOptionPropertyNames() {
         return options.getOptions()
@@ -309,7 +329,8 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         }
 
         if (JacocoAgent.isJacocoEnabled()) {
-            jvmArguments.add(JacocoAgent.getJvmArg());
+            jvmArguments.add(
+                    JacocoAgent.getJvmArg(projectLocation.getTestLocation().getBuildDir()));
         }
 
         jvmArguments.add("-XX:ErrorFile=" + jvmLogDir.resolve("java_error.log").toString());
@@ -350,8 +371,11 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             return;
         }
 
+        Path projectDirectory = projectLocation.getProjectDir().toPath();
+
         Path outputs;
         if (TestUtils.runningFromBazel()) {
+
             // Put in test undeclared output directory.
             outputs =
                     TestUtils.getTestOutputDir()

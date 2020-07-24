@@ -85,9 +85,10 @@ public class VectorDrawableTest {
 
         // Check HDPI. Test project contains the hdpi png, it should be used instead of the
         // generated one.
-        File generatedPng = new File(
-                project.getTestDir(),
-                "build/generated/res/pngs/debug/drawable-hdpi/special_heart.png");
+        File generatedPng =
+                new File(
+                        project.getTestDir(),
+                        "build/generated/res/pngs/debug/drawable-hdpi/special_heart.png");
         assertThat(generatedPng).doesNotExist();
         File pngToUse =
                 new File(
@@ -96,9 +97,10 @@ public class VectorDrawableTest {
         assertThat(pngToUse).exists();
 
         // Check XHDPI.
-        generatedPng = new File(
-                project.getTestDir(),
-                "build/generated/res/pngs/debug/drawable-xhdpi/special_heart.png");
+        generatedPng =
+                new File(
+                        project.getTestDir(),
+                        "build/generated/res/pngs/debug/drawable-xhdpi/special_heart.png");
         pngToUse =
                 new File(
                         project.getTestDir(),
@@ -205,12 +207,12 @@ public class VectorDrawableTest {
 
         long xmlTimestamp = intermediatesXml.lastModified();
 
-        File generatedPng = new File(
-                project.getTestDir(),
-                "build/generated/res/pngs/debug/drawable-hdpi/special_heart.png");
-        File originalPng = new File(
-                project.getTestDir(),
-                "src/main/res/drawable-hdpi/special_heart.png");
+        File generatedPng =
+                new File(
+                        project.getTestDir(),
+                        "build/generated/res/pngs/debug/drawable-hdpi/special_heart.png");
+        File originalPng =
+                new File(project.getTestDir(), "src/main/res/drawable-hdpi/special_heart.png");
         File pngToUse =
                 new File(
                         project.getTestDir(),
@@ -240,9 +242,10 @@ public class VectorDrawableTest {
         assertThat(intermediatesXml).exists();
         long xmlTimestamp = intermediatesXml.lastModified();
 
-        File generatedPng = new File(
-                project.getTestDir(),
-                "build/generated/res/pngs/debug/drawable-xhdpi/special_heart.png");
+        File generatedPng =
+                new File(
+                        project.getTestDir(),
+                        "build/generated/res/pngs/debug/drawable-xhdpi/special_heart.png");
         File pngToUse =
                 new File(
                         project.getTestDir(),
@@ -251,12 +254,11 @@ public class VectorDrawableTest {
         assertThat(pngToUse).exists();
         assertThat(generatedPng).exists();
 
-
         // Create a PNG file for XHDPI. It should be used instead of the generated one.
-        File hdpiPng = new File(project.getTestDir(),
-                "src/main/res/drawable-hdpi/special_heart.png");
-        File xhdpiPng = new File(project.getTestDir(),
-                "src/main/res/drawable-xhdpi/special_heart.png");
+        File hdpiPng =
+                new File(project.getTestDir(), "src/main/res/drawable-hdpi/special_heart.png");
+        File xhdpiPng =
+                new File(project.getTestDir(), "src/main/res/drawable-xhdpi/special_heart.png");
         Files.createParentDirs(xhdpiPng);
         Files.copy(hdpiPng, xhdpiPng);
 

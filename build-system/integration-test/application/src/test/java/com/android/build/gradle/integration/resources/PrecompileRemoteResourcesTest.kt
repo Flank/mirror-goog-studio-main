@@ -181,15 +181,10 @@ class PrecompileRemoteResourcesTest {
     @get:Rule
     val project = GradleTestProject.builder().fromTestApp(testApp).create()
 
-    private val transformCacheDir = FileUtils.join(
-        GradleTestProject.getGradleUserHome(GradleTestProject.BUILD_DIR).toFile(),
-        "caches",
-        "transforms-2",
-        "files-2.1"
-    )
-
     // ensure that the cache output of any previous run of this test has been cleared
     private fun clearPreviousTransformOutput() {
+        val transformCacheDir = project.location.testLocation.gradleCacheDir
+
         if (!transformCacheDir.exists() || !transformCacheDir.isDirectory) {
             return
         }
@@ -278,6 +273,8 @@ class PrecompileRemoteResourcesTest {
 
     // TODO: find a better way to check the output of the transform
     private fun checkAarResourcesCompilerTransformOutput() {
+        val transformCacheDir = project.location.testLocation.gradleCacheDir
+
         assertThat(transformCacheDir.exists()).isTrue()
         assertThat(transformCacheDir.isDirectory).isTrue()
 

@@ -21,8 +21,6 @@ import static com.android.testutils.truth.FileSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
 

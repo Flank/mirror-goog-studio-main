@@ -33,6 +33,7 @@ import com.android.apksig.ApkVerifier;
 import com.android.apksig.ApkVerifier.IssueWithParams;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelBuilder;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
@@ -294,8 +295,9 @@ public class SigningTest {
 
     @Test
     public void signingConfigsModel() throws Exception {
+        ModelBuilder modelBuilder = project.model();
         AndroidProject androidProject =
-                project.model()
+                modelBuilder
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
                         .fetchAndroidProjects()
                         .getOnlyModel();
@@ -310,7 +312,7 @@ public class SigningTest {
         new SigningConfigHelper(
                         debugSigningConfig,
                         BuilderConstants.DEBUG,
-                        GradleTestProject.ANDROID_PREFS_ROOT)
+                        modelBuilder.getPreferencesRootDir())
                 .test();
 
         SigningConfig mySigningConfig =

@@ -22,7 +22,6 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.testutils.TestInputsGenerator
 import com.google.common.truth.Truth.assertThat
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import java.nio.file.Files
