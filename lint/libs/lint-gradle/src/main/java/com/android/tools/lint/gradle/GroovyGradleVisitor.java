@@ -35,6 +35,7 @@ import org.codehaus.groovy.ast.CodeVisitorSupport;
 import org.codehaus.groovy.ast.GroovyCodeVisitor;
 import org.codehaus.groovy.ast.builder.AstBuilder;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
@@ -84,6 +85,34 @@ public class GroovyGradleVisitor extends GradleVisitor {
                         assert !mMethodCallStack.isEmpty();
                         assert mMethodCallStack.get(mMethodCallStack.size() - 1) == expression;
                         mMethodCallStack.remove(mMethodCallStack.size() - 1);
+                    }
+
+                    @Override
+                    public void visitBinaryExpression(BinaryExpression expression) {
+                        if (expression.getOperation().getText().equals("=")) {
+                            Expression leftExpression = expression.getLeftExpression();
+                            List<String> hierarchy = getPropertyHierarchy(leftExpression);
+                            String property = null;
+                            String parent = null;
+                            String parentParent = null;
+                            if (hierarchy != null && hierarchy.size() > 0) {
+                                property = hierarchy.get(0);
+                                if (hierarchy.size() == 2) {
+                                    parent = hierarchy.get(1);
+                                    if (!mMethodCallStack.isEmpty()) {
+                                        parentParent = getParent();
+                                    }
+                                } else if (hierarchy.size() > 2) {
+                                    parent = hierarchy.get(1);
+                                    parentParent = hierarchy.get(2);
+                                } else if (!mMethodCallStack.isEmpty()) {
+                                    parent = getParent();
+                                    parentParent = getParentN(2);
+                                }
+                                maybeCheckDslProperty(property, parent, parentParent, expression);
+                            }
+                        }
+                        super.visitBinaryExpression(expression);
                     }
 
                     @Override
@@ -227,6 +256,37 @@ public class GroovyGradleVisitor extends GradleVisitor {
                         return result;
                     }
 
+                    private List<String> getPropertyHierarchy(
+                            Expression propertyOrVariableExpression) {
+                        ArrayList<String> result = new ArrayList<>();
+                        if (propertyOrVariableExpression instanceof VariableExpression) {
+                            VariableExpression variableExpression =
+                                    (VariableExpression) propertyOrVariableExpression;
+                            result.add(variableExpression.getName());
+                            return result;
+                        } else if (!(propertyOrVariableExpression instanceof PropertyExpression)) {
+                            return null;
+                        }
+                        PropertyExpression propertyExpression =
+                                (PropertyExpression) propertyOrVariableExpression;
+                        result.add(propertyExpression.getPropertyAsString());
+                        Expression expression = propertyExpression.getObjectExpression();
+                        while (true) {
+                            if (expression == VariableExpression.THIS_EXPRESSION) break;
+                            else if (expression instanceof VariableExpression) {
+                                result.add(((VariableExpression) expression).getName());
+                                break;
+                            } else if (expression instanceof PropertyExpression) {
+                                propertyExpression = (PropertyExpression) expression;
+                                result.add(propertyExpression.getPropertyAsString());
+                                expression = propertyExpression.getObjectExpression();
+                            } else {
+                                return null;
+                            }
+                        }
+                        return result;
+                    }
+
                     private void checkMethodCall(
                             @NonNull String methodName,
                             @Nullable String parent,
@@ -271,6 +331,30 @@ public class GroovyGradleVisitor extends GradleVisitor {
                                             c.getMethod(),
                                             c.getArguments(),
                                             c);
+                                }
+                            }
+                        }
+                    }
+
+                    private void maybeCheckDslProperty(
+                            @NonNull String property,
+                            @Nullable String parent,
+                            @Nullable String parentParent,
+                            BinaryExpression b) {
+                        if (parent != null) {
+                            Expression rightExpression = b.getRightExpression();
+                            if (rightExpression != null) {
+                                String value = getText(rightExpression);
+                                for (GradleScanner scanner : detectors) {
+                                    scanner.checkDslPropertyAssignment(
+                                            context,
+                                            property,
+                                            value,
+                                            parent,
+                                            parentParent,
+                                            b.getLeftExpression(),
+                                            b,
+                                            b);
                                 }
                             }
                         }
