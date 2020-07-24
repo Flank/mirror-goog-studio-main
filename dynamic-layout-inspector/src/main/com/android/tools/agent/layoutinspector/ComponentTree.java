@@ -16,6 +16,7 @@
 
 package com.android.tools.agent.layoutinspector;
 
+import android.graphics.Matrix;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -67,12 +68,37 @@ class ComponentTree {
         int packageName = toInt(getPackageName(klass));
         int className = toInt(klass.getSimpleName());
         int textValue = toInt(getTextValue(view));
-        int[] location = new int[2];
+        int[] untransformedLocation = new int[4];
+        untransformedLocation[2] = view.getWidth();
+        untransformedLocation[3] = view.getHeight();
+        int[] transformedCorners = null;
         if (parent == null || parentLocation == null) {
-            view.getLocationOnScreen(location);
+            view.getLocationOnScreen(untransformedLocation);
         } else {
-            location[0] = view.getLeft() + parentLocation[0] - parent.getScrollX();
-            location[1] = view.getTop() + parentLocation[1] - parent.getScrollY();
+            Matrix transform = new Matrix();
+            view.transformMatrixToGlobal(transform);
+            if (transform.isIdentity()) {
+                view.getLocationOnScreen(untransformedLocation);
+            } else {
+                float[] corners = new float[8];
+                corners[0] = 0;
+                corners[1] = 0;
+                corners[2] = view.getWidth();
+                corners[3] = 0;
+                corners[4] = 0;
+                corners[5] = view.getHeight();
+                corners[6] = view.getWidth();
+                corners[7] = view.getHeight();
+                transform.mapPoints(corners);
+                transformedCorners = new int[8];
+                for (int i = 0; i < 8; i += 2) {
+                    transformedCorners[i] = Math.round(corners[i]);
+                    transformedCorners[i + 1] = Math.round(corners[i + 1]);
+                }
+
+                untransformedLocation[0] = view.getLeft() + parentLocation[0] - parent.getScrollX();
+                untransformedLocation[1] = view.getTop() + parentLocation[1] - parent.getScrollY();
+            }
         }
         int flags = 0;
         ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
@@ -84,10 +110,8 @@ class ComponentTree {
                         buffer,
                         parent != null,
                         viewId,
-                        location[0],
-                        location[1],
-                        view.getWidth(),
-                        view.getHeight(),
+                        untransformedLocation,
+                        transformedCorners,
                         className,
                         packageName,
                         textValue,
@@ -126,7 +150,7 @@ class ComponentTree {
                 // The tree changed. Start over.
                 throw new LayoutInspectorService.LayoutModifiedException();
             }
-            loadView(viewBuffer, group.getChildAt(index), group, location);
+            loadView(viewBuffer, group.getChildAt(index), group, untransformedLocation);
         }
     }
 
@@ -164,10 +188,8 @@ class ComponentTree {
             long event,
             boolean isSubView,
             long drawId,
-            int x,
-            int y,
-            int width,
-            int height,
+            int[] untransformedBounds,
+            int[] transformedCorners,
             int className,
             int packageName,
             int textValue,

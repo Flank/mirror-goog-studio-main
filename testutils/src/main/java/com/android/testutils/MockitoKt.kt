@@ -17,6 +17,7 @@ package com.android.testutils
 
 import org.junit.rules.ExternalResource
 import org.junit.runner.Description
+import org.mockito.ArgumentMatcher
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import org.mockito.invocation.InvocationOnMock
@@ -39,6 +40,15 @@ object MockitoKt {
   inline fun <reified T> any() = any(T::class.java)
 
   /**
+   * Wrapper around [Mockito.argThat] that doesn't return null.
+   * If used with Kotlin functions that do not accept nullable types it causes a "must not be null" exception.
+   *
+   * Using the not-null assertion operator (!!) doesn't work because the result of the method call is recorded internally by Mockito.
+   * @see Mockito.argThat
+   */
+  fun <T> argThat(arg: (T) -> Boolean): T = Mockito.argThat(arg)
+
+    /**
    * Convenience wrapper around [Mockito.mock] that allows the type to be inferred.
    */
   inline fun <reified T> mock(): T = Mockito.mock(T::class.java)

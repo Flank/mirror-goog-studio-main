@@ -46,8 +46,8 @@ public class ComponentTreeTest {
                 .isEqualTo(new ResourceEntry("id", "pck", "linearLayout1"));
         assertThat(table.get(layout.getLayout()))
                 .isEqualTo(new ResourceEntry("layout", "pck", "main_activity"));
-        assertThat(layout.getX()).isEqualTo(0);
-        assertThat(layout.getY()).isEqualTo(0);
+        assertThat(layout.getX()).isEqualTo(10);
+        assertThat(layout.getY()).isEqualTo(50);
         assertThat(layout.getWidth()).isEqualTo(980);
         assertThat(layout.getHeight()).isEqualTo(2000);
         assertThat(table.get(layout.getClassName())).isEqualTo("RootLinearLayout");

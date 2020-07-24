@@ -6,6 +6,7 @@ project(skia)
 set(CMAKE_CXX_STANDARD 14)
 
 include_directories(.)
+include_directories("../../../../../../../external/skia")
 include_directories("../../../../../../../external/skia/include/core")
 include_directories("../../../../../../../external/skia/include/utils")
 include_directories("../../../../../../../external/grpc-grpc/include")
@@ -14,4 +15,5 @@ include_directories("../../../../../../../bazel-bin/tools/base/dynamic-layout-in
 
 add_executable(skia
         server.cc
-        tree_building_canvas.cc tree_building_canvas.h)
+        tree_building_canvas.cc tree_building_canvas.h
+        tree_building_canvas_v0.cc tree_building_canvas_v0.h)

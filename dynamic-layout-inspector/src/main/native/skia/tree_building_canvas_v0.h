@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <SkNoDrawCanvas.h>
 #include <google/protobuf/text_format.h>
 #include <skia.pb.h>
 
@@ -20,18 +21,18 @@
 #include <iostream>
 #include <memory>
 
-#include "SkCanvasVirtualEnforcer.h"
+#include "SkCanvas.h"
 #include "SkPicture.h"
-#include "SkScalar.h"
 #include "SkStream.h"
-#include "SkSurface.h"
 
-#ifndef SKIA_TREEBUILDINGCANVAS_H
-#define SKIA_TREEBUILDINGCANVAS_H
-
-namespace v1 {
-
+#ifndef SKIA_TREEBUILDINGCANVASV0_H
+#define SKIA_TREEBUILDINGCANVASV0_H
+namespace v0 {
 struct View {
+  // The canvas into which to draw. Before any actual draw commands have been
+  // done is a SkNoDrawCanvas, to track any transformations that are applied.
+  std::unique_ptr<SkCanvas> canvas;
+
   // The node corresponding to this view that will eventually be returned to
   // studio via grpc. Reference is kept here so we can set up the parent/child
   // relationship between nodes.
@@ -40,18 +41,34 @@ struct View {
   // Whether we've drawn into this view yet.
   bool didDraw = false;
 
-  long id;
+  SkScalar offsetX = 0;
+  SkScalar offsetY = 0;
+  SkScalar width = 0;
+  SkScalar height = 0;
 
-  explicit View(long id) : id(id) {}
+  // The bitmap data. Proto can only take ownership of strings, not arrays, so
+  // this is how we store it.
+  std::unique_ptr<std::string> image;
+
+  // The class of this view
+  const char* label = nullptr;
+
+  // Whether we've performed any transforms in this view yet. The first
+  // concatenation (if it comes before any draw commands) actually applies to
+  // the previous view, not this one, so this tracks whether that first concat
+  // has happened already
+  bool didConcat = false;
+
+  View(SkScalar width, SkScalar height, SkScalar offsetX, SkScalar offsetY)
+      : offsetX(offsetX), offsetY(offsetY), width(width), height(height) {
+    canvas.reset(new SkNoDrawCanvas(width, height));
+  }
 };
 
-class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
+class TreeBuildingCanvas : public SkCanvas {
  public:
-  static void ParsePicture(
-      const char* skp, size_t len, int version,
-      const ::google::protobuf::RepeatedPtrField<
-          ::layoutinspector::proto::RequestedNodeInfo>* requested_node_info,
-      ::layoutinspector::proto::InspectorView* root) {
+  static void ParsePicture(const char* skp, size_t len,
+                           ::layoutinspector::proto::InspectorView* root) {
 #ifdef TREEBUILDINGCANVAS_DEBUG
     std::cerr << "###start" << std::endl;
 #endif
@@ -62,8 +79,7 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
       return;
     }
     picture->ref();
-
-    TreeBuildingCanvas canvas(version, root, requested_node_info);
+    TreeBuildingCanvas canvas(root);
     picture->playback(&canvas);
 
     picture->unref();
@@ -75,24 +91,14 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
   ~TreeBuildingCanvas() override;
 
  protected:
-  explicit TreeBuildingCanvas(
-      int version, ::layoutinspector::proto::InspectorView* r,
-      const ::google::protobuf::RepeatedPtrField<
-          ::layoutinspector::proto::RequestedNodeInfo>* requested_node_info)
-      : SkCanvasVirtualEnforcer<SkCanvas>() {
-    request_version = version;
+  explicit TreeBuildingCanvas(::layoutinspector::proto::InspectorView* r)
+      : SkCanvas() {
     root = r;
-    for (const ::layoutinspector::proto::RequestedNodeInfo& node :
-         *requested_node_info) {
-      requested_nodes.insert(std::make_pair(
-          node.id(),
-          SkIRect::MakeXYWH(node.x(), node.y(), node.width(), node.height())));
-    }
-
-    real_canvas = nullptr;
   }
 
   void didConcat(const SkMatrix& matrix) override;
+
+  void fixTranslation(const SkMatrix& matrix, View& view) const;
 
   void didSetMatrix(const SkMatrix& matrix) override;
 
@@ -182,7 +188,8 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
   void onDrawPicture(const SkPicture* picture, const SkMatrix* matrix,
                      const SkPaint* paint) override;
 
-  void onDrawAnnotation(const SkRect&, const char* key, SkData*) override;
+  void onDrawAnnotation(const SkRect& rect, const char* key,
+                        SkData* value) override;
 
   void onClipRect(const SkRect& rect, SkClipOp op,
                   ClipEdgeStyle edgeStyle) override;
@@ -190,48 +197,31 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
   void onClipRRect(const SkRRect& rrect, SkClipOp op,
                    ClipEdgeStyle edgeStyle) override;
 
-  void onClipPath(const SkPath& path, SkClipOp op,
-                  ClipEdgeStyle edgeStyle) override;
-
-  void onClipRegion(const SkRegion& deviceRgn, SkClipOp op) override;
-
-  void onDrawEdgeAAQuad(const SkRect& rect, const SkPoint clip[4],
-                        SkCanvas::QuadAAFlags aaFlags, const SkColor4f& color,
-                        SkBlendMode mode) override;
-
-  void onDrawEdgeAAImageSet(const SkCanvas::ImageSetEntry imageSet[], int count,
-                            const SkPoint dstClips[],
-                            const SkMatrix preViewMatrices[],
-                            const SkPaint* paint,
-                            SkCanvas::SrcRectConstraint constraint) override;
-
  private:
-  SkCanvas* real_canvas;
-  sk_sp<SkSurface> surface;
-
   void exitView(bool hasData);
 
-  void addView(long id);
+  void addView(const SkRect& rect);
 
-  static long parseIdFromLabel(const char* label);
+  void createRealCanvas();
+
+  std::string parseIdFromLabel(const char* label);
 
   std::deque<View> views;
 
-  int request_version;
+  // See b/121323050
+  // Currently there are some transforms applied after the annotation indicating
+  // the start of a node that should actually be done in the context of the
+  // parent node. This is a hack to make them go into the right place--while
+  // we're "inHeader", the commands are applied to the parent.
+  bool inHeader = true;
   ::layoutinspector::proto::InspectorView* root;
-  std::map<long, SkIRect> requested_nodes;
 
-  // Create a view tree node to go into the returned proto.
+  // Create a view tree node to go into the returned proto. This will release
+  //& data and give ownership of it to the newly created node.
   ::layoutinspector::proto::InspectorView* createNode(
-      long id, std::reverse_iterator<std::deque<View>::iterator>& parent,
-      bool hasData);
-
-#ifdef TREEBUILDINGCANVAS_DEBUG
-  int debug_indent = 0;
-
-  void printDebug(const char* format, ...);
-
-#endif
+      std::string& id, std::string& type, int offsetX, int offsetY, int width,
+      int height, std::unique_ptr<std::string> data,
+      std::reverse_iterator<std::deque<View>::iterator>& parent);
 };
-}  // namespace v1
-#endif  // SKIA_TREEBUILDINGCANVAS_H
+}  // namespace v0
+#endif  // SKIA_TREEBUILDINGCANVASV0_H

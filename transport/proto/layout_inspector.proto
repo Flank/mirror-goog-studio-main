@@ -85,6 +85,17 @@ message Locale {
   int32 script = 4;
 }
 
+message Bounds {
+  sint32 top_left_x = 1;
+  sint32 top_left_y = 2;
+  sint32 top_right_x = 3;
+  sint32 top_right_y = 4;
+  sint32 bottom_left_x = 5;
+  sint32 bottom_left_y = 6;
+  sint32 bottom_right_x = 7;
+  sint32 bottom_right_y = 8;
+}
+
 message View {
   int64 draw_id = 1;              // the uniqueDrawingId
   Resource view_id = 2;           // the id attribute on a View
@@ -101,7 +112,8 @@ message View {
   int32 compose_package_hash = 13;// name of method of lambda invocation
   int32 compose_offset = 14;      // package part of lambda invocation
   int32 compose_line_number = 15; // line number of lambda invocation
-  repeated View sub_view = 16;
+  Bounds transformed_bounds = 16;
+  repeated View sub_view = 17;
 }
 
 message Property {
