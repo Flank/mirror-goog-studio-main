@@ -49,7 +49,9 @@ class BuildDirTest {
         project.execute("assembleDebug")
 
         assertThat(buildDir).isDirectory()
-        assertThat(project.file("build")).doesNotExist()
+        // $project/build dir is used by default in gradle 6.6 to store configuration caching
+        // report, so check for the intermediates instead.
+        assertThat(project.file("build/intermediates")).doesNotExist()
     }
 
     private fun changeBuildDir(): File {

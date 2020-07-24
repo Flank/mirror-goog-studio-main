@@ -42,16 +42,14 @@ import java.util.zip.ZipFile
 class ShrinkResourcesNewShrinkerTest {
     @get:Rule
     var project = builder().fromTestProject("shrink")
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
-        .setTargetGradleVersion("6.6-20200609220026+0000")
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         // b/157470515, http://b/149978740
         .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=26")
         .create()
 
     @get:Rule
     var projectWithDynamicFeatureModules = builder().fromTestProject("shrinkDynamicFeatureModules")
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
-        .setTargetGradleVersion("6.6-20200609220026+0000")
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         // b/157470515, http://b/149978740
         .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=5")
         .create()

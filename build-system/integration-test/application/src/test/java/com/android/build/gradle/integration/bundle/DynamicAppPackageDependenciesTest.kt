@@ -29,8 +29,7 @@ class DynamicAppPackageDependenciesTest {
     @JvmField
     val project = GradleTestProject.builder()
         .withGradleBuildCacheDirectory(File("local-build-cache"))
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
-        .setTargetGradleVersion("6.6-20200609220026+0000")
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         // b/157470515
         .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
         .fromTestProject("dynamicApp").create()

@@ -68,8 +68,7 @@ class DataBindingWithDynamicFeaturesTest(private val useAndroidX : Boolean) {
         .fromTestProject("databindingWithDynamicFeatures")
         .addGradleProperties(BooleanOption.USE_ANDROID_X.propertyName + "=" + useAndroidX)
         .withDependencyChecker(false)
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
-        .setTargetGradleVersion("6.6-20200609220026+0000")
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         // b/157470515
         .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
         .create()

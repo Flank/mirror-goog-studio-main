@@ -236,12 +236,20 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             arguments.add("--warning-mode=fail");
         }
 
-        if (configurationCaching == ConfigurationCaching.WARN_GRADLE_6_6) {
-            arguments.add("--configuration-cache");
-            arguments.add("--configuration-cache-problems=warn");
-        } else if (configurationCaching != ConfigurationCaching.NONE) {
-            arguments.add(
-                    "--configuration-cache=" + configurationCaching.name().toLowerCase(Locale.US));
+        switch (configurationCaching) {
+            case NONE:
+                break;
+            case ON:
+                arguments.add("--configuration-cache");
+                arguments.add("--configuration-cache-problems=fail");
+                break;
+            case OFF:
+                arguments.add("--no-configuration-cache");
+                break;
+            case WARN:
+                arguments.add("--configuration-cache");
+                arguments.add("--configuration-cache-problems=warn");
+                break;
         }
 
         if (!sdkInLocalProperties) {
@@ -387,10 +395,8 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     public enum ConfigurationCaching {
         ON,
         OFF,
-        WARN,
         NONE,
-        // Make a default once we migrate to Gradle 6.6
-        WARN_GRADLE_6_6,
+        WARN,
     }
 
     @NonNull

@@ -27,6 +27,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
@@ -99,18 +100,17 @@ public class DataBindingIncrementalTest {
         this.withKotlin = withKotlin;
         mainActivityBindingClasses =
                 ImmutableList.of(MAIN_ACTIVITY_BINDING_CLASS, MAIN_ACTIVITY_BINDING_CLASS_IMPL);
-        project =
+        GradleTestProjectBuilder builder =
                 GradleTestProject.builder()
                         .fromTestProject("databindingIncremental")
                         .addGradleProperties(
                                 BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX)
-                        // http://b/158092419
-                        .withConfigurationCaching(
-                                withKotlin
-                                        ? BaseGradleExecutor.ConfigurationCaching.OFF
-                                        : BaseGradleExecutor.ConfigurationCaching.ON)
-                        .withKotlinGradlePlugin(withKotlin)
-                        .create();
+                        .withKotlinGradlePlugin(withKotlin);
+        if (withKotlin) {
+            builder.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
+        }
+
+        project = builder.create();
     }
 
     @Before
