@@ -188,11 +188,12 @@ public class ImlToIr {
                     JpsLibrary library = libraryDependency.getLibrary();
 
                     if (library == null) {
-                        if (!ignoreWarnings(jpsModule)) {
+                        String libraryName =
+                                libraryDependency.getLibraryReference().getLibraryName();
+                        if (!ignoreWarnings(jpsModule.getName(), libraryName)) {
                             logger.warning(
                                     "Module %s: invalid item '%s' in the dependencies list",
-                                    jpsModule.getName(),
-                                    libraryDependency.getLibraryReference().getLibraryName());
+                                    jpsModule.getName(), libraryName);
                         }
                         continue;  // Like IDEA, ignore dependencies on non-existent libraries.
                     }
@@ -207,9 +208,14 @@ public class ImlToIr {
                     if (irLibrary == null) {
                         irLibrary = new IrLibrary(library.getName(), owner);
                         List<File> files = library.getFiles(JpsOrderRootType.COMPILED);
-                        // Library files are sometimes returned in file system order. Which changes
-                        // across systems. Choose alphabetical always:
-                        Collections.sort(files);
+                        // Newer versions of jps sort the files correctly, for now using legacy
+                        // sorting if not strict
+                        if (!config.strict) {
+                            // Library files are sometimes returned in file system order. Which
+                            // changes
+                            // across systems. Choose alphabetical always:
+                            Collections.sort(files);
+                        }
                         for (File file : files) {
                             // "KotlinPlugin" is the library that upstream IntelliJ uses that points
                             // to
@@ -372,7 +378,7 @@ public class ImlToIr {
      * cycles) or if it involves our code as well.
      */
     private static boolean isCycleAllowed(List<JpsModule> cycle) {
-        return cycle.stream().allMatch(ImlToIr::ignoreWarnings);
+        return cycle.stream().map(JpsModule::getName).allMatch(ImlToIr::ignoreWarnings);
     }
 
     /**
@@ -380,15 +386,19 @@ public class ImlToIr {
      *
      * <p>We don't warn users about modules we don't maintain, i.e. platform modules.
      */
-    public static boolean ignoreWarnings(JpsModule module) {
-        return ignoreWarnings(module.getName());
+    public static boolean ignoreWarnings(String moduleName) {
+        return ignoreWarnings(moduleName, "");
     }
 
-    private static boolean ignoreWarnings(String moduleName) {
-        return moduleName.startsWith("intellij.platform")
+    private static boolean ignoreWarnings(String moduleName, String libraryName) {
+        if (moduleName.startsWith("intellij.platform")
                 || moduleName.startsWith("intellij.idea")
                 || moduleName.startsWith("intellij.c")
-                || moduleName.startsWith("intellij.java");
+                || moduleName.startsWith("intellij.java")) return true;
+        if (libraryName.equals("studio-platform") || libraryName.startsWith("studio-plugin-")) {
+            return true;
+        }
+        return false;
     }
 
     private static String scopeToColor(IrModule.Scope scope) {
