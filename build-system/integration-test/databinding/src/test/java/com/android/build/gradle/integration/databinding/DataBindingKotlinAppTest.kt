@@ -22,11 +22,14 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS
+import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import java.io.File
 
 /** Assemble tests for kotlin. */
 @RunWith(FilterableParameterized::class)
@@ -58,18 +61,28 @@ class DataBindingKotlinAppTest(useAndroidX: Boolean) {
     @Test
     fun compile() {
         project.executor().run("app:assembleDebug")
+        val app = project.getSubproject("app")
+
+        // Dependency artifacts should be present: 2 from androidx.databinding.library.baseAdapters
+        // and 2 from the library subproject (regression test for bug 161814391).
+        val dependencyArtifactsDir =
+            File(DATA_BINDING_DEPENDENCY_ARTIFACTS.getOutputDir(app.buildDir), "debug")
+        assertThat(dependencyArtifactsDir.list().size).isEqualTo(4)
+
+        // Check APK's contents
         val appBindingClass = "Lcom/example/android/kotlin/databinding/ActivityLayoutBinding;"
         val libBindingClass = "Lcom/example/android/kotlin/lib/databinding/LibActivityLayoutBinding;"
-        val apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)
-        assertThat(apk).containsClass(appBindingClass)
-        assertThat(apk).containsClass(libBindingClass)
-        // implementations should be in as well.
-        assertThat(apk).containsClass(
-            appBindingClass.replace(";", "Impl;")
-        )
-        assertThat(apk).containsClass(
-            libBindingClass.replace(";", "Impl;")
-        )
+        app.getApk(GradleTestProject.ApkType.DEBUG).use {
+            assertThat(it).containsClass(appBindingClass)
+            assertThat(it).containsClass(libBindingClass)
+            // implementations should be in as well.
+            assertThat(it).containsClass(
+                appBindingClass.replace(";", "Impl;")
+            )
+            assertThat(it).containsClass(
+                libBindingClass.replace(";", "Impl;")
+            )
+        }
     }
 
     @Test
