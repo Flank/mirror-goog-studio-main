@@ -96,6 +96,8 @@ dependencies {
 
     compileOnly libs.jacoco_core
     compileOnly libs.jacoco_report
+    // already packaged in (':base:builder')
+    compileOnly project(':base:profile')
 
     // Add gradleApi to classpath for compilation, but use provided configuration so that groovy is
     // not exposed as a runtime dependency.
