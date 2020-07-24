@@ -81,17 +81,22 @@ class JavaCompileCreationAction(
             .on(AP_GENERATED_SOURCES)
 
         if (creationConfig.buildFeatures.dataBinding) {
-            // Data binding artifacts are part of the annotation processing outputs of JavaCompile
-            // if Kapt is not used; otherwise, they are the outputs of Kapt.
-            if (!usingKapt) {
-                registerDataBindingOutputs(
-                    dataBindingArtifactDir,
-                    dataBindingExportClassListFile,
-                    creationConfig.variantType.isExportDataBindingClassList,
-                    taskProvider,
-                    artifacts
-                )
-            }
+            // Register data binding artifacts as outputs. Ihere are 2 ways to do this:
+            //    (1) Register with JavaCompile when Kapt is not used, and register with Kapt when
+            //        Kapt is used.
+            //    (2) Always register with JavaCompile, and when Kapt is used, replace them with
+            //        Kapt.
+            // The first way is simpler but unfortunately will break the publishing of the artifacts
+            // because publishing takes place before the registration with Kapt (bug 161814391).
+            // Therefore, we'll have to do it the second way.
+            registerDataBindingOutputs(
+                dataBindingArtifactDir,
+                dataBindingExportClassListFile,
+                creationConfig.variantType.isExportDataBindingClassList,
+                taskProvider,
+                artifacts,
+                forJavaCompile = true
+            )
         }
     }
 
@@ -166,21 +171,35 @@ class JavaCompileCreationAction(
     }
 }
 
-/** Registers data binding artifacts as outputs of JavaCompile (or Kapt if Kapt is used). */
+/** Registers data binding artifacts as outputs of JavaCompile or Kapt. */
 fun registerDataBindingOutputs(
     dataBindingArtifactDir: DirectoryProperty,
     dataBindingExportClassListFile: RegularFileProperty,
     isExportDataBindingClassList: Boolean,
     taskProvider: TaskProvider<out Task>,
-    artifacts: ArtifactsImpl
+    artifacts: ArtifactsImpl,
+    forJavaCompile: Boolean /* Whether the task is JavaCompile or Kapt */
 ) {
-    artifacts
-        .setInitialProvider(taskProvider) { dataBindingArtifactDir }
-        .on(DATA_BINDING_ARTIFACT)
-    if (isExportDataBindingClassList) {
+    if (forJavaCompile) {
         artifacts
-            .setInitialProvider(taskProvider) { dataBindingExportClassListFile }
-            .on(DATA_BINDING_EXPORT_CLASS_LIST)
+            .setInitialProvider(taskProvider) { dataBindingArtifactDir }
+            .on(DATA_BINDING_ARTIFACT)
+        if (isExportDataBindingClassList) {
+            artifacts
+                .setInitialProvider(taskProvider) { dataBindingExportClassListFile }
+                .on(DATA_BINDING_EXPORT_CLASS_LIST)
+        }
+    } else {
+        artifacts
+            .use(taskProvider)
+            .wiredWith { dataBindingArtifactDir }
+            .toCreate(DATA_BINDING_ARTIFACT)
+        if (isExportDataBindingClassList) {
+            artifacts
+                .use(taskProvider)
+                .wiredWith { dataBindingExportClassListFile }
+                .toCreate(DATA_BINDING_EXPORT_CLASS_LIST)
+        }
     }
 }
 
