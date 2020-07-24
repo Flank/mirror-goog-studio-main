@@ -62,7 +62,7 @@ class LibraryManifestTest: VariantApiBaseTest(TestType.Script, ScriptingLanguage
                         .wiredWithFiles(
                             ManifestTransformerTask::mergedManifest,
                             ManifestTransformerTask::updatedManifest)
-                        .toTransform(com.android.build.api.artifact.ArtifactType.LIBRARY_MANIFEST)  
+                        .toTransform(com.android.build.api.artifact.ArtifactType.MERGED_MANIFEST)  
                 }
             }
             """.trimIndent()
