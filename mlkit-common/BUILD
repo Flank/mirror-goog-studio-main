@@ -40,7 +40,7 @@ iml_module(
     srcs = ["src/main/java"],
     bundled_deps = [
         "//prebuilts/tools/common/m2/repository/com/google/flatbuffers/flatbuffers-java/1.12.0:unb.flatbuffers-java",
-        "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-metadata/0.1.0-rc1:unb.tensorflow-lite-metadata",
+        "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-metadata/0.1.0-rc2:unb.tensorflow-lite-metadata",
     ],
     iml_files = ["android.sdktools.mlkit-common.iml"],
     lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
@@ -55,7 +55,7 @@ iml_module(
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//prebuilts/tools/common/m2/repository/com/google/flatbuffers/flatbuffers-java/1.12.0:unb.flatbuffers-java",
-        "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-metadata/0.1.0-rc1:unb.tensorflow-lite-metadata",
+        "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-metadata/0.1.0-rc2:unb.tensorflow-lite-metadata",
         "//tools/base/testutils:unb.studio.android.sdktools.testutils[module, test]",
         "//tools/adt/idea/.idea/libraries:unb.mockito[test]",
         "//tools/base/common:unb.studio.android.sdktools.common[module]",
