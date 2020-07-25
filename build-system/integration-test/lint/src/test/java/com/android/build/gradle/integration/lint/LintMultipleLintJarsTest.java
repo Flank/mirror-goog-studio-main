@@ -41,7 +41,7 @@ public class LintMultipleLintJarsTest {
     @Test
     public void checkBothErrorsFound() throws Exception {
         project.executor().run("clean", ":app:lintDebug");
-        File file = new File(project.getSubproject("app").getTestDir(), "lint-results.xml");
+        File file = new File(project.getSubproject("app").getProjectDir(), "lint-results.xml");
         assertThat(file).exists();
         assertThat(file).contains("id=\"ShortUniqueIdA\"");
         assertThat(file).contains("id=\"ShortUniqueIdB\"");

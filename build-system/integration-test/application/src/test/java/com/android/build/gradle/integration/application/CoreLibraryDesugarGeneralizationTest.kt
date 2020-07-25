@@ -42,10 +42,10 @@ class CoreLibraryDesugarGeneralizationTest {
 
     @Before
     fun setUp() {
-        val desugarLib = project.testDir.toPath().resolve(DESUGAR_LIB_JAR)
+        val desugarLib = project.projectDir.toPath().resolve(DESUGAR_LIB_JAR)
         TestInputsGenerator.jarWithEmptyClasses(desugarLib, listOf("test/A"))
 
-        val desugarConfig = project.testDir.toPath().resolve(DESUGAR_CONFIG_JAR)
+        val desugarConfig = project.projectDir.toPath().resolve(DESUGAR_CONFIG_JAR)
         BufferedOutputStream(Files.newOutputStream(desugarConfig)).use { outputStream ->
             ZipOutputStream(outputStream).use { zipOutputStream ->
                 val entry = ZipEntry("META-INF/desugar/d8/desugar.json")

@@ -99,7 +99,7 @@ class MultiCompositeBuildTest {
             .level(modelLevel)
             .fetchAndroidProjects()
 
-        val rootDir = project.testDir
+        val rootDir = project.projectDir
 
         testCompositeApp = File(rootDir, "TestCompositeApp").absolutePath
         testCompositeLib1 = File(rootDir, "TestCompositeLib1").absolutePath

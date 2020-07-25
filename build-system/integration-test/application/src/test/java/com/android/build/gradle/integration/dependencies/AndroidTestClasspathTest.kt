@@ -72,7 +72,7 @@ class AndroidTestClasspathTest {
             it.writeText("package test; public class Data {}")
         }
         with(project.getSubproject("app")) {
-            testDir.resolve("src/androidTest/java/test/DataTest.java").also {
+            projectDir.resolve("src/androidTest/java/test/DataTest.java").also {
                 it.parentFile.mkdirs()
                 it.writeText("package test; public class DataTest extends Data {}")
             }

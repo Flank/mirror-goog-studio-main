@@ -40,7 +40,7 @@ public class ExternalTestProjectTest {
         TestFileUtils.appendToFile(project.getSettingsFile(),
                 "include ':app1'\ninclude ':app2'\n");
 
-        File rootFile = project.getTestDir();
+        File rootFile = project.getProjectDir();
 
         // app1 module
         File app1 = new File(rootFile, "app1");

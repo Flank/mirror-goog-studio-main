@@ -284,7 +284,7 @@ public class VectorDrawableTest_Library {
 
         File generatedXmlApp =
                 FileUtils.join(
-                        app.getTestDir(),
+                        app.getProjectDir(),
                         "build",
                         "generated",
                         "res",
@@ -295,7 +295,7 @@ public class VectorDrawableTest_Library {
 
         File generatedXmlLib =
                 FileUtils.join(
-                        lib.getTestDir(),
+                        lib.getProjectDir(),
                         "build",
                         "generated",
                         "res",
@@ -314,7 +314,7 @@ public class VectorDrawableTest_Library {
 
         File generatedPngApp =
                 FileUtils.join(
-                        app.getTestDir(),
+                        app.getProjectDir(),
                         "build",
                         "generated",
                         "res",
@@ -325,7 +325,7 @@ public class VectorDrawableTest_Library {
 
         File generatedPngLib =
                 FileUtils.join(
-                        lib.getTestDir(),
+                        lib.getProjectDir(),
                         "build",
                         "generated",
                         "res",

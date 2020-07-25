@@ -42,7 +42,7 @@ public class MigratedTest {
     public void checkModelReflectsMigratedSourceProviders() throws Exception {
         AndroidProject model =
                 project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
-        File projectDir = project.getTestDir();
+        File projectDir = project.getProjectDir();
 
         assertNotEquals(
                 "Library Project",

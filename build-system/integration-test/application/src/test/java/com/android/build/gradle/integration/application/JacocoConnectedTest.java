@@ -111,7 +111,7 @@ public class JacocoConnectedTest {
                         + "    public void test2() { }\n"
                         + "}\n";
         Path exampleTest =
-                project.getTestDir()
+                project.getProjectDir()
                         .toPath()
                         .resolve("src/androidTest/java/com/example/helloworld/ExampleTest.java");
         Files.createDirectories(exampleTest.getParent());

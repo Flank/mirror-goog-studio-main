@@ -190,7 +190,7 @@ class CompileLibraryResourcesTest {
         // change me.raw
         FileUtils.writeToFile(
             FileUtils.join(
-                project.getSubproject(":library").testDir,
+                project.getSubproject(":library").projectDir,
                 "src",
                 "main",
                 "res",
@@ -219,7 +219,7 @@ class CompileLibraryResourcesTest {
         // Remove ic_launcher_background
         FileUtils.deleteIfExists(
             FileUtils.join(
-                project.getSubproject(":library").testDir,
+                project.getSubproject(":library").projectDir,
                 "src",
                 "main",
                 "res",
@@ -230,7 +230,7 @@ class CompileLibraryResourcesTest {
 
         FileUtils.writeToFile(
             FileUtils.join(
-                project.getSubproject(":app").testDir,
+                project.getSubproject(":app").projectDir,
                 "src",
                 "main",
                 "res",

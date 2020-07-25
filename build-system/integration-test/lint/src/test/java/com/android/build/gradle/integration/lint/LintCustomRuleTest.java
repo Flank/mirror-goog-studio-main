@@ -46,7 +46,7 @@ public class LintCustomRuleTest {
                         + "   This app should not have any activities.\n"
                         + "\n"
                         + "1 errors, 0 warnings";
-        File file = new File(project.getSubproject("app").getTestDir(), "lint-results.txt");
+        File file = new File(project.getSubproject("app").getProjectDir(), "lint-results.txt");
         assertThat(file).exists();
         assertThat(file).contentWithUnixLineSeparatorsIsExactly(expected);
     }

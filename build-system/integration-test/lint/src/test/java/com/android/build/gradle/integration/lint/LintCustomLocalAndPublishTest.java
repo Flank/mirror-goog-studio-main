@@ -106,9 +106,12 @@ public class LintCustomLocalAndPublishTest {
                         + "   This app should not have implement java.util.List.\n"
                         + "\n"
                         + "1 errors, 1 warnings";
-        File applintfile = new File(project.getSubproject("app").getTestDir(), "lint-results.txt");
+        File applintfile =
+                new File(project.getSubproject("app").getProjectDir(), "lint-results.txt");
         File liblintfile =
-                new File(project.getSubproject("library").getTestDir(), "library-lint-results.txt");
+                new File(
+                        project.getSubproject("library").getProjectDir(),
+                        "library-lint-results.txt");
         assertThat(applintfile).exists();
         assertThat(liblintfile).exists();
         assertThat(applintfile).contentWithUnixLineSeparatorsIsExactly(appexpected);

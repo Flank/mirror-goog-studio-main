@@ -43,7 +43,7 @@ public class LintSkipDependenciesTest {
     @Test
     public void checkLintDependenciesSkipped() throws IOException, InterruptedException {
         project.execute("clean", ":app:lintDebug");
-        File file = new File(project.getSubproject("app").getTestDir(), "lint-results.txt");
+        File file = new File(project.getSubproject("app").getProjectDir(), "lint-results.txt");
         assertThat(file).exists();
         assertThat(file).contentWithUnixLineSeparatorsIsExactly("No issues found.");
     }

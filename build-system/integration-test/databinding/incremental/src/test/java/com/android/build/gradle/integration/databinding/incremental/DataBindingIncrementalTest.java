@@ -355,7 +355,7 @@ public class DataBindingIncrementalTest {
                 "Landroid/databinding/testapp/databinding/ActivityMainBindingLandImpl;";
 
         project.execute(TRIGGER_TASK);
-        File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
+        File mainActivity = new File(project.getProjectDir(), ACTIVITY_MAIN_XML);
         File landscapeActivity = new File(mainActivity
                 .getParentFile().getParentFile(), "layout-land/activity_main.xml");
         assertThat(landscapeActivity.getParentFile().mkdirs()).isTrue();
@@ -379,7 +379,7 @@ public class DataBindingIncrementalTest {
     @Test
     public void addNewLayout() throws Exception {
         project.execute(TRIGGER_TASK);
-        File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
+        File mainActivity = new File(project.getProjectDir(), ACTIVITY_MAIN_XML);
         File activity2 = new File(mainActivity.getParentFile(), "activity2.xml");
         Files.copy(mainActivity, activity2);
         assertThat(getLayoutInfoFile("activity2-layout.xml")).doesNotExist();
@@ -404,7 +404,7 @@ public class DataBindingIncrementalTest {
 
     @Test
     public void removeLayout() throws Exception {
-        File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
+        File mainActivity = new File(project.getProjectDir(), ACTIVITY_MAIN_XML);
         File activity2 = new File(mainActivity.getParentFile(), "activity2.xml");
         Files.copy(mainActivity, activity2);
         project.execute("assembleDebug");
@@ -425,7 +425,7 @@ public class DataBindingIncrementalTest {
         // useAndroidX is not relevant to this test, so testing it when useAndroidX=true is enough
         Assume.assumeTrue(useAndroidX);
 
-        File mainActivityLayout = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
+        File mainActivityLayout = new File(project.getProjectDir(), ACTIVITY_MAIN_XML);
         File mainActivityLayoutInfo = getLayoutInfoFile("activity_main-layout.xml");
         File mainActivityBinding = getGeneratedSourceFile();
         File activity2Layout = new File(mainActivityLayout.getParentFile(), "activity2.xml");
@@ -458,7 +458,7 @@ public class DataBindingIncrementalTest {
         String activity3ClassName = "Landroid/databinding/testapp/databinding/Activity3Binding;";
         String activity3ClassNameImpl =
                 "Landroid/databinding/testapp/databinding/Activity3BindingImpl;";
-        File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
+        File mainActivity = new File(project.getProjectDir(), ACTIVITY_MAIN_XML);
         File activity3 = new File(mainActivity.getParentFile(), "activity3.xml");
         Files.copy(mainActivity, activity3);
         project.executor().run("assembleDebug");

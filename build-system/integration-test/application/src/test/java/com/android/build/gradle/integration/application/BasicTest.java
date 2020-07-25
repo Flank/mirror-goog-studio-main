@@ -132,7 +132,7 @@ public class BasicTest {
 
     @Test
     public void sourceProvidersModel() {
-        AndroidProjectUtils.testDefaultSourceSets(model, project.getTestDir());
+        AndroidProjectUtils.testDefaultSourceSets(model, project.getProjectDir());
 
         // test the source provider for the artifacts
         for (Variant variant : model.getVariants()) {

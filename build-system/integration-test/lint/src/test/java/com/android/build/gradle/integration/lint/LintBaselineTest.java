@@ -44,7 +44,7 @@ public class LintBaselineTest {
         assertThat(exception.getMessage()).contains("Created baseline file");
 
         File baselineFile =
-                new File(project.getSubproject("app").getTestDir(), "lint-baseline.xml");
+                new File(project.getSubproject("app").getProjectDir(), "lint-baseline.xml");
         assertThat(baselineFile).exists();
         String baseline =
                 FilesKt.readText(baselineFile, Charsets.UTF_8)

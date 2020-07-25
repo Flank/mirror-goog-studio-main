@@ -79,6 +79,7 @@ public class InvalidResourceDirectoryTest {
         assertThat(result.getException()).isNotNull();
         Throwable rootCause = Throwables.getRootCause(result.getException());
         assertThat(rootCause.getMessage())
-                .contains(new File(project.getTestDir(), INVALID_LAYOUT_FOLDER).getAbsolutePath());
+                .contains(
+                        new File(project.getProjectDir(), INVALID_LAYOUT_FOLDER).getAbsolutePath());
     }
 }

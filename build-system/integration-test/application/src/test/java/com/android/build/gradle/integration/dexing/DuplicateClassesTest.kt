@@ -53,11 +53,11 @@ class DuplicateClassesTest {
 
     @Test
     fun testExternalLibrariesWithDuplicateClasses() {
-        val jar1 = project.getSubproject(":app").testDir.toPath().resolve("libs/jar1.jar")
+        val jar1 = project.getSubproject(":app").projectDir.toPath().resolve("libs/jar1.jar")
         Files.createDirectories(jar1.parent)
         TestInputsGenerator.jarWithEmptyClasses(jar1, listOf("com/example/A"))
 
-        val jar2 = project.getSubproject(":app").testDir.toPath().resolve("libs/jar2.jar")
+        val jar2 = project.getSubproject(":app").projectDir.toPath().resolve("libs/jar2.jar")
         TestInputsGenerator.jarWithEmptyClasses(jar2, listOf("com/example/A", "com/example/G"))
 
         TestFileUtils.appendToFile(

@@ -271,7 +271,7 @@ class LibraryBuildConfigTest {
             return
         }
         val outputFile = File(
-            project.testDir,
+            project.projectDir,
             "build/generated/source/buildConfig/"
                     + variantDir
                     + "/com/example/helloworld/BuildConfig.java"

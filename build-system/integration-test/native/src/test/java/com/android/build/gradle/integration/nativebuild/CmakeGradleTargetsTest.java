@@ -139,7 +139,7 @@ public class CmakeGradleTargetsTest {
             if (target.getLocation() != null) {
                 assertThatApk(apk).contains(target.getLocation());
             } else {
-                assertThat(project.getTestDir()).containsFile(target.getName());
+                assertThat(project.getProjectDir()).containsFile(target.getName());
                 assertThatApk(apk).doesNotContainFile(target.getName());
             }
         }
@@ -148,7 +148,7 @@ public class CmakeGradleTargetsTest {
             if (target.getLocation() != null) {
                 assertThatApk(apk).doesNotContain(target.getLocation());
             } else {
-                assertThat(project.getTestDir()).doesNotContainFile(target.getName());
+                assertThat(project.getProjectDir()).doesNotContainFile(target.getName());
                 assertThatApk(apk).doesNotContainFile(target.getName());
             }
         }

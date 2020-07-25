@@ -57,7 +57,7 @@ public class NativeSoPackagingFromRemoteAarTest {
         libProject = project.getSubproject("library");
 
         // rewrite settings.gradle to remove un-needed modules
-        Files.asCharSink(new File(project.getTestDir(), "settings.gradle"), Charsets.UTF_8)
+        Files.asCharSink(new File(project.getProjectDir(), "settings.gradle"), Charsets.UTF_8)
                 .write("include 'app'\n" + "include 'library'\n");
 
         // setup dependencies.
@@ -87,7 +87,7 @@ public class NativeSoPackagingFromRemoteAarTest {
 
         // put some default files in the library project, to check non incremental packaging
         // as well, and to provide files to change to test incremental support.
-        File libDir = libProject.getTestDir();
+        File libDir = libProject.getProjectDir();
         createOriginalSoFile(libDir,  "main",        "liblibrary.so",      "library:abcd");
         createOriginalSoFile(libDir,  "main",        "liblibrary2.so",     "library2:abcdef");
 

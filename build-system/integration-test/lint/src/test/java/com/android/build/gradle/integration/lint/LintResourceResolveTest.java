@@ -40,7 +40,7 @@ public class LintResourceResolveTest {
     @Test
     public void checkClean() throws Exception {
         project.execute("clean", ":app:lintDebug");
-        File file = new File(project.getSubproject("app").getTestDir(), "lint-report.txt");
+        File file = new File(project.getSubproject("app").getProjectDir(), "lint-report.txt");
         assertThat(file).exists();
         assertThat(file).contentWithUnixLineSeparatorsIsExactly("No issues found.");
     }

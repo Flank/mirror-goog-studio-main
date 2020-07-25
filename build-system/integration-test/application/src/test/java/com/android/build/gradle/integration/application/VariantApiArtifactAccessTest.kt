@@ -91,7 +91,7 @@ android {
 
         assertNotNull(project)
         project.execute("clean", "debugCustomTask")
-        val outFile = File(project.testDir, "app/build/debugCustomTask/out.txt")
+        val outFile = File(project.projectDir, "app/build/debugCustomTask/out.txt")
         println("out is ${outFile.absolutePath}")
         assertThat(outFile).exists()
         Truth.assertThat(outFile.readText()).contains("app-debug.apk")

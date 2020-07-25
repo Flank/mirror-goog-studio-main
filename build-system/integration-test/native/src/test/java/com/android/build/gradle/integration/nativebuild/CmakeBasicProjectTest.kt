@@ -185,7 +185,7 @@ class CmakeBasicProjectTest(
         // To recreate those conditions, build the project twice, purging only the .cxx directory
         // between runs.
         project.execute("assembleDebug")
-        project.testDir.resolve(".cxx").deleteRecursively()
+        project.projectDir.resolve(".cxx").deleteRecursively()
         assertThat(project.buildDir.resolve("intermediates/cmake/debug/obj/armeabi-v7a/libfoo.so")).isFile()
         project.execute("assembleDebug")
     }
@@ -216,7 +216,7 @@ class CmakeBasicProjectTest(
         val fooPath = project.buildDir.resolve("intermediates/cmake/debug/obj/x86_64/libfoo.so")
         assertThat(fooPath).doesNotExist()
 
-        val json = project.testDir.resolve(".cxx/cmake/debug/x86_64/android_gradle_build_mini.json")
+        val json = project.projectDir.resolve(".cxx/cmake/debug/x86_64/android_gradle_build_mini.json")
         assertThat(json).isFile()
 
         val config = AndroidBuildGradleJsons.getNativeBuildMiniConfig(json, null)
@@ -547,7 +547,7 @@ class CmakeBasicProjectTest(
         project.executor()
             .with(BooleanOption.ENABLE_PROFILE_JSON, true)
             .run("clean", "assembleDebug")
-        val traceFolder = join(project.testDir, "build", "android-profile")
+        val traceFolder = join(project.projectDir, "build", "android-profile")
         val traceFile = traceFolder.listFiles()!!.first { it.name.endsWith("json.gz") }
         Truth.assertThat(InputStreamReader(GZIPInputStream(FileInputStream(traceFile))).readText())
             .contains("CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o")

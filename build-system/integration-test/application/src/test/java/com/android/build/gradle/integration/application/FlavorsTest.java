@@ -58,7 +58,7 @@ public class FlavorsTest {
         AndroidProject model =
                 project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
 
-        File projectDir = project.getTestDir();
+        File projectDir = project.getProjectDir();
 
         assertFalse("Library Project", model.isLibrary());
         assertEquals("Project Type", AndroidProjectTypes.PROJECT_TYPE_APP, model.getProjectType());

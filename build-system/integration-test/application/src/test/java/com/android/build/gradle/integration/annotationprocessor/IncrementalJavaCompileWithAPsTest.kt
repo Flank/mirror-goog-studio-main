@@ -421,7 +421,7 @@ class IncrementalJavaCompileWithAPsTest(
 
     @Before
     fun setUp() {
-        val appDir = project.getSubproject(APP_MODULE).testDir
+        val appDir = project.getSubproject(APP_MODULE).projectDir
         val appBuildFile = project.getSubproject(APP_MODULE).buildFile
 
         val generatedSourceDir = if (withKapt)

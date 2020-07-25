@@ -51,7 +51,7 @@ public class LintLibraryModelTest {
                         + "    public static final String SD_CARD = \"/sdcard/something\";\n"
                         + "                                         ~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 2 warnings";
-        File file = new File(project.getSubproject("app").getTestDir(), "lint-results.txt");
+        File file = new File(project.getSubproject("app").getProjectDir(), "lint-results.txt");
         assertThat(file).exists();
         assertThat(file).contentWithUnixLineSeparatorsIsExactly(expected);
     }

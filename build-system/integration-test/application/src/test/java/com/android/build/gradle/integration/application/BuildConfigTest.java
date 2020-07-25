@@ -318,7 +318,7 @@ public class BuildConfigTest {
             throws IOException {
         File buildConfigJar =
                 new File(
-                        project.getTestDir(),
+                        project.getProjectDir(),
                         "build/intermediates/generated_build_config_bytecode/"
                                 + variantDir
                                 + "BuildConfig.jar");
@@ -329,7 +329,7 @@ public class BuildConfigTest {
         }
         File outputFile =
                 new File(
-                        project.getTestDir(),
+                        project.getProjectDir(),
                         "build/generated/source/buildConfig/"
                                 + variantDir
                                 + "/com/example/helloworld/BuildConfig.java");

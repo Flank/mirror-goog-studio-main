@@ -49,7 +49,7 @@ public class LocalRepoDebugger extends TestWatcher {
         }
 
         try {
-            Files.walkFileTree(project.getTestDir().toPath(), new PrintBuildFiles(System.out));
+            Files.walkFileTree(project.getProjectDir().toPath(), new PrintBuildFiles(System.out));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

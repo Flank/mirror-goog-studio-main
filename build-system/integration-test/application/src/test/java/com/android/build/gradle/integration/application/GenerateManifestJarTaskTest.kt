@@ -38,7 +38,7 @@ class GenerateManifestJarTaskTest(private val enableManifestClass : Boolean) {
     @Test
     fun `test Manifest Class is generated if there is at least one permission`() {
         val androidManifest = FileUtils.join(
-                project.testDir, "src", "main", SdkConstants.ANDROID_MANIFEST_XML)
+                project.projectDir, "src", "main", SdkConstants.ANDROID_MANIFEST_XML)
         FileUtils.writeToFile(androidManifest,
                 //language=XML
                 """<manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -66,7 +66,7 @@ class GenerateManifestJarTaskTest(private val enableManifestClass : Boolean) {
         )
 
         FileUtils.writeToFile(FileUtils.join(
-                project.testDir, "src", "main", "java", "com", "example", "helloworld",
+                project.projectDir, "src", "main", "java", "com", "example", "helloworld",
                 "ManifestClassTest.java"),
                 //language=java
                 """package com.example.helloworld;
@@ -94,7 +94,7 @@ class GenerateManifestJarTaskTest(private val enableManifestClass : Boolean) {
         )
 
         FileUtils.writeToFile(FileUtils.join(
-                project.testDir, "src", "test", "java", "com", "example", "helloworld",
+                project.projectDir, "src", "test", "java", "com", "example", "helloworld",
                 "ManifestClassUnitTest.java"),
                 //language=java
                 """package com.example.helloworld;

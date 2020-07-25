@@ -35,7 +35,7 @@ class GradlePropertiesTest {
 
     @Before
     fun setUp() {
-        project.testDir.resolve(".gradle/configuration-cache").deleteRecursively()
+        project.projectDir.resolve(".gradle/configuration-cache").deleteRecursively()
     }
 
     @Test

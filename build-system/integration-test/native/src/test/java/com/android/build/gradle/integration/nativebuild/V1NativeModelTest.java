@@ -1119,7 +1119,7 @@ public class V1NativeModelTest {
 
     private static File buildNativeBuildOutputPath(Config config, GradleTestProject project) {
         String nativeBuildOutputPath = config.nativeBuildOutputPath;
-        File projectDir = project.getTestDir();
+        File projectDir = project.getProjectDir();
 
         File outputDir = new File(nativeBuildOutputPath);
         if (!outputDir.isAbsolute()) {

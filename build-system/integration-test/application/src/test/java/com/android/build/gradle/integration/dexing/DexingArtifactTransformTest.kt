@@ -177,7 +177,7 @@ class DexingArtifactTransformTest {
 
     @Test
     fun testProguardDoesSingleMerge() {
-        project.testDir.resolve("proguard-rules.pro").writeText("-keep class **")
+        project.projectDir.resolve("proguard-rules.pro").writeText("-keep class **")
         project.buildFile.appendText("\n" +
             """
             android.buildTypes.debug {
@@ -202,7 +202,7 @@ class DexingArtifactTransformTest {
     @Test
     fun testGeneratedBytecodeIsProcessed() {
         TestInputsGenerator.jarWithEmptyClasses(
-            project.testDir.resolve("generated-classes.jar").toPath(), setOf("test/A")
+            project.projectDir.resolve("generated-classes.jar").toPath(), setOf("test/A")
         )
 
         project.buildFile.appendText("\n" +
@@ -293,7 +293,7 @@ class DexingArtifactTransformTest {
     @Test
     fun testIncrementalBuildsWithArtifactTransformsDisabledAndClasspathSensitivity() {
         // Generate 2 identical libraries.
-        project.testDir.resolve("mavenRepo").also {
+        project.projectDir.resolve("mavenRepo").also {
             it.mkdirs()
             MavenRepoGenerator(
                 listOf(

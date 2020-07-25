@@ -34,7 +34,7 @@ public class BasicMultiFlavorTest {
     public void checkSourceProviders() throws IOException {
         ModelContainer<AndroidProject> modelContainer = project.model().fetchAndroidProjects();
         AndroidProject model = modelContainer.getOnlyModel();
-        File projectDir = project.getTestDir();
+        File projectDir = project.getProjectDir();
         AndroidProjectUtils.testDefaultSourceSets(model, projectDir);
 
         // test the source provider for the flavor

@@ -227,7 +227,7 @@ public class BytecodeGenerationHooksTest {
 
     private void checkDependencies(
             GradleBuildResult result, String prefix, boolean exactly, String... dependencies) {
-        String projectDir = project.getTestDir().getAbsolutePath();
+        String projectDir = project.getProjectDir().getAbsolutePath();
 
         ImmutableList.Builder<String> listBuilder = new ImmutableList.Builder<>();
         ScannerSubjectUtils.forEachLine(
@@ -271,7 +271,7 @@ public class BytecodeGenerationHooksTest {
                 });
         List<String> lines = listBuilder.build();
 
-        File projectDir = project.getTestDir();
+        File projectDir = project.getProjectDir();
 
         List<String> deps =
                 Arrays.stream(dependencies)

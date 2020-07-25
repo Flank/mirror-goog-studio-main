@@ -196,7 +196,7 @@ public class GenFolderApiTest {
 
     @NonNull
     private String getSourceFolderStart() {
-        return FileUtils.join(project.getTestDir().getAbsolutePath(), "build", "customCode")
+        return FileUtils.join(project.getProjectDir().getAbsolutePath(), "build", "customCode")
                 + File.separatorChar;
     }
 
@@ -227,13 +227,13 @@ public class GenFolderApiTest {
 
     @NonNull
     private String getCustomResPath() {
-        return FileUtils.join(project.getTestDir().getAbsolutePath(), "build", "customRes")
+        return FileUtils.join(project.getProjectDir().getAbsolutePath(), "build", "customRes")
                 + File.separatorChar;
     }
 
     @NonNull
     private String getCustomRes2Path() {
-        return FileUtils.join(project.getTestDir().getAbsolutePath(), "build", "customRes2")
+        return FileUtils.join(project.getProjectDir().getAbsolutePath(), "build", "customRes2")
                 + File.separatorChar;
     }
 

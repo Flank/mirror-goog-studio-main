@@ -134,14 +134,14 @@ class DataBindingDeterminismTest {
         project1.executor().run("clean", "compileDebugJavaWithJavac")
         val snapshot1 = FileSnapshot.snapshot(
             fileToSnapshot = project1.buildDir,
-            baseDir = project1.testDir
+            baseDir = project1.projectDir
         )
 
         // Build the second project
         project2.executor().run("clean", "compileDebugJavaWithJavac")
         val snapshot2 = FileSnapshot.snapshot(
             fileToSnapshot = project2.buildDir,
-            baseDir = project2.testDir
+            baseDir = project2.projectDir
         )
 
         // Check that they have consistent outputs

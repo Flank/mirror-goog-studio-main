@@ -96,7 +96,7 @@ class CoreLibraryDesugarConversionTest(val minSdkVersion: Int) {
             """.trimIndent())
 
         TestFileUtils.addMethod(
-            FileUtils.join(project.testDir, "src/androidTest/java/com/example/helloworld/HelloWorldTest.java"),
+            FileUtils.join(project.projectDir, "src/androidTest/java/com/example/helloworld/HelloWorldTest.java"),
             """
                 @Test
                 public void testGetNumbers() {
@@ -105,7 +105,7 @@ class CoreLibraryDesugarConversionTest(val minSdkVersion: Int) {
             """.trimIndent())
 
         TestFileUtils.addMethod(
-            FileUtils.join(project.testDir, "src/androidTest/java/com/example/helloworld/HelloWorldTest.java"),
+            FileUtils.join(project.projectDir, "src/androidTest/java/com/example/helloworld/HelloWorldTest.java"),
             """
                 @Test
                 public void testGetTime() {
@@ -114,7 +114,7 @@ class CoreLibraryDesugarConversionTest(val minSdkVersion: Int) {
             """.trimIndent())
 
         TestFileUtils.addMethod(
-            FileUtils.join(project.testDir, "src/androidTest/java/com/example/helloworld/HelloWorldTest.java"),
+            FileUtils.join(project.projectDir, "src/androidTest/java/com/example/helloworld/HelloWorldTest.java"),
             """
                 @Test
                 public void testGetDirectActions() {

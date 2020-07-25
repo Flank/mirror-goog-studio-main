@@ -85,7 +85,7 @@ public class NativeSoPackagingTest {
         jarProject2 = project.getSubproject("jar2");
 
         // rewrite settings.gradle to remove un-needed modules
-        Files.asCharSink(new File(project.getTestDir(), "settings.gradle"), Charsets.UTF_8)
+        Files.asCharSink(new File(project.getProjectDir(), "settings.gradle"), Charsets.UTF_8)
                 .write(
                         "include 'app'\n"
                                 + "include 'library'\n"
@@ -121,27 +121,27 @@ public class NativeSoPackagingTest {
 
         // put some default files in the 4 projects, to check non incremental packaging as well,
         // and to provide files to change to test incremental support.
-        File appDir = appProject.getTestDir();
+        File appDir = appProject.getProjectDir();
         createOriginalSoFile(appDir,  "main",        "libapp.so",         "app:abcd");
         createOriginalSoFile(appDir,  "androidTest", "libapptest.so",     "appTest:abcd");
 
-        File testDir = testProject.getTestDir();
+        File testDir = testProject.getProjectDir();
         createOriginalSoFile(testDir, "main",        "libtest.so",        "test:abcd");
 
-        File libDir = libProject.getTestDir();
+        File libDir = libProject.getProjectDir();
         createOriginalSoFile(libDir,  "main",        "liblibrary.so",      "library:abcd");
         createOriginalSoFile(libDir,  "androidTest", "liblibrarytest.so",  "libraryTest:abcd");
 
-        File lib2Dir = libProject2.getTestDir();
+        File lib2Dir = libProject2.getProjectDir();
         createOriginalSoFile(lib2Dir, "main",        "liblibrary2.so",     "library2:abcd");
         createOriginalSoFile(lib2Dir, "androidTest", "liblibrary2test.so", "library2Test:abcd");
 
-        File jarDir = jarProject.getTestDir();
+        File jarDir = jarProject.getProjectDir();
         File resFolder = FileUtils.join(jarDir, "src", "main", "resources", "lib", "x86");
         FileUtils.mkdirs(resFolder);
         Files.asCharSink(new File(resFolder, "libjar.so"), Charsets.UTF_8).write("jar:abcd");
 
-        File jar2Dir = jarProject2.getTestDir();
+        File jar2Dir = jarProject2.getProjectDir();
         File res2Folder = FileUtils.join(jar2Dir, "src", "main", "resources", "lib", "x86");
         FileUtils.mkdirs(res2Folder);
         Files.asCharSink(new File(res2Folder, "libjar2.so"), Charsets.UTF_8).write("jar2:abcd");

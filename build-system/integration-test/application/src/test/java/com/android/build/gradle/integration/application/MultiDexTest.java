@@ -136,11 +136,11 @@ public class MultiDexTest {
     @Test
     public void checkApplicationNameAdded() throws IOException, InterruptedException {
         // noinspection ResultOfMethodCallIgnored
-        FileUtils.join(project.getTestDir(), "src/ics/AndroidManifest.xml").delete();
+        FileUtils.join(project.getProjectDir(), "src/ics/AndroidManifest.xml").delete();
         executor().run("processIcsDebugManifest");
         assertThat(
                         FileUtils.join(
-                                project.getTestDir(),
+                                project.getProjectDir(),
                                 "build/intermediates/merged_manifests/icsDebug/AndroidManifest.xml"))
                 .contains("android:name=\"android.support.multidex.MultiDexApplication\"");
     }
@@ -253,7 +253,7 @@ public class MultiDexTest {
                         + "}\n"
                         + "class OtherClass {}\n";
         Path someClassPath =
-                project.getTestDir()
+                project.getProjectDir()
                         .toPath()
                         .resolve("src/androidTest/java/example/SomeClass.java");
         Files.createDirectories(someClassPath.getParent());
@@ -267,7 +267,9 @@ public class MultiDexTest {
                         + "  }\n"
                         + "}\n";
         Path instrumentationPath =
-                project.getTestDir().toPath().resolve("src/androidTest/java/example/MyRunner.java");
+                project.getProjectDir()
+                        .toPath()
+                        .resolve("src/androidTest/java/example/MyRunner.java");
         Files.createDirectories(instrumentationPath.getParent());
         Files.write(instrumentationPath, instrumentation.getBytes());
 

@@ -74,7 +74,7 @@ public class PackagingOptionsFilteringTest {
             @NonNull String... paths) throws Exception {
         File file =
                 FileUtils.join(
-                        FileUtils.join(project.getTestDir(), "src", srcDir, "resources"), paths);
+                        FileUtils.join(project.getProjectDir(), "src", srcDir, "resources"), paths);
         FileUtils.mkdirs(file.getParentFile());
         Files.write(file.toPath(), contents);
     }
@@ -95,7 +95,7 @@ public class PackagingOptionsFilteringTest {
             @NonNull String... paths) throws Exception {
         File file =
                 FileUtils.join(
-                        FileUtils.join(project.getTestDir(), "src", srcDir, "resources"), paths);
+                        FileUtils.join(project.getProjectDir(), "src", srcDir, "resources"), paths);
         FileUtils.mkdirs(file.getParentFile());
         Files.write(file.toPath(), Collections.singletonList(text));
     }

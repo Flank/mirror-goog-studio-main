@@ -41,8 +41,8 @@ public class CmakeJniLibConnectedTest {
 
     @Before
     public void setUp() throws IOException, InterruptedException {
-        new File(project.getTestDir(), "src/main/jni")
-                .renameTo(new File(project.getTestDir(), "src/main/cxx"));
+        new File(project.getProjectDir(), "src/main/jni")
+                .renameTo(new File(project.getProjectDir(), "src/main/cxx"));
         GradleTestProject lib = project.getSubproject("lib");
         TestFileUtils.appendToFile(
                 lib.getBuildFile(),

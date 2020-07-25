@@ -256,7 +256,8 @@ public class MissingDimensionStrategyTest {
             @NonNull String dimension,
             @NonNull String fileContent)
             throws IOException {
-        File file = FileUtils.join(project.getTestDir(), "src", dimension, "resources", FILE_TXT);
+        File file =
+                FileUtils.join(project.getProjectDir(), "src", dimension, "resources", FILE_TXT);
         FileUtils.mkdirs(file.getParentFile());
         Files.asCharSink(file, Charsets.UTF_8).write(fileContent);
     }

@@ -114,7 +114,7 @@ public class DxFeaturesTest {
 
     @NonNull
     private List<String> createLibFromClass(Class<?> klass) throws IOException {
-        Path lib = project.getTestDir().toPath().resolve("libs/my-lib.jar");
+        Path lib = project.getProjectDir().toPath().resolve("libs/my-lib.jar");
         Files.createDirectories(lib.getParent());
 
         String path = klass.getName().replace('.', '/') + SdkConstants.DOT_CLASS;

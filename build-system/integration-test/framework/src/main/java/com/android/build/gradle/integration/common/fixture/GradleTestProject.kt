@@ -345,7 +345,7 @@ apply from: "../commonLocalRepo.gradle"
     val buildFile: File
         get() = File(location.projectDir, buildFileName)
 
-    val testDir: File
+    val projectDir: File
         get() = location.projectDir
 
     lateinit var localProp: File
@@ -431,8 +431,8 @@ apply from: "../commonLocalRepo.gradle"
         ) {
 
         Assert.assertTrue(
-            "No subproject dir at $testDir",
-            testDir.isDirectory
+            "No subproject dir at $projectDir",
+            projectDir.isDirectory
         )
     }
 
@@ -509,7 +509,7 @@ apply from: "../commonLocalRepo.gradle"
     }
 
     private fun populateTestDirectory() {
-        val projectDir = testDir
+        val projectDir = projectDir
         FileUtils.deleteRecursivelyIfExists(projectDir)
         FileUtils.mkdirs(projectDir)
 
@@ -574,7 +574,7 @@ apply from: "../commonLocalRepo.gradle"
             return null
         }
         if (additionalMavenRepoDir == null) {
-            val moreMavenRepoDir = testDir
+            val moreMavenRepoDir = projectDir
                 .toPath()
                 .parent
                 .resolve("additional_maven_repo")
@@ -644,36 +644,36 @@ allprojects { proj ->
 
     /** Return the path to the default Java main source dir.  */
     fun getMainSrcDir(language: String): File {
-        return FileUtils.join(testDir, "src", "main", language)
+        return FileUtils.join(projectDir, "src", "main", language)
     }
 
     /** Return the path to the default Java main resources dir.  */
     val mainJavaResDir: File
-        get() = FileUtils.join(testDir, "src", "main", "resources")
+        get() = FileUtils.join(projectDir, "src", "main", "resources")
 
     /** Return the path to the default main jniLibs dir.  */
     val mainJniLibsDir: File
-        get() = FileUtils.join(testDir, "src", "main", "jniLibs")
+        get() = FileUtils.join(projectDir, "src", "main", "jniLibs")
 
     /** Return the build.gradle of the test project.  */
     val settingsFile: File
-        get() = File(testDir, "settings.gradle")
+        get() = File(projectDir, "settings.gradle")
 
     /** Return the gradle.properties file of the test project.  */
     val gradlePropertiesFile: File
-        get() = File(testDir, "gradle.properties")
+        get() = File(projectDir, "gradle.properties")
 
     val buildDir: File
-        get() = FileUtils.join(testDir, "build")
+        get() = FileUtils.join(projectDir, "build")
 
     /** Return the output directory from Android plugins.  */
     val outputDir: File
-        get() = FileUtils.join(testDir, "build", AndroidProject.FD_OUTPUTS)
+        get() = FileUtils.join(projectDir, "build", AndroidProject.FD_OUTPUTS)
 
     /** Return the output directory from Android plugins.  */
     val intermediatesDir: File
         get() = FileUtils
-            .join(testDir, "build", AndroidProject.FD_INTERMEDIATES)
+            .join(projectDir, "build", AndroidProject.FD_INTERMEDIATES)
 
     /** Return a File under the output directory from Android plugins.  */
     fun getOutputFile(vararg paths: String?): File {
@@ -691,7 +691,7 @@ allprojects { proj ->
     }
 
     val generatedDir: File
-        get() = FileUtils.join(testDir, "build", AndroidProject.FD_GENERATED)
+        get() = FileUtils.join(projectDir, "build", AndroidProject.FD_GENERATED)
 
     /**
      * Returns the directory in which profiles will be generated. A null value indicates that
@@ -702,7 +702,7 @@ allprojects { proj ->
         return if (profileDirectory == null || profileDirectory.isAbsolute) {
             profileDirectory
         } else {
-            rootProject.testDir.toPath().resolve(profileDirectory)
+            rootProject.projectDir.toPath().resolve(profileDirectory)
         }
     }
 
@@ -1317,14 +1317,14 @@ allprojects { proj ->
         return if (result.isAbsolute) {
             result
         } else {
-            File(testDir, path)
+            File(projectDir, path)
         }
     }
 
     private fun createLocalProp(): File {
-        val mainLocalProp = createLocalProp(testDir)
+        val mainLocalProp = createLocalProp(projectDir)
         for (includedBuild in withIncludedBuilds) {
-            createLocalProp(File(testDir, includedBuild))
+            createLocalProp(File(projectDir, includedBuild))
         }
         return mainLocalProp
     }
@@ -1358,7 +1358,7 @@ allprojects { proj ->
             val absoluteFile: File = if (gradleBuildCacheDirectory.isAbsolute)
                 gradleBuildCacheDirectory
             else
-                File(testDir, gradleBuildCacheDirectory.path)
+                File(projectDir, gradleBuildCacheDirectory.path)
             TestFileUtils.appendToFile(
                 settingsFile,
                 """buildCache {
