@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link BuildTypeContainer}. */
-public final class IdeBuildTypeContainer implements BuildTypeContainer, Serializable {
+public final class IdeBuildTypeContainerImpl implements IdeBuildTypeContainer, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
@@ -35,7 +35,7 @@ public final class IdeBuildTypeContainer implements BuildTypeContainer, Serializ
 
     // Used for serialization by the IDE.
     @SuppressWarnings("unused")
-    IdeBuildTypeContainer() {
+    IdeBuildTypeContainerImpl() {
         myBuildType = new IdeBuildTypeImpl();
         mySourceProvider = new IdeSourceProvider();
         myExtraSourceProviders = Collections.emptyList();
@@ -43,7 +43,7 @@ public final class IdeBuildTypeContainer implements BuildTypeContainer, Serializ
         myHashCode = 0;
     }
 
-    public IdeBuildTypeContainer(
+    public IdeBuildTypeContainerImpl(
             @NonNull BuildTypeContainer container, @NonNull ModelCache modelCache) {
         myBuildType =
                 modelCache.computeIfAbsent(
@@ -88,10 +88,10 @@ public final class IdeBuildTypeContainer implements BuildTypeContainer, Serializ
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeBuildTypeContainer)) {
+        if (!(o instanceof IdeBuildTypeContainerImpl)) {
             return false;
         }
-        IdeBuildTypeContainer container = (IdeBuildTypeContainer) o;
+        IdeBuildTypeContainerImpl container = (IdeBuildTypeContainerImpl) o;
         return Objects.equals(myBuildType, container.myBuildType)
                 && Objects.equals(mySourceProvider, container.mySourceProvider)
                 && Objects.equals(myExtraSourceProviders, container.myExtraSourceProviders);

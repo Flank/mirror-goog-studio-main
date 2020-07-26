@@ -26,7 +26,7 @@ import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeBuildTypeContainer}. */
+/** Tests for {@link IdeBuildTypeContainerImpl}. */
 public class IdeBuildTypeContainerTest {
     private ModelCache myModelCache;
 
@@ -37,13 +37,13 @@ public class IdeBuildTypeContainerTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeBuildTypeContainer.class).isAssignableTo(Serializable.class);
+        assertThat(IdeBuildTypeContainerImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeBuildTypeContainer buildType =
-                new IdeBuildTypeContainer(new BuildTypeContainerStub(), myModelCache);
+        IdeBuildTypeContainerImpl buildType =
+                new IdeBuildTypeContainerImpl(new BuildTypeContainerStub(), myModelCache);
         byte[] bytes = Serialization.serialize(buildType);
         Object o = Serialization.deserialize(bytes);
         assertEquals(buildType, o);
@@ -52,13 +52,13 @@ public class IdeBuildTypeContainerTest {
     @Test
     public void constructor() throws Throwable {
         BuildTypeContainer original = new BuildTypeContainerStub();
-        IdeBuildTypeContainer copy = new IdeBuildTypeContainer(original, myModelCache);
+        IdeBuildTypeContainerImpl copy = new IdeBuildTypeContainerImpl(original, myModelCache);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeBuildTypeContainer.class).verify();
+        createEqualsVerifier(IdeBuildTypeContainerImpl.class).verify();
     }
 }

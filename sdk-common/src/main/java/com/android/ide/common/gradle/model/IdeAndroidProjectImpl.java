@@ -116,19 +116,19 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         ProductFlavorContainer defaultConfigCopy =
                 modelCache.computeIfAbsent(
                         project.getDefaultConfig(),
-                        container -> new IdeProductFlavorContainer(container, modelCache));
+                        container -> new IdeProductFlavorContainerImpl(container, modelCache));
 
         Collection<BuildTypeContainer> buildTypesCopy =
                 IdeModel.copy(
                         project.getBuildTypes(),
                         modelCache,
-                        container -> new IdeBuildTypeContainer(container, modelCache));
+                        container -> new IdeBuildTypeContainerImpl(container, modelCache));
 
         Collection<ProductFlavorContainer> productFlavorCopy =
                 IdeModel.copy(
                         project.getProductFlavors(),
                         modelCache,
-                        container -> new IdeProductFlavorContainer(container, modelCache));
+                        container -> new IdeProductFlavorContainerImpl(container, modelCache));
 
         Collection<SyncIssue> syncIssuesCopy =
                 new ArrayList<>(IdeModel.copy(syncIssues, modelCache, IdeSyncIssueImpl::new));
@@ -281,7 +281,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myModelVersion = "";
         myParsedModelVersion = null;
         myName = "";
-        myDefaultConfig = new IdeProductFlavorContainer();
+        myDefaultConfig = new IdeProductFlavorContainerImpl();
         myBuildTypes = Collections.emptyList();
         myProductFlavors = Collections.emptyList();
         mySyncIssues = Collections.emptyList();

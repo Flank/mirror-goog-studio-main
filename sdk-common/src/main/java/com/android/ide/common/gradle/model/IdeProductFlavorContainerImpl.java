@@ -26,7 +26,7 @@ import java.util.Collections;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link ProductFlavorContainer}. */
-public final class IdeProductFlavorContainer implements ProductFlavorContainer, Serializable {
+public final class IdeProductFlavorContainerImpl implements IdeProductFlavorContainer, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
@@ -36,7 +36,7 @@ public final class IdeProductFlavorContainer implements ProductFlavorContainer, 
     private final int myHashCode;
 
     // Used for serialization by the IDE.
-    IdeProductFlavorContainer() {
+    IdeProductFlavorContainerImpl() {
         myProductFlavor = new IdeProductFlavorImpl();
         mySourceProvider = new IdeSourceProvider();
         myExtraSourceProviders = Collections.emptyList();
@@ -44,7 +44,7 @@ public final class IdeProductFlavorContainer implements ProductFlavorContainer, 
         myHashCode = 0;
     }
 
-    public IdeProductFlavorContainer(
+    public IdeProductFlavorContainerImpl(
             @NonNull ProductFlavorContainer container, @NonNull ModelCache modelCache) {
         myProductFlavor =
                 modelCache.computeIfAbsent(
@@ -89,10 +89,10 @@ public final class IdeProductFlavorContainer implements ProductFlavorContainer, 
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeProductFlavorContainer)) {
+        if (!(o instanceof IdeProductFlavorContainerImpl)) {
             return false;
         }
-        IdeProductFlavorContainer container = (IdeProductFlavorContainer) o;
+        IdeProductFlavorContainerImpl container = (IdeProductFlavorContainerImpl) o;
         return Objects.equals(myProductFlavor, container.myProductFlavor)
                 && Objects.equals(mySourceProvider, container.mySourceProvider)
                 && Objects.equals(myExtraSourceProviders, container.myExtraSourceProviders);

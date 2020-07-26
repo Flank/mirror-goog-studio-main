@@ -27,7 +27,7 @@ import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeProductFlavorContainer}. */
+/** Tests for {@link IdeProductFlavorContainerImpl}. */
 public class IdeProductFlavorContainerTest {
     private ModelCache myModelCache;
 
@@ -38,13 +38,13 @@ public class IdeProductFlavorContainerTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeProductFlavorContainer.class).isAssignableTo(Serializable.class);
+        assertThat(IdeProductFlavorContainerImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeProductFlavorContainer container =
-                new IdeProductFlavorContainer(new ProductFlavorContainerStub(), myModelCache);
+        IdeProductFlavorContainerImpl container =
+                new IdeProductFlavorContainerImpl(new ProductFlavorContainerStub(), myModelCache);
         byte[] bytes = serialize(container);
         Object o = deserialize(bytes);
         assertEquals(container, o);
@@ -53,13 +53,13 @@ public class IdeProductFlavorContainerTest {
     @Test
     public void constructor() throws Throwable {
         ProductFlavorContainer original = new ProductFlavorContainerStub();
-        IdeProductFlavorContainer copy = new IdeProductFlavorContainer(original, myModelCache);
+        IdeProductFlavorContainerImpl copy = new IdeProductFlavorContainerImpl(original, myModelCache);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeProductFlavorContainer.class).verify();
+        createEqualsVerifier(IdeProductFlavorContainerImpl.class).verify();
     }
 }
