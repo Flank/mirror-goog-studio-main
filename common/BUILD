@@ -3,7 +3,7 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_pom")
 load("//tools/base/bazel:utils.bzl", "dir_archive", "fileset")
 
-# do not generate: resources removed manually
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.common",
     srcs = ["src/main/java"],
@@ -12,8 +12,11 @@ iml_module(
     ],
     iml_files = ["android.sdktools.common.iml"],
     lint_baseline = "lint_baseline.xml",
-    res_zips = [":extra_res"],
-    resources = ["src/main/resources"],
+    # do not sort: must match IML order
+    resources = [
+        "src/main/resources",
+        "version",
+    ],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
@@ -28,6 +31,14 @@ iml_module(
     ],
 )
 
+java_test(
+    name = "latest_version",
+    data = ["//tools/buildSrc/base:version.properties"],
+    jvm_flags = ["-Dtest.version.properties=$(location //tools/buildSrc/base:version.properties)"],
+    test_class = "com.android.VersionTest",
+    runtime_deps = ["studio.android.sdktools.common.tests_testlib"],
+)
+
 fileset(
     name = "tools.common.resources",
     srcs = glob(["src/main/resources/**"]),
@@ -40,12 +51,6 @@ fileset(
     name = "version.properties",
     srcs = ["//tools/buildSrc/base:version.properties"],
     mappings = {"//tools/buildSrc/base:": "com/android/"},
-)
-
-dir_archive(
-    name = "extra_res",
-    dir = "tools/base/common",
-    files = [":version.properties"],
 )
 
 kotlin_library(
@@ -116,7 +121,7 @@ iml_module(
     ],
 )
 
-# do not generate: resources removed manually
+# managed by go/iml_to_build [unb]
 iml_module(
     name = "unb.studio.android.sdktools.common",
     srcs = ["src/main/java"],
@@ -125,10 +130,10 @@ iml_module(
     ],
     iml_files = ["android.sdktools.common.iml"],
     lint_baseline = "lint_baseline.xml",
-    res_zips = [":extra_res"],
     # do not sort: must match IML order
     resources = [
         "src/main/resources",
+        "version",
     ],
     tags = [
         "manual",

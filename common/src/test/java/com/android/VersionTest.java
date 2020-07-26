@@ -16,13 +16,34 @@
 
 package com.android;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class VersionTest {
 
     @Test
-    public void testVersion() throws Exception {
+    public void testVersion() {
         Assert.assertNotNull(Version.ANDROID_GRADLE_PLUGIN_VERSION);
+    }
+
+    @Test
+    public void testBundledVersionConsistency() throws IOException {
+        String path = System.getProperty("test.version.properties");
+        if (path != null) {
+            try (InputStream bundled = Version.class.getResourceAsStream("version.properties");
+                 InputStream source = new FileInputStream(path)) {
+                Properties bundledProperties = new Properties();
+                bundledProperties.load(bundled);
+
+                Properties sourceProperties = new Properties();
+                sourceProperties.load(source);
+
+                Assert.assertEquals(sourceProperties, bundledProperties);
+            }
+        }
     }
 }
