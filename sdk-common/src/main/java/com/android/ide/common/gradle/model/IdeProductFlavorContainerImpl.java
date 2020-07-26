@@ -16,7 +16,6 @@
 package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
@@ -30,7 +29,7 @@ public final class IdeProductFlavorContainerImpl implements IdeProductFlavorCont
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
-    @NonNull private final ProductFlavor myProductFlavor;
+    @NonNull private final IdeProductFlavor myProductFlavor;
     @NonNull private final SourceProvider mySourceProvider;
     @NonNull private final Collection<SourceProviderContainer> myExtraSourceProviders;
     private final int myHashCode;
@@ -68,7 +67,7 @@ public final class IdeProductFlavorContainerImpl implements IdeProductFlavorCont
 
     @Override
     @NonNull
-    public ProductFlavor getProductFlavor() {
+    public IdeProductFlavor getProductFlavor() {
         return myProductFlavor;
     }
 

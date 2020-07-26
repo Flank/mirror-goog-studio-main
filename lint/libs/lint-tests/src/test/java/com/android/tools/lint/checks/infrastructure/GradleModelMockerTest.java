@@ -35,6 +35,10 @@ import com.android.builder.model.ProductFlavorContainer;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
+import com.android.ide.common.gradle.model.IdeBuildType;
+import com.android.ide.common.gradle.model.IdeBuildTypeContainer;
+import com.android.ide.common.gradle.model.IdeProductFlavor;
+import com.android.ide.common.gradle.model.IdeProductFlavorContainer;
 import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.ide.common.gradle.model.level2.IdeDependencies;
 import com.android.ide.common.gradle.model.level2.IdeLibrary;
@@ -98,11 +102,11 @@ public class GradleModelMockerTest {
     }
 
     @Nullable
-    private static BuildType findBuildType(
+    private static IdeBuildType findBuildType(
             @NonNull GradleModelMocker mocker, @NonNull String name) {
         IdeAndroidProject project = mocker.getProject();
-        for (BuildTypeContainer container : project.getBuildTypes()) {
-            BuildType buildType = container.getBuildType();
+        for (IdeBuildTypeContainer container : project.getBuildTypes()) {
+            IdeBuildType buildType = container.getBuildType();
             if (name.equals(buildType.getName())) {
                 return buildType;
             }
@@ -111,11 +115,11 @@ public class GradleModelMockerTest {
     }
 
     @Nullable
-    private static ProductFlavor findProductFlavor(
+    private static IdeProductFlavor findProductFlavor(
             @NonNull GradleModelMocker mocker, @NonNull String name) {
         IdeAndroidProject project = mocker.getProject();
-        for (ProductFlavorContainer container : project.getProductFlavors()) {
-            ProductFlavor productFlavor = container.getProductFlavor();
+        for (IdeProductFlavorContainer container : project.getProductFlavors()) {
+            IdeProductFlavor productFlavor = container.getProductFlavor();
             if (name.equals(productFlavor.getName())) {
                 return productFlavor;
             }

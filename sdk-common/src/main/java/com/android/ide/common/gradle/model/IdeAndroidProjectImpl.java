@@ -19,10 +19,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.NativeToolchain;
-import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
@@ -55,9 +53,9 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
 
     @NonNull private final String myModelVersion;
     @NonNull private final String myName;
-    @NonNull private final ProductFlavorContainer myDefaultConfig;
-    @NonNull private final Collection<BuildTypeContainer> myBuildTypes;
-    @NonNull private final Collection<ProductFlavorContainer> myProductFlavors;
+    @NonNull private final IdeProductFlavorContainer myDefaultConfig;
+    @NonNull private final Collection<IdeBuildTypeContainer> myBuildTypes;
+    @NonNull private final Collection<IdeProductFlavorContainer> myProductFlavors;
     @NonNull private final Collection<SyncIssue> mySyncIssues;
     @NonNull private final Collection<IdeVariant> myVariants;
     @NonNull private final Collection<String> myVariantNames;
@@ -113,18 +111,18 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         // Old plugin versions do not return model version.
         GradleVersion parsedModelVersion = GradleVersion.tryParse(project.getModelVersion());
 
-        ProductFlavorContainer defaultConfigCopy =
+        IdeProductFlavorContainer defaultConfigCopy =
                 modelCache.computeIfAbsent(
                         project.getDefaultConfig(),
                         container -> new IdeProductFlavorContainerImpl(container, modelCache));
 
-        Collection<BuildTypeContainer> buildTypesCopy =
+        Collection<IdeBuildTypeContainer> buildTypesCopy =
                 IdeModel.copy(
                         project.getBuildTypes(),
                         modelCache,
                         container -> new IdeBuildTypeContainerImpl(container, modelCache));
 
-        Collection<ProductFlavorContainer> productFlavorCopy =
+        Collection<IdeProductFlavorContainer> productFlavorCopy =
                 IdeModel.copy(
                         project.getProductFlavors(),
                         modelCache,
@@ -320,9 +318,9 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             @NonNull String modelVersion,
             @Nullable GradleVersion parsedModelVersion,
             @NonNull String name,
-            @NonNull ProductFlavorContainer defaultConfig,
-            @NonNull Collection<BuildTypeContainer> buildTypes,
-            @NonNull Collection<ProductFlavorContainer> productFlavors,
+            @NonNull IdeProductFlavorContainer defaultConfig,
+            @NonNull Collection<IdeBuildTypeContainer> buildTypes,
+            @NonNull Collection<IdeProductFlavorContainer> productFlavors,
             @NonNull Collection<SyncIssue> syncIssues,
             @NonNull Collection<IdeVariant> variants,
             @NonNull Collection<String> variantNames,
@@ -460,19 +458,19 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
 
     @Override
     @NonNull
-    public ProductFlavorContainer getDefaultConfig() {
+    public IdeProductFlavorContainer getDefaultConfig() {
         return myDefaultConfig;
     }
 
     @Override
     @NonNull
-    public Collection<BuildTypeContainer> getBuildTypes() {
+    public Collection<IdeBuildTypeContainer> getBuildTypes() {
         return myBuildTypes;
     }
 
     @Override
     @NonNull
-    public Collection<ProductFlavorContainer> getProductFlavors() {
+    public Collection<IdeProductFlavorContainer> getProductFlavors() {
         return myProductFlavors;
     }
 

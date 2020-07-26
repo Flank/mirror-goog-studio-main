@@ -20,7 +20,6 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildType;
-import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
@@ -127,7 +126,7 @@ public interface IdeAndroidProject extends Serializable {
      * @return the product flavor.
      */
     @NonNull
-    ProductFlavorContainer getDefaultConfig();
+    IdeProductFlavorContainer getDefaultConfig();
 
     /**
      * Returns a list of all the {@link BuildType} in their container.
@@ -135,7 +134,7 @@ public interface IdeAndroidProject extends Serializable {
      * @return a list of build type containers.
      */
     @NonNull
-    Collection<BuildTypeContainer> getBuildTypes();
+    Collection<IdeBuildTypeContainer> getBuildTypes();
 
     /**
      * Returns a list of all the {@link ProductFlavor} in their container.
@@ -143,7 +142,7 @@ public interface IdeAndroidProject extends Serializable {
      * @return a list of product flavor containers.
      */
     @NonNull
-    Collection<ProductFlavorContainer> getProductFlavors();
+    Collection<IdeProductFlavorContainer> getProductFlavors();
 
     /**
      * Returns a list of all the variants.
@@ -220,7 +219,7 @@ public interface IdeAndroidProject extends Serializable {
     /**
      * Returns the dependencies that were not successfully resolved. The returned list gets
      * populated only if the system property {@link
-     * com.android.builder.model.AndroidProject#PROPERTY_BUILD_MODEL_ONLY} has been set to {@code
+     * AndroidProject#PROPERTY_BUILD_MODEL_ONLY} has been set to {@code
      * true}.
      *
      * <p>Each value of the collection has the format group:name:version, for example:
@@ -235,7 +234,7 @@ public interface IdeAndroidProject extends Serializable {
 
     /**
      * Returns issues found during sync. The returned list gets populated only if the system
-     * property {@link com.android.builder.model.AndroidProject#PROPERTY_BUILD_MODEL_ONLY} has been
+     * property {@link AndroidProject#PROPERTY_BUILD_MODEL_ONLY} has been
      * set to {@code true}.
      */
     @NonNull

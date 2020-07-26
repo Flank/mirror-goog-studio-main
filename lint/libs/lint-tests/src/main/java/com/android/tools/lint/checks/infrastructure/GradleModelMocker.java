@@ -41,7 +41,6 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.BuildType;
-import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaCompileOptions;
@@ -50,7 +49,6 @@ import com.android.builder.model.Library;
 import com.android.builder.model.LintOptions;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavor;
-import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
@@ -61,9 +59,12 @@ import com.android.builder.model.level2.GraphItem;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
+import com.android.ide.common.gradle.model.IdeBuildType;
+import com.android.ide.common.gradle.model.IdeBuildTypeContainer;
 import com.android.ide.common.gradle.model.IdeJavaArtifact;
 import com.android.ide.common.gradle.model.IdeLintOptions;
 import com.android.ide.common.gradle.model.IdeProductFlavor;
+import com.android.ide.common.gradle.model.IdeProductFlavorContainer;
 import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.ide.common.gradle.model.level2.IdeAndroidLibrary;
 import com.android.ide.common.gradle.model.level2.IdeAndroidLibraryCore;
@@ -148,7 +149,7 @@ public class GradleModelMocker {
     private IdeVariant variant;
     private GlobalLibraryMap globalLibraryMap;
     private final Map<IdeLibrary, IdeLibrary> libraryMocks = new HashMap<>();
-    private final List<BuildType> buildTypes = Lists.newArrayList();
+    private final List<IdeBuildType> buildTypes = Lists.newArrayList();
     private final List<IdeLibrary> androidLibraries = Lists.newArrayList();
     private final List<IdeLibrary> javaLibraries = Lists.newArrayList();
     private final List<IdeLibrary> moduleLibraries = Lists.newArrayList();
@@ -160,7 +161,7 @@ public class GradleModelMocker {
     private final List<IdeLibrary> androidTestModuleLibraries = Lists.newArrayList();
     private final List<IdeLibrary> allJavaLibraries = Lists.newArrayList();
     private IdeProductFlavor mergedFlavor;
-    private ProductFlavor defaultFlavor;
+    private IdeProductFlavor defaultFlavor;
     private IdeLintOptions lintOptions;
     private final HashMap<String, Integer> severityOverrides = new HashMap();
     private final LintCliFlags flags = new LintCliFlags();
@@ -399,9 +400,9 @@ public class GradleModelMocker {
 
         scan(gradle, "");
 
-        List<BuildTypeContainer> containers = Lists.newArrayList();
-        for (BuildType buildType : buildTypes) {
-            BuildTypeContainer container = mock(BuildTypeContainer.class);
+        List<IdeBuildTypeContainer> containers = Lists.newArrayList();
+        for (IdeBuildType buildType : buildTypes) {
+            IdeBuildTypeContainer container = mock(IdeBuildTypeContainer.class);
             when(container.getBuildType()).thenReturn(buildType);
             containers.add(container);
 
@@ -410,7 +411,7 @@ public class GradleModelMocker {
         }
 
         when(project.getBuildTypes()).thenReturn(containers);
-        ProductFlavorContainer defaultContainer = mock(ProductFlavorContainer.class);
+        IdeProductFlavorContainer defaultContainer = mock(IdeProductFlavorContainer.class);
         when(defaultContainer.getProductFlavor()).thenReturn(defaultFlavor);
         when(defaultContainer.toString()).thenReturn("defaultConfig");
         when(project.getDefaultConfig()).thenReturn(defaultContainer);
@@ -431,13 +432,13 @@ public class GradleModelMocker {
                 Lists.newArrayList(androidTestProvider, unitTestProvider);
         when(defaultContainer.getExtraSourceProviders()).thenReturn(extraProviders);
 
-        List<ProductFlavorContainer> flavorContainers = Lists.newArrayList();
+        List<IdeProductFlavorContainer> flavorContainers = Lists.newArrayList();
         flavorContainers.add(defaultContainer);
-        for (ProductFlavor flavor : productFlavors) {
+        for (IdeProductFlavor flavor : productFlavors) {
             if (flavor == defaultFlavor) {
                 continue;
             }
-            ProductFlavorContainer container = mock(ProductFlavorContainer.class);
+            IdeProductFlavorContainer container = mock(IdeProductFlavorContainer.class);
             String flavorName = flavor.getName();
             SourceProvider flavorSourceProvider = createSourceProvider(projectDir, flavorName);
             when(container.getSourceProvider()).thenReturn(flavorSourceProvider);
@@ -588,7 +589,7 @@ public class GradleModelMocker {
         Map<String, ClassField> resValues = new HashMap<>(defaultFlavor.getResValues());
         Collection<String> resourceConfigurations =
                 new HashSet<>(defaultFlavor.getResourceConfigurations());
-        for (ProductFlavorContainer container : flavorContainers) {
+        for (IdeProductFlavorContainer container : flavorContainers) {
             ProductFlavor flavor = container.getProductFlavor();
             manifestPlaceholders.putAll(flavor.getManifestPlaceholders());
             resValues.putAll(flavor.getResValues());
@@ -1678,7 +1679,7 @@ public class GradleModelMocker {
 
     @NonNull
     private BuildType createBuildType(@NonNull String name) {
-        BuildType buildType = mock(BuildType.class);
+        IdeBuildType buildType = mock(IdeBuildType.class);
         when(buildType.getName()).thenReturn(name);
         when(buildType.toString()).thenReturn(name);
         when(buildType.isDebuggable()).thenReturn(name.startsWith("debug"));

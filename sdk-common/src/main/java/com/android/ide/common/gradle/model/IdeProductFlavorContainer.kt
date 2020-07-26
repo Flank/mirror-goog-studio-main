@@ -15,6 +15,29 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.ProductFlavorContainer
+import com.android.builder.model.SourceProvider
+import com.android.builder.model.SourceProviderContainer
 
-interface IdeProductFlavorContainer : ProductFlavorContainer
+interface IdeProductFlavorContainer {
+  /**
+   * The Product Flavor itself.
+   *
+   * @return the product flavor
+   */
+  val productFlavor: IdeProductFlavor
+
+  /**
+   * The associated main sources of the product flavor
+   *
+   * @return the main source provider.
+   */
+  val sourceProvider: SourceProvider
+
+  /**
+   * Returns a list of ArtifactMetaData/SourceProvider association.
+   *
+   * @return a list of ArtifactMetaData/SourceProvider association.
+   */
+  val extraSourceProviders: Collection<SourceProviderContainer>
+
+}

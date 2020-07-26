@@ -15,6 +15,28 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.BuildTypeContainer
+import com.android.builder.model.SourceProvider
+import com.android.builder.model.SourceProviderContainer
 
-interface IdeBuildTypeContainer: BuildTypeContainer
+interface IdeBuildTypeContainer {
+  /**
+   * The Build Type itself.
+   *
+   * @return the build type
+   */
+  val buildType: IdeBuildType
+
+  /**
+   * The associated sources of the build type.
+   *
+   * @return the build type source provider.
+   */
+  val sourceProvider: SourceProvider
+
+  /**
+   * Returns a list of ArtifactMetaData/SourceProvider association.
+   *
+   * @return a list of ArtifactMetaData/SourceProvider association.
+   */
+  val extraSourceProviders: Collection<SourceProviderContainer>
+}
