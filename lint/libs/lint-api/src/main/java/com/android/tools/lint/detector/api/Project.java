@@ -51,7 +51,6 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.ide.common.repository.ResourceVisibilityLookup;
-import com.android.projectmodel.ProjectType;
 import com.android.repository.Revision;
 import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
@@ -1072,34 +1071,6 @@ public class Project {
             // Recurse
             library.addLibraryProjects(collection, seen, path);
             path.remove(library);
-        }
-    }
-
-    /**
-     * The type of artifact produced by this Android project.
-     *
-     * @deprecated Use {@link #getType()} instead!
-     */
-    @NonNull
-    @Deprecated
-    public final ProjectType getProjectType() {
-        LintModelModuleType type = getType();
-        switch (type) {
-            case APP:
-                //noinspection DuplicateBranchesInSwitch
-                return ProjectType.APP;
-            case LIBRARY:
-                return ProjectType.LIBRARY;
-            case TEST:
-                return ProjectType.TEST;
-            case INSTANT_APP:
-                return ProjectType.INSTANT_APP;
-            case FEATURE:
-                return ProjectType.FEATURE;
-            case DYNAMIC_FEATURE:
-                return ProjectType.DYNAMIC_FEATURE;
-            default:
-                return ProjectType.APP;
         }
     }
 

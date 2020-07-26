@@ -18,7 +18,7 @@ package com.android.projectmodel
 import com.android.ide.common.util.PathString
 
 /**
- * Represents a dependency for a [Variant].
+ * Represents a dependency for a variant.
  */
 sealed class Library {
     /**
@@ -160,7 +160,7 @@ data class ProjectLibrary(
      */
     val projectName: String,
     /**
-     * Variant of the project being depended upon (matches the variant's [Variant.name] attribute).
+     * Variant of the project being depended upon.
      */
     val variant: String
 ) : Library()

@@ -98,30 +98,6 @@
     </issue>
 
     <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `capitalize(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
-        <location
-            file="src/main/java/com/android/projectmodel/SubmodulePath.kt"
-            line="86"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
-        <location
-            file="src/main/java/com/android/projectmodel/SubmodulePath.kt"
-            line="86"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
-        <location
-            file="src/main/java/com/android/projectmodel/SubmodulePath.kt"
-            line="86"/>
-    </issue>
-
-    <issue
         id="NoInterning"
         message="Do not intern strings; if reusing strings is truly necessary build a local cache">
         <location

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,33 +16,6 @@
 @file:JvmName("VariantUtil")
 
 package com.android.projectmodel
-
-/**
- * Metadata for a variant of an module. Variants
- *
- * New properties may be added in the future; clients that invoke the constructor are encouraged to
- * use Kotlin named arguments to stay source compatible.
- */
-data class Variant(
-    /**
-     * Identifier of the [Variant]. Meant to be unique within a given module and
-     * stable across syncs. This will be used for cross-referencing the [Variant] from other
-     * projects in [ProjectLibrary.variant].
-     */
-    val name: String,
-    /**
-     * User-readable name of the [Variant]. By default, this is the same as the [name].
-     */
-    val displayName: String = name
-) {
-    constructor(
-        path: SubmodulePath
-    ) : this(name = path.toConfigPath().simpleName)
-
-    override fun toString(): String = printProperties(
-        this, Variant(name = "")
-    )
-}
 
 /**
  * Name reserved the main artifact in a [Variant].
