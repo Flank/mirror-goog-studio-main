@@ -45,10 +45,6 @@ data class Config(
      */
     val manifestPlaceholderValues: Map<String, Any> = emptyMap(),
     /**
-     * List of sources contributed by this [Config].
-     */
-    val sources: SourceSet = emptySourceSet,
-    /**
      * Dynamic resources. Map of resource names onto resource values.
      */
     val resValues: Map<String, DynamicResourceValue> = emptyMap(),
@@ -105,7 +101,6 @@ data class Config(
                 { a, b -> a + b }),
             manifestValues = manifestValues + other.manifestValues,
             manifestPlaceholderValues = manifestPlaceholderValues + other.manifestPlaceholderValues,
-            sources = sources + other.sources,
             resValues = resValues + other.resValues,
             compileDeps = mergeNullable(compileDeps, other.compileDeps, { a, b -> a + b }),
             legacyMultidexEnabled = other.legacyMultidexEnabled ?: legacyMultidexEnabled,
@@ -119,11 +114,6 @@ data class Config(
             usingSupportLibVectors = usingSupportLibVectors || other.usingSupportLibVectors
         )
 
-    /**
-     * Returns a copy of the receiver with the given sources. Intended to simplify construction
-     * from Java.
-     */
-    fun withSources(sources: SourceSet) = copy(sources = sources)
 
     /**
      * Returns a copy of the receiver with the given manifest attributes. Intended to simplify
@@ -137,11 +127,6 @@ data class Config(
      */
     fun withCompileDeps(compileDeps: List<ArtifactDependency>?) = copy(compileDeps = compileDeps)
 }
-
-/**
- * Computes the [SourceSet] that includes all sources from all [Config] instances in the list.
- */
-fun Iterable<Config>.mergedSourceSet(): SourceSet = fold(SourceSet()) { a, b -> a + b.sources }
 
 /**
  * Returns the [Config] produced by merging all the given configs in order.
