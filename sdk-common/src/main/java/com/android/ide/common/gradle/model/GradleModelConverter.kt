@@ -34,7 +34,6 @@ import com.android.projectmodel.ARTIFACT_NAME_ANDROID_TEST
 import com.android.projectmodel.ARTIFACT_NAME_MAIN
 import com.android.projectmodel.ARTIFACT_NAME_UNIT_TEST
 import com.android.projectmodel.AndroidPathType
-import com.android.projectmodel.AndroidSubmodule
 import com.android.projectmodel.Artifact
 import com.android.projectmodel.Config
 import com.android.projectmodel.ConfigAssociation
@@ -82,15 +81,6 @@ fun getProjectType(typeId: Int): ProjectType {
     }
 }
 
-/**
- * Converts this [IdeAndroidProject] to an [AndroidSubmodule]. The given [cache] determines the scope for de-duping.
- * If the same [ModelCache] is used for multiple conversions, duplicate objects will be merged into the same instance
- * across those conversions. In most situations there will be many duplicate objects within the same project and
- * few duplicate objects between projects, so using the default value will be sufficient.
- */
-fun IdeAndroidProject.toSubmodule(cache: ModelCache = ModelCache()): AndroidSubmodule =
-    GradleModelConverter(this, cache).convert()
-
 /** Name assigned to the dimension that contains all flavors that aren't explicitly associated with a dimension. */
 const val DIM_UNNAMED_FLAVOR = "unnamedFlavorDimension"
 /** Name assigned to the dimension that contains build types. */
@@ -106,26 +96,7 @@ class GradleModelConverter(
 ) {
     private val schema = getConfigTableSchema(project)
 
-    fun convert(): AndroidSubmodule =
-        compute(ProjectAttribute.PROJECT, project) {
-            val variants = HashMap<SubmodulePath, Variant>()
-            val artifacts = HashMap<SubmodulePath, Artifact>()
-            forEachVariant {
-                variants[artifactPathForVariant(it)] = convertMetadata(it)
-                artifacts.putAll(
-                    convertArtifacts(it))
-            }
-
-            AndroidSubmodule(
-                name = name,
-                type = getProjectType(projectType),
-                overriddenVariants = variants,
-                artifacts = artifacts,
-                configTable = getConfigTable(project)
-            )
-        }
-
-    /**
+  /**
      * Converts the given [IdeLibrary] into a [Library]. Returns null if the given library is badly formed.
      */
     fun convert(library: IdeLibrary): Library? =

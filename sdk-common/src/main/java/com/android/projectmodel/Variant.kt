@@ -18,14 +18,14 @@
 package com.android.projectmodel
 
 /**
- * Metadata for a variant of an [AndroidSubmodule]. Variants
+ * Metadata for a variant of an module. Variants
  *
  * New properties may be added in the future; clients that invoke the constructor are encouraged to
  * use Kotlin named arguments to stay source compatible.
  */
 data class Variant(
     /**
-     * Identifier of the [Variant]. Meant to be unique within a given [AndroidSubmodule] and
+     * Identifier of the [Variant]. Meant to be unique within a given module and
      * stable across syncs. This will be used for cross-referencing the [Variant] from other
      * projects in [ProjectLibrary.variant].
      */

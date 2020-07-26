@@ -18,8 +18,8 @@
 package com.android.projectmodel
 
 /**
- * Holds a path that uniquely identifies an [Artifact] or [Variant] within an [AndroidSubmodule].
- * [SubmodulePath] instances must conform to the [ConfigTableSchema] for their [AndroidSubmodule].
+ * Holds a path that uniquely identifies an [Artifact] or [Variant] within a module.
+ * [SubmodulePath] instances must conform to the [ConfigTableSchema] for their module.
  * [Artifact] instances are always identified by the longest-possible paths in the schema. The
  * parent of an [Artifact] is always the path to its [Variant].
  */
