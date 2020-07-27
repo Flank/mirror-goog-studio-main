@@ -50,15 +50,6 @@ public class IdeSourceProviderContainerTest {
     }
 
     @Test
-    public void constructor() throws Throwable {
-        SourceProviderContainer original = new SourceProviderContainerStub();
-        IdeSourceProviderContainerImpl copy =
-                new IdeSourceProviderContainerImpl(original, myModelCache);
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
     public void equalsAndHashCode() {
         createEqualsVerifier(IdeSourceProviderContainerImpl.class).verify();
     }

@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.gradle.model;
 
-import static com.android.ide.common.gradle.model.IdeModelTestUtils.*;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
@@ -27,7 +26,7 @@ import java.util.Objects;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeSourceProvider}. */
+/** Tests for {@link IdeSourceProviderImpl}. */
 public class IdeSourceProviderTest {
     private ModelCache myModelCache;
 
@@ -62,7 +61,7 @@ public class IdeSourceProviderTest {
                                 getJniLibsDirectories());
                     }
                 };
-        IdeSourceProvider sourceProvider = IdeSourceProvider.create(original);
+        IdeSourceProvider sourceProvider = IdeSourceProviderImpl.create(original);
         assertThat(sourceProvider.getShadersDirectories()).isEmpty();
     }
 }

@@ -51,14 +51,6 @@ public class IdeProductFlavorContainerTest {
     }
 
     @Test
-    public void constructor() throws Throwable {
-        ProductFlavorContainer original = new ProductFlavorContainerStub();
-        IdeProductFlavorContainerImpl copy = new IdeProductFlavorContainerImpl(original, myModelCache);
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
     public void equalsAndHashCode() {
         createEqualsVerifier(IdeProductFlavorContainerImpl.class).verify();
     }

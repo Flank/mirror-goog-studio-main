@@ -50,14 +50,6 @@ public class IdeBuildTypeContainerTest {
     }
 
     @Test
-    public void constructor() throws Throwable {
-        BuildTypeContainer original = new BuildTypeContainerStub();
-        IdeBuildTypeContainerImpl copy = new IdeBuildTypeContainerImpl(original, myModelCache);
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
     public void equalsAndHashCode() {
         createEqualsVerifier(IdeBuildTypeContainerImpl.class).verify();
     }

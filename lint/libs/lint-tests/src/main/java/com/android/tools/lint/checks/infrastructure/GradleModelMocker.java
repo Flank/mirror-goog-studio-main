@@ -50,8 +50,6 @@ import com.android.builder.model.LintOptions;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
-import com.android.builder.model.SourceProvider;
-import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.builder.model.ViewBindingOptions;
 import com.android.builder.model.level2.GlobalLibraryMap;
@@ -65,6 +63,8 @@ import com.android.ide.common.gradle.model.IdeJavaArtifact;
 import com.android.ide.common.gradle.model.IdeLintOptions;
 import com.android.ide.common.gradle.model.IdeProductFlavor;
 import com.android.ide.common.gradle.model.IdeProductFlavorContainer;
+import com.android.ide.common.gradle.model.IdeSourceProvider;
+import com.android.ide.common.gradle.model.IdeSourceProviderContainer;
 import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.ide.common.gradle.model.level2.IdeAndroidLibrary;
 import com.android.ide.common.gradle.model.level2.IdeAndroidLibraryCore;
@@ -406,7 +406,7 @@ public class GradleModelMocker {
             when(container.getBuildType()).thenReturn(buildType);
             containers.add(container);
 
-            SourceProvider provider = createSourceProvider(projectDir, buildType.getName());
+            IdeSourceProvider provider = createSourceProvider(projectDir, buildType.getName());
             when(container.getSourceProvider()).thenReturn(provider);
         }
 
@@ -415,20 +415,20 @@ public class GradleModelMocker {
         when(defaultContainer.getProductFlavor()).thenReturn(defaultFlavor);
         when(defaultContainer.toString()).thenReturn("defaultConfig");
         when(project.getDefaultConfig()).thenReturn(defaultContainer);
-        SourceProvider mainProvider = createSourceProvider(projectDir, "main");
+        IdeSourceProvider mainProvider = createSourceProvider(projectDir, "main");
         when(defaultContainer.getSourceProvider()).thenReturn(mainProvider);
 
-        SourceProviderContainer androidTestProvider = mock(SourceProviderContainer.class);
+        IdeSourceProviderContainer androidTestProvider = mock(IdeSourceProviderContainer.class);
         when(androidTestProvider.getArtifactName())
                 .thenReturn(AndroidProject.ARTIFACT_ANDROID_TEST);
-        SourceProvider androidSourceProvider = createSourceProvider(projectDir, "androidTest");
+        IdeSourceProvider androidSourceProvider = createSourceProvider(projectDir, "androidTest");
         when(androidTestProvider.getSourceProvider()).thenReturn(androidSourceProvider);
-        SourceProviderContainer unitTestProvider = mock(SourceProviderContainer.class);
+        IdeSourceProviderContainer unitTestProvider = mock(IdeSourceProviderContainer.class);
         when(unitTestProvider.getArtifactName()).thenReturn(AndroidProject.ARTIFACT_UNIT_TEST);
-        SourceProvider unitSourceProvider = createSourceProvider(projectDir, "test");
+        IdeSourceProvider unitSourceProvider = createSourceProvider(projectDir, "test");
         when(unitTestProvider.getSourceProvider()).thenReturn(unitSourceProvider);
 
-        List<SourceProviderContainer> extraProviders =
+        List<IdeSourceProviderContainer> extraProviders =
                 Lists.newArrayList(androidTestProvider, unitTestProvider);
         when(defaultContainer.getExtraSourceProviders()).thenReturn(extraProviders);
 
@@ -440,7 +440,7 @@ public class GradleModelMocker {
             }
             IdeProductFlavorContainer container = mock(IdeProductFlavorContainer.class);
             String flavorName = flavor.getName();
-            SourceProvider flavorSourceProvider = createSourceProvider(projectDir, flavorName);
+            IdeSourceProvider flavorSourceProvider = createSourceProvider(projectDir, flavorName);
             when(container.getSourceProvider()).thenReturn(flavorSourceProvider);
             when(container.getProductFlavor()).thenReturn(flavor);
             when(container.toString()).thenReturn(flavorName);
@@ -528,7 +528,7 @@ public class GradleModelMocker {
         }
 
         if (flavorContainers.size() >= 2) {
-            SourceProvider multiVariantSourceSet =
+            IdeSourceProvider multiVariantSourceSet =
                     createSourceProvider(projectDir, variantNameSb.toString());
             when(artifact.getMultiFlavorSourceProvider()).thenReturn(multiVariantSourceSet);
         }
@@ -539,7 +539,8 @@ public class GradleModelMocker {
         }
         String defaultVariantName = variantNameSb.toString();
         if (productFlavors.isEmpty()) {
-            SourceProvider variantSourceSet = createSourceProvider(projectDir, defaultVariantName);
+            IdeSourceProvider variantSourceSet =
+                    createSourceProvider(projectDir, defaultVariantName);
             when(artifact.getVariantSourceProvider()).thenReturn(variantSourceSet);
         }
         setVariantName(defaultVariantName);
@@ -1761,8 +1762,9 @@ public class GradleModelMocker {
     }
 
     @NonNull
-    private static SourceProvider createSourceProvider(@NonNull File root, @NonNull String name) {
-        SourceProvider provider = mock(SourceProvider.class);
+    private static IdeSourceProvider createSourceProvider(
+            @NonNull File root, @NonNull String name) {
+        IdeSourceProvider provider = mock(IdeSourceProvider.class);
         when(provider.getName()).thenReturn(name);
         when(provider.getManifestFile())
                 .thenReturn(new File(root, "src/" + name + "/" + ANDROID_MANIFEST_XML));

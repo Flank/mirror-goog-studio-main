@@ -15,6 +15,15 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.SourceProviderContainer
+interface IdeSourceProviderContainer {
+  /**
+   * Returns the name matching `IdeArtifactMetaData.getName`
+   */
+  val artifactName: String
 
-interface IdeSourceProviderContainer : SourceProviderContainer
+  /**
+   * Returns the source provider
+   */
+  val sourceProvider: IdeSourceProvider
+
+}

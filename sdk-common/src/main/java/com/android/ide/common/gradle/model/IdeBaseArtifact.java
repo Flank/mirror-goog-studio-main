@@ -18,7 +18,6 @@ package com.android.ide.common.gradle.model;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.ArtifactMetaData;
-import com.android.builder.model.SourceProvider;
 import com.android.ide.common.gradle.model.level2.IdeDependencies;
 import java.io.File;
 import java.io.Serializable;
@@ -80,7 +79,7 @@ public interface IdeBaseArtifact extends Serializable {
      * @return the variant specific source provider
      */
     @Nullable
-    SourceProvider getVariantSourceProvider();
+    IdeSourceProvider getVariantSourceProvider();
 
     /**
      * A SourceProvider specific to the flavor combination.
@@ -93,7 +92,7 @@ public interface IdeBaseArtifact extends Serializable {
      * @return the multi flavor specific source provider
      */
     @Nullable
-    SourceProvider getMultiFlavorSourceProvider();
+    IdeSourceProvider getMultiFlavorSourceProvider();
 
     /**
      * Returns names of tasks that need to be run when setting up the IDE project. After these tasks

@@ -33,7 +33,7 @@ public final class IdeSourceProviderContainerImpl
     // Used for serialization by the IDE.
     IdeSourceProviderContainerImpl() {
         myArtifactName = "";
-        mySourceProvider = new IdeSourceProvider();
+        mySourceProvider = new IdeSourceProviderImpl();
 
         myHashCode = 0;
     }
@@ -45,7 +45,8 @@ public final class IdeSourceProviderContainerImpl
                 modelCache.computeIfAbsent(
                         container.getSourceProvider(),
                         provider ->
-                                IdeSourceProvider.create(provider, modelCache::deduplicateString));
+                                IdeSourceProviderImpl.create(
+                                        provider, modelCache::deduplicateString));
 
         myHashCode = calculateHashCode();
     }

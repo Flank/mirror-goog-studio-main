@@ -17,7 +17,6 @@ package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.BuildTypeContainer;
-import com.android.builder.model.SourceProviderContainer;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,14 +29,14 @@ public final class IdeBuildTypeContainerImpl implements IdeBuildTypeContainer, S
 
     @NonNull private final IdeBuildType myBuildType;
     @NonNull private final IdeSourceProvider mySourceProvider;
-    @NonNull private final Collection<SourceProviderContainer> myExtraSourceProviders;
+    @NonNull private final Collection<IdeSourceProviderContainer> myExtraSourceProviders;
     private final int myHashCode;
 
     // Used for serialization by the IDE.
     @SuppressWarnings("unused")
     IdeBuildTypeContainerImpl() {
         myBuildType = new IdeBuildTypeImpl();
-        mySourceProvider = new IdeSourceProvider();
+        mySourceProvider = new IdeSourceProviderImpl();
         myExtraSourceProviders = Collections.emptyList();
 
         myHashCode = 0;
@@ -53,7 +52,8 @@ public final class IdeBuildTypeContainerImpl implements IdeBuildTypeContainer, S
                 modelCache.computeIfAbsent(
                         container.getSourceProvider(),
                         provider ->
-                                IdeSourceProvider.create(provider, modelCache::deduplicateString));
+                                IdeSourceProviderImpl.create(
+                                        provider, modelCache::deduplicateString));
         myExtraSourceProviders =
                 IdeModel.copy(
                         container.getExtraSourceProviders(),
@@ -79,7 +79,7 @@ public final class IdeBuildTypeContainerImpl implements IdeBuildTypeContainer, S
 
     @Override
     @NonNull
-    public Collection<SourceProviderContainer> getExtraSourceProviders() {
+    public Collection<IdeSourceProviderContainer> getExtraSourceProviders() {
         return myExtraSourceProviders;
     }
 

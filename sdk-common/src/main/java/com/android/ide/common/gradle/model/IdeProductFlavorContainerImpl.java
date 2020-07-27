@@ -17,8 +17,6 @@ package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.ProductFlavorContainer;
-import com.android.builder.model.SourceProvider;
-import com.android.builder.model.SourceProviderContainer;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,14 +28,14 @@ public final class IdeProductFlavorContainerImpl implements IdeProductFlavorCont
     private static final long serialVersionUID = 2L;
 
     @NonNull private final IdeProductFlavor myProductFlavor;
-    @NonNull private final SourceProvider mySourceProvider;
-    @NonNull private final Collection<SourceProviderContainer> myExtraSourceProviders;
+    @NonNull private final IdeSourceProvider mySourceProvider;
+    @NonNull private final Collection<IdeSourceProviderContainer> myExtraSourceProviders;
     private final int myHashCode;
 
     // Used for serialization by the IDE.
     IdeProductFlavorContainerImpl() {
         myProductFlavor = new IdeProductFlavorImpl();
-        mySourceProvider = new IdeSourceProvider();
+        mySourceProvider = new IdeSourceProviderImpl();
         myExtraSourceProviders = Collections.emptyList();
 
         myHashCode = 0;
@@ -53,7 +51,8 @@ public final class IdeProductFlavorContainerImpl implements IdeProductFlavorCont
                 modelCache.computeIfAbsent(
                         container.getSourceProvider(),
                         provider ->
-                                IdeSourceProvider.create(provider, modelCache::deduplicateString));
+                                IdeSourceProviderImpl.create(
+                                        provider, modelCache::deduplicateString));
         myExtraSourceProviders =
                 IdeModel.copy(
                         container.getExtraSourceProviders(),
@@ -73,13 +72,13 @@ public final class IdeProductFlavorContainerImpl implements IdeProductFlavorCont
 
     @Override
     @NonNull
-    public SourceProvider getSourceProvider() {
+    public IdeSourceProvider getSourceProvider() {
         return mySourceProvider;
     }
 
     @Override
     @NonNull
-    public Collection<SourceProviderContainer> getExtraSourceProviders() {
+    public Collection<IdeSourceProviderContainer> getExtraSourceProviders() {
         return myExtraSourceProviders;
     }
 

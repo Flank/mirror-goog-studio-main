@@ -24,14 +24,14 @@ import com.android.builder.model.BuildType
 import com.android.builder.model.ClassField
 import com.android.builder.model.LintOptions
 import com.android.builder.model.ProductFlavor
-import com.android.builder.model.SourceProvider
-import com.android.builder.model.SourceProviderContainer
 import com.android.ide.common.gradle.model.IdeAndroidArtifact
 import com.android.ide.common.gradle.model.IdeAndroidProject
 import com.android.ide.common.gradle.model.IdeBaseArtifact
 import com.android.ide.common.gradle.model.IdeJavaArtifact
 import com.android.ide.common.gradle.model.IdeLintOptions
 import com.android.ide.common.gradle.model.IdeMavenCoordinatesImpl
+import com.android.ide.common.gradle.model.IdeSourceProvider
+import com.android.ide.common.gradle.model.IdeSourceProviderContainer
 import com.android.ide.common.gradle.model.IdeVariant
 import com.android.ide.common.gradle.model.level2.IdeLibrary
 import com.android.ide.common.repository.GradleVersion
@@ -439,15 +439,15 @@ class LintModelFactory : LintModelModuleLoader {
         return providers
     }
 
-    private fun SourceProviderContainer.isTest(): Boolean {
+    private fun IdeSourceProviderContainer.isTest(): Boolean {
         return isUnitTest() || isInstrumentationTest()
     }
 
-    private fun SourceProviderContainer.isUnitTest(): Boolean {
+    private fun IdeSourceProviderContainer.isUnitTest(): Boolean {
         return AndroidProject.ARTIFACT_UNIT_TEST == artifactName
     }
 
-    private fun SourceProviderContainer.isInstrumentationTest(): Boolean {
+    private fun IdeSourceProviderContainer.isInstrumentationTest(): Boolean {
         return AndroidProject.ARTIFACT_ANDROID_TEST == artifactName
     }
 
@@ -526,7 +526,7 @@ class LintModelFactory : LintModelModuleLoader {
     }
 
     private fun getSourceProvider(
-        providerContainer: SourceProviderContainer,
+        providerContainer: IdeSourceProviderContainer,
         debugOnly: Boolean = false
     ): LintModelSourceProvider {
         val provider = providerContainer.sourceProvider
@@ -542,7 +542,7 @@ class LintModelFactory : LintModelModuleLoader {
     }
 
     private fun getSourceProvider(
-        provider: SourceProvider,
+        provider: IdeSourceProvider,
         unitTestOnly: Boolean = false,
         instrumentationTestOnly: Boolean = false,
         debugOnly: Boolean = false
