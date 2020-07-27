@@ -21,11 +21,12 @@ import com.android.build.api.component.AndroidTestProperties
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.SigningConfig
 import com.android.build.api.variant.impl.ResValue
+import com.android.build.api.variant.impl.SigningConfigImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.api.variant.impl.initializeAaptOptionsFromDsl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
-import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -37,6 +38,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.android.build.gradle.options.IntegerOption
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -153,6 +155,19 @@ open class AndroidTestPropertiesImpl @Inject constructor(
      */
     override fun addResValue(name: String, type: String, value: Provider<String>, comment: String?) {
         resValues.put(ResValue.Key(type, name), value.map { ResValue(it, comment) })
+    }
+
+    override val signingConfig: SigningConfig by lazy {
+        SigningConfigImpl(
+            variantDslInfo.signingConfig,
+            variantPropertiesApiServices,
+            minSdkVersion.apiLevel,
+            globalScope.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
+        )
+    }
+
+    override fun signingConfig(action: SigningConfig.() -> Unit) {
+        action.invoke(signingConfig)
     }
 
     // ---------------------------------------------------------------------------------------------
