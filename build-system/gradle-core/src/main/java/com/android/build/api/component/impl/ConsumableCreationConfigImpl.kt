@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.component
+package com.android.build.api.component.impl
 
+import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.builder.dexing.DexingType
 
-/**
- * CreationConfig for variants that produces an artifact that is directly install-able to devices
- * like APKs or AABs or used by other projects as a versioned reusable logic like AARs.
- */
-interface ConsumableCreationConfig: VariantCreationConfig {
-    val renderscriptTargetApi: Int
+class ConsumableCreationConfigImpl(val variantDslInfo: VariantDslInfo) {
 
     val dexingType: DexingType
+        get() = variantDslInfo.dexingType
 }

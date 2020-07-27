@@ -26,10 +26,7 @@ import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.internal.component.ApkCreationConfig;
-import com.android.build.gradle.internal.component.ComponentCreationConfig;
-import com.android.build.gradle.internal.component.TestCreationConfig;
-import com.android.build.gradle.internal.component.VariantCreationConfig;
+import com.android.build.gradle.internal.component.*;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
@@ -146,7 +143,8 @@ public class TestApplicationTaskManager
     }
 
     @Override
-    protected void maybeCreateJavaCodeShrinkerTask(@NonNull VariantCreationConfig creationConfig) {
+    protected void maybeCreateJavaCodeShrinkerTask(
+            @NonNull ConsumableCreationConfig creationConfig) {
         final CodeShrinker codeShrinker = creationConfig.getVariantScope().getCodeShrinker();
         if (codeShrinker != null) {
             doCreateJavaCodeShrinkerTask(

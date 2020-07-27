@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.android.builder.dexing.DexingType
 import com.android.build.gradle.options.IntegerOption
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -77,6 +78,8 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     globalScope
 ), AndroidTestProperties, AndroidTestCreationConfig {
 
+    private val delegate = ConsumableCreationConfigImpl(variantDslInfo)
+
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
@@ -102,8 +105,8 @@ open class AndroidTestPropertiesImpl @Inject constructor(
 
     override val aaptOptions: AaptOptions by lazy {
         initializeAaptOptionsFromDsl(
-            globalScope.extension.aaptOptions,
-            variantPropertiesApiServices
+                globalScope.extension.aaptOptions,
+                variantPropertiesApiServices
         )
     }
 
@@ -221,5 +224,8 @@ open class AndroidTestPropertiesImpl @Inject constructor(
             testedConfig.variantType.isAar -> true
             else -> testedConfig.variantType.isBaseModule && testedConfig.variantScope.needsShrinkDesugarLibrary
         }
+
+    override val dexingType: DexingType
+        get() = delegate.dexingType
 }
 

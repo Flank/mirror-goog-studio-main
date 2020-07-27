@@ -467,7 +467,7 @@ public abstract class TaskManager<
 
         VariantDependencies variantDependencies = variantProperties.getVariantDependencies();
 
-        if (DexingTypeKt.isLegacyMultiDexMode(variantProperties.getVariantDslInfo().getDexingType())
+        if (DexingTypeKt.isLegacyMultiDexMode(variantProperties.getDexingType())
                 && variantProperties.getVariantType().isApk()) {
             String multiDexDependency =
                     variantProperties
@@ -546,7 +546,8 @@ public abstract class TaskManager<
         }
 
         if (componentProperties.getVariantType().isApk()) { // ANDROID_TEST
-            if (DexingTypeKt.isLegacyMultiDexMode(variantDslInfo.getDexingType())) {
+            if (DexingTypeKt.isLegacyMultiDexMode(
+                    ((ApkCreationConfig) componentProperties).getDexingType())) {
                 String multiDexInstrumentationDep =
                         componentProperties
                                         .getServices()
@@ -1263,7 +1264,10 @@ public abstract class TaskManager<
         // The manifest main dex list proguard rules are always needed for the bundle,
         // even if legacy multidex is not explicitly enabled.
         boolean useAaptToGenerateLegacyMultidexMainDexProguardRules =
-                creationConfig.getNeedsMainDexList();
+                creationConfig instanceof ApkCreationConfig
+                        && ((ApkCreationConfig) creationConfig)
+                                .getDexingType()
+                                .getNeedsMainDexList();
 
         if (creationConfig.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
             // TODO: make sure we generate the proguard rules in the namespaced case.
@@ -2210,7 +2214,7 @@ public abstract class TaskManager<
             }
         }
 
-        if (creationConfig.getNeedsMainDexList()) {
+        if (creationConfig.getDexingType().getNeedsMainDexList()) {
             taskFactory.register(new D8MainDexListTask.CreationAction(creationConfig, false));
         }
 
@@ -2829,7 +2833,8 @@ public abstract class TaskManager<
                 taskProvider -> componentProperties.getTaskContainer().setBundleTask(taskProvider));
     }
 
-    protected void maybeCreateJavaCodeShrinkerTask(@NonNull VariantCreationConfig creationConfig) {
+    protected void maybeCreateJavaCodeShrinkerTask(
+            @NonNull ConsumableCreationConfig creationConfig) {
         CodeShrinker codeShrinker = creationConfig.getVariantScope().getCodeShrinker();
 
         if (codeShrinker != null) {
@@ -2845,12 +2850,12 @@ public abstract class TaskManager<
      * only used by test-only modules.
      */
     protected final void doCreateJavaCodeShrinkerTask(
-            @NonNull VariantCreationConfig creationConfig, @NonNull CodeShrinker codeShrinker) {
+            @NonNull ConsumableCreationConfig creationConfig, @NonNull CodeShrinker codeShrinker) {
         doCreateJavaCodeShrinkerTask(creationConfig, codeShrinker, false);
     }
 
     protected final void doCreateJavaCodeShrinkerTask(
-            @NonNull VariantCreationConfig creationConfig,
+            @NonNull ConsumableCreationConfig creationConfig,
             @NonNull CodeShrinker codeShrinker,
             Boolean isTestApplication) {
         @NonNull TaskProvider<? extends Task> task;
@@ -2881,7 +2886,7 @@ public abstract class TaskManager<
 
     @NonNull
     private TaskProvider<R8Task> createR8Task(
-            @NonNull VariantCreationConfig creationConfig, Boolean isTestApplication) {
+            @NonNull ConsumableCreationConfig creationConfig, Boolean isTestApplication) {
         if (creationConfig instanceof ApplicationCreationConfig) {
             publishFeatureDex((ApplicationCreationConfig) creationConfig);
         }

@@ -16,6 +16,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.impl.ConsumableCreationConfigImpl
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.api.variant.DependenciesInfo
@@ -33,6 +34,7 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.IntegerOption
+import com.android.builder.dexing.DexingType
 import org.gradle.api.provider.Property
 import javax.inject.Inject
 
@@ -66,6 +68,8 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     taskCreationServices,
     globalScope
 ), ApplicationVariantProperties, ApplicationCreationConfig {
+
+    val delegate = ConsumableCreationConfigImpl(variantDslInfo)
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -143,4 +147,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
         get() {
             return variant.renderscriptTargetApi
         }
+
+    override val dexingType: DexingType
+        get() = delegate.dexingType
 }
