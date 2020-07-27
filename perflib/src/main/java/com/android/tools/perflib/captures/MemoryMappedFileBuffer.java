@@ -18,15 +18,13 @@ package com.android.tools.perflib.captures;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
-import com.android.tools.perflib.captures.DataBuffer;
+import com.android.ddmlib.ByteBufferUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-
-import sun.nio.ch.DirectBuffer;
 
 public class MemoryMappedFileBuffer implements DataBuffer {
 
@@ -91,12 +89,8 @@ public class MemoryMappedFileBuffer implements DataBuffer {
      */
     @Override
     public void dispose() {
-        try {
-            for (int i = 0; i < mByteBuffers.length; i++) {
-                ((DirectBuffer) mByteBuffers[i]).cleaner().clean();
-            }
-        } catch (Exception ex) {
-            // ignore, this is a best effort attempt.
+        for (ByteBuffer buffer : mByteBuffers) {
+            ByteBufferUtil.cleanBuffer(buffer);
         }
     }
 
