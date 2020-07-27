@@ -149,4 +149,7 @@ open class TestVariantPropertiesImpl @Inject constructor(
 
     override val dexingType: DexingType
         get() = delegate.dexingType
+
+    override val needsMainDexListForBundle: Boolean
+        get() = false
 }

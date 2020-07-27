@@ -902,7 +902,9 @@ public abstract class TaskManager<
         // dynamic-features.
         // The main dex list calculation for the bundle also needs the feature classes for reference
         // only
-        if (variantScope.consumesFeatureJars() || variantScope.getNeedsMainDexListForBundle()) {
+        if (variantScope.consumesFeatureJars()
+                || ((creationConfig instanceof ApkCreationConfig)
+                        && ((ApkCreationConfig) creationConfig).getNeedsMainDexListForBundle())) {
             transformManager.addStream(
                     OriginalStream.builder("metadata-classes")
                             .addContentTypes(TransformManager.CONTENT_CLASS)
@@ -2218,7 +2220,7 @@ public abstract class TaskManager<
             taskFactory.register(new D8MainDexListTask.CreationAction(creationConfig, false));
         }
 
-        if (variantScope.getNeedsMainDexListForBundle()) {
+        if (creationConfig.getNeedsMainDexListForBundle()) {
             taskFactory.register(new D8MainDexListTask.CreationAction(creationConfig, true));
         }
 

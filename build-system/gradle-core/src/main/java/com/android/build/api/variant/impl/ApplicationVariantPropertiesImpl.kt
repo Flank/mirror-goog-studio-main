@@ -28,9 +28,9 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.IntegerOption
@@ -150,4 +150,10 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
 
     override val dexingType: DexingType
         get() = delegate.dexingType
+
+    override val needsMainDexListForBundle: Boolean
+        get() = (variantType.isBaseModule
+                    && globalScope.hasDynamicFeatures()
+                    && dexingType.needsMainDexList)
+
 }

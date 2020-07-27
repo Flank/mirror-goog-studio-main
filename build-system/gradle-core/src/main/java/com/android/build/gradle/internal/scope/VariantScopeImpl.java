@@ -324,13 +324,6 @@ public class VariantScopeImpl implements VariantScope {
                 || getCodeShrinker() != null;
     }
 
-    @Override
-    public boolean getNeedsMainDexListForBundle() {
-        return variantDslInfo.getVariantType().isBaseModule()
-                && globalScope.hasDynamicFeatures()
-                && variantDslInfo.getDexingType().getNeedsMainDexList();
-    }
-
     @Nullable
     @Override
     public CodeShrinker getCodeShrinker() {

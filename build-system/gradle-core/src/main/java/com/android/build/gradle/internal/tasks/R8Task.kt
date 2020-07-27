@@ -230,10 +230,10 @@ abstract class R8Task: ProguardConfigurableTask() {
                 R8Task::outputResources
             ).withName("shrunkJavaRes.jar").on(InternalArtifactType.SHRUNK_JAVA_RES)
 
-            if (creationConfig.variantScope.needsMainDexListForBundle) {
+            if (creationConfig is ApkCreationConfig && creationConfig.needsMainDexListForBundle) {
                 creationConfig.artifacts.setInitialProvider(
-                    taskProvider,
-                    R8Task::mainDexListOutput
+                        taskProvider,
+                        R8Task::mainDexListOutput
                 ).withName("mainDexList.txt").on(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE)
             }
         }

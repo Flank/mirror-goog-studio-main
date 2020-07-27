@@ -384,7 +384,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 enableUncompressedNativeLibs = creationConfig.services.projectOptions[BooleanOption.ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE]
             )
 
-            if (creationConfig.variantScope.needsMainDexListForBundle) {
+            if (creationConfig.needsMainDexListForBundle) {
                 creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE,
                     task.mainDexList
