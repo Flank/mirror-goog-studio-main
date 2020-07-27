@@ -32,7 +32,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.Configuration;
-import com.android.tools.lint.client.api.DefaultConfiguration;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
@@ -148,6 +147,7 @@ public class Main {
     private IssueRegistry globalIssueRegistry;
     @Nullable private File sdkHome;
     @Nullable private File jdkHome;
+    private static Set<File> ourAlreadyWarned = null;
 
     /** Creates a CLI driver */
     public Main() {}
@@ -265,7 +265,50 @@ public class Main {
                     @Override
                     public Configuration getConfiguration(
                             @NonNull final Project project, @Nullable LintDriver driver) {
-                        DefaultConfiguration overrideConfiguration = getOverrideConfiguration();
+                        return getConfigurations()
+                                .getConfigurationForProject(
+                                        project,
+                                        (client, file) -> createConfiguration(project, driver));
+                    }
+
+                    private Configuration flagConfiguration = null;
+
+                    @Nullable
+                    @Override
+                    public Configuration getDefaultConfiguration() {
+                        Configuration overrideConfiguration = getOverrideConfiguration();
+                        if (overrideConfiguration != null) {
+                            return overrideConfiguration;
+                        }
+                        if (flagConfiguration == null) {
+                            File configFile = flags.getDefaultConfiguration();
+                            if (configFile != null) {
+                                if (!configFile.exists()) {
+                                    if (ourAlreadyWarned != null
+                                            && ourAlreadyWarned.contains(configFile)) {
+                                        return null;
+                                    }
+                                    if (ourAlreadyWarned == null) {
+                                        ourAlreadyWarned = new HashSet<>();
+                                    }
+                                    log(
+                                            Severity.ERROR,
+                                            null,
+                                            "Warning: Configuration file %1$s does not exist",
+                                            configFile);
+                                    ourAlreadyWarned.add(configFile);
+                                } else {
+                                    flagConfiguration = createConfigurationFromFile(configFile);
+                                }
+                            }
+                        }
+                        return flagConfiguration;
+                    }
+
+                    @NonNull
+                    private Configuration createConfiguration(
+                            @NonNull final Project project, @Nullable LintDriver driver) {
+                        Configuration overrideConfiguration = getOverrideConfiguration();
                         if (overrideConfiguration != null) {
                             return overrideConfiguration;
                         }
@@ -275,7 +318,7 @@ public class Main {
                             // non-Gradle runner; they are likely to be false, and will hide the
                             // real problem reported above
                             //noinspection ReturnOfInnerClass
-                            return new CliConfiguration(getConfiguration(), project, true) {
+                            return new CliConfiguration(this, flags, project, true) {
                                 @NonNull
                                 @Override
                                 public Severity getSeverity(@NonNull Issue issue) {
@@ -296,9 +339,14 @@ public class Main {
                                             && new LintCliClient(flags, LintClient.getClientName())
                                                     .isSuppressed(IssueRegistry.LINT_ERROR)) {
                                         return true;
+                                    } else if (issue == IssueRegistry.LINT_WARNING
+                                            && new LintCliClient(flags, LintClient.getClientName())
+                                                    .isSuppressed(IssueRegistry.LINT_WARNING)) {
+                                        return true;
                                     }
 
-                                    return issue != IssueRegistry.LINT_ERROR;
+                                    return issue != IssueRegistry.LINT_ERROR
+                                            && issue != IssueRegistry.LINT_WARNING;
                                 }
                             };
                         }
@@ -377,6 +425,13 @@ public class Main {
                         File descriptor = flags.getProjectDescriptorOverride();
                         if (descriptor != null) {
                             metadata = ProjectInitializerKt.computeMetadata(this, descriptor);
+
+                            String clientName = metadata.getClientName();
+                            if (clientName != null) {
+                                //noinspection ResultOfObjectAllocationIgnored
+                                new LintCliClient(clientName); // constructor has side effect
+                            }
+
                             List<Project> projects = metadata.getProjects();
                             if (!projects.isEmpty()) {
                                 request.setProjects(projects);

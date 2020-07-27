@@ -203,8 +203,8 @@ class LintModelFactory : LintModelModuleLoader {
     }
 
     private fun getGraphItem(
-      library: IdeLibrary,
-      skipProvided: Boolean
+        library: IdeLibrary,
+        skipProvided: Boolean
     ): LintModelDependency {
         val artifactAddress = library.getMavenArtifactAddress()
 

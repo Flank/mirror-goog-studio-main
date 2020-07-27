@@ -903,6 +903,13 @@ class LintDriver
     private fun checkProject(project: Project, main: Project) {
         val projectDir = project.dir
 
+        // Set up inheritance of configurations from the library project to the main project
+        val projectConfiguration = project.getConfiguration(this)
+        if (main !== project) {
+            val mainConfiguration = main.getConfiguration(this)
+            client.configurations.setParent(projectConfiguration, mainConfiguration)
+        }
+
         val projectContext = Context(this, project, null, projectDir)
         fireEvent(EventType.SCANNING_PROJECT, projectContext)
 
@@ -933,6 +940,13 @@ class LintDriver
         if (checkDependencies && !Scope.checkSingleFile(scope)) {
             val libraries = project.allLibraries
             for (library in libraries) {
+                // Set up configuration inheritance from the library project into the depending
+                // project
+                if (library.reportIssues) {
+                    val libraryConfiguration = library.getConfiguration(this)
+                    client.configurations.setParent(libraryConfiguration, projectConfiguration)
+                }
+
                 val libraryContext = Context(this, library, project, projectDir)
                 fireEvent(EventType.SCANNING_LIBRARY_PROJECT, libraryContext)
                 currentProject = library
@@ -2153,6 +2167,8 @@ class LintDriver
      */
     private inner class LintClientWrapper(private val delegate: LintClient) :
         LintClient(clientName) {
+        override val configurations = delegate.configurations
+
         override fun getMergedManifest(project: Project): Document? =
             delegate.getMergedManifest(project)
 
@@ -2184,7 +2200,7 @@ class LintDriver
                 return
             }
 
-            val configuration = context.configuration
+            val configuration = context.findConfiguration(location.file)
             if (!configuration.isEnabled(issue)) {
                 if (issue.category !== Category.LINT) {
                     delegate.log(
@@ -2242,6 +2258,14 @@ class LintDriver
 
         override fun getDisplayPath(file: File, project: Project?, format: TextFormat): String =
             delegate.getDisplayPath(file, project, format)
+
+        override fun getConfiguration(file: File): Configuration? {
+            return delegate.getConfiguration(file)
+        }
+
+        override fun getParentConfiguration(configuration: Configuration): Configuration? {
+            return delegate.getParentConfiguration(configuration)
+        }
 
         override fun log(
             severity: Severity,

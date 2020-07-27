@@ -74,14 +74,11 @@ open class Context(
 ) {
 
     /** The current configuration controlling which checks are enabled etc  */
-    val configuration: Configuration
+    val configuration: Configuration = client.getConfiguration(file)
+        ?: client.getConfiguration(project, driver)
 
     /** Whether this file contains any suppress markers (null means not yet determined)  */
     private var containsCommentSuppress: Boolean? = null
-
-    init {
-        configuration = project.getConfiguration(driver)
-    }
 
     /**
      * The scope for the lint job
@@ -229,29 +226,14 @@ open class Context(
         message: String,
         quickfixData: LintFix?
     ) {
-
-        @Suppress("SENSELESS_COMPARISON")
-        if (location == null) {
-            // Misbehaving third-party lint detectors, called from Java
-            assert(false) { issue }
-            return
-        }
-
         if (location === Location.NONE) {
             // Detector reported error for issue in a non-applicable location etc
             return
         }
 
-        var configuration = this.configuration
+        val configuration = findConfiguration(location.file)
 
-        // If this error was computed for a context where the context corresponds to
-        // a project instead of a file, the actual error may be in a different project (e.g.
-        // a library project), so adjust the configuration as necessary.
-        val project = driver.findProjectFor(location.file)
-        if (project != null) {
-            configuration = project.getConfiguration(driver)
-        }
-
+        // TODO: Consider this special case carefully! Is it necessary now with the new inheritance semantics?
         // If an error occurs in a library project, but you've disabled that check in the
         // main project, disable it in the library project too. (In some cases you don't
         // control the lint.xml of a library project, and besides, if you're not interested in
@@ -269,6 +251,20 @@ open class Context(
             this, issue, severity, location, message, TextFormat.RAW,
             quickfixData
         )
+    }
+
+    /** Finds the right configuration to use for the given file */
+    fun findConfiguration(file: File): Configuration {
+        val configurations = driver.client.configurations
+        val dir = file.parentFile
+        return configurations.getConfigurationForFolder(dir)
+            ?: run {
+                // If this error was computed for a context where the context corresponds to
+                // a project instead of a file, the actual error may be in a different project (e.g.
+                // a library project), so adjust the configuration as necessary.
+                val project = driver.findProjectFor(file)
+                project?.getConfiguration(driver) ?: configuration
+            }
     }
 
     /**

@@ -636,7 +636,9 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             }
 
             // Skip deprecated members?
-            if (IGNORE_DEPRECATED) {
+            if (IGNORE_DEPRECATED ||
+                context.configuration.getOptionAsBoolean(PLATFORM_NULLNESS, "ignore-deprecated", false)
+            ) {
                 val deprecatedNode =
                     if (node is UParameter) {
                         node.uastParent

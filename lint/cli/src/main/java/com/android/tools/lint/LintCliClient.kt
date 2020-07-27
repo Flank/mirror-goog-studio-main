@@ -33,9 +33,8 @@ import com.android.tools.lint.LintCliFlags.ERRNO_ERRORS
 import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
 import com.android.tools.lint.LintStats.Companion.create
 import com.android.tools.lint.checks.HardcodedValuesDetector
-import com.android.tools.lint.checks.WrongThreadInterproceduralDetector
 import com.android.tools.lint.client.api.Configuration
-import com.android.tools.lint.client.api.DefaultConfiguration
+import com.android.tools.lint.client.api.LintXmlConfiguration
 import com.android.tools.lint.client.api.GradleVisitor
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintBaseline
@@ -45,7 +44,6 @@ import com.android.tools.lint.client.api.LintListener
 import com.android.tools.lint.client.api.LintRequest
 import com.android.tools.lint.client.api.UastParser
 import com.android.tools.lint.client.api.XmlParser
-import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
@@ -53,7 +51,6 @@ import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
-import com.android.tools.lint.detector.api.Severity.Companion.min
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.describeCounts
 import com.android.tools.lint.detector.api.getEncodedString
@@ -131,46 +128,16 @@ open class LintCliClient : LintClient {
         initialize()
     }
 
-    /** Returns the issue registry used by this client  */
+    /** Returns the issue registry used by this client */
     open var registry: IssueRegistry? = null
         protected set
 
-    /** Returns the driver running the lint checks  */
+    /** Returns the driver running the lint checks */
     lateinit var driver: LintDriver
         protected set
 
-    /** Returns the configuration used by this client  */
-    var configuration: Configuration? = null
-        get() {
-            if (field == null) {
-                if (overrideConfiguration != null) {
-                    field = overrideConfiguration
-                    return field
-                }
-                val configFile = flags.defaultConfiguration
-                if (configFile != null) {
-                    if (!configFile.exists()) {
-                        val warned = ourAlreadyWarned ?: run {
-                            val new = mutableSetOf<File>()
-                            ourAlreadyWarned = new
-                            new
-                        }
-                        if (!warned.contains(configFile)) {
-                            log(
-                                Severity.ERROR,
-                                null,
-                                "Warning: Configuration file %1\$s does not exist",
-                                configFile
-                            )
-                            warned.add(configFile)
-                        }
-                    }
-                    field = createConfigurationFromFile(configFile)
-                }
-            }
-            return field
-        }
-        private set
+    /** Returns the configuration used by this client as a fallback */
+    open val defaultConfiguration: Configuration? = null
 
     /** Flags configuring the lint runs */
     val flags: LintCliFlags
@@ -178,7 +145,7 @@ open class LintCliClient : LintClient {
     private var validatedIds = false
     private var kotlinPerformanceManager: LintCliKotlinPerformanceManager? = null
     private var jdkHome: File? = null
-    protected var overrideConfiguration: DefaultConfiguration? = null
+    protected var overrideConfiguration: Configuration? = null
     var uastEnvironment: UastEnvironment? = null
     val ideaProject: MockProject? get() = uastEnvironment?.ideaProject
     protected val incidents: MutableList<Incident> = ArrayList()
@@ -493,7 +460,10 @@ open class LintCliClient : LintClient {
         get() = LintCliXmlParser(this)
 
     override fun getConfiguration(project: Project, driver: LintDriver?): Configuration {
-        return overrideConfiguration ?: CliConfiguration(configuration, project, flags.isFatalOnly)
+        return configurations.getConfigurationForProject(project) { _, _ ->
+            overrideConfiguration
+                ?: CliConfiguration(this, flags, project, flags.isFatalOnly)
+        }
     }
 
     /** File content cache  */
@@ -621,157 +591,6 @@ open class LintCliClient : LintClient {
         return flags.resourcesOverride ?: return super.getResourceFolders(project)
     }
 
-    /**
-     * Consult the lint.xml file, but override with the --enable and --disable flags supplied on the
-     * command line
-     */
-    protected open inner class CliConfiguration : DefaultConfiguration {
-        private val fatalOnly: Boolean
-
-        constructor(
-            parent: Configuration?,
-            project: Project,
-            fatalOnly: Boolean
-        ) : super(this@LintCliClient, project, parent) {
-            this.fatalOnly = fatalOnly
-        }
-
-        constructor(lintFile: File, fatalOnly: Boolean) :
-            super(this@LintCliClient, null, null, lintFile) {
-                this.fatalOnly = fatalOnly
-            }
-
-        protected constructor(
-            lintFile: File,
-            parent: Configuration?,
-            project: Project?,
-            fatalOnly: Boolean
-        ) : super(this@LintCliClient, project, parent, lintFile) {
-            this.fatalOnly = fatalOnly
-        }
-
-        override fun getSeverity(issue: Issue): Severity {
-            var severity = computeSeverity(issue)
-            if (fatalOnly && severity !== Severity.FATAL) {
-                return Severity.IGNORE
-            }
-            if (flags.isWarningsAsErrors && severity === Severity.WARNING) {
-                if (issue === IssueRegistry.BASELINE) {
-                    // Don't promote the baseline informational issue
-                    // (number of issues promoted) to error
-                    return severity
-                }
-                severity = Severity.ERROR
-            }
-            if (flags.isIgnoreWarnings && severity === Severity.WARNING) {
-                severity = Severity.IGNORE
-            }
-            return severity
-        }
-
-        override fun getDefaultSeverity(issue: Issue): Severity {
-            return if (flags.isCheckAllWarnings) {
-                // Exclude the interprocedural check from the "enable all warnings" flag;
-                // it's much slower and still triggers various bugs in UAST that can affect
-                // other checks.
-                if (issue === WrongThreadInterproceduralDetector.ISSUE) {
-                    super.getDefaultSeverity(issue)
-                } else issue.defaultSeverity
-            } else super.getDefaultSeverity(issue)
-        }
-
-        private fun computeSeverity(issue: Issue): Severity {
-            val severity = super.getSeverity(issue)
-            // Issue not allowed to be suppressed?
-            if (issue.suppressNames != null && !flags.allowSuppress) {
-                return getDefaultSeverity(issue)
-            }
-            val id = issue.id
-            val suppress = flags.suppressedIds
-            if (suppress.contains(id)) {
-                return Severity.IGNORE
-            }
-            val disabledCategories = flags.disabledCategories
-            if (disabledCategories != null) {
-                val category = issue.category
-                if (disabledCategories.contains(category) ||
-                    category.parent != null && disabledCategories.contains(category.parent)
-                ) {
-                    return Severity.IGNORE
-                }
-            }
-            val manual = flags.severityOverrides[id]
-            if (manual != null) {
-                return if (this.severity != null &&
-                    (this.severity.containsKey(id) || this.severity.containsKey(VALUE_ALL))
-                ) {
-                    // Ambiguity! We have a specific severity override provided
-                    // via lint options for the main app module, but a local lint.xml
-                    // file in the library (not a lintOptions definition) which also
-                    // specifies severity for the same issue.
-                    //
-                    // Who should win? Should the intent from the main app module
-                    // win, such that you have a global way to say "this is the severity
-                    // I want during this lint run?". Or should the library-local definition
-                    // win, to say "there's a local problem in this library; I need to
-                    // change things here?".
-                    //
-                    // Both are plausible, so for now I'm going with a middle ground: local
-                    // definitions should be used to turn of issues that don't work right.
-                    // Therefore, we'll take the minimum of the two severities!
-                    min(severity, manual)
-                } else manual
-            }
-            val enabled = flags.enabledIds
-            val exact = flags.exactCheckedIds
-            val enabledCategories = flags.enabledCategories
-            val exactCategories = flags.exactCategories
-            val category = issue.category
-            if (exact != null) {
-                if (exact.contains(id)) {
-                    return getVisibleSeverity(issue, severity)
-                } else if (category !== Category.LINT) {
-                    return Severity.IGNORE
-                }
-            }
-            if (exactCategories != null) {
-                if (exactCategories.contains(category) ||
-                    category.parent != null && exactCategories.contains(category.parent)
-                ) {
-                    return getVisibleSeverity(issue, severity)
-                } else if (category !== Category.LINT ||
-                    flags.disabledCategories?.contains(Category.LINT) == true
-                ) {
-                    return Severity.IGNORE
-                }
-            }
-            return if (enabled.contains(id) ||
-                enabledCategories != null && (
-                    enabledCategories.contains(category) ||
-                        category.parent != null && enabledCategories.contains(category.parent)
-                    )
-            ) {
-                getVisibleSeverity(issue, severity)
-            } else severity
-        }
-
-        /** Returns the given severity, but if not visible, use the default  */
-        private fun getVisibleSeverity(issue: Issue, severity: Severity): Severity {
-            // Overriding default
-            // Detectors shouldn't be returning ignore as a default severity,
-            // but in case they do, force it up to warning here to ensure that
-            // it's run
-            var visibleSeverity = severity
-            if (visibleSeverity === Severity.IGNORE) {
-                visibleSeverity = issue.defaultSeverity
-                if (visibleSeverity === Severity.IGNORE) {
-                    visibleSeverity = Severity.WARNING
-                }
-            }
-            return visibleSeverity
-        }
-    }
-
     override fun createProject(dir: File, referenceDir: File): Project {
         val project = super.createProject(dir, referenceDir)
         val compileSdkVersion = flags.compileSdkVersionOverride
@@ -842,7 +661,7 @@ open class LintCliClient : LintClient {
             // configuration
             return
         }
-        val message = DefaultConfiguration.getUnknownIssueIdErrorMessage(id, registry)
+        val message = LintXmlConfiguration.getUnknownIssueIdErrorMessage(id, registry)
         if (::driver.isInitialized && project != null && !isSuppressed(IssueRegistry.UNKNOWN_ISSUE_ID)) {
             val location = guessGradleLocation(this, project.dir, id)
             report(
@@ -956,8 +775,11 @@ open class LintCliClient : LintClient {
         return flags.enabledIds.contains(issue.id)
     }
 
-    fun createConfigurationFromFile(file: File): DefaultConfiguration {
-        return CliConfiguration(file, flags.isFatalOnly)
+    fun createConfigurationFromFile(file: File): Configuration {
+        return configurations.getConfigurationForFile(file) { _, _ ->
+            val dir = file.parentFile ?: File(".")
+            CliConfiguration(this, flags, file, dir, flags.isFatalOnly)
+        }
     }
 
     public override fun initializeProjects(knownProjects: Collection<Project>) {
@@ -1100,50 +922,50 @@ open class LintCliClient : LintClient {
 
     /** Synchronizes any options specified in lint.xml with the [LintCliFlags] object  */
     fun syncConfigOptions() {
-        val configuration = configuration
-        if (configuration is DefaultConfiguration) {
+        val configuration = defaultConfiguration
+        if (configuration is LintXmlConfiguration) {
             val config = configuration
-            val checkAllWarnings = config.checkAllWarnings
+            val checkAllWarnings = config.getCheckAllWarnings()
             if (checkAllWarnings != null) {
                 flags.isCheckAllWarnings = checkAllWarnings
             }
-            val ignoreWarnings = config.ignoreWarnings
+            val ignoreWarnings = config.getIgnoreWarnings()
             if (ignoreWarnings != null) {
                 flags.isIgnoreWarnings = ignoreWarnings
             }
-            val warningsAsErrors = config.warningsAsErrors
+            val warningsAsErrors = config.getWarningsAsErrors()
             if (warningsAsErrors != null) {
                 flags.isWarningsAsErrors = warningsAsErrors
             }
-            val fatalOnly = config.fatalOnly
+            val fatalOnly = config.getFatalOnly()
             if (fatalOnly != null) {
                 flags.isFatalOnly = fatalOnly
             }
-            val checkTestSources = config.checkTestSources
+            val checkTestSources = config.getCheckTestSources()
             if (checkTestSources != null) {
                 flags.isCheckTestSources = checkTestSources
             }
-            val ignoreTestSources = config.ignoreTestSources
+            val ignoreTestSources = config.getIgnoreTestSources()
             if (ignoreTestSources != null) {
                 flags.isIgnoreTestSources = ignoreTestSources
             }
-            val checkGeneratedSources = config.checkGeneratedSources
+            val checkGeneratedSources = config.getCheckGeneratedSources()
             if (checkGeneratedSources != null) {
                 flags.isCheckGeneratedSources = checkGeneratedSources
             }
-            val checkDependencies = config.checkDependencies
+            val checkDependencies = config.getCheckDependencies()
             if (checkDependencies != null) {
                 flags.isCheckDependencies = checkDependencies
             }
-            val explainIssues = config.explainIssues
+            val explainIssues = config.getExplainIssues()
             if (explainIssues != null) {
                 flags.isExplainIssues = explainIssues
             }
-            val removeFixedBaselineIssues = config.removeFixedBaselineIssues
+            val removeFixedBaselineIssues = config.getRemoveFixedBaselineIssues()
             if (removeFixedBaselineIssues != null) {
                 flags.setRemovedFixedBaselineIssues(removeFixedBaselineIssues)
             }
-            val abortOnError = config.abortOnError
+            val abortOnError = config.getAbortOnError()
             if (abortOnError != null) {
                 flags.isSetExitCode = abortOnError
             }
@@ -1152,7 +974,7 @@ open class LintCliClient : LintClient {
                 flags.baselineFile =
                     if (baselineFile.path == SdkConstants.VALUE_NONE) null else baselineFile
             }
-            val applySuggestions = config.applySuggestions
+            val applySuggestions = config.getApplySuggestions()
             if (applySuggestions != null && applySuggestions) {
                 flags.isAutoFix = true
             }
@@ -1268,7 +1090,7 @@ open class LintCliClient : LintClient {
                 .withFileStreamProvider(object : FileStreamProvider() {
                     @Throws(FileNotFoundException::class)
                     override fun getInputStream(file: File): InputStream {
-                        // noinspection FileComparisons
+                        //noinspection FileComparisons
                         if (injectedFile == file) {
                             return CharSequences.getInputStream(injectedXml.toString())
                         }
@@ -1431,7 +1253,5 @@ open class LintCliClient : LintClient {
             }
             return sb.toString()
         }
-
-        private var ourAlreadyWarned: MutableSet<File>? = null
     }
 }

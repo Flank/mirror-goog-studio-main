@@ -223,13 +223,7 @@ protected constructor() {
      * @return true if the given string is a valid category
      */
     fun isCategoryName(name: String): Boolean {
-        for (category in getCategories()) {
-            if (category.name == name || category.fullName == name) {
-                return true
-            }
-        }
-
-        return false
+        return Category.getCategory(name) != null
     }
 
     /**
@@ -253,7 +247,13 @@ protected constructor() {
     private fun createCategoryList(): List<Category> {
         val categorySet = Sets.newHashSetWithExpectedSize<Category>(20)
         for (issue in issues) {
-            categorySet.add(issue.category)
+            val element = issue.category
+            categorySet.add(element)
+            var parent = element.parent
+            while (parent != null) {
+                categorySet.add(parent)
+                parent = parent.parent
+            }
         }
         val sorted = ArrayList(categorySet)
         sorted.sort()
@@ -328,6 +328,7 @@ protected constructor() {
 
         map[PARSER_ERROR.id] = PARSER_ERROR
         map[LINT_ERROR.id] = LINT_ERROR
+        map[LINT_WARNING.id] = LINT_WARNING
         map[BASELINE.id] = BASELINE
         map[UNKNOWN_ISSUE_ID.id] = UNKNOWN_ISSUE_ID
         map[OBSOLETE_LINT_CHECK.id] = OBSOLETE_LINT_CHECK
@@ -416,6 +417,30 @@ protected constructor() {
             category = Category.LINT,
             priority = 10,
             severity = Severity.ERROR,
+            implementation = EMPTY_IMPLEMENTATION
+        )
+
+        /**
+         * Issue reported by lint for various other issues which may prevent lint from
+         * running normally when it's not necessarily an error in the user's code base.
+         * Similar to [LINT_WARNING] but intended for lower severity problems which may
+         * or may not be significant.
+         */
+        @JvmField // temporarily
+        val LINT_WARNING = Issue.create(
+            id = "LintWarning",
+            briefDescription = "Lint Failure",
+            explanation =
+                """
+                This issue type represents a problem running lint itself. Examples include \
+                unsupported tags in configuration files, etc.
+
+                These errors are not errors in your own code, but they are shown to make it \
+                clear that some checks were not completed.
+                """,
+            category = Category.LINT,
+            priority = 5,
+            severity = Severity.WARNING,
             implementation = EMPTY_IMPLEMENTATION
         )
 

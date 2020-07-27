@@ -697,8 +697,23 @@ public class Project {
      */
     @NonNull
     public String getRelativePath(@NonNull File file) {
+        return getRelativePath(dir, file);
+    }
+
+    /**
+     * Returns the relative path of a given file within the given root directory.
+     *
+     * @param root the root/base folder
+     * @param file the file under the root folder to check
+     * @return the path relative to the project
+     */
+    @NonNull
+    public static String getRelativePath(@Nullable File root, @NonNull File file) {
         String path = file.getPath();
-        String referencePath = dir.getPath();
+        if (root == null) {
+            return path;
+        }
+        String referencePath = root.getPath();
         if (path.startsWith(referencePath)) {
             int length = referencePath.length();
             if (path.length() > length && path.charAt(length) == File.separatorChar) {
@@ -854,7 +869,7 @@ public class Project {
      * AndroidTargetHash} for a platform or for an add-on, and {@link AndroidVersion} can only
      * express platform versions.
      *
-     * @return the build target API or -1 if unknown
+     * @return the build target API or null if unknown
      */
     @Nullable
     public String getBuildTargetHash() {

@@ -652,6 +652,8 @@ public class MainTest extends AbstractCheckTest {
                                         + "    <issue id=\"all\" severity=\"warning\" />\n"
                                         + "    <issue id=\"UnknownIssueId\" severity=\"error\" />\n"
                                         + "    <issue id=\"SomeUnknownId\" severity=\"fatal\" />\n"
+                                        + "    <issue id=\"Security\" severity=\"fatal\" />\n"
+                                        + "    <issue id=\"Interoperability\" severity=\"ignore\" />\n"
                                         + "    <issue id=\"IconLauncherFormat\">\n"
                                         + "        <ignore path=\"src/main/res/mipmap-anydpi-v26/ic_launcher.xml\" />\n"
                                         + "        <ignore path=\"src/main/res/drawable/ic_launcher_foreground.xml\" />\n"

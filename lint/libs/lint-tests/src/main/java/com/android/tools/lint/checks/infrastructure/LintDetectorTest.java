@@ -58,12 +58,12 @@ import com.android.tools.lint.checks.infrastructure.TestFile.KotlinTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.ManifestTestFile;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
-import com.android.tools.lint.client.api.DefaultConfiguration;
 import com.android.tools.lint.client.api.GradleVisitor;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintRequest;
+import com.android.tools.lint.client.api.LintXmlConfiguration;
 import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.detector.api.ApiKt;
 import com.android.tools.lint.detector.api.Context;
@@ -312,7 +312,11 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     protected TestConfiguration getConfiguration(LintClient client, Project project) {
-        return new TestConfiguration(client, project, null);
+        return (TestConfiguration)
+                client.getConfigurations()
+                        .getConfigurationForProject(
+                                project,
+                                (lintClient, file) -> new TestConfiguration(lintClient, project));
     }
 
     protected void configureDriver(LintDriver driver) {}
@@ -1251,20 +1255,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         }
     }
 
-    public class TestConfiguration extends DefaultConfiguration {
-        protected TestConfiguration(
-                @NonNull LintClient client,
-                @NonNull Project project,
-                @Nullable Configuration parent) {
-            super(client, project, parent);
-        }
-
-        public TestConfiguration(
-                @NonNull LintClient client,
-                @Nullable Project project,
-                @Nullable Configuration parent,
-                @NonNull File configFile) {
-            super(client, project, parent, configFile);
+    public class TestConfiguration extends LintXmlConfiguration {
+        protected TestConfiguration(@NonNull LintClient client, @NonNull Project project) {
+            super(client, project);
         }
 
         @Override

@@ -419,7 +419,10 @@ public class TestLintClient extends LintCliClient {
                                 + "Alternatively, set useTestProjectImplementation(true) on the "
                                 + "lint task.");
             }
+
+            Project oldProject = project;
             project = new LintModelModuleProject(this, dir, referenceDir, buildVariant, null);
+            project.setDirectLibraries(oldProject.getDirectLibraries());
         }
 
         registerProject(dir, project);
@@ -442,11 +445,15 @@ public class TestLintClient extends LintCliClient {
         if (srcs != null) {
             for (File child : srcs) {
                 String name = child.getName();
+                if (name.startsWith("lint-")) {
+                    continue;
+                }
                 switch (name) {
                     case FN_ANDROID_MANIFEST_XML:
                     case "res":
                     case "java":
                     case "kotlin":
+                    case "lint.xml":
                         break;
                     default:
                         return true;
@@ -926,7 +933,21 @@ public class TestLintClient extends LintCliClient {
     @NonNull
     @Override
     public Configuration getConfiguration(@NonNull Project project, @Nullable LintDriver driver) {
-        return new TestConfiguration(task, this, project, null);
+        return getConfigurations()
+                .getConfigurationForProject(
+                        project,
+                        (client, file) ->
+                                (project.getBuildModule() != null)
+                                        ? new TestLintOptionsConfiguration(
+                                                task,
+                                                client,
+                                                project.getBuildModule()
+                                                        .getLintOptions()
+                                                        .getLintConfig(),
+                                                project.getDir(),
+                                                project.getBuildModule().getLintOptions(),
+                                                false)
+                                        : new TestConfiguration(task, client, project));
     }
 
     @Override

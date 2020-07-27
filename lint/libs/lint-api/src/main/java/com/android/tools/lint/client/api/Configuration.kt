@@ -23,6 +23,7 @@ import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.google.common.annotations.Beta
 import java.io.File
+import java.lang.NumberFormatException
 
 /**
  * Lint configuration for an Android project such as which specific rules to include,
@@ -33,12 +34,13 @@ import java.io.File
  */
 @Beta
 abstract class Configuration {
+    /** The "scope" of this configuration */
+    abstract val dir: File
 
     /**
      * The baseline file to use, if any. The baseline file is
      * an XML report previously created by lint, and any warnings and
      * errors listed in that report will be ignored from analysis.
-     *
      *
      * If you have a project with a large number of existing warnings,
      * this lets you set a baseline and only see newly introduced warnings
@@ -90,6 +92,51 @@ abstract class Configuration {
     open fun getSeverity(issue: Issue): Severity {
         return issue.defaultSeverity
     }
+
+    /**
+     * Returns the value for the given option, or the default value (normally null)
+     * if it has not been specified.
+     */
+    abstract fun getOption(
+        issue: Issue,
+        name: String,
+        default: String? = null
+    ): String?
+
+    /**
+     * Returns the value for the given option as an int, or the default value if
+     * not specified (or if the option is not a valid integer)
+     */
+    fun getOptionAsInt(issue: Issue, name: String, default: Int): Int {
+        return try {
+            getOption(issue, name, null)?.toInt() ?: default
+        } catch (e: NumberFormatException) {
+            return default
+        }
+    }
+
+    /**
+     * Returns the value for the given option as a boolean, or the default value if
+     * not specified
+     */
+    fun getOptionAsBoolean(issue: Issue, name: String, default: Boolean): Boolean {
+        return getOption(issue, name, null)?.toBoolean() ?: default
+    }
+
+    /**
+     * Returns the value for the given option as an absolute [File]. It's important to use
+     * this method instead of trying to interpret the string options returned from
+     * [getOption] yourself, since we support relative paths, and the path is relative
+     * to the lint.xml file which defines the option, and since configurations can
+     * inherit from other configurations, you can't know by just calling
+     * [getOption] where a value is defined, and therefore how to interpret the
+     * relative path.
+     */
+    abstract fun getOptionAsFile(
+        issue: Issue,
+        name: String,
+        default: File? = null
+    ): File?
 
     // Editing configurations
 

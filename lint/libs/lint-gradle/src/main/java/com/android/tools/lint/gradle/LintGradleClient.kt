@@ -22,12 +22,13 @@ import com.android.tools.lint.LintCliClient
 import com.android.tools.lint.LintCliFlags
 import com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE
 import com.android.tools.lint.client.api.Configuration
-import com.android.tools.lint.client.api.DefaultConfiguration
 import com.android.tools.lint.client.api.GradleVisitor
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintBaseline
 import com.android.tools.lint.client.api.LintDriver
+import com.android.tools.lint.client.api.LintOptionsConfiguration
 import com.android.tools.lint.client.api.LintRequest
+import com.android.tools.lint.client.api.LintXmlConfiguration
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintFix
@@ -37,7 +38,6 @@ import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.gradle.api.VariantInputs
-import com.android.tools.lint.model.LintModelSeverity
 import com.android.utils.XmlUtils
 import com.google.common.io.Files
 import org.gradle.api.GradleException
@@ -68,6 +68,11 @@ class LintGradleClient(
     private val isAndroid: Boolean
     private val resolver: KotlinSourceFoldersResolver
 
+    init {
+        configurations.rootDir = System.getenv("LINT_XML_ROOT")?.let { File(it) }
+            ?: gradleProject.rootDir
+    }
+
     fun getKotlinSourceFolders(project: GradleProject, variantName: String): List<File> {
         return resolver.getKotlinSourceFolders(variantName, project)
     }
@@ -78,49 +83,27 @@ class LintGradleClient(
         project: Project,
         driver: LintDriver?
     ): Configuration {
+        return configurations.getConfigurationForProject(project) { _, _ ->
+            createConfiguration(project, driver)
+        }
+    }
+
+    private fun createConfiguration(
+        project: Project,
+        driver: LintDriver?
+    ): Configuration {
         val overrideConfiguration = overrideConfiguration
         if (overrideConfiguration != null) {
             return overrideConfiguration
         }
-
         // Look up local lint configuration for this project, either via Gradle lintOptions
         // or via local lint.xml
         val buildModel = project.buildModule
             ?: return super.getConfiguration(project, driver)
         val lintOptions = buildModel.lintOptions
         val lintXml = lintOptions.lintConfig
-            ?: File(
-                project.dir,
-                DefaultConfiguration.CONFIG_FILE_NAME
-            )
-        val overrides = lintOptions.severityOverrides
-        if (overrides == null || overrides.isEmpty()) {
-            return super.getConfiguration(project, driver)
-        }
-        return object : CliConfiguration(lintXml, configuration, project, flags.isFatalOnly) {
-            override fun getSeverity(issue: Issue): Severity {
-                if (issue.suppressNames != null) {
-                    return getDefaultSeverity(issue)
-                }
-                val severity: Severity = overrides[issue.id]?.toLintSeverity()
-                    ?: return super.getSeverity(issue)
-                return if (flags.isFatalOnly && severity !== Severity.FATAL)
-                    Severity.IGNORE
-                else
-                    severity
-            }
-        }
-    }
-
-    private fun LintModelSeverity.toLintSeverity(): Severity {
-        return when (this) {
-            LintModelSeverity.FATAL -> Severity.FATAL
-            LintModelSeverity.ERROR -> Severity.ERROR
-            LintModelSeverity.WARNING -> Severity.WARNING
-            LintModelSeverity.INFORMATIONAL -> Severity.INFORMATIONAL
-            LintModelSeverity.IGNORE -> Severity.IGNORE
-            LintModelSeverity.DEFAULT_ENABLED -> Severity.WARNING
-        }
+            ?: File(project.dir, LintXmlConfiguration.CONFIG_FILE_NAME)
+        return LintOptionsConfiguration(this, lintXml, project.dir, lintOptions, flags.isFatalOnly)
     }
 
     override fun findResource(relativePath: String): File? {
