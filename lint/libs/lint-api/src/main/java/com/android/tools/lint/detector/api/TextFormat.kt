@@ -199,8 +199,10 @@ enum class TextFormat {
                     tag.equals("ol", ignoreCase = true) ||
                     tag.equals("ul", ignoreCase = true) ||
                     tag.equals("li", ignoreCase = true) ||
-                    (tag.length == 2 && tag.startsWith("h") &&
-                            Character.isDigit(tag[1]))
+                    (
+                        tag.length == 2 && tag.startsWith("h") &&
+                            Character.isDigit(tag[1])
+                        )
                 ) {
                     // Block tag: ensure new line
                     if (sb.isNotEmpty() && sb[sb.length - 1] != '\n') {
@@ -282,7 +284,14 @@ enum class TextFormat {
 
             if (!escaped && (c == '*' || c == '`') && i < n - 1) {
                 // Preformatted text?
-                if (i == 0 || i > 0 && text[i - 1] == '\n' && text.regionMatches(i, "```", 0, 3, false)) {
+                if (i == 0 || i > 0 && text[i - 1] == '\n' && text.regionMatches(
+                    i,
+                    "```",
+                    0,
+                    3,
+                    false
+                )
+                ) {
                     // Yes. Find end
                     val end = text.indexOf("\n```", i + 3)
                     if (end != -1) {
@@ -298,8 +307,10 @@ enum class TextFormat {
                         if (html) {
                             sb.append("<pre>\n")
                         }
-                        appendEscapedText(sb, text, html, nextLineStart, end + 1,
-                            escapeUnicode, newlinesAsBr = false)
+                        appendEscapedText(
+                            sb, text, html, nextLineStart, end + 1,
+                            escapeUnicode, newlinesAsBr = false
+                        )
                         if (html) {
                             sb.append("</pre>\n")
                         }

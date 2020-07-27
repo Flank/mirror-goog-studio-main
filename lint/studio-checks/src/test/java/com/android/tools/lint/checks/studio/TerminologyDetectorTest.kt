@@ -194,7 +194,8 @@ class TerminologyDetectorTest {
 
         val stringWriter = StringWriter()
         val printer = PrintWriter(stringWriter)
-        val names = recommendations.map { it.getNames() }.flatten().sortedWith(compareBy({ it.length }, { it })).toSet()
+        val names = recommendations.map { it.getNames() }.flatten()
+            .sortedWith(compareBy({ it.length }, { it })).toSet()
 
         val replacements: MutableMap<String, String> = mutableMapOf()
         recommendations.forEach { recommendation ->
@@ -213,6 +214,7 @@ class TerminologyDetectorTest {
         fun String.mustEscapeIdentifier(): Boolean {
             return isNotEmpty() && (!this[0].isJavaIdentifierStart() || this.any { !it.isJavaIdentifierPart() })
         }
+
         val prefixSet: MutableSet<String> = HashSet()
         prefixSet.add("") // init sat
         for (state in names) {

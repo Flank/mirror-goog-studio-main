@@ -277,7 +277,8 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
      */
     private static boolean isWearableListenerServiceAction(@NonNull Element element) {
         // Checks whether a service has an action for a WearableListenerService
-        // see developers.google.com/android/reference/com/google/android/gms/wearable/WearableListenerService
+        // see
+        // developers.google.com/android/reference/com/google/android/gms/wearable/WearableListenerService
         // for details on the applicable actions.
         for (Element child : XmlUtils.getSubTags(element)) {
             if (child.getTagName().equals(TAG_INTENT_FILTER)) {
@@ -434,7 +435,8 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
     @Override
     public List<String> getApplicableMethodNames() {
         return Arrays.asList(
-                // These are the API calls that can accept a MODE_WORLD_READABLE/MODE_WORLD_WRITEABLE
+                // These are the API calls that can accept a
+                // MODE_WORLD_READABLE/MODE_WORLD_WRITEABLE
                 // argument.
                 "openFileOutput",
                 "getSharedPreferences",

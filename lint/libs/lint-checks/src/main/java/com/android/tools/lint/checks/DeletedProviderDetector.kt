@@ -73,7 +73,7 @@ class DeletedProviderDetector : Detector(), SourceCodeScanner {
             context.report(
                 ISSUE, expression, context.getLocation(expression),
                 "The Crypto provider has been deleted " +
-                        "in Android P (and was deprecated in Android N), so the code will crash"
+                    "in Android P (and was deprecated in Android N), so the code will crash"
             )
         }
     }
@@ -83,7 +83,8 @@ class DeletedProviderDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "DeletedProvider",
             briefDescription = "Using Deleted Provider",
-            explanation = """
+            explanation =
+                """
                 The `Crypto` provider has been completely removed in Android P (and was \
                 deprecated in an earlier release). This means that the code will throw a \
                 `NoSuchProviderException` and the app will crash. Even if the code catches \

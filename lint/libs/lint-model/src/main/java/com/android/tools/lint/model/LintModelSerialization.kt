@@ -532,9 +532,13 @@ private open class LintModelWriter(
         if (path.isEmpty()) {
             return
         }
-        printAttribute(name, path.joinToString(File.pathSeparator) {
-            adapter.toPathString(it, relativeTo)
-        }, indent)
+        printAttribute(
+            name,
+            path.joinToString(File.pathSeparator) {
+                adapter.toPathString(it, relativeTo)
+            },
+            indent
+        )
     }
 
     protected fun PrintWriter.printStrings(
@@ -1630,15 +1634,19 @@ private class LintModelVariantReader(
                     when (parser.name) {
                         "resValues" -> resValues = readResValues()
                         "manifestPlaceholders" -> manifestPlaceholders = readManifestPlaceholders()
-                        "mainArtifact" -> mainArtifact =
-                            readAndroidArtifact(parser.name, readDependencies)
-                        "androidTestArtifact" -> androidTestArtifact =
-                            readAndroidArtifact(parser.name, readDependencies)
-                        "testArtifact" -> testArtifact =
-                            readJavaArtifact(parser.name, readDependencies)
+                        "mainArtifact" ->
+                            mainArtifact =
+                                readAndroidArtifact(parser.name, readDependencies)
+                        "androidTestArtifact" ->
+                            androidTestArtifact =
+                                readAndroidArtifact(parser.name, readDependencies)
+                        "testArtifact" ->
+                            testArtifact =
+                                readJavaArtifact(parser.name, readDependencies)
                         "sourceProviders" -> sourceProviders = readSourceProviders(parser.name)
-                        "testSourceProviders" -> testSourceProviders =
-                            readSourceProviders(parser.name)
+                        "testSourceProviders" ->
+                            testSourceProviders =
+                                readSourceProviders(parser.name)
                         "buildFeatures" -> buildFeatures = readBuildFeatures()
                         else -> unexpectedTag()
                     }

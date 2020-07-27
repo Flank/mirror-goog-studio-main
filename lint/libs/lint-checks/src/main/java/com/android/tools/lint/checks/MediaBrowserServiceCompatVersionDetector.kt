@@ -26,7 +26,8 @@ class MediaBrowserServiceCompatVersionDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "IncompatibleMediaBrowserServiceCompatVersion",
             briefDescription = "Obsolete version of MediaBrowserServiceCompat",
-            explanation = """
+            explanation =
+                """
             `MediaBrowserServiceCompat` from version 23.2.0 to 23.4.0 of the Support v4 Library \
             used private APIs and will not be compatible with future versions of Android beyond Android N. \
             Please upgrade to version 24.0.0 or higher of the Support Library.""",
@@ -56,9 +57,9 @@ class MediaBrowserServiceCompatVersionDetector : Detector(), SourceCodeScanner {
 
     override fun visitClass(context: JavaContext, declaration: UClass) {
         if (!context.evaluator.extendsClass(
-                declaration,
-                MEDIA_BROWSER_SERVICE_COMPAT, true
-            )
+            declaration,
+            MEDIA_BROWSER_SERVICE_COMPAT, true
+        )
         ) {
             return
         }

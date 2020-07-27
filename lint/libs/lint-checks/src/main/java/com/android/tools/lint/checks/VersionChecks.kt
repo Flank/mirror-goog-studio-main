@@ -160,8 +160,10 @@ class VersionChecks(private val evaluator: JavaEvaluator) {
                             } else if (tokenType === UastBinaryOperator.LESS && level <= api) {
                                 // SDK_INT < ICE_CREAM_SANDWICH
                                 return false
-                            } else if ((tokenType === UastBinaryOperator.EQUALS ||
-                                        tokenType === UastBinaryOperator.IDENTITY_EQUALS) &&
+                            } else if ((
+                                tokenType === UastBinaryOperator.EQUALS ||
+                                    tokenType === UastBinaryOperator.IDENTITY_EQUALS
+                                ) &&
                                 level < api
                             ) {
                                 return false
@@ -266,8 +268,10 @@ class VersionChecks(private val evaluator: JavaEvaluator) {
                     }
                 }
             } else if (current is UPolyadicExpression &&
-                (isAndedWithConditional(current, api, isLowerBound, prev) ||
-                        isOredWithConditional(current, api, isLowerBound, prev))
+                (
+                    isAndedWithConditional(current, api, isLowerBound, prev) ||
+                        isOredWithConditional(current, api, isLowerBound, prev)
+                    )
             ) {
                 return true
             } else if (current is USwitchClauseExpressionWithBody) {
@@ -352,12 +356,12 @@ class VersionChecks(private val evaluator: JavaEvaluator) {
                             apiLevel
                         }
                         if (lambdaInvocation != null && isWithinVersionCheckConditional(
-                                evaluator = evaluator,
-                                element = lambdaInvocation,
-                                api = api,
-                                isLowerBound = isLowerBound,
-                                apiLookup = newApiLookup
-                            )
+                            evaluator = evaluator,
+                            element = lambdaInvocation,
+                            api = api,
+                            isLowerBound = isLowerBound,
+                            apiLookup = newApiLookup
+                        )
                         ) {
                             return true
                         }
@@ -571,8 +575,8 @@ class VersionChecks(private val evaluator: JavaEvaluator) {
                     name.startsWith("isAtLeastQ") -> return api <= 29
                     // Try to guess future API levels before they're announced
                     name.startsWith("isAtLeast") &&
-                            name.length == 10 && Character.isUpperCase(name[9])
-                            && name[9] > 'Q' ->
+                        name.length == 10 && Character.isUpperCase(name[9])
+                        && name[9] > 'Q' ->
                         return api <= SdkVersionInfo.HIGHEST_KNOWN_API + 1
                 }
             }
@@ -863,11 +867,11 @@ class VersionChecks(private val evaluator: JavaEvaluator) {
                     if (operand == before) {
                         break
                     } else if (isOredWithConditional(
-                            element = operand,
-                            api = api,
-                            isLowerBound = isLowerBound,
-                            before = before
-                        )
+                        element = operand,
+                        api = api,
+                        isLowerBound = isLowerBound,
+                        before = before
+                    )
                     ) {
                         return true
                     }
@@ -921,11 +925,11 @@ class VersionChecks(private val evaluator: JavaEvaluator) {
                     if (operand == before) {
                         break
                     } else if (isAndedWithConditional(
-                            operand,
-                            api,
-                            isLowerBound,
-                            before
-                        )
+                        operand,
+                        api,
+                        isLowerBound,
+                        before
+                    )
                     ) {
                         return true
                     }

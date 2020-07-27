@@ -70,7 +70,7 @@ class AsmVisitor {
     private List<ClassScanner>[] nodeTypeDetectors;
 
     // Really want this:
-    //<T extends List<Detector> & ClassScanner> ClassVisitor(T xmlDetectors) {
+    // <T extends List<Detector> & ClassScanner> ClassVisitor(T xmlDetectors) {
     // but it makes client code tricky and ugly.
     @SuppressWarnings("unchecked")
     AsmVisitor(@NonNull LintClient client, @NonNull List<? extends Detector> classDetectors) {

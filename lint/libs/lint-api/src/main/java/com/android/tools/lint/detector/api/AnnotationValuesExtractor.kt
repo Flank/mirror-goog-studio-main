@@ -34,19 +34,30 @@ internal sealed class AnnotationValuesExtractor {
     internal abstract fun getAnnotationConstantObject(annotation: UAnnotation?, name: String): Any?
     internal fun getAnnotationBooleanValue(annotation: UAnnotation?, name: String): Boolean? =
         getAnnotationConstantObject(annotation, name) as? Boolean
+
     internal fun getAnnotationLongValue(annotation: UAnnotation?, name: String): Long? =
         (getAnnotationConstantObject(annotation, name) as? Number)?.toLong()
+
     internal fun getAnnotationDoubleValue(annotation: UAnnotation?, name: String): Double? =
         (getAnnotationConstantObject(annotation, name) as? Number)?.toDouble()
+
     internal fun getAnnotationStringValue(annotation: UAnnotation?, name: String): String? =
         getAnnotationConstantObject(annotation, name) as? String
-    internal abstract fun getAnnotationStringValues(annotation: UAnnotation?, name: String): Array<String>?
+
+    internal abstract fun getAnnotationStringValues(
+        annotation: UAnnotation?,
+        name: String
+    ): Array<String>?
 
     private object Source : AnnotationValuesExtractor() {
         override fun getAnnotationConstantObject(annotation: UAnnotation?, name: String): Any? =
-            annotation?.findDeclaredAttributeValue(name)?.let { ConstantEvaluator.evaluate(null, it) }
+            annotation?.findDeclaredAttributeValue(name)
+                ?.let { ConstantEvaluator.evaluate(null, it) }
 
-        override fun getAnnotationStringValues(annotation: UAnnotation?, name: String): Array<String>? {
+        override fun getAnnotationStringValues(
+            annotation: UAnnotation?,
+            name: String
+        ): Array<String>? {
             val attributeValue = annotation?.findDeclaredAttributeValue(name) ?: return null
 
             if (attributeValue.isArrayInitializer()) {
@@ -63,14 +74,18 @@ internal sealed class AnnotationValuesExtractor {
             } else {
                 // Use constant evaluator since we want to resolve field references as well
                 return when (val o = ConstantEvaluator.evaluate(null, attributeValue)) {
-                    is String -> { arrayOf(o) }
+                    is String -> {
+                        arrayOf(o)
+                    }
                     is Array<*> -> {
                         Arrays.stream(o)
                             .filter { e -> e is String }
                             .map { e -> e as String }
                             .toArray<String> { size -> arrayOfNulls(size) }
                     }
-                    else -> { null }
+                    else -> {
+                        null
+                    }
                 }
             }
         }
@@ -81,9 +96,13 @@ internal sealed class AnnotationValuesExtractor {
             (annotation?.javaPsi) as? ClsAnnotationImpl
 
         override fun getAnnotationConstantObject(annotation: UAnnotation?, name: String): Any? =
-            getClsAnnotation(annotation)?.findDeclaredAttributeValue(name)?.let { ConstantEvaluator.evaluate(null, it) }
+            getClsAnnotation(annotation)?.findDeclaredAttributeValue(name)
+                ?.let { ConstantEvaluator.evaluate(null, it) }
 
-        override fun getAnnotationStringValues(annotation: UAnnotation?, name: String): Array<String>? {
+        override fun getAnnotationStringValues(
+            annotation: UAnnotation?,
+            name: String
+        ): Array<String>? {
             val clsAnnotation = getClsAnnotation(annotation) ?: return null
             val attribute = clsAnnotation.findDeclaredAttributeValue(name) ?: return null
 
@@ -101,14 +120,18 @@ internal sealed class AnnotationValuesExtractor {
             } else {
                 // Use constant evaluator since we want to resolve field references as well
                 return when (val o = ConstantEvaluator.evaluate(null, attribute)) {
-                    is String -> { arrayOf(o) }
+                    is String -> {
+                        arrayOf(o)
+                    }
                     is Array<*> -> {
                         Arrays.stream(o)
                             .filter { e -> e is String }
                             .map { e -> e as String }
                             .toArray<String> { size -> arrayOfNulls(size) }
                     }
-                    else -> { null }
+                    else -> {
+                        null
+                    }
                 }
             }
         }

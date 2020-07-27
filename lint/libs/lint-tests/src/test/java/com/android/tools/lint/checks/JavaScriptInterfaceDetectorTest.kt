@@ -71,7 +71,8 @@ class JavaScriptInterfaceDetectorTest : AbstractCheckTest() {
     }
 
     fun test() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/JavaScriptTest.java:11: Error: None of the methods in the added interface (NonAnnotatedObject) have been annotated with @android.webkit.JavascriptInterface; they will not be visible in API 17 [JavascriptInterface]
                     webview.addJavascriptInterface(new NonAnnotatedObject(), "myobj");
                             ~~~~~~~~~~~~~~~~~~~~~~

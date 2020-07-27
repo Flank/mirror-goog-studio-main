@@ -21,9 +21,9 @@ import com.android.tools.lint.detector.api.ClassContext
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.model.DefaultLintModelMavenName
 import com.android.tools.lint.model.LintModelDependencies
+import com.android.tools.lint.model.LintModelExternalLibrary
 import com.android.tools.lint.model.LintModelLibrary
 import com.android.tools.lint.model.LintModelMavenName
-import com.android.tools.lint.model.LintModelExternalLibrary
 import com.google.common.collect.Maps
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAnonymousClass
@@ -374,8 +374,8 @@ class JavaEvaluator {
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated(
         "Most lint APIs (such as ApiLookup) no longer require internal JVM names and\n" +
-                "      accept qualified names that can be obtained by calling the\n" +
-                "      {@link #getQualifiedName(PsiClass)} method."
+            "      accept qualified names that can be obtained by calling the\n" +
+            "      {@link #getQualifiedName(PsiClass)} method."
     )
     open fun getInternalName(psiClass: PsiClass): String? {
         var qualifiedName = psiClass.qualifiedName
@@ -394,8 +394,8 @@ class JavaEvaluator {
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated(
         "Most lint APIs (such as ApiLookup) no longer require internal JVM names and\n" +
-                "      accept qualified names that can be obtained by calling the\n" +
-                "      {@link #getQualifiedName(PsiClassType)} method."
+            "      accept qualified names that can be obtained by calling the\n" +
+            "      {@link #getQualifiedName(PsiClassType)} method."
     )
     open fun getInternalName(psiClassType: PsiClassType): String? {
         return ClassContext.getInternalName(psiClassType.canonicalText)
@@ -496,8 +496,8 @@ class JavaEvaluator {
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated(
         "Most lint APIs (such as ApiLookup) no longer require internal JVM method\n" +
-                "      descriptions and accept JVM equivalent descriptions that can be obtained by calling the\n" +
-                "      {@link #getMethodDescription} method."
+            "      descriptions and accept JVM equivalent descriptions that can be obtained by calling the\n" +
+            "      {@link #getMethodDescription} method."
     )
     open fun getInternalDescription(
         method: PsiMethod,
@@ -868,12 +868,15 @@ class JavaEvaluator {
                                     if (c == '/' || c == File.separatorChar) {
                                         val artifactId = jarFile.substring(i, j)
                                         val versionEnd = jarFile.indexOf(c, j + 1)
-                                        val version = if (versionEnd != -1) jarFile.substring(j + 1, versionEnd) else ""
+                                        val version = if (versionEnd != -1) jarFile.substring(
+                                            j + 1,
+                                            versionEnd
+                                        ) else ""
                                         coordinates = DefaultLintModelMavenName(
-                                                groupId,
-                                                artifactId,
-                                                version
-                                            )
+                                            groupId,
+                                            artifactId,
+                                            version
+                                        )
                                         break
                                     }
                                 }
@@ -1000,8 +1003,8 @@ class JavaEvaluator {
         for (annotation in annotations) {
             val signature = annotation.qualifiedName
             if (signature == null || signature.startsWith("java.") && !relevantAnnotations!!.contains(
-                    signature
-                )
+                signature
+            )
             ) {
                 // @Override, @SuppressWarnings etc. Ignore
                 continue

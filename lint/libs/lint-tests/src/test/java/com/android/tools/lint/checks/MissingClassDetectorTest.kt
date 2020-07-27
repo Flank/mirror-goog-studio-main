@@ -393,62 +393,62 @@ class MissingClassDetectorTest : AbstractCheckTest() {
                 base64gzip(
                     "libs/classes.jar",
                     "" +
-                            "H4sIAAAAAAAAAJVWCTSUbRseBt+MyZdlsjRjzxChH5F9KbLNGFsllCVpwpRl" +
-                            "aCxZJzPCZEu2JorEEGkxjRT5KJQt+5aMlAhFi6X5R8sXzuE///Oe95z3nPe+" +
-                            "r/t+nvu67+dCWwA5oAAQ63mGQRgCVi0wgAOANLYzVDRDmSh/bwQAgAC0xV+g" +
-                            "lV/sv0zQGzpDWe+/zkhDlJmJsa2dEtLkE7K5ydJCUamNx0JR/kVzS4XN7peq" +
-                            "r8b8lMyRu8yQbbgiDvDldyJ1MJjCyb2CUMZ1+bNvZN5jPvrN+rH9iG4Q+OKL" +
-                            "Dgtb51d07h/RMtZF52S9AR7+Acobm4B/m5zx8lT+s4/1ZmKrzayw+7wx7l6G" +
-                            "7gGYQEwAXsnd29Xfn5A8iOU3hDYwPXNDFRRdbt6VvyuPTsZS7yHc1JACKYis" +
-                            "YOvo9BMQmNbtSewlQiPs6+6hy5dPVs2whUKO1Z090evMl3uxOVtTnDmsqdrU" +
-                            "MjwcDug5IA0mlI2IAK1wwc7zd3HecYHThVOkpJl6szqwzOBE5b23hQ9GC13P" +
-                            "XzyrtGvkoUTdqXlByXPeQfFb3EzHy6I4JG+Bm/aKfm7h+ZJwDrs9JurEfVxF" +
-                            "Pt1owXD3B2cim6uto9q+FEfnB/c6w6Binx3stZOQZjNa4FEyeCxTEKXNX5/f" +
-                            "97rkXXp9vpXci2exC7Ix8/iF4JcjLtbGCtS9O+QCyRenyOFhS+0aVRD6kyGD" +
-                            "OdGOs+MJPrLU0MxadSumJEG0dt7srQNB/KmaloiOwR5SbExnWW+rQEFR7yC8" +
-                            "Cy1t59UXEna9uACL61Rt2Xbw/rfw/agrmhWx2P6zMgyv9BNiQVbmZTzf4y4+" +
-                            "2kX5+n72ynErDwvvQ4GPpOYztnKrVMkuucRdiBy4HjG1515okunATNjRitrJ" +
-                            "1ItSrmLFkTOPb1GkmxdZCajwNnZs5/5+1TiVvc7iaDmemEcutEy2JcLi80EF" +
-                            "ZYru0hGit9MU03puiBzBn5KQydvJN4VQTx/EeNXkIIhqWGMiYdrh27huPrqv" +
-                            "ZOxhUOkksvIh3No5qrIC3lbJzzaQwHvASbq4nWA+MqQxEL4olDYrELJ0w+7G" +
-                            "mXeg9ERE0WLmoP4KW5NDozuFWc3Czrm6V9ZzDLaaY3asD7Tf6UDMcQ+/nwRL" +
-                            "s3H2EjCE6moMmzn23ynoXGiz88HEVUpImV6XYzMEy6txWfMieiVRCXTfQPVW" +
-                            "JiNaD6z3Fbhk/XqwFynXa/9erzknJ6Qlw78lh/Komgk4I7TowQDxSANHLfXi" +
-                            "s8VOHz0VXuR0s0mONzBm/NQx2ovWL/Fz8R2kUSoRHVyo45EI+hZ9kIJ++7WU" +
-                            "KkmeUImT4ztIb0xpeUIG3gxx230pZr5UHzpa3Sq/YPU35M1DbpDjoKWiT3VD" +
-                            "mjum8mONYRCiMaUen29PD5EqqBWBnGbAYSVV1os+C4XzqXvOH+Gb2MlutMdl" +
-                            "Ide6WghsGQlW+BTVEFxnrqFSKpF6oH0OJbvLX1mxIo0gt1P5Yh+vlkjYcs1y" +
-                            "tXCsikt1gHj+zeezjO9sCLvQW9fyiTpjvQ8lofoEGwp/AUZG5PmVprn4/zTT" +
-                            "nF3rDDja38VozVwT6Ub06Wcgcxs93xASxR32+pa0djN92mnDJlM9W+fRetZt" +
-                            "/lRKWFhQXvBkVJjRXBq+4XRWtwpTE05yn52ByR/Dp+xL6E7WpbqQuscqI0a5" +
-                            "D9RyUhGvPOEQPgQTz0Y7nhTrq25oQt/z0kcvFuc9s31KKa+mHZTVY3522v+O" +
-                            "5sLtx/QTeA0BhpTyCL+SLJycfL4DztPUFl+R0XfPl3Co1t7Jogcrq56vPag3" +
-                            "ao390Iab3PE0CG6RoZUpiId6quLUHLywHw6e+3BwckKJso32kQuLCJqfPFlh" +
-                            "96Gf/uGf3kdz2TihkUvL/Ys8K8RrSbW5sptFPPymxINvRDyVn8zzQTX9XYPm" +
-                            "1b3WadNiSiwRFczs4YeR7KX53cIdNZxuNdp/bzJ3GwGGpgqnJ9RZ+p14kY3X" +
-                            "vXJfO0KpUckm5ogUmRTes2tZRFZAlNJpNFEKyUIvF/NlV/cVHzcoyyzRrBGr" +
-                            "h7yrMVInq8GNdqJDNPWmjG56Sg2YG8kQpctzICVDS453UtK0+CdqmELBHKe3" +
-                            "UwJ2HGic/Gqt7eUreDKC8rifmENWfdAc+iQyYDGumZAC1TFpgCoyhD9RuBI5" +
-                            "VY+qOecLrRxFe9IEsIa1UXG2/6sHbTzcPTCBv3sQZ91k/oR1Eh2HvKldRSVd" +
-                            "QoLQI0Jc4vS4KM5ctFMh1GkIIfSwD5F83ZhpfigqSvzVAVJKf0T+XYfmjO6M" +
-                            "7IzF5U+znK94Hbn4Y9zkoluDg6sqsD205Ht2wHcwUz75WlyolealKVpuwL73" +
-                            "A19i3C88Ujd6s58mryOzo/iuumTnDBwjRfL+G3Mc9O2S35jHo+6k7wlvA2Rc" +
-                            "y8d68/oFq+Ne783gnrY3OIxZLi5APQ3GwvkSi0t8PRJAlCcL+3Nv5ophVCdd" +
-                            "BXJ10logO3MkqagsY1Pt5aPThDLHEqQacqAQ60LQWAwqzwEKyKRecyzh6yqy" +
-                            "7SK/zOo+Onx/jBD3wl5YcVqfGCnByCxVWDY5xBG5Bc2mD85Tfiamz+kYLX0h" +
-                            "SbgjZPoy3l2WLcXHRJan+fZzHpjwuDD409MGhqpuov9onQNyQEzQ3Y2hePXq" +
-                            "+6WJw24m7E1y9U8S76hILJLaFYsdwkRhmeLWKQmxiLLSKS51EWRp2tytGchK" +
-                            "+YwY8NRAVum62Dcr3/b15bP18AvEuHv8qh65HMVuyHueGRndAeSM5HXULnMR" +
-                            "gMDiCQjEDiEYaNnvfpv9gEzQXy2ENBJh66t9Ip7pHcLXHJv1K5ihGRlfyN0a" +
-                            "AM+3hELeYEIjpDy4SkAVVSDf/3Y/AQRyxrQ3T9g97TRP5co9l5ugpATurDmD" +
-                            "ApX6FEnZlQ/v58EZKXSZDJZSBOWznv2TTEJ5C9CymyzpD5a2xIXkCCzMHhtt" +
-                            "0KnPVPCxqT3JGz6VdNhWzpZISp+d6S+jXa7EpmnahGSdWRI3JRYE5shMmNDt" +
-                            "+/QRZDGGyWuOULGB4jP1nr5baPzUuiPaYTVDFfelE3FMkbyacpqXi66LDDzP" +
-                            "vnacuq2h9bNQ78zx8PFL15v69n4EaldPnGNfOVh65eAEH+tgaT/6go0dClir" +
-                            "5H5rvBUZuHatEYXrXVcLNOgaN90NJOEKAjdgYyH3Z9EB/8q6jV3Aa1yGAGtk" +
-                            "3p9cV9xWX89ia9w42f6X7FuPtXriwtZgYYCbXu/rgVbPK/gaoNecm4/r9Uir" +
-                            "W2dtSlNcm0679UCrqbJ9DRAVtFnfoS04uX6WBAw4xEqC80fF/gu8+KimcgwA" +
-                            "AA=="
+                        "H4sIAAAAAAAAAJVWCTSUbRseBt+MyZdlsjRjzxChH5F9KbLNGFsllCVpwpRl" +
+                        "aCxZJzPCZEu2JorEEGkxjRT5KJQt+5aMlAhFi6X5R8sXzuE///Oe95z3nPe+" +
+                        "r/t+nvu67+dCWwA5oAAQ63mGQRgCVi0wgAOANLYzVDRDmSh/bwQAgAC0xV+g" +
+                        "lV/sv0zQGzpDWe+/zkhDlJmJsa2dEtLkE7K5ydJCUamNx0JR/kVzS4XN7peq" +
+                        "r8b8lMyRu8yQbbgiDvDldyJ1MJjCyb2CUMZ1+bNvZN5jPvrN+rH9iG4Q+OKL" +
+                        "Dgtb51d07h/RMtZF52S9AR7+Acobm4B/m5zx8lT+s4/1ZmKrzayw+7wx7l6G" +
+                        "7gGYQEwAXsnd29Xfn5A8iOU3hDYwPXNDFRRdbt6VvyuPTsZS7yHc1JACKYis" +
+                        "YOvo9BMQmNbtSewlQiPs6+6hy5dPVs2whUKO1Z090evMl3uxOVtTnDmsqdrU" +
+                        "MjwcDug5IA0mlI2IAK1wwc7zd3HecYHThVOkpJl6szqwzOBE5b23hQ9GC13P" +
+                        "XzyrtGvkoUTdqXlByXPeQfFb3EzHy6I4JG+Bm/aKfm7h+ZJwDrs9JurEfVxF" +
+                        "Pt1owXD3B2cim6uto9q+FEfnB/c6w6Binx3stZOQZjNa4FEyeCxTEKXNX5/f" +
+                        "97rkXXp9vpXci2exC7Ix8/iF4JcjLtbGCtS9O+QCyRenyOFhS+0aVRD6kyGD" +
+                        "OdGOs+MJPrLU0MxadSumJEG0dt7srQNB/KmaloiOwR5SbExnWW+rQEFR7yC8" +
+                        "Cy1t59UXEna9uACL61Rt2Xbw/rfw/agrmhWx2P6zMgyv9BNiQVbmZTzf4y4+" +
+                        "2kX5+n72ynErDwvvQ4GPpOYztnKrVMkuucRdiBy4HjG1515okunATNjRitrJ" +
+                        "1ItSrmLFkTOPb1GkmxdZCajwNnZs5/5+1TiVvc7iaDmemEcutEy2JcLi80EF" +
+                        "ZYru0hGit9MU03puiBzBn5KQydvJN4VQTx/EeNXkIIhqWGMiYdrh27huPrqv" +
+                        "ZOxhUOkksvIh3No5qrIC3lbJzzaQwHvASbq4nWA+MqQxEL4olDYrELJ0w+7G" +
+                        "mXeg9ERE0WLmoP4KW5NDozuFWc3Czrm6V9ZzDLaaY3asD7Tf6UDMcQ+/nwRL" +
+                        "s3H2EjCE6moMmzn23ynoXGiz88HEVUpImV6XYzMEy6txWfMieiVRCXTfQPVW" +
+                        "JiNaD6z3Fbhk/XqwFynXa/9erzknJ6Qlw78lh/Komgk4I7TowQDxSANHLfXi" +
+                        "s8VOHz0VXuR0s0mONzBm/NQx2ovWL/Fz8R2kUSoRHVyo45EI+hZ9kIJ++7WU" +
+                        "KkmeUImT4ztIb0xpeUIG3gxx230pZr5UHzpa3Sq/YPU35M1DbpDjoKWiT3VD" +
+                        "mjum8mONYRCiMaUen29PD5EqqBWBnGbAYSVV1os+C4XzqXvOH+Gb2MlutMdl" +
+                        "Ide6WghsGQlW+BTVEFxnrqFSKpF6oH0OJbvLX1mxIo0gt1P5Yh+vlkjYcs1y" +
+                        "tXCsikt1gHj+zeezjO9sCLvQW9fyiTpjvQ8lofoEGwp/AUZG5PmVprn4/zTT" +
+                        "nF3rDDja38VozVwT6Ub06Wcgcxs93xASxR32+pa0djN92mnDJlM9W+fRetZt" +
+                        "/lRKWFhQXvBkVJjRXBq+4XRWtwpTE05yn52ByR/Dp+xL6E7WpbqQuscqI0a5" +
+                        "D9RyUhGvPOEQPgQTz0Y7nhTrq25oQt/z0kcvFuc9s31KKa+mHZTVY3522v+O" +
+                        "5sLtx/QTeA0BhpTyCL+SLJycfL4DztPUFl+R0XfPl3Co1t7Jogcrq56vPag3" +
+                        "ao390Iab3PE0CG6RoZUpiId6quLUHLywHw6e+3BwckKJso32kQuLCJqfPFlh" +
+                        "96Gf/uGf3kdz2TihkUvL/Ys8K8RrSbW5sptFPPymxINvRDyVn8zzQTX9XYPm" +
+                        "1b3WadNiSiwRFczs4YeR7KX53cIdNZxuNdp/bzJ3GwGGpgqnJ9RZ+p14kY3X" +
+                        "vXJfO0KpUckm5ogUmRTes2tZRFZAlNJpNFEKyUIvF/NlV/cVHzcoyyzRrBGr" +
+                        "h7yrMVInq8GNdqJDNPWmjG56Sg2YG8kQpctzICVDS453UtK0+CdqmELBHKe3" +
+                        "UwJ2HGic/Gqt7eUreDKC8rifmENWfdAc+iQyYDGumZAC1TFpgCoyhD9RuBI5" +
+                        "VY+qOecLrRxFe9IEsIa1UXG2/6sHbTzcPTCBv3sQZ91k/oR1Eh2HvKldRSVd" +
+                        "QoLQI0Jc4vS4KM5ctFMh1GkIIfSwD5F83ZhpfigqSvzVAVJKf0T+XYfmjO6M" +
+                        "7IzF5U+znK94Hbn4Y9zkoluDg6sqsD205Ht2wHcwUz75WlyolealKVpuwL73" +
+                        "A19i3C88Ujd6s58mryOzo/iuumTnDBwjRfL+G3Mc9O2S35jHo+6k7wlvA2Rc" +
+                        "y8d68/oFq+Ne783gnrY3OIxZLi5APQ3GwvkSi0t8PRJAlCcL+3Nv5ophVCdd" +
+                        "BXJ10logO3MkqagsY1Pt5aPThDLHEqQacqAQ60LQWAwqzwEKyKRecyzh6yqy" +
+                        "7SK/zOo+Onx/jBD3wl5YcVqfGCnByCxVWDY5xBG5Bc2mD85Tfiamz+kYLX0h" +
+                        "SbgjZPoy3l2WLcXHRJan+fZzHpjwuDD409MGhqpuov9onQNyQEzQ3Y2hePXq" +
+                        "+6WJw24m7E1y9U8S76hILJLaFYsdwkRhmeLWKQmxiLLSKS51EWRp2tytGchK" +
+                        "+YwY8NRAVum62Dcr3/b15bP18AvEuHv8qh65HMVuyHueGRndAeSM5HXULnMR" +
+                        "gMDiCQjEDiEYaNnvfpv9gEzQXy2ENBJh66t9Ip7pHcLXHJv1K5ihGRlfyN0a" +
+                        "AM+3hELeYEIjpDy4SkAVVSDf/3Y/AQRyxrQ3T9g97TRP5co9l5ugpATurDmD" +
+                        "ApX6FEnZlQ/v58EZKXSZDJZSBOWznv2TTEJ5C9CymyzpD5a2xIXkCCzMHhtt" +
+                        "0KnPVPCxqT3JGz6VdNhWzpZISp+d6S+jXa7EpmnahGSdWRI3JRYE5shMmNDt" +
+                        "+/QRZDGGyWuOULGB4jP1nr5baPzUuiPaYTVDFfelE3FMkbyacpqXi66LDDzP" +
+                        "vnacuq2h9bNQ78zx8PFL15v69n4EaldPnGNfOVh65eAEH+tgaT/6go0dClir" +
+                        "5H5rvBUZuHatEYXrXVcLNOgaN90NJOEKAjdgYyH3Z9EB/8q6jV3Aa1yGAGtk" +
+                        "3p9cV9xWX89ia9w42f6X7FuPtXriwtZgYYCbXu/rgVbPK/gaoNecm4/r9Uir" +
+                        "W2dtSlNcm0679UCrqbJ9DRAVtFnfoS04uX6WBAw4xEqC80fF/gu8+KimcgwA" +
+                        "AA=="
                 )
             )
             .run()
@@ -462,7 +462,7 @@ class MissingClassDetectorTest : AbstractCheckTest() {
                 androidManifest,
                 classpath(),
                 java(
-                "" +
+                    "" +
                         "package test.pkg;\n" +
                         "\n" +
                         "import android.app.Activity;\n" +
@@ -496,33 +496,33 @@ class MissingClassDetectorTest : AbstractCheckTest() {
                     base64gzip(
                         "test/pkg/Foo.class",
                         "" +
-                                "H4sIAAAAAAAAAGVOu07DMBQ9t03jNoS2hNeMxAAMWOoK6kClSkgRDKDuTrCK" +
-                                "S0iQ7TL0r5iQGPiAfhTiJnSohC2dex7X8ln/fH0DGOFYoEWIvXZevr3M5bSq" +
-                                "BALCcKHelSxUOZf32ULnnhBem9L4MaF9dj4jBJPqSUdooxejg5AwSE2p75av" +
-                                "mbaPKis0IUmrXBUzZU2tN2bgn40j9NPtP68I0UO1tLmemnqpy95lXYG73Zal" +
-                                "tpNCOaedQMLdtl+e3ijLlRgFDv9nqyZb4QRMUB/iy30ZBSvZaKBz8YnuB5MW" +
-                                "Isbwz8QOY7zhMXabvN/gAEOeCbM9zvfRwwHPI9Av5fj6R1sBAAA="
+                            "H4sIAAAAAAAAAGVOu07DMBQ9t03jNoS2hNeMxAAMWOoK6kClSkgRDKDuTrCK" +
+                            "S0iQ7TL0r5iQGPiAfhTiJnSohC2dex7X8ln/fH0DGOFYoEWIvXZevr3M5bSq" +
+                            "BALCcKHelSxUOZf32ULnnhBem9L4MaF9dj4jBJPqSUdooxejg5AwSE2p75av" +
+                            "mbaPKis0IUmrXBUzZU2tN2bgn40j9NPtP68I0UO1tLmemnqpy95lXYG73Zal" +
+                            "tpNCOaedQMLdtl+e3ijLlRgFDv9nqyZb4QRMUB/iy30ZBSvZaKBz8YnuB5MW" +
+                            "Isbwz8QOY7zhMXabvN/gAEOeCbM9zvfRwwHPI9Av5fj6R1sBAAA="
                     ),
                     base64gzip(
                         "test/pkg/Foo\$Bar.class",
                         "" +
-                                "H4sIAAAAAAAAAF1Oy0oDQRCsTja7ybqah/kBwYN6cMCrImggEAhelNwnu4OO" +
-                                "rjPLzCTgZ3kSPPgBfpTYO3oQu6G6q7qL7s+v9w8AZ5hm6BBGQfkgmqd7Mbf2" +
-                                "8Fq6DAlhKk3lrK6EbBpxVQa91eGFkF5oo8MloXt0vCIkM1upHF0MCvSQEoZL" +
-                                "bdTN5nmt3J1c14owWdpS1ivpdMt/xSQ8aN/O/t8+J+S3duNKNdftYp/100e5" +
-                                "lYRiYYxys1p6r3yGCSt/3fwS+3EAbtAGcfJPjBkzETnQO3lD/5WbDnLGNIop" +
-                                "dhiLnwWuu3G+F3GIEdc82sfYx+AbAxaHhz8BAAA="
+                            "H4sIAAAAAAAAAF1Oy0oDQRCsTja7ybqah/kBwYN6cMCrImggEAhelNwnu4OO" +
+                            "rjPLzCTgZ3kSPPgBfpTYO3oQu6G6q7qL7s+v9w8AZ5hm6BBGQfkgmqd7Mbf2" +
+                            "8Fq6DAlhKk3lrK6EbBpxVQa91eGFkF5oo8MloXt0vCIkM1upHF0MCvSQEoZL" +
+                            "bdTN5nmt3J1c14owWdpS1ivpdMt/xSQ8aN/O/t8+J+S3duNKNdftYp/100e5" +
+                            "lYRiYYxys1p6r3yGCSt/3fwS+3EAbtAGcfJPjBkzETnQO3lD/5WbDnLGNIop" +
+                            "dhiLnwWuu3G+F3GIEdc82sfYx+AbAxaHhz8BAAA="
                     ),
                     base64gzip(
                         "test/pkg/Foo\$Baz.class",
                         "" +
-                                "H4sIAAAAAAAAAF1QTUvDQBB9k8SkjbFNa/06Cj1UBSPiTRG0UBCCF6X3bbLo" +
-                                "akxCsi3ov/Igggd/gD9KnA0eqgw8Zt57M/vYr++PTwDH2PFgEUItax2Vj3fR" +
-                                "pCiGl+LFg0MYiDytCpVGoiyji0SrhdLPBFffq3p4ROjEy2unrJypXOlzQm/0" +
-                                "V9qbEpxxkco2CKsBVuD6sLEWwEOHYI+MoRurXF7Pn2ayuhWzTBL6cZGIbCoq" +
-                                "ZeZf0jHPG+1/Zg7g3xTzKpETZYwt5g8fxEIQgqs8l9U4E3Utaw9bzCxvcwLe" +
-                                "xy6Hs/lXKAxNQtNxeWgxtnk6gcUF+PsHbwzvCF55stBldNkDdoaMQdP76KHf" +
-                                "6OsNDrDRsObmJrZBP1YpAveEAQAA"
+                            "H4sIAAAAAAAAAF1QTUvDQBB9k8SkjbFNa/06Cj1UBSPiTRG0UBCCF6X3bbLo" +
+                            "akxCsi3ov/Igggd/gD9KnA0eqgw8Zt57M/vYr++PTwDH2PFgEUItax2Vj3fR" +
+                            "pCiGl+LFg0MYiDytCpVGoiyji0SrhdLPBFffq3p4ROjEy2unrJypXOlzQm/0" +
+                            "V9qbEpxxkco2CKsBVuD6sLEWwEOHYI+MoRurXF7Pn2ayuhWzTBL6cZGIbCoq" +
+                            "ZeZf0jHPG+1/Zg7g3xTzKpETZYwt5g8fxEIQgqs8l9U4E3Utaw9bzCxvcwLe" +
+                            "xy6Hs/lXKAxNQtNxeWgxtnk6gcUF+PsHbwzvCF55stBldNkDdoaMQdP76KHf" +
+                            "6OsNDrDRsObmJrZBP1YpAveEAQAA"
                     )
                 )
             )
@@ -555,7 +555,7 @@ class MissingClassDetectorTest : AbstractCheckTest() {
                     """
                 ).indented(),
                 java(
-                "" +
+                    "" +
                         "package test.pkg.Foo;\n" +
                         "\n" +
                         "import android.app.Activity;\n" +
@@ -600,12 +600,12 @@ class MissingClassDetectorTest : AbstractCheckTest() {
                     base64gzip(
                         "test/pkg/Foo/Bar.class",
                         "" +
-                                "H4sIAAAAAAAAAF2NzU7CQBRGv1sKxVopIb6AO3XBJLrUmIgJK+JGwn7aTvQq" +
-                                "dJrpQOJjuTJxwQPwUIY76Iq7mHN/Tubb/f5sAdxgmCAiDL1pvWo+XtXUWjXR" +
-                                "LkFMONd15SxXSjeNeiw9b9h/Enr3XLN/IHQurxaE+MlWJkUHJxm66BHyGdfm" +
-                                "eb0qjJvrYmkIo5kt9XKhHYf5fxn7N27D7Tj7jpC+2LUrzZSD2Jfd+F1vNC4g" +
-                                "oQhFiEKYMJHpVkjC7vU3+l/SREjlTYUQKRbpVLrsTxKeHb4YHMx8D9v6x2YM" +
-                                "AQAA"
+                            "H4sIAAAAAAAAAF2NzU7CQBRGv1sKxVopIb6AO3XBJLrUmIgJK+JGwn7aTvQq" +
+                            "dJrpQOJjuTJxwQPwUIY76Iq7mHN/Tubb/f5sAdxgmCAiDL1pvWo+XtXUWjXR" +
+                            "LkFMONd15SxXSjeNeiw9b9h/Enr3XLN/IHQurxaE+MlWJkUHJxm66BHyGdfm" +
+                            "eb0qjJvrYmkIo5kt9XKhHYf5fxn7N27D7Tj7jpC+2LUrzZSD2Jfd+F1vNC4g" +
+                            "oQhFiEKYMJHpVkjC7vU3+l/SREjlTYUQKRbpVLrsTxKeHb4YHMx8D9v6x2YM" +
+                            "AQAA"
                     )
                 )
             )
@@ -639,14 +639,14 @@ class MissingClassDetectorTest : AbstractCheckTest() {
                 ).indented(),
                 java(
                     "" +
-                            "package test.pkg;\n" +
-                            "\n" +
-                            "import android.app.Activity;\n" +
-                            "\n" +
-                            "public class Foo {\n" +
-                            "    public static class Bar extends Activity {\n" +
-                            "    }\n" +
-                            "}\n"
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.app.Activity;\n" +
+                        "\n" +
+                        "public class Foo {\n" +
+                        "    public static class Bar extends Activity {\n" +
+                        "    }\n" +
+                        "}\n"
                 )
             )
             .run()

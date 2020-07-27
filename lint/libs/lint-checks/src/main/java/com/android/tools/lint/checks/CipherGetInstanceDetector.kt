@@ -95,10 +95,12 @@ class CipherGetInstanceDetector : Detector(), SourceCodeScanner {
         if (ALGORITHM_ONLY.contains(transformation)) {
             val message =
                 "`Cipher.getInstance` should not be called without setting the" +
-                        " encryption mode and padding"
+                    " encryption mode and padding"
             context.report(ISSUE, call, context.getLocation(node), message)
-        } else if ((transformation.contains("/ECB/") ||
-                    transformation.endsWith("/ECB")) &&
+        } else if ((
+            transformation.contains("/ECB/") ||
+                transformation.endsWith("/ECB")
+            ) &&
             !transformation.startsWith("RSA/")
         ) {
             var message = "ECB encryption mode should not be used"
@@ -117,16 +119,18 @@ class CipherGetInstanceDetector : Detector(), SourceCodeScanner {
     ) {
         if (provider == "BC") {
             val message =
-                (if (context.mainProject.targetSdkVersion.featureLevel >= 28) {
-                    "The `BC` provider is deprecated and as of Android P " +
+                (
+                    if (context.mainProject.targetSdkVersion.featureLevel >= 28) {
+                        "The `BC` provider is deprecated and as of Android P " +
                             "this method will throw a `NoSuchAlgorithmException`."
-                } else {
-                    "The `BC` provider is deprecated and when `targetSdkVersion` is moved " +
+                    } else {
+                        "The `BC` provider is deprecated and when `targetSdkVersion` is moved " +
                             "to `P` this method will throw a `NoSuchAlgorithmException`."
-                }) +
-                        " To fix " +
-                        "this you should stop specifying a provider and use the default " +
-                        "implementation"
+                    }
+                    ) +
+                    " To fix " +
+                    "this you should stop specifying a provider and use the default " +
+                    "implementation"
             context.report(
                 ISSUE, call, context.getLocation(node),
                 message
@@ -139,7 +143,8 @@ class CipherGetInstanceDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "GetInstance",
             briefDescription = "Cipher.getInstance with ECB",
-            explanation = """
+            explanation =
+                """
                 `Cipher#getInstance` should not be called with ECB as the cipher mode or \
                 without setting the cipher mode because the default mode on android is \
                 ECB, which is insecure.""",
@@ -157,7 +162,8 @@ class CipherGetInstanceDetector : Detector(), SourceCodeScanner {
         val DEPRECATED_PROVIDER = Issue.create(
             id = "DeprecatedProvider",
             briefDescription = "Using BC Provider",
-            explanation = """
+            explanation =
+                """
             The `BC` provider has been deprecated and will not be provided when `targetSdkVersion` is P or higher.
             """,
             moreInfo = "https://android-developers.googleblog.com/2018/03/cryptography-changes-in-android-p.html",

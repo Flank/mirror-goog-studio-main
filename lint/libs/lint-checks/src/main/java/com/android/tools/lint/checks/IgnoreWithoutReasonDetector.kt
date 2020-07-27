@@ -42,7 +42,8 @@ class IgnoreWithoutReasonDetector : Detector(), Detector.UastScanner {
         val ISSUE = Issue.create(
             id = "IgnoreWithoutReason",
             briefDescription = "@Ignore without Reason",
-            explanation = """
+            explanation =
+                """
             Ignoring a test without a reason makes it difficult to figure out the problem later.
             Please define an explicit reason why it is ignored, and when it can be resolved.""",
             category = Category.TESTING,
@@ -76,11 +77,11 @@ class IgnoreWithoutReasonDetector : Detector(), Detector.UastScanner {
                 val attribute = ignoreAnnotation.findAttributeValue(ATTR_VALUE)
                 val hasDescription =
                     attribute != null &&
-                            run {
-                                val value =
-                                    ConstantEvaluator.evaluate(context, attribute) as? String
-                                value != null && value.isNotBlank() && value != "TODO"
-                            }
+                        run {
+                            val value =
+                                ConstantEvaluator.evaluate(context, attribute) as? String
+                            value != null && value.isNotBlank() && value != "TODO"
+                        }
                 if (!hasDescription) {
                     val fix =
                         if (attribute == null || ignoreAnnotation.attributeValues.isEmpty()) {

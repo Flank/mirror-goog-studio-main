@@ -100,11 +100,13 @@ class GradleContext(
 
     companion object {
         fun getStringLiteralValue(value: String): String? {
-            return if (value.length > 2 && (value.startsWith("'") && value.endsWith("'") || value.startsWith(
+            return if (value.length > 2 && (
+                value.startsWith("'") && value.endsWith("'") || value.startsWith(
                     "\""
                 ) && value.endsWith(
                     "\""
-                ))
+                )
+                )
             ) {
                 value.substring(1, value.length - 1)
             } else null
@@ -126,7 +128,7 @@ class GradleContext(
 
         fun isStringLiteral(token: String): Boolean {
             return token.startsWith("\"") && token.endsWith("\"") ||
-                    token.startsWith("'") && token.endsWith("'")
+                token.startsWith("'") && token.endsWith("'")
         }
     }
 }

@@ -1067,7 +1067,7 @@ public class Extractor {
         final Pattern XML_SIGNATURE =
                 Pattern.compile(
                         // Class (FieldName | Type? Name(ArgList) Argnum?)
-                        //"(\\S+) (\\S+|(.*)\\s+(\\S+)\\((.*)\\)( \\d+)?)");
+                        // "(\\S+) (\\S+|(.*)\\s+(\\S+)\\((.*)\\)( \\d+)?)");
                         "(\\S+) (\\S+|((.*)\\s+)?(\\S+)\\((.*)\\)( \\d+)?)");
 
         Element root = document.getDocumentElement();
@@ -1154,7 +1154,8 @@ public class Extractor {
             // Example:
             // <item name="android.provider.Browser BOOKMARKS_URI">
             //   <annotation name="android.support.annotation.RequiresPermission.Read">
-            //     <val name="value" val="&quot;com.android.browser.permission.READ_HISTORY_BOOKMARKS&quot;" />
+            //     <val name="value"
+            // val="&quot;com.android.browser.permission.READ_HISTORY_BOOKMARKS&quot;" />
             //     <val name="apis" val="&quot;..22&quot;" />
             //   </annotation>
             //   ..
@@ -1803,14 +1804,17 @@ public class Extractor {
                 if (attributes.size() == 1 && REQUIRES_PERMISSION.isPrefix(name, true)) {
                     UExpression expression = attributes.get(0).getExpression();
                     if (expression instanceof UAnnotation) {
-                        // The external annotations format does not allow for nested/complex annotations.
+                        // The external annotations format does not allow for nested/complex
+                        // annotations.
                         // However, these special annotations (@RequiresPermission.Read,
-                        // @RequiresPermission.Write, etc) are known to only be simple containers with a
+                        // @RequiresPermission.Write, etc) are known to only be simple containers
+                        // with a
                         // single permission child, so instead we "inline" the content:
                         //  @Read(@RequiresPermission(allOf={P1,P2},conditional=true)
                         //     =>
                         //      @RequiresPermission.Read(allOf({P1,P2},conditional=true)
-                        // That's setting attributes that don't actually exist on the container permission,
+                        // That's setting attributes that don't actually exist on the container
+                        // permission,
                         // but we'll counteract that on the read-annotations side.
                         UAnnotation annotation = (UAnnotation) expression;
                         attributes = annotation.getAttributeValues();
@@ -2790,7 +2794,7 @@ public class Extractor {
         @Override
         public boolean visitField(UField field) {
             // Not calling super: don't recurse inside field (e.g. field initializer)
-            //super.visitField(field);
+            // super.visitField(field);
             if (hasRelevantAnnotations(field)) {
                 PsiClass containingClass = field.getContainingClass();
                 if (containingClass != null) {

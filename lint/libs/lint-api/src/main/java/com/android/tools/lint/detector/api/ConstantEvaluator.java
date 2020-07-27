@@ -1070,8 +1070,9 @@ public class ConstantEvaluator {
             Object value = ((PsiLiteral) node).getValue();
             if (value == null && node instanceof KtLightPsiLiteral) {
                 KtExpression origin = ((KtLightPsiLiteral) node).getKotlinOrigin();
-                UExpression uastExpression = (UExpression) UastFacade.INSTANCE
-                        .convertElement(origin, null, UExpression.class);
+                UExpression uastExpression =
+                        (UExpression)
+                                UastFacade.INSTANCE.convertElement(origin, null, UExpression.class);
                 if (uastExpression != null) {
                     value = uastExpression.evaluate();
                 }

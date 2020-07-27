@@ -164,7 +164,8 @@ class RequiresFeatureDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
             kotlin(
-                "src/test/pkg/test.kt", """
+                "src/test/pkg/test.kt",
+                """
                 package test.pkg
 
                 import test.framework.pkg.FeatureChecker

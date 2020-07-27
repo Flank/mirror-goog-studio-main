@@ -53,7 +53,8 @@ public class ByteOrderMarkDetectorTest extends AbstractCheckTest {
                                         + "import android.annotation.SuppressLint;\n"
                                         + "public class MyTest {\n"
                                         + "    public void test1() {\n"
-                                        // source code is allowed to reference byteorder mark indirectly
+                                        // source code is allowed to reference byteorder mark
+                                        // indirectly
                                         + "        String s = \"\\uFEFF\"; // OK\n"
                                         + "        String t = \"\uFEFF\"; // ERROR\n"
                                         + "    }\n"

@@ -62,7 +62,8 @@ res/values-sv-rSV: Warning: Suspicious language and region combination sv (Swedi
     }
 
     fun testAlpha3() {
-        val expected = """
+        val expected =
+            """
 res/values-b+nor+NOR: Warning: For compatibility, should use 2-letter language codes when available; use no instead of nor [UseAlpha2]
 res/values-b+nor+NOR: Warning: For compatibility, should use 2-letter region codes when available; use NO instead of nor [UseAlpha2]
 0 errors, 2 warnings
@@ -131,17 +132,17 @@ res/values-b+en+Scr1: Error: Multiple locale folders for language en map to a si
             // Explicit call to getLocales
             java(
                 "" +
-                        "package test.pkg.myapplication;\n" +
-                        "\n" +
-                        "import android.content.res.AssetManager;\n" +
-                        "import android.content.res.Resources;\n" +
-                        "\n" +
-                        "public class MyLibrary {\n" +
-                        "    public static void doSomething(Resources resources) {\n" +
-                        "        AssetManager assets = resources.getAssets();\n" +
-                        "        String[] locales = assets.getLocales();\n" +
-                        "    }\n" +
-                        "}\n"
+                    "package test.pkg.myapplication;\n" +
+                    "\n" +
+                    "import android.content.res.AssetManager;\n" +
+                    "import android.content.res.Resources;\n" +
+                    "\n" +
+                    "public class MyLibrary {\n" +
+                    "    public static void doSomething(Resources resources) {\n" +
+                    "        AssetManager assets = resources.getAssets();\n" +
+                    "        String[] locales = assets.getLocales();\n" +
+                    "    }\n" +
+                    "}\n"
             ),
             xml("res/values-no/strings.xml", stringsXml),
             xml("res/values-fil/strings.xml", stringsXml),
@@ -164,15 +165,16 @@ src/test/pkg/myapplication/MyLibrary.java:9: Error: The app will crash on platfo
             jar(
                 "libs/build-compat.jar",
                 base64gzip(
-                    "android/support/v4/os/BuildCompat.class", "" +
-                            "H4sIAAAAAAAAAIVSy07CQBQ9g0ihouID3woaF+DCWbjUmBATV1UTMW5cDWVSR8uUTAcTPsu" +
-                            "NJi78AD/KeKegbox0cZ/n3HvupB+fb+8AjrDnYxpVHytY9bGGdQ8bHjYZCidKK3vKMNVo3j" +
-                            "Lkz5KuZJgPlJaXg15HmhvRiamyGCShiG+FUS4fF/P2XqUMe4GVqeX9x4j3hqLfj1UorEo0v" +
-                            "xgGqmOEGR4zzHSTdtKTxNARURqB0F2TqC4PE22lttzIlF/LNBmYUKbHTkzJfKcMtQl4Bi92" +
-                            "Ch126S54EE+Cx0JHvG0NbaS+386g58opn/uRduigZRTgedgqYxs7Hmpl1LHLUJ90F0Pld9N" +
-                            "V50GGlmH7X6V0ViRtK02lpXi/0fzzsKx/IbSIpCHt9UkYOo+mBt8vUG00/3gD7CJPf4H7cm" +
-                            "DuZLJFyjh5Rn764BXsOWuXyBZGRfhky+N4hiJQdxZzY3KLfM7VDl6Qe8FU8DvAzxoewYrZk" +
-                            "JUREPOokC8ScQGL2e6ljLP8BSDzZ1KvAgAA"
+                    "android/support/v4/os/BuildCompat.class",
+                    "" +
+                        "H4sIAAAAAAAAAIVSy07CQBQ9g0ihouID3woaF+DCWbjUmBATV1UTMW5cDWVSR8uUTAcTPsu" +
+                        "NJi78AD/KeKegbox0cZ/n3HvupB+fb+8AjrDnYxpVHytY9bGGdQ8bHjYZCidKK3vKMNVo3j" +
+                        "Lkz5KuZJgPlJaXg15HmhvRiamyGCShiG+FUS4fF/P2XqUMe4GVqeX9x4j3hqLfj1UorEo0v" +
+                        "xgGqmOEGR4zzHSTdtKTxNARURqB0F2TqC4PE22lttzIlF/LNBmYUKbHTkzJfKcMtQl4Bi92" +
+                        "Ch126S54EE+Cx0JHvG0NbaS+386g58opn/uRduigZRTgedgqYxs7Hmpl1LHLUJ90F0Pld9N" +
+                        "V50GGlmH7X6V0ViRtK02lpXi/0fzzsKx/IbSIpCHt9UkYOo+mBt8vUG00/3gD7CJPf4H7cm" +
+                        "DuZLJFyjh5Rn764BXsOWuXyBZGRfhky+N4hiJQdxZzY3KLfM7VDl6Qe8FU8DvAzxoewYrZk" +
+                        "JUREPOokC8ScQGL2e6ljLP8BSDzZ1KvAgAA"
                 )
             ),
             xml("res/values-no/strings.xml", stringsXml),
@@ -205,21 +207,22 @@ res/values-fil: Error: The app will crash on platforms older than v21 (minSdkVer
         lint().files(
             manifest().minSdk(18),
             base64gzip(
-                "libs/build-compat.jar", "" +
-                        "H4sIAAAAAAAAAEspzc2t1M1ITUxJLeIK8GZmEWHg4OBgsFjE682ABEQYWBh8" +
-                        "XUMcdT393PR9Hf083VyDQ/R83f6dYmD47HvmtI+3rt5FXm9drXNnzm8OMrhi" +
-                        "/ODpo6dMDAHe7Byb6pneSQONkARi3BaoA3FiXkpRfmaKfnFpQUF+UYl+mYl+" +
-                        "frG+U2lmTopzfm5BYoleck5icXFr0Gm/Qw4its0eCxc9Yr7PJSX+4FDkjisz" +
-                        "BITDQ4UN82J4U4PcT0/xYRe2O92rpveHwf5UxfIFeT0lhfOf36l+t0R+fv57" +
-                        "hr4Nz5OlQuW1I75ubCvll5Yzk+RS99KuPmVwNeOe0ZPzk9alzOCfMm16c5z7" +
-                        "LOmLnSs3Sags7MhvDdSTF//8LW4pT3Xj1JVP/x7v+N626H5/qMYaL5P9Emyr" +
-                        "klsk5YzPlEwuuzT5yAXBQKnGC7GTV+jxC+cu3XbnxJT40yaSMwKWHffzOVmz" +
-                        "nGcrZwWbfhmXbNlLvQoB/6bjTu57cnlzl+y7f27B81Oa839PLHuxIFXkQeUN" +
-                        "rWRpa7ms1CsbTwfMLxF3flp+OfS5Y9u0xN/xS0vCVHK1fZcurdh/8c/nDWvq" +
-                        "Fbd0LFF8+9VTwqp/Gdt9/YBck/8VzG+U/OsbfxclvEvZ5HrKotKt7tcD0TeW" +
-                        "2dNPiLm5/kg5/biiTSmgXKw4uai75txVvrgJ1QdDPlgfOC8ld7Dr5oSpggKf" +
-                        "V0zQFypk7L75bmnP5j+soBhV+JweVMvIwLCeCRSjjEwiDIg4RY5tUKJBBbiS" +
-                        "ELopyDaoo5iQSHw6CfBmZQNpYQLC2UDamAnEAwBHypjM8QIAAA=="
+                "libs/build-compat.jar",
+                "" +
+                    "H4sIAAAAAAAAAEspzc2t1M1ITUxJLeIK8GZmEWHg4OBgsFjE682ABEQYWBh8" +
+                    "XUMcdT393PR9Hf083VyDQ/R83f6dYmD47HvmtI+3rt5FXm9drXNnzm8OMrhi" +
+                    "/ODpo6dMDAHe7Byb6pneSQONkARi3BaoA3FiXkpRfmaKfnFpQUF+UYl+mYl+" +
+                    "frG+U2lmTopzfm5BYoleck5icXFr0Gm/Qw4its0eCxc9Yr7PJSX+4FDkjisz" +
+                    "BITDQ4UN82J4U4PcT0/xYRe2O92rpveHwf5UxfIFeT0lhfOf36l+t0R+fv57" +
+                    "hr4Nz5OlQuW1I75ubCvll5Yzk+RS99KuPmVwNeOe0ZPzk9alzOCfMm16c5z7" +
+                    "LOmLnSs3Sags7MhvDdSTF//8LW4pT3Xj1JVP/x7v+N626H5/qMYaL5P9Emyr" +
+                    "klsk5YzPlEwuuzT5yAXBQKnGC7GTV+jxC+cu3XbnxJT40yaSMwKWHffzOVmz" +
+                    "nGcrZwWbfhmXbNlLvQoB/6bjTu57cnlzl+y7f27B81Oa839PLHuxIFXkQeUN" +
+                    "rWRpa7ms1CsbTwfMLxF3flp+OfS5Y9u0xN/xS0vCVHK1fZcurdh/8c/nDWvq" +
+                    "Fbd0LFF8+9VTwqp/Gdt9/YBck/8VzG+U/OsbfxclvEvZ5HrKotKt7tcD0TeW" +
+                    "2dNPiLm5/kg5/biiTSmgXKw4uai75txVvrgJ1QdDPlgfOC8ld7Dr5oSpggKf" +
+                    "V0zQFypk7L75bmnP5j+soBhV+JweVMvIwLCeCRSjjEwiDIg4RY5tUKJBBbiS" +
+                    "ELopyDaoo5iQSHw6CfBmZQNpYQLC2UDamAnEAwBHypjM8QIAAA=="
             ),
             xml("res/values-no/strings.xml", stringsXml),
             xml("res/values-fil/strings.xml", stringsXml),

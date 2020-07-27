@@ -553,8 +553,9 @@ abstract class LintClient {
 
             // Fallback to looking in the old location: platform-tools/api/<name> under the SDK
             var file = File(
-                top, "platform-tools" + File.separator + "api" +
-                        File.separator + relativePath
+                top,
+                "platform-tools" + File.separator + "api" +
+                    File.separator + relativePath
             )
             if (file.exists()) {
                 return file
@@ -565,7 +566,8 @@ abstract class LintClient {
                 val build = System.getenv("ANDROID_BUILD_TOP")
                 if (build != null) {
                     file = File(
-                        build, "development/sdk/api-versions.xml"
+                        build,
+                        "development/sdk/api-versions.xml"
                             .replace('/', File.separatorChar)
                     )
                     if (file.exists()) {
@@ -606,8 +608,10 @@ abstract class LintClient {
         val parent = project.dir.parentFile
         if (parent != null && parent.name == SdkConstants.FD_SOURCES) {
             val root = parent.parentFile
-            if (root != null && (File(root, SdkConstants.FN_BUILD_GRADLE).exists() ||
-                        File(root, SdkConstants.FN_BUILD_GRADLE_KTS).exists())
+            if (root != null && (
+                File(root, SdkConstants.FN_BUILD_GRADLE).exists() ||
+                    File(root, SdkConstants.FN_BUILD_GRADLE_KTS).exists()
+                )
             ) {
                 return true
             }
@@ -727,8 +731,8 @@ abstract class LintClient {
                             var src = File(
                                 projectDir,
                                 "src" + File.separator +
-                                        "main" + File.separator +
-                                        "java"
+                                    "main" + File.separator +
+                                    "java"
                             )
                             if (src.exists()) {
                                 sources.add(src)
@@ -742,8 +746,8 @@ abstract class LintClient {
                             val gen = File(
                                 projectDir,
                                 "target" + File.separator +
-                                        "generated-sources" + File.separator +
-                                        "r"
+                                    "generated-sources" + File.separator +
+                                    "r"
                             )
                             if (gen.exists()) {
                                 generated.add(gen)
@@ -1358,8 +1362,8 @@ abstract class LintClient {
      */
     open fun isProjectDirectory(dir: File): Boolean =
         isManifestFolder(dir) ||
-                Project.isAospFrameworksRelatedProject(dir) ||
-                findGradleBuildFile(dir).exists()
+            Project.isAospFrameworksRelatedProject(dir) ||
+            findGradleBuildFile(dir).exists()
 
     /**
      * Returns whether lint should look for suppress comments. Tools that already do
@@ -1739,12 +1743,14 @@ abstract class LintClient {
         val l = Locale.getDefault()
         val basePathToCompare = if (caseSensitive) basePath else basePath.toLowerCase(l)
         val filePathToCompare = if (caseSensitive) filePath else filePath.toLowerCase(l)
-        if (basePathToCompare == (if (!filePathToCompare.isEmpty() &&
+        if (basePathToCompare == (
+            if (!filePathToCompare.isEmpty() &&
                 filePathToCompare[filePathToCompare.length - 1] == separatorChar
             )
                 filePathToCompare
             else
-                filePathToCompare + separatorChar)
+                filePathToCompare + separatorChar
+            )
         ) {
             return "."
         }
@@ -2029,9 +2035,12 @@ abstract class LintClient {
                         driver
                     } else {
                         val request = LintRequest(client, emptyList())
-                        LintDriver(object : IssueRegistry() {
-                            override val issues: List<Issue> = emptyList()
-                        }, client, request)
+                        LintDriver(
+                            object : IssueRegistry() {
+                                override val issues: List<Issue> = emptyList()
+                            },
+                            client, request
+                        )
                     }
 
                     Context(

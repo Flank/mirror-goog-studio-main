@@ -24,10 +24,10 @@ import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.AndroidVersion
 import com.android.support.AndroidxNameUtils
 import com.android.tools.lint.client.api.LintClient
+import com.android.tools.lint.model.LintModelExternalLibrary
 import com.android.tools.lint.model.LintModelMavenName
 import com.android.tools.lint.model.LintModelModule
 import com.android.tools.lint.model.LintModelModuleType
-import com.android.tools.lint.model.LintModelExternalLibrary
 import com.android.tools.lint.model.LintModelSourceProvider
 import com.android.tools.lint.model.LintModelVariant
 import com.android.utils.XmlUtils
@@ -95,7 +95,7 @@ open class LintModelModuleProject(
     override fun getBuildModule(): LintModelModule = variant.module
     override fun getBuildVariant(): LintModelVariant? = variant
     override fun isLibrary(): Boolean = model.type === LintModelModuleType.LIBRARY ||
-            model.type === LintModelModuleType.JAVA_LIBRARY
+        model.type === LintModelModuleType.JAVA_LIBRARY
 
     override fun isAndroidProject(): Boolean = type != LintModelModuleType.JAVA_LIBRARY
     override fun hasDynamicFeatures(): Boolean =
@@ -326,7 +326,7 @@ open class LintModelModuleProject(
                 if (supportLib == null) {
                     val a = variant.mainArtifact
                     supportLib = a.findCompileDependency(ANDROIDX_SUPPORT_LIB_ARTIFACT) != null ||
-                            a.findCompileDependency("com.android.support:support-v4") != null
+                        a.findCompileDependency("com.android.support:support-v4") != null
                 }
                 supportLib
             }
@@ -334,7 +334,7 @@ open class LintModelModuleProject(
                 if (appCompat == null) {
                     val a = variant.mainArtifact
                     appCompat = a.findCompileDependency(ANDROIDX_APPCOMPAT_LIB_ARTIFACT) != null ||
-                            a.findCompileDependency(APPCOMPAT_LIB_ARTIFACT) != null
+                        a.findCompileDependency(APPCOMPAT_LIB_ARTIFACT) != null
                 }
                 appCompat
             }
@@ -342,7 +342,7 @@ open class LintModelModuleProject(
                 if (leanback == null) {
                     val a = variant.mainArtifact
                     leanback = a.findCompileDependency(ANDROIDX_LEANBACK_ARTIFACT) != null ||
-                            a.findCompileDependency(LEANBACK_V17_ARTIFACT) != null
+                        a.findCompileDependency(LEANBACK_V17_ARTIFACT) != null
                 }
                 leanback
             }

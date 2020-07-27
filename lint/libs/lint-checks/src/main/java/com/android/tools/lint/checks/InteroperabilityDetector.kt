@@ -73,14 +73,15 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
 
         val IGNORE_DEPRECATED =
             VALUE_TRUE == System.getenv("ANDROID_LINT_NULLNESS_IGNORE_DEPRECATED") ||
-                    VALUE_TRUE == System.getProperty("lint.nullness.ignore-deprecated")
+                VALUE_TRUE == System.getProperty("lint.nullness.ignore-deprecated")
 
         @JvmField
         val NO_HARD_KOTLIN_KEYWORDS = Issue.create(
             id = "NoHardKeywords",
             briefDescription = "No Hard Kotlin Keywords",
 
-            explanation = """
+            explanation =
+                """
             Do not use Kotlin’s hard keywords as the name of methods or fields.
             These require the use of backticks to escape when calling from Kotlin.
             Soft keywords, modifier keywords, and special identifiers are allowed.
@@ -103,7 +104,8 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             id = "LambdaLast",
             briefDescription = "Lambda Parameters Last",
 
-            explanation = """
+            explanation =
+                """
             To improve calling this code from Kotlin,
             parameter types eligible for SAM conversion should be last.
             """,
@@ -120,7 +122,8 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             id = "UnknownNullness",
             briefDescription = "Unknown nullness",
 
-            explanation = """
+            explanation =
+                """
             To improve referencing this code from Kotlin, consider adding
             explicit nullness information here with either `@NonNull` or `@Nullable`.
 
@@ -142,7 +145,8 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             id = "KotlinPropertyAccess",
             briefDescription = "Kotlin Property Access",
 
-            explanation = """
+            explanation =
+                """
             For a method to be represented as a property in Kotlin, strict “bean”-style prefixing must be used.
 
             Accessor methods require a ‘get’ prefix or for boolean-returning methods an ‘is’ prefix can be used.
@@ -198,8 +202,8 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
 
         private fun isNonNullAnnotation(qualifiedName: String): Boolean {
             return qualifiedName.endsWith("NonNull") ||
-                    qualifiedName.endsWith("NotNull") ||
-                    qualifiedName.endsWith("Nonnull")
+                qualifiedName.endsWith("NotNull") ||
+                qualifiedName.endsWith("Nonnull")
         }
 
         private fun isApi(context: JavaContext, declaration: UDeclaration): Boolean {
@@ -368,10 +372,10 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             node: UMethod
         ): Boolean {
             return methodName.startsWith("set") && methodName.length > 3 &&
-                    Character.isUpperCase(methodName[3]) &&
-                    node.uastParameters.size == 1 &&
-                    context.evaluator.isPublic(node) &&
-                    !context.evaluator.isStatic(node)
+                Character.isUpperCase(methodName[3]) &&
+                node.uastParameters.size == 1 &&
+                context.evaluator.isPublic(node) &&
+                !context.evaluator.isStatic(node)
         }
 
         private fun ensureValidProperty(setter: UMethod, methodName: String) {
@@ -388,8 +392,10 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                     val name = it.name
                     if (name == getterName1 || name == getterName2) {
                         getter = it
-                    } else if ((name == badGetterName || name == propertyName ||
-                                name.endsWith(propertySuffix)) &&
+                    } else if ((
+                        name == badGetterName || name == propertyName ||
+                            name.endsWith(propertySuffix)
+                        ) &&
                         context.evaluator.isPublic(it) &&
                         !it.isConstructor &&
                         it.returnType == setter.uastParameters.firstOrNull()?.type
@@ -426,7 +432,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                 // enforce public and not static
                 if (!context.evaluator.isPublic(getter)) {
                     val message = "This getter should be public such that `$propertyName` can " +
-                            "be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes"
+                        "be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes"
                     val location = context.getNameLocation(getter)
                     context.report(KOTLIN_PROPERTY, getter, location, message)
                     return
@@ -453,7 +459,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                     }
                     val message =
                         "This getter should not be static such that `$propertyName` can " +
-                                "be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes"
+                            "be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes"
                     context.report(
                         KOTLIN_PROPERTY,
                         location.source as? PsiElement ?: setter, location, message
@@ -468,7 +474,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                 ) {
                     val message =
                         "The getter return type (`${getter.returnType?.presentableText}`) and setter parameter type (`${setterParameterType.presentableText}`) getter and setter methods for property `$propertyName` should have exactly the same type to allow " +
-                                "be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes"
+                            "be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes"
                     val location = getPropertyLocation(getter, setter)
                     context.report(
                         KOTLIN_PROPERTY,
@@ -485,12 +491,12 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                         if (superReturnType != getterType) {
                             val message =
                                 "The getter return type (`${getterType?.presentableText}`)" +
-                                        " is not the same as the setter return type " +
-                                        "(`${superReturnType.presentableText}`); they should have " +
-                                        "exactly the same type to allow " +
-                                        "`${propertySuffix.usLocaleDecapitalize()}` " +
-                                        "be accessed as a property from Kotlin; see " +
-                                        "https://android.github.io/kotlin-guides/interop.html#property-prefixes"
+                                    " is not the same as the setter return type " +
+                                    "(`${superReturnType.presentableText}`); they should have " +
+                                    "exactly the same type to allow " +
+                                    "`${propertySuffix.usLocaleDecapitalize()}` " +
+                                    "be accessed as a property from Kotlin; see " +
+                                    "https://android.github.io/kotlin-guides/interop.html#property-prefixes"
                             val location = getPropertyLocation(getter, setter)
                             context.report(
                                 KOTLIN_PROPERTY,
@@ -520,9 +526,9 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                     val newProperty = name1[2].toLowerCase() + name1.substring(3)
                     val message =
                         "This method should be called `set${newProperty.usLocaleCapitalize()}` such " +
-                                "that (along with the `$name1` getter) Kotlin code can access it " +
-                                "as a property (`$newProperty`); see " +
-                                "https://android.github.io/kotlin-guides/interop.html#property-prefixes"
+                            "that (along with the `$name1` getter) Kotlin code can access it " +
+                            "as a property (`$newProperty`); see " +
+                            "https://android.github.io/kotlin-guides/interop.html#property-prefixes"
                     val location = context.getNameLocation(setter)
                     context.report(KOTLIN_PROPERTY, setter, location, message)
                     return
@@ -531,7 +537,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                 val location = context.getNameLocation(badGetter!!)
                 val message =
                     "This method should be called `get$propertySuffix` such that `$propertyName` can " +
-                            "be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes"
+                        "be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes"
                 context.report(KOTLIN_PROPERTY, badGetter, location, message)
             }
         }
@@ -671,8 +677,8 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                 return
             }
             val message = "Unknown nullability; explicitly declare as `@Nullable` or `@NonNull`" +
-                    " to improve Kotlin interoperability; see " +
-                    "https://android.github.io/kotlin-guides/interop.html#nullability-annotations"
+                " to improve Kotlin interoperability; see " +
+                "https://android.github.io/kotlin-guides/interop.html#nullability-annotations"
             val fix = LintFix.create().alternatives(
                 LintFix.create()
                     .replace()
@@ -754,7 +760,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                 }
                 val message =
                     "Avoid $typeLabel names that are Kotlin hard keywords (\"$name\"); see " +
-                            "https://android.github.io/kotlin-guides/interop.html#no-hard-keywords"
+                        "https://android.github.io/kotlin-guides/interop.html#no-hard-keywords"
                 context.report(
                     NO_HARD_KOTLIN_KEYWORDS,
                     node as UElement,
@@ -782,7 +788,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                                 "Functional interface parameters (such as parameter ${i + 1}, \"${parameter.name}\", in ${
                                 method.containingClass?.qualifiedName}.${method.name
                                 }) should be last to improve Kotlin interoperability; see " +
-                                        "https://kotlinlang.org/docs/reference/java-interop.html#sam-conversions"
+                                    "https://kotlinlang.org/docs/reference/java-interop.html#sam-conversions"
                             context.report(
                                 LAMBDA_LAST,
                                 method,

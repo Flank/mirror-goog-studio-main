@@ -54,7 +54,8 @@ class DataFlowAnalyzerTest : TestCase() {
                     public Test g() { return this; }
                     public Test other() { return this; }
                 }
-            """, File("test/pkg/Test.java")
+            """,
+            File("test/pkg/Test.java")
         )
 
         val target = findMethodCall(parsed, "d")
@@ -103,7 +104,8 @@ class DataFlowAnalyzerTest : TestCase() {
                     fun h(): Test = this
                     fun other(): Test = this
                 }
-            """, File("test/pkg/Test.kt")
+            """,
+            File("test/pkg/Test.kt")
         )
 
         val target = findMethodCall(parsed, "d")

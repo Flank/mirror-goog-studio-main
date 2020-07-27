@@ -100,9 +100,9 @@ class ActionsXmlDetector : ResourceXmlDetector() {
         context.report(
             ISSUE, actions, context.getElementLocation(actions),
             "This action resource should be registered in the manifest under the " +
-                    "`<application>` tag as " +
-                    "`<meta-data android:name=\"com.google.android.actions\" " +
-                    "android:resource=\"@xml/$actionResourceName\" />`"
+                "`<application>` tag as " +
+                "`<meta-data android:name=\"com.google.android.actions\" " +
+                "android:resource=\"@xml/$actionResourceName\" />`"
         )
     }
 
@@ -527,7 +527,8 @@ class ActionsXmlDetector : ResourceXmlDetector() {
             if (value != null && (allowBlank || !value.isBlank())) {
                 if (!allowReference && value.startsWith(PREFIX_RESOURCE_REF)) {
                     context.report(
-                        ISSUE, element, context.getLocation(
+                        ISSUE, element,
+                        context.getLocation(
                             element.getAttributeNode(attribute)
                         ),
                         "`$attribute` must be a value, not a reference"

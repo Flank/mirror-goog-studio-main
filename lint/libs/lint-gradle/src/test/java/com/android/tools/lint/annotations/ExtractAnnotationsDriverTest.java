@@ -302,7 +302,7 @@ public class ExtractAnnotationsDriverTest {
                                 + pathSeparator
                                 + kotlinLibraries,
                         "--quiet",
-                        //"--skip-class-retention",
+                        // "--skip-class-retention",
                         "--output",
                         output.getPath(),
                         "--proguard",
@@ -490,7 +490,7 @@ public class ExtractAnnotationsDriverTest {
                             + "@file:Suppress(\"unused\", \"UseExpressionBody\")\n"
                             +
                             // WARNING: This makes resolve fail!
-                            //"@file:JvmName(\"LongDefTest\")" +
+                            // "@file:JvmName(\"LongDefTest\")" +
                             "\n"
                             + "package test.pkg\n"
                             + "\n"
@@ -517,7 +517,7 @@ public class ExtractAnnotationsDriverTest {
                             // Why oh why does this get matched as kotlin.IntRange?
                             "    @IntRange(from = 20)\n"
                             +
-                            //"    @android.support.annotation.IntRange(from = 20)\n" +
+                            // "    @android.support.annotation.IntRange(from = 20)\n" +
                             "    @Retention(AnnotationRetention.SOURCE)\n"
                             + "    private annotation class DialogStyle\n"
                             + "\n"

@@ -340,11 +340,11 @@ class TypoLookup private constructor(
             val binaryData = File(
                 cacheDir,
                 name +
-                        // Incorporate version number in the filename to avoid upgrade filename
-                        // conflicts on Windows (such as issue #26663)
-                        '-'.toString() +
-                        BINARY_FORMAT_VERSION +
-                        ".bin"
+                    // Incorporate version number in the filename to avoid upgrade filename
+                    // conflicts on Windows (such as issue #26663)
+                    '-'.toString() +
+                    BINARY_FORMAT_VERSION +
+                    ".bin"
             )
 
             @Suppress("ConstantConditionIf")

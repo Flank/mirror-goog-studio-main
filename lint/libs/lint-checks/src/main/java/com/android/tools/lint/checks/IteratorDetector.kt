@@ -49,7 +49,8 @@ class IteratorDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "BrokenIterator",
             briefDescription = "Broken Iterator",
-            explanation = """
+            explanation =
+                """
                 **For LinkedHashMap:**
 
                 The spliterators returned by `LinkedHashMap` in Android Nougat (API levels 24 \

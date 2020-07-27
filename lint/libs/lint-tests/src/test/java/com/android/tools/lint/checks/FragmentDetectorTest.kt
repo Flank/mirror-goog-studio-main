@@ -24,7 +24,8 @@ class FragmentDetectorTest : AbstractCheckTest() {
     }
 
     fun testBasic() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/FragmentTest.java:10: Error: This fragment class should be public (test.pkg.FragmentTest.Fragment1) [ValidFragment]
                 private static class Fragment1 extends Fragment {
                                      ~~~~~~~~~
@@ -115,7 +116,8 @@ class FragmentDetectorTest : AbstractCheckTest() {
     }
 
     fun testAnonymousInnerClass() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/Parent.java:7: Error: Fragments should be static such that they can be re-instantiated by the system, and anonymous classes are not static [ValidFragment]
                     return new Fragment() {
                                ~~~~~~~~
@@ -143,7 +145,8 @@ class FragmentDetectorTest : AbstractCheckTest() {
     fun testAndroidXFragment() {
         // Regression test for
         // 119675579: Remove the Fragments must have a no-arg constructor warning when using 1.1.0+
-        val expected = """
+        val expected =
+            """
             src/test/pkg/Parent.java:5: Error: This fragment should provide a default constructor (a public constructor with no arguments) (test.pkg.FragmentTest.Fragment1) [ValidFragment]
                 public static class Fragment1 extends android.support.v4.app.Fragment {
                                     ~~~~~~~~~

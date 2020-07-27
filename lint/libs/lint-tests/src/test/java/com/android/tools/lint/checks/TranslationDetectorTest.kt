@@ -29,7 +29,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
     }
 
     fun testTranslation() {
-        val expected = """
+        val expected =
+            """
             res/values/strings.xml:20: Error: "show_all_apps" is not translated in "nl" (Dutch) [MissingTranslation]
                 <string name="show_all_apps">All</string>
                         ~~~~~~~~~~~~~~~~~~~~
@@ -129,11 +130,14 @@ class TranslationDetectorTest : AbstractCheckTest() {
     fun testCaseHandlingInRepositories() {
         // Regression test for https://issuetracker.google.com/120747416
         lint().files(
-            xml("res/values/cases.xml", """
+            xml(
+                "res/values/cases.xml",
+                """
                 <resources>
                     <string name="abc_abc.abc.abc_abc">ABC</string>
                 </resources>
-            """).indented()
+            """
+            ).indented()
         )
             .incremental("res/values/cases.xml")
             .run()
@@ -141,109 +145,116 @@ class TranslationDetectorTest : AbstractCheckTest() {
     }
 
     private val valuesCsArrays = xml(
-        "res/values-cs/arrays.xml", "" +
-                "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
-                "  <string-array name=\"security_questions\">\n" +
-                "    <item>\"Oblíbené jídlo?\"</item>\n" +
-                "    <item>\"M\u011bsto narození.\"</item>\n" +
-                "    <item>\"Jméno nejlep\u0161ího kamaráda z d\u011btství?\"</item>\n" +
-                "    <item>\"Název st\u0159ední \u0161koly\"</item>\n" +
-                "  </string-array>\n" +
-                "</resources>\n"
+        "res/values-cs/arrays.xml",
+        "" +
+            "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
+            "  <string-array name=\"security_questions\">\n" +
+            "    <item>\"Oblíbené jídlo?\"</item>\n" +
+            "    <item>\"M\u011bsto narození.\"</item>\n" +
+            "    <item>\"Jméno nejlep\u0161ího kamaráda z d\u011btství?\"</item>\n" +
+            "    <item>\"Název st\u0159ední \u0161koly\"</item>\n" +
+            "  </string-array>\n" +
+            "</resources>\n"
     )
 
     private val doNotTranslateEsStrings = xml(
-        "res/values-es/donottranslate.xml", "" +
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
-                "    <string name=\"full_wday_month_day_no_year\">EEEE, d MMMM</string>\n" +
-                "</resources>\n"
+        "res/values-es/donottranslate.xml",
+        "" +
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+            "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
+            "    <string name=\"full_wday_month_day_no_year\">EEEE, d MMMM</string>\n" +
+            "</resources>\n"
     )
 
     private val valuesStrings = xml(
-        "res/values/strings.xml", "" +
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<!-- Copyright (C) 2007 The Android Open Source Project\n" +
-                "\n" +
-                "     Licensed under the Apache License, Version 2.0 (the \"License\");\n" +
-                "     you may not use this file except in compliance with the License.\n" +
-                "     You may obtain a copy of the License at\n" +
-                "\n" +
-                "          http://www.apache.org/licenses/LICENSE-2.0\n" +
-                "\n" +
-                "     Unless required by applicable law or agreed to in writing, software\n" +
-                "     distributed under the License is distributed on an \"AS IS\" BASIS,\n" +
-                "     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n" +
-                "     See the License for the specific language governing permissions and\n" +
-                "     limitations under the License.\n" +
-                "-->\n" +
-                "\n" +
-                "<resources>\n" +
-                "    <!-- Home -->\n" +
-                "    <string name=\"home_title\">Home Sample</string>\n" +
-                "    <string name=\"show_all_apps\">All</string>\n" +
-                "\n" +
-                "    <!-- Home Menus -->\n" +
-                "    <string name=\"menu_wallpaper\">Wallpaper</string>\n" +
-                "    <string name=\"menu_search\">Search</string>\n" +
-                "    <string name=\"menu_settings\">Settings</string>\n" +
-                "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n" +
-                "\n" +
-                "    <!-- Wallpaper -->\n" +
-                "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n" +
-                "</resources>\n" +
-                "\n"
+        "res/values/strings.xml",
+        "" +
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+            "<!-- Copyright (C) 2007 The Android Open Source Project\n" +
+            "\n" +
+            "     Licensed under the Apache License, Version 2.0 (the \"License\");\n" +
+            "     you may not use this file except in compliance with the License.\n" +
+            "     You may obtain a copy of the License at\n" +
+            "\n" +
+            "          http://www.apache.org/licenses/LICENSE-2.0\n" +
+            "\n" +
+            "     Unless required by applicable law or agreed to in writing, software\n" +
+            "     distributed under the License is distributed on an \"AS IS\" BASIS,\n" +
+            "     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n" +
+            "     See the License for the specific language governing permissions and\n" +
+            "     limitations under the License.\n" +
+            "-->\n" +
+            "\n" +
+            "<resources>\n" +
+            "    <!-- Home -->\n" +
+            "    <string name=\"home_title\">Home Sample</string>\n" +
+            "    <string name=\"show_all_apps\">All</string>\n" +
+            "\n" +
+            "    <!-- Home Menus -->\n" +
+            "    <string name=\"menu_wallpaper\">Wallpaper</string>\n" +
+            "    <string name=\"menu_search\">Search</string>\n" +
+            "    <string name=\"menu_settings\">Settings</string>\n" +
+            "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n" +
+            "\n" +
+            "    <!-- Wallpaper -->\n" +
+            "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n" +
+            "</resources>\n" +
+            "\n"
     )
 
     private val strings13 = xml(
-        "res/values/strings.xml", "" +
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
-                "    <string name=\"home_title\">\"Casa\"</string>\n" +
-                "    <string name=\"show_all_apps\">\"Todo\"</string>\n" +
-                "    <string name=\"menu_wallpaper\">\"Papel tapiz\"</string>\n" +
-                "    <string name=\"menu_search\">\"Búsqueda\"</string>\n" +
-                "    <!-- no translation found for menu_settings (1769059051084007158) -->\n" +
-                "    <skip />\n" +
-                "    <string name=\"wallpaper_instructions\">\"Puntee en la imagen para establecer papel tapiz vertical\"</string>\n" +
-                "\n" +
-                "  <string-array name=\"security_questions\">\n" +
-                "    <item>\"Comida favorita\"</item>\n" +
-                "    <item>\"Ciudad de nacimiento\"</item>\n" +
-                "    <item>\"Nombre de tu mejor amigo/a de la infancia\"</item>\n" +
-                "    <item>\"Nombre de tu colegio\"</item>\n" +
-                "  </string-array>\n" +
-                "</resources>\n"
+        "res/values/strings.xml",
+        "" +
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
+            "    <string name=\"home_title\">\"Casa\"</string>\n" +
+            "    <string name=\"show_all_apps\">\"Todo\"</string>\n" +
+            "    <string name=\"menu_wallpaper\">\"Papel tapiz\"</string>\n" +
+            "    <string name=\"menu_search\">\"Búsqueda\"</string>\n" +
+            "    <!-- no translation found for menu_settings (1769059051084007158) -->\n" +
+            "    <skip />\n" +
+            "    <string name=\"wallpaper_instructions\">\"Puntee en la imagen para establecer papel tapiz vertical\"</string>\n" +
+            "\n" +
+            "  <string-array name=\"security_questions\">\n" +
+            "    <item>\"Comida favorita\"</item>\n" +
+            "    <item>\"Ciudad de nacimiento\"</item>\n" +
+            "    <item>\"Nombre de tu mejor amigo/a de la infancia\"</item>\n" +
+            "    <item>\"Nombre de tu colegio\"</item>\n" +
+            "  </string-array>\n" +
+            "</resources>\n"
     )
 
     private val strings14 = xml(
-        "res/values/strings.xml", "" +
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
-                "    <string name=\"menu_search\">\"Búsqueda\"</string>\n" +
-                "</resources>\n"
+        "res/values/strings.xml",
+        "" +
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
+            "    <string name=\"menu_search\">\"Búsqueda\"</string>\n" +
+            "</resources>\n"
     )
 
     private val valuesCsStrings = xml(
-        "res/values-cs/strings.xml", "" +
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
-                "    <string name=\"home_title\">\"Dom\u016f\"</string>\n" +
-                "    <string name=\"show_all_apps\">\"V\u0161e\"</string>\n" +
-                "    <string name=\"menu_wallpaper\">\"Tapeta\"</string>\n" +
-                "    <string name=\"menu_search\">\"Hledat\"</string>\n" +
-                "    <!-- no translation found for menu_settings (1769059051084007158) -->\n" +
-                "    <skip />\n" +
-                "    <string name=\"wallpaper_instructions\">\"Klepnutím na obrázek nastavíte tapetu portrétu\"</string>\n" +
-                "</resources>\n"
+        "res/values-cs/strings.xml",
+        "" +
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
+            "    <string name=\"home_title\">\"Dom\u016f\"</string>\n" +
+            "    <string name=\"show_all_apps\">\"V\u0161e\"</string>\n" +
+            "    <string name=\"menu_wallpaper\">\"Tapeta\"</string>\n" +
+            "    <string name=\"menu_search\">\"Hledat\"</string>\n" +
+            "    <!-- no translation found for menu_settings (1769059051084007158) -->\n" +
+            "    <skip />\n" +
+            "    <string name=\"wallpaper_instructions\">\"Klepnutím na obrázek nastavíte tapetu portrétu\"</string>\n" +
+            "</resources>\n"
     )
 
     private val valuesStrings2 = xml(
-        "res/values/strings2.xml", """
+        "res/values/strings2.xml",
+        """
 
             <resources>
                 <string name="hello">Hello</string>
@@ -253,140 +264,150 @@ class TranslationDetectorTest : AbstractCheckTest() {
     ).indented()
 
     private val valuesNbStrings2 = xml(
-        "res/values-nb/strings2.xml", "" +
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<resources>\n" +
-                "    <string name=\"hello\">Hello</string>\n" +
-                "</resources>\n" +
-                "\n"
+        "res/values-nb/strings2.xml",
+        "" +
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+            "<resources>\n" +
+            "    <string name=\"hello\">Hello</string>\n" +
+            "</resources>\n" +
+            "\n"
     )
 
     private val valuesDeDeStrings = xml(
-        "res/values-de-rDE/strings.xml", "" +
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
-                "    <string name=\"home_title\">\"Startseite\"</string>\n" +
-                "    <string name=\"show_all_apps\">\"Alle\"</string>\n" +
-                "    <string name=\"menu_wallpaper\">\"Bildschirmhintergrund\"</string>\n" +
-                "    <string name=\"menu_search\">\"Suchen\"</string>\n" +
-                "    <!-- no translation found for menu_settings (1769059051084007158) -->\n" +
-                "    <skip />\n" +
-                "    <string name=\"wallpaper_instructions\">\"Tippen Sie auf Bild, um Porträt-Bildschirmhintergrund einzustellen\"</string>\n" +
-                "    <string name=\"continue_skip_label\">\"Weiter\"</string>\n" +
-                "</resources>\n"
+        "res/values-de-rDE/strings.xml",
+        "" +
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
+            "    <string name=\"home_title\">\"Startseite\"</string>\n" +
+            "    <string name=\"show_all_apps\">\"Alle\"</string>\n" +
+            "    <string name=\"menu_wallpaper\">\"Bildschirmhintergrund\"</string>\n" +
+            "    <string name=\"menu_search\">\"Suchen\"</string>\n" +
+            "    <!-- no translation found for menu_settings (1769059051084007158) -->\n" +
+            "    <skip />\n" +
+            "    <string name=\"wallpaper_instructions\">\"Tippen Sie auf Bild, um Porträt-Bildschirmhintergrund einzustellen\"</string>\n" +
+            "    <string name=\"continue_skip_label\">\"Weiter\"</string>\n" +
+            "</resources>\n"
     )
 
     private val valuesEnRgbStrings = xml(
-        "res/values-en-rGB/strings.xml", "" +
-                "<?xml version='1.0' encoding='UTF-8' standalone='no'?>\n" +
-                "<resources>\n" +
-                "\n" +
-                "    <string name=\"dateFormat\">ukformat</string>\n" +
-                "\n" +
-                "</resources>\n"
+        "res/values-en-rGB/strings.xml",
+        "" +
+            "<?xml version='1.0' encoding='UTF-8' standalone='no'?>\n" +
+            "<resources>\n" +
+            "\n" +
+            "    <string name=\"dateFormat\">ukformat</string>\n" +
+            "\n" +
+            "</resources>\n"
     )
 
     private val valuesDeRdeStrings = xml(
-        "res/values-de-rDE/strings.xml", "" +
-                "<?xml version='1.0' encoding='UTF-8' standalone='no'?>\n" +
-                "<resources>\n" +
-                "\n" +
-                "    <string name=\"dateFormat\">ukformat</string>\n" +
-                "\n" +
-                "</resources>\n"
+        "res/values-de-rDE/strings.xml",
+        "" +
+            "<?xml version='1.0' encoding='UTF-8' standalone='no'?>\n" +
+            "<resources>\n" +
+            "\n" +
+            "    <string name=\"dateFormat\">ukformat</string>\n" +
+            "\n" +
+            "</resources>\n"
     )
 
     private val valuesEsStrings = xml(
-        "res/values-es/strings.xml", "" +
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
-                "    <string name=\"home_title\">\"Casa\"</string>\n" +
-                "    <string name=\"show_all_apps\">\"Todo\"</string>\n" +
-                "    <string name=\"menu_wallpaper\">\"Papel tapiz\"</string>\n" +
-                "    <string name=\"menu_search\">\"Búsqueda\"</string>\n" +
-                "    <!-- no translation found for menu_settings (1769059051084007158) -->\n" +
-                "    <skip />\n" +
-                "    <string name=\"wallpaper_instructions\">\"Puntee en la imagen para establecer papel tapiz vertical\"</string>\n" +
-                "\n" +
-                "  <string-array name=\"security_questions\">\n" +
-                "    <item>\"Comida favorita\"</item>\n" +
-                "    <item>\"Ciudad de nacimiento\"</item>\n" +
-                "    <item>\"Nombre de tu mejor amigo/a de la infancia\"</item>\n" +
-                "    <item>\"Nombre de tu colegio\"</item>\n" +
-                "  </string-array>\n" +
-                "</resources>\n"
+        "res/values-es/strings.xml",
+        "" +
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
+            "    <string name=\"home_title\">\"Casa\"</string>\n" +
+            "    <string name=\"show_all_apps\">\"Todo\"</string>\n" +
+            "    <string name=\"menu_wallpaper\">\"Papel tapiz\"</string>\n" +
+            "    <string name=\"menu_search\">\"Búsqueda\"</string>\n" +
+            "    <!-- no translation found for menu_settings (1769059051084007158) -->\n" +
+            "    <skip />\n" +
+            "    <string name=\"wallpaper_instructions\">\"Puntee en la imagen para establecer papel tapiz vertical\"</string>\n" +
+            "\n" +
+            "  <string-array name=\"security_questions\">\n" +
+            "    <item>\"Comida favorita\"</item>\n" +
+            "    <item>\"Ciudad de nacimiento\"</item>\n" +
+            "    <item>\"Nombre de tu mejor amigo/a de la infancia\"</item>\n" +
+            "    <item>\"Nombre de tu colegio\"</item>\n" +
+            "  </string-array>\n" +
+            "</resources>\n"
     )
 
     private val valuesEsUsStrings = xml(
-        "res/values-es-rUS/strings.xml", "" +
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
-                "    <string name=\"menu_search\">\"Búsqueda\"</string>\n" +
-                "</resources>\n"
+        "res/values-es-rUS/strings.xml",
+        "" +
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
+            "    <string name=\"menu_search\">\"Búsqueda\"</string>\n" +
+            "</resources>\n"
     )
 
     private val valuesLandStrings = xml(
-        "res/values-land/strings.xml", "" +
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<!-- Copyright (C) 2007 The Android Open Source Project\n" +
-                "\n" +
-                "     Licensed under the Apache License, Version 2.0 (the \"License\");\n" +
-                "     you may not use this file except in compliance with the License.\n" +
-                "     You may obtain a copy of the License at\n" +
-                "\n" +
-                "          http://www.apache.org/licenses/LICENSE-2.0\n" +
-                "\n" +
-                "     Unless required by applicable law or agreed to in writing, software\n" +
-                "     distributed under the License is distributed on an \"AS IS\" BASIS,\n" +
-                "     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n" +
-                "     See the License for the specific language governing permissions and\n" +
-                "     limitations under the License.\n" +
-                "-->\n" +
-                "\n" +
-                "<resources>\n" +
-                "    <!-- Wallpaper -->\n" +
-                "    <string name=\"wallpaper_instructions\">Tap image to set landscape wallpaper</string>\n" +
-                "</resources>\n" +
-                "\n"
+        "res/values-land/strings.xml",
+        "" +
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+            "<!-- Copyright (C) 2007 The Android Open Source Project\n" +
+            "\n" +
+            "     Licensed under the Apache License, Version 2.0 (the \"License\");\n" +
+            "     you may not use this file except in compliance with the License.\n" +
+            "     You may obtain a copy of the License at\n" +
+            "\n" +
+            "          http://www.apache.org/licenses/LICENSE-2.0\n" +
+            "\n" +
+            "     Unless required by applicable law or agreed to in writing, software\n" +
+            "     distributed under the License is distributed on an \"AS IS\" BASIS,\n" +
+            "     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n" +
+            "     See the License for the specific language governing permissions and\n" +
+            "     limitations under the License.\n" +
+            "-->\n" +
+            "\n" +
+            "<resources>\n" +
+            "    <!-- Wallpaper -->\n" +
+            "    <string name=\"wallpaper_instructions\">Tap image to set landscape wallpaper</string>\n" +
+            "</resources>\n" +
+            "\n"
     )
 
     private val valuesNlNlStrings = xml(
-        "res/values-nl-rNL/strings.xml", "" +
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
-                "    <string name=\"home_title\">\"Start\"</string>\n" +
-                "    <!-- Commented out in the unit test to generate extra warnings:\n" +
-                "    <string name=\"show_all_apps\">\"Alles\"</string>\n" +
-                "    <string name=\"menu_wallpaper\">\"Achtergrond\"</string>\n" +
-                "    -->\n" +
-                "    <string name=\"menu_search\">\"Zoeken\"</string>\n" +
-                "    <!-- no translation found for menu_settings (1769059051084007158) -->\n" +
-                "    <skip />\n" +
-                "    <string name=\"wallpaper_instructions\">\"Tik op afbeelding om portretachtergrond in te stellen\"</string>\n" +
-                "</resources>\n"
+        "res/values-nl-rNL/strings.xml",
+        "" +
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
+            "    <string name=\"home_title\">\"Start\"</string>\n" +
+            "    <!-- Commented out in the unit test to generate extra warnings:\n" +
+            "    <string name=\"show_all_apps\">\"Alles\"</string>\n" +
+            "    <string name=\"menu_wallpaper\">\"Achtergrond\"</string>\n" +
+            "    -->\n" +
+            "    <string name=\"menu_search\">\"Zoeken\"</string>\n" +
+            "    <!-- no translation found for menu_settings (1769059051084007158) -->\n" +
+            "    <skip />\n" +
+            "    <string name=\"wallpaper_instructions\">\"Tik op afbeelding om portretachtergrond in te stellen\"</string>\n" +
+            "</resources>\n"
     )
 
     private val valuesTlhStrings = xml(
-        "res/values-b+tlh/strings.xml", "" +
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
-                "    <string name=\"home_title\">\"Dom\u016f\"</string>\n" +
-                "    <string name=\"show_all_apps\">\"V\u0161e\"</string>\n" +
-                "    <string name=\"menu_wallpaper\">\"Tapeta\"</string>\n" +
-                "    <string name=\"menu_search\">\"Hledat\"</string>\n" +
-                "    <!-- no translation found for menu_settings (1769059051084007158) -->\n" +
-                "    <skip />\n" +
-                "    <string name=\"wallpaper_instructions\">\"Klepnutím na obrázek nastavíte tapetu portrétu\"</string>\n" +
-                "</resources>\n"
+        "res/values-b+tlh/strings.xml",
+        "" +
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
+            "    <string name=\"home_title\">\"Dom\u016f\"</string>\n" +
+            "    <string name=\"show_all_apps\">\"V\u0161e\"</string>\n" +
+            "    <string name=\"menu_wallpaper\">\"Tapeta\"</string>\n" +
+            "    <string name=\"menu_search\">\"Hledat\"</string>\n" +
+            "    <!-- no translation found for menu_settings (1769059051084007158) -->\n" +
+            "    <skip />\n" +
+            "    <string name=\"wallpaper_instructions\">\"Klepnutím na obrázek nastavíte tapetu portrétu\"</string>\n" +
+            "</resources>\n"
     )
 
     fun testBcp47() {
-        val expected = """
+        val expected =
+            """
             res/values/strings.xml:25: Error: "menu_settings" is not translated in "tlh" (Klingon; tlhIngan-Hol) [MissingTranslation]
                 <string name="menu_settings">Settings</string>
                         ~~~~~~~~~~~~~~~~~~~~
@@ -405,11 +426,14 @@ class TranslationDetectorTest : AbstractCheckTest() {
 
         lint().files(
             xml(
-                "res/values/strings.xml", ("" +
+                "res/values/strings.xml",
+                (
+                    "" +
                         "\ufeff<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                         "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
                         "    <string name=\"app_name\">Unit Test</string>\n" +
-                        "</resources>\n")
+                        "</resources>\n"
+                    )
             )
         ).run().expectClean()
     }
@@ -417,7 +441,9 @@ class TranslationDetectorTest : AbstractCheckTest() {
     fun testTranslatedArrays() {
         lint().files(
             xml(
-                "res/values/translatedarrays.xml", ("" +
+                "res/values/translatedarrays.xml",
+                (
+                    "" +
                         "<resources>\n" +
                         "    <string name=\"item1\">Item1</string>\n" +
                         "    <string name=\"item2\">Item2</string>\n" +
@@ -425,14 +451,18 @@ class TranslationDetectorTest : AbstractCheckTest() {
                         "        <item>@string/item1</item>\n" +
                         "        <item>@string/item2</item>\n" +
                         "    </string-array>\n" +
-                        "</resources>\n")
+                        "</resources>\n"
+                    )
             ),
             xml(
-                "res/values-cs/translatedarrays.xml", ("" +
+                "res/values-cs/translatedarrays.xml",
+                (
+                    "" +
                         "<resources>\n" +
                         "    <string name=\"item1\">Item1-cs</string>\n" +
                         "    <string name=\"item2\">Item2-cs</string>\n" +
-                        "</resources>\n")
+                        "</resources>\n"
+                    )
             )
         ).run().expectClean()
     }
@@ -440,7 +470,9 @@ class TranslationDetectorTest : AbstractCheckTest() {
     fun testTranslationSuppresss() {
         lint().files(
             xml(
-                "res/values/strings.xml", ("" +
+                "res/values/strings.xml",
+                (
+                    "" +
                         "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                         "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n" +
                         "    <!-- Home -->\n" +
@@ -455,10 +487,13 @@ class TranslationDetectorTest : AbstractCheckTest() {
                         "\n" +
                         "    <!-- Wallpaper -->\n" +
                         "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n" +
-                        "</resources>\n")
+                        "</resources>\n"
+                    )
             ),
             xml(
-                "res/values-es/strings.xml", ("" +
+                "res/values-es/strings.xml",
+                (
+                    "" +
                         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                         "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
                         "    xmlns:tools=\"http://schemas.android.com/tools\"\n" +
@@ -478,7 +513,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
                         "    <item>\"Nombre de tu mejor amigo/a de la infancia\"</item>\n" +
                         "    <item>\"Nombre de tu colegio\"</item>\n" +
                         "  </string-array>\n" +
-                        "</resources>\n")
+                        "</resources>\n"
+                    )
             ),
             valuesNlNlStrings
         ).run().expectClean()
@@ -489,7 +525,9 @@ class TranslationDetectorTest : AbstractCheckTest() {
 
         lint().files(
             xml(
-                "res/values/strings.xml", ("" +
+                "res/values/strings.xml",
+                (
+                    "" +
                         "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                         "<resources xmlns:tools=\"http://schemas.android.com/tools\" tools:ignore=\"MissingTranslation\">\n" +
                         "\n" +
@@ -499,10 +537,13 @@ class TranslationDetectorTest : AbstractCheckTest() {
                         "\t\t<item>@string/test_string</item>\n" +
                         "\t</string-array>\n" +
                         "\n" +
-                        "</resources>\n")
+                        "</resources>\n"
+                    )
             ),
             xml(
-                "res/values-fr/strings.xml", ("" +
+                "res/values-fr/strings.xml",
+                (
+                    "" +
                         "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                         "<resources>\n" +
                         "\n" +
@@ -510,7 +551,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
                         "\t\t<item>Test (French)</item>\n" +
                         "\t</string-array>\n" +
                         "\n" +
-                        "</resources>\n")
+                        "</resources>\n"
+                    )
             )
         ).run().expectClean()
     }
@@ -522,44 +564,47 @@ class TranslationDetectorTest : AbstractCheckTest() {
         val library = project(
             // Library project
             xml(
-                "res/values/strings.xml", "" +
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                        "<resources>\n" +
-                        "    <!-- Home -->\n" +
-                        "    <string name=\"home_title\">Home Sample</string>\n" +
-                        "    <string name=\"show_all_apps\">All</string>\n" +
-                        "\n" +
-                        "    <!-- Home Menus -->\n" +
-                        "    <string name=\"menu_wallpaper\">Wallpaper</string>\n" +
-                        "    <string name=\"menu_search\">Search</string>\n" +
-                        "    <string name=\"menu_settings\">Settings</string>\n" +
-                        "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n" +
-                        "\n" +
-                        "    <!-- Wallpaper -->\n" +
-                        "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n" +
-                        "</resources>\n" +
-                        "\n"
+                "res/values/strings.xml",
+                "" +
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                    "<resources>\n" +
+                    "    <!-- Home -->\n" +
+                    "    <string name=\"home_title\">Home Sample</string>\n" +
+                    "    <string name=\"show_all_apps\">All</string>\n" +
+                    "\n" +
+                    "    <!-- Home Menus -->\n" +
+                    "    <string name=\"menu_wallpaper\">Wallpaper</string>\n" +
+                    "    <string name=\"menu_search\">Search</string>\n" +
+                    "    <string name=\"menu_settings\">Settings</string>\n" +
+                    "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n" +
+                    "\n" +
+                    "    <!-- Wallpaper -->\n" +
+                    "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n" +
+                    "</resources>\n" +
+                    "\n"
             ),
             xml(
-                "res/values-cs/strings.xml", "" +
-                        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                        "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                        "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
-                        "    <string name=\"home_title\">\"Dom\u016f\"</string>\n" +
-                        "    <string name=\"show_all_apps\">\"V\u0161e\"</string>\n" +
-                        "    <string name=\"menu_wallpaper\">\"Tapeta\"</string>\n" +
-                        "    <string name=\"menu_search\">\"Hledat\"</string>\n" +
-                        "    <!-- no translation found for menu_settings (1769059051084007158) -->\n" +
-                        "    <skip />\n" +
-                        "    <string name=\"wallpaper_instructions\">\"Klepnutím na obrázek nastavíte tapetu portrétu\"</string>\n" +
-                        "</resources>\n"
+                "res/values-cs/strings.xml",
+                "" +
+                    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                    "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                    "    xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
+                    "    <string name=\"home_title\">\"Dom\u016f\"</string>\n" +
+                    "    <string name=\"show_all_apps\">\"V\u0161e\"</string>\n" +
+                    "    <string name=\"menu_wallpaper\">\"Tapeta\"</string>\n" +
+                    "    <string name=\"menu_search\">\"Hledat\"</string>\n" +
+                    "    <!-- no translation found for menu_settings (1769059051084007158) -->\n" +
+                    "    <skip />\n" +
+                    "    <string name=\"wallpaper_instructions\">\"Klepnutím na obrázek nastavíte tapetu portrétu\"</string>\n" +
+                    "</resources>\n"
             )
 
         ).type(ProjectDescription.Type.LIBRARY).name("LibraryProject").report(false)
 
         val main = project(
             xml(
-                "res/values/strings2.xml", """
+                "res/values/strings2.xml",
+                """
             <resources>
                 <string name="hello">Hello</string>
             </resources>
@@ -587,7 +632,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
             """
         lint().files(
             xml(
-                "res/values/strings.xml", """
+                "res/values/strings.xml",
+                """
                     <resources>
                         <string>Ignore Me</string>
                     </resources>
@@ -599,7 +645,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
     fun testMissingNameIncremental() {
         lint().files(
             xml(
-                "res/values/strings.xml", """
+                "res/values/strings.xml",
+                """
                 <resources>
                     <string name="" />
                 </resources>
@@ -616,21 +663,24 @@ class TranslationDetectorTest : AbstractCheckTest() {
                         ~~~~~~~~~~~~
             0 errors, 1 warnings
             """
-        val fixes = """
+        val fixes =
+            """
             Fix for res/values-nb/nontranslatable.xml line 1: Remove translation:
             @@ -2 +2
             -     <string name="dummy">Ignore Me</string>
             """
         lint().files(
             xml(
-                "res/values/nontranslatable.xml", """
+                "res/values/nontranslatable.xml",
+                """
                     <resources>
                         <string name="dummy" translatable="false">Ignore Me</string>
                     </resources>
                     """
             ).indented(),
             xml(
-                "res/values-nb/nontranslatable.xml", """
+                "res/values-nb/nontranslatable.xml",
+                """
                     <resources>
                         <string name="dummy">Ignore Me</string>
                     </resources>
@@ -645,7 +695,9 @@ class TranslationDetectorTest : AbstractCheckTest() {
         // Don't treat "google_maps_key" or "google_maps_key_instructions" as translatable
         lint().files(
             xml(
-                "res/values/google_maps_api.xml", ("" +
+                "res/values/google_maps_api.xml",
+                (
+                    "" +
                         "<resources>\n" +
                         "    <string name=\"google_maps_key_instructions\"><!--\n" +
                         "    TODO: Before you run your application, you need a Google Maps API key.\n" +
@@ -655,7 +707,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
                         "    <string name=\"google_maps_key\">\n" +
                         "        YOUR_KEY_HERE\n" +
                         "    </string>\n" +
-                        "</resources>\n")
+                        "</resources>\n"
+                    )
             ),
             valuesStrings2,
             valuesNbStrings2
@@ -673,7 +726,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
     fun testSpecifiedLanguage() {
         lint().files(
             xml(
-                "res/values/strings.xml", """
+                "res/values/strings.xml",
+                """
                     <resources xmlns:android="http://schemas.android.com/apk/res/android"
                         xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"
                         xmlns:tools="http://schemas.android.com/tools"
@@ -704,7 +758,9 @@ class TranslationDetectorTest : AbstractCheckTest() {
 
         lint().files(
             xml(
-                "res/values/analytics.xml", ("" +
+                "res/values/analytics.xml",
+                (
+                    "" +
                         "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
                         "<resources>\n" +
                         "  <!--Replace placeholder ID with your tracking ID-->\n" +
@@ -722,7 +778,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
                         "  <string name=\"test.pkg.OnClickActivity\">Clicks</string>\n" +
                         "\n" +
                         "  <string name=\"google_crash_reporting_api_key\" translatable=\"false\">AIzbSyCILMsOuUKwN3qhtxrPq7FFemDJUAXTyZ8</string>\n" +
-                        "</resources>\n")
+                        "</resources>\n"
+                    )
             ),
             doNotTranslateEsStrings // to make app multilingual
         ).run().expectClean()
@@ -730,7 +787,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
 
     fun testIssue33845() {
         // See http://code.google.com/p/android/issues/detail?id=33845
-        val expected = """
+        val expected =
+            """
             res/values/strings.xml:3: Error: "dateTimeFormat" is not translated in "de" (German) [MissingTranslation]
                 <string name="dateTimeFormat">MM/dd/yyyy - HH:mm</string>
                         ~~~~~~~~~~~~~~~~~~~~~
@@ -738,7 +796,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
             """
         lint().files(
             xml(
-                "res/values/strings.xml", """
+                "res/values/strings.xml",
+                """
                         <resources xmlns:tools="http://schemas.android.com/tools" tools:locale="en">
                             <string name="dateFormat">MM/dd/yyyy</string>
                             <string name="dateTimeFormat">MM/dd/yyyy - HH:mm</string>
@@ -754,7 +813,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
                     """
             ).indented(),
             xml(
-                "res/values-en-rGB/strings.xml", """
+                "res/values-en-rGB/strings.xml",
+                """
                     <resources>
                         <string name="dateFormat">dd/MM/yyyy</string>
                     </resources>
@@ -769,32 +829,41 @@ class TranslationDetectorTest : AbstractCheckTest() {
 
         lint().files(
             xml(
-                "res/values/styles.xml", ("" +
+                "res/values/styles.xml",
+                (
+                    "" +
                         "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                         "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
                         "\n" +
                         "    <!-- DeleteThisFileToGetRidOfOtherWarning -->\n" +
                         "\n" +
-                        "</resources>\n")
+                        "</resources>\n"
+                    )
             ),
             xml(
-                "res/values/strings.xml", ("" +
+                "res/values/strings.xml",
+                (
+                    "" +
                         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" +
                         "<resources xmlns:tools=\"http://schemas.android.com/tools\" tools:locale=\"en\">\n" +
                         "\n" +
                         "    <string name=\"dateFormat\">defaultformat</string>\n" +
                         "\n" +
-                        "</resources>\n")
+                        "</resources>\n"
+                    )
             ),
             xml(
-                "res/values-en-rGB/strings.xml", ("" +
+                "res/values-en-rGB/strings.xml",
+                (
+                    "" +
                         "<?xml version='1.0' encoding='UTF-8' standalone='no'?>\n" +
                         "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n" +
                         "\n" +
                         "    <string name=\"dateFormat\">ukformat</string>\n" +
                         "    <string name=\"dummy\" tools:ignore=\"ExtraTranslation\">DeleteMeToGetRidOfOtherWarning</string>\n" +
                         "\n" +
-                        "</resources>\n")
+                        "</resources>\n"
+                    )
             )
         ).run().expectClean()
     }
@@ -805,14 +874,17 @@ class TranslationDetectorTest : AbstractCheckTest() {
 
         lint().files(
             xml(
-                "res/values/strings.xml", ("" +
+                "res/values/strings.xml",
+                (
+                    "" +
                         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" +
                         "<resources xmlns:tools=\"http://schemas.android.com/tools\" tools:locale=\"en\">\n" +
                         "\n" +
                         "    <string name=\"dateFormat\">defaultformat</string>\n" +
                         "    <string name=\"other\">other</string>\n" +
                         "\n" +
-                        "</resources>\n")
+                        "</resources>\n"
+                    )
             ),
             valuesEnRgbStrings
         ).run().expectClean()
@@ -822,7 +894,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
         // No tools:locale specified in the base folder: *assume* English
         // Regression test for https://code.google.com/p/android/issues/detail?id=75879
 
-        val expected = """
+        val expected =
+            """
             res/values/strings.xml:3: Error: "other" is not translated in "de" (German) or "en" (English) [MissingTranslation]
                 <string name="other">other</string>
                         ~~~~~~~~~~~~
@@ -851,14 +924,17 @@ class TranslationDetectorTest : AbstractCheckTest() {
 
         lint().files(
             xml(
-                "res/values/strings.xml", ("" +
+                "res/values/strings.xml",
+                (
+                    "" +
                         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" +
                         "<resources xmlns:tools=\"http://schemas.android.com/tools\" tools:locale=\"de\">\n" +
                         "\n" +
                         "    <string name=\"dateFormat\">defaultformat</string>\n" +
                         "    <string name=\"other\">other</string>\n" +
                         "\n" +
-                        "</resources>\n")
+                        "</resources>\n"
+                    )
             ),
             valuesDeRdeStrings
         ).run().expectClean()
@@ -879,7 +955,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
     }
 
     fun testResConfigs() {
-        val expected = """
+        val expected =
+            """
             src/main/res/values/strings.xml:25: Error: "menu_settings" is not translated in "cs" (Czech) or "de" (German) [MissingTranslation]
                 <string name="menu_settings">Settings</string>
                         ~~~~~~~~~~~~~~~~~~~~
@@ -932,7 +1009,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
     fun TestFile.toSrcMain(): TestFile = xml("src/main/" + targetRelativePath, contents)
 
     fun testResConfigsIncremental() {
-        val expected = """
+        val expected =
+            """
             src/main/res/values/strings.xml:25: Error: "menu_settings" is not translated in "cs" (Czech) or "de" (German) [MissingTranslation]
                 <string name="menu_settings">Settings</string>
                         ~~~~~~~~~~~~~~~~~~~~
@@ -997,7 +1075,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
     }
 
     fun testMissingSomeBaseStrings() {
-        val expected = """
+        val expected =
+            """
             res/values-es/strings.xml:4: Error: "home_title" is translated here but not found in default locale [ExtraTranslation]
                 <string name="home_title">"Casa"</string>
                         ~~~~~~~~~~~~~~~~~
@@ -1067,7 +1146,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
         // keys you normally want to translate, let's filter them for users.
         lint().files(
             xml(
-                "res/values/config.xml", """
+                "res/values/config.xml",
+                """
                         <resources>
                             <string name="gcm_defaultSenderId">SENDER_ID</string>
                             <string name="google_app_id">App Id</string>
@@ -1076,14 +1156,16 @@ class TranslationDetectorTest : AbstractCheckTest() {
                         """
             ).indented(),
             xml(
-                "res/values/strings.xml", """
+                "res/values/strings.xml",
+                """
                         <resources>
                             <string name="app_name">My Application</string>
                         </resources>
                         """
             ).indented(),
             xml(
-                "res/values-nb/strings.xml", """
+                "res/values-nb/strings.xml",
+                """
                         <resources>
                             <string name="app_name">Min Applikasjon</string>
                         </resources>
@@ -1095,14 +1177,16 @@ class TranslationDetectorTest : AbstractCheckTest() {
     fun testTranslatableAttributeWarning() {
         lint().files(
             xml(
-                "res/values/strings.xml", """
+                "res/values/strings.xml",
+                """
                     <resources>
                         <string name="name">base</string>
                     </resources>
                     """
             ).indented(),
             xml(
-                "res/values-en/strings.xml", """
+                "res/values-en/strings.xml",
+                """
                     <resources>
                         <string name="name" translatable="false">base</string>
                     </resources>
@@ -1117,28 +1201,32 @@ class TranslationDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
             xml(
-                "res/values-sv/strings.xml", """
+                "res/values-sv/strings.xml",
+                """
                     <resources xmlns:tools="http://schemas.android.com/tools">
                         <string name="name" translatable="false" tools:ignore="ExtraTranslation">base</string>
                     </resources>
                     """
             ).indented(),
             xml(
-                "res/values/something.xml", """
+                "res/values/something.xml",
+                """
                     <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
                         <!-- Version dependent font string, in v21 we added sans-serif-medium. [DO NOT TRANSLATE] -->
                         <string name="games_font_roboto_medium">sans-serif</string>
                     </resources>"""
             ).indented(),
             xml(
-                "res/values-af/something.xml", """
+                "res/values-af/something.xml",
+                """
                     <resources>
                         <string name="name">base</string>
                         <string name="games_font_roboto_medium" msgid="2018081468373942067">sans-serif-medium</string>
                     </resources>"""
             ).indented(),
             xml(
-                "res/values-v21/something.xml", """
+                "res/values-v21/something.xml",
+                """
                     <resources>
                         <!-- Version specific font string for v21 and up. [DO NOT TRANSLATE] -->
                         <string name="games_font_roboto_medium" translatable="false">sans-serif-medium</string>
@@ -1158,7 +1246,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
         // TODO: Make sure that with -vNN we don't complain if minSdkVersion >= NN
         lint().files(
             xml(
-                "res/values/dimen.xml", """
+                "res/values/dimen.xml",
+                """
                     <resources>
                         <dimen name="ok_dimen">base</dimen> <!-- ok -->
                         <style name="ok_style"></style> <!-- ok -->
@@ -1166,7 +1255,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
                     """
             ).indented(),
             xml(
-                "res/values-land/dimen.xml", """
+                "res/values-land/dimen.xml",
+                """
                     <resources>
                         <dimen name="ok_dimen">1pt</dimen> <!-- ok -->
                         <style name="ok_style"></style> <!-- ok -->
@@ -1176,7 +1266,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
                     """
             ).indented(),
             xml(
-                "res/values-v21/dimen.xml", """
+                "res/values-v21/dimen.xml",
+                """
                     <resources>
                         <!-- We allow common scenario of having dedicated
                              resources for API levels, often used for theming -->
@@ -1185,7 +1276,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
                     """
             ).indented(),
             xml(
-                "res/values-land-v21/dimen.xml", """
+                "res/values-land-v21/dimen.xml",
+                """
                     <resources>
                         <dimen name="ok_extra_dimen">2pt</dimen> <!-- ok -->
                         <dimen name="extra_dimen2">1pt</dimen> <!-- error -->
@@ -1194,7 +1286,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
             ).indented(),
 
             xml(
-                "res/drawable-mdpi/ok_drawable.xml", """
+                "res/drawable-mdpi/ok_drawable.xml",
+                """
                     <resources>
                         <drawable name="color_drawable">#ffffffff</drawable>
                     </resources>
@@ -1258,7 +1351,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
     fun testExtraResourcesOfOtherTypesIncremental() {
         lint().files(
             xml(
-                "res/values/dimen.xml", """
+                "res/values/dimen.xml",
+                """
                     <resources>
                         <dimen name="ok_dimen">base</dimen> <!-- ok -->
                         <style name="ok_style"></style> <!-- ok -->
@@ -1266,7 +1360,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
                     """
             ).indented(),
             xml(
-                "res/values-land/dimen.xml", """
+                "res/values-land/dimen.xml",
+                """
                     <resources>
                         <dimen name="ok_dimen">1pt</dimen> <!-- ok -->
                         <style name="ok_style"></style> <!-- ok -->
@@ -1276,7 +1371,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
                     """
             ).indented(),
             xml(
-                "res/values-v21/dimen.xml", """
+                "res/values-v21/dimen.xml",
+                """
                     <resources>
                         <!-- We allow common scenario of having dedicated
                              resources for API levels, often used for theming -->
@@ -1285,7 +1381,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
                     """
             ).indented(),
             xml(
-                "res/values-land-v21/dimen.xml", """
+                "res/values-land-v21/dimen.xml",
+                """
                     <resources>
                         <dimen name="ok_extra_dimen">2pt</dimen> <!-- ok -->
                         <dimen name="extra_dimen2">1pt</dimen> <!-- error -->
@@ -1305,7 +1402,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
     fun testExtraResourcesOfOtherTypesIncremental2() {
         lint().files(
             xml(
-                "res/values-v21/dimen.xml", """
+                "res/values-v21/dimen.xml",
+                """
                     <resources>
                         <!-- We allow common scenario of having dedicated
                              resources for API levels, often used for theming -->
@@ -1337,14 +1435,16 @@ class TranslationDetectorTest : AbstractCheckTest() {
 
         lint().files(
             xml(
-                "res/values/strings.xml", """
+                "res/values/strings.xml",
+                """
                     <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
                       <string name="foo">Foo</string>
                     </resources>
                     """
             ),
             xml(
-                "res/values-nb/strings.xml", """
+                "res/values-nb/strings.xml",
+                """
                     <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="ExtraTranslation">
                       <string name="bar">Bar</string>
                     </resources>
@@ -1359,7 +1459,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
 
         lint().files(
             xml(
-                "res/values/strings.xml", """
+                "res/values/strings.xml",
+                """
                     <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
                       <string name="foo">Foo</string>
                       <string name="bar">Bar</string>
@@ -1367,12 +1468,14 @@ class TranslationDetectorTest : AbstractCheckTest() {
                     """
             ),
             xml(
-                "res/layout/foo.xml", """
+                "res/layout/foo.xml",
+                """
                     <View/>
                     """
             ),
             xml(
-                "res/values-nb/strings.xml", """
+                "res/values-nb/strings.xml",
+                """
                     <resources>
                       <string name="bar">Bar</string>
                     </resources>
@@ -1385,7 +1488,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
         // Regression test for https://issuetracker.google.com/142590628
         lint().files(
             xml(
-                "res/values/strings.xml", """
+                "res/values/strings.xml",
+                """
                 <resources xmlns:tools="http://schemas.android.com/tools" tools:locale="en">
                     <string name="app_name">My Application</string>
                     <string name="test">This is a test</string>

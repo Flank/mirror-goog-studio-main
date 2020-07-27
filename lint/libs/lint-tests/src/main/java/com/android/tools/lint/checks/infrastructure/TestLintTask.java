@@ -915,8 +915,9 @@ public class TestLintTask {
         for (TestFile fp : testFiles) {
             if (haveGradle) {
                 if (ANDROID_MANIFEST_XML.equals(fp.targetRelativePath)) {
-                    // The default should be src/main/AndroidManifest.xml, not just AndroidManifest.xml
-                    //fp.to("src/main/AndroidManifest.xml");
+                    // The default should be src/main/AndroidManifest.xml, not just
+                    // AndroidManifest.xml
+                    // fp.to("src/main/AndroidManifest.xml");
                     fp.within("src/main");
                 } else if (fp instanceof JavaTestFile
                         && fp.targetRootFolder != null

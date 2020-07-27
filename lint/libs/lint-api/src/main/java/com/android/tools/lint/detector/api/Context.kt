@@ -209,7 +209,8 @@ open class Context(
 
     @Deprecated(
         "Here for temporary compatibility; the new typed quickfix data parameter" +
-                " should be used instead", ReplaceWith("report(issue, location, message)")
+            " should be used instead",
+        ReplaceWith("report(issue, location, message)")
     )
     fun report(
         issue: Issue,
@@ -379,15 +380,17 @@ open class Context(
         @VisibleForTesting
         fun isSuppressedWithComment(line: String, issue: Issue): Boolean {
             return lineContainsId(line, issue.id) ||
-                    lineContainsId(line, SUPPRESS_ALL) ||
-                    isSuppressedWithComment(line, issue.category)
+                lineContainsId(line, SUPPRESS_ALL) ||
+                isSuppressedWithComment(line, issue.category)
         }
 
         private fun isSuppressedWithComment(line: String, category: Category): Boolean {
             return lineContainsId(line, category.name) ||
-                    category.parent != null &&
-                    (lineContainsId(line, category.fullName) ||
-                            isSuppressedWithComment(line, category.parent))
+                category.parent != null &&
+                (
+                    lineContainsId(line, category.fullName) ||
+                        isSuppressedWithComment(line, category.parent)
+                    )
         }
 
         // Like line.contains(id), but requires word match (e.g. "MyId" is found
@@ -443,7 +446,8 @@ open class Context(
             // Search backwards on the previous line until you find the prefix start (also look
             // back on previous lines if the previous line(s) contain just whitespace
             val first = prefix[0]
-            var offset = lineStart - 2 // 0: first char on this line, -1: \n on previous line, -2 last
+            var offset =
+                lineStart - 2 // 0: first char on this line, -1: \n on previous line, -2 last
             var seenNonWhitespace = false
             while (offset >= 0) {
                 val c = contents[offset]
@@ -456,9 +460,9 @@ open class Context(
                 }
 
                 if (c == first && CharSequences.regionMatches(
-                        contents, offset, prefix, 0,
-                        prefix.length
-                    )
+                    contents, offset, prefix, 0,
+                    prefix.length
+                )
                 ) {
                     return offset
                 }

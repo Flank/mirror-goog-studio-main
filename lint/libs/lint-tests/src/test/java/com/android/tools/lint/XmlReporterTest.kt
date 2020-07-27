@@ -55,7 +55,8 @@ class XmlReporterTest {
     @Test
     fun testBasic() {
         @Language("XML")
-        val expected = """
+        val expected =
+            """
                 <issues format="5" by="lint unittest">
 
                     <issue
@@ -118,7 +119,8 @@ class XmlReporterTest {
                         .parent
                     val actual = xml.replace(testRoot, "TESTROOT").replace('\\', '/')
                     @Language("XML")
-                    val expected = """
+                    val expected =
+                        """
                         <issues format="5" by="lint unittest">
 
                             <issue
@@ -168,7 +170,8 @@ class XmlReporterTest {
         // See https://code.google.com/p/android/issues/detail?id=56205
 
         @Language("XML")
-        val expected = """
+        val expected =
+            """
             <issues format="5" by="lint unittest">
 
                 <issue
@@ -196,11 +199,11 @@ class XmlReporterTest {
             xml(
                 "res/values/typography.xml",
                 "" +
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                        "<resources>\n" +
-                        "    <string name=\"user_registration_name1_4\">Register 1/4</string>\n" +
-                        "</resources>\n" +
-                        "\n"
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                    "<resources>\n" +
+                    "    <string name=\"user_registration_name1_4\">Register 1/4</string>\n" +
+                    "</resources>\n" +
+                    "\n"
             )
         )
             .issues(TypographyDetector.FRACTIONS)
@@ -211,7 +214,8 @@ class XmlReporterTest {
     @Test
     fun testBaselineFile() {
         @Language("XML")
-        val expected = """
+        val expected =
+            """
             <issues format="5" by="lint unittest">
 
                 <issue
@@ -251,7 +255,8 @@ class XmlReporterTest {
     @Test
     fun testFixData() {
         @Language("XML")
-        val expected = """
+        val expected =
+            """
             <issues format="5" by="lint unittest">
 
                 <issue
@@ -287,21 +292,21 @@ class XmlReporterTest {
         lint().files(
             java(
                 "" +
-                        "package test.pkg;\n" +
-                        "import android.content.Context;\n" +
-                        "import android.os.PowerManager;\n" +
-                        "\n" +
-                        "import static android.os.PowerManager.PARTIAL_WAKE_LOCK;\n" +
-                        "\n" +
-                        "/** @noinspection ClassNameDiffersFromFileName*/ " +
-                        "public abstract class WakelockTest extends Context {\n" +
-                        "    public PowerManager.WakeLock createWakelock() {\n" +
-                        "        PowerManager manager = (PowerManager) getSystemService(POWER_SERVICE);\n" +
-                        "        PowerManager.WakeLock wakeLock = manager.newWakeLock(PARTIAL_WAKE_LOCK, \"Test\");\n" +
-                        "        wakeLock.acquire(); // ERROR\n" +
-                        "        return wakeLock;\n" +
-                        "    }\n" +
-                        "}\n"
+                    "package test.pkg;\n" +
+                    "import android.content.Context;\n" +
+                    "import android.os.PowerManager;\n" +
+                    "\n" +
+                    "import static android.os.PowerManager.PARTIAL_WAKE_LOCK;\n" +
+                    "\n" +
+                    "/** @noinspection ClassNameDiffersFromFileName*/ " +
+                    "public abstract class WakelockTest extends Context {\n" +
+                    "    public PowerManager.WakeLock createWakelock() {\n" +
+                    "        PowerManager manager = (PowerManager) getSystemService(POWER_SERVICE);\n" +
+                    "        PowerManager.WakeLock wakeLock = manager.newWakeLock(PARTIAL_WAKE_LOCK, \"Test\");\n" +
+                    "        wakeLock.acquire(); // ERROR\n" +
+                    "        return wakeLock;\n" +
+                    "    }\n" +
+                    "}\n"
             )
         )
             .issues(WakelockDetector.TIMEOUT)
@@ -318,7 +323,8 @@ class XmlReporterTest {
         // Check that XML report contains all three fixes
 
         @Language("XML")
-        val expected = """
+        val expected =
+            """
             <issues format="5" by="lint unittest">
 
                 <issue
@@ -378,10 +384,10 @@ class XmlReporterTest {
             xml(
                 "res/values/strings.xml",
                 "" +
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                        "<resources>\n" +
-                        "    <string name=\"message\">%d unsed resources</string>\n" +
-                        "</resources>\n"
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                    "<resources>\n" +
+                    "    <string name=\"message\">%d unsed resources</string>\n" +
+                    "</resources>\n"
             )
         )
             .issues(TypoDetector.ISSUE)
@@ -397,7 +403,8 @@ class XmlReporterTest {
         // Check that XML report contains all three fixes
 
         @Language("XML")
-        val expected = """
+        val expected =
+            """
             <issues format="5" by="lint unittest">
 
                 <issue
@@ -445,19 +452,19 @@ class XmlReporterTest {
             xml(
                 "res/layout/sample.xml",
                 "" +
-                        "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                        "    android:layout_width=\"wrap_content\"\n" +
-                        "    android:layout_height=\"wrap_content\" >\n" +
-                        "\n" +
-                        "    <TextView\n" +
-                        "        android:layout_width=\"wrap_content\"\n" +
-                        "        android:layout_height=\"wrap_content\"\n" +
-                        "        android:ellipsize=\"start\"\n" + // ERROR
+                    "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                    "    android:layout_width=\"wrap_content\"\n" +
+                    "    android:layout_height=\"wrap_content\" >\n" +
+                    "\n" +
+                    "    <TextView\n" +
+                    "        android:layout_width=\"wrap_content\"\n" +
+                    "        android:layout_height=\"wrap_content\"\n" +
+                    "        android:ellipsize=\"start\"\n" + // ERROR
 
-                        "        android:lines=\"1\"\n" +
-                        "        android:text=\"Really long text that needs to be ellipsized here - 0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\" />\n" +
-                        "\n" +
-                        "</RelativeLayout>\n"
+                    "        android:lines=\"1\"\n" +
+                    "        android:text=\"Really long text that needs to be ellipsized here - 0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\" />\n" +
+                    "\n" +
+                    "</RelativeLayout>\n"
             )
         )
             .issues(EllipsizeMaxLinesDetector.ISSUE)

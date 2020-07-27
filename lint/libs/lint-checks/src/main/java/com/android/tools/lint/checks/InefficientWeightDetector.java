@@ -274,7 +274,8 @@ public class InefficientWeightDetector extends LayoutDetector {
             for (Element child : children) {
                 String tagName = child.getTagName();
                 if (!(sdkInfo.isLayout(tagName)
-                                // RadioGroup is a layout, but one which possibly should be base aligned
+                                // RadioGroup is a layout, but one which possibly should be base
+                                // aligned
                                 && !tagName.equals(RADIO_GROUP)
                         // Consider <fragment> tags as layouts for the purposes of this check
                         || VIEW_FRAGMENT.equals(tagName)

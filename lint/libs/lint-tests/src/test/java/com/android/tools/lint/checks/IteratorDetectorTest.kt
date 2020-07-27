@@ -115,7 +115,7 @@ class IteratorDetectorTest : AbstractCheckTest() {
                 """
             )
         ).run().expect(
-        """
+            """
             src/test/pkg/LinkedHashmapTest.java:34: Warning: LinkedHashMap#spliterator was broken in API 24 and 25. Workaround: Use java.util.Spliterators.spliterator(c2a, c2a.spliterator().characteristics()) [BrokenIterator]
                     Spliterator<String> keys2a = c2a.spliterator(); // Warn
                                                  ~~~~~~~~~~~~~~~~~
@@ -200,7 +200,7 @@ class IteratorDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         ).run().expect(
-        """
+            """
             src/test/pkg/VectorTest.java:15: Warning: Vector#listIterator was broken in API 24 and 25; it can return hasNext()=false before the last element. Consider switching to ArrayList with synchronization if you need it. [BrokenIterator]
                     error1.add("test");
                     ~~~~~~~~~~~~~~~~~~

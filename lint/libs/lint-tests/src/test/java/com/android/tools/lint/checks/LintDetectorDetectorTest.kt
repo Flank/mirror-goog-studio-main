@@ -448,7 +448,7 @@ class LintDetectorDetectorTest {
         val root = TestUtils.getWorkspaceRoot()
         val srcFiles =
             getTestSources(root, "tools/base/lint/libs/lint-checks/src/main/java") +
-                    getTestSources(root, "tools/base/lint/studio-checks/src/main/java")
+                getTestSources(root, "tools/base/lint/studio-checks/src/main/java")
         if (srcFiles.isEmpty()) {
             // This test doesn't work in Bazel; we don't ship all the source files of lint
             // as a dependency. Note however than in Bazel we actually run the lint checks

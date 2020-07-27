@@ -168,7 +168,8 @@ public class ServiceCastDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "    public void test(Context ctx) {\n"
                                         + "        mContext = ctx.getApplicationContext();\n"
-                                        // Here we *could* determine that ctx is most likely NOT an application context since
+                                        // Here we *could* determine that ctx is most likely NOT an
+                                        // application context since
                                         // we're calling getApplicationContext on it above
                                         + "        ctx.getSystemService(Context.WIFI_SERVICE); // UNKNOWN (though likely)\n"
                                         + "    }\n"

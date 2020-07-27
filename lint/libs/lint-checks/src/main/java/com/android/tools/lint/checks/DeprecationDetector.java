@@ -122,7 +122,7 @@ public class DeprecationDetector extends ResourceXmlDetector {
                 // We could warn about it, but it will probably be very noisy
                 // and make people disable the deprecation check; let's focus on
                 // some older flags for now
-                //"fill_parent",
+                // "fill_parent",
 
                 ATTR_EDITABLE,
                 ATTR_INPUT_METHOD,
@@ -143,14 +143,14 @@ public class DeprecationDetector extends ResourceXmlDetector {
                 // know the API level to apply the deprecation for:
 
                 // "ignored as of ICS (but deprecated earlier)"
-                //"fadingEdge",
+                // "fadingEdge",
 
                 // "This attribute is not used by the Android operating system."
-                //"restoreNeedsApplication",
+                // "restoreNeedsApplication",
 
                 // "This will create a non-standard UI appearance, because the search bar UI is
                 // changing to use only icons for its buttons."
-                //"searchButtonText",
+                // "searchButtonText",
                 );
     }
 

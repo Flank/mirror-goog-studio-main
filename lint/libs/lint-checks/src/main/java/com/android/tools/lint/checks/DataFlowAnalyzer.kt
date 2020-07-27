@@ -189,10 +189,10 @@ abstract class DataFlowAnalyzer(
     private fun isKotlinScopingFunction(node: UCallExpression): Boolean {
         val methodName = getMethodName(node)
         return methodName == "apply" ||
-                methodName == "run" ||
-                methodName == "with" ||
-                methodName == "also" ||
-                methodName == "let"
+            methodName == "run" ||
+            methodName == "with" ||
+            methodName == "also" ||
+            methodName == "let"
     }
 
     override fun afterVisitVariable(node: UVariable) {

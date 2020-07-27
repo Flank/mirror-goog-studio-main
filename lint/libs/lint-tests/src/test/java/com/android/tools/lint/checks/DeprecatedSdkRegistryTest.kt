@@ -34,7 +34,8 @@ private class StubDeprecatedSdkRegistry @JvmOverloads constructor(
 class DeprecatedSdkRegistryTest : TestCase() {
     fun testBasic() {
         @Language("XML")
-        val xml = """
+        val xml =
+            """
             <sdk_metadata>
              <library groupId="log4j" artifactId="log4j" recommended-version="1.2.17+" recommended-version-sha="5af35056b4d257e4b64b9e8069c0746e8b08629f">
               <versions from="1.2.14" to="1.2.16" status="deprecated" description="Deprecated due to ANR issue">
@@ -74,7 +75,8 @@ class DeprecatedSdkRegistryTest : TestCase() {
 
     fun testHostileNetwork() {
         @Language("HTML")
-        val xml = """
+        val xml =
+            """
                 <!DOCTYPE html>
                 <html lang=en>
                   <meta charset=utf-8>

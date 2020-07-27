@@ -138,8 +138,8 @@ public class GroovyGradleVisitor extends GradleVisitor {
                                     } else {
                                         Map<String, String> namedArguments = new HashMap<>();
                                         List<String> unnamedArguments = new ArrayList<>();
-                                        extractMethodCallArguments(tupleExpression,
-                                                unnamedArguments, namedArguments);
+                                        extractMethodCallArguments(
+                                                tupleExpression, unnamedArguments, namedArguments);
                                         for (GradleScanner scanner : detectors) {
                                             scanner.checkMethodCall(
                                                     context,
@@ -154,8 +154,8 @@ public class GroovyGradleVisitor extends GradleVisitor {
                                 } else {
                                     Map<String, String> namedArguments = new HashMap<>();
                                     List<String> unnamedArguments = new ArrayList<>();
-                                    extractMethodCallArguments(tupleExpression, unnamedArguments,
-                                            namedArguments);
+                                    extractMethodCallArguments(
+                                            tupleExpression, unnamedArguments, namedArguments);
                                     for (GradleScanner scanner : detectors) {
                                         scanner.checkMethodCall(
                                                 context,
@@ -173,15 +173,15 @@ public class GroovyGradleVisitor extends GradleVisitor {
                         super.visitTupleExpression(tupleExpression);
                     }
 
-                    private void extractMethodCallArguments(TupleExpression tupleExpression,
+                    private void extractMethodCallArguments(
+                            TupleExpression tupleExpression,
                             List<String> unnamedArguments,
                             Map<String, String> namedArguments) {
                         for (Expression subExpr : tupleExpression.getExpressions()) {
                             if (subExpr instanceof NamedArgumentListExpression) {
                                 NamedArgumentListExpression nale =
                                         (NamedArgumentListExpression) subExpr;
-                                for (MapEntryExpression mae :
-                                        nale.getMapEntryExpressions()) {
+                                for (MapEntryExpression mae : nale.getMapEntryExpressions()) {
                                     namedArguments.put(
                                             mae.getKeyExpression().getText(),
                                             mae.getValueExpression().getText());

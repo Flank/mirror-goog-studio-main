@@ -32,24 +32,24 @@ class DataBindingDetectorTest : AbstractCheckTest() {
             xml(
                 "res/layout/layout1.xml",
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                        "<layout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                        "        xmlns:app=\"http://schemas.android.com/apk/res-auto\">\n" +
-                        "  <data>\n" +
-                        "    <import type=\"test.langdb.calc.Calculator.Op\" />\n" +
-                        "    <variable\n" +
-                        "        name=\"calc\"\n" +
-                        "        type=\"test.langdb.calc.Calculator&lt;String>\" />\n" +
-                        "  </data>\n" +
-                        "\n" +
-                        "  <androidx.constraintlayout.widget.ConstraintLayout\n" +
-                        "      android:layout_width=\"match_parent\"\n" +
-                        "      android:layout_height=\"match_parent\">\n" +
-                        "  <TextView\n" +
-                        "      android:id=\"@+id/view_id\"\n" +
-                        "      android:text=\"@{calc.a &lt; (calc.b &lt;&lt; 2) ? calc.textA : calc.textB}\"/>\n" +
-                        "  </androidx.constraintlayout.widget.ConstraintLayout>\n" +
-                        "</layout>\n" +
-                        "\n"
+                    "<layout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                    "        xmlns:app=\"http://schemas.android.com/apk/res-auto\">\n" +
+                    "  <data>\n" +
+                    "    <import type=\"test.langdb.calc.Calculator.Op\" />\n" +
+                    "    <variable\n" +
+                    "        name=\"calc\"\n" +
+                    "        type=\"test.langdb.calc.Calculator&lt;String>\" />\n" +
+                    "  </data>\n" +
+                    "\n" +
+                    "  <androidx.constraintlayout.widget.ConstraintLayout\n" +
+                    "      android:layout_width=\"match_parent\"\n" +
+                    "      android:layout_height=\"match_parent\">\n" +
+                    "  <TextView\n" +
+                    "      android:id=\"@+id/view_id\"\n" +
+                    "      android:text=\"@{calc.a &lt; (calc.b &lt;&lt; 2) ? calc.textA : calc.textB}\"/>\n" +
+                    "  </androidx.constraintlayout.widget.ConstraintLayout>\n" +
+                    "</layout>\n" +
+                    "\n"
             )
         ).run().expectClean()
     }
@@ -73,48 +73,48 @@ class DataBindingDetectorTest : AbstractCheckTest() {
         }
 
         val expected = "" +
-                "res/layout/layout1.xml:8: Error: < must be escaped (as &lt;) in attribute values [XmlEscapeNeeded]\n" +
-                "        type=\"test.langdb.calc.Calculator  <  String>\" />\n" +
-                "                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "res/layout/layout1.xml:16: Error: < must be escaped (as &lt;) in attribute values [XmlEscapeNeeded]\n" +
-                "      android:text=\"@{calc.a  <  calc.b ? calc.textA : calc.textB}\"/>\n" +
-                "                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "2 errors, 0 warnings"
+            "res/layout/layout1.xml:8: Error: < must be escaped (as &lt;) in attribute values [XmlEscapeNeeded]\n" +
+            "        type=\"test.langdb.calc.Calculator  <  String>\" />\n" +
+            "                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "res/layout/layout1.xml:16: Error: < must be escaped (as &lt;) in attribute values [XmlEscapeNeeded]\n" +
+            "      android:text=\"@{calc.a  <  calc.b ? calc.textA : calc.textB}\"/>\n" +
+            "                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "2 errors, 0 warnings"
         lint().allowCompilationErrors().files(
             xml(
                 "res/layout/layout1.xml",
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                        "<layout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                        "        xmlns:app=\"http://schemas.android.com/apk/res-auto\">\n" +
-                        "  <data>\n" +
-                        "    <import type=\"test.langdb.calc.Calculator.Op\" />\n" +
-                        "    <variable\n" +
-                        "        name=\"calc\"\n" +
-                        // Note special extra spacing around "<": this is there for the
-                        // string replacement to find and have enough space to replace it
-                        // with &lt;
-                        "        type=\"test.langdb.calc.Calculator  <  String>\" />\n" +
-                        "  </data>\n" +
-                        "\n" +
-                        "  <androidx.constraintlayout.widget.ConstraintLayout\n" +
-                        "      android:layout_width=\"match_parent\"\n" +
-                        "      android:layout_height=\"match_parent\">\n" +
-                        "  <TextView\n" +
-                        "      android:id=\"@+id/view_id\"\n" +
-                        "      android:text=\"@{calc.a  <  calc.b ? calc.textA : calc.textB}\"/>\n" +
-                        "  </androidx.constraintlayout.widget.ConstraintLayout>\n" +
-                        "</layout>\n" +
-                        "\n"
+                    "<layout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                    "        xmlns:app=\"http://schemas.android.com/apk/res-auto\">\n" +
+                    "  <data>\n" +
+                    "    <import type=\"test.langdb.calc.Calculator.Op\" />\n" +
+                    "    <variable\n" +
+                    "        name=\"calc\"\n" +
+                    // Note special extra spacing around "<": this is there for the
+                    // string replacement to find and have enough space to replace it
+                    // with &lt;
+                    "        type=\"test.langdb.calc.Calculator  <  String>\" />\n" +
+                    "  </data>\n" +
+                    "\n" +
+                    "  <androidx.constraintlayout.widget.ConstraintLayout\n" +
+                    "      android:layout_width=\"match_parent\"\n" +
+                    "      android:layout_height=\"match_parent\">\n" +
+                    "  <TextView\n" +
+                    "      android:id=\"@+id/view_id\"\n" +
+                    "      android:text=\"@{calc.a  <  calc.b ? calc.textA : calc.textB}\"/>\n" +
+                    "  </androidx.constraintlayout.widget.ConstraintLayout>\n" +
+                    "</layout>\n" +
+                    "\n"
             )
         ).allowCompilationErrors().client(client).run().expect(expected).expectFixDiffs(
             "Fix for res/layout/layout1.xml line 8: Change '<' to '&lt;':\n" +
-                    "@@ -8 +8\n" +
-                    "-         type=\"test.langdb.calc.Calculator  <  String>\" />\n" +
-                    "+         type=\"test.langdb.calc.Calculator  &lt;  String>\" />\n" +
-                    "Fix for res/layout/layout1.xml line 16: Change '<' to '&lt;':\n" +
-                    "@@ -16 +16\n" +
-                    "-       android:text=\"@{calc.a  <  calc.b ? calc.textA : calc.textB}\"/>\n" +
-                    "+       android:text=\"@{calc.a  &lt;  calc.b ? calc.textA : calc.textB}\"/>"
+                "@@ -8 +8\n" +
+                "-         type=\"test.langdb.calc.Calculator  <  String>\" />\n" +
+                "+         type=\"test.langdb.calc.Calculator  &lt;  String>\" />\n" +
+                "Fix for res/layout/layout1.xml line 16: Change '<' to '&lt;':\n" +
+                "@@ -16 +16\n" +
+                "-       android:text=\"@{calc.a  <  calc.b ? calc.textA : calc.textB}\"/>\n" +
+                "+       android:text=\"@{calc.a  &lt;  calc.b ? calc.textA : calc.textB}\"/>"
         )
     }
 }

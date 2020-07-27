@@ -490,8 +490,8 @@ public class GradleModelMocker {
         for (Map.Entry<String, String> entry : splits.entries()) {
             outputs.add(createAndroidArtifactOutput(entry.getKey(), entry.getValue()));
         }
-        //outputs.add(createAndroidArtifactOutput("DENSITY", "mdpi"));
-        //outputs.add(createAndroidArtifactOutput("DENSITY", "hdpi"));
+        // outputs.add(createAndroidArtifactOutput("DENSITY", "mdpi"));
+        // outputs.add(createAndroidArtifactOutput("DENSITY", "hdpi"));
         when(artifact.getOutputs()).thenReturn(outputs);
 
         Set<String> seenDimensions = Sets.newHashSet();
@@ -834,7 +834,7 @@ public class GradleModelMocker {
             if (!jar.exists()) {
                 createEmptyJar(jar);
             }
-            //when(l2.isProvided).thenReturn(androidLibrary.isProvided());
+            // when(l2.isProvided).thenReturn(androidLibrary.isProvided());
         } else if (library instanceof JavaLibrary) {
             JavaLibrary javaLibrary = (JavaLibrary) library;
             when(lib.getType()).thenReturn(com.android.builder.model.level2.Library.LIBRARY_JAVA);
@@ -1225,7 +1225,8 @@ public class GradleModelMocker {
                 && key.startsWith("android.")
                 && line.endsWith("]")) {
             // Example:
-            // android.defaultConfig.manifestPlaceholders [ localApplicationId:'com.example.manifest_merger_example']
+            // android.defaultConfig.manifestPlaceholders [
+            // localApplicationId:'com.example.manifest_merger_example']
             Map<String, Object> manifestPlaceholders;
             if (context.startsWith("android.buildTypes.")) {
                 String name = context.substring("android.buildTypes.".length());
@@ -1276,7 +1277,8 @@ public class GradleModelMocker {
             when(productFlavor.getDimension()).thenReturn(dimension);
         } else if (key.startsWith("android.") && line.startsWith("resValue ")) {
             // Example:
-            // android.defaultConfig.resValue 'string', 'defaultConfigName', 'Some DefaultConfig Data'
+            // android.defaultConfig.resValue 'string', 'defaultConfigName', 'Some DefaultConfig
+            // Data'
             int index = key.indexOf(".resValue ");
             String name = key.substring("android.".length(), index);
 
@@ -2129,8 +2131,7 @@ public class GradleModelMocker {
                                 FN_ANNOTATIONS_ZIP,
                                 "public.txt",
                                 "../lib.aar",
-                                "R.txt"
-                        ),
+                                "R.txt"),
                         isProvided));
     }
 

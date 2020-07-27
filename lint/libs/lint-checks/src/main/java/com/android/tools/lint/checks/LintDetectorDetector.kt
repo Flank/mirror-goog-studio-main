@@ -170,7 +170,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                     checkCall(
                         node, CLASS_PSI_METHOD,
                         "Don't call PsiMethod#getBody(); you must use UAST instead. " +
-                                "If you don't have a UMethod call UastFacade.getMethodBody(method)"
+                            "If you don't have a UMethod call UastFacade.getMethodBody(method)"
                     )
                 }
                 "getParent" -> {
@@ -205,7 +205,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                     checkCall(
                         node, CLASS_PSI_VARIABLE,
                         "Don't call PsiField#getInitializer(); you must use UAST instead. " +
-                                "If you don't have a UField call UastFacade.getInitializerBody(field)"
+                            "If you don't have a UField call UastFacade.getInitializerBody(field)"
                     )
                 }
                 "equals" -> {
@@ -268,11 +268,14 @@ class LintDetectorDetector : Detector(), UastScanner {
                         index = text.indexOf(DOLLAR_CHAR)
                     }
                     if (index != -1) {
-                        val fix = LintFix.create().replace().text(if (string) DOLLAR_STRING else DOLLAR_CHAR).with("＄").build()
+                        val fix = LintFix.create().replace()
+                            .text(if (string) DOLLAR_STRING else DOLLAR_CHAR).with("＄").build()
                         val location = context.getRangeLocation(element, index, 6)
-                        context.report(DOLLAR_STRINGS, source, location,
+                        context.report(
+                            DOLLAR_STRINGS, source, location,
                             "In unit tests, use the fullwidth dollar sign, `＄`, instead of `\$`, to avoid having to use cumbersome escapes. Lint will treat a `＄` as a `\$`.",
-                            fix)
+                            fix
+                        )
                         return
                     }
                     super.visitElement(element)
@@ -425,8 +428,9 @@ class LintDetectorDetector : Detector(), UastScanner {
                                 // Don't need to do anything; we'll see this registration
                                 // as part of our regular detector visit
                             } else if (issue?.uAnnotations?.any {
-                                    it.qualifiedName == "kotlin.jvm.JvmField"
-                                } == true) {
+                                it.qualifiedName == "kotlin.jvm.JvmField"
+                            } == true
+                            ) {
                                 // This field is annotated with @JvmField; we'll come across
                                 // it within the class instead
                             } else {
@@ -666,8 +670,10 @@ class LintDetectorDetector : Detector(), UastScanner {
                     } else {
                         val host = parsed.host
                         if (host != null &&
-                            (host.contains("corp.google.com") ||
-                                    host.contains("googleplex.com"))
+                            (
+                                host.contains("corp.google.com") ||
+                                    host.contains("googleplex.com")
+                                )
                         ) {
                             context.report(
                                 UNEXPECTED_DOMAIN, argument, getStringLocation(argument, url),
@@ -736,9 +742,9 @@ class LintDetectorDetector : Detector(), UastScanner {
                         context.report(
                             TRIM_INDENT, selector, location,
                             "No need to call `.$methodName()` in issue registration strings; they " +
-                                    "are already trimmed by indent by lint when displaying to users${
-                                        if (isUnitTest) ". Instead, call `.indented()` on the surrounding `${(argument.uastParent as? UCallExpression)?.methodName}()` test file construction" else ""
-                                    }",
+                                "are already trimmed by indent by lint when displaying to users${
+                                if (isUnitTest) ". Instead, call `.indented()` on the surrounding `${(argument.uastParent as? UCallExpression)?.methodName}()` test file construction" else ""
+                                }",
                             fix
                         )
                     }
@@ -832,11 +838,16 @@ class LintDetectorDetector : Detector(), UastScanner {
             // Look for likely candidates of symbols that should be capitalized:
             // camelcase expressions, and function calls.
             checkForCodeFragments(XML_PATTERN, string, argument, "an XML reference") ||
-                    checkForCodeFragments(CALL_PATTERN, string, argument, "a call") ||
-                    checkForCodeFragments(CAMELCASE_PATTERN, string, argument, "a code reference")
+                checkForCodeFragments(CALL_PATTERN, string, argument, "a call") ||
+                checkForCodeFragments(CAMELCASE_PATTERN, string, argument, "a code reference")
         }
 
-        private fun checkForCodeFragments(pattern: Regex, string: String, argument: UExpression, typeString: String): Boolean {
+        private fun checkForCodeFragments(
+            pattern: Regex,
+            string: String,
+            argument: UExpression,
+            typeString: String
+        ): Boolean {
             val xml = pattern.find(string)
             return if (xml != null) {
                 val s = xml.groupValues[0]
@@ -975,9 +986,9 @@ class LintDetectorDetector : Detector(), UastScanner {
             if (type is PsiClassType) {
                 val psiClass = type.resolve()
                 if (psiClass != null && context.evaluator.inheritsFrom(
-                        psiClass,
-                        CLASS_PSI_ELEMENT, strict = false
-                    )
+                    psiClass,
+                    CLASS_PSI_ELEMENT, strict = false
+                )
                 ) {
                     if (arg1?.isNullLiteral() == true) { // comparisons with null are ok
                         return
@@ -986,7 +997,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                         return
                     }
                     val message = "Don't compare PsiElements with `equals`, use " +
-                            "`isEquivalentTo(PsiElement)` instead"
+                        "`isEquivalentTo(PsiElement)` instead"
                     context.report(PSI_COMPARE, node, context.getLocation(node), message)
                 }
             }
@@ -1030,7 +1041,8 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "LintImplIdFormat",
                 briefDescription = "Lint ID Format",
-                explanation = """
+                explanation =
+                    """
                     This check looks at lint issue id registrations and makes sure the id \
                     follows the expected conventions: capitalized, camel case, no spaces, \
                     and not too long.
@@ -1064,7 +1076,8 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "LintImplBadUrl",
                 briefDescription = "Bad More Info Link",
-                explanation = """
+                explanation =
+                    """
                    More Info URLs let a link check point to additional resources about \
                    the problem and solution it's checking for.
 
@@ -1085,7 +1098,8 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "LintImplUnexpectedDomain",
                 briefDescription = "Unexpected URL Domain",
-                explanation = """
+                explanation =
+                    """
                     This checks flags URLs to domains that have not been explicitly \
                     allowed for use as a documentation source.
                 """,
@@ -1105,7 +1119,8 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "LintImplTextFormat",
                 briefDescription = "Lint Text Format",
-                explanation = """
+                explanation =
+                    """
                     Lint supports various markdown like formatting directives in all of its \
                     strings (issue explanations, reported error messages, etc).
 
@@ -1133,7 +1148,8 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "LintImplUseExistingConstants",
                 briefDescription = "Use Existing Lint Constants",
-                explanation = """
+                explanation =
+                    """
                     This check looks for opportunities to reuse predefined lint constants.
                 """,
                 category = CUSTOM_LINT_CHECKS,
@@ -1149,7 +1165,8 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "LintImplUseUast",
                 briefDescription = "Using Wrong UAST Method",
-                explanation = """
+                explanation =
+                    """
                     UAST is a library that sits on top of PSI, and in many cases PSI is \
                     part of the UAST API; for example, UResolvable#resolve returns a \
                     PsiElement.
@@ -1178,7 +1195,8 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "LintImplPsiEquals",
                 briefDescription = "Comparing PsiElements with Equals",
-                explanation = """
+                explanation =
+                    """
                     You should never compare two PSI elements for equality with `equals`;
                     use `isEquivalentTo(PsiElement)` instead.
                     """,
@@ -1198,7 +1216,8 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "LintImplUseKotlin",
                 briefDescription = "Non-Kotlin Lint Detectors",
-                explanation = """
+                explanation =
+                    """
                     New lint checks should be written in Kotlin; the Lint API is written in \
                     Kotlin and uses a number of language features that makes it beneficial \
                     to also write the lint checks in Kotlin. Examples include many extension \
@@ -1219,7 +1238,8 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "LintImplTrimIndent",
                 briefDescription = "Calling `.trimIndent` on Lint Strings",
-                explanation = """
+                explanation =
+                    """
                     Lint implicitly calls `.trimIndent()` (lazily, at the last minute) in \
                     a number of places:
                     * Issue explanations
@@ -1251,7 +1271,8 @@ class LintDetectorDetector : Detector(), UastScanner {
                 id = "LintImplDollarEscapes",
                 briefDescription = "Using Dollar Escapes",
                 //noinspection LintImplDollarEscapes
-                explanation = """
+                explanation =
+                    """
                     Instead of putting ${"$"}{"$"} in your Kotlin raw string literals \
                     you can simply use ＄. This looks like the dollar sign but is instead \
                     the full width dollar sign, U+FF04. And this character does not need \

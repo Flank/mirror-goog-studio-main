@@ -876,13 +876,13 @@ public class DefaultConfiguration extends Configuration {
             @NonNull StringBuilder message,
             @NonNull String id,
             @NonNull IssueRegistry issueRegistry) {
-       message.append("'").append(id).append("'");
-       Issue issue = issueRegistry.getIssue(id);
-       if (issue != null) {
-           message.append(" (");
-           message.append(issue.getBriefDescription(TextFormat.RAW));
-           message.append(")");
-       }
+        message.append("'").append(id).append("'");
+        Issue issue = issueRegistry.getIssue(id);
+        if (issue != null) {
+            message.append(" (");
+            message.append(issue.getBriefDescription(TextFormat.RAW));
+            message.append(")");
+        }
     }
 
     public static String getUnknownIssueIdErrorMessage(

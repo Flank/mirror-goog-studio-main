@@ -25,7 +25,8 @@ class CipherGetInstanceDetectorTest : AbstractCheckTest() {
     }
 
     fun testCipherGetInstanceAES() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/CipherGetInstanceAES.java:8: Warning: Cipher.getInstance should not be called without setting the encryption mode and padding [GetInstance]
                 Cipher.getInstance("AES");
                                    ~~~~~
@@ -51,7 +52,8 @@ class CipherGetInstanceDetectorTest : AbstractCheckTest() {
     }
 
     fun testCipherGetInstanceDES() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/CipherGetInstanceDES.java:8: Warning: Cipher.getInstance should not be called without setting the encryption mode and padding [GetInstance]
                 Cipher.getInstance("DES");
                                    ~~~~~
@@ -77,7 +79,8 @@ class CipherGetInstanceDetectorTest : AbstractCheckTest() {
     }
 
     fun testCipherGetInstanceAESECB() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/CipherGetInstanceAESECB.java:8: Warning: ECB encryption mode should not be used [GetInstance]
                 Cipher.getInstance("AES/ECB/NoPadding");
                                    ~~~~~~~~~~~~~~~~~~~
@@ -144,7 +147,8 @@ class CipherGetInstanceDetectorTest : AbstractCheckTest() {
     }
 
     fun testResolveConstants() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/CipherGetInstanceTest.java:11: Warning: ECB encryption mode should not be used (was "DES/ECB/NoPadding") [GetInstance]
                     Cipher des = Cipher.getInstance(Constants.DES);
                                                     ~~~~~~~~~~~~~

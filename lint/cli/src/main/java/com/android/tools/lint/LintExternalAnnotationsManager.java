@@ -146,7 +146,7 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
 
         // We don't need to do equals; we don't worry about having annotations
         // for removed projects, but make sure all the new projects are covered
-        //if (this.roots.equals(roots)) {
+        // if (this.roots.equals(roots)) {
         if (roots.containsAll(newRoots)) {
             return;
         }
@@ -155,7 +155,8 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
         dropCache(); // TODO: Find out if I need to drop cache for pure additions
 
         // TODO
-        //ApplicationManager.getApplication().runWriteAction(
-        //    () -> ((PsiModificationTrackerImpl)myPsiManager.getModificationTracker()).incCounter());
+        // ApplicationManager.getApplication().runWriteAction(
+        //    () ->
+        // ((PsiModificationTrackerImpl)myPsiManager.getModificationTracker()).incCounter());
     }
 }

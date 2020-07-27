@@ -81,28 +81,32 @@ public class PrivateApiLookupTest : AbstractCheckTest() {
             db.getMethodRestriction(
                 "android/app/Activity",
                 "dispatchPictureInPictureModeChanged",
-                "(ZLandroid/content/res/Configuration;)")
+                "(ZLandroid/content/res/Configuration;)"
+            )
         )
         assertEquals(
             Restriction.MAYBE_MAX_P,
             db.getMethodRestriction(
                 "android.animation.LayoutTransition",
                 "cancel",
-                "()")
+                "()"
+            )
         )
         assertEquals(
             Restriction.DENY,
             db.getMethodRestriction(
                 "android/app/Notification",
                 "getContextualActions",
-                "()Ljava/util/List;")
+                "()Ljava/util/List;"
+            )
         )
         assertEquals(
             Restriction.UNKNOWN,
             db.getMethodRestriction(
                 "android/graphics/drawable/BitmapDrawable",
                 "setTargetDensity",
-                "(Landroid/util/DisplayMetrics;)V")
+                "(Landroid/util/DisplayMetrics;)V"
+            )
         )
     }
 
@@ -111,19 +115,22 @@ public class PrivateApiLookupTest : AbstractCheckTest() {
             Restriction.DENY,
             db.getFieldRestriction(
                 "android/Manifest\$permission",
-                "INSTALL_EXISTING_PACKAGES")
+                "INSTALL_EXISTING_PACKAGES"
+            )
         )
         assertEquals(
             Restriction.MAYBE,
             db.getFieldRestriction(
                 "android/content/ContentProviderOperation",
-                "mUri")
+                "mUri"
+            )
         )
         assertEquals(
             Restriction.MAYBE_MAX_P,
             db.getFieldRestriction(
                 "android.animation.ValueAnimator",
-                "sDurationScale")
+                "sDurationScale"
+            )
         )
     }
 

@@ -1007,7 +1007,8 @@ public class GradleModelMockerTest {
                                 ""
                                         + "buildscript {\n"
                                         + "    dependencies {\n"
-                                        // Need at least 2.5.0-alpha1 for this dependency graph behavior
+                                        // Need at least 2.5.0-alpha1 for this dependency graph
+                                        // behavior
                                         + "        classpath 'com.android.tools.build:gradle:2.5.0-alpha1'\n"
                                         + "    }\n"
                                         + "}\n"

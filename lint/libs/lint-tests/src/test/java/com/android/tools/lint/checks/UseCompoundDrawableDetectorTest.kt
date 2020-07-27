@@ -25,7 +25,8 @@ class UseCompoundDrawableDetectorTest : AbstractCheckTest() {
 
     fun testCompound() {
 
-        val expected = """
+        val expected =
+            """
             res/layout/compound.xml:1: Warning: This tag and its children can be replaced by one <TextView/> and a compound drawable [UseCompoundDrawables]
             <LinearLayout
              ~~~~~~~~~~~~

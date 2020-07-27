@@ -297,7 +297,7 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
         public boolean visitCallExpression(UCallExpression expression) {
             if (expression.equals(mLoadMethod)) {
                 PsiVariable variable = CleanupDetector.getVariableElement(expression, true, false);
-                //PsiVariable variable = UastUtils.getParentOfType(expression, UVariable.class);
+                // PsiVariable variable = UastUtils.getParentOfType(expression, UVariable.class);
 
                 mLoadVariable = variable == null ? null : variable.getName();
             } else if (mLoadVariable != null

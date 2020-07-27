@@ -197,7 +197,7 @@ class LintModelFactory : LintModelModuleLoader {
 
     private fun IdeLibrary.getMavenArtifactAddress(): String {
         return when (type) {
-            IdeLibrary.LibraryType.LIBRARY_MODULE -> "artifacts:${projectPath}:unspecified" // TODO(b/158346611): Review artifact names for modules.
+            IdeLibrary.LibraryType.LIBRARY_MODULE -> "artifacts:$projectPath:unspecified" // TODO(b/158346611): Review artifact names for modules.
             else -> artifactAddress.substringBefore("@")
         }
     }
@@ -208,14 +208,15 @@ class LintModelFactory : LintModelModuleLoader {
     ): LintModelDependency {
         val artifactAddress = library.getMavenArtifactAddress()
 
-        val lintLibrary = libraryResolverMap[artifactAddress] ?: getLibrary(library).also { libraryResolverMap[artifactAddress] = it }
+        val lintLibrary = libraryResolverMap[artifactAddress]
+            ?: getLibrary(library).also { libraryResolverMap[artifactAddress] = it }
 
         return DefaultLintModelDependency(
             artifactName = library.getArtifactName(),
             artifactAddress = artifactAddress,
-            requestedCoordinates = null,  // Always null in builder models and not present in Ide* models.
+            requestedCoordinates = null, // Always null in builder models and not present in Ide* models.
             // Deep copy
-            dependencies = emptyList(),  // Dependency hierarchy is not yet supported.
+            dependencies = emptyList(), // Dependency hierarchy is not yet supported.
             libraryResolver = libraryResolver
         )
     }

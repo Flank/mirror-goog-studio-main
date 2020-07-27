@@ -178,7 +178,8 @@ public class LocaleFolderDetector extends Detector
                                             Scope.RESOURCE_FOLDER,
                                             Scope.JAVA_FILE,
                                             Scope.JAVA_LIBRARIES),
-                                    // In IDE: won't have JAVA_LIBRARIES scope (no bytecode analysis)
+                                    // In IDE: won't have JAVA_LIBRARIES scope (no bytecode
+                                    // analysis)
                                     EnumSet.of(Scope.RESOURCE_FOLDER, Scope.JAVA_FILE)))
                     .setAndroidSpecific(true);
 

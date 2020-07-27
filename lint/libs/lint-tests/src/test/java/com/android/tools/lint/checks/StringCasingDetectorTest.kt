@@ -37,7 +37,8 @@ class StringCasingDetectorTest : AbstractCheckTest() {
     }
 
     fun testDuplicateStrings() {
-        val expected = """
+        val expected =
+            """
                 res/values/duplicate_strings.xml:3: Warning: Duplicate string value HELLO, used in hello_caps and hello. Use android:inputType or android:capitalize to treat these as the same and avoid string duplication. [DuplicateStrings]
                                     <string name="hello">hello</string>
                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -76,7 +77,8 @@ class StringCasingDetectorTest : AbstractCheckTest() {
     )
 
     fun testTurkishDuplicateStrings() {
-        val expected = """
+        val expected =
+            """
                 res/values-tr/duplicate_strings.xml:3: Warning: Duplicate string value hello İ, used in hello_caps and hello. Use android:inputType or android:capitalize to treat these as the same and avoid string duplication. [DuplicateStrings]
                                     <string name="hello">hello i</string>
                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -87,7 +89,8 @@ class StringCasingDetectorTest : AbstractCheckTest() {
     }
 
     fun testDuplicatesWithoutCaseDifferences() {
-        val expected = """
+        val expected =
+            """
                 res/values/duplicate_strings.xml:3: Warning: Duplicate string value Hello, used in hello1, hello2 and hello3 [DuplicateStrings]
                                     <string name="hello1">Hello</string>
                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -132,10 +135,10 @@ class StringCasingDetectorTest : AbstractCheckTest() {
             xml(
                 "res/values/duplicate_strings.xml",
                 "<resources>\n" +
-                        "    <string name=\"app_name\">lint bug</string>\n" +
-                        "    <string name=\"item_one\"><![CDATA[<b>%1$\\s</b>]]> did something</string>\n" +
-                        "    <string name=\"item_two\"><![CDATA[<b>You</b>]]> did something <![CDATA[<b>%1$\\s</b>]]></string>\n" +
-                        "</resources>"
+                    "    <string name=\"app_name\">lint bug</string>\n" +
+                    "    <string name=\"item_one\"><![CDATA[<b>%1$\\s</b>]]> did something</string>\n" +
+                    "    <string name=\"item_two\"><![CDATA[<b>You</b>]]> did something <![CDATA[<b>%1$\\s</b>]]></string>\n" +
+                    "</resources>"
             ).indented()
         ).run().expectClean()
     }

@@ -420,9 +420,12 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                                         + "package test.pkg;\n"
                                         + "import java.util.Map;\n"
                                         +
-                                        // The main purpose of this test is to ensure that the lint test
-                                        // infrastructure is able to compute the correct class name (and
-                                        // target file path) for this interface and package declaration
+                                        // The main purpose of this test is to ensure that the lint
+                                        // test
+                                        // infrastructure is able to compute the correct class name
+                                        // (and
+                                        // target file path) for this interface and package
+                                        // declaration
                                         "public interface MyMap<P extends Number, T extends Map<P, ?>>\n"
                                         + "                            extends InteractorBaseComponent<T> {\n"
                                         + "    public String foo = \"/sdcard/foo\"; "

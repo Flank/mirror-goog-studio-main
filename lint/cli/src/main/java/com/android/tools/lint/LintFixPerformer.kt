@@ -225,9 +225,9 @@ open class LintFixPerformer constructor(
                 client.log(
                     Severity.WARNING, null,
                     "Overlapping edits in quickfixes; skipping. " +
-                            "Involved fixes: ${prev.fix.displayName} in [" +
-                            "${prev.startOffset}-${prev.endOffset}] and ${
-                            fix.fix.displayName} in [${fix.startOffset}-${fix.endOffset}]"
+                        "Involved fixes: ${prev.fix.displayName} in [" +
+                        "${prev.startOffset}-${prev.endOffset}] and ${
+                        fix.fix.displayName} in [${fix.startOffset}-${fix.endOffset}]"
                 )
                 return true
             }
@@ -280,15 +280,15 @@ open class LintFixPerformer constructor(
         if (node == null || node.nodeType != Node.ELEMENT_NODE) {
             throw IllegalArgumentException(
                 "Didn't find element at offset " +
-                        start.offset +
-                        " (line " +
-                        start.line + 1 +
-                        ", column " +
-                        start.column + 1 +
-                        ") in " +
-                        file.file.path +
-                        ":\n" +
-                        contents
+                    start.offset +
+                    " (line " +
+                    start.line + 1 +
+                    ", column " +
+                    start.column + 1 +
+                    ") in " +
+                    file.file.path +
+                    ":\n" +
+                    contents
             )
         }
         val element = node as Element
@@ -492,12 +492,12 @@ open class LintFixPerformer constructor(
                 }
                 else -> throw IllegalArgumentException(
                     "Did not find \"" +
-                            oldString +
-                            "\" in \"" +
-                            locationRange +
-                            "\" as suggested in the quickfix. Consider calling " +
-                            "ReplaceStringBuilder#range() to set a larger range to " +
-                            "search than the default highlight range."
+                        oldString +
+                        "\" in \"" +
+                        locationRange +
+                        "\" as suggested in the quickfix. Consider calling " +
+                        "ReplaceStringBuilder#range() to set a larger range to " +
+                        "search than the default highlight range."
                 )
             }
         } else {
@@ -507,10 +507,10 @@ open class LintFixPerformer constructor(
             if (!matcher.find()) {
                 throw IllegalArgumentException(
                     "Did not match pattern \"" +
-                            oldPattern +
-                            "\" in \"" +
-                            locationRange +
-                            "\" as suggested in the quickfix"
+                        oldPattern +
+                        "\" in \"" +
+                        locationRange +
+                        "\" as suggested in the quickfix"
                 )
             } else {
                 startOffset = start.offset

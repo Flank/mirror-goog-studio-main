@@ -64,7 +64,7 @@ fun searchForInterproceduralThreadAnnotationViolations(
     fun CallTarget.isAnnotatedWith(annotation: String) = when (this) {
         is CallTarget.Method -> {
             element.isAnnotatedWith(annotation) ||
-                    element.javaPsi.containingClass?.isAnnotatedWith(annotation) ?: false
+                element.javaPsi.containingClass?.isAnnotatedWith(annotation) ?: false
         }
         is CallTarget.Lambda -> element.uAnnotations.any { it.qualifiedName == annotation }
         is CallTarget.DefaultCtor -> element.isAnnotatedWith(annotation)
@@ -73,11 +73,11 @@ fun searchForInterproceduralThreadAnnotationViolations(
     val contextualGraph = callGraph.buildContextualCallGraph(receiverEval)
     val uiSearchNodes = contextualGraph.contextualNodes.filter {
         it.node.target.isAnnotatedWith(UI_THREAD_ANNOTATION.oldName()) ||
-                it.node.target.isAnnotatedWith(UI_THREAD_ANNOTATION.newName())
+            it.node.target.isAnnotatedWith(UI_THREAD_ANNOTATION.newName())
     }
     val workerSearchNodes = contextualGraph.contextualNodes.filter {
         it.node.target.isAnnotatedWith(WORKER_THREAD_ANNOTATION.oldName()) ||
-                it.node.target.isAnnotatedWith(WORKER_THREAD_ANNOTATION.newName())
+            it.node.target.isAnnotatedWith(WORKER_THREAD_ANNOTATION.newName())
     }
 
     // Some methods take in a lambda (say) and run it on a different thread.
@@ -108,12 +108,12 @@ fun searchForInterproceduralThreadAnnotationViolations(
         }
 
     val allUiSearchNodes = uiSearchNodes +
-            paramSearchNodes(UI_THREAD_ANNOTATION.oldName()) +
-            paramSearchNodes(UI_THREAD_ANNOTATION.newName())
+        paramSearchNodes(UI_THREAD_ANNOTATION.oldName()) +
+        paramSearchNodes(UI_THREAD_ANNOTATION.newName())
 
     val allWorkerSearchNodes = workerSearchNodes +
-            paramSearchNodes(WORKER_THREAD_ANNOTATION.oldName()) +
-            paramSearchNodes(WORKER_THREAD_ANNOTATION.newName())
+        paramSearchNodes(WORKER_THREAD_ANNOTATION.oldName()) +
+        paramSearchNodes(WORKER_THREAD_ANNOTATION.newName())
 
     val uiThreadAnnotationName = UI_THREAD_ANNOTATION.defaultName().substringAfterLast(".")
     val workerThreadAnnotationName = WORKER_THREAD_ANNOTATION.defaultName().substringAfterLast(".")
@@ -161,7 +161,7 @@ class WrongThreadInterproceduralDetector : Detector(), SourceCodeScanner {
             val sourceStr = sourceAnnotation.substringAfterLast('.')
             val sinkStr = sinkAnnotation.substringAfterLast('.')
             val message = "Interprocedural thread annotation violation " +
-                    "($sourceStr to $sinkStr):\n$pathStr"
+                "($sourceStr to $sinkStr):\n$pathStr"
             context.report(ISSUE, location, message, null)
         }
     }
@@ -171,7 +171,8 @@ class WrongThreadInterproceduralDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "WrongThreadInterprocedural",
             briefDescription = "Wrong Thread (Interprocedural)",
-            explanation = """
+            explanation =
+                """
                 Searches for interprocedural call paths that violate thread annotations \
                 in the program. Tracks the flow of instantiated types and lambda \
                 expressions to increase accuracy across method boundaries.

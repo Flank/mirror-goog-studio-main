@@ -42,7 +42,8 @@ class LintStats constructor(
     companion object {
         fun create(mergedIncidents: List<Incident>, baseline: LintBaseline?): LintStats {
             return create(
-                mergedIncidents, if (baseline != null)
+                mergedIncidents,
+                if (baseline != null)
                     listOf(baseline)
                 else
                     emptyList()
@@ -95,7 +96,7 @@ class LintStats constructor(
                 for (baseline in baselines) {
                     baselineErrorCount = max(baselineErrorCount, baseline.foundErrorCount)
                     baselineWarningCount =
-                            max(baselineWarningCount, baseline.foundWarningCount)
+                        max(baselineWarningCount, baseline.foundWarningCount)
                     baselineFixedCount = max(baselineFixedCount, baseline.fixedCount)
                 }
             }

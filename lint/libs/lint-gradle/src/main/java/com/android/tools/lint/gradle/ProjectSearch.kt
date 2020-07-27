@@ -47,7 +47,8 @@ import org.gradle.api.Project as GradleProject
  */
 class ProjectSearch {
     private val libraryProjects = mutableMapOf<LintModelLibrary, Project>()
-    private val libraryProjectsByCoordinate = mutableMapOf<LintModelMavenName, LintModelModuleLibraryProject>()
+    private val libraryProjectsByCoordinate =
+        mutableMapOf<LintModelMavenName, LintModelModuleLibraryProject>()
     private val namedProjects = mutableMapOf<String, Project>()
     private val appProjects = mutableMapOf<GradleProject, Project>()
     private val gradleProjects = mutableMapOf<GradleProject, LintModelModule>()
@@ -205,7 +206,15 @@ class ProjectSearch {
         for (item in dependencies.roots) {
             val library = item.findLibrary() ?: continue // local project dependency: handled below
             if (library is LintModelAndroidLibrary) {
-                lintProject.addDirectLibrary(getLibrary(client, item, library, gradleProject, variant))
+                lintProject.addDirectLibrary(
+                    getLibrary(
+                        client,
+                        item,
+                        library,
+                        gradleProject,
+                        variant
+                    )
+                )
             }
             if (library is LintModelModuleLibrary) {
                 val projectName = library.projectPath

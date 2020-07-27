@@ -41,7 +41,8 @@ class ForkJoinPoolDetector : Detector(), SourceCodeScanner {
         val COMMON_FJ_POOL = Issue.create(
             id = "CommonForkJoinPool",
             briefDescription = "Using common Fork Join Pool",
-            explanation = """
+            explanation =
+                """
                 Using the common ForkJoinPool can lead to freezes because in many cases
                 the set of threads is very low.
 
@@ -67,7 +68,8 @@ class ForkJoinPoolDetector : Detector(), SourceCodeScanner {
         val NEW_FJ_POOL = Issue.create(
             id = "NewForkJoinPool",
             briefDescription = "Using Fork Join Pool",
-            explanation = """
+            explanation =
+                """
                 Using new Fork Join Pools should be limited to very specific use cases.
 
                 For Android Studio, when possible, prefer using the IntelliJ application pool:
@@ -100,7 +102,8 @@ class ForkJoinPoolDetector : Detector(), SourceCodeScanner {
         // TODO: ForkJoinTask
         context.report(
             NEW_FJ_POOL, node, context.getLocation(node),
-            "Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`, or for the Android Gradle Plugin use `com.android.build.gradle.internal.tasks.Workers`. See `go/do-not-freeze`.")
+            "Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`, or for the Android Gradle Plugin use `com.android.build.gradle.internal.tasks.Workers`. See `go/do-not-freeze`."
+        )
     }
 
     override fun getApplicableMethodNames() = listOf("commonPool")

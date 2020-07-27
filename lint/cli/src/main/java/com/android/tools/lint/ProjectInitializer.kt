@@ -832,8 +832,8 @@ private class ProjectInitializer(
                     if (sourceRoots.contains(root)) {
                         reportError(
                             "${type.usLocaleCapitalize()} sources cannot be in the same " +
-                                    "source root as production files; " +
-                                    "source root $root is also a test root"
+                                "source root as production files; " +
+                                "source root $root is also a test root"
                         )
                         break
                     }
@@ -870,7 +870,7 @@ private class ProjectInitializer(
                 // In that case it is relative to the pwd, so we get the *absolute*
                 // path of the file instead, and take its parent path.
                 val root = findRoot(file) ?: file.parentFile ?: file.absoluteFile.parentFile
-                ?: continue
+                    ?: continue
 
                 dirToRootCache[parent.path] = root
 
@@ -942,7 +942,8 @@ private class ProjectInitializer(
             else dir.canonicalPath
             reportError(
                 "$path ${if (!File(path).isAbsolute) "(relative to " +
-                        relativePath + ") " else ""}does not exist", element
+                    relativePath + ") " else ""}does not exist",
+                element
             )
         }
         return source

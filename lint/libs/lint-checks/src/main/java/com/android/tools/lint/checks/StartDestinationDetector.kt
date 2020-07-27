@@ -51,7 +51,8 @@ class StartDestinationDetector : ResourceXmlDetector() {
             id = "InvalidNavigation",
             briefDescription = "No start destination specified",
 
-            explanation = """
+            explanation =
+                """
             All `<navigation>` elements must have a start destination specified, and it must \
             be a direct child of that `<navigation>`.
             """,

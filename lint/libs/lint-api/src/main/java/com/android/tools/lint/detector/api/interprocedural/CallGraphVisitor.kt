@@ -199,11 +199,11 @@ class CallGraphVisitor(
     private fun UMethod.isStaticallyDispatched(): Boolean {
         val parentClass = javaPsi.containingClass ?: return true
         return isConstructor ||
-                isStatic ||
-                isFinal ||
-                visibility == UastVisibility.PRIVATE ||
-                parentClass is PsiAnonymousClass ||
-                parentClass.hasModifierProperty(PsiModifier.FINAL)
+            isStatic ||
+            isFinal ||
+            visibility == UastVisibility.PRIVATE ||
+            parentClass is PsiAnonymousClass ||
+            parentClass.hasModifierProperty(PsiModifier.FINAL)
     }
 
     /**

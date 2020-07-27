@@ -122,13 +122,13 @@ class LintFixTest : TestCase() {
         lint().files(
             java(
                 "" +
-                        "package test.pkg;\n" +
-                        "import android.util.Log;\n" +
-                        "public class Test {\n" +
-                        "    void test() {\n" +
-                        "        Log.d(\"TAG\", \"msg\");\n" +
-                        "    }\n" +
-                        "}"
+                    "package test.pkg;\n" +
+                    "import android.util.Log;\n" +
+                    "public class Test {\n" +
+                    "    void test() {\n" +
+                    "        Log.d(\"TAG\", \"msg\");\n" +
+                    "    }\n" +
+                    "}"
             )
         )
             .detector(SampleTestDetector())
@@ -136,18 +136,18 @@ class LintFixTest : TestCase() {
             .run()
             .expect(
                 "src/test/pkg/Test.java:5: Warning: Sample test message [TestIssueId]\n" +
-                        "        Log.d(\"TAG\", \"msg\");\n" +
-                        "        ~~~\n" +
-                        "0 errors, 1 warnings\n"
+                    "        Log.d(\"TAG\", \"msg\");\n" +
+                    "        ~~~\n" +
+                    "0 errors, 1 warnings\n"
             )
             .verifyFixes().window(1).expectFixDiffs(
                 "" +
-                        "Fix for src/test/pkg/Test.java line 4: Fix Description:\n" +
-                        "@@ -5 +5\n" +
-                        "      void test() {\n" +
-                        "-         Log.d(\"TAG\", \"msg\");\n" +
-                        "+         MyLogger.d(\"msg\"); // Was: Log.d(\"TAG\", \"msg\");\n" +
-                        "      }\n"
+                    "Fix for src/test/pkg/Test.java line 4: Fix Description:\n" +
+                    "@@ -5 +5\n" +
+                    "      void test() {\n" +
+                    "-         Log.d(\"TAG\", \"msg\");\n" +
+                    "+         MyLogger.d(\"msg\"); // Was: Log.d(\"TAG\", \"msg\");\n" +
+                    "      }\n"
             )
     }
 

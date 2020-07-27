@@ -165,7 +165,7 @@ class LintDriver
  *
  * @param client the tool wrapping the analyzer, such as an IDE or a CLI
  */
-    (var registry: IssueRegistry, client: LintClient, val request: LintRequest) {
+(var registry: IssueRegistry, client: LintClient, val request: LintRequest) {
     /** True if execution has been canceled  */
     @Volatile
     internal var isCanceled: Boolean = false
@@ -189,12 +189,12 @@ class LintDriver
 
     init {
         projectRoots =
-                try {
-                    request.getProjects() ?: computeProjects(request.files)
-                } catch (e: CircularDependencyException) {
-                    circularProjectError = e
-                    emptyList()
-                }
+            try {
+                request.getProjects() ?: computeProjects(request.files)
+            } catch (e: CircularDependencyException) {
+                circularProjectError = e
+                emptyList()
+            }
     }
 
     /**
@@ -965,10 +965,12 @@ class LintDriver
         currentProject = project
 
         for (check in applicableDetectors) {
-            client.runReadAction(Runnable {
-                check.afterCheckEachProject(projectContext)
-                check.afterCheckRootProject(projectContext)
-            })
+            client.runReadAction(
+                Runnable {
+                    check.afterCheckEachProject(projectContext)
+                    check.afterCheckRootProject(projectContext)
+                }
+            )
             if (isCanceled) {
                 return
             }
@@ -1029,29 +1031,34 @@ class LintDriver
         if (project.isAndroidProject) {
             for (manifestFile in project.manifestFiles) {
                 val parser = client.xmlParser
-                client.runReadAction(Runnable {
-                    val context = createXmlContext(project, main, manifestFile, null, parser) ?: return@Runnable
-                    project.readManifest(context.document)
-                    if ((!project.isLibrary || main != null &&
-                                main.isMergingManifests) && scope.contains(Scope.MANIFEST)
-                    ) {
-                        val detectors = scopeDetectors[Scope.MANIFEST]
-                        if (detectors != null) {
-                            val xmlDetectors = ArrayList<XmlScanner>(detectors.size)
-                            for (detector in detectors) {
-                                if (detector is XmlScanner) {
-                                    xmlDetectors.add(detector)
+                client.runReadAction(
+                    Runnable {
+                        val context = createXmlContext(project, main, manifestFile, null, parser)
+                            ?: return@Runnable
+                        project.readManifest(context.document)
+                        if ((
+                            !project.isLibrary || main != null &&
+                                main.isMergingManifests
+                            ) && scope.contains(Scope.MANIFEST)
+                        ) {
+                            val detectors = scopeDetectors[Scope.MANIFEST]
+                            if (detectors != null) {
+                                val xmlDetectors = ArrayList<XmlScanner>(detectors.size)
+                                for (detector in detectors) {
+                                    if (detector is XmlScanner) {
+                                        xmlDetectors.add(detector)
+                                    }
                                 }
-                            }
 
-                            val v = ResourceVisitor(parser, xmlDetectors, null)
-                            fireEvent(EventType.SCANNING_FILE, context)
-                            v.visitFile(context)
-                            fileCount++
-                            resourceFileCount++
+                                val v = ResourceVisitor(parser, xmlDetectors, null)
+                                fireEvent(EventType.SCANNING_FILE, context)
+                                v.visitFile(context)
+                                fileCount++
+                                resourceFileCount++
+                            }
                         }
                     }
-                })
+                )
             }
         }
 
@@ -1204,55 +1211,59 @@ class LintDriver
             }
             val gradleKtsContexts = uastSourceList?.gradleKtsContexts ?: emptyList()
             for (context in gradleKtsContexts) {
-                client.runReadAction(Runnable {
-                    // Gradle Kotlin Script? Use Java parsing mechanism.
-                    val uFile = context.uastParser.parse(context)
-                    if (uFile != null) {
-                        context.setJavaFile(uFile.psi) // needed for getLocation
-                        context.uastFile = uFile
-                        fireEvent(EventType.SCANNING_FILE, context)
+                client.runReadAction(
+                    Runnable {
+                        // Gradle Kotlin Script? Use Java parsing mechanism.
+                        val uFile = context.uastParser.parse(context)
+                        if (uFile != null) {
+                            context.setJavaFile(uFile.psi) // needed for getLocation
+                            context.uastFile = uFile
+                            fireEvent(EventType.SCANNING_FILE, context)
 
-                        val uastVisitor = UastGradleVisitor(context)
-                        val gradleContext =
-                            GradleContext(uastVisitor, this, project, main, context.file)
-                        fireEvent(EventType.SCANNING_FILE, context)
-                        for (detector in detectors) {
-                            detector.beforeCheckFile(context)
+                            val uastVisitor = UastGradleVisitor(context)
+                            val gradleContext =
+                                GradleContext(uastVisitor, this, project, main, context.file)
+                            fireEvent(EventType.SCANNING_FILE, context)
+                            for (detector in detectors) {
+                                detector.beforeCheckFile(context)
+                            }
+
+                            uastVisitor.visitBuildScript(gradleContext, gradleScanners)
+                            for (scanner in customVisitedGradleScanners) {
+                                scanner.visitBuildScript(context)
+                            }
+                            for (detector in detectors) {
+                                detector.afterCheckFile(context)
+                            }
+
+                            context.setJavaFile(null)
+                            context.uastFile = null
                         }
 
-                        uastVisitor.visitBuildScript(gradleContext, gradleScanners)
-                        for (scanner in customVisitedGradleScanners) {
-                            scanner.visitBuildScript(context)
-                        }
-                        for (detector in detectors) {
-                            detector.afterCheckFile(context)
-                        }
-
-                        context.setJavaFile(null)
-                        context.uastFile = null
+                        fileCount++
                     }
-
-                    fileCount++
-                })
+                )
             }
             for (file in files) {
                 if (file.path.endsWith(DOT_GRADLE)) {
-                    client.runReadAction(Runnable {
-                        val gradleVisitor = project.client.getGradleVisitor()
-                        val context = GradleContext(gradleVisitor, this, project, main, file)
-                        fireEvent(EventType.SCANNING_FILE, context)
-                        for (detector in detectors) {
-                            detector.beforeCheckFile(context)
+                    client.runReadAction(
+                        Runnable {
+                            val gradleVisitor = project.client.getGradleVisitor()
+                            val context = GradleContext(gradleVisitor, this, project, main, file)
+                            fireEvent(EventType.SCANNING_FILE, context)
+                            for (detector in detectors) {
+                                detector.beforeCheckFile(context)
+                            }
+                            gradleVisitor.visitBuildScript(context, gradleScanners)
+                            for (scanner in customVisitedGradleScanners) {
+                                scanner.visitBuildScript(context)
+                            }
+                            for (detector in detectors) {
+                                detector.afterCheckFile(context)
+                            }
+                            fileCount++
                         }
-                        gradleVisitor.visitBuildScript(context, gradleScanners)
-                        for (scanner in customVisitedGradleScanners) {
-                            scanner.visitBuildScript(context)
-                        }
-                        for (detector in detectors) {
-                            detector.afterCheckFile(context)
-                        }
-                        fileCount++
-                    })
+                    )
                 }
             }
         }
@@ -1359,8 +1370,9 @@ class LintDriver
         classEntries = if (classFolders.isEmpty()) {
             val message = String.format(
                 "No `.class` files were found in project \"%1\$s\", " +
-                        "so none of the classfile based checks could be run. " +
-                        "Does the project need to be built first?", project.name
+                    "so none of the classfile based checks could be run. " +
+                    "Does the project need to be built first?",
+                project.name
             )
             LintClient.report(
                 client = client, issue = IssueRegistry.LINT_ERROR, message = message,
@@ -1487,11 +1499,11 @@ class LintDriver
                             oldRootLength = sourceName.length
                         }
                         if (newRootLength != oldRootLength || !sourceName.regionMatches(
-                                0,
-                                newName,
-                                0,
-                                newRootLength
-                            )
+                            0,
+                            newName,
+                            0,
+                            newRootLength
+                        )
                         ) {
                             sourceContents = null
                         }
@@ -1978,21 +1990,25 @@ class LintDriver
             Arrays.sort(files)
             for (file in files) {
                 if (isXmlFile(file)) {
-                    client.runReadAction(Runnable {
-                        val context = createXmlContext(project, main, file, type, parser) ?: return@Runnable
-                        fireEvent(EventType.SCANNING_FILE, context)
-                        visitor.visitFile(context)
-                        fileCount++
-                        resourceFileCount++
-                    })
+                    client.runReadAction(
+                        Runnable {
+                            val context = createXmlContext(project, main, file, type, parser)
+                                ?: return@Runnable
+                            fireEvent(EventType.SCANNING_FILE, context)
+                            visitor.visitFile(context)
+                            fileCount++
+                            resourceFileCount++
+                        }
+                    )
                 } else if (binaryChecks != null &&
                     (isBitmapFile(file) || type == ResourceFolderType.RAW)
                 ) {
-                    val context = object : ResourceContext(this@LintDriver, project, main, file, type, "") {
-                        override val resourceFolder: File?
-                            // Like super, but for the parent folder instead of the context file
-                            get() = if (resourceFolderType != null) file.parentFile else null
-                    }
+                    val context =
+                        object : ResourceContext(this@LintDriver, project, main, file, type, "") {
+                            override val resourceFolder: File?
+                                // Like super, but for the parent folder instead of the context file
+                                get() = if (resourceFolderType != null) file.parentFile else null
+                        }
                     fireEvent(EventType.SCANNING_FILE, context)
                     visitor.visitBinaryResource(context)
                     fileCount++
@@ -2057,13 +2073,16 @@ class LintDriver
                     val visitor = getVisitor(type, xmlDetectors, binaryChecks)
                     if (visitor != null) {
                         val parser = visitor.parser
-                        client.runReadAction(Runnable {
-                            val context = createXmlContext(project, main, file, type, parser) ?: return@Runnable
-                            fireEvent(EventType.SCANNING_FILE, context)
-                            visitor.visitFile(context)
-                            fileCount++
-                            resourceFileCount++
-                        })
+                        client.runReadAction(
+                            Runnable {
+                                val context = createXmlContext(project, main, file, type, parser)
+                                    ?: return@Runnable
+                                fireEvent(EventType.SCANNING_FILE, context)
+                                visitor.visitFile(context)
+                                fileCount++
+                                resourceFileCount++
+                            }
+                        )
                     }
                 }
             } else if (binaryChecks != null && file.isFile && isBitmapFile(file)) {
@@ -2209,7 +2228,7 @@ class LintDriver
         private fun unsupported(): Nothing =
             throw UnsupportedOperationException(
                 "This method should not be called by lint " +
-                        "detectors; it is intended only for usage by the lint infrastructure"
+                    "detectors; it is intended only for usage by the lint infrastructure"
             )
 
         // Everything else just delegates to the embedding lint client
@@ -2702,7 +2721,7 @@ class LintDriver
 
         var currentScope = scope
         val checkComments = client.checkForSuppressComments() &&
-                context != null && context.containsCommentSuppress()
+            context != null && context.containsCommentSuppress()
         while (currentScope != null) {
             if (currentScope is UAnnotated) {
                 if (isSuppressed(issue, currentScope)) {
@@ -2804,7 +2823,7 @@ class LintDriver
 
         var currentScope = scope
         val checkComments = client.checkForSuppressComments() &&
-                context != null && context.containsCommentSuppress()
+            context != null && context.containsCommentSuppress()
         while (currentScope != null) {
             if (currentScope is PsiModifierListOwner) {
                 if (isAnnotatedWithSuppress(context, issue, currentScope)) {
@@ -2861,7 +2880,7 @@ class LintDriver
 
         var currentScope: UAnnotated = scope
         val checkComments = client.checkForSuppressComments() &&
-                context != null && context.containsCommentSuppress()
+            context != null && context.containsCommentSuppress()
         while (true) {
             if (isSuppressed(issue, currentScope)) {
                 if (customSuppressNames != null && context != null) {
@@ -2951,7 +2970,7 @@ class LintDriver
             currentNode = currentNode.ownerElement
         }
         val checkComments = client.checkForSuppressComments() &&
-                context != null && context.containsCommentSuppress()
+            context != null && context.containsCommentSuppress()
         while (currentNode != null) {
             if (currentNode.nodeType == org.w3c.dom.Node.ELEMENT_NODE) {
                 val element = currentNode as Element
@@ -3056,7 +3075,7 @@ class LintDriver
                     return false
                 }
                 throwable is AssertionError &&
-                        throwable.message?.startsWith("Already disposed: ") == true -> {
+                    throwable.message?.startsWith("Already disposed: ") == true -> {
                     // Editor is in the middle of analysis when project
                     // is created. This isn't common, but is often triggered by Studio UI
                     // testsuite which rapidly opens, edits and closes projects.
@@ -3101,13 +3120,13 @@ class LintDriver
             sb.append("`")
             sb.append(
                 "\n\nYou can set environment variable `LINT_PRINT_STACKTRACE=true` to " +
-                        "dump a full stacktrace to stdout."
+                    "dump a full stacktrace to stdout."
             )
 
             val throwableMessage = throwable.message
             if (throwableMessage != null && throwableMessage.startsWith(
-                    "loader constraint violation: when resolving field \"QUALIFIER_SPLITTER\" the class loader"
-                )
+                "loader constraint violation: when resolving field \"QUALIFIER_SPLITTER\" the class loader"
+            )
             ) {
                 // Rewrite error message
                 sb.setLength(0)
@@ -3387,11 +3406,13 @@ class LintDriver
 
             for (annotation in getAnnotations(context, modifierListOwner)) {
                 val fqcn = annotation.qualifiedName
-                if (fqcn != null && (fqcn == FQCN_SUPPRESS_LINT ||
-                            fqcn == SUPPRESS_WARNINGS_FQCN ||
-                            fqcn == KOTLIN_SUPPRESS ||
-                            // when missing imports
-                            fqcn == SUPPRESS_LINT)
+                if (fqcn != null && (
+                    fqcn == FQCN_SUPPRESS_LINT ||
+                        fqcn == SUPPRESS_WARNINGS_FQCN ||
+                        fqcn == KOTLIN_SUPPRESS ||
+                        // when missing imports
+                        fqcn == SUPPRESS_LINT
+                    )
                 ) {
                     val parameterList = annotation.parameterList
                     for (pair in parameterList.attributes) {
@@ -3459,11 +3480,13 @@ class LintDriver
 
             for (annotation in annotations) {
                 val fqcn = annotation.qualifiedName
-                if (fqcn != null && (fqcn == FQCN_SUPPRESS_LINT ||
-                            fqcn == SUPPRESS_WARNINGS_FQCN ||
-                            fqcn == KOTLIN_SUPPRESS ||
-                            // when missing imports
-                            fqcn == SUPPRESS_LINT)
+                if (fqcn != null && (
+                    fqcn == FQCN_SUPPRESS_LINT ||
+                        fqcn == SUPPRESS_WARNINGS_FQCN ||
+                        fqcn == KOTLIN_SUPPRESS ||
+                        // when missing imports
+                        fqcn == SUPPRESS_LINT
+                    )
                 ) {
                     val attributeList = annotation.attributeValues
                     for (attribute in attributeList) {

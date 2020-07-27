@@ -40,7 +40,11 @@ class BlockedDependencies(val project: Project) {
      * or null if this dependency is not forbidden. If [remove] is true, the
      * dependency is removed from the map after this.
      */
-    fun checkDependency(groupId: String, artifactId: String, remove: Boolean): List<LintModelDependency>? {
+    fun checkDependency(
+        groupId: String,
+        artifactId: String,
+        remove: Boolean
+    ): List<LintModelDependency>? {
         val map = this.map ?: return null
         val coordinate = "$groupId:$artifactId"
         val path = map[coordinate] ?: return null

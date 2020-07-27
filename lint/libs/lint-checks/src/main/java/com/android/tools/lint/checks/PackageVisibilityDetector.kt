@@ -170,7 +170,8 @@ class PackageVisibilityDetector : Detector(), XmlScanner, SourceCodeScanner {
         val QUERY_ALL_PACKAGES_PERMISSION = Issue.create(
             id = "QueryAllPackagesPermission",
             briefDescription = "Using the QUERY_ALL_PACKAGES permission",
-            explanation = """
+            explanation =
+                """
             If you need to query or interact with other installed apps, you should be using a \
             `<queries>` declaration in your manifest. Using the QUERY_ALL_PACKAGES permission in \
             order to see all installed apps is rarely necessary, and most apps on Google Play are \
@@ -191,7 +192,8 @@ class PackageVisibilityDetector : Detector(), XmlScanner, SourceCodeScanner {
         val QUERY_PERMISSIONS_NEEDED = Issue.create(
             id = "QueryPermissionsNeeded",
             briefDescription = "Using APIs affected by query permissions",
-            explanation = """
+            explanation =
+                """
             Apps that target Android 11 cannot query or interact with other installed apps \
             by default. If you need to query or interact with other installed apps, you may need \
             to add a `<queries>` declaration in your manifest.

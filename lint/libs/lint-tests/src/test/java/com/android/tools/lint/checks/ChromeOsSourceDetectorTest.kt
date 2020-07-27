@@ -25,7 +25,9 @@ class ChromeOsSourceDetectorTest : AbstractCheckTest() {
     }
 
     fun testValidSetRequestedOrientation() {
-        lint().files(java("""
+        lint().files(
+            java(
+                """
             package test.pkg;
 
             import android.app.Activity;
@@ -44,7 +46,9 @@ class ChromeOsSourceDetectorTest : AbstractCheckTest() {
                     setRequestedOrientation(SCREEN_ORIENTATION_FULL_SENSOR);
                 }
             }
-        """).indented())
+        """
+            ).indented()
+        )
             .issues(ChromeOsSourceDetector.UNSUPPORTED_LOCKED_ORIENTATION)
             .run()
             .expectClean()
@@ -52,14 +56,17 @@ class ChromeOsSourceDetectorTest : AbstractCheckTest() {
 
     fun testInvalidSetRequestedOrientation() {
 
-        val expected = """
+        val expected =
+            """
         src/test/pkg/MainActivity.java:15: Warning: You should not lock orientation of your activities, so that you can support a good user experience for any device or orientation [SourceLockedOrientationActivity]
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         0 errors, 1 warnings
         """
 
-        lint().files(java("""
+        lint().files(
+            java(
+                """
             package test.pkg;
 
             import android.app.Activity;
@@ -77,14 +84,18 @@ class ChromeOsSourceDetectorTest : AbstractCheckTest() {
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                 }
             }
-        """).indented())
+        """
+            ).indented()
+        )
             .issues(ChromeOsSourceDetector.UNSUPPORTED_LOCKED_ORIENTATION)
             .run()
             .expect(expected)
     }
 
     fun testValidCameraSystemFeature() {
-        lint().files(java("""
+        lint().files(
+            java(
+                """
             package test.pkg;
 
             import android.app.Activity;
@@ -102,7 +113,9 @@ class ChromeOsSourceDetectorTest : AbstractCheckTest() {
                     getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
                 }
             }
-        """).indented())
+        """
+            ).indented()
+        )
             .issues(ChromeOsSourceDetector.UNSUPPORTED_CAMERA_FEATURE)
             .run()
             .expectClean()
@@ -110,14 +123,17 @@ class ChromeOsSourceDetectorTest : AbstractCheckTest() {
 
     fun testInvalidCameraSystemFeature() {
 
-        val expected = """
+        val expected =
+            """
             src/test/pkg/MainActivity.java:15: Warning: You should look for any camera available on the device, not just the rear [UnsupportedChromeOsCameraSystemFeature]
                     getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 1 warnings
         """
 
-        lint().files(java("""
+        lint().files(
+            java(
+                """
             package test.pkg;
 
             import android.app.Activity;
@@ -135,7 +151,9 @@ class ChromeOsSourceDetectorTest : AbstractCheckTest() {
                     getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
                 }
             }
-        """).indented())
+        """
+            ).indented()
+        )
             .issues(ChromeOsSourceDetector.UNSUPPORTED_CAMERA_FEATURE)
             .run()
             .expect(expected)

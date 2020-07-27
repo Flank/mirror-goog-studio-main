@@ -46,7 +46,8 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
                         mAppCompatJar,
                         mAppCompatTest,
                         mIntermediateActivity,
-                        // Stubs just to be able to do type resolution without needing the full appcompat jar
+                        // Stubs just to be able to do type resolution without needing the full
+                        // appcompat jar
                         mActionBarActivity,
                         mActionMode)
                 .run()
@@ -108,7 +109,8 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
                                         + "}\n"),
                         mAppCompatJar,
                         mIntermediateActivity,
-                        // Stubs just to be able to do type resolution without needing the full appcompat jar
+                        // Stubs just to be able to do type resolution without needing the full
+                        // appcompat jar
                         mActionBarActivity,
                         mActionMode)
                 .run()

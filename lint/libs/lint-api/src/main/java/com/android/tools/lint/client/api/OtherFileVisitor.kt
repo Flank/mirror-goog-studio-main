@@ -71,9 +71,9 @@ internal class OtherFileVisitor(private val detectors: List<Detector>) {
                 val files = ArrayList<File>(subset.size)
                 for (file in subset) {
                     if (SdkUtils.endsWith(
-                            file.path,
-                            DOT_XML
-                        ) && file.name != ANDROID_MANIFEST_XML
+                        file.path,
+                        DOT_XML
+                    ) && file.name != ANDROID_MANIFEST_XML
                     ) {
                         files.add(file)
                     }

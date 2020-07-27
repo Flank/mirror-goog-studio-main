@@ -122,8 +122,8 @@ public class BadHostnameVerifierDetector extends Detector implements SourceCodeS
             if (argument != null) {
                 // TODO: Only do this if certain that there isn't some intermediate
                 // assignment, as exposed by the unit test
-                //Object value = ConstantEvaluator.evaluate(context, argument);
-                //if (Boolean.TRUE.equals(value)) {
+                // Object value = ConstantEvaluator.evaluate(context, argument);
+                // if (Boolean.TRUE.equals(value)) {
                 if (UastLiteralUtils.isTrueLiteral(argument)) {
                     complex = false;
                 } else {

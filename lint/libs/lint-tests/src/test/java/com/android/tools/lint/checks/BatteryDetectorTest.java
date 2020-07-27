@@ -59,7 +59,8 @@ public class BatteryDetectorTest extends AbstractCheckTest {
                                         + "        <intent-filter>\n"
                                         + "            <action android:name=\"android.net.conn.CONNECTIVITY_CHANGE\" />\n"
                                         + "            <action android:name=\"android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS\" />\n"
-                                        // as shown in http://stackoverflow.com/questions/3015448/where-is-android-camera-new-picture-defined
+                                        // as shown in
+                                        // http://stackoverflow.com/questions/3015448/where-is-android-camera-new-picture-defined
                                         + "            <action android:name=\"com.android.camera.NEW_PICTURE\" />\n"
                                         + "            <action android:name=\"android.hardware.action.NEW_PICTURE\" />\n"
                                         + "            <data android:mimeType=\"image/*\" />"

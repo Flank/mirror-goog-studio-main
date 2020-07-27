@@ -59,7 +59,8 @@ class LintBaselineTest {
         baselineFile.deleteOnExit()
 
         @Language("XML")
-        val baselineContents = """<?xml version="1.0" encoding="UTF-8"?>
+        val baselineContents =
+            """<?xml version="1.0" encoding="UTF-8"?>
 <issues format="5" by="lint unittest">
 
     <issue
@@ -283,8 +284,8 @@ There are quickfixes to automatically extract this hardcoded string into a resou
                 DefaultPosition(6, 4, 198), DefaultPosition(6, 42, 236)
             ),
             "<uses-sdk> tag should specify a target API level (the highest verified \n" +
-                    "version; when running on later versions, compatibility behaviors may \n" +
-                    "be enabled) with android:targetSdkVersion=\"?\"",
+                "version; when running on later versions, compatibility behaviors may \n" +
+                "be enabled) with android:targetSdkVersion=\"?\"",
             Severity.WARNING, null
         )
         baseline.close()
@@ -293,7 +294,8 @@ There are quickfixes to automatically extract this hardcoded string into a resou
             .replace(File.separatorChar, '/')
 
         @Language("XML")
-        val expected = ("""<?xml version="1.0" encoding="UTF-8"?>
+        val expected = (
+            """<?xml version="1.0" encoding="UTF-8"?>
 <issues format="5" by="lint unittest">
 
     <issue
@@ -313,7 +315,8 @@ There are quickfixes to automatically extract this hardcoded string into a resou
     </issue>
 
 </issues>
-""")
+"""
+            )
         assertThat(actual).isEqualTo(expected)
 
         // Now load the baseline back in and make sure we can match entries correctly
@@ -336,8 +339,8 @@ There are quickfixes to automatically extract this hardcoded string into a resou
                 DefaultPosition(6, 4, 198), DefaultPosition(6, 42, 236)
             ),
             "<uses-sdk> tag should specify a target API level (the highest verified \n" +
-                    "version; when running on later versions, compatibility behaviors may \n" +
-                    "be enabled) with android:targetSdkVersion=\"?\"",
+                "version; when running on later versions, compatibility behaviors may \n" +
+                "be enabled) with android:targetSdkVersion=\"?\"",
             Severity.WARNING, null
         )
         assertThat(found).isTrue()
@@ -382,18 +385,18 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         // before but not repeated now) should be missing.
         assertThat(actual).isEqualTo(
             "" +
-                    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                    "<issues format=\"5\" by=\"lint unittest\">\n" +
-                    "\n" +
-                    "    <issue\n" +
-                    "        id=\"HardcodedText\"\n" +
-                    "        message=\"Hardcoded string &quot;Fooo&quot;, should use `@string` resource\">\n" +
-                    "        <location\n" +
-                    "            file=\"../project1/my/source/file.txt\"\n" +
-                    "            line=\"1\"/>\n" +
-                    "    </issue>\n" +
-                    "\n" +
-                    "</issues>\n"
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<issues format=\"5\" by=\"lint unittest\">\n" +
+                "\n" +
+                "    <issue\n" +
+                "        id=\"HardcodedText\"\n" +
+                "        message=\"Hardcoded string &quot;Fooo&quot;, should use `@string` resource\">\n" +
+                "        <location\n" +
+                "            file=\"../project1/my/source/file.txt\"\n" +
+                "            line=\"1\"/>\n" +
+                "    </issue>\n" +
+                "\n" +
+                "</issues>\n"
         )
     }
 }

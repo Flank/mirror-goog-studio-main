@@ -62,7 +62,7 @@ class SecureRandomDetector : Detector(), SourceCodeScanner {
                 context.report(
                     ISSUE, node, context.getLocation(node),
                     "Do not call `setSeed()` on a `SecureRandom` with a fixed seed: " +
-                            "it is not secure. Use `getSeed()`."
+                        "it is not secure. Use `getSeed()`."
                 )
             } else {
                 // Called with a simple System.currentTimeMillis() seed or something like that?
@@ -73,8 +73,8 @@ class SecureRandomDetector : Detector(), SourceCodeScanner {
                         context.report(
                             ISSUE, node, context.getLocation(node),
                             "It is dangerous to seed `SecureRandom` with the current " +
-                                    "time because that value is more predictable to " +
-                                    "an attacker than the default seed"
+                                "time because that value is more predictable to " +
+                                "an attacker than the default seed"
                         )
                     }
                 }
@@ -107,7 +107,8 @@ class SecureRandomDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "SecureRandom",
             briefDescription = "Using a fixed seed with `SecureRandom`",
-            explanation = """
+            explanation =
+                """
                 Specifying a fixed seed will cause the instance to return a predictable \
                 sequence of numbers. This may be useful for testing but it is not appropriate \
                 for secure use.

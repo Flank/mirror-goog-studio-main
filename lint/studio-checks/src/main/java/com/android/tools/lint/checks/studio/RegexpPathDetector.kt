@@ -49,7 +49,8 @@ class RegexpPathDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "RegexPath",
             briefDescription = "Using Path as Regular Expression",
-            explanation = """
+            explanation =
+                """
                 Be careful when passing in a path into a method which expects \
                 a regular expression. Your code may work on Linux or OSX, but on \
                 Windows the file separator is a back slash, which in a regular \
@@ -103,8 +104,8 @@ class RegexpPathDetector : Detector(), SourceCodeScanner {
             context.report(
                 ISSUE, node, context.getLocation(node),
                 "Passing a path to a parameter which expects a regular expression " +
-                        "is dangerous; on Windows path separators will look like escapes. " +
-                        "Wrap path with `Pattern.quote`."
+                    "is dangerous; on Windows path separators will look like escapes. " +
+                    "Wrap path with `Pattern.quote`."
             )
         }
     }
@@ -144,8 +145,9 @@ class RegexpPathDetector : Detector(), SourceCodeScanner {
                 return true
             }
             if (lastAssignment is UQualifiedReferenceExpression &&
-                    lastAssignment.selector is UCallExpression &&
-                (lastAssignment.selector as UCallExpression).methodName == "getPath") {
+                lastAssignment.selector is UCallExpression &&
+                (lastAssignment.selector as UCallExpression).methodName == "getPath"
+            ) {
                 return true
             }
         }

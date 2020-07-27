@@ -201,12 +201,15 @@ class SuppressLintTest {
                         forbidden()
                     }"""
                 ).indented(),
-                xml("lint.xml", """
+                xml(
+                    "lint.xml",
+                    """
                     <lint>
                         <issue id="all" severity="ignore" />
                         <issue id="_SecureIssue" severity="ignore" />
                     </lint>
-                """).indented()
+                """
+                ).indented()
             )
             .issues(MySecurityDetector.TEST_ISSUE)
             .sdkHome(TestUtils.getSdk())
@@ -232,13 +235,16 @@ class SuppressLintTest {
                         forbidden()
                     }"""
                 ).indented(),
-                xml("lint.xml", """
+                xml(
+                    "lint.xml",
+                    """
                     <lint>
                         <!-- Not specifically targeting the forbidden issue with "all"
                          so we skip it for this issue but don't complain about it -->
                         <issue id="all" severity="ignore" />
                     </lint>
-                """).indented()
+                """
+                ).indented()
             )
             .issues(MySecurityDetector.TEST_ISSUE)
             .sdkHome(TestUtils.getSdk())
@@ -266,7 +272,10 @@ class SuppressLintTest {
                 ).indented()
             )
             .issues(MySecurityDetector.TEST_ISSUE)
-            .baseline(xml("baseline.xml", """
+            .baseline(
+                xml(
+                    "baseline.xml",
+                    """
                 <issues format="5" by="lint 3.3.0">
                     <issue
                         id="_SecureIssue"
@@ -284,7 +293,9 @@ class SuppressLintTest {
                             column="5"/>
                     </issue>
                 </issues>
-            """).indented())
+            """
+                ).indented()
+            )
             .sdkHome(TestUtils.getSdk())
             .run()
             .expect(

@@ -66,8 +66,8 @@ class WebViewApiAvailabilityDetector : Detector(), SourceCodeScanner {
             id = "WebViewApiAvailability",
             briefDescription = "WebView API Availability",
             explanation = "The `androidx.webkit` library is a static library you can add to your " +
-                    "Android application allowing you to use new APIs on older platform " +
-                    "versions, targeting more devices.",
+                "Android application allowing you to use new APIs on older platform " +
+                "versions, targeting more devices.",
             category = Category.CORRECTNESS,
             priority = 7,
             severity = Severity.WARNING,

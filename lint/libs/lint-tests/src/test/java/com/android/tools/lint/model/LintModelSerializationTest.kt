@@ -1118,15 +1118,17 @@ class LintModelSerializationTest {
 
         for (fileType in TargetFile.values()) {
             for (variant in module.variants) {
-                for (artifactName in listOf(
-                    "mainArtifact",
-                    "testArtifact",
-                    "androidTestArtifact"
-                )) {
+                for (
+                    artifactName in listOf(
+                        "mainArtifact",
+                        "testArtifact",
+                        "androidTestArtifact"
+                    )
+                ) {
                     val mapKey = getMapKey(fileType, variant.name, artifactName)
                     val writtenXml: String = xml[mapKey] ?: continue
                     assertValidXml(writtenXml)
-                    val expected = remainingExpectedXml.remove(mapKey)?: continue
+                    val expected = remainingExpectedXml.remove(mapKey) ?: continue
                     assertThat(writtenXml.cleanup()).isEqualTo(expected.trimIndent().trim())
                 }
             }
@@ -1134,10 +1136,14 @@ class LintModelSerializationTest {
         assertThat(remainingExpectedXml).isEmpty()
 
         val newModule =
-            LintModelSerialization.readModule(LintModelSerializationStringAdapter(reader = { target, variantName, artifact ->
-                val contents = xml[getMapKey(target, variantName, artifact)]!!
-                StringReader(contents)
-            }))
+            LintModelSerialization.readModule(
+                LintModelSerializationStringAdapter(
+                    reader = { target, variantName, artifact ->
+                        val contents = xml[getMapKey(target, variantName, artifact)]!!
+                        StringReader(contents)
+                    }
+                )
+            )
         val newXml = writeModule(newModule)
         for ((key, contents) in xml) {
             assertEquals(
@@ -1184,10 +1190,12 @@ class LintModelSerializationTest {
         val map = mutableMapOf<String, StringWriter>()
         LintModelSerialization.writeModule(
             module,
-            LintModelSerializationStringAdapter(writer = { target, variantName, artifactName ->
-                val key = getMapKey(target, variantName, artifactName)
-                map[key] ?: StringWriter().also { map[key] = it }
-            })
+            LintModelSerializationStringAdapter(
+                writer = { target, variantName, artifactName ->
+                    val key = getMapKey(target, variantName, artifactName)
+                    map[key] ?: StringWriter().also { map[key] = it }
+                }
+            )
         )
         return map.mapValues {
             it.value.toString()
@@ -1196,9 +1204,14 @@ class LintModelSerializationTest {
 
     private fun writeVariant(variant: LintModelVariant): String {
         val writer = StringWriter()
-        LintModelSerialization.writeVariant(variant, LintModelSerializationStringAdapter(writer = { _, _, _ ->
-            writer
-        }))
+        LintModelSerialization.writeVariant(
+            variant,
+            LintModelSerializationStringAdapter(
+                writer = { _, _, _ ->
+                    writer
+                }
+            )
+        )
         return writer.toString()
     }
 
@@ -1239,4 +1252,3 @@ class LintModelSerializationTest {
     }
 }
 private const val ROOT: String = "\uFF04ROOT"
-

@@ -168,7 +168,7 @@ class LeakDetector : Detector(), SourceCodeScanner {
                 ) {
                     val message =
                         "Do not place Android context classes in static fields; " +
-                                "this is a memory leak"
+                            "this is a memory leak"
                     report(node, modifierList, message)
                 }
             } else {
@@ -195,9 +195,9 @@ class LeakDetector : Detector(), SourceCodeScanner {
                             !isInitializedToAppContext(context, referenced, innerCls)
                         ) {
                             val message = "Do not place Android context classes in static " +
-                                    "fields (static reference to `${cls.name}` which has field " +
-                                    "`${referenced.name}` pointing to `${innerCls.name}`); this " +
-                                    "is a memory leak"
+                                "fields (static reference to `${cls.name}` which has field " +
+                                "`${referenced.name}` pointing to `${innerCls.name}`); this " +
+                                "is a memory leak"
                             report(node, modifierList, message)
                             break
                         }
@@ -317,7 +317,8 @@ class LeakDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "StaticFieldLeak",
             briefDescription = "Static Field Leaks",
-            explanation = """
+            explanation =
+                """
                 A static field will leak contexts.
 
                 Non-static inner classes have an implicit reference to their outer class. \
@@ -362,15 +363,17 @@ class LeakDetector : Detector(), SourceCodeScanner {
         }
 
         private fun isLeakCandidate(cls: PsiClass, evaluator: JavaEvaluator): Boolean {
-            return (evaluator.extendsClass(cls, CLASS_CONTEXT, false) &&
-                    !evaluator.extendsClass(cls, CLASS_APPLICATION, false)) ||
-                    evaluator.extendsClass(cls, CLASS_VIEW, false) ||
-                    evaluator.extendsClass(cls, CLASS_FRAGMENT, false) ||
-                    // From https://developer.android.com/topic/libraries/architecture/viewmodel:
-                    // Caution: A ViewModel must never reference a view, Lifecycle, or any
-                    // class that may hold a reference to the activity context
-                    evaluator.extendsClass(cls, CLASS_LIFECYCLE, false) ||
-                    evaluator.extendsClass(cls, CLASS_LIFECYCLE_OLD, false)
+            return (
+                evaluator.extendsClass(cls, CLASS_CONTEXT, false) &&
+                    !evaluator.extendsClass(cls, CLASS_APPLICATION, false)
+                ) ||
+                evaluator.extendsClass(cls, CLASS_VIEW, false) ||
+                evaluator.extendsClass(cls, CLASS_FRAGMENT, false) ||
+                // From https://developer.android.com/topic/libraries/architecture/viewmodel:
+                // Caution: A ViewModel must never reference a view, Lifecycle, or any
+                // class that may hold a reference to the activity context
+                evaluator.extendsClass(cls, CLASS_LIFECYCLE, false) ||
+                evaluator.extendsClass(cls, CLASS_LIFECYCLE_OLD, false)
         }
     }
 }

@@ -388,7 +388,8 @@ public class LintSyntaxHighlighter {
     }
 
     private static boolean isKotlinKeyword(@NonNull String keyword) {
-        // From https://github.com/JetBrains/kotlin/blob/master/core/descriptors/src/org/jetbrains/kotlin/renderer/KeywordStringsGenerated.java
+        // From
+        // https://github.com/JetBrains/kotlin/blob/master/core/descriptors/src/org/jetbrains/kotlin/renderer/KeywordStringsGenerated.java
         switch (keyword) {
             case "package":
             case "as":
@@ -488,9 +489,10 @@ public class LintSyntaxHighlighter {
                                 continue;
                             } else if (source.startsWith("![CDATA[", offset)) {
                                 // TODO: Syntax higlight this better
-                                //styles.put(offset - 1, STYLE_COMMENT);
+                                // styles.put(offset - 1, STYLE_COMMENT);
 
-                                // Skip CDATA text content; HTML text is irrelevant to this tokenizer
+                                // Skip CDATA text content; HTML text is irrelevant to this
+                                // tokenizer
                                 // anyway
                                 int end = source.indexOf("]]>", offset + 8);
                                 if (end == -1) {

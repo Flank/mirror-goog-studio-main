@@ -74,7 +74,8 @@ class MemoryLeakTest {
     private fun doAnalysis() {
         lint().files(
 
-            gradle("""
+            gradle(
+                """
                 apply plugin: 'com.android.application'
 
                 android {
@@ -91,9 +92,11 @@ class MemoryLeakTest {
                     // Higher version to accidentally pick up recent 1.1 version from local cache
                     implementation 'androidx.appcompat:appcompat:5.0.2'
                 }
-            """).indented(),
+            """
+            ).indented(),
 
-            kotlin("""
+            kotlin(
+                """
                 package com.gharrma.sampleapp
 
                 import androidx.appcompat.app.AppCompatActivity
@@ -113,9 +116,11 @@ class MemoryLeakTest {
                         }
                     }
                 }
-            """).indented(),
+            """
+            ).indented(),
 
-            java("""
+            java(
+                """
                 package com.gharrma.sampleapp;
 
                 public class Utils {
@@ -125,7 +130,8 @@ class MemoryLeakTest {
                         MainActivity.Companion.bar();
                     }
                 }
-            """).indented(),
+            """
+            ).indented(),
 
             xml(
                 "src/main/res/layout/activity_main.xml",
@@ -149,7 +155,7 @@ class MemoryLeakTest {
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
             """
-        ).indented(),
+            ).indented(),
             java(
                 """
                 // Stub to prevent MissingClass errors
@@ -166,7 +172,7 @@ class MemoryLeakTest {
             // Needed to allow GradleDetector to run.
             .networkData(
                 "http://search.maven.org/solrsearch/select" +
-                        "?q=g:%22androidx.appcompat%22+AND+a:%22appcompat%22&core=gav&wt=json",
+                    "?q=g:%22androidx.appcompat%22+AND+a:%22appcompat%22&core=gav&wt=json",
                 "" // Response doesn't matter for this test.
             )
 
@@ -191,14 +197,17 @@ class MemoryLeakTest {
 
         assertTrue(
             "Utility function `countLiveInstancesOf()` appears to be broken.",
-            countLiveInstancesOf(Object::class.java.name) > 0)
+            countLiveInstancesOf(Object::class.java.name) > 0
+        )
 
         assertTrue(
             "Detected Lint memory leak; KotlinCoreEnvironment is reachable",
-            countLiveInstancesOf(KotlinCoreEnvironment::class.java.name) == 0)
+            countLiveInstancesOf(KotlinCoreEnvironment::class.java.name) == 0
+        )
 
         assertTrue(
             "Detected Lint memory leak; PsiWhiteSpaceImpl is reachable",
-            countLiveInstancesOf(PsiWhiteSpaceImpl::class.java.name) == 0)
+            countLiveInstancesOf(PsiWhiteSpaceImpl::class.java.name) == 0
+        )
     }
 }

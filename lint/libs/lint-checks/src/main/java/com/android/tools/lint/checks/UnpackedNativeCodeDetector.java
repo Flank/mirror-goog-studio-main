@@ -176,15 +176,15 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector
             return;
         }
 
-        //compileSdkVersion must be >= 23
+        // compileSdkVersion must be >= 23
         boolean projectSupportsAttribute = context.getMainProject().getBuildSdk() >= 23;
 
-        //android gradle plugin must be 2.2.0+
+        // android gradle plugin must be 2.2.0+
         GradleVersion gradleVersion = context.getMainProject().getGradleModelVersion();
         boolean gradleSupportsAttribute =
                 MIN_GRADLE_VERSION.compareIgnoringQualifiers(gradleVersion) <= 0;
 
-        //suppress lint check if the compile SDK or the Gradle plugin are too old
+        // suppress lint check if the compile SDK or the Gradle plugin are too old
         mSuppress = !projectSupportsAttribute || !gradleSupportsAttribute;
     }
 

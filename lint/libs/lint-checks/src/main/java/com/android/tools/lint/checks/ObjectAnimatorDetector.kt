@@ -93,11 +93,13 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
     ) {
         val evaluator = context.evaluator
         if (!evaluator.isMemberInClass(method, "android.animation.ObjectAnimator") &&
-            !(method.name == "ofPropertyValuesHolder" &&
+            !(
+                method.name == "ofPropertyValuesHolder" &&
                     evaluator.isMemberInClass(
                         method,
                         "android.animation.ValueAnimator"
-                    ))
+                    )
+                )
         ) {
             return
         }
@@ -196,7 +198,7 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
                 propertyNameExpression,
                 bestMethod,
                 "The setter for this property does not match the " +
-                        "expected signature (`public void $methodName($expectedType arg`)",
+                    "expected signature (`public void $methodName($expectedType arg`)",
                 null
             )
         } else if (context.evaluator.isStatic(bestMethod)) {
@@ -211,10 +213,12 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
         } else {
             var owner: PsiModifierListOwner? = bestMethod
             while (owner != null) {
-                for (annotation in context.evaluator.getAllAnnotations(
-                    owner,
-                    false
-                )) {
+                for (
+                    annotation in context.evaluator.getAllAnnotations(
+                        owner,
+                        false
+                    )
+                ) {
                     if (KEEP_ANNOTATION.isEquals(annotation.qualifiedName)) {
                         return
                     }
@@ -237,8 +241,8 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
                 propertyNameExpression,
                 bestMethod,
                 "This method is accessed from an ObjectAnimator so it should be " +
-                        "annotated with `@Keep` to ensure that it is not discarded or renamed " +
-                        "in release builds",
+                    "annotated with `@Keep` to ensure that it is not discarded or renamed " +
+                    "in release builds",
                 fix().map().put(PsiMethod::class.java, bestMethod).build()
             )
         }
@@ -304,8 +308,8 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
                 assert(issue === MISSING_KEEP)
                 val secondaryMessage =
                     "The method referenced here (${method.name}) has " +
-                            "not been annotated with `@Keep` which means it could be " +
-                            "discarded or renamed in release builds"
+                        "not been annotated with `@Keep` which means it could be " +
+                        "discarded or renamed in release builds"
 
                 // If on the other hand we're in a separate compilation unit, we should
                 // draw attention to the problem
@@ -585,20 +589,20 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
                             location.withSecondary(
                                 uastParser.getLocation(javaContext, m),
                                 "" +
-                                        "This method is accessed via reflection from a " +
-                                        "MotionScene ($sceneName) so it should be " +
-                                        "annotated with `@Keep` to ensure that it is not " +
-                                        "discarded or renamed in release builds",
+                                    "This method is accessed via reflection from a " +
+                                    "MotionScene ($sceneName) so it should be " +
+                                    "annotated with `@Keep` to ensure that it is not " +
+                                    "discarded or renamed in release builds",
                                 selfExplanatory = true
                             )
                             context.report(
                                 MISSING_KEEP, element, location,
                                 "" +
-                                        "This attribute references a method or property in " +
-                                        "custom view $viewClass which is not annotated with " +
-                                        "`@Keep`; it should be annotated with `@Keep` to " +
-                                        "ensure that it is not discarded or renamed in " +
-                                        "release builds"
+                                    "This attribute references a method or property in " +
+                                    "custom view $viewClass which is not annotated with " +
+                                    "`@Keep`; it should be annotated with `@Keep` to " +
+                                    "ensure that it is not discarded or renamed in " +
+                                    "release builds"
                             )
                         }
                     }
@@ -627,7 +631,8 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
             Issue.create(
                 id = "AnimatorKeep",
                 briefDescription = "Missing @Keep for Animated Properties",
-                explanation = """
+                explanation =
+                    """
                     When you use property animators, properties can be accessed via reflection. \
                     Those methods should be annotated with @Keep to ensure that during release \
                     builds, the methods are not potentially treated as unused and removed, or \
@@ -649,7 +654,8 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
             Issue.create(
                 id = "ObjectAnimatorBinding",
                 briefDescription = "Incorrect ObjectAnimator Property",
-                explanation = """
+                explanation =
+                    """
                     This check cross references properties referenced by String from \
                     `ObjectAnimator` and `PropertyValuesHolder` method calls and ensures that \
                     the corresponding setter methods exist and have the right signatures.

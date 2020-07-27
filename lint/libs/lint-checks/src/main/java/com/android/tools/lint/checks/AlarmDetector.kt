@@ -44,7 +44,8 @@ class AlarmDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "ShortAlarm",
             briefDescription = "Short or Frequent Alarm",
-            explanation = """
+            explanation =
+                """
             Frequent alarms are bad for battery life. As of API 22, the `AlarmManager` will override \
             near-future and high-frequency alarm requests, delaying the alarm at least 5 seconds into the \
             future and ensuring that the repeat interval is at least 60 seconds.
@@ -85,7 +86,7 @@ class AlarmDetector : Detector(), SourceCodeScanner {
         val value = getLongValue(context, argument)
         if (value < min) {
             val message = "Value will be forced up to $min as of Android 5.1; " +
-                    "don't rely on this to be exact"
+                "don't rely on this to be exact"
             context.report(ISSUE, argument, context.getLocation(argument), message)
         }
     }

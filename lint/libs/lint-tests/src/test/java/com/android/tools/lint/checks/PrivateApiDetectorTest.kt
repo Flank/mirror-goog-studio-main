@@ -40,7 +40,8 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
             """
 
         lint().files(
-            java("""
+            java(
+                """
                 package test.pkg.myapplication;
 
                 import android.app.Activity;
@@ -54,13 +55,15 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
                         Class SystemProperties = cl.loadClass("android.os.SystemProperties");
                     }
                 }
-            """).indented()
+            """
+            ).indented()
         ).run().expect(expected)
     }
 
     fun testForNameOnSdkClass() {
         lint().files(
-            java("""
+            java(
+                """
                 package test.pkg.myapplication;
 
                 import android.app.Activity;
@@ -70,13 +73,14 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
                         Class.forName("android.view.View"); // OK
                     }
                 }
-            """).indented()
+            """
+            ).indented()
         ).run().expectClean()
     }
 
     fun testLoadClass() {
         val expected =
-                """
+            """
                 src/test/pkg/myapplication/ReflectionTest2.java:9: Warning: Accessing internal APIs via reflection is not supported and may not work on all devices or in the future [PrivateApi]
                         classLoader.loadClass("com.android.internal.widget.LockPatternUtils"); // ERROR
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -84,7 +88,8 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
                 """
 
         lint().files(
-            java("""
+            java(
+                """
                 package test.pkg.myapplication;
 
                 import android.app.Activity;
@@ -96,7 +101,8 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
                         classLoader.loadClass("com.android.internal.widget.LockPatternUtils"); // ERROR
                     }
                 }
-            """).indented()
+            """
+            ).indented()
         ).run().expect(expected)
     }
 
@@ -113,7 +119,8 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
             """
 
         lint().files(
-            java("""
+            java(
+                """
                 package test.pkg.myapplication;
 
                 import android.app.Activity;
@@ -124,7 +131,8 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
                         c.getDeclaredMethod("getKeyguardStoredPasswordQuality");
                     }
                 }
-            """).indented()
+            """
+            ).indented()
         ).run().expect(expected)
     }
 
@@ -141,7 +149,8 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
             """
 
         lint().files(
-            java("""
+            java(
+                """
                 package test.pkg.myapplication;
 
                 import android.app.Activity;
@@ -160,7 +169,8 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
                         Method m3 = tm.getClass().getDeclaredMethod("canChangeDtmfToneLength"); // OK
                     }
                 }
-            """).indented()
+            """
+            ).indented()
         ).run().expect(expected)
     }
 
@@ -180,7 +190,8 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
             """
 
         lint().files(
-            java("""
+            java(
+                """
                 package test.pkg.myapplication;
 
                 import android.app.Activity;
@@ -202,7 +213,8 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
                         Object am = IActivityManager.cast(getDefault.invoke(ActivityManagerNative, null));
                     }
                 }
-            """).indented()
+            """
+            ).indented()
         ).run().expect(expected)
     }
 
@@ -217,7 +229,8 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
             """
 
         lint().files(
-            java("""
+            java(
+                """
                 package test.pkg.myapplication;
 
                 import android.app.Activity;
@@ -233,7 +246,8 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
                         Log.e (TAG, "TestClass 1, String load end");
                     }
                 }
-            """).indented()
+            """
+            ).indented()
         ).run().expect(expected)
     }
 
@@ -275,7 +289,8 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
 
         lint().files(
             manifest().targetSdk(28),
-            java("""
+            java(
+                """
                 package test.pkg.application;
 
                 import android.content.res.AssetManager;
@@ -297,8 +312,10 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
                         Method m7 = activityClass.getDeclaredMethod("dispatchActivityPostCreated", bundleClass);
                     }
                 }
-            """),
-            kotlin("""
+            """
+            ),
+            kotlin(
+                """
                 package test.pkg.application;
 
                 import android.content.res.AssetManager
@@ -317,7 +334,8 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
 
                     }
                 }
-            """).indented()
+            """
+            ).indented()
         ).run().expect(expected)
     }
 
@@ -343,7 +361,8 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
             """.trimIndent()
         lint().files(
             manifest().targetSdk(28),
-            java("""
+            java(
+                """
                 package test.pkg.application;
 
                 import android.app.Activity;
@@ -361,7 +380,8 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
                         Method m5 = Activity.class.getDeclaredMethod("restoreManagedDialogs", android.os.Bundle.class); // GREY_MAX_O
                     }
                 }
-            """).indented()
+            """
+            ).indented()
         ).run().expect(expected)
     }
 
@@ -387,7 +407,8 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
             """.trimIndent()
         lint().files(
             manifest().targetSdk(28),
-            kotlin("""
+            kotlin(
+                """
                 package test.pkg.application;
 
                 import android.app.Activity
@@ -409,7 +430,8 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
                         }
                     }
                 }
-            """).indented()
+            """
+            ).indented()
         ).run().expect(expected)
     }
 }

@@ -918,7 +918,7 @@ public class TestLintClient extends LintCliClient {
 
         if (exception != null) {
             // Ensure that we get the full cause
-            //fail(exception.toString());
+            // fail(exception.toString());
             throw new RuntimeException(exception);
         }
     }

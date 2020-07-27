@@ -85,12 +85,12 @@ class StartDestinationDetectorTest : AbstractCheckTest() {
                                <fragment android:id="@+id/foo2"/>
                            </navigation>"""
             ).indented()
-            ).incremental("res/navigation/navigation.xml").run().expect(
+        ).incremental("res/navigation/navigation.xml").run().expect(
             "" +
-                    "res/navigation/navigation.xml:5: Warning: Invalid start destination @id/includedId [InvalidNavigation]\n" +
-                    "                             app:startDestination=\"@id/includedId\">\n" +
-                    "                                                   ~~~~~~~~~~~~~~\n" +
-                    "0 errors, 1 warnings"
+                "res/navigation/navigation.xml:5: Warning: Invalid start destination @id/includedId [InvalidNavigation]\n" +
+                "                             app:startDestination=\"@id/includedId\">\n" +
+                "                                                   ~~~~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings"
         )
     }
 
@@ -120,10 +120,10 @@ class StartDestinationDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             "" +
-                    "res/navigation/navigation.xml:2: Warning: No start destination specified [InvalidNavigation]\n" +
-                    "                           <navigation\n" +
-                    "                            ~~~~~~~~~~\n" +
-                    "0 errors, 1 warnings"
+                "res/navigation/navigation.xml:2: Warning: No start destination specified [InvalidNavigation]\n" +
+                "                           <navigation\n" +
+                "                            ~~~~~~~~~~\n" +
+                "0 errors, 1 warnings"
         )
     }
 
@@ -141,10 +141,10 @@ class StartDestinationDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             "" +
-                    "res/navigation/navigation.xml:5: Warning: Invalid start destination @id/bar [InvalidNavigation]\n" +
-                    "                             app:startDestination=\"@id/bar\">\n" +
-                    "                                                   ~~~~~~~\n" +
-                    "0 errors, 1 warnings"
+                "res/navigation/navigation.xml:5: Warning: Invalid start destination @id/bar [InvalidNavigation]\n" +
+                "                             app:startDestination=\"@id/bar\">\n" +
+                "                                                   ~~~~~~~\n" +
+                "0 errors, 1 warnings"
         )
     }
 }

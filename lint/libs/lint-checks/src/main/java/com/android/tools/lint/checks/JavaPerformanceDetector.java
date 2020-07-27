@@ -225,7 +225,7 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
                                 || typeName.equals(TYPE_LONG_WRAPPER)
                                 || typeName.equals(TYPE_DOUBLE_WRAPPER)
                                 || typeName.equals(TYPE_BYTE_WRAPPER))
-                        //&& node.astTypeReference().astParts().size() == 1
+                        // && node.astTypeReference().astParts().size() == 1
                         && node.getValueArgumentCount() == 1) {
                     String argument = node.getValueArguments().get(0).asSourceString();
 

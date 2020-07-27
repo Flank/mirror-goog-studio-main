@@ -44,7 +44,8 @@ class FragmentDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "ValidFragment",
             briefDescription = "Fragment not instantiatable",
-            explanation = """
+            explanation =
+                """
                 From the Fragment documentation:
                 **Every** fragment must have an empty constructor, so it can be instantiated \
                 when restoring its activity's state. It is strongly recommended that subclasses \

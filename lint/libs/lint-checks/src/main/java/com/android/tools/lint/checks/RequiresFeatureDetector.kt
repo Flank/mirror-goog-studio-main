@@ -100,7 +100,7 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
             context.report(
                 REQUIRES_FEATURE, usage, context.getLocation(usage),
                 "`${method.name}` should only be called if the feature `$name` is " +
-                        "present; to check call `$reference`"
+                    "present; to check call `$reference`"
             )
         }
     }
@@ -279,10 +279,12 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                             return true
                         }
                     }
-                } else if (current is UPolyadicExpression && (isAndedWithConditional(
+                } else if (current is UPolyadicExpression && (
+                    isAndedWithConditional(
                         current,
                         prev
-                    ) || isOredWithConditional(current, prev))
+                    ) || isOredWithConditional(current, prev)
+                    )
                 ) {
                     return true
                 } else if (current is USwitchClauseExpressionWithBody) {
@@ -331,8 +333,8 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                             val lambdaInvocation = match.get()
                             val newApiLookup = NameLookup(call.valueArguments)
                             if (lambdaInvocation != null && isWithinNameCheckConditional(
-                                    evaluator, lambdaInvocation, newApiLookup
-                                )
+                                evaluator, lambdaInvocation, newApiLookup
+                            )
                             ) {
                                 return true
                             }
@@ -592,7 +594,8 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
         val REQUIRES_FEATURE = Issue.create(
             id = "RequiresFeature",
             briefDescription = "Requires Feature",
-            explanation = """
+            explanation =
+                """
                 Some APIs require optional features to be present. This check makes sure that \
                 calls to these APIs are surrounded by a check which enforces this.""",
             category = Category.CORRECTNESS,

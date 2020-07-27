@@ -71,7 +71,8 @@ class LintFixPerformerTest : TestCase() {
 
     fun testSingleReplace() {
         val file = File("bogus.txt")
-        val source = """
+        val source =
+            """
             First line.
             Second line.
             Third line.
@@ -81,8 +82,9 @@ class LintFixPerformerTest : TestCase() {
         val fix =
             fix().replace().text("Second").range(range).with("2nd").autoFix().build()
         check(
-            file, source, fix, expected =
-            """
+            file, source, fix,
+            expected =
+                """
             First line.
             2nd line.
             Third line.""",
@@ -93,7 +95,8 @@ class LintFixPerformerTest : TestCase() {
     fun testMultipleReplaces() {
         // Ensures we reorder edits correctly
         val file = File("bogus.txt")
-        val source = """
+        val source =
+            """
             First line.
             Second line.
             Third line.
@@ -107,12 +110,14 @@ class LintFixPerformerTest : TestCase() {
         val fix3 =
             fix().replace().text("Second").range(range).with("2nd").autoFix().build()
         check(
-            file, source, fix1, fix2, fix3, expected =
-            """
+            file, source, fix1, fix2, fix3,
+            expected =
+                """
             1st line.
             2nd line.
-            3rd line.""", expectedOutput =
-            """
+            3rd line.""",
+            expectedOutput =
+                """
             Applied 3 edits across 1 files
             1: Replace with 3rd
             1: Replace with 2nd
@@ -124,7 +129,8 @@ class LintFixPerformerTest : TestCase() {
     fun testXmlSetAttribute() {
         val file = File("bogus.txt")
         @Language("XML")
-        val source = """
+        val source =
+            """
             <root>
                 <element1 attribute1="value1" />
                 <element2 attribute1="value1" attribute2="value2"/>
@@ -136,8 +142,9 @@ class LintFixPerformerTest : TestCase() {
             fix().set(SdkConstants.ANDROID_URI, "new_attribute", "new value")
                 .range(range).autoFix().build()
         check(
-            file, source, fix, expected =
-            """
+            file, source, fix,
+            expected =
+                """
             <root xmlns:android="http://schemas.android.com/apk/res/android">
                 <element1 attribute1="value1" android:new_attribute="new value"  />
                 <element2 attribute1="value1" attribute2="value2"/>
@@ -149,7 +156,8 @@ class LintFixPerformerTest : TestCase() {
     fun testXmlSetAttributeOrder1() {
         val file = File("bogus.txt")
         @Language("XML")
-        val source = """
+        val source =
+            """
             <root xmlns:android="http://schemas.android.com/apk/res/android">
                 <element1 android:layout_width="wrap_content" android:width="foo" />
             </root>
@@ -160,9 +168,10 @@ class LintFixPerformerTest : TestCase() {
             fix().set(SdkConstants.ANDROID_URI, "layout_height", "wrap_content")
                 .range(range).autoFix().build()
         check(
-            file, source, fix, expected =
+            file, source, fix,
+            expected =
 
-            """
+                """
             <root xmlns:android="http://schemas.android.com/apk/res/android">
                 <element1 android:layout_width="wrap_content" android:layout_height="wrap_content" android:width="foo" />
             </root>
@@ -173,7 +182,8 @@ class LintFixPerformerTest : TestCase() {
     fun testXmlSetAttributeOrder2() {
         val file = File("bogus.txt")
         @Language("XML")
-        val source = """
+        val source =
+            """
             <root xmlns:android="http://schemas.android.com/apk/res/android">
                 <element1 android:layout_width="wrap_content" android:width="foo" />
             </root>
@@ -184,8 +194,9 @@ class LintFixPerformerTest : TestCase() {
             fix().set(SdkConstants.ANDROID_URI, "id", "@+id/my_id")
                 .range(range).autoFix().build()
         check(
-            file, source, fix, expected =
-            """
+            file, source, fix,
+            expected =
+                """
             <root xmlns:android="http://schemas.android.com/apk/res/android">
                 <element1 android:id="@+id/my_id" android:layout_width="wrap_content" android:width="foo" />
             </root>
@@ -196,7 +207,8 @@ class LintFixPerformerTest : TestCase() {
     fun testXmlSetAttributeOrder3() {
         val file = File("bogus.txt")
         @Language("XML")
-        val source = """
+        val source =
+            """
             <root xmlns:android="http://schemas.android.com/apk/res/android">
                 <element1 android:layout_width="wrap_content" android:width="foo" />
             </root>
@@ -207,8 +219,9 @@ class LintFixPerformerTest : TestCase() {
             fix().set(SdkConstants.ANDROID_URI, "z-order", "5")
                 .range(range).autoFix().build()
         check(
-            file, source, fix, expected =
-            """
+            file, source, fix,
+            expected =
+                """
             <root xmlns:android="http://schemas.android.com/apk/res/android">
                 <element1 android:layout_width="wrap_content" android:width="foo" android:z-order="5"  />
             </root>
@@ -219,7 +232,8 @@ class LintFixPerformerTest : TestCase() {
     fun testXmlDeleteAttribute() {
         val file = File("bogus.txt")
         @Language("XML")
-        val source = """
+        val source =
+            """
             <root>
                 <element1 attribute1="value1" />
                 <element2 attribute1="value1" attribute2="value2"/>
@@ -231,8 +245,9 @@ class LintFixPerformerTest : TestCase() {
             fix().unset(null, "attribute2")
                 .range(range).autoFix().build()
         check(
-            file, source, fix, expected =
-            """
+            file, source, fix,
+            expected =
+                """
             <root>
                 <element1 attribute1="value1" />
                 <element2 attribute1="value1" />
@@ -244,7 +259,8 @@ class LintFixPerformerTest : TestCase() {
     fun testXmlComposite() {
         val file = File("bogus.txt")
         @Language("XML")
-        val source = """
+        val source =
+            """
             <root>
                 <element1 attribute1="value1" />
                 <element2 attribute1="value1" attribute2="value2"/>
@@ -260,8 +276,9 @@ class LintFixPerformerTest : TestCase() {
 
         val fix = fix().composite(setFix, unsetFix).autoFix()
         check(
-            file, source, fix, expected =
-            """
+            file, source, fix,
+            expected =
+                """
             <root xmlns:android="http://schemas.android.com/apk/res/android">
                 <element1  android:new_attribute="new value"  />
                 <element2 attribute1="value1" attribute2="value2"/>
@@ -283,12 +300,14 @@ class LintFixPerformerTest : TestCase() {
             "id",
             "name"
         )
-        val sorted = attributes.sortedWith(Comparator { a, b ->
-            LintFixPerformer.compareAttributeNames(
-                a,
-                b
-            )
-        })
+        val sorted = attributes.sortedWith(
+            Comparator { a, b ->
+                LintFixPerformer.compareAttributeNames(
+                    a,
+                    b
+                )
+            }
+        )
         assertEquals(
             "[id, name, layout_width, layout_height, layout_bar, layout_foo, bar, foo]",
             sorted.toString()

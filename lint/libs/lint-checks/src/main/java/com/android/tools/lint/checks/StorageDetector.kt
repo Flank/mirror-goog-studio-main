@@ -59,7 +59,7 @@ class StorageDetector : Detector(), SourceCodeScanner {
         if (!found) {
             val location = context.getCallLocation(node, false, false)
             val message = "Consider also using `StorageManager#getAllocatableBytes` and " +
-                    "`allocateBytes` which will consider clearable cached data"
+                "`allocateBytes` which will consider clearable cached data"
             context.report(ISSUE, node, location, message)
         }
     }
@@ -69,7 +69,8 @@ class StorageDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "UsableSpace",
             briefDescription = "Using getUsableSpace()",
-            explanation = """
+            explanation =
+                """
                 When you need to allocate disk space for large files, consider using the new \
                 `allocateBytes(FileDescriptor, long)` API, which will automatically clear \
                 cached files belonging to other apps (as needed) to meet your request.

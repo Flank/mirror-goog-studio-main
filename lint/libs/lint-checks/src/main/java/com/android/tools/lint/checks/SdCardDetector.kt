@@ -40,7 +40,8 @@ class SdCardDetector : Detector(), SourceCodeScanner {
             id = "SdCardPath",
             briefDescription = "Hardcoded reference to `/sdcard`",
 
-            explanation = """
+            explanation =
+                """
             Your code should not reference the `/sdcard` path directly; instead use \
             `Environment.getExternalStorageDirectory().getPath()`.
 

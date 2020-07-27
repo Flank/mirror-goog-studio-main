@@ -228,9 +228,9 @@ abstract class Detector {
      */
     @Deprecated(
         "If you want to override the event that each root project is about " +
-                "to be analyzed, override beforeCheckRootProject; if you want to override the event " +
-                "that each project (both root projects and their dependencies, override " +
-                "beforeCheckEachProject",
+            "to be analyzed, override beforeCheckRootProject; if you want to override the event " +
+            "that each project (both root projects and their dependencies, override " +
+            "beforeCheckEachProject",
         replaceWith = ReplaceWith("beforeCheckRootProject(context)")
     )
     open fun beforeCheckProject(context: Context) {
@@ -254,9 +254,10 @@ abstract class Detector {
      */
     @Deprecated(
         "If you want to override the event that each root project is about " +
-                "to be analyzed, override afterCheckRootProject; if you want to override the event " +
-                "that each project (both root projects and their dependencies, override " +
-                "afterCheckEachProject", replaceWith = ReplaceWith("afterCheckRootProject(context)")
+            "to be analyzed, override afterCheckRootProject; if you want to override the event " +
+            "that each project (both root projects and their dependencies, override " +
+            "afterCheckEachProject",
+        replaceWith = ReplaceWith("afterCheckRootProject(context)")
     )
     open fun afterCheckProject(context: Context) {
     }

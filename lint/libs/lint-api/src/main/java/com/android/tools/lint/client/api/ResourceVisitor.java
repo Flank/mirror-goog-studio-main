@@ -67,7 +67,7 @@ class ResourceVisitor {
     private final XmlParser parser;
 
     // Really want this:
-    //<T extends List<Detector> & XmlScanner> XmlVisitor(IDomParser parser,
+    // <T extends List<Detector> & XmlScanner> XmlVisitor(IDomParser parser,
     //    T xmlDetectors) {
     // but it makes client code tricky and ugly.
     ResourceVisitor(

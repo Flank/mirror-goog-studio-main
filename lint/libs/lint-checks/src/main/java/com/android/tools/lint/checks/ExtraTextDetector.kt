@@ -43,7 +43,8 @@ class ExtraTextDetector : ResourceXmlDetector() {
         val ISSUE = Issue.create(
             id = "ExtraText",
             briefDescription = "Extraneous text in resource files",
-            explanation = """
+            explanation =
+                """
             Layout resource files should only contain elements and attributes. Any XML text content found \
             in the file is likely accidental (and potentially dangerous if the text resembles XML and the \
             developer believes the text to be functional)""",
@@ -63,12 +64,12 @@ class ExtraTextDetector : ResourceXmlDetector() {
 
     override fun appliesTo(folderType: ResourceFolderType): Boolean =
         folderType == ResourceFolderType.LAYOUT ||
-                folderType == ResourceFolderType.MENU ||
-                folderType == ResourceFolderType.ANIM ||
-                folderType == ResourceFolderType.ANIMATOR ||
-                folderType == ResourceFolderType.DRAWABLE ||
-                folderType == ResourceFolderType.COLOR ||
-                folderType == ResourceFolderType.NAVIGATION
+            folderType == ResourceFolderType.MENU ||
+            folderType == ResourceFolderType.ANIM ||
+            folderType == ResourceFolderType.ANIMATOR ||
+            folderType == ResourceFolderType.DRAWABLE ||
+            folderType == ResourceFolderType.COLOR ||
+            folderType == ResourceFolderType.NAVIGATION
 
     override fun visitDocument(context: XmlContext, document: Document) {
         foundText = false

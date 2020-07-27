@@ -69,8 +69,8 @@ class C2dmDetector : Detector(), XmlScanner {
 
         if (haveReceive && haveRegistration) {
             val message = "The C2DM library does not work on Android P or newer devices; " +
-                    "you should migrate to Firebase Cloud Messaging to ensure reliable " +
-                    "message delivery"
+                "you should migrate to Firebase Cloud Messaging to ensure reliable " +
+                "message delivery"
             context.report(ISSUE, attribute, context.getValueLocation(attribute), message)
         }
     }
@@ -85,7 +85,8 @@ class C2dmDetector : Detector(), XmlScanner {
         val ISSUE = Issue.create(
             id = "UsingC2DM",
             briefDescription = "Using C2DM",
-            explanation = """
+            explanation =
+                """
                 The C2DM library does not work on Android P or newer devices; \
                 you should migrate to Firebase Cloud Messaging to ensure reliable message delivery.
                 """,

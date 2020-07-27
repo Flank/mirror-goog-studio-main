@@ -130,11 +130,12 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                                 ""
                                         + "<resources>\n"
                                         +
-                                        //"    <style name=\"InterstitialDialogLayout\" />\n" +
-                                        //"\n" +
+                                        // "    <style name=\"InterstitialDialogLayout\" />\n" +
+                                        // "\n" +
                                         "    <style name=\"ButtonBar\" parent=\"@android:style/ButtonBar\" />\n"
                                         +
-                                        //"    <style name=\"ButtonBarButton\" parent=\"@android:style/Widget.Button\" />\n" +
+                                        // "    <style name=\"ButtonBarButton\"
+                                        // parent=\"@android:style/Widget.Button\" />\n" +
                                         "\n"
                                         + "</resources>\n"))
                 .run()

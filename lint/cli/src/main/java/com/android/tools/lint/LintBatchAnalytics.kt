@@ -176,11 +176,11 @@ class LintBatchAnalytics {
                     map[id] = this
                     issueId = issue.id
                     severity =
-                            if (incident.severity == issue.defaultSeverity) {
-                                LintIssueId.LintSeverity.DEFAULT_SEVERITY
-                            } else {
-                                incident.severity.toAnalyticsSeverity()
-                            }
+                        if (incident.severity == issue.defaultSeverity) {
+                            LintIssueId.LintSeverity.DEFAULT_SEVERITY
+                        } else {
+                            incident.severity.toAnalyticsSeverity()
+                        }
                 }
             }
             issueBuilder.count = issueBuilder.count + 1

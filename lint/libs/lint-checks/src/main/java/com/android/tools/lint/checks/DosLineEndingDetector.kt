@@ -37,7 +37,8 @@ class DosLineEndingDetector : LayoutDetector() {
         val ISSUE = Issue.create(
             id = "MangledCRLF",
             briefDescription = "Mangled file line endings",
-            explanation = """
+            explanation =
+                """
             On Windows, line endings are typically recorded as carriage return plus newline: \\r\\n.
 
             This detector looks for invalid line endings with repeated carriage return characters \

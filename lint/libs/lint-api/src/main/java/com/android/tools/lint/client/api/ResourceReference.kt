@@ -72,7 +72,8 @@ class ResourceReference(
 
             var packageNameFromResolved: String? = null
 
-            val containingClass = PsiTreeUtil.getParentOfType(expression.resolve(), PsiClass::class.java)
+            val containingClass =
+                PsiTreeUtil.getParentOfType(expression.resolve(), PsiClass::class.java)
             if (containingClass != null) {
                 val containingClassFqName = containingClass.qualifiedName
                 if (containingClassFqName != null) {
@@ -179,8 +180,10 @@ class ResourceReference(
                         val expression = it.importReference as? USimpleNameReferenceExpression
                         val resolved = expression?.resolvedName
                         if (resolved != null &&
-                            (resolved.startsWith("import kotlinx.android.synthetic.") ||
-                                    resolved.startsWith("kotlinx.android.synthetic."))
+                            (
+                                resolved.startsWith("import kotlinx.android.synthetic.") ||
+                                    resolved.startsWith("kotlinx.android.synthetic.")
+                                )
                         ) {
                             return ResourceReference(
                                 element,

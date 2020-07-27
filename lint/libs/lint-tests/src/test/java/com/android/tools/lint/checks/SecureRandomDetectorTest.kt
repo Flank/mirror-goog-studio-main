@@ -63,7 +63,8 @@ class SecureRandomDetectorTest : AbstractCheckTest() {
             """
         lint().files(
             java(
-                "src/test/pkg/SecureRandomTest.java", """
+                "src/test/pkg/SecureRandomTest.java",
+                """
                     package test.pkg;
 
                     import java.security.SecureRandom;

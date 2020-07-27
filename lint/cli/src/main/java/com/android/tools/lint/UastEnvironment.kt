@@ -393,9 +393,12 @@ private fun configureApplicationEnvironment(appEnv: CoreApplicationEnvironment) 
     )
 
     appConfigured = true
-    Disposer.register(appEnv.parentDisposable, Disposable {
-        appConfigured = false
-    })
+    Disposer.register(
+        appEnv.parentDisposable,
+        Disposable {
+            appConfigured = false
+        }
+    )
 }
 
 // A Kotlin compiler BindingTrace optimized for Lint.

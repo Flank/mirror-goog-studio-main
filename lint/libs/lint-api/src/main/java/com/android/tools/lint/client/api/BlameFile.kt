@@ -57,8 +57,10 @@ class BlameFile internal constructor(
                 }
             }
             for (nodeName in actions.getRecordedAttributeNames(nodeKey)) {
-                for (record in actions
-                    .getAttributeRecords(nodeKey, nodeName)) {
+                for (
+                    record in actions
+                        .getAttributeRecords(nodeKey, nodeName)
+                ) {
                     val actionType = record.actionType
                     if (actionType == Actions.ActionType.ADDED || actionType == Actions.ActionType.MERGED) {
                         if (blameNode == null) {
@@ -206,17 +208,20 @@ class BlameFile internal constructor(
         // keys. That's what we're doing below.
 
         val reference = AtomicReference<Element>()
-        XmlVisitor.accept(document, object : XmlVisitor() {
-            override fun visitTag(element: Element, tag: String): Boolean {
-                val key = getNodeKey(element)
-                if (targetKey == key) {
-                    reference.set(element)
-                    return true
-                }
+        XmlVisitor.accept(
+            document,
+            object : XmlVisitor() {
+                override fun visitTag(element: Element, tag: String): Boolean {
+                    val key = getNodeKey(element)
+                    if (targetKey == key) {
+                        reference.set(element)
+                        return true
+                    }
 
-                return false
+                    return false
+                }
             }
-        })
+        )
         return Pair.of(manifest, reference.get())
     }
 

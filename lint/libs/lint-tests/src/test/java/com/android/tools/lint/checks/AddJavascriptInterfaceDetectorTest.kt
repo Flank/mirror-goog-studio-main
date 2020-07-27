@@ -21,7 +21,8 @@ import com.android.tools.lint.detector.api.Detector
 class AddJavascriptInterfaceDetectorTest : AbstractCheckTest() {
 
     fun test() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/AddJavascriptInterfaceTest.java:16: Warning: WebView.addJavascriptInterface should not be called with minSdkVersion < 17 for security reasons: JavaScript can use reflection to manipulate application [AddJavascriptInterface]
                         webView.addJavascriptInterface(object, string);
                                 ~~~~~~~~~~~~~~~~~~~~~~

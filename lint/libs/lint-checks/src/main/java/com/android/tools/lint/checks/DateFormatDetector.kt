@@ -48,9 +48,9 @@ class DateFormatDetector : Detector(), SourceCodeScanner {
         if (!specifiesLocale(constructor)) {
             val location = context.getLocation(node)
             val message = "To get local formatting use `getDateInstance()`, " +
-                    "`getDateTimeInstance()`, or `getTimeInstance()`, or use " +
-                    "`new SimpleDateFormat(String template, Locale locale)` with for " +
-                    "example `Locale.US` for ASCII dates."
+                "`getDateTimeInstance()`, or `getTimeInstance()`, or use " +
+                "`new SimpleDateFormat(String template, Locale locale)` with for " +
+                "example `Locale.US` for ASCII dates."
             context.report(DATE_FORMAT, node, location, message)
         }
 
@@ -84,9 +84,10 @@ class DateFormatDetector : Detector(), SourceCodeScanner {
     private fun checkDateFormat(context: JavaContext, argument: UExpression) {
         val value = when (argument) {
             is ULiteralExpression -> argument.value
-            is UInjectionHost -> argument.evaluateToString()
-                ?: ConstantEvaluator().allowUnknowns().evaluate(argument)
-                ?: return
+            is UInjectionHost ->
+                argument.evaluateToString()
+                    ?: ConstantEvaluator().allowUnknowns().evaluate(argument)
+                    ?: return
             else -> ConstantEvaluator().allowUnknowns().evaluate(argument) ?: return
         }
         val format = value.toString()
@@ -149,7 +150,8 @@ class DateFormatDetector : Detector(), SourceCodeScanner {
             Issue.create(
                 id = "SimpleDateFormat",
                 briefDescription = "Implied locale in date format",
-                explanation = """
+                explanation =
+                    """
                     Almost all callers should use `getDateInstance()`, `getDateTimeInstance()`, \
                     or `getTimeInstance()` to get a ready-made instance of SimpleDateFormat \
                     suitable for the user's locale. The main reason you'd create an instance \
@@ -175,7 +177,8 @@ class DateFormatDetector : Detector(), SourceCodeScanner {
         val WEEK_YEAR = Issue.create(
             id = "WeekBasedYear",
             briefDescription = "Week Based Year",
-            explanation = """
+            explanation =
+                """
                 The `DateTimeFormatter` pattern `YYYY` returns the *week* based year, not \
                 the era-based year. This means that 12/29/2019 will format to 2019, but \
                 12/30/2019 will format to 2020!

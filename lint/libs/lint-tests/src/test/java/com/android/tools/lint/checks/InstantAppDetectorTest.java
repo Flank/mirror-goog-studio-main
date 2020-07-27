@@ -36,9 +36,9 @@ public class InstantAppDetectorTest extends AbstractCheckTest {
                                         + "        context.registerReceiver(receiver, filter);\n"
                                         + "    }\n"
                                         + "}\n"),
-                        gradle(
-                                ""
-                                        + "apply plugin: 'com.android.application'\n")) // not atom or instant-app
+                        gradle("" + "apply plugin: 'com.android.application'\n")) // not atom
+                // or
+                // instant-app
                 .run()
                 .expectClean();
     }

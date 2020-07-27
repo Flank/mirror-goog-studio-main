@@ -51,7 +51,8 @@ class StringCasingDetector : ResourceXmlDetector() {
         val DUPLICATE_STRINGS = Issue.create(
             id = "DuplicateStrings",
             briefDescription = "Duplicate Strings",
-            explanation = """
+            explanation =
+                """
                 Duplicate strings can make applications larger unnecessarily.
 
                 This lint check looks for duplicate strings, including differences for strings \
@@ -142,8 +143,8 @@ class StringCasingDetector : ResourceXmlDetector() {
                         if (string != prevString) {
                             caseVaries = true
                             location.message += " (case varies, but you can use " +
-                                    "`android:inputType` or `android:capitalize` in the " +
-                                    "presentation)"
+                                "`android:inputType` or `android:capitalize` in the " +
+                                "presentation)"
                         }
                     }
 
@@ -158,7 +159,7 @@ class StringCasingDetector : ResourceXmlDetector() {
 
                 if (caseVaries) {
                     message += ". Use `android:inputType` or `android:capitalize` " +
-                            "to treat these as the same and avoid string duplication."
+                        "to treat these as the same and avoid string duplication."
                 }
                 context.report(DUPLICATE_STRINGS, firstLocation, message)
             }

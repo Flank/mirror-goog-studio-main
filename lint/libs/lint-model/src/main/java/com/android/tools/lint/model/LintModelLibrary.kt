@@ -93,7 +93,7 @@ class DefaultLintModelModuleLibrary(
     override val lintJar: File?,
     override val provided: Boolean
 ) : DefaultLintModelLibrary(), LintModelModuleLibrary {
-    override fun toString(): String = "LocalLibrary(${projectPath})"
+    override fun toString(): String = "LocalLibrary($projectPath)"
 }
 
 class DefaultLintModelAndroidLibrary(
@@ -111,7 +111,7 @@ class DefaultLintModelAndroidLibrary(
     override val provided: Boolean,
     override val resolvedCoordinates: LintModelMavenName
 ) : DefaultLintModelLibrary(), LintModelAndroidLibrary {
-    override fun toString(): String = "AndroidLibrary(${resolvedCoordinates})"
+    override fun toString(): String = "AndroidLibrary($resolvedCoordinates)"
 }
 
 class DefaultLintModelJavaLibrary(
@@ -120,7 +120,7 @@ class DefaultLintModelJavaLibrary(
     override val resolvedCoordinates: LintModelMavenName,
     override val provided: Boolean
 ) : DefaultLintModelLibrary(), LintModelJavaLibrary {
-    override fun toString(): String = "JavaLibrary(${resolvedCoordinates})"
+    override fun toString(): String = "JavaLibrary($resolvedCoordinates)"
 
     override val lintJar: File? = null
 }

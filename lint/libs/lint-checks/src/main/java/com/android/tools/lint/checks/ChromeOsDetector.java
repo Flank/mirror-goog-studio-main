@@ -187,11 +187,7 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
 
     private static final Set<String> UNSUPPORTED_ORIENTATIONS =
             new HashSet<>(
-                    Arrays.asList(
-                            "portrait",
-                            "reversePortrait",
-                            "sensorPortrait",
-                            "userPortrait"));
+                    Arrays.asList("portrait", "reversePortrait", "sensorPortrait", "userPortrait"));
 
     /** Constructs a new {@link ChromeOsDetector} check */
     public ChromeOsDetector() {}
@@ -287,8 +283,7 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                         };
 
                 Collection<String> filteredPermissions =
-                        unsupportedHardwareImpliedPermissions
-                                .stream()
+                        unsupportedHardwareImpliedPermissions.stream()
                                 .filter(p)
                                 .collect(Collectors.toCollection(HashSet::new));
 

@@ -80,7 +80,8 @@ class DataBindingDetector : LayoutDetector() {
         val ESCAPE_XML = Issue.create(
             id = "XmlEscapeNeeded",
             briefDescription = "Missing XML Escape",
-            explanation = """
+            explanation =
+                """
               When a string contains characters that have special usage in XML, \
               you must escape the characters.
             """,
