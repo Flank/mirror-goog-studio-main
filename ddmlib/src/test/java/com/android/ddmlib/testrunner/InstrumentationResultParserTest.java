@@ -33,7 +33,7 @@ public class InstrumentationResultParserTest extends TestCase {
     private InstrumentationResultParser mParser;
     private ITestRunListener mMockListener;
 
-    // static dummy test names to use for validation
+    // static fake test names to use for validation
     private static final String RUN_NAME = "foo";
     private static final String CLASS_NAME = "com.test.FooTest";
     private static final String TEST_NAME = "testFoo";
@@ -444,7 +444,7 @@ public class InstrumentationResultParserTest extends TestCase {
         final String errorMessage = "Unable to find instrumentation info";
         addStatusKey(output, "Error", errorMessage);
         addStatusCode(output, "-1");
-        output.append("INSTRUMENTATION_FAILED: com.dummy/android.test.InstrumentationTestRunner");
+        output.append("INSTRUMENTATION_FAILED: com.fake/android.test.InstrumentationTestRunner");
         addLineBreak(output);
 
         mMockListener.testRunStarted(RUN_NAME, 0);
