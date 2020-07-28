@@ -17,7 +17,11 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
+import com.android.build.gradle.internal.cxx.gradle.generator.abiJsonFile
+import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
 import com.android.build.gradle.internal.cxx.logging.errorln
@@ -29,21 +33,16 @@ import com.android.build.gradle.internal.cxx.model.DetermineUsedStlResult
 import com.android.build.gradle.internal.cxx.model.determineUsedStl
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.sdklib.AndroidVersion
 import com.google.gson.GsonBuilder
 import com.google.gson.annotations.SerializedName
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.*
 import java.io.File
 import java.io.StringWriter
 import kotlin.math.max
@@ -177,6 +176,11 @@ data class PrefabAbiData(
 )
 
 abstract class PrefabPackageTask : NonIncrementalTask() {
+    @get:Internal
+    abstract val sdkComponents: Property<SdkComponentsBuildService>
+
+    private lateinit var configurationModel: CxxConfigurationModel
+
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
@@ -189,18 +193,71 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
         private set
 
     @get:Nested
-    lateinit var abiData: List<PrefabAbiData>
-        private set
-
-    @get:Nested
     lateinit var modules: List<PrefabModuleTaskData>
         private set
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    val jsonFiles get() = Abi.values().map { configurationModel.abiJsonFile(it) }
+
+    @get:Input
+    val minSdkVersion get() = configurationModel.minSdkVersion
+
+    @get:Input
+    val externalNativeBuildArguments get() = configurationModel.nativeVariantConfig.arguments
+
+    @get:Input
+    val externalNativeBuildAbiFilters get() = configurationModel.nativeVariantConfig.externalNativeBuildAbiFilters
+
+    @get:Input
+    val ndkAbiFilters get() = configurationModel.nativeVariantConfig.ndkAbiFilters
 
     override fun doTaskAction() {
         val installDir = outputDirectory.get().asFile.apply { mkdirs() }
         createPackageMetadata(installDir)
+        val abis = createAbiData()
         for (module in modules) {
-            createModule(module, installDir)
+            createModule(module, abis, installDir)
+        }
+    }
+
+    private fun createAbiData() : List<PrefabAbiData> {
+        val generator = createCxxMetadataGenerator(sdkComponents.get(), configurationModel)
+        val variantModel = generator.variant
+        val abiModels = generator.abis
+
+        val stl = when (val result = variantModel.determineUsedStl()) {
+            is DetermineUsedStlResult.Success -> result.stl
+            is DetermineUsedStlResult.Failure -> {
+                errorln(result.error)
+                return listOf()
+            }
+        }
+
+        return abiModels.map {
+            // Pull up the app's minSdkVersion to be within the bounds for the ABI and NDK.
+            val ndkVersion = it.variant.module.ndkVersion.major
+            val metaPlatforms = it.variant.module.ndkMetaPlatforms
+            val minVersionForAbi = when {
+                it.abi.supports64Bits() -> AndroidVersion.SUPPORTS_64_BIT.apiLevel
+                else -> 1
+            }
+            val minVersionForNdk = when {
+                // Newer NDKs expose the minimum supported version via meta/platforms.json
+                metaPlatforms != null -> metaPlatforms.min
+                // Older NDKs did not expose this, but the information is in the change logs
+                ndkVersion < 12 -> 1
+                ndkVersion < 15 -> 9
+                ndkVersion < 18 -> 14
+                else -> 16
+            }
+            PrefabAbiData(
+                    it.abi,
+                    max(it.abiPlatformVersion, max(minVersionForAbi, minVersionForNdk)),
+                    ndkVersion,
+                    stl.argumentName,
+                    project.provider { it.jsonFile }
+            )
         }
     }
 
@@ -217,11 +274,11 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
         )
     }
 
-    private fun createModule(module: PrefabModuleTaskData, packageDir: File) {
+    private fun createModule(module: PrefabModuleTaskData, abis : List<PrefabAbiData>, packageDir: File) {
         val installDir = packageDir.resolve("modules/${module.name}").apply { mkdirs() }
         createModuleMetadata(module, installDir)
         installHeaders(module, installDir)
-        installLibs(module, installDir)
+        installLibs(module, abis, installDir)
     }
 
     private fun createModuleMetadata(module: PrefabModuleTaskData, installDir: File) {
@@ -260,9 +317,9 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
         return matchingLibs.single()
     }
 
-    private fun installLibs(module: PrefabModuleTaskData, installDir: File) {
+    private fun installLibs(module: PrefabModuleTaskData, abis : List<PrefabAbiData>, installDir: File) {
         val libsDir = installDir.resolve("libs").apply { deleteRecursively() }
-        for (abiData in abiData) {
+        for (abiData in abis) {
             val srcLibrary = findLibraryForAbi(module.name, abiData).output
             if (srcLibrary != null) {
                 val libDir = libsDir.resolve("android.${abiData.abi.tag}")
@@ -290,10 +347,10 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        private val modules: List<PrefabModuleTaskData>,
-        private val variantModel: CxxVariantModel,
-        private val abiModels: Collection<CxxAbiModel>,
-        componentProperties: LibraryVariantPropertiesImpl
+            private val modules: List<PrefabModuleTaskData>,
+            private val sdkComponentsBuildService: SdkComponentsBuildService,
+            private val config : CxxConfigurationModel,
+            componentProperties: LibraryVariantPropertiesImpl
     ) : VariantTaskCreationAction<PrefabPackageTask, LibraryVariantPropertiesImpl>(
         componentProperties
     ) {
@@ -321,39 +378,10 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
             task.packageVersion = project.version.toString()
             task.modules = modules
 
-            val stl = when (val result = variantModel.determineUsedStl()) {
-                is DetermineUsedStlResult.Success -> result.stl
-                is DetermineUsedStlResult.Failure -> {
-                    errorln(result.error)
-                    return
-                }
-            }
-
-            task.abiData = abiModels.map {
-                // Pull up the app's minSdkVersion to be within the bounds for the ABI and NDK.
-                val ndkVersion = it.variant.module.ndkVersion.major
-                val metaPlatforms = it.variant.module.ndkMetaPlatforms
-                val minVersionForAbi = when {
-                    it.abi.supports64Bits() -> AndroidVersion.SUPPORTS_64_BIT.apiLevel
-                    else -> 1
-                }
-                val minVersionForNdk = when {
-                    // Newer NDKs expose the minimum supported version via meta/platforms.json
-                    metaPlatforms != null -> metaPlatforms.min
-                    // Older NDKs did not expose this, but the information is in the change logs
-                    ndkVersion < 12 -> 1
-                    ndkVersion < 15 -> 9
-                    ndkVersion < 18 -> 14
-                    else -> 16
-                }
-                PrefabAbiData(
-                    it.abi,
-                    max(it.abiPlatformVersion, max(minVersionForAbi, minVersionForNdk)),
-                    ndkVersion,
-                    stl.argumentName,
-                    project.provider { it.jsonFile }
-                )
-            }
+            task.configurationModel = config
+            task.sdkComponents.setDisallowChanges(
+                    getBuildService(creationConfig.services.buildServiceRegistry)
+            )
         }
     }
 }

@@ -21,7 +21,6 @@ import com.android.SdkConstants.CURRENT_PLATFORM
 import com.android.SdkConstants.NDK_SYMLINK_DIR
 import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.android.build.gradle.internal.SdkComponentsBuildService
-import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.NdkAbiFile
 import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
@@ -30,9 +29,8 @@ import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import com.android.build.gradle.internal.cxx.configure.ndkMetaAbisFile
 import com.android.build.gradle.internal.cxx.configure.trySymlinkNdk
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
-import com.android.build.gradle.internal.cxx.logging.warnln
+import com.android.build.gradle.internal.cxx.gradle.generator.cxxFolder
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
-import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
 import java.io.File
 import java.io.FileReader
@@ -80,10 +78,7 @@ fun createCxxModuleModel(
     cmakeLocator: CmakeLocator
 ) : CxxModuleModel {
 
-    val cxxFolder = findCxxFolder(
-        configurationModel.moduleRootFolder,
-        configurationModel.buildStagingFolder,
-        configurationModel.buildDir)
+    val cxxFolder = configurationModel.cxxFolder
 
     fun localPropertyFile(property : String) : File? {
         val path = gradleLocalProperties(configurationModel.rootDir)
@@ -171,37 +166,3 @@ fun createCxxModuleModel(
     CmakeLocator()
 )
 
-/**
- * Finds the location of the build-system output folder. For example, .cxx/cmake/debug/x86/
- *
- * If user specific externalNativeBuild.cmake.buildStagingFolder = 'xyz' then that folder
- * will be used instead of the default of moduleRoot/.cxx.
- *
- * If the resulting build output folder would be inside of moduleRoot/build then issue an error
- * because moduleRoot/build will be deleted when the user does clean and that will lead to
- * undefined behavior.
- */
-internal fun findCxxFolder(
-    moduleRootFolder : File,
-    buildStagingDirectory: File?,
-    buildFolder: File): File {
-    val defaultCxxFolder =
-        join(
-            moduleRootFolder,
-            CXX_DEFAULT_CONFIGURATION_SUBFOLDER
-        )
-    return when {
-        buildStagingDirectory == null -> defaultCxxFolder
-        FileUtils.isFileInDirectory(buildStagingDirectory, buildFolder) -> {
-            warnln("""
-            The build staging directory you specified ('${buildStagingDirectory.absolutePath}')
-            is a subdirectory of your project's temporary build directory (
-            '${buildFolder.absolutePath}'). Files in this directory do not persist through clean
-            builds. It is recommended to either use the default build staging directory 
-            ('$defaultCxxFolder'), or specify a path outside the temporary build directory.
-            """.trimIndent())
-            buildStagingDirectory
-        }
-        else -> buildStagingDirectory
-    }
-}

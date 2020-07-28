@@ -20,8 +20,9 @@ import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurationKey
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurator
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
+import com.android.build.gradle.internal.cxx.gradle.generator.variantJsonFolder
 import com.android.build.gradle.internal.cxx.gradle.generator.variantObjFolder
-import com.android.build.gradle.tasks.NativeBuildSystem
+import com.android.build.gradle.internal.cxx.gradle.generator.variantSoFolder
 import com.android.builder.profile.ProcessProfileWriter
 import com.android.utils.FileUtils.join
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -49,6 +50,7 @@ fun createCxxVariantModel(
             // DSL.
             get() = "android-gradle-plugin-predetermined-name"
         override val objFolder by lazy { configurationModel.variantObjFolder }
+        override val soFolder by lazy { configurationModel.variantSoFolder }
         override val isDebuggableEnabled = configurationModel.isDebuggable
         override val validAbiList by lazy {
             CachingEnvironment(module.cxxFolder).use {
@@ -68,16 +70,9 @@ fun createCxxVariantModel(
 
         override val prefabClassPath = configurationModel.prefabClassPath?.singleFile
         override val prefabPackageDirectoryList get() = configurationModel.prefabPackageDirectoryList?.toList()?:listOf()
-        override val prefabDirectory: File = jsonFolder.resolve("prefab")
+        override val prefabDirectory: File = configurationModel.variantJsonFolder.resolve("prefab")
     }
 }
-
-/**
- * Base folder for android_gradle_build.json files
- *   ex, $moduleRootFolder/.cxx/cmake/debug
- */
-val CxxVariantModel.jsonFolder
-        get() = join(module.cxxFolder, module.buildSystem.tag, variantName)
 
 /**
  * The gradle build output folder
