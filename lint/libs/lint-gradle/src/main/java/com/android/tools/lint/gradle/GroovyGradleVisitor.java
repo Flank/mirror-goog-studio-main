@@ -17,6 +17,7 @@
 package com.android.tools.lint.gradle;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.GradleDetector;
 import com.android.tools.lint.client.api.GradleVisitor;
 import com.android.tools.lint.detector.api.Context;
@@ -42,10 +43,6 @@ import org.codehaus.groovy.ast.expr.NamedArgumentListExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
-import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.ast.stmt.ExpressionStatement;
-import org.codehaus.groovy.ast.stmt.ReturnStatement;
-import org.codehaus.groovy.ast.stmt.Statement;
 
 /**
  * Implementation of the {@link GradleDetector} using a real Groovy AST, which the Gradle plugin has
@@ -102,72 +99,47 @@ public class GroovyGradleVisitor extends GradleVisitor {
                                     ArgumentListExpression ale =
                                             (ArgumentListExpression) tupleExpression;
                                     List<Expression> expressions = ale.getExpressions();
-                                    if (expressions.size() == 1
-                                            && expressions.get(0) instanceof ClosureExpression) {
-                                        ClosureExpression closureExpression =
-                                                (ClosureExpression) expressions.get(0);
-                                        Statement block = closureExpression.getCode();
-                                        if (block instanceof BlockStatement) {
-                                            BlockStatement bs = (BlockStatement) block;
-                                            for (Statement statement : bs.getStatements()) {
-                                                if (statement instanceof ExpressionStatement) {
-                                                    ExpressionStatement e =
-                                                            (ExpressionStatement) statement;
-                                                    if (e.getExpression()
-                                                            instanceof MethodCallExpression) {
-                                                        checkDslProperty(
-                                                                parent,
-                                                                (MethodCallExpression)
-                                                                        e.getExpression(),
-                                                                parentParent,
-                                                                detectors);
-                                                    }
-                                                } else if (statement instanceof ReturnStatement) {
-                                                    // Single item in block
-                                                    ReturnStatement e = (ReturnStatement) statement;
-                                                    if (e.getExpression()
-                                                            instanceof MethodCallExpression) {
-                                                        checkDslProperty(
-                                                                parent,
-                                                                (MethodCallExpression)
-                                                                        e.getExpression(),
-                                                                parentParent,
-                                                                detectors);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    } else {
+                                    // a pure block has its effect recorded in mMethodCallStack
+                                    if (expressions.size() != 1
+                                            || !(expressions.get(0) instanceof ClosureExpression)) {
                                         Map<String, String> namedArguments = new HashMap<>();
                                         List<String> unnamedArguments = new ArrayList<>();
                                         extractMethodCallArguments(
                                                 tupleExpression, unnamedArguments, namedArguments);
-                                        for (GradleScanner scanner : detectors) {
-                                            scanner.checkMethodCall(
-                                                    context,
-                                                    parent,
-                                                    parentParent,
-                                                    parent3,
-                                                    namedArguments,
-                                                    unnamedArguments,
-                                                    call);
-                                        }
+                                        checkMethodCall(
+                                                parent,
+                                                parentParent,
+                                                parent3,
+                                                unnamedArguments,
+                                                namedArguments,
+                                                call);
+                                        maybeCheckDslProperty(
+                                                parent,
+                                                parentParent,
+                                                parent3,
+                                                unnamedArguments,
+                                                namedArguments,
+                                                call);
                                     }
                                 } else {
                                     Map<String, String> namedArguments = new HashMap<>();
                                     List<String> unnamedArguments = new ArrayList<>();
                                     extractMethodCallArguments(
                                             tupleExpression, unnamedArguments, namedArguments);
-                                    for (GradleScanner scanner : detectors) {
-                                        scanner.checkMethodCall(
-                                                context,
-                                                parent,
-                                                parentParent,
-                                                parent3,
-                                                namedArguments,
-                                                unnamedArguments,
-                                                call);
-                                    }
+                                    checkMethodCall(
+                                            parent,
+                                            parentParent,
+                                            parent3,
+                                            unnamedArguments,
+                                            namedArguments,
+                                            call);
+                                    maybeCheckDslProperty(
+                                            parent,
+                                            parentParent,
+                                            parent3,
+                                            unnamedArguments,
+                                            namedArguments,
+                                            call);
                                 }
                             }
                         }
@@ -188,6 +160,8 @@ public class GroovyGradleVisitor extends GradleVisitor {
                                             mae.getKeyExpression().getText(),
                                             mae.getValueExpression().getText());
                                 }
+                            } else {
+                                unnamedArguments.add(getText(subExpr));
                             }
                         }
                     }
@@ -253,23 +227,52 @@ public class GroovyGradleVisitor extends GradleVisitor {
                         return result;
                     }
 
-                    private void checkDslProperty(
-                            String parent,
-                            MethodCallExpression c,
-                            String parentParent,
-                            @NonNull List<? extends GradleScanner> detectors) {
-                        String property = c.getMethodAsString();
-                        String value = getText(c.getArguments());
+                    private void checkMethodCall(
+                            @NonNull String methodName,
+                            @Nullable String parent,
+                            @Nullable String parentParent,
+                            List<String> unnamedArguments,
+                            Map<String, String> namedArguments,
+                            MethodCallExpression call) {
                         for (GradleScanner scanner : detectors) {
-                            scanner.checkDslPropertyAssignment(
+                            scanner.checkMethodCall(
                                     context,
-                                    property,
-                                    value,
+                                    methodName,
                                     parent,
                                     parentParent,
-                                    c.getMethod(),
-                                    c.getArguments(),
-                                    c);
+                                    namedArguments,
+                                    unnamedArguments,
+                                    call);
+                        }
+                    }
+
+                    private void maybeCheckDslProperty(
+                            @NonNull String property,
+                            @Nullable String parent,
+                            @Nullable String parentParent,
+                            List<String> unnamedArguments,
+                            Map<String, String> namedArguments,
+                            MethodCallExpression c) {
+                        if (parent != null) {
+                            String value = null;
+                            if (unnamedArguments.size() == 1 && namedArguments.size() == 0) {
+                                value = unnamedArguments.get(0);
+                            } else if (unnamedArguments.size() == 0 && namedArguments.size() > 0) {
+                                value = getText(c.getArguments());
+                            }
+                            if (value != null) {
+                                for (GradleScanner scanner : detectors) {
+                                    scanner.checkDslPropertyAssignment(
+                                            context,
+                                            property,
+                                            value,
+                                            parent,
+                                            parentParent,
+                                            c.getMethod(),
+                                            c.getArguments(),
+                                            c);
+                                }
+                            }
                         }
                     }
 
