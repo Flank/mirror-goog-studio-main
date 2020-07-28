@@ -19,24 +19,13 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface Bundle {
-    val abi: BundleAbi
+interface BundleDeviceTier {
+    var enableSplit: Boolean?
 
-    val density: BundleDensity
-
-    val language: BundleLanguage
-
-    val texture: BundleTexture
-
-    val deviceTier: BundleDeviceTier
-
-    fun abi(action: BundleAbi.() -> Unit)
-
-    fun density(action: BundleDensity.() -> Unit)
-
-    fun language(action: BundleLanguage.() -> Unit)
-
-    fun texture(action: BundleTexture.() -> Unit)
-
-    fun deviceTier(action: BundleDeviceTier.() -> Unit)
+    /**
+     * Specifies the default device tier value for the bundle. Used for local-testing and generating
+     * universal APKs.
+     *
+     */
+    var defaultTier: String?
 }

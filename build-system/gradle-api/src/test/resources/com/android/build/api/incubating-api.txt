@@ -309,8 +309,10 @@ com.android.build.api.dsl.BuildType.setTestCoverageEnabled: void (boolean)
 com.android.build.api.dsl.Bundle
 com.android.build.api.dsl.Bundle.abi: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleAbi, kotlin.Unit>)
 com.android.build.api.dsl.Bundle.density: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleDensity, kotlin.Unit>)
+com.android.build.api.dsl.Bundle.deviceTier: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleDeviceTier, kotlin.Unit>)
 com.android.build.api.dsl.Bundle.getAbi: com.android.build.api.dsl.BundleAbi ()
 com.android.build.api.dsl.Bundle.getDensity: com.android.build.api.dsl.BundleDensity ()
+com.android.build.api.dsl.Bundle.getDeviceTier: com.android.build.api.dsl.BundleDeviceTier ()
 com.android.build.api.dsl.Bundle.getLanguage: com.android.build.api.dsl.BundleLanguage ()
 com.android.build.api.dsl.Bundle.getTexture: com.android.build.api.dsl.BundleTexture ()
 com.android.build.api.dsl.Bundle.language: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleLanguage, kotlin.Unit>)
@@ -321,6 +323,11 @@ com.android.build.api.dsl.BundleAbi.setEnableSplit: void (java.lang.Boolean)
 com.android.build.api.dsl.BundleDensity
 com.android.build.api.dsl.BundleDensity.getEnableSplit: java.lang.Boolean ()
 com.android.build.api.dsl.BundleDensity.setEnableSplit: void (java.lang.Boolean)
+com.android.build.api.dsl.BundleDeviceTier
+com.android.build.api.dsl.BundleDeviceTier.getDefaultTier: java.lang.String ()
+com.android.build.api.dsl.BundleDeviceTier.getEnableSplit: java.lang.Boolean ()
+com.android.build.api.dsl.BundleDeviceTier.setDefaultTier: void (java.lang.String)
+com.android.build.api.dsl.BundleDeviceTier.setEnableSplit: void (java.lang.Boolean)
 com.android.build.api.dsl.BundleLanguage
 com.android.build.api.dsl.BundleLanguage.getEnableSplit: java.lang.Boolean ()
 com.android.build.api.dsl.BundleLanguage.setEnableSplit: void (java.lang.Boolean)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,29 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.build.api.dsl
+package com.android.build.gradle.internal.dsl
 
-import org.gradle.api.Incubating
+import com.android.build.api.dsl.BundleDeviceTier
+import javax.inject.Inject
 
-@Incubating
-interface Bundle {
-    val abi: BundleAbi
+open class BundleOptionsDeviceTier @Inject constructor() : BundleDeviceTier {
 
-    val density: BundleDensity
-
-    val language: BundleLanguage
-
-    val texture: BundleTexture
-
-    val deviceTier: BundleDeviceTier
-
-    fun abi(action: BundleAbi.() -> Unit)
-
-    fun density(action: BundleDensity.() -> Unit)
-
-    fun language(action: BundleLanguage.() -> Unit)
-
-    fun texture(action: BundleTexture.() -> Unit)
-
-    fun deviceTier(action: BundleDeviceTier.() -> Unit)
+    override var enableSplit: Boolean? = null
+    override var defaultTier: String? = null
 }

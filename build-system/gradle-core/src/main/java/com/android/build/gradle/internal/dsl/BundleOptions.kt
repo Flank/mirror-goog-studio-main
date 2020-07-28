@@ -34,6 +34,8 @@ abstract class BundleOptions @Inject constructor(
         dslServices.newInstance(BundleOptionsLanguage::class.java)
     override val texture: BundleOptionsTexture =
         dslServices.newInstance(BundleOptionsTexture::class.java)
+    override val deviceTier: BundleOptionsDeviceTier =
+        dslServices.newInstance(BundleOptionsDeviceTier::class.java)
     abstract val integrityConfigDir: DirectoryProperty
 
     fun abi(action: Action<BundleOptionsAbi>) {
@@ -52,6 +54,10 @@ abstract class BundleOptions @Inject constructor(
         action.execute(texture)
     }
 
+    fun deviceTier(action: Action<BundleOptionsDeviceTier>) {
+        action.execute(deviceTier)
+    }
+
     override fun abi(action: com.android.build.api.dsl.BundleAbi.() -> Unit) {
         action.invoke(abi)
     }
@@ -66,5 +72,9 @@ abstract class BundleOptions @Inject constructor(
 
     override fun texture(action: com.android.build.api.dsl.BundleTexture.() -> Unit) {
         action.invoke(texture)
+    }
+
+    override fun deviceTier(action: com.android.build.api.dsl.BundleDeviceTier.() -> Unit) {
+        action.invoke(deviceTier)
     }
 }
