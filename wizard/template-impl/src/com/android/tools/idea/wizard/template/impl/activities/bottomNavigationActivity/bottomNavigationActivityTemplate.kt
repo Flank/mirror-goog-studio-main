@@ -17,6 +17,7 @@
 package com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity
 
 import com.android.tools.idea.wizard.template.Category
+import com.android.tools.idea.wizard.template.Constraint
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
 import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
@@ -77,16 +78,35 @@ val bottomNavigationActivityTemplate
 
     val packageName = defaultPackageNameParameter
 
+    val navGraphName = stringParameter {
+      name = "Navigation graph name"
+      default = "mobile_navigation"
+      help = "The name of the navigation graph"
+      visible = { false }
+      constraints = listOf(Constraint.NAVIGATION, Constraint.UNIQUE)
+      suggest = { "mobile_navigation" }
+    }
+
     widgets(
       TextFieldWidget(activityClass),
       TextFieldWidget(layoutName),
       PackageNameWidget(packageName),
-      LanguageWidget()
+      LanguageWidget(),
+
+      // Invisible widget. Defining this to impose constraints
+      TextFieldWidget(navGraphName)
     )
 
     thumb { File("template_bottom_navigation_activity.png") }
 
     recipe = { data: TemplateData ->
-      bottomNavigationActivityRecipe(data as ModuleTemplateData, activityClass.value, activityTitle.value, layoutName.value, packageName.value)
+      bottomNavigationActivityRecipe(
+        moduleData = data as ModuleTemplateData,
+        activityClass = activityClass.value,
+        activityTitle = activityTitle.value,
+        layoutName = layoutName.value,
+        packageName = packageName.value,
+        navGraphName = navGraphName.value
+      )
     }
   }

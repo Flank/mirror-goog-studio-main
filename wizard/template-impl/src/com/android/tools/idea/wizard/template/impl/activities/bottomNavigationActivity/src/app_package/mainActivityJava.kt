@@ -21,6 +21,7 @@ import com.android.tools.idea.wizard.template.getMaterialComponentName
 fun mainActivityJava(
   activityClass: String,
   layoutName: String,
+  navHostFragmentId: String,
   packageName: String,
   useAndroidX: Boolean
 ) = """
@@ -46,7 +47,7 @@ public class ${activityClass} extends AppCompatActivity {
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications)
                 .build();
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
+        NavController navController = Navigation.findNavController(this, R.id.${navHostFragmentId});
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
     }

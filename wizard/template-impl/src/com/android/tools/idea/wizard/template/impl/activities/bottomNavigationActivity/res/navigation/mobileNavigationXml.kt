@@ -18,13 +18,14 @@ package com.android.tools.idea.wizard.template.impl.activities.bottomNavigationA
 
 
 fun mobileNavigationXml(
+  navGraphName: String,
   packageName: String
 ) = """
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/mobile_navigation"
+    android:id="@+id/${navGraphName}"
     app:startDestination="@+id/navigation_home">
 
     <fragment

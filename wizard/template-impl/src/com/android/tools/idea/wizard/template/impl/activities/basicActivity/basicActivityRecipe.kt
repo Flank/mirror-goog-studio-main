@@ -41,13 +41,14 @@ fun RecipeExecutor.generateBasicActivity(
   moduleData: ModuleTemplateData,
   activityClass: String,
   layoutName: String,
-  simpleLayoutName: String,
+  contentLayoutName: String,
   packageName: PackageName,
   menuName: String,
   activityTitle: String,
   isLauncher: Boolean,
   firstFragmentLayoutName: String,
-  secondFragmentLayoutName: String
+  secondFragmentLayoutName: String,
+  navGraphName: String
 ) {
   val (projectData, srcOut, resOut) = moduleData
   val appCompatVersion = moduleData.apis.appCompatVersion
@@ -58,12 +59,23 @@ fun RecipeExecutor.generateBasicActivity(
     moduleData, activityClass, activityTitle, packageName, isLauncher, true,
     generateActivityTitle = true)
   generateAppBar(
-    moduleData, activityClass, packageName, simpleLayoutName, layoutName, useAndroidX = useAndroidX
+    moduleData, activityClass, packageName, contentLayoutName, layoutName, useAndroidX = useAndroidX
   )
 
   addDependency("com.android.support:appcompat-v7:$appCompatVersion.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
-  save(fragmentSimpleXml(useAndroidX), moduleData.resDir.resolve("layout/$simpleLayoutName.xml"))
+
+  // navHostFragmentId needs to be unique, thus appending contentLayoutName since it's
+  // guaranteed to be unique
+  val navHostFragmentId = "nav_host_fragment_${contentLayoutName}"
+  save(
+    fragmentSimpleXml(
+      navGraphName = navGraphName,
+      navHostFragmentId = navHostFragmentId,
+      useAndroidX = useAndroidX
+    ),
+    moduleData.resDir.resolve("layout/$contentLayoutName.xml")
+  )
   if (moduleData.isNewModule) {
     generateSimpleMenu(packageName, activityClass, moduleData.resDir, menuName)
   }
@@ -71,15 +83,28 @@ fun RecipeExecutor.generateBasicActivity(
   val ktOrJavaExt = projectData.language.extension
   val simpleActivityPath = srcOut.resolve("$activityClass.$ktOrJavaExt")
   val generateKotlin = projectData.language == Language.Kotlin
-
   val simpleActivity = when (projectData.language) {
     Language.Java ->
       basicActivityJava(
-        moduleData.isNewModule, projectData.applicationPackage, packageName, useAndroidX, activityClass, layoutName, menuName
+        isNewProject = moduleData.isNewModule,
+        applicationPackage = projectData.applicationPackage,
+        packageName = packageName,
+        useAndroidX = useAndroidX,
+        activityClass = activityClass,
+        layoutName = layoutName,
+        menuName = menuName,
+        navHostFragmentId = navHostFragmentId
       )
     Language.Kotlin ->
       basicActivityKt(
-        moduleData.isNewModule, projectData.applicationPackage, packageName, useAndroidX, activityClass, layoutName, menuName
+        isNewProject = moduleData.isNewModule,
+        applicationPackage = projectData.applicationPackage,
+        packageName = packageName,
+        useAndroidX = useAndroidX,
+        activityClass = activityClass,
+        layoutName = layoutName,
+        menuName = menuName,
+        navHostFragmentId = navHostFragmentId
       )
   }
 
@@ -111,9 +136,14 @@ fun RecipeExecutor.generateBasicActivity(
   save(secondFragmentLayoutContent, resOut.resolve("layout/$secondFragmentLayoutName.xml"))
 
   val navGraphContent = navGraphXml(
-    packageName, firstFragmentClass, secondFragmentClass, firstFragmentLayoutName, secondFragmentLayoutName
+    packageName = packageName,
+    firstFragmentClass = firstFragmentClass,
+    secondFragmentClass = secondFragmentClass,
+    firstFragmentLayoutName = firstFragmentLayoutName,
+    secondFragmentLayoutName = secondFragmentLayoutName,
+    navGraphName = navGraphName
   )
-  mergeXml(navGraphContent, resOut.resolve("navigation/nav_graph.xml"))
+  mergeXml(navGraphContent, resOut.resolve("navigation/${navGraphName}.xml"))
   mergeXml(stringsXml, resOut.resolve("values/strings.xml"))
 
   if (generateKotlin) {
@@ -129,6 +159,6 @@ fun RecipeExecutor.generateBasicActivity(
   }
   open(simpleActivityPath)
 
-  open(resOut.resolve("layout/$simpleLayoutName"))
+  open(resOut.resolve("layout/$contentLayoutName"))
   open(srcOut.resolve("$activityClass.$ktOrJavaExt"))
 }

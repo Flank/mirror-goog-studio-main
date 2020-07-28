@@ -17,14 +17,17 @@ package com.android.tools.idea.wizard.template.impl.activities.basicActivity.res
 
 fun navGraphXml(
   packageName:String,
-  firstFragmentClass: String, secondFragmentClass: String,
-  firstFragmentLayoutName: String, secondFragmentLayoutName: String
+  firstFragmentClass: String,
+  secondFragmentClass: String,
+  firstFragmentLayoutName: String,
+  secondFragmentLayoutName: String,
+  navGraphName: String
 ) =
   """<?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/nav_graph"
+    android:id="@+id/${navGraphName}"
     app:startDestination="@id/$firstFragmentClass">
 
     <fragment

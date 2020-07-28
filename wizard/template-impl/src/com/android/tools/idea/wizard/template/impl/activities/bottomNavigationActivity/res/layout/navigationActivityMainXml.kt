@@ -19,6 +19,8 @@ package com.android.tools.idea.wizard.template.impl.activities.bottomNavigationA
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 
 fun navigationActivityMainXml(
+  navGraphName: String,
+  navHostFragmentId: String,
   useAndroidX: Boolean
 ) = """
 <?xml version="1.0" encoding="utf-8"?>
@@ -43,7 +45,7 @@ fun navigationActivityMainXml(
         app:menu="@menu/bottom_nav_menu"/>
 
     <fragment
-        android:id="@+id/nav_host_fragment"
+        android:id="@+id/${navHostFragmentId}"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -52,7 +54,7 @@ fun navigationActivityMainXml(
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:navGraph="@navigation/mobile_navigation"
+        app:navGraph="@navigation/${navGraphName}"
     />
 
 </${getMaterialComponentName("android.support.constraint.ConstraintLayout", useAndroidX)}>"""

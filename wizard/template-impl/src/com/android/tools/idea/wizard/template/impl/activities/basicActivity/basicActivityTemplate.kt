@@ -18,6 +18,7 @@ package com.android.tools.idea.wizard.template.impl.activities.basicActivity
 import com.android.tools.idea.wizard.template.BooleanParameter
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.CheckBoxWidget
+import com.android.tools.idea.wizard.template.Constraint
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
 import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
@@ -117,6 +118,15 @@ val basicActivityTemplate get() = template {
     help = "The name of the layout of the Fragment as the second destination in Navigation"
   }
 
+  val navGraphName = stringParameter {
+    name = "Navigation graph name"
+    default = "nav_graph"
+    help = "The name of the navigation graph"
+    visible = { false }
+    constraints = listOf(Constraint.NAVIGATION, Constraint.UNIQUE)
+    suggest = { "nav_graph" }
+  }
+
   val packageName = defaultPackageNameParameter
 
   widgets(
@@ -126,11 +136,14 @@ val basicActivityTemplate get() = template {
     TextFieldWidget(menuName),
     CheckBoxWidget(isLauncher),
     Separator, // for example
+    PackageNameWidget(packageName),
+    LanguageWidget(),
+
+    // Invisible widgets. Defining these to impose constraints
     TextFieldWidget(contentLayoutName),
     TextFieldWidget(firstFragmentLayoutName),
     TextFieldWidget(secondFragmentLayoutName),
-    PackageNameWidget(packageName),
-    LanguageWidget()
+    TextFieldWidget(navGraphName)
   )
 
   thumb {
@@ -139,7 +152,17 @@ val basicActivityTemplate get() = template {
 
   recipe = { data: TemplateData ->
     generateBasicActivity(
-      data as ModuleTemplateData, activityClass.value, layoutName.value, contentLayoutName.value, packageName.value,
-      menuName.value, activityTitle.value, isLauncher.value, firstFragmentLayoutName.value, secondFragmentLayoutName.value)
+      moduleData = data as ModuleTemplateData,
+      activityClass = activityClass.value,
+      layoutName = layoutName.value,
+      contentLayoutName = contentLayoutName.value,
+      packageName = packageName.value,
+      menuName = menuName.value,
+      activityTitle = activityTitle.value,
+      isLauncher = isLauncher.value,
+      firstFragmentLayoutName = firstFragmentLayoutName.value,
+      secondFragmentLayoutName = secondFragmentLayoutName.value,
+      navGraphName = navGraphName.value
+    )
   }
 }
