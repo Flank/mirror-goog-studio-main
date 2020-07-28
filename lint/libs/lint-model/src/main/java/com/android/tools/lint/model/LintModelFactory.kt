@@ -29,7 +29,7 @@ import com.android.ide.common.gradle.model.IdeAndroidProject
 import com.android.ide.common.gradle.model.IdeBaseArtifact
 import com.android.ide.common.gradle.model.IdeJavaArtifact
 import com.android.ide.common.gradle.model.IdeLintOptions
-import com.android.ide.common.gradle.model.IdeMavenCoordinatesImpl
+import com.android.ide.common.gradle.model.impl.IdeMavenCoordinatesImpl
 import com.android.ide.common.gradle.model.IdeSourceProvider
 import com.android.ide.common.gradle.model.IdeSourceProviderContainer
 import com.android.ide.common.gradle.model.IdeVariant

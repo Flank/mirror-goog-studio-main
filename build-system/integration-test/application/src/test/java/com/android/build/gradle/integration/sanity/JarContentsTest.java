@@ -525,6 +525,7 @@ public class JarContentsTest {
                 "com/android/ide/common/fonts/",
                 "com/android/ide/common/gradle/",
                 "com/android/ide/common/gradle/model/",
+                "com/android/ide/common/gradle/model/impl/",
                 "com/android/ide/common/gradle/model/level2/",
                 "com/android/ide/common/internal/",
                 "com/android/ide/common/process/",

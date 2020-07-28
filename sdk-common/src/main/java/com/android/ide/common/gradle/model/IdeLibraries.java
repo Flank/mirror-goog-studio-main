@@ -25,6 +25,7 @@ import com.android.builder.model.Dependencies.ProjectIdentifier;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Library;
 import com.android.builder.model.MavenCoordinates;
+import com.android.ide.common.gradle.model.impl.IdeMavenCoordinatesImpl;
 import com.android.ide.common.gradle.model.level2.BuildFolderPaths;
 import java.io.File;
 

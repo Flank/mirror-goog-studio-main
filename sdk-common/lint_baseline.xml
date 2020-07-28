@@ -102,7 +102,7 @@
         message="Do not intern strings; if reusing strings is truly necessary build a local cache">
         <location
             file="src/main/java/com/android/ide/common/gradle/model/IdeLibraries.java"
-            line="67"/>
+            line="68"/>
     </issue>
 
     <issue
@@ -110,7 +110,7 @@
         message="Do not intern strings; if reusing strings is truly necessary build a local cache">
         <location
             file="src/main/java/com/android/ide/common/gradle/model/IdeLibraries.java"
-            line="77"/>
+            line="78"/>
     </issue>
 
     <issue
@@ -301,8 +301,8 @@
         id="VisibleForTests"
         message="This method should only be accessed from tests or within private scope">
         <location
-            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidProjectImpl.java"
-            line="193"/>
+            file="src/main/java/com/android/ide/common/gradle/model/impl/IdeAndroidProjectImpl.java"
+            line="204"/>
     </issue>
 
     <issue
@@ -445,79 +445,39 @@
         id="FileComparisons"
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
-            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidArtifactOutputImpl.java"
-            line="105"/>
+            file="src/main/java/com/android/ide/common/gradle/model/impl/IdeAndroidArtifactOutputImpl.java"
+            line="109"/>
     </issue>
 
     <issue
         id="FileComparisons"
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
-            file="src/main/java/com/android/ide/common/gradle/model/IdeAndroidProjectImpl.java"
-            line="716"/>
+            file="src/main/java/com/android/ide/common/gradle/model/impl/IdeAndroidProjectImpl.java"
+            line="727"/>
     </issue>
 
     <issue
         id="FileComparisons"
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
-            file="src/main/java/com/android/ide/common/gradle/model/IdeBaseArtifactImpl.java"
-            line="255"/>
+            file="src/main/java/com/android/ide/common/gradle/model/impl/IdeBaseArtifactImpl.java"
+            line="259"/>
     </issue>
 
     <issue
         id="FileComparisons"
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
-            file="src/main/java/com/android/ide/common/gradle/model/IdeBaseArtifactImpl.java"
-            line="257"/>
+            file="src/main/java/com/android/ide/common/gradle/model/impl/IdeBaseArtifactImpl.java"
+            line="261"/>
     </issue>
 
     <issue
         id="FileComparisons"
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
-            file="src/main/java/com/android/ide/common/gradle/model/IdeInstantRunImpl.java"
-            line="80"/>
-    </issue>
-
-    <issue
-        id="FileComparisons"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
-        <location
-            file="src/main/java/com/android/ide/common/gradle/model/IdeJavaArtifactImpl.java"
-            line="66"/>
-    </issue>
-
-    <issue
-        id="FileComparisons"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
-        <location
-            file="src/main/java/com/android/ide/common/gradle/model/IdeNativeArtifactImpl.java"
-            line="152"/>
-    </issue>
-
-    <issue
-        id="FileComparisons"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
-        <location
-            file="src/main/java/com/android/ide/common/gradle/model/IdeNativeFileImpl.java"
-            line="73"/>
-    </issue>
-
-    <issue
-        id="FileComparisons"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
-        <location
-            file="src/main/java/com/android/ide/common/gradle/model/IdeNativeFileImpl.java"
-            line="75"/>
-    </issue>
-
-    <issue
-        id="FileComparisons"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
-        <location
-            file="src/main/java/com/android/ide/common/gradle/model/IdeNativeToolchainImpl.java"
+            file="src/main/java/com/android/ide/common/gradle/model/impl/IdeInstantRunImpl.java"
             line="81"/>
     </issue>
 
@@ -525,7 +485,39 @@
         id="FileComparisons"
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
-            file="src/main/java/com/android/ide/common/gradle/model/IdeNativeToolchainImpl.java"
+            file="src/main/java/com/android/ide/common/gradle/model/impl/IdeJavaArtifactImpl.java"
+            line="69"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/impl/IdeNativeArtifactImpl.java"
+            line="156"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/impl/IdeNativeFileImpl.java"
+            line="74"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/impl/IdeNativeFileImpl.java"
+            line="76"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/impl/IdeNativeToolchainImpl.java"
             line="82"/>
     </issue>
 
@@ -533,16 +525,24 @@
         id="FileComparisons"
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
-            file="src/main/java/com/android/ide/common/gradle/model/IdeOutputFileImpl.java"
-            line="188"/>
+            file="src/main/java/com/android/ide/common/gradle/model/impl/IdeNativeToolchainImpl.java"
+            line="83"/>
     </issue>
 
     <issue
         id="FileComparisons"
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
-            file="src/main/java/com/android/ide/common/gradle/model/IdeSigningConfigImpl.java"
-            line="125"/>
+            file="src/main/java/com/android/ide/common/gradle/model/impl/IdeOutputFileImpl.java"
+            line="191"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/ide/common/gradle/model/impl/IdeSigningConfigImpl.java"
+            line="128"/>
     </issue>
 
     <issue
