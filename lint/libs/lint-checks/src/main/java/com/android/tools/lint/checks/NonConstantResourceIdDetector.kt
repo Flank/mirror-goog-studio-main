@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants
 import com.android.tools.lint.client.api.ResourceReference
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
@@ -96,7 +97,9 @@ class NonConstantResourceIdDetector : Detector(), SourceCodeScanner {
         }
 
         private fun checkExpressionReceiverIsRClass(expression: UExpression): Boolean {
-            return ResourceReference.get(expression) != null
+            val evaluatedExpression = ResourceReference.get(expression)
+            return evaluatedExpression != null &&
+                    evaluatedExpression.`package` != SdkConstants.ANDROID_PKG
         }
     }
 

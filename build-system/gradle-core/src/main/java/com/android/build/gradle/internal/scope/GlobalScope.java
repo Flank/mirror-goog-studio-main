@@ -30,8 +30,10 @@ import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
+import com.android.build.gradle.internal.ide.DependencyFailureHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.services.DslServices;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.model.OptionalCompilationStep;
@@ -39,10 +41,12 @@ import com.android.ide.common.blame.MessageReceiver;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.component.SoftwareComponentFactory;
@@ -270,21 +274,39 @@ public class GlobalScope {
     /**
      * Gets the lint JAR from the lint checking configuration.
      *
-     * @return the resolved lint.jar ArtifactFile from the lint checking configuration
+     * @return the resolved lint.jar artifact files from the lint checking configuration
      */
     @NonNull
     public FileCollection getLocalCustomLintChecks() {
+        boolean lenientMode =
+                dslServices.getProjectOptions().get(BooleanOption.IDE_BUILD_MODEL_ONLY);
+
         // Query for JAR instead of PROCESSED_JAR as we want to get the original lint.jar
         Action<AttributeContainer> attributes =
                 container ->
                         container.attribute(
                                 ARTIFACT_TYPE, AndroidArtifacts.ArtifactType.JAR.getType());
 
-        return lintChecks
-                .getIncoming()
-                .artifactView(config -> config.attributes(attributes))
-                .getArtifacts()
-                .getArtifactFiles();
+        ArtifactCollection artifactCollection =
+                lintChecks
+                        .getIncoming()
+                        .artifactView(
+                                config -> {
+                                    config.attributes(attributes);
+                                    config.lenient(lenientMode);
+                                })
+                        .getArtifacts();
+
+        if (lenientMode) {
+            Collection<Throwable> failures = artifactCollection.getFailures();
+            if (!failures.isEmpty()) {
+                DependencyFailureHandler failureHandler = new DependencyFailureHandler();
+                failureHandler.addErrors(project.getPath() + "/" + lintChecks.getName(), failures);
+                failureHandler.registerIssues(dslServices.getIssueReporter());
+            }
+        }
+
+        return artifactCollection.getArtifactFiles();
     }
 
     /**

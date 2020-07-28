@@ -113,7 +113,7 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
                 // exceeds the PreprocessingReason SDK threshold.
                 if (validDensityQualifier
                         || originalConfiguration.getVersionQualifier().getVersion()
-                                <= reason.getSdkThreshold()) {
+                                < reason.getSdkThreshold()) {
                     for (Density density : mDensities) {
                         FolderConfiguration newConfiguration =
                                 FolderConfiguration.copyOf(originalConfiguration);
