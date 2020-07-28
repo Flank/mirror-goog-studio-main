@@ -37,7 +37,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.builder.model.AaptOptions;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
@@ -60,9 +59,11 @@ import com.android.builder.model.ViewBindingOptions;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
+import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeJavaArtifact;
 import com.android.ide.common.gradle.model.IdeLintOptions;
+import com.android.ide.common.gradle.model.IdeProductFlavor;
 import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.ide.common.gradle.model.level2.IdeAndroidLibrary;
 import com.android.ide.common.gradle.model.level2.IdeAndroidLibraryCore;
@@ -158,13 +159,13 @@ public class GradleModelMocker {
     private final List<IdeLibrary> androidTestJavaLibraries = Lists.newArrayList();
     private final List<IdeLibrary> androidTestModuleLibraries = Lists.newArrayList();
     private final List<IdeLibrary> allJavaLibraries = Lists.newArrayList();
-    private ProductFlavor mergedFlavor;
+    private IdeProductFlavor mergedFlavor;
     private ProductFlavor defaultFlavor;
     private IdeLintOptions lintOptions;
     private final HashMap<String, Integer> severityOverrides = new HashMap();
     private final LintCliFlags flags = new LintCliFlags();
     private File projectDir = new File("");
-    private final List<ProductFlavor> productFlavors = Lists.newArrayList();
+    private final List<IdeProductFlavor> productFlavors = Lists.newArrayList();
     private final Multimap<String, String> splits = ArrayListMultimap.create();
     private ILogger logger;
     private boolean initialized;
@@ -458,8 +459,8 @@ public class GradleModelMocker {
         when(artifact.getApplicationId()).thenReturn(applicationId);
         when(androidTestArtifact.getApplicationId()).thenReturn(applicationId);
 
-        Collection<IdeJavaArtifact> extraJavaArtifacts = Collections.singletonList(testArtifact);
-        Collection<IdeAndroidArtifact> extraAndroidArtifacts =
+        List<IdeJavaArtifact> extraJavaArtifacts = Collections.singletonList(testArtifact);
+        List<IdeAndroidArtifact> extraAndroidArtifacts =
                 Collections.singletonList(androidTestArtifact);
 
         //noinspection deprecation
@@ -483,7 +484,7 @@ public class GradleModelMocker {
 
         when(project.getBuildFolder()).thenReturn(new File(projectDir, "build"));
 
-        Collection<AndroidArtifactOutput> outputs = Lists.newArrayList();
+        List<IdeAndroidArtifactOutput> outputs = Lists.newArrayList();
         outputs.add(createAndroidArtifactOutput("", ""));
         for (Map.Entry<String, String> entry : splits.entries()) {
             outputs.add(createAndroidArtifactOutput(entry.getKey(), entry.getValue()));
@@ -631,7 +632,7 @@ public class GradleModelMocker {
                     VectorDrawablesOptions vectorDrawables = mergedFlavor.getVectorDrawables();
                     SigningConfig signingConfig = mergedFlavor.getSigningConfig();
 
-                    ProductFlavor variantFlavor = mock(ProductFlavor.class);
+                    IdeProductFlavor variantFlavor = mock(IdeProductFlavor.class);
                     when(variantFlavor.getMinSdkVersion()).thenReturn(minSdkVersion);
                     when(variantFlavor.getTargetSdkVersion()).thenReturn(targetSdkVersion);
                     when(variantFlavor.getName()).thenReturn(flavorName);
@@ -1708,8 +1709,8 @@ public class GradleModelMocker {
     }
 
     @Contract("_,true -> !null")
-    private ProductFlavor getProductFlavor(@NonNull String name, boolean create) {
-        for (ProductFlavor flavor : productFlavors) {
+    private IdeProductFlavor getProductFlavor(@NonNull String name, boolean create) {
+        for (IdeProductFlavor flavor : productFlavors) {
             if (flavor.getName().equals(name)) {
                 return flavor;
             }
@@ -1723,8 +1724,8 @@ public class GradleModelMocker {
     }
 
     @NonNull
-    private ProductFlavor createProductFlavor(@NonNull String name) {
-        ProductFlavor flavor = mock(ProductFlavor.class);
+    private IdeProductFlavor createProductFlavor(@NonNull String name) {
+        IdeProductFlavor flavor = mock(IdeProductFlavor.class);
         when(flavor.getName()).thenReturn(name);
         when(flavor.toString()).thenReturn(name);
         // Creating mutable map here which we can add to later
@@ -1738,9 +1739,9 @@ public class GradleModelMocker {
     }
 
     @NonNull
-    private static AndroidArtifactOutput createAndroidArtifactOutput(
+    private static IdeAndroidArtifactOutput createAndroidArtifactOutput(
             @NonNull String filterType, @NonNull String identifier) {
-        AndroidArtifactOutput artifactOutput = mock(AndroidArtifactOutput.class);
+        IdeAndroidArtifactOutput artifactOutput = mock(IdeAndroidArtifactOutput.class);
 
         if (filterType.isEmpty()) {
             when(artifactOutput.getFilterTypes()).thenReturn(Collections.emptyList());

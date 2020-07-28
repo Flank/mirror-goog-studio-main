@@ -88,10 +88,12 @@ perfetto::protos::TraceConfig PerfettoManager::BuildCommonTraceConfig() {
   // The intervals are somewhat arbitrary. We want to write to file
   // at an interval that isn't going to be super noticable for users
   // at the same time we don't want to fill our in memory buffers.
-  // We write to file at 2x slower than our flush period just to ensure
-  // we have data to write.
-  config.set_file_write_period_ms(2000);
-  config.set_flush_period_ms(1000);
+  // We do not need to set the flush period since we are not doing
+  // realtime streaming of data. Setting the flush period foces all
+  // probes to flush any in memory data to disk. This can cause
+  // significant latency and have a negative impact on the data
+  // and the users app.
+  config.set_file_write_period_ms(250);
   return config;
 }
 
@@ -117,6 +119,9 @@ perfetto::protos::TraceConfig PerfettoManager::BuildHeapprofdConfig(
 
 perfetto::protos::TraceConfig PerfettoManager::BuildFtraceConfig(
     string app_pkg_name, int buffer_size_in_kb) {
+  // The current settings when profiled on a Pixel 2 account for an overhead
+  // of approximately 50% CPU time on a little core. This means there is a
+  // total performance overhead of ~6%.
   perfetto::protos::TraceConfig config = BuildCommonTraceConfig();
   auto* buffer = config.add_buffers();
   buffer->set_size_kb(buffer_size_in_kb);
@@ -124,9 +129,28 @@ perfetto::protos::TraceConfig PerfettoManager::BuildFtraceConfig(
   auto* data_config = source->mutable_config();
   data_config->set_name("linux.ftrace");
   auto* ftrace_config = data_config->mutable_ftrace_config();
-  ftrace_config->set_buffer_size_kb(4096);
-  ftrace_config->set_drain_period_ms(250);
-  ftrace_config->add_ftrace_events("print");
+  ftrace_config->set_buffer_size_kb(buffer_size_in_kb);
+  // Drain ftrace every 10frames @ 60fps
+  ftrace_config->set_drain_period_ms(170);
+  // Enable more counters
+  ftrace_config->add_ftrace_events("thermal/thermal_temperature");
+  ftrace_config->add_ftrace_events("perf_trace_counters/perf_trace_user");
+  // If this event is reported by the OS. Fenced events will help users track
+  // synchronization issues. Most commonly fences are used to guard buffers
+  // used by kernel level drivers (eg. GPU). They are captured when the driver
+  // needs to do work and they are signaled when the driver is done.
+  ftrace_config->add_ftrace_events("fence/signaled");
+  ftrace_config->add_ftrace_events("fence/fence_wait_start");
+
+  // Enable task tracking
+  // This enables us to capture events/metadata that helps to track
+  // processes/threads as they get renamed/spawned. Reduces the number of
+  // processes/threads with only PIDs and no name attached to them in the
+  // capture.
+  ftrace_config->add_ftrace_events("task/task_rename");
+  ftrace_config->add_ftrace_events("task/task_newtask");
+
+  // Standard set of atrace categories
   ftrace_config->add_atrace_categories("gfx");
   ftrace_config->add_atrace_categories("input");
   ftrace_config->add_atrace_categories("view");
@@ -137,8 +161,21 @@ perfetto::protos::TraceConfig PerfettoManager::BuildFtraceConfig(
   ftrace_config->add_atrace_categories("hal");
   ftrace_config->add_atrace_categories("res");
   ftrace_config->add_atrace_categories("pm");
+  ftrace_config->add_atrace_categories("ss");
+  ftrace_config->add_atrace_categories("power");
+  ftrace_config->add_atrace_categories("database");
+  ftrace_config->add_atrace_categories("binder_driver");
+  ftrace_config->add_atrace_categories("binder_lock");
+
+  // Very verbose atrace categories
   ftrace_config->add_atrace_categories("sched");
   ftrace_config->add_atrace_categories("freq");
+
+  // Enable perf counters (mem / oom score / HW VSYNC)
+  auto* perf_config = data_config->mutable_perf_event_config();
+  perf_config->set_all_cpus(true);  // Required
+  perf_config->add_target_cmdline(app_pkg_name);
+
   // In P and above "*" is supported, if we move to support O we will want to
   // pass in the |app_pkg_name|
   ftrace_config->add_atrace_apps("*");

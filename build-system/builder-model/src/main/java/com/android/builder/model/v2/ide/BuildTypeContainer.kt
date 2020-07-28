@@ -15,6 +15,7 @@
  */
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.AndroidModel
 import com.android.builder.model.v2.dsl.BuildType
 
 /**
@@ -22,7 +23,7 @@ import com.android.builder.model.v2.dsl.BuildType
  *
  * @since 4.2
  */
-interface BuildTypeContainer {
+interface BuildTypeContainer: AndroidModel {
     /**
      * The Build Type itself.
      *

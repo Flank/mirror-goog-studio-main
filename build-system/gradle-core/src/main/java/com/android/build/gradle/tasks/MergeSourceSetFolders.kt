@@ -17,7 +17,7 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -306,8 +306,8 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
     }
 
     abstract class CreationAction protected constructor(
-        creationConfig: BaseCreationConfig
-    ) : VariantTaskCreationAction<MergeSourceSetFolders, BaseCreationConfig>(
+        creationConfig: ComponentCreationConfig
+    ) : VariantTaskCreationAction<MergeSourceSetFolders, ComponentCreationConfig>(
         creationConfig
     ) {
 
@@ -326,7 +326,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
     }
 
     open class MergeAssetBaseCreationAction(
-        creationConfig: BaseCreationConfig,
+        creationConfig: ComponentCreationConfig,
         private val outputArtifactType: InternalArtifactType<Directory>,
         private val includeDependencies: Boolean
     ) : CreationAction(creationConfig) {
@@ -394,7 +394,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         }
     }
 
-    class MergeAppAssetCreationAction(creationConfig: BaseCreationConfig) :
+    class MergeAppAssetCreationAction(creationConfig: ComponentCreationConfig) :
         MergeAssetBaseCreationAction(
             creationConfig,
             InternalArtifactType.MERGED_ASSETS,

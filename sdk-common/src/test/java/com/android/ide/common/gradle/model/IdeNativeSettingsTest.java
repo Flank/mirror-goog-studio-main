@@ -26,7 +26,7 @@ import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeNativeSettings}. */
+/** Tests for {@link IdeNativeSettingsImpl}. */
 public class IdeNativeSettingsTest {
     private ModelCache myModelCache;
 
@@ -37,12 +37,12 @@ public class IdeNativeSettingsTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeNativeSettings.class).isAssignableTo(Serializable.class);
+        assertThat(IdeNativeSettingsImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeNativeSettings nativeSettings = new IdeNativeSettings(new NativeSettingsStub());
+        IdeNativeSettingsImpl nativeSettings = new IdeNativeSettingsImpl(new NativeSettingsStub());
         byte[] bytes = Serialization.serialize(nativeSettings);
         Object o = Serialization.deserialize(bytes);
         assertEquals(nativeSettings, o);
@@ -51,13 +51,13 @@ public class IdeNativeSettingsTest {
     @Test
     public void constructor() throws Throwable {
         NativeSettings original = new NativeSettingsStub();
-        IdeNativeSettings copy = new IdeNativeSettings(original);
+        IdeNativeSettingsImpl copy = new IdeNativeSettingsImpl(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeNativeSettings.class).verify();
+        createEqualsVerifier(IdeNativeSettingsImpl.class).verify();
     }
 }

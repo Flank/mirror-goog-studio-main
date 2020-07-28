@@ -96,6 +96,11 @@ configure([test, testPrebuilts]) {
     exclude "**/BazelIntegrationTestsSuite*"
 }
 
+configure(test) {
+    environment["GENERATE_MODEL_GOLDEN_FILES"] = System.getenv("GENERATE_MODEL_GOLDEN_FILES") ?: ""
+	environment["PROJECT_ROOT"] = project.projectDir
+}
+
 task automaticTest(type: Test) {
     include "com/android/build/gradle/integration/automatic/**"
 

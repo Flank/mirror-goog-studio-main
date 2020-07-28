@@ -15,6 +15,7 @@
  */
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.AndroidModel
 import java.io.File
 
 /**
@@ -25,7 +26,15 @@ import java.io.File
  *
  * @since 4.2
  */
-interface JavaArtifact : BaseArtifact {
+interface JavaArtifact : BaseArtifact, AndroidModel {
     /** Path to the mockable platform jar generated for this [JavaArtifact], if present.  */
-    val mockablePlatformJar: File
+    val mockablePlatformJar: File?
+
+    /**
+     * Returns the folder containing resource files that classes from this artifact expect to find
+     * on the classpath.
+     *
+     * This is used to run the unit tests
+     */
+    val runtimeResourceFolder: File?
 }

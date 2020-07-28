@@ -15,6 +15,9 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.JavaArtifact
+import java.io.File
 
-interface IdeJavaArtifact: JavaArtifact, IdeBaseArtifact
+interface IdeJavaArtifact: IdeBaseArtifact {
+  /** Path to the mockable platform jar generated for this [IdeJavaArtifact], if present.  */
+  val mockablePlatformJar: File?
+}

@@ -21,7 +21,10 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.builder.errors.EvalIssueException
+import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
+import com.google.common.collect.Iterables
+import com.google.common.collect.Sets
 import com.google.common.truth.StringSubject
 import com.google.common.truth.Truth.assertThat
 import java.io.File
@@ -168,15 +171,26 @@ class KotlinDslTest {
     @Test
     fun `mergedFlavor source compatibility`() {
         val applicationVariants = (android as BaseAppModuleExtension).applicationVariants
+        val fileF = File("f")
+        val fileG = File("g")
+        val fileH = File("h")
         applicationVariants.all { variant ->
             variant.mergedFlavor.manifestPlaceholders += mapOf("a" to "b")
             variant.mergedFlavor.testInstrumentationRunnerArguments += mapOf("c" to "d")
+            variant.mergedFlavor.resourceConfigurations += "e"
+            variant.mergedFlavor.proguardFiles += fileF
+            variant.mergedFlavor.consumerProguardFiles += fileG // While not applicable to apps, the same objects are used for libraries
+            variant.mergedFlavor.testProguardFiles += fileH
         }
         plugin.createAndroidTasks()
         assertThat(applicationVariants).hasSize(2)
         applicationVariants.first().also { variant ->
             assertThat(variant.mergedFlavor.manifestPlaceholders).containsExactly("a", "b")
             assertThat(variant.mergedFlavor.testInstrumentationRunnerArguments).containsExactly("c", "d")
+            assertThat(variant.mergedFlavor.resourceConfigurations).containsExactly("e")
+            assertThat(variant.mergedFlavor.proguardFiles).containsExactly(fileF)
+            assertThat(variant.mergedFlavor.consumerProguardFiles).containsExactly(fileG)
+            assertThat(variant.mergedFlavor.testProguardFiles).containsExactly(fileH)
         }
     }
 
@@ -211,6 +225,47 @@ class KotlinDslTest {
             assertThat(checkOnly).containsExactly("c")
         }
     }
+
+    @Test
+    fun `matchingFallbacks source compatibility`() {
+        (android as BaseAppModuleExtension).productFlavors.create("example").apply {
+            // Check the list can be mutated
+            matchingFallbacks += "a"
+            matchingFallbacks.add("b")
+            assertThat(matchingFallbacks).containsExactly("a", "b")
+            // Check the single value setter
+            setMatchingFallbacks("c")
+            assertThat(matchingFallbacks).containsExactly( "c")
+            // Check the vararg setter
+            setMatchingFallbacks("d", "e")
+            assertThat(matchingFallbacks).containsExactly("d", "e")
+            // Check the list setter
+            setMatchingFallbacks(ImmutableList.of("f"))
+            assertThat(matchingFallbacks).containsExactly("f")
+            // Check the setter copies before clearing
+            setMatchingFallbacks(matchingFallbacks)
+            assertThat(matchingFallbacks).containsExactly("f")
+        }
+        (android as BaseAppModuleExtension).buildTypes.create("qa").apply {
+            // Check the list can be mutated
+            matchingFallbacks += "a"
+            matchingFallbacks.add("b")
+            assertThat(matchingFallbacks).containsExactly("a", "b")
+            // Check the single value setter
+            setMatchingFallbacks("c")
+            assertThat(matchingFallbacks).containsExactly( "c")
+            // Check the vararg setter
+            setMatchingFallbacks("d", "e")
+            assertThat(matchingFallbacks).containsExactly("d", "e")
+            // Check the list setter
+            setMatchingFallbacks(ImmutableList.of("f"))
+            assertThat(matchingFallbacks).containsExactly("f")
+            // Check the setter copies before clearing
+            setMatchingFallbacks(matchingFallbacks)
+            assertThat(matchingFallbacks).containsExactly("f")
+        }
+    }
+
 
     private fun assertThatPath(file: File?): StringSubject {
         return assertThat(file?.path)

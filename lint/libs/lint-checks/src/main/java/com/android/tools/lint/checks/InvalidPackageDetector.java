@@ -246,19 +246,18 @@ public class InvalidPackageDetector extends Detector implements ClassScanner {
                 continue;
             }
             seen.add(pkg);
-
             if (pkg.equals("javax.inject")) {
                 String name = jarFile.getName();
                 //noinspection SpellCheckingInspection
                 if (name.startsWith("dagger-") || name.startsWith("guice-")) {
                     // White listed
-                    return;
+                    continue;
                 }
             }
 
             if (jarFile.getName().startsWith("junit-")) {
                 // Deliberately allowed; see b/73555280
-                return;
+                continue;
             }
 
             Project project = context.getProject();

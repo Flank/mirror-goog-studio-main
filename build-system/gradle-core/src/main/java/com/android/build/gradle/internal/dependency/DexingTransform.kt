@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.dexing.readDesugarGraph
 import com.android.build.gradle.internal.dexing.writeDesugarGraph
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
@@ -324,11 +324,11 @@ abstract class DexingWithClasspathTransform : BaseDexingTransform<BaseDexingTran
     override fun computeClasspathFiles() = classpath.files.map(File::toPath)
 }
 
-fun getDexingArtifactConfigurations(components: Collection<BaseCreationConfig>): Set<DexingArtifactConfiguration> {
+fun getDexingArtifactConfigurations(components: Collection<ComponentCreationConfig>): Set<DexingArtifactConfiguration> {
     return components.map { getDexingArtifactConfiguration(it) }.toSet()
 }
 
-fun getDexingArtifactConfiguration(creationConfig: BaseCreationConfig): DexingArtifactConfiguration {
+fun getDexingArtifactConfiguration(creationConfig: ComponentCreationConfig): DexingArtifactConfiguration {
     return DexingArtifactConfiguration(
         minSdk = creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel,
         isDebuggable = creationConfig.variantDslInfo.isDebuggable,

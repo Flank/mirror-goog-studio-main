@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
@@ -63,8 +63,8 @@ abstract class JavaPreCompileTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: BaseCreationConfig) :
-        VariantTaskCreationAction<JavaPreCompileTask, BaseCreationConfig>(creationConfig) {
+    class CreationAction(creationConfig: ComponentCreationConfig) :
+        VariantTaskCreationAction<JavaPreCompileTask, ComponentCreationConfig>(creationConfig) {
 
         override val name: String
             get() = computeTaskName("javaPreCompile")

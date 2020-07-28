@@ -142,7 +142,7 @@ class PropertiesTest {
         `when`(resources.getResourceTypeName(eq(fontId))).thenReturn("font")
         `when`(resources.getResourcePackageName(eq(fontId))).thenReturn("pck")
         `when`(resources.getResourceEntryName(eq(fontId))).thenReturn("garamond")
-        val builder = TreeBuilderWrapper(PropertiesTest::class.java.classLoader)
+        val builder = TreeBuilderWrapper(PropertiesTest::class.java.classLoader!!)
         val nodes = builder.convert(androidComposeView)
         WindowInspector.getGlobalWindowViews().add(androidComposeView)
 

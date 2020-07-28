@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -250,8 +251,8 @@ abstract class RenderscriptCompile : NdkTask() {
     // ----- CreationAction -----
 
     class CreationAction(
-        creationConfig: VariantCreationConfig
-    ) : VariantTaskCreationAction<RenderscriptCompile, VariantCreationConfig>(
+        creationConfig: ConsumableCreationConfig
+    ) : VariantTaskCreationAction<RenderscriptCompile, ConsumableCreationConfig>(
         creationConfig
     ) {
 
@@ -287,9 +288,7 @@ abstract class RenderscriptCompile : NdkTask() {
 
             val ndkMode = variantDslInfo.renderscriptNdkModeEnabled
 
-            task.targetApi.set(task.project.provider {
-                variantDslInfo.renderscriptTarget
-            })
+            task.targetApi.set(creationConfig.renderscriptTargetApi)
             task.targetApi.disallowChanges()
 
             task.isSupportMode = variantDslInfo.renderscriptSupportModeEnabled

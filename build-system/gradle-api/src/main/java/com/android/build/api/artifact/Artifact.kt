@@ -97,7 +97,7 @@ abstract class Artifact<T: FileSystemLocation>(
     /**
      * Denotes possible multiple [FileSystemLocation] instances for this artifact type.
      * Consumers of artifact types with multiple instances must consume a collection of
-     * [FileSystemLocation]
+     * [FileSystemLocation].
      */
     @Incubating
     abstract class MultipleArtifact<FileTypeT: FileSystemLocation>(

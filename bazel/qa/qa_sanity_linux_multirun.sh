@@ -39,9 +39,7 @@ target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emula
   //tools/adt/idea/android-uitests:AddNewBuildTypeTest \
   //tools/adt/idea/android-uitests:AddKotlinTest \
   //tools/adt/idea/android-uitests:AddRemoveCppDependencyTest \
-  //tools/adt/idea/android-uitests:BaselineConstraintHandlingTest \
   //tools/adt/idea/android-uitests:BasicLayoutEditTest \
-  //tools/adt/idea/android-uitests:BuildCppKotlinTest \
   //tools/adt/idea/android-uitests:CMakeListsTest \
   //tools/adt/idea/android-uitests:ConvertFromWebpToPngTest \
   //tools/adt/idea/android-uitests:CreateCppKotlinProjectTest \

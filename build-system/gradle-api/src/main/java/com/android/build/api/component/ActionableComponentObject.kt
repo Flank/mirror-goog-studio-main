@@ -19,7 +19,7 @@ package com.android.build.api.component
 import org.gradle.api.Incubating
 
 /**
- * Tag interface for interfaces or classes that can be used as parameter to an
+ * Tag interface for interfaces or classes that can be used as a parameter to an
  * [org.gradle.api.Action] or lambda in the Variant API.
  */
 @Incubating

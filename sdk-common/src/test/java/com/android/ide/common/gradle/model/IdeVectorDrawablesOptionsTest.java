@@ -26,7 +26,7 @@ import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeVectorDrawablesOptions}. */
+/** Tests for {@link IdeVectorDrawablesOptionsImpl}. */
 public class IdeVectorDrawablesOptionsTest {
     private ModelCache myModelCache;
 
@@ -37,13 +37,13 @@ public class IdeVectorDrawablesOptionsTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeVectorDrawablesOptions.class).isAssignableTo(Serializable.class);
+        assertThat(IdeVectorDrawablesOptionsImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeVectorDrawablesOptions options =
-                new IdeVectorDrawablesOptions(new VectorDrawablesOptionsStub());
+        IdeVectorDrawablesOptionsImpl options =
+                new IdeVectorDrawablesOptionsImpl(new VectorDrawablesOptionsStub());
         byte[] bytes = Serialization.serialize(options);
         Object o = Serialization.deserialize(bytes);
         assertEquals(options, o);
@@ -52,13 +52,13 @@ public class IdeVectorDrawablesOptionsTest {
     @Test
     public void constructor() throws Throwable {
         VectorDrawablesOptions original = new VectorDrawablesOptionsStub();
-        IdeVectorDrawablesOptions copy = new IdeVectorDrawablesOptions(original);
+        IdeVectorDrawablesOptionsImpl copy = new IdeVectorDrawablesOptionsImpl(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeVectorDrawablesOptions.class).verify();
+        createEqualsVerifier(IdeVectorDrawablesOptionsImpl.class).verify();
     }
 }

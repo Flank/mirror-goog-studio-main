@@ -41,6 +41,12 @@ internal abstract class LazyManifestParserBaseTest :
     val temporaryFolder = TemporaryFolder()
 
     private val projectServices = createProjectServices()
+    private var issueChecker: ((List<SyncIssue>) -> Unit)? = null
+
+    fun withIssueChecker(action: (List<SyncIssue>) -> Unit) {
+        checkState(TestState.GIVEN)
+        issueChecker = action
+    }
 
     override fun instantiateGiven() = GivenBuilder()
     override fun instantiateResult() = Result()
@@ -124,8 +130,10 @@ internal abstract class LazyManifestParserBaseTest :
         }
 
         // finally check for errors
-        // conver the normal SyncIssue returned into fake ones in order to compare them.
-        Truth.assertThat(actualMaybe.issues.map { it.toFake() }).isEqualTo(expectedMaybe.issues)
+        issueChecker?.invoke(actualMaybe.issues) ?: run {
+            // conver the normal SyncIssue returned into fake ones in order to compare them.
+            Truth.assertThat(actualMaybe.issues.map { it.toFake() }).isEqualTo(expectedMaybe.issues)
+        }
     }
 
     class GivenBuilder {

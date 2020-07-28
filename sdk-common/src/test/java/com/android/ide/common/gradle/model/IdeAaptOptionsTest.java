@@ -28,7 +28,7 @@ import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeAaptOptions}. */
+/** Tests for {@link IdeAaptOptionsImpl}. */
 public class IdeAaptOptionsTest {
     private ModelCache myModelCache;
 
@@ -39,12 +39,12 @@ public class IdeAaptOptionsTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeAaptOptions.class).isAssignableTo(Serializable.class);
+        assertThat(IdeAaptOptionsImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeAaptOptions aaptOptions = new IdeAaptOptions(new AaptOptionsStub());
+        IdeAaptOptionsImpl aaptOptions = new IdeAaptOptionsImpl(new AaptOptionsStub());
         byte[] bytes = Serialization.serialize(aaptOptions);
         Object o = Serialization.deserialize(bytes);
         assertEquals(aaptOptions, o);
@@ -53,13 +53,13 @@ public class IdeAaptOptionsTest {
     @Test
     public void constructor() throws Throwable {
         AaptOptions original = new AaptOptionsStub();
-        IdeAaptOptions copy = new IdeAaptOptions(original);
+        IdeAaptOptionsImpl copy = new IdeAaptOptionsImpl(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeClassField.class).verify();
+        createEqualsVerifier(IdeClassFieldImpl.class).verify();
     }
 }

@@ -22,11 +22,11 @@ import java.util.regex.Pattern
 
 /**
  * Allows registering Actions on [ComponentT], with the ability to include
- * filters to target sub sets of [ComponentT].
+ * filters to target subsets of [ComponentT].
  *
- * The filters acts on the properties of [ComponentIdentity]
+ * The filters act on the properties of [ComponentIdentity].
  *
- * Calls can be chained to include more than one filters, though in some cases, selecting a
+ * Calls can be chained to include more than one filter, though in some cases, selecting a
  * particular filter can reduce the list of available filters in the chain.
  */
 @Incubating
@@ -36,31 +36,31 @@ interface FilteredComponentActionRegistrar<ComponentT>
     /**
      * Returns a new registrar for [ComponentT] objects with a given build type.
      *
-     * @param buildType to filter [ComponentT] on
-     * @return an instance of [BuildTypedComponentActionRegistrar] to further filter variants.
+     * @param buildType Build type to filter [ComponentT] on.
+     * @return An instance of [BuildTypedComponentActionRegistrar] to further filter variants.
      */
     fun withBuildType(buildType: String): BuildTypedComponentActionRegistrar<ComponentT>
 
     /**
      * Registers an [Action] for [ComponentT] objects with a given build type.
      *
-     * @param buildType to filter [ComponentT] on
-     * @param action [Action] to run on filtered [ComponentT]
+     * @param buildType Build type to filter [ComponentT] on.
+     * @param action [Action] to run on filtered [ComponentT].
      */
     fun withBuildType(buildType: String, action: Action<ComponentT>)
 
     /**
      * Registers an action for [ComponentT] objects with a given build type.
      *
-     * @param buildType to filter [ComponentT] on
-     * @param action lambda function to run on filtered [ComponentT]
+     * @param buildType Build type to filter [ComponentT] on.
+     * @param action Lambda function to run on filtered [ComponentT].
      */
     fun withBuildType(buildType: String, action: ComponentT.() -> Unit)
 
     /**
      * Returns a new registrar for [ComponentT] objects with a given (dimension, flavorName).
      *
-     * @param flavorToDimension to filter [ComponentT] on
+     * @param flavorToDimension Dimension and flavor to filter [ComponentT] on.
      * @return [FlavoredComponentActionRegistrar] instance to further filter instances of [ComponentT]
      */
     fun withFlavor(flavorToDimension: Pair<String, String>): FlavoredComponentActionRegistrar<ComponentT>
@@ -68,16 +68,16 @@ interface FilteredComponentActionRegistrar<ComponentT>
     /**
      * Registers an [Action] for [ComponentT] objects with a given (dimension, flavorName).
      *
-     * @param flavorToDimension to filter [ComponentT] on
-     * @param action [Action] to run on filtered [ComponentT]
+     * @param flavorToDimension Dimension and flavor to filter [ComponentT] on.
+     * @param action [Action] to run on filtered [ComponentT].
      */
     fun withFlavor(flavorToDimension: Pair<String, String>, action: Action<ComponentT>)
 
     /**
      * Registers an action for [ComponentT] objects with a given (dimension, flavorName).
      *
-     * @param flavorToDimension to filter [ComponentT] on
-     * @param action lambda function to run on filtered [ComponentT]
+     * @param flavorToDimension Dimension and flavor to filter [ComponentT] on.
+     * @param action Lambda function to run on filtered [ComponentT].
      */
     fun withFlavor(flavorToDimension: Pair<String, String>, action: ComponentT.() -> Unit)
 
@@ -86,23 +86,23 @@ interface FilteredComponentActionRegistrar<ComponentT>
      *
      * @param pattern [Pattern] to apply on the [org.gradle.api.Named.getName] to filter [ComponentT]
      * instances on
-     * @param action [Action] to run on filtered [ComponentT]
+     * @param action [Action] to run on filtered [ComponentT].
      */
     fun withName(pattern: Pattern, action: Action<ComponentT>)
 
     /**
      * Registers an [Action] for [ComponentT] objects with a given name.
      *
-     * @param name name to filter [ComponentT] on
-     * @param action [Action] to run on filtered [ComponentT]
+     * @param name Name to filter [ComponentT] on.
+     * @param action [Action] to run on filtered [ComponentT].
      */
     fun withName(name: String, action: Action<ComponentT>)
 
     /**
      * Registers an action for [ComponentT] objects with a given name.
      *
-     * @param name name to filter [ComponentT] on
-     * @param action lambda function to run on filtered [ComponentT]
+     * @param name Name to filter [ComponentT] on.
+     * @param action Lambda function to run on filtered [ComponentT].
      */
     fun withName(name: String, action: ComponentT.() -> Unit)
 }

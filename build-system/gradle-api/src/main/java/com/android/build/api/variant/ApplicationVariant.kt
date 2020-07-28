@@ -39,5 +39,4 @@ interface ApplicationVariant<PropertiesT: ApplicationVariantProperties> : Varian
 
     /** Specify whether to include SDK dependency information in APKs and Bundles. */
     fun dependenciesInfo(action: DependenciesInfo.() -> Unit)
-
 }

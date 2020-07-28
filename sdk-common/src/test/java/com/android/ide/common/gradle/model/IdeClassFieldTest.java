@@ -26,7 +26,7 @@ import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeClassField}. */
+/** Tests for {@link IdeClassFieldImpl}. */
 public class IdeClassFieldTest {
     private ModelCache myModelCache;
 
@@ -37,12 +37,12 @@ public class IdeClassFieldTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeClassField.class).isAssignableTo(Serializable.class);
+        assertThat(IdeClassFieldImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeClassField classField = new IdeClassField(new ClassFieldStub());
+        IdeClassFieldImpl classField = new IdeClassFieldImpl(new ClassFieldStub());
         byte[] bytes = Serialization.serialize(classField);
         Object o = Serialization.deserialize(bytes);
         assertEquals(classField, o);
@@ -51,13 +51,13 @@ public class IdeClassFieldTest {
     @Test
     public void constructor() throws Throwable {
         ClassField original = new ClassFieldStub();
-        IdeClassField copy = new IdeClassField(original);
+        IdeClassFieldImpl copy = new IdeClassFieldImpl(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeClassField.class).verify();
+        createEqualsVerifier(IdeClassFieldImpl.class).verify();
     }
 }

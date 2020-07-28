@@ -15,12 +15,14 @@
  */
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.AndroidModel
+
 /**
  * Options for aapt, but only those needed by the IDE.
  *
  * @since 4.2
  */
-interface AaptOptions {
+interface AaptOptions: AndroidModel {
     enum class Namespacing {
         /**
          * Resources are not namespaced.

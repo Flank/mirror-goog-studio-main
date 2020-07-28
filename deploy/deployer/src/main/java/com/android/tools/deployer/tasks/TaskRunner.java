@@ -329,6 +329,8 @@ public class TaskRunner {
             return new TaskResult(batch);
         } catch (DeployerException e) {
             return new TaskResult(batch, e);
+        } catch (Exception e) {
+            return new TaskResult(batch, DeployerException.runtimeException(e));
         } finally {
             running.release();
         }

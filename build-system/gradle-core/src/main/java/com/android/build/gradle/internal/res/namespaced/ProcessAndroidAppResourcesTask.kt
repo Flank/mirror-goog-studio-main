@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.SdkConstants
 import com.android.build.gradle.internal.AndroidJarInput
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
@@ -111,8 +111,8 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: BaseCreationConfig) :
-        VariantTaskCreationAction<ProcessAndroidAppResourcesTask, BaseCreationConfig>(
+    class CreationAction(creationConfig: ComponentCreationConfig) :
+        VariantTaskCreationAction<ProcessAndroidAppResourcesTask, ComponentCreationConfig>(
             creationConfig
         ) {
 

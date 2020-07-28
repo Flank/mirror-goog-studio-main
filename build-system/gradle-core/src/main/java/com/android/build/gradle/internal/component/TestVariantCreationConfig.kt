@@ -19,6 +19,6 @@ package com.android.build.gradle.internal.component
 /**
  * Internal CreationConfig for test modules
  */
-interface TestVariantCreationConfig: ApkCreationConfig, TestCreationConfig, VariantCreationConfig {
+interface TestVariantCreationConfig: ApkCreationConfig, TestCreationConfig {
 
 }

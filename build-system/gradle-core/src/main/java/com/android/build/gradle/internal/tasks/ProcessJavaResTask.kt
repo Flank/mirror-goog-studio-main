@@ -16,7 +16,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.api.AndroidSourceSet
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.DirectoryProperty
@@ -43,8 +43,8 @@ abstract class ProcessJavaResTask : Sync(), VariantAwareTask {
 
     /** Configuration Action for a process*JavaRes tasks.  */
     class CreationAction(
-        creationConfig: BaseCreationConfig
-    ) : VariantTaskCreationAction<ProcessJavaResTask, BaseCreationConfig>(
+        creationConfig: ComponentCreationConfig
+    ) : VariantTaskCreationAction<ProcessJavaResTask, ComponentCreationConfig>(
         creationConfig
     ) {
 

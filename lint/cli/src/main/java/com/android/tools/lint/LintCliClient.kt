@@ -32,7 +32,6 @@ import com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE
 import com.android.tools.lint.LintCliFlags.ERRNO_ERRORS
 import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
 import com.android.tools.lint.LintStats.Companion.create
-import com.android.tools.lint.UastEnvironment.Companion.create
 import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.WrongThreadInterproceduralDetector
 import com.android.tools.lint.client.api.Configuration
@@ -66,28 +65,21 @@ import com.android.utils.StdLogger
 import com.google.common.annotations.Beta
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Splitter
+import com.google.common.collect.Iterables
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import com.intellij.codeInsight.ExternalAnnotationsManager
-import com.intellij.core.JavaCoreProjectEnvironment
 import com.intellij.mock.MockProject
-import com.intellij.openapi.Disposable
-import com.intellij.openapi.components.ServiceManager
-import com.intellij.openapi.roots.LanguageLevelProjectExtension
-import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.PsiManager
-import com.intellij.psi.impl.file.impl.JavaFileManager
-import com.intellij.util.io.URLUtil
 import com.intellij.util.lang.UrlClassLoader
 import org.jetbrains.jps.model.java.impl.JavaSdkUtil
+import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys.PERF_MANAGER
 import org.jetbrains.kotlin.cli.common.CommonCompilerPerformanceManager
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
-import org.jetbrains.kotlin.cli.jvm.index.JavaRoot
-import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesIndexImpl
-import org.jetbrains.kotlin.cli.jvm.index.SingleJavaFileRootsIndex
+import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.config.LanguageVersionSettings
+import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.util.PerformanceCounter.Companion.resetAllCounters
 import org.w3c.dom.Document
 import org.xml.sax.SAXException
@@ -185,11 +177,10 @@ open class LintCliClient : LintClient {
 
     private var validatedIds = false
     private var kotlinPerformanceManager: LintCliKotlinPerformanceManager? = null
+    private var jdkHome: File? = null
     protected var overrideConfiguration: DefaultConfiguration? = null
     var uastEnvironment: UastEnvironment? = null
-    var ideaProject: com.intellij.openapi.project.Project? = null
-        private set
-    private var projectDisposer: Disposable? = null
+    val ideaProject: MockProject? get() = uastEnvironment?.ideaProject
     protected val incidents: MutableList<Incident> = ArrayList()
     private var hasErrors = false
     protected var errorCount = 0
@@ -965,9 +956,6 @@ open class LintCliClient : LintClient {
         return CliConfiguration(file, flags.isFatalOnly)
     }
 
-    val projectEnvironment: JavaCoreProjectEnvironment?
-        get() = uastEnvironment?.projectEnvironment
-
     public override fun initializeProjects(knownProjects: Collection<Project>) {
         // Initialize the associated idea project to use
         val includeTests = !flags.isIgnoreTestSources
@@ -977,19 +965,20 @@ open class LintCliClient : LintClient {
             allProjects.add(project)
             allProjects.addAll(project.allLibraries)
         }
-        val classpath: MutableSet<File> = LinkedHashSet(50)
+        val sourceRoots: MutableSet<File> = LinkedHashSet(10)
+        val classpathRoots: MutableSet<File> = LinkedHashSet(50)
         for (project in allProjects) {
             // Note that there could be duplicates here since we're including multiple library
             // dependencies that could have the same dependencies (e.g. lib1 and lib2 both
             // referencing guava.jar)
-            classpath.addAll(project.javaSourceFolders)
+            sourceRoots.addAll(project.javaSourceFolders)
             if (includeTests) {
-                classpath.addAll(project.testSourceFolders)
+                sourceRoots.addAll(project.testSourceFolders)
             }
-            classpath.addAll(project.generatedSourceFolders)
-            classpath.addAll(project.getJavaLibraries(true))
+            sourceRoots.addAll(project.generatedSourceFolders)
+            classpathRoots.addAll(project.getJavaLibraries(true))
             if (includeTests) {
-                classpath.addAll(project.testLibraries)
+                classpathRoots.addAll(project.testLibraries)
             }
             // Don't include all class folders:
             //  files.addAll(project.getJavaClassFolders());
@@ -1001,17 +990,17 @@ open class LintCliClient : LintClient {
             // compiled libraries will not work; see
             // https://issuetracker.google.com/72032121
             if (project.isLibrary) {
-                classpath.addAll(project.javaClassFolders)
+                classpathRoots.addAll(project.javaClassFolders)
             } else if (project.isGradleProject) {
                 // As of 3.4, R.java is in a special jar file
                 for (f in project.javaClassFolders) {
                     if (f.name == SdkConstants.FN_R_CLASS_JAR) {
-                        classpath.add(f)
+                        classpathRoots.add(f)
                     }
                 }
             }
         }
-        addBootClassPath(knownProjects, classpath)
+        addBootClassPath(knownProjects, classpathRoots)
         var maxLevel = LanguageLevel.JDK_1_7
         for (project in knownProjects) {
             val level = project.javaLanguageLevel
@@ -1019,51 +1008,28 @@ open class LintCliClient : LintClient {
                 maxLevel = level
             }
         }
-        val parentDisposable = Disposer.newDisposable()
-        projectDisposer = parentDisposable
-        val environment = create(parentDisposable)
-        uastEnvironment = environment
-        val projectEnvironment = environment.projectEnvironment
-        val mockProject = projectEnvironment.project
-        ideaProject = mockProject
-        val languageLevelProjectExtension =
-            mockProject.getComponent(LanguageLevelProjectExtension::class.java)
-        if (languageLevelProjectExtension != null) {
-            languageLevelProjectExtension.languageLevel = maxLevel
+
+        for (file in Iterables.concat(sourceRoots, classpathRoots)) {
+            // IntelliJ expects absolute file paths, otherwise resolution can fail in subtle ways.
+            require(file.isAbsolute) { "Relative Path found: $file. All paths should be absolute." }
         }
-        projectEnvironment.registerPaths(classpath.toList())
-        val manager = ServiceManager.getService(
-            mockProject,
-            JavaFileManager::class.java
-        ) as KotlinCliJavaFileManagerImpl
-        val roots: MutableList<JavaRoot> = ArrayList()
-        for (file in classpath) {
-            // IntelliJ's framework requires absolute path to JARs, name resolution might fail
-            // otherwise. We defensively ensure all paths are absolute.
-            require(file.isAbsolute) {
-                "Relative Path found: ${file.path}. All paths should be absolute."
-            }
-            if (file.isDirectory) {
-                val vFile = StandardFileSystems.local().findFileByPath(file.path)
-                if (vFile != null) {
-                    roots.add(JavaRoot(vFile, JavaRoot.RootType.SOURCE, null))
-                }
-            } else {
-                val pathString = file.path
-                if (pathString.endsWith(SdkConstants.DOT_SRCJAR)) {
-                    // Mount as source files
-                    val root =
-                        StandardFileSystems.jar().findFileByPath(pathString + URLUtil.JAR_SEPARATOR)
-                    if (root != null) {
-                        roots.add(JavaRoot(root, JavaRoot.RootType.SOURCE, null))
-                    }
-                }
-            }
+
+        val config = UastEnvironment.Configuration.create()
+        config.javaLanguageLevel = maxLevel
+        config.addSourceRoots(sourceRoots.toList())
+        config.addClasspathRoots(classpathRoots.toList())
+        config.kotlinCompilerConfig.putIfNotNull(PERF_MANAGER, kotlinPerformanceManager)
+        jdkHome?.let {
+            config.kotlinCompilerConfig.put(JVMConfigurationKeys.JDK_HOME, it)
+            config.kotlinCompilerConfig.put(JVMConfigurationKeys.NO_JDK, false)
         }
-        val index = JvmDependenciesIndexImpl(roots)
-        manager.initialize(index, emptyList(), SingleJavaFileRootsIndex(emptyList()), false)
+
+        val env = UastEnvironment.create(config)
+        uastEnvironment = env
+        kotlinPerformanceManager?.notifyCompilerInitialized()
+
         for (project in allProjects) {
-            project.ideaProject = ideaProject
+            project.ideaProject = env.ideaProject
         }
         super.initializeProjects(knownProjects)
     }
@@ -1094,6 +1060,10 @@ open class LintCliClient : LintClient {
                 }
             }
 
+            // TODO: When the JRE/JDK distinction no longer applies, simplify the jdkHome setup.
+            if (!isJre) {
+                this.jdkHome = jdkHome
+            }
             return true
         }
 
@@ -1116,9 +1086,8 @@ open class LintCliClient : LintClient {
     }
 
     public override fun disposeProjects(knownProjects: Collection<Project>) {
-        projectDisposer?.let { Disposer.dispose(it) }
-        ideaProject = null
-        projectDisposer = null
+        uastEnvironment?.dispose()
+        uastEnvironment = null
         super.disposeProjects(knownProjects)
     }
 
@@ -1335,32 +1304,26 @@ open class LintCliClient : LintClient {
                     kotlinFiles.add(context.file)
                 }
             }
-            // We unconditionally invoke the KotlinLintAnalyzerFacade, even
+            // We unconditionally invoke UastEnvironment.analyzeFiles(), even
             // if kotlinFiles is empty -- without this, the machinery in
             // the project (such as the CliLightClassGenerationSupport and
             // the CoreFileManager) will throw exceptions at runtime even
             // for plain class lookup
-            val project = ideaProject as? MockProject
-            val environment = uastEnvironment
-            if (project != null && environment != null) {
-                val paths = environment.projectEnvironment.paths
-                KotlinLintAnalyzerFacade(kotlinPerformanceManager).analyze(
-                    kotlinFiles,
-                    paths,
-                    project,
-                    environment,
-                    javaLanguageLevel,
-                    kotlinLanguageLevel
-                )
+            val env = uastEnvironment
+            if (env != null) {
+                if (kotlinLanguageLevel != null) {
+                    env.kotlinCompilerConfig.languageVersionSettings = kotlinLanguageLevel
+                }
+                env.analyzeFiles(kotlinFiles)
             }
             val ok = super.prepare(contexts, javaLanguageLevel, kotlinLanguageLevel)
-            if (project == null || contexts.isEmpty()) {
+            if (contexts.isEmpty()) {
                 return ok
             }
             // Now that we have a project context, ensure that the annotations manager
             // is up to date
             val annotationsManager =
-                ExternalAnnotationsManager.getInstance(project) as LintExternalAnnotationsManager
+                ExternalAnnotationsManager.getInstance(ideaProject) as LintExternalAnnotationsManager
             val target = pickBuildTarget(contexts.first().driver.projects)
             annotationsManager.updateAnnotationRoots(this@LintCliClient, target)
             return ok

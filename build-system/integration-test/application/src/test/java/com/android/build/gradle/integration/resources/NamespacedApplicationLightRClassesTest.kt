@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Rule
@@ -87,7 +88,9 @@ class NamespacedApplicationLightRClassesTest {
 
     @Test
     fun testResourcesCompiled() {
-        project.executor().run(":app:assembleDebug")
+        project.executor()
+            .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false) // b/160949546
+            .run(":app:assembleDebug")
 
         // Check library resources
         val libFiles = project.getSubproject("lib")

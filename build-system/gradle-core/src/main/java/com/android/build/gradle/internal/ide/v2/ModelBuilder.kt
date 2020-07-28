@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.internal.ide.v2
 
+import com.android.SdkConstants
 import com.android.Version
+import com.android.build.api.component.impl.AndroidTestPropertiesImpl
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.dsl.AndroidSourceSet
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.BuildFeatures
@@ -25,24 +28,52 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.SigningConfig
+import com.android.build.api.dsl.TestExtension
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantProperties
-import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+import com.android.build.api.variant.impl.TestVariantPropertiesImpl
+import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl.GlobalSyncIssueService
+import com.android.build.gradle.internal.ide.DependencyFailureHandler
+import com.android.build.gradle.internal.ide.ModelBuilder
+import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputs
+import com.android.build.gradle.internal.ide.dependencies.BuildMapping
+import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
+import com.android.build.gradle.internal.ide.dependencies.computeBuildMapping
+import com.android.build.gradle.internal.ide.dependencies.getDependencyGraphBuilder
+import com.android.build.gradle.internal.ide.dependencies.getVariantName
 import com.android.build.gradle.internal.ide.verifyIDEIsNotOld
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
+import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL
+import com.android.build.gradle.internal.scope.InternalArtifactType.APK_IDE_MODEL
+import com.android.build.gradle.internal.scope.InternalArtifactType.BUNDLE_IDE_MODEL
+import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
+import com.android.build.gradle.internal.scope.InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
+import com.android.build.gradle.internal.tasks.ExtractApksTask
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
+import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SyncIssue
 import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags.BooleanFlag
+import com.android.builder.model.v2.ide.ArtifactDependencies
 import com.android.builder.model.v2.ide.BuildTypeContainer
+import com.android.builder.model.v2.ide.BundleInfo
+import com.android.builder.model.v2.ide.JavaArtifact
 import com.android.builder.model.v2.ide.ProductFlavorContainer
 import com.android.builder.model.v2.ide.ProjectType
+import com.android.builder.model.v2.ide.TestInfo
+import com.android.builder.model.v2.ide.TestedTargetVariant
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.ModelBuilderParameter
@@ -51,8 +82,15 @@ import com.android.builder.model.v2.models.VariantDependencies
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.Project
+import org.gradle.api.provider.Provider
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder
-import com.android.builder.model.v2.ide.Variant as V2IdeVariant
+import java.io.File
+import java.io.FileInputStream
+import java.io.IOException
+import javax.xml.namespace.QName
+import javax.xml.stream.XMLInputFactory
+import javax.xml.stream.XMLStreamException
+import javax.xml.stream.events.EndElement
 
 class ModelBuilder<
         AndroidSourceSetT : AndroidSourceSet,
@@ -110,7 +148,7 @@ class ModelBuilder<
         className: String,
         parameter: ModelBuilderParameter,
         project: Project
-    ): Any = when (className) {
+    ): Any? = when (className) {
         VariantDependencies::class.java.name -> buildVariantDependenciesModel(project, parameter)
         AndroidProject::class.java.name,
         GlobalLibraryMap::class.java.name,
@@ -188,10 +226,12 @@ class ModelBuilder<
             )
         }
 
-        // gather variants
-        val variantList = mutableListOf<V2IdeVariant>()
-//        TODO
+        // Keep track of the result of parsing each manifest for instant app value.
+        // This prevents having to reparse the
+        val instantAppResultMap = mutableMapOf<File, Boolean>()
 
+        // gather variants
+        val variantList = variants.map { createVariant(it, buildFeatures, instantAppResultMap) }
 
         return AndroidProjectImpl(
             modelVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION,
@@ -233,7 +273,13 @@ class ModelBuilder<
     }
 
     private fun buildGlobalLibraryMapModel(project: Project): GlobalLibraryMap {
-        throw RuntimeException("Not yet implemented")
+        val globalLibraryBuildService =
+            getBuildService(
+                project.gradle.sharedServices,
+                GlobalLibraryBuildService::class.java
+            ).get()
+
+        return globalLibraryBuildService.createModel()
     }
 
     private fun buildProjectSyncIssueModel(project: Project): ProjectSyncIssues {
@@ -265,8 +311,213 @@ class ModelBuilder<
     private fun buildVariantDependenciesModel(
         project: Project,
         parameter: ModelBuilderParameter
-    ): VariantDependencies {
-        throw RuntimeException("Not yet implemented")
+    ): VariantDependencies? {
+        // get the variant to return the dependencies for
+        val variantName = parameter.variantName
+        val variant = variantModel.variants.singleOrNull { it.name == variantName }
+            ?: return null
+
+        val globalLibraryBuildService =
+            getBuildService(
+                project.gradle.sharedServices,
+                GlobalLibraryBuildService::class.java
+            ).get()
+
+        val mavenCoordinatesBuildService =
+            getBuildService(
+                project.gradle.sharedServices,
+                MavenCoordinatesCacheBuildService::class.java
+            )
+
+        val buildMapping = project.gradle.computeBuildMapping()
+
+        return VariantDependenciesImpl(
+            name = variantName,
+            mainArtifact = createDependencies(
+                variant,
+                buildMapping,
+                globalLibraryBuildService,
+                mavenCoordinatesBuildService
+            ),
+            androidTestArtifact = variant.testComponents[VariantTypeImpl.ANDROID_TEST]?.let {
+                createDependencies(
+                    it,
+                    buildMapping,
+                    globalLibraryBuildService,
+                    mavenCoordinatesBuildService
+                )
+            },
+            unitTestArtifact = variant.testComponents[VariantTypeImpl.UNIT_TEST]?.let {
+                createDependencies(
+                    it,
+                    buildMapping,
+                    globalLibraryBuildService,
+                    mavenCoordinatesBuildService
+                )
+            }
+        )
+    }
+
+    private fun createVariant(
+        variant: VariantPropertiesImpl,
+        features: BuildFeatureValues,
+        instantAppResultMap: MutableMap<File, Boolean>
+    ): VariantImpl {
+        return VariantImpl(
+            name = variant.name,
+            displayName = variant.baseName,
+            mainArtifact = createAndroidArtifact(variant, features),
+            androidTestArtifact = variant.testComponents[VariantTypeImpl.ANDROID_TEST]?.let {
+                createAndroidArtifact(it, features)
+            },
+            unitTestArtifact = variant.testComponents[VariantTypeImpl.UNIT_TEST]?.let {
+                createJavaArtifact(it, features)
+            },
+            buildType = variant.buildType,
+            productFlavors = variant.productFlavors.map { it.second },
+            testedTargetVariant = getTestTargetVariant(variant),
+            isInstantAppCompatible = inspectManifestForInstantTag(variant, instantAppResultMap),
+            desugaredMethods = listOf()
+        )
+    }
+
+    private fun createAndroidArtifact(
+        component: ComponentPropertiesImpl,
+        features: BuildFeatureValues
+    ): AndroidArtifactImpl {
+        val variantData = component.variantData
+        val sourceProviders = component.variantSources
+        val variantDslInfo = component.variantDslInfo
+        val variantScope = component.variantScope
+        // FIXME need to find a better way for this.
+        val taskContainer: MutableTaskContainer = component.taskContainer
+
+        val classesFolders = mutableSetOf<File>()
+        classesFolders.add(component.artifacts.get(JAVAC).get().asFile)
+        classesFolders.addAll(variantData.allPreJavacGeneratedBytecode.files)
+        classesFolders.addAll(variantData.allPostJavacGeneratedBytecode.files)
+        classesFolders.addAll(component.getCompiledRClasses(COMPILE_CLASSPATH).files)
+
+        val testInfo: TestInfo? = when(component) {
+            is TestVariantPropertiesImpl, is AndroidTestPropertiesImpl -> {
+                val runtimeApks: Collection<File> = globalScope
+                    .project
+                    .configurations
+                    .findByName(SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION)?.files
+                    ?: listOf()
+
+                DeviceProviderInstrumentTestTask.checkForNonApks(runtimeApks) { message ->
+                    syncIssueReporter.reportError(IssueReporter.Type.GENERIC, message)
+                }
+
+                val testOptionsDsl = globalScope.extension.testOptions
+
+                val testTaskName = taskContainer.connectedTask?.name ?: "".also {
+                    syncIssueReporter.reportError(
+                        IssueReporter.Type.GENERIC,
+                        "unable to find connectedCheck task name for ${component.name}"
+                    )
+                }
+
+                TestInfoImpl(
+                    animationsDisabled = testOptionsDsl.animationsDisabled,
+                    execution = testOptionsDsl.getExecutionEnum().convert(),
+                    additionalRuntimeApks = runtimeApks,
+                    instrumentedTestTaskName = testTaskName
+                )
+            }
+            else -> null
+        }
+
+        return AndroidArtifactImpl(
+            variantSourceProvider = sourceProviders.variantSourceProvider?.convert(features),
+            multiFlavorSourceProvider = sourceProviders.multiFlavorSourceProvider?.convert(features),
+
+            signingConfigName = component.variantDslInfo.signingConfig?.name,
+            isSigned = component.variantDslInfo.signingConfig != null,
+
+            abiFilters = variantDslInfo.supportedAbis,
+            testInfo = testInfo,
+            bundleInfo = getBundleInfo(component),
+            codeShrinker = variantScope.codeShrinker?.convert(),
+
+            assembleTaskName = taskContainer.assembleTask.name,
+            compileTaskName = taskContainer.compileTask.name,
+            sourceGenTaskName = taskContainer.sourceGenTask.name,
+            ideSetupTaskNames = setOf(taskContainer.sourceGenTask.name),
+
+            generatedSourceFolders = ModelBuilder.getGeneratedSourceFolders(component),
+            generatedResourceFolders = ModelBuilder.getGeneratedResourceFolders(component),
+            classesFolders = classesFolders,
+            assembleTaskOutputListingFile = component.artifacts.get(APK_IDE_MODEL).get().asFile
+        )
+    }
+
+    private fun createJavaArtifact(
+        component: ComponentPropertiesImpl,
+        features: BuildFeatureValues
+    ): JavaArtifact {
+        val variantData = component.variantData
+        val sourceProviders = component.variantSources
+        val variantScope = component.variantScope
+
+        // FIXME need to find a better way for this.
+        val taskContainer: MutableTaskContainer = component.taskContainer
+
+        val classesFolders = mutableSetOf<File>()
+        classesFolders.add(component.artifacts.get(JAVAC).get().asFile)
+        classesFolders.addAll(variantData.allPreJavacGeneratedBytecode.files)
+        classesFolders.addAll(variantData.allPostJavacGeneratedBytecode.files)
+        if (extension.testOptions.unitTests.isIncludeAndroidResources) {
+            classesFolders.add(component.artifacts.get(UNIT_TEST_CONFIG_DIRECTORY).get().asFile)
+        }
+        // The separately compile R class, if applicable.
+        if (!globalScope.extension.aaptOptions.namespaced) {
+            classesFolders.add(variantScope.rJarForUnitTests.get().asFile)
+        }
+
+        return JavaArtifactImpl(
+            variantSourceProvider = sourceProviders.variantSourceProvider?.convert(features),
+            multiFlavorSourceProvider = sourceProviders.multiFlavorSourceProvider?.convert(features),
+
+            assembleTaskName = taskContainer.assembleTask.name,
+            compileTaskName = taskContainer.compileTask.name,
+            ideSetupTaskNames = setOf(TaskManager.CREATE_MOCKABLE_JAR_TASK_NAME),
+
+            classesFolders = classesFolders,
+            generatedSourceFolders = ModelBuilder.getGeneratedSourceFoldersForUnitTests(component),
+            runtimeResourceFolder = component.variantData.javaResourcesForUnitTesting,
+
+            mockablePlatformJar = globalScope.mockableJarArtifact.files.singleOrNull()
+        )
+    }
+
+    private fun createDependencies(
+        component: ComponentPropertiesImpl,
+        buildMapping: BuildMapping,
+        globalLibraryBuildService: GlobalLibraryBuildService,
+        mavenCoordinatesBuildService: Provider<MavenCoordinatesCacheBuildService>
+    ): ArtifactDependencies {
+        val modelBuilder = DependencyModelBuilder(globalLibraryBuildService)
+        val graphBuilder = getDependencyGraphBuilder()
+
+        val inputs = ArtifactCollectionsInputs(
+            variantDependencies = component.variantDependencies,
+            projectPath = globalScope.project.path,
+            variantName = component.name,
+            runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
+            mavenCoordinatesCache = mavenCoordinatesBuildService,
+            buildMapping = buildMapping
+        )
+
+        graphBuilder.createDependencies(
+            modelBuilder = modelBuilder,
+            artifactCollectionsProvider = inputs,
+            withFullDependency = true,
+            issueReporter = syncIssueReporter
+        )
+
+        return modelBuilder.createModel()
     }
 
     private fun getFlags(): AndroidGradlePluginProjectFlagsImpl {
@@ -291,5 +542,147 @@ class ModelBuilder<
         )
 
         return AndroidGradlePluginProjectFlagsImpl(flags.build())
+    }
+
+    private fun getBundleInfo(
+        component: ComponentPropertiesImpl
+    ): BundleInfo? {
+        if (!component.variantType.isBaseModule) {
+            return null
+        }
+
+        // FIXME need to find a better way for this.
+        val taskContainer: MutableTaskContainer = component.taskContainer
+        val artifacts = component.artifacts
+
+        return BundleInfoImpl(
+            bundleTaskName = taskContainer.bundleTask?.name ?: error("failed to find bundle task name for ${component.name}"),
+            bundleTaskOutputListingFile = artifacts.get(BUNDLE_IDE_MODEL).get().asFile,
+            apkFromBundleTaskName = ExtractApksTask.getTaskName(component),
+            apkFromBundleTaskOutputListingFile = artifacts.get(APK_FROM_BUNDLE_IDE_MODEL).get().asFile
+        )
+    }
+
+    // FIXME this is coming from the v1 Model Builder and this needs to be rethought. b/160970116
+    private fun inspectManifestForInstantTag(
+        component: ComponentPropertiesImpl,
+        instantAppResultMap: MutableMap<File, Boolean>
+    ): Boolean {
+        if (!component.variantType.isBaseModule && !component.variantType.isDynamicFeature) {
+            return false
+        }
+
+        val variantSources = component.variantSources
+
+        // get the manifest in descending order of priority. First one to return
+        val manifests = mutableListOf<File>()
+        manifests.addAll(variantSources.manifestOverlays)
+        variantSources.mainManifestIfExists?.let { manifests.add(it) }
+
+        if (manifests.isEmpty()) {
+            return false
+        }
+        for (manifest in manifests) {
+            // check if the manifest was already parsed. If so, just pull the information
+            // from the map
+            val parseResult = instantAppResultMap[manifest]
+            if (parseResult != null) {
+                if (parseResult) {
+                    return true
+                }
+                continue
+            }
+
+            try {
+                FileInputStream(manifest).use { inputStream ->
+                    val factory = XMLInputFactory.newInstance()
+                    val eventReader = factory.createXMLEventReader(inputStream)
+                    while (eventReader.hasNext() && !eventReader.peek().isEndDocument) {
+                        val event = eventReader.nextTag()
+                        if (event.isStartElement) {
+                            val startElement = event.asStartElement()
+                            if (startElement.name.namespaceURI == SdkConstants.DIST_URI
+                                && startElement.name.localPart.equals("module", ignoreCase = true)
+                            ) {
+                                val instant = startElement.getAttributeByName(
+                                    QName(SdkConstants.DIST_URI, "instant")
+                                )
+                                if (instant != null
+                                    && (
+                                            instant.value == SdkConstants.VALUE_TRUE
+                                                    || instant.value == SdkConstants.VALUE_1)
+                                ) {
+                                    eventReader.close()
+                                    instantAppResultMap[manifest] = true
+                                    return true
+                                }
+                            }
+                        } else if (event.isEndElement
+                            && (event as EndElement).name.localPart.equals("manifest", ignoreCase = true)
+                        ) {
+                            break
+                        }
+                    }
+                    eventReader.close()
+                }
+            } catch (e: XMLStreamException) {
+                syncIssueReporter.reportError(
+                    IssueReporter.Type.GENERIC,
+                    """
+                        Failed to parse XML in ${manifest.path}
+                        ${e.message}
+                        """.trimIndent()
+                )
+            } catch (e: IOException) {
+                syncIssueReporter.reportError(
+                    IssueReporter.Type.GENERIC,
+                    """
+                        Failed to parse XML in ${manifest.path}
+                        ${e.message}
+                        """.trimIndent()
+                )
+            } finally {
+                // check that we have not yet put a true in there
+                instantAppResultMap.putIfAbsent(manifest, false)
+            }
+        }
+        return false
+    }
+
+    private fun getTestTargetVariant(
+        component: ComponentPropertiesImpl
+    ): TestedTargetVariant? {
+        if (extension is TestExtension<*,*,*,*,*>) {
+            val targetPath = extension.targetProjectPath ?: return null
+
+            // to get the target variant we need to get the result of the dependency resolution
+            val apkArtifacts = component
+                .variantDependencies
+                .getArtifactCollection(
+                    COMPILE_CLASSPATH,
+                    AndroidArtifacts.ArtifactScope.ALL,
+                    AndroidArtifacts.ArtifactType.MANIFEST_METADATA
+                )
+
+            // while there should be a single result, the list may be empty if the variant
+            // matching is broken
+            if (apkArtifacts.artifacts.size == 1) {
+                val result = apkArtifacts.artifacts.single()
+                // if the name of the variant is missing, then just return null, but this
+                // should not happen
+                val variantName = result.getVariantName() ?: return null
+                return TestedTargetVariantImpl(targetPath, variantName)
+
+            } else if (!apkArtifacts.failures.isEmpty()) {
+                // probably there was an error...
+                DependencyFailureHandler()
+                    .addErrors(
+                        "${globalScope.project.path}@${component.name}/testTarget",
+                        apkArtifacts.failures
+                    )
+                    .registerIssues(syncIssueReporter)
+            }
+        }
+        return null
     }
 }

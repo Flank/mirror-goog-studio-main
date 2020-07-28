@@ -26,7 +26,7 @@ import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeSourceProviderContainer}. */
+/** Tests for {@link IdeSourceProviderContainerImpl}. */
 public class IdeSourceProviderContainerTest {
     private ModelCache myModelCache;
 
@@ -37,13 +37,13 @@ public class IdeSourceProviderContainerTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeSourceProviderContainer.class).isAssignableTo(Serializable.class);
+        assertThat(IdeSourceProviderContainerImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeSourceProviderContainer classField =
-                new IdeSourceProviderContainer(new SourceProviderContainerStub(), myModelCache);
+        IdeSourceProviderContainerImpl classField =
+                new IdeSourceProviderContainerImpl(new SourceProviderContainerStub(), myModelCache);
         byte[] bytes = Serialization.serialize(classField);
         Object o = Serialization.deserialize(bytes);
         assertEquals(classField, o);
@@ -52,13 +52,14 @@ public class IdeSourceProviderContainerTest {
     @Test
     public void constructor() throws Throwable {
         SourceProviderContainer original = new SourceProviderContainerStub();
-        IdeSourceProviderContainer copy = new IdeSourceProviderContainer(original, myModelCache);
+        IdeSourceProviderContainerImpl copy =
+                new IdeSourceProviderContainerImpl(original, myModelCache);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeSourceProviderContainer.class).verify();
+        createEqualsVerifier(IdeSourceProviderContainerImpl.class).verify();
     }
 }

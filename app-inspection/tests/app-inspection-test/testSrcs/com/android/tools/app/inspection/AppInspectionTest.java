@@ -37,6 +37,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import test.inspector.api.TestExecutorsApi;
 import test.inspector.api.TestInspectorApi;
 import test.inspector.api.TodoInspectorApi;
 
@@ -674,6 +675,48 @@ public final class AppInspectionTest {
         appInspectionRule.assertInput("first executor: cancellation #1 for command #1");
         appInspectionRule.assertInput("second executor: cancellation #2 for command #1");
         appInspectionRule.assertInput("post cancellation executor: cancellation #3 for command #1");
+    }
+
+    @Test
+    public void testInspectorExecutorsHandler() throws Exception {
+        testInspectorExecutors(
+                TestExecutorsApi.Command.COMPLETE_ON_HANDLER,
+                TestExecutorsApi.Command.FAIL_ON_HANDLER);
+    }
+
+    @Test
+    public void testInspectorExecutorsPrimary() throws Exception {
+        testInspectorExecutors(
+                TestExecutorsApi.Command.COMPLETE_ON_PRIMARY_EXECUTOR,
+                TestExecutorsApi.Command.FAIL_ON_PRIMARY_EXECUTOR);
+    }
+
+    private void testInspectorExecutors(
+            TestExecutorsApi.Command completeCommand, TestExecutorsApi.Command failCommand)
+            throws Exception {
+        String inspectorId = "test.executors.inspector";
+        assertResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(inspectorId, injectInspectorDex())),
+                SUCCESS);
+
+        appInspectionRule.sendCommand(
+                rawCommandInspector(inspectorId, completeCommand.toByteArray()));
+
+        AppInspectionEvent handlerCompleted = appInspectionRule.consumeCollectedEvent();
+        assertThat(handlerCompleted.getRawEvent().getContent().toByteArray())
+                .isEqualTo(TestExecutorsApi.Event.COMPLETED.toByteArray());
+
+        appInspectionRule.sendCommand(rawCommandInspector(inspectorId, failCommand.toByteArray()));
+
+        AppInspection.AppInspectionEvent crashEvent = appInspectionRule.consumeCollectedEvent();
+        assertThat(appInspectionRule.hasEventToCollect()).isFalse();
+
+        assertCrashEvent(
+                crashEvent,
+                inspectorId,
+                "Inspector " + inspectorId + " crashed due to: This is an inspector exception.");
+        appInspectionRule.assertInput(EXPECTED_INSPECTOR_DISPOSED);
     }
 
     @NonNull

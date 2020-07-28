@@ -47,6 +47,11 @@ public class HandlerThreadExecutor implements Executor {
         mThread.quitSafely();
     }
 
+    @NonNull
+    public Handler getHandler() {
+        return handler;
+    }
+
     private static class SafeHandler extends Handler {
         private final Consumer<Throwable> mUncaughtExceptionHandler;
 

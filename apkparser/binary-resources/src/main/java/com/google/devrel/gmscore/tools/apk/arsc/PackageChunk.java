@@ -16,6 +16,7 @@
 
 package com.google.devrel.gmscore.tools.apk.arsc;
 
+import com.android.annotations.Nullable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
@@ -26,7 +27,6 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.Nullable;
 
 /** A package chunk is a collection of resource data types within a package. */
 public final class PackageChunk extends ChunkWithChunks {

@@ -12,11 +12,13 @@ android {
     lintOptions {
         textReport true
         textOutput file("lint-results.txt")
-        // Only look for these two issues (which have been
-        // planted in the project); otherwise newly added
-        // lint issues may suddenly cause this test to fail
-        // when it finds more than expected.
-        check 'Assert', 'SdCardPath'
+        // Note that we have the presence of an id='RequiredSize' error in the
+        // app project, but that issue should be off by default in Gradle projects;
+        // this test makes sure of that (it should not be reported).
+        // We've also planted deliberate errors with id='Assert' and id='SdCardPath'
+        // in the dependent projects; this test ensures that those are not flagged
+        // here since checkDependencies=false below.
+        disable 'GradleDependency', 'UnusedResources', 'HardcodedText'
         absolutePaths false
         explainIssues false
         checkDependencies false

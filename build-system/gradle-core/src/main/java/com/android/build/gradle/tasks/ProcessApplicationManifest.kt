@@ -315,7 +315,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 taskProvider,
                 ProcessApplicationManifest::mergedManifest
             )
-                .on(ArtifactType.APPLICATION_MANIFEST)
+                .on(ArtifactType.MERGED_MANIFEST)
 
             artifacts.setInitialProvider(
                 taskProvider,

@@ -24,7 +24,7 @@ import com.android.build.api.transform.QualifiedContent.Scope
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.VariantManager
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.pipeline.StreamFilter
@@ -236,7 +236,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
         private fun applyProguardRules(
             task: ProguardConfigurableTask,
-            creationConfig: BaseCreationConfig,
+            creationConfig: ComponentCreationConfig,
             inputProguardMapping: FileCollection?,
             testedConfig: VariantCreationConfig?
         ) {
@@ -298,7 +298,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
         private fun applyProguardConfigForNonTest(
             task: ProguardConfigurableTask,
-            creationConfig: BaseCreationConfig
+            creationConfig: ComponentCreationConfig
         ) {
             val variantDslInfo = creationConfig.variantDslInfo
 
@@ -349,7 +349,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         }
 
         private fun addFeatureProguardRules(
-            creationConfig: BaseCreationConfig,
+            creationConfig: ComponentCreationConfig,
             configurationFiles: ConfigurableFileCollection
         ) {
             configurationFiles.from(
@@ -363,7 +363,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         }
 
         private fun maybeGetCodeShrinkerAttributes(
-            creationConfig: BaseCreationConfig
+            creationConfig: ComponentCreationConfig
         ): AndroidAttributes? {
             return if (creationConfig.variantScope.codeShrinker != null) {
                 AndroidAttributes(VariantManager.SHRINKER_ATTR to creationConfig.variantScope.codeShrinker.toString())

@@ -27,7 +27,7 @@ import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeInstantRun}. */
+/** Tests for {@link IdeInstantRunImpl}. */
 public class IdeInstantRunTest {
     private ModelCache myModelCache;
 
@@ -38,12 +38,12 @@ public class IdeInstantRunTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeInstantRun.class).isAssignableTo(Serializable.class);
+        assertThat(IdeInstantRunImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeInstantRun instantRun = new IdeInstantRun(new InstantRunStub());
+        IdeInstantRunImpl instantRun = new IdeInstantRunImpl(new InstantRunStub());
         byte[] bytes = serialize(instantRun);
         Object o = deserialize(bytes);
         assertEquals(instantRun, o);
@@ -52,13 +52,13 @@ public class IdeInstantRunTest {
     @Test
     public void constructor() throws Throwable {
         InstantRun original = new InstantRunStub();
-        IdeInstantRun copy = new IdeInstantRun(original);
+        IdeInstantRunImpl copy = new IdeInstantRunImpl(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeInstantRun.class).verify();
+        createEqualsVerifier(IdeInstantRunImpl.class).verify();
     }
 }

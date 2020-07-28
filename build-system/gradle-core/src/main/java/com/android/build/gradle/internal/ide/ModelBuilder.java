@@ -783,6 +783,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                             .get()
                             .getAsFile());
         }
+
         // The separately compile R class, if applicable.
         if (!globalScope.getExtension().getAaptOptions().getNamespaced()) {
             additionalTestClasses.add(
@@ -833,12 +834,13 @@ public class ModelBuilder<Extension extends BaseExtension>
                                 componentProperties.getServices().getBuildServiceRegistry());
                 ArtifactCollectionsInputs artifactCollectionsInputs =
                         new ArtifactCollectionsInputs(
-                                componentProperties, ArtifactCollectionsInputs.RuntimeType.FULL);
+                                componentProperties,
+                                ArtifactCollectionsInputs.RuntimeType.FULL,
+                                buildMapping);
                 graphBuilder.createDependencies(
                         modelBuilder,
                         artifactCollectionsInputs,
                         modelWithFullDependency,
-                        buildMapping,
                         syncIssueReporter);
                 result = Pair.of(DependenciesImpl.EMPTY, modelBuilder.createModel());
             } else {
@@ -847,13 +849,14 @@ public class ModelBuilder<Extension extends BaseExtension>
                                 componentProperties.getServices().getBuildServiceRegistry());
                 ArtifactCollectionsInputs artifactCollectionsInputs =
                         new ArtifactCollectionsInputs(
-                                componentProperties, ArtifactCollectionsInputs.RuntimeType.PARTIAL);
+                                componentProperties,
+                                ArtifactCollectionsInputs.RuntimeType.PARTIAL,
+                                buildMapping);
 
                 graphBuilder.createDependencies(
                         modelBuilder,
                         artifactCollectionsInputs,
                         modelWithFullDependency,
-                        buildMapping,
                         syncIssueReporter);
                 result = Pair.of(modelBuilder.createModel(), EmptyDependencyGraphs.EMPTY);
             }
@@ -1007,7 +1010,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     @NonNull
-    private static List<File> getGeneratedSourceFoldersForUnitTests(
+    public static List<File> getGeneratedSourceFoldersForUnitTests(
             @Nullable ComponentPropertiesImpl componentProperties) {
         if (componentProperties == null) {
             return Collections.emptyList();
@@ -1026,7 +1029,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     @NonNull
-    private List<File> getGeneratedSourceFolders(
+    public static List<File> getGeneratedSourceFolders(
             @Nullable ComponentPropertiesImpl componentProperties) {
         if (componentProperties == null) {
             return Collections.emptyList();
@@ -1076,7 +1079,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     @NonNull
-    private static List<File> getGeneratedResourceFolders(
+    public static List<File> getGeneratedResourceFolders(
             @Nullable ComponentPropertiesImpl componentProperties) {
         if (componentProperties == null) {
             return Collections.emptyList();

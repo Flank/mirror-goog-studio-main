@@ -46,6 +46,9 @@ abstract class IssueRegistry
  * Creates a new [IssueRegistry]
  */
 protected constructor() {
+    init {
+        LintClient.ensureClientNameInitialized()
+    }
 
     /**
      * The Lint API version this issue registry's checks were compiled.

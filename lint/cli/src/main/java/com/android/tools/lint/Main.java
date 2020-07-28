@@ -180,6 +180,8 @@ public class Main {
             exit(ERRNO_USAGE);
         }
 
+        LintClient.setClientName(LintClient.CLIENT_CLI);
+
         Ref<LanguageLevel> javaLanguageLevel = new Ref<>(null);
         Ref<LanguageVersionSettings> kotlinLanguageLevel = new Ref<>(null);
         List<LintModelModule> modules = new ArrayList<>();

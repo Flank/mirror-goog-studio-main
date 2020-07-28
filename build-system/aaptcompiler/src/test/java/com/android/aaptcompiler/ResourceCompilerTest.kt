@@ -3,11 +3,13 @@ package com.android.aaptcompiler
 import com.android.aapt.Resources
 import com.android.aaptcompiler.android.ResValue
 import com.android.aaptcompiler.proto.deserializeConfigFromPb
+import com.android.aaptcompiler.proto.deserializeFileTypeFromPb
 import com.android.aaptcompiler.proto.deserializeTableFromPb
 import com.android.aaptcompiler.testutils.ContainerReader
 import com.android.aaptcompiler.testutils.FileEntry
 import com.android.aaptcompiler.testutils.TableEntry
 import com.android.aaptcompiler.testutils.parseNameOrFail
+import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import org.junit.Assert.fail
 import org.junit.Before
@@ -53,11 +55,16 @@ class ResourceCompilerTest {
         return File(outputDir, filePath.getIntermediateContainerFilename())
     }
 
-    private fun testXmlFile(type: AaptResourceType, input: String, config: String = ""): File {
+    private fun testXmlFile(
+            type: AaptResourceType,
+            input: String,
+            config: String = "",
+            options: ResourceCompilerOptions = ResourceCompilerOptions()
+    ): File {
         val resourceFolder = tempFolder.newFolder(type.tagName)
         val configSuffix = if (config.isEmpty()) "" else "-$config"
         val file = createFile(input, "test$configSuffix.xml", resourceFolder)
-        compileResource(file, outputDir, ResourceCompilerOptions())
+        compileResource(file, outputDir, options)
         val filePath = extractPathData(file)
         return File(outputDir, filePath.getIntermediateContainerFilename())
     }
@@ -508,9 +515,9 @@ class ResourceCompilerTest {
         try {
             testPngFile(AaptResourceType.LAYOUT, input, isPatch9 = true)
             fail()
-        } catch (e: IllegalStateException) {
-            Truth.assertThat(e.message).contains("Patch 9 PNG processing")
-            Truth.assertThat(e.message).contains("support not yet implemented")
+        } catch (e: ResourceCompilationException) {
+            Truth.assertThat(e.cause!!.message).contains(
+                "Patch 9 PNG processing is not supported with the JVM Android resource compiler.")
             // expected
         }
     }
@@ -528,9 +535,9 @@ class ResourceCompilerTest {
                 input,
                 options = ResourceCompilerOptions(requirePngCrunching = true))
             fail()
-        } catch (e: IllegalStateException) {
-            Truth.assertThat(e.message).contains("PNG crunching")
-            Truth.assertThat(e.message).contains("support not yet implemented")
+        } catch (e: ResourceCompilationException) {
+            Truth.assertThat(e.cause!!.message).contains(
+                "PNG crunching is not supported with the JVM Android resource compiler.")
             // expected
         }
     }
@@ -559,5 +566,24 @@ class ResourceCompilerTest {
 
         val dataString = String(data)
         Truth.assertThat(dataString).isEqualTo(input)
+    }
+
+    @Test
+    fun testCompileFileWithCustomSourcePath() {
+        val input = // language=XML
+                """<?xml version="1.0" encoding="utf-8"?>
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android">
+            <TextBox android:id="@+id/text_one" android:background="@color/color_one"/>
+        </LinearLayout>
+    """.trimIndent()
+
+        val path = FileUtils.join("main", "res", "values", "test.xml")
+        val options = ResourceCompilerOptions(sourcePath = path)
+        val result = ContainerReader(
+                testXmlFile(type = AaptResourceType.LAYOUT, input = input, options = options))
+        Truth.assertThat(result.numEntries).isEqualTo(1)
+        val entries = result.entries as List<FileEntry>
+        val sourcePath : String = entries[0].header.sourcePath
+        Truth.assertThat(sourcePath).isEqualTo(path)
     }
 }

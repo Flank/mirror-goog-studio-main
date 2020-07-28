@@ -49,7 +49,6 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   addAllKotlinDependencies(moduleData)
 
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
-  addDependency("com.android.support:design:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
   addMaterialDependency(useAndroidX)
 
@@ -71,7 +70,7 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   saveFragmentAndViewModel(resOut, srcOut, language, packageName, "home", useAndroidX)
   saveFragmentAndViewModel(resOut, srcOut, language, packageName, "dashboard", useAndroidX)
   saveFragmentAndViewModel(resOut, srcOut, language, packageName, "notifications", useAndroidX)
-  navigationDependencies(generateKotlin, useAndroidX, moduleData.apis.buildApiRevision ?: 28)
+  navigationDependencies(generateKotlin, useAndroidX, moduleData.apis.appCompatVersion)
   if (generateKotlin) {
     requireJavaVersion("1.8", true)
   }

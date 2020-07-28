@@ -17,13 +17,15 @@
 package com.android.build.gradle.internal.instrumentation
 
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
+import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.builder.errors.IssueReporter
 import org.gradle.api.model.ObjectFactory
 
 class AsmClassVisitorsFactoryRegistry(private val issueReporter: IssueReporter) {
-    var isLocked = false
+    private var isLocked = false
+    var framesComputationMode = FramesComputationMode.COPY_FRAMES
 
     val projectClassesVisitors =
         ArrayList<AsmClassVisitorFactoryEntry<out InstrumentationParameters>>()
@@ -52,6 +54,20 @@ class AsmClassVisitorsFactoryRegistry(private val issueReporter: IssueReporter) 
             dependenciesClassesVisitors.add(visitorEntry)
         }
         projectClassesVisitors.add(visitorEntry)
+    }
+
+    fun setAsmFramesComputationMode(mode: FramesComputationMode) {
+        if (isLocked) {
+            issueReporter.reportError(
+                IssueReporter.Type.EDIT_LOCKED_DSL_VALUE,
+                "It is too late to set the asm frames computation mode, " +
+                        "The DSL is now locked as the variants have been created.\n"
+            )
+            return
+        }
+        if (mode.ordinal > framesComputationMode.ordinal) {
+            framesComputationMode = mode
+        }
     }
 
     fun configureAndLock(objectFactory: ObjectFactory, asmApiVersion: Int) {

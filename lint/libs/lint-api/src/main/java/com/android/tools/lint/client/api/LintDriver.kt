@@ -988,6 +988,11 @@ class LintDriver
         currentProjects = null
     }
 
+    // The UAST source list of the last project analyzed.
+    private var cachedUastSourceList: CachedUastSourceList? = null
+
+    private class CachedUastSourceList(val project: Project, var uastSourceList: UastSourceList)
+
     private fun runFileDetectors(project: Project, main: Project?) {
         if (phase == 1) {
             moduleCount++
@@ -996,34 +1001,24 @@ class LintDriver
         // Prepare Java/Kotlin compilation. We're not processing these files yet, but
         // we need to prepare to load various symbol tables such that class lookup
         // works from resource detectors
-        var uastSourceList: UastSourceList? = null
-        if (scope.contains(Scope.JAVA_FILE) || scope.contains(Scope.ALL_JAVA_FILES)) {
-            val checks = union(
-                scopeDetectors[Scope.JAVA_FILE],
-                scopeDetectors[Scope.ALL_JAVA_FILES]
-            )
-
-            if (checks != null && checks.isNotEmpty()) {
-                val files = project.subset
-                uastSourceList = if (files != null) {
-                    findUastSources(project, main, checks, files)
-                } else {
-                    findUastSources(project, main, checks)
-                }
-                prepareUast(uastSourceList)
-            }
-        }
-
-        // Still need to set up class path when running outside of the IDE
-        // to prepare for class lookup from resource detectors
-        if (uastSourceList == null && !LintClient.isStudio) {
+        val uastSourceList: UastSourceList
+        val prevUastSourceList = cachedUastSourceList
+        if (prevUastSourceList != null && prevUastSourceList.project === project) {
+            // Reuse previously-prepared UAST sources to reduce time spent in the Kotlin compiler.
+            // Note: this only helps when checkDependencies=false, where the set of files to
+            // analyze stays the same across phases.
+            assert(phase > 1)
+            uastSourceList = prevUastSourceList.uastSourceList
+        } else {
+            assert(phase == 1 || checkDependencies)
             val files = project.subset
-            val uastRequest = if (files != null) {
-                findUastSources(project, main, emptyList(), files)
+            uastSourceList = if (files != null) {
+                findUastSources(project, main, files)
             } else {
-                findUastSources(project, main, emptyList())
+                findUastSources(project, main)
             }
-            prepareUast(uastRequest)
+            prepareUast(uastSourceList)
+            cachedUastSourceList = CachedUastSourceList(project, uastSourceList)
         }
 
         if (isCanceled) {
@@ -1128,8 +1123,12 @@ class LintDriver
         }
 
         // Java & Kotlin
-        if (uastSourceList != null) {
-            visitUast(project, main, uastSourceList)
+        val uastScanners = union(
+            scopeDetectors[Scope.JAVA_FILE],
+            scopeDetectors[Scope.ALL_JAVA_FILES]
+        )
+        if (uastScanners != null && uastScanners.isNotEmpty()) {
+            visitUast(project, main, uastSourceList, uastScanners)
         }
 
         if (isCanceled) {
@@ -1148,7 +1147,7 @@ class LintDriver
         }
 
         if (scope.contains(Scope.GRADLE_FILE)) {
-            checkBuildScripts(project, main)
+            checkBuildScripts(project, main, uastSourceList)
         }
 
         if (isCanceled) {
@@ -1178,7 +1177,11 @@ class LintDriver
         }
     }
 
-    private fun checkBuildScripts(project: Project, main: Project?) {
+    private fun checkBuildScripts(
+        project: Project,
+        main: Project?,
+        uastSourceList: UastSourceList?
+    ) {
         val detectors = scopeDetectors[Scope.GRADLE_FILE]
         if (detectors != null) {
             val files = project.subset ?: project.gradleBuildScripts
@@ -1199,47 +1202,42 @@ class LintDriver
             if (gradleScanners.isEmpty() && customVisitedGradleScanners.isEmpty()) {
                 return
             }
-            for (file in files) {
+            val gradleKtsContexts = uastSourceList?.gradleKtsContexts ?: emptyList()
+            for (context in gradleKtsContexts) {
                 client.runReadAction(Runnable {
-                    // Gradle Kotlin Script? Use Java parsing mechanism instead
-                    if (file.path.endsWith(DOT_KTS)) {
-                        val context = JavaContext(this, project, main, file)
-                        val uastParser = client.getUastParser(currentProject)
-                        context.uastParser = uastParser
+                    // Gradle Kotlin Script? Use Java parsing mechanism.
+                    val uFile = context.uastParser.parse(context)
+                    if (uFile != null) {
+                        context.setJavaFile(uFile.psi) // needed for getLocation
+                        context.uastFile = uFile
+                        fireEvent(EventType.SCANNING_FILE, context)
 
-                        uastParser.prepare(
-                            listOf(context),
-                            project.javaLanguageLevel, project.kotlinLanguageLevel
-                        )
-                        val uFile = uastParser.parse(context)
-                        if (uFile != null) {
-                            context.setJavaFile(uFile.psi) // needed for getLocation
-                            context.uastFile = uFile
-                            fireEvent(EventType.SCANNING_FILE, context)
-
-                            val uastVisitor =
-                                UastGradleVisitor(context)
-                            val gradleContext =
-                                GradleContext(uastVisitor, this, project, main, file)
-                            fireEvent(EventType.SCANNING_FILE, context)
-                            for (detector in detectors) {
-                                detector.beforeCheckFile(context)
-                            }
-
-                            uastVisitor.visitBuildScript(gradleContext, gradleScanners)
-                            for (scanner in customVisitedGradleScanners) {
-                                scanner.visitBuildScript(context)
-                            }
-                            for (detector in detectors) {
-                                detector.afterCheckFile(context)
-                            }
-
-                            context.setJavaFile(null)
-                            context.uastFile = null
+                        val uastVisitor = UastGradleVisitor(context)
+                        val gradleContext =
+                            GradleContext(uastVisitor, this, project, main, context.file)
+                        fireEvent(EventType.SCANNING_FILE, context)
+                        for (detector in detectors) {
+                            detector.beforeCheckFile(context)
                         }
 
-                        fileCount++
-                    } else if (file.path.endsWith(DOT_GRADLE)) {
+                        uastVisitor.visitBuildScript(gradleContext, gradleScanners)
+                        for (scanner in customVisitedGradleScanners) {
+                            scanner.visitBuildScript(context)
+                        }
+                        for (detector in detectors) {
+                            detector.afterCheckFile(context)
+                        }
+
+                        context.setJavaFile(null)
+                        context.uastFile = null
+                    }
+
+                    fileCount++
+                })
+            }
+            for (file in files) {
+                if (file.path.endsWith(DOT_GRADLE)) {
+                    client.runReadAction(Runnable {
                         val gradleVisitor = project.client.getGradleVisitor()
                         val context = GradleContext(gradleVisitor, this, project, main, file)
                         fireEvent(EventType.SCANNING_FILE, context)
@@ -1254,8 +1252,8 @@ class LintDriver
                             detector.afterCheckFile(context)
                         }
                         fileCount++
-                    }
-                })
+                    })
+                }
             }
         }
     }
@@ -1623,11 +1621,7 @@ class LintDriver
         return null
     }
 
-    private fun findUastSources(
-        project: Project,
-        main: Project?,
-        checks: List<Detector>
-    ): UastSourceList {
+    private fun findUastSources(project: Project, main: Project?): UastSourceList {
         val sourceFolders = project.javaSourceFolders
         val testFolders = if (!ignoreTestSources)
             project.testSourceFolders
@@ -1678,28 +1672,33 @@ class LintDriver
             }
         }
 
-        return findUastSources(checks, contexts, testContexts, generatedContexts)
+        // build.gradle.kts files.
+        val gradleKtsContexts = project.gradleBuildScripts.asSequence()
+            .filter { it.name.endsWith(DOT_KTS) }
+            .map { JavaContext(this, project, main, it) }
+            .toList()
+
+        return findUastSources(contexts, testContexts, generatedContexts, gradleKtsContexts)
     }
 
     private fun findUastSources(
-        checks: List<Detector>,
         contexts: List<JavaContext>,
         testContexts: List<JavaContext>,
-        generatedContexts: List<JavaContext>
+        generatedContexts: List<JavaContext>,
+        gradleKtsContexts: List<JavaContext>
     ): UastSourceList {
-        val allContexts: List<JavaContext>
-        if (testContexts.isEmpty() && generatedContexts.isEmpty()) {
-            allContexts = contexts
-        } else {
-            val capacity = contexts.size + testContexts.size + generatedContexts.size
-            allContexts = ArrayList(capacity)
-            allContexts.addAll(contexts)
-            allContexts.addAll(testContexts)
-            allContexts.addAll(generatedContexts)
-        }
+        val capacity =
+            contexts.size + testContexts.size + generatedContexts.size + gradleKtsContexts.size
+        val allContexts = ArrayList<JavaContext>(capacity)
+        allContexts.addAll(contexts)
+        allContexts.addAll(testContexts)
+        allContexts.addAll(generatedContexts)
+        allContexts.addAll(gradleKtsContexts)
 
         val parser = client.getUastParser(currentProject)
-        return UastSourceList(parser, checks, allContexts, contexts, testContexts, generatedContexts)
+        return UastSourceList(
+            parser, allContexts, contexts, testContexts, generatedContexts, gradleKtsContexts
+        )
     }
 
     private fun prepareUast(sourceList: UastSourceList) {
@@ -1714,20 +1713,20 @@ class LintDriver
     /** The lists of production and test files for Kotlin and Java to parse and process */
     private class UastSourceList(
         val parser: UastParser,
-        val checks: List<Detector>,
         val allContexts: List<JavaContext>,
         val srcContexts: List<JavaContext>,
         val testContexts: List<JavaContext>,
-        val generatedContexts: List<JavaContext>
+        val generatedContexts: List<JavaContext>,
+        val gradleKtsContexts: List<JavaContext>
     )
 
     private fun visitUast(
         project: Project,
         main: Project?,
-        sourceList: UastSourceList
+        sourceList: UastSourceList,
+        uastScanners: List<Detector>
     ) {
         val parser = sourceList.parser
-        val uastScanners = sourceList.checks
         if (uastScanners.isEmpty()) {
             return
         }
@@ -1808,21 +1807,25 @@ class LintDriver
     private fun findUastSources(
         project: Project,
         main: Project?,
-        checks: List<Detector>,
         files: List<File>
     ): UastSourceList {
         val contexts = ArrayList<JavaContext>(files.size)
         val testContexts = ArrayList<JavaContext>(files.size)
         val generatedContexts = ArrayList<JavaContext>(files.size)
+        val gradleKtsContexts = ArrayList<JavaContext>(files.size)
         val testFolders = project.testSourceFolders
         val generatedFolders = project.generatedSourceFolders
         for (file in files) {
             val path = file.path
-            if (path.endsWith(DOT_JAVA) || path.endsWith(DOT_KT)) {
+            if (path.endsWith(DOT_JAVA) || path.endsWith(DOT_KT) || path.endsWith(DOT_KTS)) {
                 val context = JavaContext(this, project, main, file)
 
                 when {
-                    // Figure out if this file is a test context
+                    // Figure out if this file is a Gradle .kts context
+                    path.endsWith(DOT_KTS) -> {
+                        gradleKtsContexts.add(context)
+                    }
+                    // or a test context
                     testFolders.any { FileUtil.isAncestor(it, file, false) } -> {
                         context.isTestSource = true
                         testContexts.add(context)
@@ -1843,7 +1846,7 @@ class LintDriver
         // as non-tests now. This gives you warnings if you're editing an individual
         // test file for example.
 
-        return findUastSources(checks, contexts, testContexts, generatedContexts)
+        return findUastSources(contexts, testContexts, generatedContexts, gradleKtsContexts)
     }
 
     private var currentFolderType: ResourceFolderType? = null

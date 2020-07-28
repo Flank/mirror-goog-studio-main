@@ -156,6 +156,7 @@ android.defaultConfig.minSdkVersion 21
     @Test
     fun smokeTest() {
         project.executor()
+            .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false) // b/160949546
             .with(BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT, true)
             .run(
                 ":lib:assembleDebug",

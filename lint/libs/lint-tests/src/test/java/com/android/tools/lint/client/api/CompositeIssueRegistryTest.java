@@ -31,6 +31,12 @@ import java.util.List;
 import junit.framework.TestCase;
 
 public class CompositeIssueRegistryTest extends TestCase {
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        LintClient.setClientName(LintClient.CLIENT_UNIT_TESTS);
+    }
+
     public void test() {
         IssueRegistry registry1 =
                 new IssueRegistry() {

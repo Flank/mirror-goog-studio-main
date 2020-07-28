@@ -15,6 +15,8 @@
  */
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.AndroidModel
+
 /**
  * The dependencies information for a given artifact.
  *
@@ -26,16 +28,14 @@ package com.android.builder.model.v2.ide
  *
  * @since 4.2
  */
-interface ArtifactDependencies {
+interface ArtifactDependencies: AndroidModel {
     /**
-     * Returns the compile dependency graph.
+     * The compile dependency graph.
      */
     val compileDependencies: List<GraphItem>
 
     /**
-     * Returns the package dependency graph.
-     *
-     * Only valid in full dependency mode.
+     * The runtime dependency graph.
      */
-    val packageDependencies: List<GraphItem>?
+    val runtimeDependencies: List<GraphItem>?
 }

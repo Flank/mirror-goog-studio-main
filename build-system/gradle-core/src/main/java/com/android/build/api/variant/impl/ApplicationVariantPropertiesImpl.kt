@@ -124,4 +124,9 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
             variantDslInfo.versionCode,
             "$name::versionCode"
         )
+
+    override val renderscriptTargetApi: Int
+        get() {
+            return variant.renderscriptTargetApi
+        }
 }

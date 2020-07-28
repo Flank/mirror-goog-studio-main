@@ -109,14 +109,24 @@ open class BuildType @Inject constructor(
     private val _isDefaultProperty: Property<Boolean> =
         dslServices.property(Boolean::class.java).convention(false)
 
-    override var matchingFallbacks: MutableList<String> = mutableListOf()
+    override val matchingFallbacks: MutableList<String> = mutableListOf()
+
+    fun setMatchingFallbacks(fallbacks: List<String>) {
+        val newFallbacks = ArrayList(fallbacks)
+        matchingFallbacks.clear()
+        matchingFallbacks.addAll(newFallbacks)
+    }
 
     fun setMatchingFallbacks(vararg fallbacks: String) {
-        matchingFallbacks = mutableListOf(*fallbacks)
+        matchingFallbacks.clear()
+        for (fallback in fallbacks) {
+            matchingFallbacks.add(fallback)
+        }
     }
 
     fun setMatchingFallbacks(fallback: String) {
-        matchingFallbacks = mutableListOf(fallback)
+        matchingFallbacks.clear()
+        matchingFallbacks.add(fallback)
     }
 
     override val javaCompileOptions: JavaCompileOptions =
@@ -200,7 +210,7 @@ open class BuildType @Inject constructor(
         _postProcessing.initWith(that.postprocessing)
         isCrunchPngs = thatBuildType.isCrunchPngs
         isCrunchPngsDefault = thatBuildType.isCrunchPngsDefault
-        matchingFallbacks = thatBuildType.matchingFallbacks
+        setMatchingFallbacks(thatBuildType.matchingFallbacks)
         // we don't want to dynamically link these values. We just want to copy the current value.
         isDefault = thatBuildType.isDefault
         aarMetadata.minCompileSdk = thatBuildType.aarMetadata.minCompileSdk

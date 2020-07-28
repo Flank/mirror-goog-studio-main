@@ -37,23 +37,9 @@ interface BaseArtifact {
     val assembleTaskName: String
 
     /**
-     * Returns the folder containing the class files. This is the output of the java compilation.
-     *
-     * @return a folder.
+     * Set of folders containing the result of the compilation step(s)
      */
-    val classesFolder: File
-
-    /**
-     * Folders or jars containing additional classes (e.g., R.jar or those registered by third-party
-     * plugins like Kotlin).
-     */
-    val additionalClassesFolders: Set<File>
-
-    /**
-     * Returns the folder containing resource files that classes from this artifact expect to find
-     * on the classpath.
-     */
-    val javaResourcesFolder: File
+    val classesFolders: Set<File>
 
     /**
      * A SourceProvider specific to the variant. This can be null if there is no flavors as

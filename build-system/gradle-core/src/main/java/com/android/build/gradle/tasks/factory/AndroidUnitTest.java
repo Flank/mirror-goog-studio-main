@@ -28,7 +28,7 @@ import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
-import com.android.build.gradle.internal.component.BaseCreationConfig;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.component.UnitTestCreationConfig;
 import com.android.build.gradle.internal.scope.BootClasspathBuilder;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -81,7 +81,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<AndroidUnitTest, BaseCreationConfig> {
+            extends VariantTaskCreationAction<AndroidUnitTest, ComponentCreationConfig> {
 
         @NonNull private final UnitTestCreationConfig unitTestCreationConfig;
 
@@ -171,7 +171,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
 
         @NonNull
         private ConfigurableFileCollection computeClasspath(
-                BaseCreationConfig creationConfig, boolean includeAndroidResources) {
+                ComponentCreationConfig creationConfig, boolean includeAndroidResources) {
             GlobalScope globalScope = creationConfig.getGlobalScope();
             ArtifactsImpl artifacts = creationConfig.getArtifacts();
 

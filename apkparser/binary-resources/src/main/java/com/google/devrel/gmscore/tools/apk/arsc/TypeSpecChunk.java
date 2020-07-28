@@ -16,14 +16,12 @@
 
 package com.google.devrel.gmscore.tools.apk.arsc;
 
+import com.android.annotations.Nullable;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedBytes;
-
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-
-import javax.annotation.Nullable;
 
 /** A chunk that contains a collection of resource entries for a particular resource data type. */
 public final class TypeSpecChunk extends Chunk {

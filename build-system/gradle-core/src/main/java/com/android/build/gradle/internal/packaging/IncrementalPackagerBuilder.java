@@ -472,6 +472,7 @@ public class IncrementalPackagerBuilder {
      * <ul>
      *    <li>{@link #withOutputFile(File)}
      *    <li>{@link #withIntermediateDir(File)}
+     *    <li>{@link #withNoCompressPredicate(Predicate)}
      * </ul>
      *
      * @return the incremental packager
@@ -486,14 +487,7 @@ public class IncrementalPackagerBuilder {
                                 this.manifestFile, () -> true, isManifestFileRequired, null)
                         : null;
 
-        if (noCompressPredicate == null) {
-            if (manifest != null) {
-                noCompressPredicate =
-                        PackagingUtils.getNoCompressPredicate(aaptOptionsNoCompress, manifest);
-            } else {
-                noCompressPredicate = path -> false;
-            }
-        }
+        Preconditions.checkNotNull(noCompressPredicate);
 
         if (nativeLibrariesPackagingMode == null) {
             if (manifest != null) {

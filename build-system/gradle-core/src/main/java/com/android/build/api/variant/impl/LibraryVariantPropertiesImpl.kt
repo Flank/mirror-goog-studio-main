@@ -16,9 +16,11 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.variant.LibraryVariant
+import com.android.build.api.instrumentation.AsmClassVisitorFactory
+import com.android.build.api.instrumentation.InstrumentationParameters
+import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.LibraryVariantProperties
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -70,6 +72,23 @@ open class LibraryVariantPropertiesImpl @Inject constructor(
 
     override val applicationId: Provider<String> =
         internalServices.providerOf(String::class.java, variantDslInfo.packageName)
+
+    override fun <ParamT : InstrumentationParameters> transformClassesWith(
+        classVisitorFactoryImplClass: Class<out AsmClassVisitorFactory<ParamT>>,
+        scope: InstrumentationScope,
+        instrumentationParamsConfig: (ParamT) -> Unit
+    ) {
+        if (scope == InstrumentationScope.ALL) {
+            throw RuntimeException(
+                "Can't register ${classVisitorFactoryImplClass.name} to " +
+                        "instrument library dependencies.\n" +
+                        "Instrumenting library dependencies will have no effect on library " +
+                        "consumers, move the dependencies instrumentation to be done in the " +
+                        "consuming app or test component."
+            )
+        }
+        super.transformClassesWith(classVisitorFactoryImplClass, scope, instrumentationParamsConfig)
+    }
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API

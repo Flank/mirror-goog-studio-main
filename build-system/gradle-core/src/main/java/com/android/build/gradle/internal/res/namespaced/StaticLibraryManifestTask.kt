@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -52,8 +52,8 @@ abstract class StaticLibraryManifestTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: BaseCreationConfig
-    ) : VariantTaskCreationAction<StaticLibraryManifestTask, BaseCreationConfig>(
+        creationConfig: ComponentCreationConfig
+    ) : VariantTaskCreationAction<StaticLibraryManifestTask, ComponentCreationConfig>(
         creationConfig
     ) {
 

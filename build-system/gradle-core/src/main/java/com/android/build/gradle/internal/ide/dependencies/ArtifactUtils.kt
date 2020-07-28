@@ -50,19 +50,22 @@ class ArtifactCollectionsInputs constructor(
     @get:Input val projectPath: String,
     @get:Input val variantName: String,
     @get:Input val runtimeType: RuntimeType,
-    @get:Internal internal val mavenCoordinatesCache: Provider<MavenCoordinatesCacheBuildService>
+    @get:Internal internal val mavenCoordinatesCache: Provider<MavenCoordinatesCacheBuildService>,
+    @get:Input val buildMapping: ImmutableMap<String, String>
 ) {
     enum class RuntimeType { FULL, PARTIAL }
 
     constructor(
         componentProperties: ComponentPropertiesImpl,
-        runtimeType: RuntimeType
+        runtimeType: RuntimeType,
+        buildMapping: ImmutableMap<String, String>
     ) : this(
         componentProperties.variantDependencies,
         componentProperties.globalScope.project.path,
         componentProperties.name,
         runtimeType,
-        getBuildService(componentProperties.services.buildServiceRegistry)
+        getBuildService(componentProperties.services.buildServiceRegistry),
+        buildMapping
     )
 
     @get:Nested
@@ -274,8 +277,7 @@ fun getAllArtifacts(
 fun getAllArtifacts(
     inputs: ArtifactCollectionsInputs,
     consumedConfigType: AndroidArtifacts.ConsumedConfigType,
-    dependencyFailureHandler: DependencyFailureHandler?,
-    buildMapping: ImmutableMap<String, String>
+    dependencyFailureHandler: DependencyFailureHandler?
 ): Set<ResolvedArtifact> {
     val collections = if (consumedConfigType == AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH) {
         inputs.compileClasspath
@@ -285,7 +287,7 @@ fun getAllArtifacts(
     return getAllArtifacts(
         collections,
         dependencyFailureHandler,
-        buildMapping,
+        inputs.buildMapping,
         inputs.projectPath,
         inputs.variantName,
         inputs.mavenCoordinatesCache.get()

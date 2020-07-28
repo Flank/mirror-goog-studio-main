@@ -3,6 +3,7 @@ package com.android.build.gradle.internal.res
 
 import com.android.aaptcompiler.ResourceCompilerOptions
 import com.android.aaptcompiler.compileResource
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.ide.common.resources.CompileResourceRequest
 import org.gradle.api.provider.ListProperty
@@ -25,7 +26,9 @@ abstract class ResourceCompilerRunnable : ProfileAwareWorkAction<ResourceCompile
       val options = ResourceCompilerOptions(
         pseudolocalize = request.isPseudoLocalize,
         legacyMode = true)
-      compileResource(request.inputFile, request.outputDirectory, options)
+      // TODO: find a way to re-use the blame logger between requests
+      val blameLogger = blameLoggerFor(request, LoggerWrapper.getLogger(this::class.java))
+      compileResource(request.inputFile, request.outputDirectory, options, blameLogger)
     }
   }
 }

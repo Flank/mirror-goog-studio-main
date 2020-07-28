@@ -70,33 +70,43 @@ class ClassesHierarchyDataTest(private val testMode: TestMode) {
             classesHierarchyData.addClassesFromJar(inputJar)
         }
 
-        classesHierarchyData.addClass(Type.getInternalName(Object::class.java), null, emptyList())
+        classesHierarchyData.addClass(
+            Type.getInternalName(Object::class.java),
+            emptyList(),
+            null,
+            emptyList()
+        )
     }
 
     @Test
     fun testClassesHierarchyData() {
         assertClassDataIsCorrect(
             clazz = I::class.java,
+            expectedAnnotations = emptyList(),
             expectedSuperclasses = listOf(Object::class.java),
             expectedInterfaces = emptyList()
         )
         assertClassDataIsCorrect(
             clazz = InterfaceExtendsI::class.java,
+            expectedAnnotations = listOf(Instrument::class.java),
             expectedSuperclasses = listOf(Object::class.java),
             expectedInterfaces = listOf(I::class.java)
         )
         assertClassDataIsCorrect(
             clazz = ClassImplementsI::class.java,
+            expectedAnnotations = listOf(Instrument::class.java),
             expectedSuperclasses = listOf(Object::class.java),
             expectedInterfaces = listOf(I::class.java)
         )
         assertClassDataIsCorrect(
             clazz = ClassWithNoInterfacesOrSuperclasses::class.java,
+            expectedAnnotations = emptyList(),
             expectedSuperclasses = listOf(Object::class.java),
             expectedInterfaces = emptyList()
         )
         assertClassDataIsCorrect(
             clazz = ClassExtendsOneClassAndImplementsTwoInterfaces::class.java,
+            expectedAnnotations = emptyList(),
             expectedSuperclasses = listOf(
                 ClassWithNoInterfacesOrSuperclasses::class.java,
                 Object::class.java
@@ -105,6 +115,7 @@ class ClassesHierarchyDataTest(private val testMode: TestMode) {
         )
         assertClassDataIsCorrect(
             clazz = ClassExtendsAClassThatExtendsAnotherClassAndImplementsTwoInterfaces::class.java,
+            expectedAnnotations = listOf(Instrument::class.java),
             expectedSuperclasses = listOf(
                 ClassExtendsOneClassAndImplementsTwoInterfaces::class.java,
                 ClassWithNoInterfacesOrSuperclasses::class.java,
@@ -116,14 +127,18 @@ class ClassesHierarchyDataTest(private val testMode: TestMode) {
 
     private fun assertClassDataIsCorrect(
         clazz: Class<*>,
+        expectedAnnotations: List<Class<*>>,
         expectedSuperclasses: List<Class<*>>,
         expectedInterfaces: List<Class<*>>
     ) {
+        assertThat(classesHierarchyData.getAnnotations(Type.getInternalName(clazz))).isEqualTo(
+            expectedAnnotations.map(Class<*>::getName)
+        )
         assertThat(classesHierarchyData.getAllSuperClasses(Type.getInternalName(clazz))).isEqualTo(
-            expectedSuperclasses.map(Type::getInternalName)
+            expectedSuperclasses.map(Class<*>::getName)
         )
         assertThat(classesHierarchyData.getAllInterfaces(Type.getInternalName(clazz))).isEqualTo(
-            expectedInterfaces.map(Type::getInternalName)
+            expectedInterfaces.map(Class<*>::getName)
         )
     }
 }

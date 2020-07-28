@@ -49,6 +49,8 @@ class CentralDirectoryRecord {
     // Location of the Local file header to end of payload in file space.
     private final Location location;
     private final short compressionFlag;
+    private final short versionMadeBy;
+    private final int externalAttribute;
     private final Location payloadLocation;
     private final boolean isZip64;
 
@@ -59,7 +61,9 @@ class CentralDirectoryRecord {
             long uncompressedSize,
             Location location,
             short compressionFlag,
-            Location payloadLocation) {
+            Location payloadLocation,
+            short versionMadeBy,
+            int externalAttribute) {
         this.nameBytes = nameBytes;
         this.crc = crc;
         this.compressedSize = compressedSize;
@@ -71,6 +75,8 @@ class CentralDirectoryRecord {
                 compressedSize > Zip64.LONG_MAGIC
                         || uncompressedSize > Zip64.LONG_MAGIC
                         || location.first > Zip64.LONG_MAGIC;
+        this.versionMadeBy = versionMadeBy;
+        this.externalAttribute = externalAttribute;
     }
 
     void write(@NonNull ByteBuffer buf) {
@@ -82,7 +88,7 @@ class CentralDirectoryRecord {
         ByteBuffer extra = buildExtraField();
 
         buf.putInt(SIGNATURE);
-        buf.putShort((short) 0); // version made by
+        buf.putShort(versionMadeBy);
         buf.putShort(versionNeeded);
         buf.putShort((short) 0); // flag
         buf.putShort(compressionFlag);
@@ -96,7 +102,7 @@ class CentralDirectoryRecord {
         buf.putShort((short) 0); // comment size
         buf.putShort((short) 0); // disk # start
         buf.putShort((short) 0); // internal att
-        buf.putInt(0); // external att
+        buf.putInt(externalAttribute);
         buf.putInt(offset);
         buf.put(nameBytes);
         buf.put(extra);

@@ -296,8 +296,6 @@ class ProjectInitializerTest {
 
         MainTest.checkDriver(
             """
-            Classpath entry points to a non-existent location: ROOT/test.jar
-            Classpath entry points to a non-existent location: ROOT/test.jar
             baseline.xml: Information: 1 error was filtered out because it is listed in the baseline file, baseline.xml
              [LintBaseline]
             project.xml:5: Error: test.jar (relative to ROOT) does not exist [LintError]
@@ -313,7 +311,7 @@ class ProjectInitializerTest {
                 AndroidManifest.xml:8: Previous permission here
             3 errors, 0 warnings (1 error filtered by baseline baseline.xml)
             """,
-            "",
+            "w: Classpath entry points to a non-existent location: ROOT/test.jar",
 
             // Expected exit code
             ERRNO_SUCCESS,

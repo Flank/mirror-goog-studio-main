@@ -351,8 +351,11 @@ public class JvmWideVariableTest {
             Integer value = variable2.get();
             fail("Expected ClassCastException");
         } catch (ClassCastException e) {
-            assertThat(e.getMessage())
-                    .isEqualTo("java.lang.String cannot be cast to java.lang.Integer");
+            String message = e.getMessage();
+            // Don't assert the entire message because its format may change across JDK versions
+            // (bug 161616922).
+            assertThat(message).contains("java.lang.String");
+            assertThat(message).contains("java.lang.Integer");
         }
 
         variable.unregister();
@@ -383,8 +386,11 @@ public class JvmWideVariableTest {
             Integer value = variable2.get().get(0);
             fail("Expected ClassCastException");
         } catch (ClassCastException e) {
-            assertThat(e.getMessage())
-                    .isEqualTo("java.lang.String cannot be cast to java.lang.Integer");
+            String message = e.getMessage();
+            // Don't assert the entire message because its format may change across JDK versions
+            // (bug 161616922).
+            assertThat(message).contains("java.lang.String");
+            assertThat(message).contains("java.lang.Integer");
         }
 
         variable.unregister();

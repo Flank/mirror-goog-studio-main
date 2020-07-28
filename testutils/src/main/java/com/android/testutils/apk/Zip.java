@@ -37,7 +37,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.annotation.CheckReturnValue;
+import org.mockito.CheckReturnValue;
 
 @Immutable
 public class Zip implements AutoCloseable {

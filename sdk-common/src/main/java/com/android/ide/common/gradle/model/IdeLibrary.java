@@ -40,8 +40,8 @@ public abstract class IdeLibrary implements Library, Serializable {
 
     // Used for serialization by the IDE.
     IdeLibrary() {
-        myResolvedCoordinates = new IdeMavenCoordinates();
-        myRequestedCoordinates = new IdeMavenCoordinates();
+        myResolvedCoordinates = new IdeMavenCoordinatesImpl();
+        myRequestedCoordinates = new IdeMavenCoordinatesImpl();
         myBuildId = null;
         myProject = null;
         myName = null;

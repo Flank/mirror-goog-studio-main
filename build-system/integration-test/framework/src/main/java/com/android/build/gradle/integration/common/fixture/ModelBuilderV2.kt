@@ -16,13 +16,15 @@
 package com.android.build.gradle.integration.common.fixture
 
 import com.android.SdkConstants
-import com.android.build.gradle.integration.common.fixture.AndroidProjectContainer.ProjectInfo
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor.runBuild
+import com.android.build.gradle.integration.common.fixture.ModelContainerV2.ModelInfo
 import com.android.build.gradle.integration.common.fixture.model.FileNormalizer
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.Option
 import com.android.builder.model.v2.ide.SyncIssue
 import com.android.builder.model.v2.models.AndroidProject
+import com.android.builder.model.v2.models.VariantDependencies
+import com.android.utils.FileUtils
 import com.google.common.collect.Sets
 import org.gradle.tooling.BuildAction
 import org.gradle.tooling.BuildActionExecuter
@@ -61,8 +63,8 @@ class ModelBuilderV2 : BaseGradleExecutor<ModelBuilderV2> {
     ) {
     }
 
-    data class FetchResult(
-        val container: AndroidProjectContainer,
+    data class FetchResult<T>(
+        val container: T,
         val normalizer: FileNormalizer
     )
 
@@ -84,18 +86,44 @@ class ModelBuilderV2 : BaseGradleExecutor<ModelBuilderV2> {
 
     /**
      * Fetches the [AndroidProject] and [ProjectSyncIssues] for each project and return them as a
-     * [AndroidProjectContainer]
+     * [ModelContainer]
      */
-    fun fetchAndroidProjects(): FetchResult {
-        val container = assertNoSyncIssues(buildModelV2(GetAndroidProjectV2Action()))
+    fun fetchAndroidProjects(): FetchResult<ModelContainerV2<AndroidProject>> {
+        val container =
+            assertNoSyncIssues(buildModelV2(GetAndroidModelV2Action(AndroidProject::class.java)))
+
         return FetchResult(
-        container,
-        normalizer = FileNormalizerImpl(
-            container.rootBuildId,
-            GradleTestProject.getGradleUserHome(GradleTestProject.BUILD_DIR).toFile(),
-            project?.androidHome,
-            androidSdkHome
-        ))
+            container,
+            normalizer = FileNormalizerImpl(
+                container.rootBuildId,
+                GradleTestProject.getGradleUserHome(GradleTestProject.BUILD_DIR).toFile(),
+                project?.androidHome,
+                androidSdkHome
+            )
+        )
+    }
+
+    /**
+     * Fetches the [AndroidProject] and [ProjectSyncIssues] for each project and return them as a
+     * [ModelContainer]
+     */
+    fun fetchVariantDependencies(variantName: String): FetchResult<ModelContainerV2<VariantDependencies>> {
+        val container = buildModelV2(
+            GetAndroidModelV2Action(
+                VariantDependencies::class.java,
+                variantName
+            )
+        )
+
+        return FetchResult(
+            container,
+            normalizer = FileNormalizerImpl(
+                container.rootBuildId,
+                GradleTestProject.getGradleUserHome(GradleTestProject.BUILD_DIR).toFile(),
+                project?.androidHome,
+                androidSdkHome
+            )
+        )
     }
 
     /** Return a list of all task names of the project.  */
@@ -163,8 +191,8 @@ class ModelBuilderV2 : BaseGradleExecutor<ModelBuilderV2> {
     }
 
     private fun assertNoSyncIssues(
-        container: AndroidProjectContainer
-    ): AndroidProjectContainer {
+        container: ModelContainerV2<AndroidProject>
+    ): ModelContainerV2<AndroidProject> {
         val allowedOptions: Set<String> =
             Sets.union(
                 explicitlyAllowedOptions,
@@ -173,12 +201,12 @@ class ModelBuilderV2 : BaseGradleExecutor<ModelBuilderV2> {
         val errors = container.infoMaps
             .entries
             .asSequence()
-            .flatMap { buildEntry: Map.Entry<BuildIdentifier, Map<String, ProjectInfo>> ->
+            .flatMap { buildEntry: Map.Entry<BuildIdentifier, Map<String, ModelInfo<AndroidProject>>> ->
                 buildEntry
                     .value
                     .entries
                     .asSequence()
-                    .map { projectEntry: Map.Entry<String, ProjectInfo> ->
+                    .map { projectEntry: Map.Entry<String, ModelInfo<AndroidProject>> ->
                         "${buildEntry.key.rootDir}@@${projectEntry.key}" to removeAllowedIssues(projectEntry.value.issues.syncIssues, allowedOptions)
                     }
             }
@@ -213,39 +241,109 @@ class ModelBuilderV2 : BaseGradleExecutor<ModelBuilderV2> {
 }
 
 class FileNormalizerImpl(
-    private val buildId: BuildIdentifier,
-    private val gradleUserHome: File,
-    private val androidSdk: File?,
-    private val androidHome: File?
+    buildId: BuildIdentifier,
+    gradleUserHome: File,
+    androidSdk: File?,
+    androidHome: File?
 ): FileNormalizer {
+
+    private data class RootData(
+        val root: File,
+        val varName: String,
+        val stringModifier: ((String) -> String)? = null
+    )
+
+    private val rootDataList: List<RootData>
+
     init {
-        println("Path variables:")
-        println("GRADLE      : $gradleUserHome")
-        println("SDK         : ${androidSdk ?: "(null)"}")
-        println("ANDROID_HOME: ${androidHome ?: "(null)"}")
+        val mutableList = mutableListOf<RootData>()
+
+        mutableList.add(RootData(buildId.rootDir, "PROJECT"))
+
+        // Custom root for Gradle's transform cache. We'll replace not the full path but
+        // re-inject the paths into it. The goal is to remove the checksum.
+        // Must be in the list before gradleUserHome
+        val gradleTransformCache: File = FileUtils.join(
+            gradleUserHome,
+            "caches", "transforms-2", "files-2.1"
+        )
+        mutableList.add(RootData(gradleTransformCache, "GRADLE") {
+            // re-inject the segments between {GRADLE} and the relative path
+            // and remove the actual checksum (size 32)
+            // incoming string is "XXXX/..." so removing XXX leaves a leading /
+            "caches/transforms-2/files-2.1/{CHECKSUM}${it.substring(32)}"
+        })
+
+        mutableList.add(RootData(gradleUserHome, "GRADLE"))
+        androidSdk?.let {
+            mutableList.add(RootData(it, "SDK"))
+        }
+        androidHome?.let {
+            mutableList.add(RootData(it, "ANDROID_HOME"))
+        }
+
+        GradleTestProject.localRepositories.asSequence().map { it.toFile()}.forEach {
+            mutableList.add(RootData(it, "LOCAL_REPO"))
+        }
+
+        rootDataList = mutableList.toList()
     }
 
     override fun normalize(file: File): String  {
-        val result = file.relativeToOrNull(buildId.rootDir, "PROJECT")
-            ?: file.relativeToOrNull(gradleUserHome, "GRADLE")
-            ?: androidHome?.let { file.relativeToOrNull(it, "ANDROID_HOME") }
-            ?: androidSdk?.let { file.relativeToOrNull(it, "SDK") }
-            ?: file
+        for (rootData in rootDataList) {
+            val result = file.relativeToOrNull(
+                rootData.root,
+                rootData.varName,
+                rootData.stringModifier)
 
-        return result.toString()
+            if (result != null) {
+                return result
+            }
+        }
+
+        return file.toString()
     }
 
-    private fun File.relativeToOrNull(root: File, varName: String): String? {
+    override fun toString(): String {
+        val sb = StringBuilder()
+        sb.append("Path variables:")
+        val len = rootDataList.map { it.varName.length }.max()?.dec() ?: 10
+        for (rootData in rootDataList) {
+            sb.append('\n')
+            sb.append(rootData.varName)
+            for (i in rootData.varName.length..len) {
+                sb.append(' ')
+            }
+
+            sb.append(": ${rootData.root}")
+        }
+
+        return sb.toString()
+    }
+
+    private fun File.relativeToOrNull(
+        root: File,
+        varName: String,
+        action: ((String) -> String)? = null
+    ): String? {
         // check first that the file is inside the root, otherwise relativeToOrNull can still
         // return something that starts with a bunch of ../
         if (startsWith(root)) {
             val relativeFile = relativeToOrNull(root)
             if (relativeFile != null) {
-                return if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
-                    "[$varName]/${relativeFile.toString().replace("\\", "/")}"
+                val osNormalizedString = if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+                    relativeFile.toString().replace("\\", "/")
                 } else {
-                    "[$varName]/$relativeFile"
+                    relativeFile.toString()
                 }
+
+                val finalString = if (action != null) {
+                    action(osNormalizedString)
+                } else {
+                    osNormalizedString
+                }
+
+                return "{$varName}/$finalString"
             }
         }
 

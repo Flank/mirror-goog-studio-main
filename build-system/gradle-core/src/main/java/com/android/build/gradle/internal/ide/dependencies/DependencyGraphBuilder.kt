@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.ide.dependencies
 
 import com.android.builder.errors.IssueReporter
-import com.google.common.collect.ImmutableMap
 
 interface DependencyGraphBuilder {
 
@@ -25,7 +24,6 @@ interface DependencyGraphBuilder {
         modelBuilder: DependencyModelBuilder<*>,
         artifactCollectionsProvider: ArtifactCollectionsInputs,
         withFullDependency: Boolean,
-        buildMapping: ImmutableMap<String, String>,
         issueReporter: IssueReporter
     )
 }

@@ -16,52 +16,30 @@
 
 package com.android.build.gradle.integration.common.fixture.model
 
+import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.builder.model.v2.dsl.BaseConfig
 import com.android.builder.model.v2.dsl.BuildType
 import com.android.builder.model.v2.dsl.ProductFlavor
+import com.android.builder.model.v2.ide.AndroidArtifact
+import com.android.builder.model.v2.ide.ArtifactDependencies
+import com.android.builder.model.v2.ide.BaseArtifact
 import com.android.builder.model.v2.ide.BuildTypeContainer
+import com.android.builder.model.v2.ide.JavaArtifact
 import com.android.builder.model.v2.ide.LintOptions
 import com.android.builder.model.v2.ide.ProductFlavorContainer
 import com.android.builder.model.v2.ide.SourceProvider
+import com.android.builder.model.v2.ide.Variant
 import com.android.builder.model.v2.models.AndroidProject
+import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.VariantDependencies
 import java.io.File
 
-interface FileNormalizer {
-    fun normalize(file: File): String
-}
-
-/**
- * Entry point to dump an [AndroidProject]
- */
-fun AndroidProject.dump(normalizer: FileNormalizer): String {
-    return dump("AndroidProject", normalizer) {
-        writeToBuilder(this)
-    }.also {
-        println("--------------------------------------------------")
-        println("Dumped model:")
-        println(it)
-    }
-}
-
-/**
- * Entry point to dump an [VariantDependencies]
- */
-fun VariantDependencies.dump(normalizer: FileNormalizer): String {
-    return dump("VariantDependencies", normalizer) {
-        // TODO
-    }.also {
-        println("--------------------------------------------------")
-        println("Dumped model:")
-        println(it)
-    }
-}
-
 // --------------
-// Internal dump fixtures specific to each model class
+// dump fixtures specific to each model class
 
-private fun AndroidProject.writeToBuilder(builder: DumpBuilder) {
+internal fun AndroidProject.writeToBuilder(builder: DumpBuilder) {
     builder.apply {
+        item("modelVersion", "n/a")
         item("apiVersion", apiVersion)
         item("projectType", projectType.name)
         item("path", path)
@@ -76,7 +54,7 @@ private fun AndroidProject.writeToBuilder(builder: DumpBuilder) {
         multiLineList("bootClasspath", bootClasspath.sorted()) {
             value(it)
         }
-        largeObject("DefaultConfigContainer", defaultConfig) {
+        largeObject("defaultConfig", defaultConfig) {
             it.writeToBuilder(this)
         }
         multiLineList("buildTypes", buildTypes.sortedBy { it.buildType.name }) {
@@ -101,6 +79,12 @@ private fun AndroidProject.writeToBuilder(builder: DumpBuilder) {
                 item("enableV2Signing", config.enableV2Signing)
                 item("enableV3Signing", config.enableV3Signing)
                 item("enableV4Signing", config.enableV4Signing)
+                item("isSigningReady", config.isSigningReady)
+            }
+        }
+        multiLineList("variants", variants.sortedBy { it.name }) {
+            largeObject("variant(${it.name})", it) { variant ->
+                variant.writeToBuilder(this)
             }
         }
         multiLineList("lintRuleJars", lintRuleJars.sorted()) {
@@ -133,16 +117,16 @@ private fun AndroidProject.writeToBuilder(builder: DumpBuilder) {
 
 private fun ProductFlavorContainer.writeToBuilder(builder: DumpBuilder) {
     builder.apply {
-        largeObject("Flavor", productFlavor) {
+        largeObject("productFlavor", productFlavor) {
             it.writeToBuilder(this)
         }
-        largeObject("Prod-SourceProvider", sourceProvider) {
+        largeObject("sourceProvider", sourceProvider) {
             it.writeToBuilder(this)
         }
-        largeObject("AndroidTest-SourceProvider", androidTestSourceProvider) {
+        largeObject("androidTestSourceProvider", androidTestSourceProvider) {
             it.writeToBuilder(this)
         }
-        largeObject("UnitTest-SourceProvider", unitTestSourceProvider) {
+        largeObject("unitTestSourceProvider", unitTestSourceProvider) {
             it.writeToBuilder(this)
         }
     }
@@ -152,6 +136,7 @@ private fun ProductFlavor.writeToBuilder(builder: DumpBuilder) {
     dumpBaseConfig(builder)
     builder.apply {
         item("dimension", dimension)
+        item("applicationId", applicationId)
         item("versionCode", versionCode)
         item("versionName", versionName)
         struct("minSdkVersion", minSdkVersion) {
@@ -188,16 +173,16 @@ private fun ProductFlavor.writeToBuilder(builder: DumpBuilder) {
 
 private fun BuildTypeContainer.writeToBuilder(builder: DumpBuilder) {
     builder.apply {
-        largeObject("BuildType", buildType) {
+        largeObject("buildType", buildType) {
             it.writeToBuilder(this)
         }
-        largeObject("Prod-SourceProvider", sourceProvider) {
+        largeObject("sourceProvider", sourceProvider) {
             it.writeToBuilder(this)
         }
-        largeObject("AndroidTest-SourceProvider", androidTestSourceProvider) {
+        largeObject("androidTestSourceProvider", androidTestSourceProvider) {
             it.writeToBuilder(this)
         }
-        largeObject("UnitTest-SourceProvider", unitTestSourceProvider) {
+        largeObject("unitTestSourceProvider", unitTestSourceProvider) {
             it.writeToBuilder(this)
         }
     }
@@ -237,6 +222,7 @@ private fun BaseConfig.dumpBaseConfig(builder: DumpBuilder) {
         multiLineList("resValues", resValues.entries.sortedBy { it.key }) {
             struct("value", it.value) { field ->
                 item("name", field.name)
+                item("type", field.type)
                 item("value", field.value)
                 item("documentation", field.documentation)
                 list("annotations", field.annotations.sorted())
@@ -263,7 +249,7 @@ private fun BaseConfig.dumpBaseConfig(builder: DumpBuilder) {
 private fun SourceProvider.writeToBuilder(builder: DumpBuilder) {
     builder.apply {
         item("name", name)
-        item("ManifestFile", manifestFile)
+        item("manifestFile", manifestFile)
         multiLineList("javaDirectories", javaDirectories.sorted()) {
             value(it)
         }
@@ -300,6 +286,83 @@ private fun SourceProvider.writeToBuilder(builder: DumpBuilder) {
     }
 }
 
+internal fun Variant.writeToBuilder(builder: DumpBuilder) {
+    builder.apply {
+        item("name", name)
+        item("displayName", name)
+        item("buildType", buildType)
+        item("productFlavors", productFlavors)
+        item("isInstantAppCompatible", isInstantAppCompatible)
+        item("desugaredMethods", desugaredMethods)
+        largeObject("mainArtifact", mainArtifact) {
+            it.writeToBuilder(this)
+        }
+        largeObject("androidTestArtifact", androidTestArtifact) {
+            it.writeToBuilder(this)
+        }
+        largeObject("unitTestArtifact", unitTestArtifact) {
+            it.writeToBuilder(this)
+        }
+        struct("testedTargetVariant", testedTargetVariant) {
+            item("targetProjectPath", it.targetProjectPath)
+            item("targetVariant", it.targetVariant)
+        }
+    }
+}
+
+private fun AndroidArtifact.writeToBuilder(builder: DumpBuilder) {
+    writeBaseArtifactToBuilder(builder)
+    builder.apply {
+        item("isSigned", isSigned)
+        item("signingConfigName", signingConfigName)
+        item("sourceGenTaskName", sourceGenTaskName)
+        item("generatedResourceFolders", generatedResourceFolders.sorted())
+        item("abiFilters", abiFilters?.sorted())
+        item("assembleTaskOutputListingFile", assembleTaskOutputListingFile)
+        struct("testInfo", testInfo) {
+            item("animationsDisabled", it.animationsDisabled)
+            item("execution", it.execution)
+            item("additionalRuntimeApks", it.additionalRuntimeApks)
+            item("instrumentedTestTaskName", it.instrumentedTestTaskName)
+        }
+        struct("bundleInfo", bundleInfo) {
+            item("bundleTaskName", it.bundleTaskName)
+            item("bundleTaskOutputListingFile", it.bundleTaskOutputListingFile)
+            item("apkFromBundleTaskName", it.apkFromBundleTaskName)
+            item("apkFromBundleTaskOutputListingFile", it.apkFromBundleTaskOutputListingFile)
+        }
+        item("codeShrinker", codeShrinker)
+    }
+}
+
+private fun JavaArtifact.writeToBuilder(builder: DumpBuilder) {
+    writeBaseArtifactToBuilder(builder)
+    builder.apply {
+        item("mockablePlatformJar", mockablePlatformJar)
+        item("runtimeResourceFolder", runtimeResourceFolder)
+    }
+}
+
+private fun BaseArtifact.writeBaseArtifactToBuilder(builder: DumpBuilder) {
+    builder.apply {
+        item("compileTaskName", compileTaskName)
+        item("assembleTaskName", assembleTaskName)
+        multiLineList("classesFolders", classesFolders.sorted()) {
+            value(it)
+        }
+        item("ideSetupTaskNames", ideSetupTaskNames.sorted())
+        multiLineList("generatedSourceFolders", generatedSourceFolders.sorted()) {
+            value(it)
+        }
+        largeObject("variantSourceProvider", variantSourceProvider) {
+            it.writeToBuilder(this)
+        }
+        largeObject("multiFlavorSourceProvider", multiFlavorSourceProvider) {
+            it.writeToBuilder(this)
+        }
+    }
+}
+
 private fun LintOptions.writeToBuilder(builder: DumpBuilder) {
     builder.apply {
         list("disable", disable.sorted())
@@ -329,6 +392,69 @@ private fun LintOptions.writeToBuilder(builder: DumpBuilder) {
         item("baselineFile", baselineFile)
         multiLineList("severityOverrides", severityOverrides?.entries?.sortedBy { it.key }) {
             entry(it.key, it.value)
+        }
+    }
+}
+
+internal fun VariantDependencies.writeToBuilder(builder: DumpBuilder) {
+    builder.apply {
+        item("name", name)
+        largeObject("mainArtifact", mainArtifact) {
+            it.writeToBuilder(this)
+        }
+        largeObject("androidTestArtifact", androidTestArtifact) {
+            it.writeToBuilder(this)
+        }
+        largeObject("unitTestArtifact", unitTestArtifact) {
+            it.writeToBuilder(this)
+        }
+    }
+}
+
+private fun ArtifactDependencies.writeToBuilder(builder: DumpBuilder) {
+    builder.apply {
+        multiLineList("compileDependencies", compileDependencies) {
+            struct("GraphItem", it) { item->
+                artifactAddress("artifactAddress", item.artifactAddress)
+                item("requestedCoordinates", item.requestedCoordinates)
+                item("dependencies", item.dependencies)
+            }
+        }
+        multiLineList("runtimeDependencies", runtimeDependencies) {
+            struct("GraphItem", it) { item->
+                artifactAddress("artifactAddress", item.artifactAddress)
+                item("requestedCoordinates", item.requestedCoordinates)
+                item("dependencies", item.dependencies)
+            }
+        }
+    }
+}
+
+internal fun GlobalLibraryMap.writeToBuilder(builder: DumpBuilder) {
+    builder.apply {
+        multiLineList("libraries", libraries.values.sortedBy { it.artifactAddress }) {
+            largeObject("library", it) { library ->
+                item("type", library.type)
+                artifactAddress("artifactAddress", library.artifactAddress)
+                item("artifact", library.artifact)
+                buildId("buildId", library.buildId)
+                item("projectPath", library.projectPath)
+                item("variant", library.variant)
+                item("compileJarFiles", library.compileJarFiles)
+                item("runtimeJarFiles", library.runtimeJarFiles)
+                item("manifest", library.manifest)
+                item("resFolder", library.resFolder)
+                item("resStaticLibrary", library.resStaticLibrary)
+                item("assetsFolder", library.assetsFolder)
+                item("jniFolder", library.jniFolder)
+                item("aidlFolder", library.aidlFolder)
+                item("renderscriptFolder", library.renderscriptFolder)
+                item("proguardRules", library.proguardRules)
+                item("lintJar", library.lintJar)
+                item("externalAnnotations", library.externalAnnotations)
+                item("publicResources", library.publicResources)
+                item("symbolFile", library.symbolFile)
+            }
         }
     }
 }

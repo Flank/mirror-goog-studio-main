@@ -699,10 +699,10 @@ abstract class LintClient {
                 val jars = libs.listFiles()
                 if (jars != null) {
                     for (jar in jars) {
-                        if ((endsWith(jar.path, DOT_JAR) || endsWith(jar.path, DOT_SRCJAR)) &&
-                            !libraries.contains(jar)
-                        ) {
+                        if (endsWith(jar.path, DOT_JAR) && !libraries.contains(jar)) {
                             libraries.add(jar)
+                        } else if (endsWith(jar.path, DOT_SRCJAR) && !sources.contains(jar)) {
+                            sources.add(jar)
                         }
                     }
                 }
@@ -1875,17 +1875,23 @@ abstract class LintClient {
         @Suppress("MemberVisibilityCanBePrivate")
         const val CLIENT_UNKNOWN = "unknown"
 
-        /** The client name.  */
         /**
-         * Returns the name of the embedding client. It could be not just
+         * The name of the embedding client. It could be not just
          * [.CLIENT_STUDIO], [.CLIENT_GRADLE], [.CLIENT_CLI]
          * etc but other values too as lint is integrated in other embedding contexts.
+         *
+         * This is only intended to be set by the lint infrastructure.
+         *
+         * Note that if you are getting an UninitializedPropertyAccessException here,
+         * you're accessing code which should only be run after the lint client
+         * name has been initialized. This should be performed early in the
+         * initialization of each integration of lint in a tool such as Gradle,
+         * Android Studio, etc.
          *
          * @return the name of the embedding client
          */
         @JvmStatic
-        var clientName = CLIENT_UNKNOWN
-            private set
+        lateinit var clientName: String
 
         /**
          * Returns true if the embedding client currently running lint is Android Studio
@@ -1910,6 +1916,26 @@ abstract class LintClient {
         @JvmStatic
         val isUnitTest: Boolean
             get() = CLIENT_UNIT_TESTS == clientName
+
+        /** Intended only for test infrastructure */
+        fun isClientNameInitialized(): Boolean {
+            return this::clientName.isInitialized
+        }
+
+        /** Intended only for test infrastructure */
+        fun ensureClientNameInitialized() {
+            if (!isClientNameInitialized()) {
+                error("The LintClient.clientName must be initialized before running other lint code")
+            }
+        }
+
+        /** Intended only for test infrastructure */
+        fun resetClientName() {
+            // Use reflection to null out a lateinit variable.
+            val field = LintClient::class.java.getDeclaredField("clientName")
+            field.isAccessible = true
+            field.set(null, null)
+        }
 
         /**
          * Returns the desugaring operations that the Gradle plugin will use for a

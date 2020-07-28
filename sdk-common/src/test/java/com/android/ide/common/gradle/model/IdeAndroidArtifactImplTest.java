@@ -15,10 +15,8 @@
  */
 package com.android.ide.common.gradle.model;
 
-import static com.android.ide.common.gradle.model.IdeModelTestUtils.assertEqualsOrSimilar;
 import static com.android.ide.common.gradle.model.IdeModelTestUtils.createEqualsVerifier;
 import static com.android.ide.common.gradle.model.IdeModelTestUtils.expectUnsupportedOperationException;
-import static com.android.ide.common.gradle.model.IdeModelTestUtils.verifyUsageOfImmutableCollections;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
@@ -88,16 +86,6 @@ public class IdeAndroidArtifactImplTest {
                 new IdeAndroidArtifactImpl(
                         original, myModelCache, myDependenciesFactory, myGradleVersion);
         expectUnsupportedOperationException(artifact::getInstantRun);
-    }
-
-    @Test
-    public void constructor() throws Throwable {
-        AndroidArtifact original = new AndroidArtifactStub();
-        IdeAndroidArtifactImpl copy =
-                new IdeAndroidArtifactImpl(
-                        original, myModelCache, myDependenciesFactory, myGradleVersion);
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
     }
 
     // See http://b/64305584

@@ -614,9 +614,9 @@ public class Project {
     }
 
     /**
-     * Returns the list of source folders for Java test source files
+     * Returns the list of Java libraries (typically .jar files) that the tests depend on.
      *
-     * @return a list of source folders to search for .java files
+     * @return a list of .jar files (or class folders) that the tests depends on.
      */
     @NonNull
     public List<File> getTestLibraries() {

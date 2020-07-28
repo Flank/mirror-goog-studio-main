@@ -27,7 +27,7 @@ import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
-import com.android.build.gradle.internal.component.BaseCreationConfig;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.component.TestCreationConfig;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -122,7 +122,7 @@ public class TestApplicationTaskManager
     }
 
     @Override
-    protected void postJavacCreation(@NonNull BaseCreationConfig creationConfig) {
+    protected void postJavacCreation(@NonNull ComponentCreationConfig creationConfig) {
         // do nothing.
     }
 
@@ -171,7 +171,7 @@ public class TestApplicationTaskManager
     }
 
     @Override
-    protected void createVariantPreBuildTask(@NonNull BaseCreationConfig creationConfig) {
+    protected void createVariantPreBuildTask(@NonNull ComponentCreationConfig creationConfig) {
         createDefaultPreBuildTask(creationConfig);
     }
 }

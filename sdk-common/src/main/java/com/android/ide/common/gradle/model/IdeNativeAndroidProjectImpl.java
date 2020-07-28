@@ -90,12 +90,12 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
                 IdeModel.copy(
                         project.getToolChains(),
                         modelCache,
-                        toolchain -> new IdeNativeToolchain(toolchain));
+                        toolchain -> new IdeNativeToolchainImpl(toolchain));
         mySettings =
                 IdeModel.copy(
                         project.getSettings(),
                         modelCache,
-                        settings -> new IdeNativeSettings(settings));
+                        settings -> new IdeNativeSettingsImpl(settings));
         myFileExtensions = ImmutableMap.copyOf(project.getFileExtensions());
         myDefaultNdkVersion = copyDefaultNdkVersion(project);
         myBuildSystems = copyBuildSystems(project);

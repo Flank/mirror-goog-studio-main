@@ -15,6 +15,7 @@
  */
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.AndroidModel
 import java.io.File
 
 /**
@@ -24,7 +25,7 @@ import java.io.File
  *
  * @since 4.2
  */
-interface SourceProvider {
+interface SourceProvider: AndroidModel {
     /**
      * Returns the name of this source set.
      *

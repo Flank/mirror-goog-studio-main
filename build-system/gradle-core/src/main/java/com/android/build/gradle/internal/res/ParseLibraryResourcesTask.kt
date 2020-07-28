@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -141,8 +141,8 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
     }
 
     class CreateAction(
-        creationConfig: BaseCreationConfig
-    ) : VariantTaskCreationAction<ParseLibraryResourcesTask, BaseCreationConfig>(
+        creationConfig: ComponentCreationConfig
+    ) : VariantTaskCreationAction<ParseLibraryResourcesTask, ComponentCreationConfig>(
         creationConfig
     ) {
 

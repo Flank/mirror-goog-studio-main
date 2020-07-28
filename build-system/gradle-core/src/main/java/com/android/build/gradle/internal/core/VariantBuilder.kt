@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.core
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.ComponentIdentityImpl
+import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.core.VariantBuilder.Companion.getBuilder
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
@@ -252,8 +253,8 @@ class VariantBuilder private constructor(
 
     private val flavors = mutableListOf<Pair<ProductFlavor, SourceProvider>>()
 
-    var variantSourceProvider: SourceProvider? = null
-    var multiFlavorSourceProvider: SourceProvider? = null
+    var variantSourceProvider: DefaultAndroidSourceSet? = null
+    var multiFlavorSourceProvider: DefaultAndroidSourceSet? = null
     var testedVariant: VariantDslInfoImpl? = null
 
     fun addProductFlavor(

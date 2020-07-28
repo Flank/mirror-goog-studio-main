@@ -43,5 +43,6 @@ class CompileResourceRequest @JvmOverloads constructor(
      * This should be used in case the folder contents aren't already loaded in memory, otherwise
      * use [blameMap]
      */
-    val mergeBlameFolder: File? = null
+    val mergeBlameFolder: File? = null,
+    val sourcePath : String = inputFile.absolutePath
 ) : Serializable

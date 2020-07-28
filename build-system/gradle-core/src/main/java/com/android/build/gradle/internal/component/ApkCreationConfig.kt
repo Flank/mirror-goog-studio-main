@@ -23,7 +23,7 @@ import org.gradle.api.provider.MapProperty
 /**
  * Interface for properties common to all variant generating APKs
  */
-interface ApkCreationConfig: VariantCreationConfig {
+interface ApkCreationConfig: ConsumableCreationConfig {
 
     val aaptOptions: AaptOptions
 

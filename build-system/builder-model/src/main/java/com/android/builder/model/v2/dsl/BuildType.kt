@@ -15,6 +15,8 @@
  */
 package com.android.builder.model.v2.dsl
 
+import com.android.builder.model.v2.AndroidModel
+
 /**
  * a Build Type. This is only the configuration of the build type.
  *
@@ -28,7 +30,7 @@ package com.android.builder.model.v2.dsl
  *
  * @since 4.2
  */
-interface BuildType : BaseConfig {
+interface BuildType : BaseConfig, AndroidModel {
     /** Whether the build type is configured to generate a debuggable apk. */
     val isDebuggable: Boolean
 

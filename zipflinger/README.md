@@ -134,6 +134,18 @@ ZipSourceEntry is returned. The handle is only used if alignment needs to be req
 All sources can be requested to be aligned via the Source.align() method. All sources except for the
 ZipSourceEntry can be requested to be uncompressed/re-compressed.
 
+## File properties and symbolic links
+
+Zipflinger will preserve UNIX permissions as found in the Central Directory "external
+attribute" entries when transferring entries between zip archives.
+
+By default, zipflinger creates zip entries with "read" and "write" permissions for user, group, and
+others. Symbolic links are also followed. If you want to preserve the executable permission or if
+you want to not follow symbolic links, you must use the FullFileSource object.
+
+Keep in mind that FullFileSource is a little bit slower to process files since it needs to perform
+extra I/O in order to retrieve each properties.
+
 ## Performance considerations when using ZipSource
 
 Zipflinger excels at moving zip entries between zip archives thanks to zero-copy transfer. However

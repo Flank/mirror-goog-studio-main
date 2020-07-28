@@ -16,11 +16,10 @@
 
 package com.google.devrel.gmscore.tools.apk.arsc;
 
+import com.android.annotations.Nullable;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-
-import javax.annotation.Nullable;
 
 /** Represents the end of an XML node. */
 public final class XmlEndElementChunk extends XmlNodeChunk {

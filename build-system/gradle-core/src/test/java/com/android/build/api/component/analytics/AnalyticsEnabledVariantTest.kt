@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 package com.android.build.api.component.analytics
+import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.tools.build.gradle.internal.profile.VariantMethodType
@@ -39,12 +40,12 @@ class AnalyticsEnabledVariantTest {
     }
     @Test
     fun setMinSdkVersion() {
-        val newVersion = AndroidVersionImpl(23)
-        proxy.minSdkVersion = newVersion
+        val newAndroidVersion = AndroidVersion(23)
+        proxy.minSdkVersion = newAndroidVersion
         Truth.assertThat(stats.variantApiAccess.variantAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantAccessList.first().type
         ).isEqualTo(VariantMethodType.MIN_SDK_VERSION_VALUE_VALUE)
-        verify(delegate, times(1)).minSdkVersion = newVersion
+        verify(delegate, times(1)).minSdkVersion = newAndroidVersion
     }
 }

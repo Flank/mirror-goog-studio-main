@@ -25,7 +25,7 @@ import java.io.Serializable
  */
 data class ArtifactDependenciesImpl(
     override val compileDependencies: List<GraphItem>,
-    override val packageDependencies: List<GraphItem>?
+    override val runtimeDependencies: List<GraphItem>?
 ) : ArtifactDependencies, Serializable {
     companion object {
         @JvmStatic

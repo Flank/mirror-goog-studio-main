@@ -25,7 +25,7 @@ import org.gradle.api.provider.Provider
 import java.io.Serializable
 
 /**
- * Properties for the android test Variant of a module
+ * Properties for the android test Variant of a module.
  */
 @Incubating
 interface AndroidTestProperties : TestComponentProperties {
@@ -46,7 +46,7 @@ interface AndroidTestProperties : TestComponentProperties {
     fun aaptOptions(action: AaptOptions.() -> Unit)
 
     /**
-     * The package name into which some classes are generated
+     * The package name into which some classes are generated.
      */
     val packageName: Provider<String>
 
@@ -65,7 +65,7 @@ interface AndroidTestProperties : TestComponentProperties {
      */
     val functionalTest: Property<Boolean>
 
-    /** the test label  */
+    /** The test label.  */
     val testLabel: Property<String?>
 
     /**
@@ -75,19 +75,19 @@ interface AndroidTestProperties : TestComponentProperties {
 
     /**
      * Adds a ResValue element to the generated resources.
-     * @param name the resource name
-     * @param type the resource type like 'string'
-     * @param value the resource value
-     * @param comment optional comment to be added to the generated resource file for the field.
+     * @param name The resource name.
+     * @param type The resource type like 'string'.
+     * @param value The resource value.
+     * @param comment Optional comment to be added to the generated resource file for the field.
      */
     fun addResValue(name: String, type: String, value: String, comment: String?)
 
     /**
      * Adds a ResValue element to the generated resources.
-     * @param name the resource name
-     * @param type the resource type like 'string'
-     * @param value a [Provider] for the value
-     * @param comment optional comment to be added to the generated resource file for the field.
+     * @param name The resource name.
+     * @param type The resource type like 'string'.
+     * @param value A [Provider] for the value.
+     * @param comment Optional comment to be added to the generated resource file for the field.
      */
     fun addResValue(name: String, type: String, value: Provider<String>, comment: String?)
 
@@ -98,7 +98,7 @@ interface AndroidTestProperties : TestComponentProperties {
      * Placeholders are organized with a key and a value. The value is a [String] that will be
      * used as is in the merged manifest.
      *
-     * @return the [MapProperty] with keys as [String]
+     * @return The [MapProperty] with keys as [String].
      */
     val manifestPlaceholders: MapProperty<String, String>
 }

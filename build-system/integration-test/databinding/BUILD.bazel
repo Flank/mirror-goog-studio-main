@@ -36,6 +36,7 @@ TEST_DATA = [
     "//tools/base/build-system:gradle-distrib",
     "//tools/base/build-system:gradle-distrib-6.6-20200609220026+0000",
     "//tools/base/build-system:gradle_plugin_repo.zip",
+    "//tools/base/build-system/integration-test:dagger_prebuilts.zip",
     "//tools/base/build-system/integration-test:support_library_latest.zip",
     "//tools/base/build-system/integration-test:test-projects/databinding",
     "//tools/base/build-system/integration-test:test-projects/databindingAndDagger",
@@ -71,7 +72,7 @@ coverage_java_test(
         "-Dfile.encoding=UTF-8",
         "-Dsun.jnu.encoding=UTF-8",
         "-Dmaven.repo.local=/tmp/localMavenRepo",  # For gradle publishing, writing to ~/.m2
-        "-Dtest.android.build.gradle.integration.repos=tools/base/build-system/gradle_plugin_repo.zip,tools/base/build-system/integration-test/databinding/prebuilts.zip,tools/base/third_party/kotlin/kotlin-m2repository.zip,tools/data-binding/data_binding_runtime.zip,tools/base/build-system/integration-test/support_library_latest.zip",
+        "-Dtest.android.build.gradle.integration.repos=tools/base/build-system/gradle_plugin_repo.zip,tools/base/build-system/integration-test/databinding/prebuilts.zip,tools/base/third_party/kotlin/kotlin-m2repository.zip,tools/data-binding/data_binding_runtime.zip,tools/base/build-system/integration-test/support_library_latest.zip,tools/base/build-system/integration-test/dagger_prebuilts.zip",
     ],
     shard_count = 8,
     tags = [
@@ -208,9 +209,6 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/1.3.9:jar",
         "//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/2.0.1:jar",
         "//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/3.0.1:jar",
-        "//prebuilts/tools/common/m2/repository/com/google/dagger/dagger-compiler/2.6:jar",
-        "//prebuilts/tools/common/m2/repository/com/google/dagger/dagger-producers/2.6:jar",
-        "//prebuilts/tools/common/m2/repository/com/google/dagger/dagger/2.6:jar",
         "//prebuilts/tools/common/m2/repository/com/google/dexmaker/dexmaker-mockito/1.2:jar",
         "//prebuilts/tools/common/m2/repository/com/google/dexmaker/dexmaker/1.2:jar",
         "//prebuilts/tools/common/m2/repository/com/squareup/javawriter/2.1.1:jar",

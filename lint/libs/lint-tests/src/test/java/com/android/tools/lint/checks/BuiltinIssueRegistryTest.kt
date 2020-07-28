@@ -19,14 +19,19 @@ package com.android.tools.lint.checks
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.client.api.LintClient
+import com.android.tools.lint.client.api.LintClient.Companion.clientName
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Scope
 import junit.framework.TestCase
-import junit.framework.TestCase.assertTrue
 import java.util.EnumSet
 import java.util.HashSet
 
 class BuiltinIssueRegistryTest : TestCase() {
+    override fun setUp() {
+        super.setUp()
+        clientName = LintClient.CLIENT_UNIT_TESTS
+    }
+
     fun testNoListResize() {
         val registry = TestIssueRegistry()
         val issues = registry.issues

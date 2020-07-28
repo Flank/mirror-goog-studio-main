@@ -15,6 +15,8 @@
  */
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.AndroidModel
+
 /**
  * A node in a dependency graph, representing a direct or transitive dependency.
  *
@@ -24,7 +26,7 @@ package com.android.builder.model.v2.ide
  *
  * @since 4.2
  */
-interface GraphItem {
+interface GraphItem: AndroidModel {
     /**
      * Returns the artifact address in a unique way.
      *

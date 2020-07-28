@@ -25,12 +25,11 @@ import java.io.Serializable
  * Implementation of [JavaArtifact] for serialization via the Tooling API.
  */
 data class JavaArtifactImpl(
-    override val mockablePlatformJar: File,
+    override val mockablePlatformJar: File?,
     override val compileTaskName: String,
     override val assembleTaskName: String,
-    override val classesFolder: File,
-    override val additionalClassesFolders: Set<File>,
-    override val javaResourcesFolder: File,
+    override val classesFolders: Set<File>,
+    override val runtimeResourceFolder: File?,
     override val variantSourceProvider: SourceProvider?,
     override val multiFlavorSourceProvider: SourceProvider?,
     override val ideSetupTaskNames: Set<String>,

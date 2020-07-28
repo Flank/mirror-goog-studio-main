@@ -66,8 +66,7 @@ data class ApiTemplateData(
   val buildApi: ApiVersion,
   val targetApi: ApiVersion,
   val minApi: ApiVersion,
-  val appCompatVersion: Int,
-  val buildApiRevision: Int? = null
+  val appCompatVersion: Int
 )
 
 // TODO: pack version data in separate class, possibly similar to AndroidVersionsInfo.VersionItem

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.repository.GradleVersion
@@ -74,7 +74,7 @@ dependencies {
         throw RuntimeException(message)
     }
 
-    class CreationAction(private val creationConfig: BaseCreationConfig) :
+    class CreationAction(private val creationConfig: ComponentCreationConfig) :
         TaskCreationAction<AppClasspathCheckTask>() {
 
         override val name: String

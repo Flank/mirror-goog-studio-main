@@ -45,7 +45,6 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             @NonNull DependencyModelBuilder<?> modelBuilder,
             @NonNull ArtifactCollectionsInputs artifactCollectionsInputs,
             boolean withFullDependency,
-            @NonNull ImmutableMap<String, String> buildMapping,
             @NonNull IssueReporter issueReporter) {
         // FIXME change the way we compare dependencies b/64387392
 
@@ -53,10 +52,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             // get the compile artifact first.
             Set<ResolvedArtifact> compileArtifacts =
                     ArtifactUtils.getAllArtifacts(
-                            artifactCollectionsInputs,
-                            COMPILE_CLASSPATH,
-                            dependencyFailureHandler,
-                            buildMapping);
+                            artifactCollectionsInputs, COMPILE_CLASSPATH, dependencyFailureHandler);
 
             // dependencies lintJar.
             // This contains the list of all the lint jar provided by the dependencies.
@@ -79,8 +75,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                         ArtifactUtils.getAllArtifacts(
                                 artifactCollectionsInputs,
                                 RUNTIME_CLASSPATH,
-                                dependencyFailureHandler,
-                                buildMapping);
+                                dependencyFailureHandler);
 
                 Set<ComponentIdentifier> runtimeIds =
                         runtimeArtifacts.stream()

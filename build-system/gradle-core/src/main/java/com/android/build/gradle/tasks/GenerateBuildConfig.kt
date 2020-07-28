@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.generators.BuildConfigByteCodeGenerator
 import com.android.build.gradle.internal.generators.BuildConfigData
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
-import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask

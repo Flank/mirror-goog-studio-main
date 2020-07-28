@@ -32,7 +32,7 @@ data class IdeProjectSyncIssues(val syncIssues: Collection<SyncIssue> = Collecti
 
         fun copySyncIssues(project: ProjectSyncIssues, modelCache: ModelCache): Collection<SyncIssue> {
             return IdeModel.copy(
-              project.syncIssues, modelCache) { issue -> IdeSyncIssue(issue) }
+              project.syncIssues, modelCache) { issue -> IdeSyncIssueImpl(issue) }
         }
     }
 }

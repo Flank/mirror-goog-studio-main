@@ -112,7 +112,6 @@ enum class BooleanOption(
     DISABLE_RESOURCE_VALIDATION("android.disableResourceValidation", false, FeatureStage.Experimental),
     CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES("android.consumeDependenciesAsSharedLibraries", false, FeatureStage.Experimental),
     DISABLE_EARLY_MANIFEST_PARSING("android.disableEarlyManifestParsing", false, FeatureStage.Experimental),
-    ENABLE_JVM_RESOURCE_COMPILER("android.enableJvmResourceCompiler", false, FeatureStage.Experimental),
     ENABLE_RESOURCE_NAMESPACING_DEFAULT("android.enableResourceNamespacingDefault", false, FeatureStage.Experimental),
     NON_TRANSITIVE_R_CLASS("android.nonTransitiveRClass", false, FeatureStage.Experimental),
     NON_TRANSITIVE_APP_R_CLASS("android.experimental.nonTransitiveAppRClass", false, FeatureStage.Experimental),
@@ -121,6 +120,7 @@ enum class BooleanOption(
     KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false, FeatureStage.Experimental),
     USE_NON_FINAL_RES_IDS("android.nonFinalResIds", false, FeatureStage.Experimental),
     ENABLE_R_TXT_RESOURCE_SHRINKING("android.enableRTxtResourceShrinking", true, FeatureStage.Experimental),
+    ENABLE_PARTIAL_R_INCREMENTAL_BUILDS("android.enablePartialRIncrementalBuilds", false, FeatureStage.Experimental),
     ENABLE_RESOURCE_OPTIMIZATIONS("android.enableResourceOptimizations", false, FeatureStage.Experimental),
     ENABLE_NEW_RESOURCE_SHRINKER("android.experimental.enableNewResourceShrinker", false, FeatureStage.Experimental),
     ENABLE_NEW_RESOURCE_SHRINKER_PRECISE("android.experimental.enableNewResourceShrinker.preciseShrinking", false, FeatureStage.Experimental),
@@ -181,8 +181,7 @@ enum class BooleanOption(
     /** Incremental dexing task using D8's new API for desugaring graph computation. */
     ENABLE_INCREMENTAL_DEXING_TASK_V2("android.enableIncrementalDexingTaskV2", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_5_0)),
 
-    /** Use partial r resource files during incremental builds. */
-    ENABLE_PARTIAL_R_INCREMENTAL_BUILDS("android.enablePartialRIncrementalBuilds", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_4_2)),
+    ENABLE_JVM_RESOURCE_COMPILER("android.enableJvmResourceCompiler", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_4_2)),
 
     /* -------------------
      * DEPRECATED FEATURES

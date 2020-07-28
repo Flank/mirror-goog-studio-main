@@ -230,13 +230,20 @@ public class DownloadCacheTest {
         assertThat(is3).isNotNull();
         assertThat(new BufferedReader(new InputStreamReader(is3, Charsets.UTF_8)).readLine())
                 .isEqualTo("Blah blah blah");
-        assertThat(sanitize(d3, mFileOp.getWrittenFiles())).isEqualTo(
-                "<$CACHE/sdkbin-1_9b8dc757-download1_xml: 'Blah blah blah'>" +
-                 "<$CACHE/sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n" +
-                  "#<creation timestamp>\n" +
-                  "URL=http\\://www.example.com/download1.xml\n" +
-                  "Status-Code=200\n" +
-                "'>");
+        assertThat(sanitize(d3, mFileOp.getWrittenFiles()))
+                .isAnyOf(
+                        "<$CACHE/sdkbin-1_9b8dc757-download1_xml: 'Blah blah blah'>"
+                                + "<$CACHE/sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
+                                + "#<creation timestamp>\n"
+                                + "URL=http\\://www.example.com/download1.xml\n"
+                                + "Status-Code=200\n"
+                                + "'>",
+                        "<$CACHE/sdkbin-1_9b8dc757-download1_xml: 'Blah blah blah'>"
+                                + "<$CACHE/sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
+                                + "#<creation timestamp>\n"
+                                + "Status-Code=200\n"
+                                + "URL=http\\://www.example.com/download1.xml\n"
+                                + "'>");
 
         mFileOp.reset();
         NoDownloadCache d4 = new NoDownloadCache(mFileOp,
@@ -246,13 +253,20 @@ public class DownloadCacheTest {
         assertThat(is4).isNotNull();
         assertThat(new BufferedReader(new InputStreamReader(is4, Charsets.UTF_8)).readLine())
                 .isEqualTo("Blah blah blah");
-        assertThat(sanitize(d4, mFileOp.getWrittenFiles())).isEqualTo(
-                "<$CACHE/sdkbin-1_9b8dc757-download1_xml: 'Blah blah blah'>" +
-                 "<$CACHE/sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n" +
-                  "#<creation timestamp>\n" +
-                  "URL=http\\://www.example.com/download1.xml\n" +
-                  "Status-Code=200\n" +
-                "'>");
+        assertThat(sanitize(d4, mFileOp.getWrittenFiles()))
+                .isAnyOf(
+                        "<$CACHE/sdkbin-1_9b8dc757-download1_xml: 'Blah blah blah'>"
+                                + "<$CACHE/sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
+                                + "#<creation timestamp>\n"
+                                + "Status-Code=200\n"
+                                + "URL=http\\://www.example.com/download1.xml\n"
+                                + "'>",
+                        "<$CACHE/sdkbin-1_9b8dc757-download1_xml: 'Blah blah blah'>"
+                                + "<$CACHE/sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
+                                + "#<creation timestamp>\n"
+                                + "URL=http\\://www.example.com/download1.xml\n"
+                                + "Status-Code=200\n"
+                                + "'>");
     }
 
     @Test
@@ -358,14 +372,20 @@ public class DownloadCacheTest {
                 .isEqualTo("This is the new content");
         assertThat(mFileOp.hasRecordedExistingFolder(d4.getCacheRoot())).isTrue();
         // Cache isn updated since something fresh was read.
-        assertThat(sanitize(d4, mFileOp.getWrittenFiles())).isEqualTo(
-                "<$CACHE/sdkbin-1_9b8dc757-download1_xml: 'This is the new content'>" +
-                        "<$CACHE/sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
-                        +
-                        "#<creation timestamp>\n" +
-                        "URL=http\\://www.example.com/download1.xml\n" +
-                        "Status-Code=200\n" +
-                        "'>");
+        assertThat(sanitize(d4, mFileOp.getWrittenFiles()))
+                .isAnyOf(
+                        "<$CACHE/sdkbin-1_9b8dc757-download1_xml: 'This is the new content'>"
+                                + "<$CACHE/sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
+                                + "#<creation timestamp>\n"
+                                + "Status-Code=200\n"
+                                + "URL=http\\://www.example.com/download1.xml\n"
+                                + "'>",
+                        "<$CACHE/sdkbin-1_9b8dc757-download1_xml: 'This is the new content'>"
+                                + "<$CACHE/sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
+                                + "#<creation timestamp>\n"
+                                + "URL=http\\://www.example.com/download1.xml\n"
+                                + "Status-Code=200\n"
+                                + "'>");
     }
 
     @Test

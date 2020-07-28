@@ -15,6 +15,8 @@
  */
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.AndroidModel
+
 /**
  * Represents the version of an Android Platform.
  *
@@ -29,7 +31,7 @@ package com.android.builder.model.v2.ide
  *
  * @since 4.2
  */
-interface ApiVersion {
+interface ApiVersion: AndroidModel {
     /**
      * The api level as an integer.
      *

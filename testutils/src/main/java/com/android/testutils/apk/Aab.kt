@@ -16,8 +16,8 @@
 
 package com.android.testutils.apk
 
+import org.mockito.CheckReturnValue
 import java.io.File
-import javax.annotation.CheckReturnValue
 
 class Aab(file: File) : Zip(file) {
 

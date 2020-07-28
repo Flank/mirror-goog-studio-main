@@ -22,16 +22,14 @@ import static java.io.File.pathSeparatorChar;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.tools.lint.KotlinLintAnalyzerFacade;
 import com.android.tools.lint.UastEnvironment;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.utils.SdkUtils;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.intellij.mock.MockProject;
-import com.intellij.openapi.Disposable;
-import com.intellij.openapi.util.Disposer;
 import com.intellij.psi.PsiFile;
 import java.io.File;
 import java.io.IOException;
@@ -244,17 +242,14 @@ public class ExtractAnnotationsDriver {
                 new Extractor(database, rmTypeDefs, verbose, !skipClassRetention, true);
         extractor.setListIgnored(listFiltered);
 
-        Disposable parentDisposable = Disposer.newDisposable();
-        UastEnvironment environment = UastEnvironment.create(parentDisposable);
-        UastEnvironment.ProjectEnvironment projectEnvironment = environment.getProjectEnvironment();
+        LintClient.setClientName(LintClient.CLIENT_UNIT_TESTS);
 
-        List<File> sourceRoots = findSourceRoots(sources);
-        List<File> joined = Lists.newArrayList(sourceRoots);
-        joined.addAll(classpath);
+        UastEnvironment.Configuration config = UastEnvironment.Configuration.create();
+        config.addSourceRoots(findSourceRoots(sources));
+        config.addClasspathRoots(classpath);
 
-        projectEnvironment.registerPaths(joined);
-
-        MockProject project = projectEnvironment.getProject();
+        UastEnvironment env = UastEnvironment.create(config);
+        MockProject project = env.getIdeaProject();
 
         List<File> allSourceFiles = Extractor.gatherSources(sources);
         List<? extends PsiFile> units = Extractor.createUnitsForFiles(project, allSourceFiles);
@@ -266,7 +261,7 @@ public class ExtractAnnotationsDriver {
             }
         }
 
-        new KotlinLintAnalyzerFacade().analyze(ktFiles, joined, project, environment, null, null);
+        env.analyzeFiles(ktFiles);
         extractor.extractFromProjectSource(units);
 
         for (File jar : mergePaths) {
@@ -289,8 +284,8 @@ public class ExtractAnnotationsDriver {
             }
         }
 
-        Disposer.dispose(parentDisposable);
-        UastEnvironment.ensureDisposed();
+        env.dispose();
+        UastEnvironment.disposeApplicationEnvironment();
     }
 
     private static final String SEP_JAVA_SEP = File.separator + "java" + File.separator;

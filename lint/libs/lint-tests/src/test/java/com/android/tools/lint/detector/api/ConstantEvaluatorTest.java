@@ -175,7 +175,7 @@ public class ConstantEvaluatorTest extends TestCase {
             Object expected, @Language("JAVA") String source, final String targetVariable) {
         checkJavaUast(expected, source, targetVariable);
         checkPsi(expected, source, targetVariable);
-        UastEnvironment.ensureDisposed();
+        UastEnvironment.disposeApplicationEnvironment();
     }
 
     private static void checkStatements(
@@ -234,7 +234,7 @@ public class ConstantEvaluatorTest extends TestCase {
                         + "}\n";
 
         checkKotlinUast(expected, source, "expression");
-        UastEnvironment.ensureDisposed();
+        UastEnvironment.disposeApplicationEnvironment();
     }
 
     public void testStrings() {

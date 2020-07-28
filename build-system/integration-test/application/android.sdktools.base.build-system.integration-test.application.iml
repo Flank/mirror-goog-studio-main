@@ -39,5 +39,6 @@
     <orderEntry type="library" scope="TEST" name="commons-compress" level="project" />
     <orderEntry type="library" name="truth-java8-extension" level="project" />
     <orderEntry type="module" module-name="android.sdktools.zipflinger" />
+    <orderEntry type="library" name="bundletool" level="project" />
   </component>
 </module>

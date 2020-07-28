@@ -16,17 +16,24 @@
 
 package com.android.tools.agent.app.inspection;
 
+import androidx.annotation.NonNull;
 import androidx.inspection.InspectorEnvironment;
+import androidx.inspection.InspectorExecutors;
 import java.util.Arrays;
 import java.util.List;
 
 class InspectorEnvironmentImpl implements InspectorEnvironment {
     private final long mAppInspectionServicePtr;
     private final String inspectorId;
+    private final InspectorExecutors mExecutors;
 
-    InspectorEnvironmentImpl(long mAppInspectionServicePtr, String inspectorId) {
+    InspectorEnvironmentImpl(
+            long mAppInspectionServicePtr,
+            @NonNull String inspectorId,
+            @NonNull InspectorExecutors executors) {
         this.mAppInspectionServicePtr = mAppInspectionServicePtr;
         this.inspectorId = inspectorId;
+        mExecutors = executors;
     }
 
     @Override
@@ -43,6 +50,12 @@ class InspectorEnvironmentImpl implements InspectorEnvironment {
     public <T> void registerExitHook(
             Class<?> originClass, String originMethod, ExitHook<T> exitHook) {
         AppInspectionService.addExitHook(inspectorId, originClass, originMethod, exitHook);
+    }
+
+    @NonNull
+    @Override
+    public InspectorExecutors executors() {
+        return mExecutors;
     }
 
     private static native <T> T[] nativeFindInstances(long servicePtr, Class<T> clazz);

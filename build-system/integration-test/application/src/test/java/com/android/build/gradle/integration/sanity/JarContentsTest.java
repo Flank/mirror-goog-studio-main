@@ -141,6 +141,7 @@ public class JarContentsTest {
                 "com/android/builder/model/v2/dsl/",
                 "com/android/builder/model/v2/ide/",
                 "com/android/builder/model/v2/models/",
+                "com/android/builder/model/v2/models/ndk/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
@@ -456,7 +457,6 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/tasks/mlkit/codegen/codeinjector/codeblock/processor/",
                 "com/android/build/gradle/internal/tasks/mlkit/codegen/codeinjector/innerclass/",
                 "com/android/build/gradle/internal/tasks/mlkit/codegen/codeinjector/methods/",
-                "com/android/build/gradle/internal/tasks/structureplugin/",
                 "com/android/build/gradle/internal/tasks/integrity_config_schema.xsd",
                 "com/android/build/gradle/internal/tasks/",
                 "com/android/build/gradle/internal/test/",
@@ -486,7 +486,6 @@ public class JarContentsTest {
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "META-INF/gradle-plugins/",
-                "META-INF/gradle-plugins/com.android.debug.structure.properties",
                 "META-INF/gradle-plugins/com.android.internal.application.properties",
                 "META-INF/gradle-plugins/com.android.internal.asset-pack.properties",
                 "META-INF/gradle-plugins/com.android.internal.dynamic-feature.properties",

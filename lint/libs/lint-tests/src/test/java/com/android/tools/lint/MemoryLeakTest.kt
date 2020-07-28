@@ -27,6 +27,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.intellij.psi.impl.source.tree.PsiWhiteSpaceImpl
 import com.sun.tools.attach.VirtualMachine
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import sun.tools.attach.HotSpotVirtualMachine
@@ -193,8 +194,8 @@ class MemoryLeakTest {
             countLiveInstancesOf(Object::class.java.name) > 0)
 
         assertTrue(
-            "Detected Lint memory leak; LintCoreProjectEnvironment is reachable",
-            countLiveInstancesOf(UastEnvironment.ProjectEnvironment::class.java.name) == 0)
+            "Detected Lint memory leak; KotlinCoreEnvironment is reachable",
+            countLiveInstancesOf(KotlinCoreEnvironment::class.java.name) == 0)
 
         assertTrue(
             "Detected Lint memory leak; PsiWhiteSpaceImpl is reachable",

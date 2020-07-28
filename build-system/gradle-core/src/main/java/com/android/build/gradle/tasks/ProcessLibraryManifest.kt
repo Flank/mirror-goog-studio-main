@@ -278,7 +278,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             artifacts.setInitialProvider(
                 taskProvider
             ) { task: ProcessLibraryManifest -> task.manifestOutputFile }
-                .on(ArtifactType.LIBRARY_MANIFEST)
+                .on(ArtifactType.MERGED_MANIFEST)
 
             artifacts.setInitialProvider(
                 taskProvider,

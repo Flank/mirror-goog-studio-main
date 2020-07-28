@@ -16,15 +16,13 @@
 
 package com.google.devrel.gmscore.tools.apk.arsc;
 
+import com.android.annotations.Nullable;
 import com.google.common.base.Preconditions;
-
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.annotation.Nullable;
 
 /**
  * Represents a resource table structure. Its sub-chunks contain:

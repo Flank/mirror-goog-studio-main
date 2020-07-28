@@ -27,17 +27,17 @@ import com.android.testutils.Serialization;
 import java.io.Serializable;
 import org.junit.Test;
 
-/** Tests for {@link IdeSyncIssue}. */
+/** Tests for {@link IdeSyncIssueImpl}. */
 public class IdeSyncIssueTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeSyncIssue.class).isAssignableTo(Serializable.class);
+        assertThat(IdeSyncIssueImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeSyncIssue syncIssue = new IdeSyncIssue(new SyncIssueStub());
+        IdeSyncIssueImpl syncIssue = new IdeSyncIssueImpl(new SyncIssueStub());
         byte[] bytes = Serialization.serialize(syncIssue);
         Object o = Serialization.deserialize(bytes);
         assertEquals(syncIssue, o);
@@ -46,13 +46,13 @@ public class IdeSyncIssueTest {
     @Test
     public void constructor() throws Throwable {
         SyncIssue original = new SyncIssueStub();
-        IdeSyncIssue copy = new IdeSyncIssue(original);
+        IdeSyncIssueImpl copy = new IdeSyncIssueImpl(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeSyncIssue.class).verify();
+        createEqualsVerifier(IdeSyncIssueImpl.class).verify();
     }
 }

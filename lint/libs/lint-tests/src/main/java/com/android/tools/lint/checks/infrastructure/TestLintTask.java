@@ -20,6 +20,7 @@ import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.DOT_GRADLE;
 import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.DOT_KTS;
+import static com.android.tools.lint.client.api.LintClient.CLIENT_UNIT_TESTS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -125,6 +126,7 @@ public class TestLintTask {
 
     /** Creates a new lint test task */
     public TestLintTask() {
+        LintClient.setClientName(CLIENT_UNIT_TESTS);
         BuiltinIssueRegistry.reset();
     }
 

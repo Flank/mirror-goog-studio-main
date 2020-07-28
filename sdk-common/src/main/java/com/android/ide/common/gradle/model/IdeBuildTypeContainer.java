@@ -36,7 +36,7 @@ public final class IdeBuildTypeContainer implements BuildTypeContainer, Serializ
     // Used for serialization by the IDE.
     @SuppressWarnings("unused")
     IdeBuildTypeContainer() {
-        myBuildType = new IdeBuildType();
+        myBuildType = new IdeBuildTypeImpl();
         mySourceProvider = new IdeSourceProvider();
         myExtraSourceProviders = Collections.emptyList();
 
@@ -48,7 +48,7 @@ public final class IdeBuildTypeContainer implements BuildTypeContainer, Serializ
         myBuildType =
                 modelCache.computeIfAbsent(
                         container.getBuildType(),
-                        buildType -> new IdeBuildType(buildType, modelCache));
+                        buildType -> new IdeBuildTypeImpl(buildType, modelCache));
         mySourceProvider =
                 modelCache.computeIfAbsent(
                         container.getSourceProvider(),
@@ -59,7 +59,7 @@ public final class IdeBuildTypeContainer implements BuildTypeContainer, Serializ
                         container.getExtraSourceProviders(),
                         modelCache,
                         sourceProviderContainer ->
-                                new IdeSourceProviderContainer(
+                                new IdeSourceProviderContainerImpl(
                                         sourceProviderContainer, modelCache));
 
         myHashCode = calculateHashCode();

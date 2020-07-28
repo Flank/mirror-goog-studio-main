@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.api.artifact.Artifact
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
@@ -30,7 +30,7 @@ import org.gradle.api.file.Directory
  */
 class NamespacedResourcesTaskManager(
         private val taskFactory: TaskFactory,
-        private val creationConfig: BaseCreationConfig
+        private val creationConfig: ComponentCreationConfig
 ) {
 
     /**

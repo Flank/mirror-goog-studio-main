@@ -22,7 +22,7 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.dirName
 import com.android.build.api.variant.impl.getApiString
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.TestCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
@@ -70,7 +70,7 @@ import java.io.IOException
  * For both test modules and tests in androidTest process is the same, except for how the tested
  * application id is extracted.
  *
- * Tests in androidTest get that info from the [BaseCreationConfig.getApplicationId] on
+ * Tests in androidTest get that info from the [ComponentCreationConfig.getApplicationId] on
  * the [TestComponentCreationConfig.getTestedConfig()] object,
  * while the test modules get the info from the published intermediate manifest with type
  * [AndroidArtifacts.TYPE_METADATA] of the tested app.

@@ -29,8 +29,13 @@ import org.junit.Test;
 /** Tests whether the Gradle version check takes effect. */
 public class GradleVersionCheckTest {
 
-    /** An old version of Gradle to use in this test. */
-    private static final String OLD_GRADLE_VERSION = "4.5";
+    /**
+     * An old version of Gradle to use in this test.
+     *
+     * <p>(This can't be lower than 4.8 as those Gradle versions do not support JDK 11, see bug
+     * 161639074.)
+     */
+    private static final String OLD_GRADLE_VERSION = "5.0";
 
     @Rule
     public GradleTestProject project =

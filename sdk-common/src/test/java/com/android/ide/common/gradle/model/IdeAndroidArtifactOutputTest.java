@@ -26,7 +26,7 @@ import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeAndroidArtifactOutput}. */
+/** Tests for {@link IdeAndroidArtifactOutputImpl}. */
 public class IdeAndroidArtifactOutputTest {
     private ModelCache myModelCache;
 
@@ -37,13 +37,13 @@ public class IdeAndroidArtifactOutputTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeAndroidArtifactOutput.class).isAssignableTo(Serializable.class);
+        assertThat(IdeAndroidArtifactOutputImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeAndroidArtifactOutput output =
-                new IdeAndroidArtifactOutput(new AndroidArtifactOutputStub(), myModelCache);
+        IdeAndroidArtifactOutputImpl output =
+                new IdeAndroidArtifactOutputImpl(new AndroidArtifactOutputStub(), myModelCache);
         byte[] bytes = Serialization.serialize(output);
         Object o = Serialization.deserialize(bytes);
         assertEquals(output, o);
@@ -52,14 +52,15 @@ public class IdeAndroidArtifactOutputTest {
     @Test
     public void constructor() throws Throwable {
         AndroidArtifactOutput original = new AndroidArtifactOutputStub();
-        IdeAndroidArtifactOutput copy = new IdeAndroidArtifactOutput(original, myModelCache);
+        IdeAndroidArtifactOutputImpl copy =
+                new IdeAndroidArtifactOutputImpl(original, myModelCache);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeAndroidArtifactOutput.class)
+        createEqualsVerifier(IdeAndroidArtifactOutputImpl.class)
                 .withRedefinedSuperclass()
                 .withIgnoredFields("hashCode")
                 .verify();

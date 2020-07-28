@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import java.io.File;
 import junit.framework.TestCase;
+import kotlin.UninitializedPropertyAccessException;
 
 @SuppressWarnings("javadoc")
 public class LintClientTest extends TestCase {
@@ -208,5 +209,17 @@ public class LintClientTest extends TestCase {
         assertEquals(
                 file("d/e/f").getPath(),
                 client.getRelativePath(file("a/b/c/e"), file("a/b/c/d/e/f")));
+    }
+
+    public void testClientName() {
+        LintClient.Companion.resetClientName();
+        try {
+            LintClient.getClientName();
+            fail("Expected accessing client name before initialization to fail");
+        } catch (UninitializedPropertyAccessException t) {
+            // pass
+        }
+        LintClient.setClientName(CLIENT_UNIT_TESTS);
+        LintClient.getClientName();
     }
 }

@@ -17,20 +17,16 @@
 package com.android.build.gradle.internal.databinding
 
 import android.databinding.tool.DataBindingBuilder
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.databinding.DATA_BINDING_TRIGGER_CLASS
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -73,7 +69,7 @@ abstract class DataBindingExcludeDelegate @Inject constructor(
     }
 }
 
-fun Property<DataBindingExcludeDelegate>.configureFrom(creationConfig: BaseCreationConfig) {
+fun Property<DataBindingExcludeDelegate>.configureFrom(creationConfig: ComponentCreationConfig) {
     // if databinding is not enabled. Do not set this delegate.
     // this means the delegate probably needs to be @Optional
     if (!creationConfig.buildFeatures.dataBinding) {

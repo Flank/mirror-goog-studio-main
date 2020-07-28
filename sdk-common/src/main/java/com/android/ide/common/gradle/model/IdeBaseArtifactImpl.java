@@ -22,16 +22,22 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.BaseArtifact;
-import com.android.builder.model.Dependencies;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
+import com.android.ide.common.gradle.model.level2.IdeDependenciesImpl;
 import com.android.ide.common.repository.GradleVersion;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.Serializable;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
+import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of a {@link BaseArtifact}. */
 public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializable {
@@ -70,7 +76,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
         myGeneratedSourceFolders = Collections.emptySet();
         myAdditionalClassFolders = Collections.emptySet();
 
-        myLevel2Dependencies = new com.android.ide.common.gradle.model.level2.IdeDependenciesImpl();
+        myLevel2Dependencies = new IdeDependenciesImpl();
 
         myJavaResourcesFolder = null;
         myDependencyGraphs = null;
@@ -188,25 +194,6 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
 
     @Override
     @NonNull
-    public Dependencies getCompileDependencies() {
-        throw new UnsupportedOperationException(
-                "Unsupported method: BaseArtifact.getCompileDependencies()");
-    }
-
-    @Override
-    @NonNull
-    public DependencyGraphs getDependencyGraphs() {
-        if (myDependencyGraphs != null) {
-            return myDependencyGraphs;
-        }
-        // Since this method is marked as @NonNull, it is not defined what to do when invoked while using older models. For now, we
-        // keep the default behavior and throw an exception.
-        throw new UnsupportedOperationException(
-                "Unsupported method: BaseArtifact.getDependencyGraphs");
-    }
-
-    @Override
-    @NonNull
     public Set<String> getIdeSetupTaskNames() {
         return myIdeSetupTaskNames;
     }
@@ -241,7 +228,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
     }
 
     @Override
-    public Set<File> getAdditionalClassesFolders() {
+    public @NotNull Set<File> getAdditionalClassesFolders() {
         return myAdditionalClassFolders;
     }
 

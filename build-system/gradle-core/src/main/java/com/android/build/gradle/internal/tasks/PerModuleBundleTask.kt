@@ -20,7 +20,7 @@ import com.android.SdkConstants
 import com.android.SdkConstants.FD_ASSETS
 import com.android.SdkConstants.FD_DEX
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
@@ -347,7 +347,7 @@ private class ResRelocator : JarCreator.Relocator {
  * Returns a file collection containing all of the native libraries to be packaged.
  */
 fun getNativeLibsFiles(
-    creationConfig: BaseCreationConfig,
+    creationConfig: ComponentCreationConfig,
     packageCustomClassDependencies: Boolean
 ): FileCollection {
     val nativeLibs = creationConfig.services.fileCollection()

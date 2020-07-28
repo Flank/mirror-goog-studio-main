@@ -277,7 +277,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
      * packaging mode changes.
      */
     @Input
-    public List<String> getNativeLibrariesAndDexPackagingModeName() {
+    public List<String> getNativeLibrariesAndDexPackagingModeNames() {
         ImmutableList.Builder<String> listBuilder = ImmutableList.builder();
         getManifests()
                 .get()
@@ -290,14 +290,17 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                             .equals(SdkConstants.ANDROID_MANIFEST_XML)) {
                                 ManifestAttributeSupplier parser =
                                         new DefaultManifestParser(manifest, () -> true, true, null);
-                                String extractNativeLibs =
+                                String nativeLibsPackagingMode =
                                         PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
                                                         parser)
                                                 .toString();
-                                listBuilder.add(extractNativeLibs);
-                                String useEmbeddedDex =
-                                        PackagingUtils.getUseEmbeddedDex(parser).toString();
-                                listBuilder.add(useEmbeddedDex);
+                                listBuilder.add(nativeLibsPackagingMode);
+                                String dexPackagingMode =
+                                        PackagingUtils
+                                                .getDexPackagingMode(
+                                                        parser, getMinSdkVersion().get())
+                                                .toString();
+                                listBuilder.add(dexPackagingMode);
                             }
                         });
         return listBuilder.build();
@@ -698,7 +701,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                 PackagingUtils.getNativeLibrariesLibrariesPackagingMode(manifest))
                         .withNoCompressPredicate(
                                 PackagingUtils.getNoCompressPredicate(
-                                        params.getAaptOptionsNoCompress().get(), manifest))
+                                        params.getAaptOptionsNoCompress().get(),
+                                        manifest,
+                                        params.getMinSdkVersion().get()))
                         .withIntermediateDir(incrementalDirForSplit)
                         .withDebuggableBuild(params.getIsDebuggableBuild().get())
                         .withDeterministicEntryOrder(!params.getIsInvokedFromIde().get())

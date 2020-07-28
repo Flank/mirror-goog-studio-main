@@ -155,7 +155,7 @@ fun RecipeExecutor.generateAppBar(
   packageName: String,
   simpleLayoutName: String,
   appBarLayoutName: String,
-  buildApi: Int = moduleData.apis.appCompatVersion,
+  appCompatVersion: Int = moduleData.apis.appCompatVersion,
   resDir: File = moduleData.resDir,
   baseFeatureResOut: File? = moduleData.baseFeature?.resDir,
   themesData: ThemesData = moduleData.themesData,
@@ -207,8 +207,8 @@ fun RecipeExecutor.generateAppBar(
     </$coordinatorLayout>
   """.trimIndent()
 
-  addDependency("com.android.support:appcompat-v7:$buildApi.+")
-  addDependency("com.android.support:design:$buildApi.+")
+  addDependency("com.android.support:appcompat-v7:$appCompatVersion.+")
+  addDependency("com.android.support:design:$appCompatVersion.+")
 
   save(appBarLayout, resDir.resolve("layout/$appBarLayoutName.xml"))
 

@@ -20,6 +20,7 @@ import com.android.build.api.instrumentation.ClassData
 
 class ClassDataImpl(
     override val className: String,
+    override val classAnnotations: List<String>,
     override val interfaces: List<String>,
     override val superClasses: List<String>
 ) : ClassData

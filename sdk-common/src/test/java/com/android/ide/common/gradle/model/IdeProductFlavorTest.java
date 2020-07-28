@@ -29,7 +29,7 @@ import java.util.Objects;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeProductFlavor}. */
+/** Tests for {@link IdeProductFlavorImpl}. */
 public class IdeProductFlavorTest {
     private ModelCache myModelCache;
 
@@ -40,12 +40,13 @@ public class IdeProductFlavorTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeProductFlavor.class).isAssignableTo(Serializable.class);
+        assertThat(IdeProductFlavorImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeProductFlavor buildType = new IdeProductFlavor(new ProductFlavorStub(), myModelCache);
+        IdeProductFlavorImpl buildType =
+                new IdeProductFlavorImpl(new ProductFlavorStub(), myModelCache);
         byte[] bytes = Serialization.serialize(buildType);
         Object o = Serialization.deserialize(bytes);
         assertEquals(buildType, o);
@@ -54,7 +55,7 @@ public class IdeProductFlavorTest {
     @Test
     public void constructor() throws Throwable {
         ProductFlavor original = new ProductFlavorStub();
-        IdeProductFlavor copy = new IdeProductFlavor(original, myModelCache);
+        IdeProductFlavorImpl copy = new IdeProductFlavorImpl(original, myModelCache);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
@@ -100,13 +101,13 @@ public class IdeProductFlavorTest {
                                 getWearAppUnbundled());
                     }
                 };
-        IdeProductFlavor copy = new IdeProductFlavor(original, myModelCache);
+        IdeProductFlavorImpl copy = new IdeProductFlavorImpl(original, myModelCache);
         expectUnsupportedOperationException(copy::getVectorDrawables);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeProductFlavor.class)
+        createEqualsVerifier(IdeProductFlavorImpl.class)
                 .withRedefinedSuperclass()
                 .withIgnoredFields("hashCode")
                 .verify();

@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -100,8 +100,8 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: BaseCreationConfig
-    ) : VariantTaskCreationAction<CheckAarMetadataTask, BaseCreationConfig>(creationConfig) {
+        creationConfig: ComponentCreationConfig
+    ) : VariantTaskCreationAction<CheckAarMetadataTask, ComponentCreationConfig>(creationConfig) {
 
         override val name: String
             get() = computeTaskName("check", "AarMetadata")

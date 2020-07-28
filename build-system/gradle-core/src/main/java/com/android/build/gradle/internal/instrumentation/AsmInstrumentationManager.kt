@@ -18,11 +18,13 @@ package com.android.build.gradle.internal.instrumentation
 
 import com.android.SdkConstants.DOT_CLASS
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
+import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.utils.FileUtils
 import com.google.common.io.ByteStreams
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.MethodVisitor
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -42,15 +44,34 @@ import java.util.zip.ZipOutputStream
  * regenerated after visiting each class and should be regenerated separately if needed.
  *
  * @param visitors the list of registered [AsmClassVisitorFactoryEntry].
- * @param apiVersion the asm api version
+ * @param apiVersion the asm api version.
  * @param classesHierarchyData used to derive information about classes hierarchy without having to
  *                             load the actual classes.
+ * @param framesComputationMode the frame computation mode that will be applied to the bytecode of
+ *                              the instrumented classes.
  */
 class AsmInstrumentationManager(
     private val visitors: List<AsmClassVisitorFactory<*>>,
     private val apiVersion: Int,
-    private val classesHierarchyData: ClassesHierarchyData
+    private val classesHierarchyData: ClassesHierarchyData,
+    private val framesComputationMode: FramesComputationMode
 ) {
+    private val classWriterFlags: Int =
+        when (framesComputationMode) {
+            FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS,
+            FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES ->
+                ClassWriter.COMPUTE_FRAMES
+            else -> 0
+        }
+
+    private val classReaderFlags: Int =
+        when (framesComputationMode) {
+            FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES,
+            FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES ->
+                ClassReader.SKIP_FRAMES
+            else -> 0
+        }
+
     fun instrumentClassesFromDirectoryToDirectory(inputDir: File, outputDir: File) {
         val inputPath = inputDir.toPath()
         Files.walkFileTree(inputPath, object : SimpleFileVisitor<Path>() {
@@ -114,10 +135,9 @@ class AsmInstrumentationManager(
 
         val classData = ClassDataImpl(
             classFullName,
-            classesHierarchyData.getAllInterfaces(classInternalName)
-                .map { it.replace('/', '.') },
+            classesHierarchyData.getAnnotations(classInternalName),
+            classesHierarchyData.getAllInterfaces(classInternalName),
             classesHierarchyData.getAllSuperClasses(classInternalName)
-                .map { it.replace('/', '.') }
         )
 
         // Reversing the visitors as they will be chained from the end, and so the visiting
@@ -130,14 +150,18 @@ class AsmInstrumentationManager(
             classInputStream.invoke().use {
                 val bytes = ByteStreams.toByteArray(it)
                 val classReader = ClassReader(bytes)
-                val classWriter = ClassWriter(0)
+                val classWriter = ClassWriter(classReader, classWriterFlags)
                 var nextVisitor: ClassVisitor = classWriter
+
+                if (framesComputationMode == FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES) {
+                    nextVisitor = MaxsInvalidatingClassVisitor(apiVersion, classWriter)
+                }
 
                 filteredVisitors.forEach { entry ->
                     nextVisitor = entry.createClassVisitor(classData, nextVisitor)
                 }
 
-                classReader.accept(nextVisitor, ClassReader.SKIP_FRAMES)
+                classReader.accept(nextVisitor, classReaderFlags)
                 classWriter.toByteArray()
             }
         } else {
@@ -208,4 +232,31 @@ class AsmInstrumentationManager(
             FileUtils.copyFile(classFile, outputFile)
         }
     }
+
+    /**
+     * A class visitor that visits all methods with [MethodVisitorDelegator].
+     *
+     * Because the flag [ClassReader.SKIP_FRAMES] doesn't skip the maxs, [ClassWriter] will
+     * recalculate all frames from scratch, but will only recalculate the maxs of the visited
+     * methods. This class visitor visits all methods in order to force [ClassWriter] to calculate
+     * the maxs for all methods when the frame computation mode is
+     * [FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES].
+     */
+    private class MaxsInvalidatingClassVisitor(apiVersion: Int, classVisitor: ClassVisitor) :
+        ClassVisitor(apiVersion, classVisitor) {
+
+        override fun visitMethod(
+            access: Int,
+            name: String?,
+            descriptor: String?,
+            signature: String?,
+            exceptions: Array<out String>?
+        ): MethodVisitor {
+            val delegate = super.visitMethod(access, name, descriptor, signature, exceptions)
+            return MethodVisitorDelegator(api, delegate)
+        }
+    }
+
+    private class MethodVisitorDelegator(apiVersion: Int, methodVisitor: MethodVisitor) :
+        MethodVisitor(apiVersion, methodVisitor)
 }

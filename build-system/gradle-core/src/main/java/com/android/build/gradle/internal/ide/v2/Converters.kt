@@ -21,10 +21,13 @@ import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.dsl.LintOptions
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.builder.model.TestOptions
 import com.android.builder.model.v2.dsl.ClassField
 import com.android.builder.model.v2.ide.AaptOptions.Namespacing.DISABLED
 import com.android.builder.model.v2.ide.AaptOptions.Namespacing.REQUIRED
+import com.android.builder.model.v2.ide.CodeShrinker
 import com.android.builder.model.v2.ide.JavaCompileOptions
+import com.android.builder.model.v2.ide.TestInfo
 import com.android.build.api.dsl.SigningConfig as DslSigningConfig
 import com.android.build.gradle.internal.dsl.BuildType as DslBuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig as DslDefaultConfig
@@ -32,6 +35,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor as DslProductFlavor
 import com.android.build.gradle.internal.dsl.VectorDrawablesOptions as DslVectorDrawablesOptions
 import com.android.builder.model.ApiVersion as DslApiVersion
 import com.android.builder.model.ClassField as DslClassField
+import com.android.builder.model.CodeShrinker as CodeShrinkerV1
 
 // Converts DSL items into v2 model instances
 
@@ -221,4 +225,15 @@ internal fun CompileOptions.convert(): JavaCompileOptions {
         targetCompatibility = targetCompatibility.toString(),
         isCoreLibraryDesugaringEnabled = isCoreLibraryDesugaringEnabled
     )
+}
+
+internal fun CodeShrinkerV1.convert(): CodeShrinker = when (this) {
+    CodeShrinkerV1.PROGUARD -> CodeShrinker.PROGUARD
+    CodeShrinkerV1.R8 -> CodeShrinker.R8
+}
+
+internal fun TestOptions.Execution.convert(): TestInfo.Execution = when (this) {
+    TestOptions.Execution.HOST -> TestInfo.Execution.HOST
+    TestOptions.Execution.ANDROID_TEST_ORCHESTRATOR -> TestInfo.Execution.ANDROID_TEST_ORCHESTRATOR
+    TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR -> TestInfo.Execution.ANDROIDX_TEST_ORCHESTRATOR
 }

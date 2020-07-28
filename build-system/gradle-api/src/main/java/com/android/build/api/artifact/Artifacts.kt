@@ -53,7 +53,7 @@ interface Artifacts {
     /**
      * Get the [Provider] of [FileTypeT] for the passed [Artifact].
      *
-     * @param type of the single artifact.
+     * @param type Type of the single artifact.
      */
     fun <FileTypeT: FileSystemLocation> get(
         type: ArtifactType<FileTypeT>
@@ -62,7 +62,7 @@ interface Artifacts {
     /**
      * Get all the [Provider]s of [FileTypeT] for the passed [Artifact].
      *
-     * @param type of the multiple artifact
+     * @param type Type of the multiple artifact.
      */
     fun <FileTypeT: FileSystemLocation> getAll(
         type: MultipleArtifactType<FileTypeT>

@@ -15,6 +15,7 @@
  */
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.AndroidModel
 import java.io.File
 
 /**
@@ -22,7 +23,7 @@ import java.io.File
  *
  * @since 4.2
 */
-interface LintOptions {
+interface LintOptions: AndroidModel {
     /**
      * The set of issue id's to suppress.
      */

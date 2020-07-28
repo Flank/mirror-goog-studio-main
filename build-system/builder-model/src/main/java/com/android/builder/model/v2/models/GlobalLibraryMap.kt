@@ -15,6 +15,7 @@
  */
 package com.android.builder.model.v2.models
 
+import com.android.builder.model.v2.AndroidModel
 import com.android.builder.model.v2.ide.Library
 
 /**
@@ -25,7 +26,7 @@ import com.android.builder.model.v2.ide.Library
  *
  * @since 4.2
  */
-interface GlobalLibraryMap {
+interface GlobalLibraryMap: AndroidModel {
     /**
      * the list of external libraries used by all the variants in the module.
      *

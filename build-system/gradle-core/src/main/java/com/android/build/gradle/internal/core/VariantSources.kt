@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.core
 
+import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
 import com.android.builder.model.SourceProvider
@@ -37,9 +38,9 @@ class VariantSources internal constructor(
     /** The list of product flavors. Items earlier in the list override later items.  */
     private val flavorSourceProviders: List<SourceProvider>,
     /** MultiFlavors specific source provider, may be null  */
-    val multiFlavorSourceProvider: SourceProvider? = null,
+    val multiFlavorSourceProvider: DefaultAndroidSourceSet? = null,
     /** Variant specific source provider, may be null  */
-    val variantSourceProvider: SourceProvider? = null
+    val variantSourceProvider: DefaultAndroidSourceSet? = null
 ) {
 
     /**

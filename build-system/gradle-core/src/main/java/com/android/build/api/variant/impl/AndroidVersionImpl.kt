@@ -22,6 +22,6 @@ import java.io.Serializable
 /**
  * Implementation of [AndroidVersion]
  */
-data class AndroidVersionImpl(
-    override val apiLevel: Int,
-    override val codename: String? = null): AndroidVersion, Serializable
+class AndroidVersionImpl(
+    apiLevel: Int,
+    codename: String? = null): AndroidVersion(apiLevel, codename), Serializable

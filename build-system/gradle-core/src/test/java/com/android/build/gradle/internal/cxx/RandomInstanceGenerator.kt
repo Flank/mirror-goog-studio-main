@@ -45,6 +45,7 @@ class RandomInstanceGenerator {
         provide(Revision::class.java) { revision() }
         provide(String::class.java) { string() }
         provide(Int::class.java) { int() }
+        provide(java.lang.Integer::class.java) { int() }
         provide(Boolean::class.java) { boolean() }
         provide(AbiInfo::class.java) {
             val abi = synthetic(Abi::class.java)

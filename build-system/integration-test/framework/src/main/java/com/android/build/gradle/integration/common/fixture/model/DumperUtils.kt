@@ -16,10 +16,16 @@
 
 package com.android.build.gradle.integration.common.fixture.model
 
+import com.android.builder.model.v2.AndroidModel
+import com.google.common.truth.Truth
 import java.io.File
 
 // Sets of classes and functions to provide a little DSL facilitating
 // dumping a model into a String.
+
+interface FileNormalizer {
+    fun normalize(file: File): String
+}
 
 /**
  * Main entry point of the dump functions.
@@ -29,18 +35,38 @@ import java.io.File
  *
  * @return the strings with the dumped model
  */
-fun dump(name: String, normalizer: FileNormalizer, action: DumpBuilder.() -> Unit): String {
-    val rootBuilder = DumpBuilder()
+internal fun <T> dump(
+    theClass: Class<T>,
+    normalizer: FileNormalizer,
+    includedBuilds: List<String>? = null,
+    action: DumpBuilder.() -> Unit
+): String {
 
-    rootBuilder.header("> $name")
+    val map = mutableMapOf<String, String>()
+    if (includedBuilds != null) {
+        var index = 1
+        for (includedBuild in includedBuilds) {
+            map[includedBuild] = "BUILD_${index++}"
+        }
+    }
+
+    val rootBuilder = DumpBuilder(map)
+
+    val name = theClass.simpleName
+    rootBuilder.startObject(name)
     val actionBuilder = rootBuilder.builder()
     action(actionBuilder)
-    rootBuilder.header("< $name")
+    rootBuilder.endObject(name)
+
+    // check the properties have all been written.
+    actionBuilder.checkBuilderItemAgainst(theClass)
 
     val sb = StringBuilder()
     rootBuilder.write(sb, normalizer)
     return sb.toString()
 }
+
+typealias BuildIdMap = Map<String, String>
 
 /**
  * an object that can be written
@@ -54,6 +80,10 @@ abstract class Writeable(protected val indent: Int) {
     )
 }
 
+interface PropertyEntry {
+    val name: String
+}
+
 /**
  * A writeable Key/Value pair.
  *
@@ -64,21 +94,21 @@ abstract class Writeable(protected val indent: Int) {
  */
 class KeyValuePair(
     indent: Int,
-    private val key: String,
+    override val name: String,
     private val value: Any?,
     private val separator: String = "="
-): Writeable(indent) {
+): Writeable(indent), PropertyEntry {
 
     val keyLen: Int
-        get() = key.length
+        get() = name.length
 
     override fun write(sb: StringBuilder, normalizer: FileNormalizer, spacing: Int, prefix: Char) {
         if (indent > 0) for (i in 0..indent) sb.append(' ')
 
-        sb.append(prefix).append(' ').append(key)
+        sb.append(prefix).append(' ').append(name)
 
         if (spacing > 0) {
-            val spaceLen = spacing - key.length
+            val spaceLen = spacing - name.length
             for (i in 0..spaceLen) sb.append(' ')
 
         } else {
@@ -107,14 +137,28 @@ private fun Collection<*>.toValueStringList(normalizer: FileNormalizer): String 
 /**
  * A Writeable Header
  */
-class Header(
+class StartObjectHeader(
     indent: Int,
-    private val header: String
+    override val name: String
+): Writeable(indent), PropertyEntry {
+    override fun write(sb: StringBuilder, normalizer: FileNormalizer, spacing: Int, prefix: Char) {
+        if (indent > 0) for (i in 0..indent) sb.append(' ')
+
+        sb.append("> ").append(name).append(":\n")
+    }
+}
+
+/**
+ * A Writeable Header
+ */
+class EndObjectHeader(
+    indent: Int,
+    private val name: String
 ): Writeable(indent) {
     override fun write(sb: StringBuilder, normalizer: FileNormalizer, spacing: Int, prefix: Char) {
         if (indent > 0) for (i in 0..indent) sb.append(' ')
 
-        sb.append(header).append("\n")
+        sb.append("< ").append(name).append("\n")
     }
 }
 
@@ -123,12 +167,12 @@ class Header(
  */
 class KeyOnly(
     indent: Int,
-    private val key: String
-): Writeable(indent) {
+    override val name: String
+): Writeable(indent), PropertyEntry {
     override fun write(sb: StringBuilder, normalizer: FileNormalizer, spacing: Int, prefix: Char) {
         if (indent > 0) for (i in 0..indent) sb.append(' ')
 
-        sb.append(prefix).append(' ').append(key).append(":\n")
+        sb.append(prefix).append(' ').append(name).append(":\n")
     }
 }
 
@@ -155,6 +199,7 @@ const val INDENT_STEP = 3
  * this can accumulate [Writeable] items (which includes sub-dump builders)
  */
 class DumpBuilder(
+    private val buildIdMap: BuildIdMap,
     indent: Int = 0,
     private val prefix: Char = '-'): Writeable(indent) {
     private val items = mutableListOf<Writeable>()
@@ -180,12 +225,47 @@ class DumpBuilder(
         items.add(KeyValuePair(indent, key, value, separator = "->"))
     }
 
-    internal fun header(name: String) {
-        items.add(Header(indent, name))
+    internal fun startObject(name: String) {
+        items.add(StartObjectHeader(indent, name))
     }
 
-    internal fun builder() = DumpBuilder(indent + INDENT_STEP).also {
+    internal fun endObject(name: String) {
+        items.add(EndObjectHeader(indent, name))
+    }
+
+    internal fun builder() = DumpBuilder(
+        buildIdMap = buildIdMap,
+        indent = indent + INDENT_STEP
+    ).also {
         items.add(it)
+    }
+
+    /**
+     * Handles an Artifact address.
+     *
+     * Addresses for subprojects are made up of <build-ID>@@<projectpath>::<variant> and build IDs
+     * are the location of the root project of the build.
+     */
+    fun artifactAddress(key: String, value: String) {
+        if (value.contains("@@")) {
+            val buildId =  value.substringBefore("@@")
+            val projectPathAndVariant = value.substringAfter("@@")
+
+            val newID = buildIdMap[buildId] ?: buildId
+
+            item(key, "{${newID}}@@${projectPathAndVariant}")
+        } else {
+            item(key, value)
+        }
+    }
+
+    /**
+     * Handles an Build ID
+     *
+     * build IDs are the location of the root project of the build.
+     */
+    fun buildId(key: String, value: String?) {
+        item(key, value?.let { buildIdMap[it]?.let { "{$it}" } } ?: value)
     }
 
     /**
@@ -203,8 +283,11 @@ class DumpBuilder(
         if (list.isNullOrEmpty()) {
             items.add(KeyValuePair(indent, name, list))
         } else {
-            items.add(Header(indent, "> $name:"))
-            val newBuilder = DumpBuilder(indent + INDENT_STEP, prefix = '*')
+            startObject(name)
+            val newBuilder = DumpBuilder(
+                buildIdMap = buildIdMap,
+                indent = indent + INDENT_STEP,
+                prefix = '*')
             items.add(newBuilder)
             newBuilder.apply {
                 for (item in list) {
@@ -217,7 +300,7 @@ class DumpBuilder(
             if (newBuilder.items.isEmpty()) {
                 throw RuntimeException("Builder for list items (list: $name) is empty but list isn't. Do filtering before calling multiLineList, and remember to call item/value/entry in the lambda")
             }
-            items.add(Header(indent, "< $name"))
+            endObject(name)
         }
     }
 
@@ -247,14 +330,20 @@ class DumpBuilder(
      * @param obj the object
      * @param action a callback to add the items to the builder
      */
-    fun <T> struct(name: String, obj: T?, action: DumpBuilder.(T) -> Unit) {
+    fun <T: AndroidModel> struct(name: String, obj: T?, action: DumpBuilder.(T) -> Unit) {
         if (obj == null) {
             items.add(KeyValuePair(indent, name, obj))
         } else {
             items.add(KeyOnly(indent, name))
-            val newBuilder = DumpBuilder(indent + INDENT_STEP, prefix = '*')
+            val newBuilder = DumpBuilder(
+                buildIdMap = buildIdMap,
+                indent = indent + INDENT_STEP,
+                prefix = '*')
             items.add(newBuilder)
             action(newBuilder, obj)
+
+            // check the properties have all been written.
+            newBuilder.checkBuilderItemAgainst(obj.javaClass)
         }
     }
 
@@ -267,15 +356,21 @@ class DumpBuilder(
      * @param obj the object
      * @param action a callback to add the items to the builder
      */
-    fun <T> largeObject(name: String, obj: T?, action: DumpBuilder.(T) -> Unit) {
+    fun <T: AndroidModel> largeObject(name: String, obj: T?, action: DumpBuilder.(T) -> Unit) {
         if (obj == null) {
             items.add(KeyValuePair(indent, name, obj))
         } else {
-            items.add(Header(indent, "> $name:"))
-            val newBuilder = DumpBuilder(indent + INDENT_STEP)
+            startObject(name)
+            val newBuilder = DumpBuilder(
+                buildIdMap = buildIdMap,
+                indent = indent + INDENT_STEP
+            )
             items.add(newBuilder)
             action(newBuilder, obj)
-            items.add(Header(indent, "< $name"))
+            endObject(name)
+
+            // check the properties have all been written.
+            newBuilder.checkBuilderItemAgainst(obj.javaClass)
         }
     }
 
@@ -286,4 +381,40 @@ class DumpBuilder(
             item.write(sb, normalizer, keySpacing, this.prefix)
         }
     }
+
+    internal fun checkBuilderItemAgainst(clazz: Class<*>) {
+        // find the super interface that implements AndroidModel
+        val modelInterface = clazz.interfaces.firstOrNull { extendsAndroidModel(it) }
+            ?: clazz
+
+        Truth.assertWithMessage("Properties for $modelInterface")
+            .that(items.filterIsInstance<PropertyEntry>().map { it.name })
+            .containsExactlyElementsIn(clazz.gatherProperties())
+    }
+}
+
+private fun extendsAndroidModel(clazz: Class<*>): Boolean = if (clazz == AndroidModel::class.java) {
+    true
+} else {
+    clazz.interfaces.any { extendsAndroidModel(it) }
+}
+
+internal fun Class<*>.gatherProperties(): Set<String> {
+    return this.methods
+        .map { it.name }
+        .filter {
+            (it.startsWith("get") || it.startsWith("is"))
+                    && it != "getProxyClass"
+                    && it != "isProxyClass"
+                    && it != "getInvocationHandler"
+                    && it!= "getClass" }
+        .map {
+            if (it.startsWith("get")) {
+                // strip "get" prefix and reduce fist char to lower case
+                it[3].toLowerCase() + it.substring(4)
+            } else {
+                it
+            }
+        }
+        .toSet()
 }

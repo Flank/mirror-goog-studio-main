@@ -26,7 +26,7 @@ import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeNativeToolchain}. */
+/** Tests for {@link IdeNativeToolchainImpl}. */
 public class IdeNativeToolchainTest {
     private ModelCache myModelCache;
 
@@ -37,12 +37,12 @@ public class IdeNativeToolchainTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeNativeToolchain.class).isAssignableTo(Serializable.class);
+        assertThat(IdeNativeToolchainImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeNativeToolchain toolchain = new IdeNativeToolchain(new NativeToolchainStub());
+        IdeNativeToolchainImpl toolchain = new IdeNativeToolchainImpl(new NativeToolchainStub());
         byte[] bytes = Serialization.serialize(toolchain);
         Object o = Serialization.deserialize(bytes);
         assertEquals(toolchain, o);
@@ -51,13 +51,13 @@ public class IdeNativeToolchainTest {
     @Test
     public void constructor() throws Throwable {
         NativeToolchain original = new NativeToolchainStub();
-        IdeNativeToolchain copy = new IdeNativeToolchain(original);
+        IdeNativeToolchainImpl copy = new IdeNativeToolchainImpl(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeNativeToolchain.class).verify();
+        createEqualsVerifier(IdeNativeToolchainImpl.class).verify();
     }
 }

@@ -21,6 +21,9 @@ import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.ComponentProperties
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
+import com.android.build.api.instrumentation.FramesComputationMode
+import com.android.build.api.instrumentation.InstrumentationParameters
+import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
@@ -30,7 +33,7 @@ import com.android.build.api.variant.impl.fullName
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.DependencyConfigurator
 import com.android.build.gradle.internal.VariantManager
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -97,13 +100,29 @@ abstract class ComponentPropertiesImpl(
     override val services: TaskCreationServices,
     @Deprecated("Do not use if you can avoid it. Check if services has what you need")
     override val globalScope: GlobalScope
-): ComponentProperties, BaseCreationConfig, ComponentIdentity by variant {
+): ComponentProperties, ComponentCreationConfig, ComponentIdentity by variant {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
     override val packageName: Provider<String> =
         internalServices.providerOf(String::class.java, variantDslInfo.packageName)
+
+    override fun <ParamT : InstrumentationParameters> transformClassesWith(
+        classVisitorFactoryImplClass: Class<out AsmClassVisitorFactory<ParamT>>,
+        scope: InstrumentationScope,
+        instrumentationParamsConfig: (ParamT) -> Unit
+    ) {
+        asmClassVisitorsRegistry.register(
+            classVisitorFactoryImplClass,
+            scope,
+            instrumentationParamsConfig
+        )
+    }
+
+    override fun setAsmFramesComputationMode(mode: FramesComputationMode) {
+        asmClassVisitorsRegistry.setAsmFramesComputationMode(mode)
+    }
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
@@ -180,7 +199,7 @@ abstract class ComponentPropertiesImpl(
     // ---------------------------------------------------------------------------------------------
 
     private val variantOutputs = mutableListOf<VariantOutputImpl>()
-    protected val asmClassVisitorsRegistry = AsmClassVisitorsFactoryRegistry(services.issueReporter)
+    private val asmClassVisitorsRegistry = AsmClassVisitorsFactoryRegistry(services.issueReporter)
 
     // FIXME make internal
     fun addVariantOutput(

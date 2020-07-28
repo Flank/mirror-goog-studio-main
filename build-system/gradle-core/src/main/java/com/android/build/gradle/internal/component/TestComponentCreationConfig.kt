@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.component
 /**
  * Internal interface for all test components
  */
-interface TestComponentCreationConfig: TestCreationConfig, BaseCreationConfig {
+interface TestComponentCreationConfig: TestCreationConfig {
 
     override val testedConfig: VariantCreationConfig
 }

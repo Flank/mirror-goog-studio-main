@@ -40,5 +40,16 @@ interface Variant<PropertiesT : VariantProperties>: Component<PropertiesT>,
     fun androidTest(action: AndroidTest<AndroidTestProperties>.() -> Unit)
     fun androidTestProperties(action: AndroidTestProperties.() -> Unit)
 
+    /**
+     * Gets the minimum supported SDK Version for this variant.
+     */
     var minSdkVersion: AndroidVersion
+
+    /**
+     * Specifies the bytecode version to be generated. We recommend you set this value to the
+     * lowest API level able to provide all the functionality you are using
+     *
+     * @return the renderscript target api or -1 if not specified.
+     */
+    var renderscriptTargetApi: Int
 }

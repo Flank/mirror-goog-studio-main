@@ -20,7 +20,7 @@ import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.impl.ResValue
 import org.gradle.api.provider.MapProperty
 
-interface VariantCreationConfig: BaseCreationConfig {
+interface VariantCreationConfig: ComponentCreationConfig {
 
     val buildConfigFields: MapProperty<String, BuildConfigField<out java.io.Serializable>>
 

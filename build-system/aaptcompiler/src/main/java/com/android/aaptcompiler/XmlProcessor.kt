@@ -1,6 +1,5 @@
 package com.android.aaptcompiler
 
-import com.android.utils.ILogger
 import java.io.InputStream
 import javax.xml.namespace.QName
 import javax.xml.stream.XMLEventReader
@@ -83,7 +82,7 @@ private fun mangleEntry(pck: String, entry: String) = "$pck${'$'}$entry"
  *
  * @property source: The source that this processor is going to process.
  */
-class XmlProcessor(val source: Source, val logger: ILogger?) {
+class XmlProcessor(val source: Source, val logger: BlameLogger?) {
 
     lateinit var primaryFile: ResourceFile
         private set
@@ -108,7 +107,7 @@ class XmlProcessor(val source: Source, val logger: ILogger?) {
 
             val documentStart = eventReader.nextEvent()
             if (!documentStart.isStartDocument) {
-                logError("Failed to find start of xml for file %s", blameSource(source))
+                logError(blameSource(source), "Failed to find start of XML")
                 return false
             }
 
@@ -164,8 +163,8 @@ class XmlProcessor(val source: Source, val logger: ILogger?) {
         }
     }
 
-    private fun logError(formatMessage: String, vararg args: Any?) {
-        logger?.error(null, formatMessage, args)
+    private fun logError(source: BlameLogger.Source, message: String) {
+        logger?.error(message, source)
     }
 
     /**
@@ -216,9 +215,10 @@ class XmlProcessor(val source: Source, val logger: ILogger?) {
         // </ListView>
         // Both of these are invalid.
         if (isAaptAttribute(startElement.name)) {
-            val errorMsg = "%s, <aapt:attr> blocks are not allowed as the root of documents, or " +
-                    "as a child element under another <aapt:attr>."
-            logError(errorMsg, blameSource(source, startElement.location))
+            logError(
+                blameSource(source, startElement.location),
+                "<aapt:attr> blocks are not allowed as the root of documents, or " +
+                        "as a child element under another <aapt:attr>.")
             walkToEndOfElement(startElement, eventReader)
             return false
         }
@@ -359,8 +359,9 @@ class XmlProcessor(val source: Source, val logger: ILogger?) {
 
         val nameAttribute = attrElement.getAttributeByName(QName("name"))
         if (nameAttribute == null) {
-            val errorMsg = "%s, <%s> tag requires the 'name' attribute."
-            logError(errorMsg, blameSource(source, attrElement.location), attrElement.name)
+            logError(
+                blameSource(source, attrElement.location),
+                "<${attrElement.name}> tag requires the 'name' attribute.")
             walkToEndOfElement(attrElement, eventReader)
             return false
         }
@@ -370,8 +371,10 @@ class XmlProcessor(val source: Source, val logger: ILogger?) {
 
         val extractedPackage = transformPackageAlias(attrElement, nameValue.pck!!)
         if (extractedPackage == null) {
-            val errorMsg = "%s, Invalid namespace prefix '%s' for value of 'name' attribute '%s'."
-            logError(errorMsg, blameSource(source, attrElement.location), nameValue.pck, nameValue)
+            logError(
+                blameSource(source, attrElement.location),
+                "Invalid namespace prefix '${nameValue.pck}' " +
+                        "for value of 'name' attribute '$nameValue'.")
             walkToEndOfElement(attrElement, eventReader)
             return false
         }
@@ -464,8 +467,9 @@ class XmlProcessor(val source: Source, val logger: ILogger?) {
             if (event.isCharacters) {
                 // Non-whitespace text is not allowed as children of a aapt:attr
                 if (!event.asCharacters().isWhiteSpace) {
-                    val errorMsg = "%s, Can't extract text into its own resource."
-                    logError(errorMsg, blameSource(source, event.location))
+                    logError(
+                        blameSource(source, event.location),
+                        "Can't extract text into its own resource.")
                     foundError = true
                 }
                 continue
@@ -474,8 +478,9 @@ class XmlProcessor(val source: Source, val logger: ILogger?) {
             if (event.isStartElement) {
                 // An aapt:attr element cannot have more than one element child.
                 if (foundChild) {
-                    val errorMsg = "%s, Inline XML resources must have a single root."
-                    logError(errorMsg, blameSource(source, event.location))
+                    logError(
+                        blameSource(source, event.location),
+                        "Inline XML resources must have a single root.")
                     foundError = true
                     walkToEndOfElement(event.asStartElement(), eventReader)
                     continue
@@ -490,7 +495,6 @@ class XmlProcessor(val source: Source, val logger: ILogger?) {
                         namespaceContext
                     )
                 ) {
-
                     foundError = true
                 }
             }
@@ -499,8 +503,9 @@ class XmlProcessor(val source: Source, val logger: ILogger?) {
         }
 
         if (!foundChild) {
-            val errorMsg = "%s, No resource to outline. <%s> block is empty."
-            logError(errorMsg, blameSource(source, startElement.location), startElement.name)
+            logError(
+                blameSource(source, startElement.location),
+                "No resource to outline. <${startElement.name}> block is empty.")
             return null
         }
 
@@ -530,12 +535,9 @@ class XmlProcessor(val source: Source, val logger: ILogger?) {
             val resourceName = parsedRef.reference.name
             if (parsedRef.createNew && resourceName.type == AaptResourceType.ID) {
                 if (!isValidResourceEntryName(resourceName.entry!!)) {
-                    val errorMsg = "%s, Id '%s' has an invalid entry name '%s'."
                     logError(
-                        errorMsg,
                         blameSource(source, startElement.location),
-                        resourceName,
-                        resourceName.entry)
+                        "Id '$resourceName' has an invalid entry name '${resourceName.entry}'.")
                     noError = false
                 } else {
                     collectedIds.putIfAbsent(

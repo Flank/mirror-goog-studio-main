@@ -20,7 +20,7 @@ import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -194,9 +194,9 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
     }
 
     internal class CreationAction(
-        creationConfig: BaseCreationConfig,
+        creationConfig: ComponentCreationConfig,
         val isLibrary: Boolean)
-        : VariantTaskCreationAction<GenerateLibraryRFileTask, BaseCreationConfig>(creationConfig) {
+        : VariantTaskCreationAction<GenerateLibraryRFileTask, ComponentCreationConfig>(creationConfig) {
 
         override val name: String
             get() = computeTaskName("generate", "RFile")
@@ -293,8 +293,8 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
         }
     }
 
-    internal class TestRuntimeStubRClassCreationAction(creationConfig: BaseCreationConfig) :
-        VariantTaskCreationAction<GenerateLibraryRFileTask, BaseCreationConfig>(
+    internal class TestRuntimeStubRClassCreationAction(creationConfig: ComponentCreationConfig) :
+        VariantTaskCreationAction<GenerateLibraryRFileTask, ComponentCreationConfig>(
             creationConfig
         ) {
 

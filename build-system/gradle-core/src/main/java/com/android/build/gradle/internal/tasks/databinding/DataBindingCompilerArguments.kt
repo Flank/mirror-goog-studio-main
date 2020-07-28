@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.CompilerArguments
 import com.android.build.api.artifact.impl.DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_DATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.file.Directory
-import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -67,7 +66,7 @@ class DataBindingCompilerArguments constructor(
     // annotate it with @Internal, expecting that the directory's contents should be stable and this
     // won't affect correctness.
     @get:Internal
-    val sdkDir: File,
+    val sdkDir: Provider<Directory>,
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -92,11 +91,11 @@ class DataBindingCompilerArguments constructor(
     val featureInfoDir: Provider<Directory>,
 
     @get:OutputDirectory
-    val aarOutDir: Provider<Directory>,
+    val aarOutDir: File,
 
     @get:Optional
     @get:OutputFile
-    val exportClassListOutFile: Provider<RegularFile>,
+    val exportClassListOutFile: File?,
 
     @get:Input
     val enableDebugLogs: Boolean,
@@ -124,14 +123,14 @@ class DataBindingCompilerArguments constructor(
             artifactType = artifactType,
             modulePackage = packageName.get(),
             minApi = minApi,
-            sdkDir = sdkDir,
+            sdkDir = sdkDir.get().asFile,
             dependencyArtifactsDir = dependencyArtifactsDir.get().asFile,
             layoutInfoDir = layoutInfoDir.get().asFile,
             classLogDir = classLogDir.get().asFile,
             baseFeatureInfoDir = baseFeatureInfoDir.orNull?.asFile,
             featureInfoDir = featureInfoDir.orNull?.asFile,
-            aarOutDir = aarOutDir.get().asFile,
-            exportClassListOutFile = exportClassListOutFile.orNull?.asFile,
+            aarOutDir = aarOutDir,
+            exportClassListOutFile = exportClassListOutFile,
             enableDebugLogs = enableDebugLogs,
             printEncodedErrorLogs = printEncodedErrorLogs,
             isTestVariant = isTestVariant,
@@ -149,7 +148,7 @@ class DataBindingCompilerArguments constructor(
 
         @JvmStatic
         fun createArguments(
-            creationConfig: BaseCreationConfig,
+            creationConfig: ComponentCreationConfig,
             enableDebugLogs: Boolean,
             printEncodedErrorLogs: Boolean
         ): DataBindingCompilerArguments {
@@ -162,7 +161,7 @@ class DataBindingCompilerArguments constructor(
                 artifactType = getModuleType(creationConfig),
                 packageName = creationConfig.packageName,
                 minApi = creationConfig.minSdkVersion.apiLevel,
-                sdkDir = globalScope.sdkComponents.flatMap { it.sdkDirectoryProvider }.get().asFile,
+                sdkDir = globalScope.sdkComponents.flatMap { it.sdkDirectoryProvider },
                 dependencyArtifactsDir = artifacts.get(DATA_BINDING_DEPENDENCY_ARTIFACTS),
                 layoutInfoDir = artifacts.get(getLayoutInfoArtifactType(creationConfig)),
                 classLogDir = artifacts.get(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
@@ -171,15 +170,28 @@ class DataBindingCompilerArguments constructor(
                 ),
                 featureInfoDir = artifacts.get(FEATURE_DATA_BINDING_FEATURE_INFO),
                 // Note that aarOurDir and exportClassListOutFile below are outputs. In the usual
-                // pattern, they need to be wired as producers of the corresponding artifacts
-                // through AGP Artifacts API. However, since the actual task that will produce these
-                // artifacts is not known at this point (it could be either JavaCompile or Kapt),
-                // using the Artifacts API is not possible.
+                // pattern, they need to be wired with the corresponding artifacts through AGP
+                // Artifacts API. However, since the actual task that will produce these artifacts
+                // is not known at this point (it could be either JavaCompile or Kapt), using the
+                // Artifacts API is not possible.
                 //
                 // Instead, we wire them when JavaCompile or Kapt is registered, and here we'll just
                 // get the artifacts' locations.
-                aarOutDir = artifacts.get(DATA_BINDING_ARTIFACT),
-                exportClassListOutFile = artifacts.get(DATA_BINDING_EXPORT_CLASS_LIST),
+                //
+                // There is still another issue: Ideally, we should just call
+                // artifacts.get(<ARTIFACT-NAME>) to get a Provider<Directory/RegularFile> and
+                // resolve the actual locations lazily, but because KaptGenerateStubsTask currently
+                // resolves annotation processor options early
+                // (https://youtrack.jetbrains.com/issue/KT-39715), we need to get the artifacts'
+                // locations immediately here rather than lazily, using internal API.
+                aarOutDir = artifacts.getOutputPath(DATA_BINDING_ARTIFACT),
+                exportClassListOutFile =
+                        if (creationConfig.variantType.isExportDataBindingClassList) {
+                            artifacts.getOutputPath(
+                                DATA_BINDING_EXPORT_CLASS_LIST,
+                                DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS
+                            )
+                        } else null,
                 enableDebugLogs = enableDebugLogs,
                 printEncodedErrorLogs = printEncodedErrorLogs,
                 isTestVariant = creationConfig.variantType.isTestComponent,
@@ -193,7 +205,7 @@ class DataBindingCompilerArguments constructor(
          * of the tested variant.
          */
         @JvmStatic
-        fun getModuleType(creationConfig: BaseCreationConfig): CompilerArguments.Type {
+        fun getModuleType(creationConfig: ComponentCreationConfig): CompilerArguments.Type {
             val component = creationConfig.onTestedConfig {
                 it
             } ?: creationConfig
@@ -214,7 +226,7 @@ class DataBindingCompilerArguments constructor(
          * trigger unnecessary computations (see bug 133092984 and 110412851).
          */
         @JvmStatic
-        fun getLayoutInfoArtifactType(creationConfig: BaseCreationConfig): InternalArtifactType<Directory> {
+        fun getLayoutInfoArtifactType(creationConfig: ComponentCreationConfig): InternalArtifactType<Directory> {
             return if (creationConfig.variantType.isAar) {
                 DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE
             } else {

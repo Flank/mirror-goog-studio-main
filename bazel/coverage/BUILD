@@ -160,7 +160,8 @@ coverage_report(
         "//tools/adt/idea/android:intellij.android.core.tests_tests",
         "//tools/adt/idea/android-layout-inspector:android-layout-inspector-test_tests",
         "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
-        "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
+        #TODO(b/161091273) too flaky for coverage runs
+        #"//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
         "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
         "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
@@ -209,7 +210,8 @@ coverage_report(
     tests = [
         "//tools/adt/idea/android:intellij.android.core.tests_tests",
         "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
-        "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
+        #TODO(b/161091273) too flaky for coverage runs
+        #"//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
         "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
         "//tools/adt/idea/layoutlib-loader:intellij.android.layoutlib-loader.tests_tests",
@@ -531,7 +533,8 @@ coverage_report(
         "//tools/adt/idea/assistant:assistant-test_tests",
         "//tools/adt/idea/build-attribution:intellij.android.build-attribution.tests_tests",
         "//tools/adt/idea/build-common:intellij.android.buildCommon_tests",
-        "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
+        #TODO(b/161091273) too flaky for coverage runs
+        #"//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
         "//tools/adt/idea/connection-assistant:connection-assistant-test_tests",
         "//tools/adt/idea/dagger:intellij.android.dagger.tests_tests",
         "//tools/adt/idea/databinding:intellij.android.databinding.tests_tests",

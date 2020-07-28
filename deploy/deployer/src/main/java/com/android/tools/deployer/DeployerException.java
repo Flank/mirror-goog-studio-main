@@ -290,7 +290,9 @@ public class DeployerException extends Exception {
                 "Reinstall and restart app",
                 ResolutionAction.RUN_APP),
 
-        OPERATION_NOT_SUPPORTED("Operation not supported.", "%s", "", ResolutionAction.NONE);
+        OPERATION_NOT_SUPPORTED("Operation not supported.", "%s", "", ResolutionAction.NONE),
+
+        RUN_TIME_EXCEPTION("Runtime Exception.", "%s", "Retry", ResolutionAction.RETRY);
 
         private final String message;
         private final String details;
@@ -552,6 +554,10 @@ public class DeployerException extends Exception {
 
     public static DeployerException operationNotSupported(String reason) {
         return new DeployerException(Error.OPERATION_NOT_SUPPORTED, NO_ARGS, reason);
+    }
+
+    public static DeployerException runtimeException(Exception e) {
+        return new DeployerException(Error.RUN_TIME_EXCEPTION, NO_ARGS, e.toString());
     }
 
     public static DeployerException apiNotSupported() {

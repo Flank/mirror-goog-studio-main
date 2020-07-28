@@ -21,7 +21,7 @@ import com.android.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
-import javax.annotation.CheckReturnValue;
+import org.mockito.CheckReturnValue;
 
 public abstract class AndroidArchive extends Zip {
 

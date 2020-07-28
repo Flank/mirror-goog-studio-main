@@ -28,24 +28,26 @@ import java.io.Serializable
  * Implementation of [AndroidArtifact] for serialization via the Tooling API.
  */
 data class AndroidArtifactImpl(
-    override val isSigned: Boolean,
+    override val variantSourceProvider: SourceProvider?,
+    override val multiFlavorSourceProvider: SourceProvider?,
+
     override val signingConfigName: String?,
-    override val sourceGenTaskName: String,
-    override val generatedResourceFolders: Collection<File>,
+    override val isSigned: Boolean,
+
     override val abiFilters: Set<String>?,
-    override val assembleTaskOutputListingFile: String,
     override val testInfo: TestInfo?,
     override val bundleInfo: BundleInfo?,
     override val codeShrinker: CodeShrinker?,
+
     override val compileTaskName: String,
     override val assembleTaskName: String,
-    override val classesFolder: File,
-    override val additionalClassesFolders: Set<File>,
-    override val javaResourcesFolder: File,
-    override val variantSourceProvider: SourceProvider?,
-    override val multiFlavorSourceProvider: SourceProvider?,
+    override val sourceGenTaskName: String,
     override val ideSetupTaskNames: Set<String>,
-    override val generatedSourceFolders: Collection<File>
+
+    override val generatedSourceFolders: Collection<File>,
+    override val generatedResourceFolders: Collection<File>,
+    override val classesFolders: Set<File>,
+    override val assembleTaskOutputListingFile: File
 ) : AndroidArtifact, Serializable {
     companion object {
         @JvmStatic

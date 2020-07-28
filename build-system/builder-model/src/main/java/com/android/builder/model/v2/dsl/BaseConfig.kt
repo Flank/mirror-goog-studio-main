@@ -15,6 +15,7 @@
  */
 package com.android.builder.model.v2.dsl
 
+import com.android.builder.model.v2.AndroidModel
 import java.io.File
 
 /**
@@ -25,7 +26,7 @@ import java.io.File
  *
  * @since 4.2
  */
-interface BaseConfig {
+interface BaseConfig: AndroidModel {
 
     /**
      * The name

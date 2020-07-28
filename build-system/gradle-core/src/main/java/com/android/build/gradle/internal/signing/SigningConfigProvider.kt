@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.signing
 
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.SigningConfigUtils
@@ -85,7 +85,7 @@ class SigningConfigProvider(
     companion object {
 
         @JvmStatic
-        fun create(creationConfig: BaseCreationConfig): SigningConfigProvider {
+        fun create(creationConfig: ComponentCreationConfig): SigningConfigProvider {
             val isInDynamicFeature =
                 creationConfig.variantType.isDynamicFeature
                         || (creationConfig is TestComponentPropertiesImpl

@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.publishing
 
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactType.APK
-import com.android.build.api.artifact.ArtifactType.LIBRARY_MANIFEST
+import com.android.build.api.artifact.ArtifactType.MERGED_MANIFEST
 import com.android.build.api.artifact.ArtifactType.OBFUSCATION_MAPPING_FILE
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
@@ -215,7 +215,7 @@ class PublishingSpecs {
 
                 // manifest is published to both to compare and detect provided-only library
                 // dependencies.
-                output(LIBRARY_MANIFEST, ArtifactType.MANIFEST)
+                output(MERGED_MANIFEST, ArtifactType.MANIFEST)
                 output(RES_STATIC_LIBRARY, ArtifactType.RES_STATIC_LIBRARY)
                 output(DATA_BINDING_ARTIFACT, ArtifactType.DATA_BINDING_ARTIFACT)
                 output(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,

@@ -20,20 +20,18 @@ import com.android.AndroidProjectTypes
 import com.android.builder.model.AaptOptions
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.ApiVersion
-import com.android.builder.model.BaseArtifact
 import com.android.builder.model.BuildType
 import com.android.builder.model.ClassField
 import com.android.builder.model.LintOptions
 import com.android.builder.model.ProductFlavor
 import com.android.builder.model.SourceProvider
 import com.android.builder.model.SourceProviderContainer
-import com.android.builder.model.Variant
 import com.android.ide.common.gradle.model.IdeAndroidArtifact
 import com.android.ide.common.gradle.model.IdeAndroidProject
 import com.android.ide.common.gradle.model.IdeBaseArtifact
 import com.android.ide.common.gradle.model.IdeJavaArtifact
 import com.android.ide.common.gradle.model.IdeLintOptions
-import com.android.ide.common.gradle.model.IdeMavenCoordinates
+import com.android.ide.common.gradle.model.IdeMavenCoordinatesImpl
 import com.android.ide.common.gradle.model.IdeVariant
 import com.android.ide.common.gradle.model.level2.IdeLibrary
 import com.android.ide.common.repository.GradleVersion
@@ -47,7 +45,7 @@ import java.io.File
 class LintModelFactory : LintModelModuleLoader {
     init {
         // We're just copying by value so make sure our constants match
-        assert(LintModelMavenName.LOCAL_AARS == IdeMavenCoordinates.LOCAL_AARS)
+        assert(LintModelMavenName.LOCAL_AARS == IdeMavenCoordinatesImpl.LOCAL_AARS)
     }
 
     private val libraryResolverMap = mutableMapOf<String, LintModelLibrary>()
@@ -289,7 +287,7 @@ class LintModelFactory : LintModelModuleLoader {
         )
     }
 
-    private fun BaseArtifact.getClassFolders(): List<File> {
+    private fun IdeBaseArtifact.getClassFolders(): List<File> {
         return if (additionalClassesFolders.isEmpty()) {
             listOf(classesFolder)
         } else {
@@ -300,7 +298,7 @@ class LintModelFactory : LintModelModuleLoader {
         }
     }
 
-    private fun getBuildType(project: IdeAndroidProject, variant: Variant): BuildType {
+    private fun getBuildType(project: IdeAndroidProject, variant: IdeVariant): BuildType {
         val buildTypeName = variant.buildType
         return project.buildTypes.first { it.buildType.name == buildTypeName }.buildType
     }
@@ -336,7 +334,7 @@ class LintModelFactory : LintModelModuleLoader {
         )
     }
 
-    private fun getMergedResourceConfigurations(variant: Variant): Collection<String> {
+    private fun getMergedResourceConfigurations(variant: IdeVariant): Collection<String> {
         // Are there any splits that specify densities?
         /* Hotfix for b/148602190
         if (relevantDensities.isEmpty()) {
@@ -373,7 +371,7 @@ class LintModelFactory : LintModelModuleLoader {
 
     private fun computeSourceProviders(
         project: IdeAndroidProject,
-        variant: Variant
+        variant: IdeVariant
     ): List<LintModelSourceProvider> {
         val providers = mutableListOf<LintModelSourceProvider>()
 
@@ -468,7 +466,7 @@ class LintModelFactory : LintModelModuleLoader {
      */
     private fun computeTestSourceProviders(
         project: IdeAndroidProject,
-        variant: Variant
+        variant: IdeVariant
     ): List<LintModelSourceProvider> {
         val providers = mutableListOf<LintModelSourceProvider>()
 
@@ -615,7 +613,7 @@ class LintModelFactory : LintModelModuleLoader {
         return project.buildTypes.none { it.buildType.isMinifyEnabled }
     }
 
-    private fun useSupportLibraryVectorDrawables(variant: Variant): Boolean {
+    private fun useSupportLibraryVectorDrawables(variant: IdeVariant): Boolean {
         return try {
             variant.mergedFlavor.vectorDrawables.useSupportLibrary == true
         } catch (e: Throwable) {
@@ -796,7 +794,7 @@ class LintModelFactory : LintModelModuleLoader {
             get() = variant.name
         override val useSupportLibraryVectorDrawables: Boolean
             get() = useSupportLibraryVectorDrawables(variant)
-        override val oldVariant: Variant?
+        override val oldVariant: IdeVariant?
             get() = variant
         override val `package`: String?
             get() = null // no in the old builder model
@@ -950,3 +948,4 @@ class LintModelFactory : LintModelModuleLoader {
         }
     }
 }
+// TODO(b/120870752): Remove.

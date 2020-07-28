@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks.factory
 
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.tasks.BaseTask
@@ -61,7 +61,7 @@ abstract class TaskCreationAction<TaskT : Task> : TaskInformation<TaskT>, PreCon
  * This contains both meta-data to create the task ([name], [type])
  * and actions to configure the task ([preConfigure], [configure], [handleProvider])
  */
-abstract class VariantTaskCreationAction<TaskT, CreationConfigT: BaseCreationConfig>(
+abstract class VariantTaskCreationAction<TaskT, CreationConfigT: ComponentCreationConfig>(
     @JvmField protected val creationConfig: CreationConfigT,
     private val dependsOnPreBuildTask: Boolean
 ) : TaskCreationAction<TaskT>() where TaskT: Task, TaskT: VariantAwareTask {

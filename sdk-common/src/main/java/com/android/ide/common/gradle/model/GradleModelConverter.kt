@@ -18,9 +18,7 @@
 package com.android.ide.common.gradle.model
 
 import com.android.builder.model.AaptOptions
-import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.ApiVersion
-import com.android.builder.model.BaseArtifact
 import com.android.builder.model.BaseConfig
 import com.android.builder.model.BuildType
 import com.android.builder.model.BuildTypeContainer
@@ -156,7 +154,7 @@ class GradleModelConverter(
 
     private inline fun forEachArtifact(
         variant: IdeVariant,
-        block: (ConfigPath, BaseArtifact) -> Unit
+        block: (ConfigPath, IdeBaseArtifact) -> Unit
     ) {
         block(schema.matchArtifact(ARTIFACT_NAME_MAIN), variant.mainArtifact)
         variant.extraAndroidArtifacts.forEach {
@@ -323,7 +321,7 @@ class GradleModelConverter(
                 mergedConfig = mergedConfig.mergeWith(config.config)
             }
 
-            if (this is AndroidArtifact) {
+            if (this is IdeAndroidArtifact) {
                 mergedConfig = mergedConfig.copy(
                     manifestValues = mergedConfig.manifestValues.copy(
                         applicationId = applicationId

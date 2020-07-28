@@ -21,7 +21,7 @@ import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.processing.ScopedException
 import android.databinding.tool.store.LayoutInfoInput
 import android.databinding.tool.util.L
-import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -163,8 +163,8 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
         )
     }
 
-    class CreationAction(creationConfig: BaseCreationConfig) :
-        VariantTaskCreationAction<DataBindingGenBaseClassesTask, BaseCreationConfig>(
+    class CreationAction(creationConfig: ComponentCreationConfig) :
+        VariantTaskCreationAction<DataBindingGenBaseClassesTask, ComponentCreationConfig>(
             creationConfig
         ) {
 
