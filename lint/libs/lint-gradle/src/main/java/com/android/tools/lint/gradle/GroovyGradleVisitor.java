@@ -39,7 +39,9 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.NamedArgumentListExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
@@ -93,9 +95,9 @@ public class GroovyGradleVisitor extends GradleVisitor {
                             MethodCallExpression call =
                                     mMethodCallStack.get(mMethodCallStack.size() - 1);
                             if (call.getArguments() == tupleExpression) {
-                                String parent = call.getMethodAsString();
-                                String parentParent = getParentParent();
-                                String parent3 = getParentN(2);
+                                String parent = getParent();
+                                String parentParent = getParentN(2);
+                                String parent3 = getParentN(3);
                                 if (tupleExpression instanceof ArgumentListExpression) {
                                     ArgumentListExpression ale =
                                             (ArgumentListExpression) tupleExpression;
@@ -190,28 +192,65 @@ public class GroovyGradleVisitor extends GradleVisitor {
                         }
                     }
 
+                    @NonNull
+                    private String getParent() {
+                        return getParentN(1);
+                    }
+
                     private String getParentN(int n) {
                         int nParent = 0;
+                        MethodCallExpression methodCallExpression =
+                                mMethodCallStack.get(mMethodCallStack.size() - 1);
+                        List<String> hierarchy = getMethodCallHierarchy(methodCallExpression);
+                        if (hierarchy == null) {
+                            return null;
+                        }
+                        if (n - nParent - 1 < hierarchy.size()) {
+                            return hierarchy.get(n - nParent - 1);
+                        }
+                        nParent += hierarchy.size();
                         for (int i = mMethodCallStack.size() - 2; i >= 0; i--) {
-                            MethodCallExpression expression = mMethodCallStack.get(i);
-                            Expression arguments = expression.getArguments();
+                            methodCallExpression = mMethodCallStack.get(i);
+                            Expression arguments = methodCallExpression.getArguments();
                             if (arguments instanceof ArgumentListExpression) {
                                 ArgumentListExpression ale = (ArgumentListExpression) arguments;
                                 List<Expression> expressions = ale.getExpressions();
                                 if (expressions.size() == 1
                                         && expressions.get(0) instanceof ClosureExpression) {
-                                    nParent += 1;
+                                    hierarchy = getMethodCallHierarchy(methodCallExpression);
+                                    if (hierarchy == null) {
+                                        return null;
+                                    }
+                                    if (n - nParent - 1 < hierarchy.size()) {
+                                        return hierarchy.get(n - nParent - 1);
+                                    }
+                                    nParent += hierarchy.size();
                                 }
-                            }
-                            if (nParent == n) {
-                                return expression.getMethodAsString();
                             }
                         }
                         return null;
                     }
 
-                    private String getParentParent() {
-                        return getParentN(1);
+                    private List<String> getMethodCallHierarchy(
+                            MethodCallExpression methodCallExpression) {
+                        ArrayList<String> result = new ArrayList<>();
+                        result.add(methodCallExpression.getMethodAsString());
+                        Expression expression = methodCallExpression.getObjectExpression();
+                        while (true) {
+                            if (expression == VariableExpression.THIS_EXPRESSION) break;
+                            else if (expression instanceof VariableExpression) {
+                                result.add(((VariableExpression) expression).getName());
+                                break;
+                            } else if (expression instanceof PropertyExpression) {
+                                PropertyExpression propertyExpression =
+                                        (PropertyExpression) expression;
+                                result.add(propertyExpression.getPropertyAsString());
+                                expression = propertyExpression.getObjectExpression();
+                            } else {
+                                return null;
+                            }
+                        }
+                        return result;
                     }
 
                     private void checkDslProperty(
