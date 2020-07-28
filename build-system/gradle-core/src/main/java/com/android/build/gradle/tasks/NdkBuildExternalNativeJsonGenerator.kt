@@ -29,7 +29,6 @@ import com.android.build.gradle.internal.cxx.model.statsBuilder
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.google.common.base.Charsets
-import com.google.common.base.Joiner
 import com.google.common.collect.Lists
 import com.google.gson.GsonBuilder
 import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule
@@ -47,14 +46,7 @@ internal class NdkBuildExternalNativeJsonGenerator(
     abis: List<CxxAbiModel>
 ) : ExternalNativeJsonGenerator(variant, abis) {
     @Throws(IOException::class)
-    override fun processBuildOutput(
-        buildOutput: String,
-        abiConfig: CxxAbiModel
-    ) {
-        // Discover Application.mk if one exists next to Android.mk
-        // If there is an Application.mk file next to Android.mk then pick it up.
-        val applicationMk = File(makeFile.parent, "Application.mk")
-
+    override fun processBuildOutput(buildOutput: String, abiConfig: CxxAbiModel) {
         // Write the captured ndk-build output to a file for diagnostic purposes.
         infoln("parse and convert ndk-build output to build configuration JSON")
 
@@ -81,20 +73,21 @@ internal class NdkBuildExternalNativeJsonGenerator(
         // TODO(jomof): This NativeBuildConfigValue is probably consuming a lot of memory for large
         // projects. Should be changed to a streaming model where NativeBuildConfigValueBuilder
         // provides a streaming JsonReader rather than a full object.
-        val buildConfig = NativeBuildConfigValueBuilder(
-            makeFile, variant.module.moduleRootFolder
-        )
-            .setCommands(
-                getBuildCommand(abiConfig, applicationMk, false /* removeJobsFlag */),
-                getBuildCommand(abiConfig, applicationMk, true /* removeJobsFlag */)
-                        + " clean",
-                variant.variantName,
-                buildOutput
+        val buildConfig =
+            NativeBuildConfigValueBuilder(
+                makeFile,
+                variant.module.moduleRootFolder
             )
-            .build()
-        if (applicationMk.exists()) {
-            infoln("found application make file %s", applicationMk.absolutePath)
-            buildConfig.buildFiles!!.add(applicationMk)
+                .setCommands(
+                    getBuildCommand(abiConfig, removeJobsFlag = false),
+                    getBuildCommand(abiConfig, removeJobsFlag = true) + " clean",
+                    variant.variantName,
+                    buildOutput
+                )
+                .build()
+        applicationMk?.let {
+            infoln("found application make file %s", it.absolutePath)
+            buildConfig.buildFiles!!.add(it)
         }
         val actualResult = GsonBuilder()
             .registerTypeAdapter(File::class.java, PlainFileGsonTypeAdaptor())
@@ -114,22 +107,18 @@ internal class NdkBuildExternalNativeJsonGenerator(
      * would do to execute the build.
      */
     override fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder {
-        // Discover Application.mk if one exists next to Android.mk
-        // If there is an Application.mk file next to Android.mk then pick it up.
-        val applicationMk = File(makeFile.parent, "Application.mk")
         val builder = ProcessInfoBuilder()
         builder.setExecutable(ndkBuild)
             .addArgs(
                 getBaseArgs(
                     abi,
-                    applicationMk,
-                    false /* removeJobsFlag */
+                    removeJobsFlag = false,
+                    // Disable response files so we can parse the command line.
+                    useShortCommand = false,
+                    forceCleanBuild = true,
+                    dryRun = true
                 )
-            ) // Disable response files so we can parse the command line.
-            .addArgs("APP_SHORT_COMMANDS=false")
-            .addArgs("LOCAL_SHORT_COMMANDS=false")
-            .addArgs("-B") // Build as if clean
-            .addArgs("-n")
+            )
         return builder
     }
 
@@ -168,6 +157,10 @@ internal class NdkBuildExternalNativeJsonGenerator(
             }
         }
 
+    /** Discovers Application.mk if one exists next to Android.mk. */
+    private val applicationMk: File?
+        get() = File(makeFile.parent, "Application.mk").takeIf { it.exists() }
+
     /**
      * If the make file is a directory then get the implied file, otherwise return the path.
      */
@@ -178,15 +171,18 @@ internal class NdkBuildExternalNativeJsonGenerator(
 
     /** Get the base list of arguments for invoking ndk-build.  */
     private fun getBaseArgs(
-        abi: CxxAbiModel, applicationMk: File, removeJobsFlag: Boolean
-    ): List<String?> {
-        val result: MutableList<String?> =
-            Lists.newArrayList()
+        abi: CxxAbiModel,
+        removeJobsFlag: Boolean,
+        useShortCommand: Boolean? = null,
+        forceCleanBuild: Boolean = false,
+        dryRun: Boolean = false
+    ): List<String> {
+        val result: MutableList<String> = Lists.newArrayList()
         result.add("NDK_PROJECT_PATH=null")
         result.add("APP_BUILD_SCRIPT=$makeFile")
-        if (applicationMk.exists()) {
-            // NDK_APPLICATION_MK specifies the Application.mk file.
-            result.add("NDK_APPLICATION_MK=" + applicationMk.absolutePath)
+        // NDK_APPLICATION_MK specifies the Application.mk file.
+        applicationMk?.let {
+            result.add("NDK_APPLICATION_MK=" + it.absolutePath)
         }
         if (abi.variant.prefabPackageDirectoryList.isNotEmpty()) {
             if (abi.variant.module.ndkVersion.major < 21) {
@@ -265,18 +261,22 @@ internal class NdkBuildExternalNativeJsonGenerator(
             }
             result.add(argument)
         }
+        if (useShortCommand != null) {
+            result.add("APP_SHORT_COMMANDS=$useShortCommand")
+            result.add("LOCAL_SHORT_COMMANDS=$useShortCommand")
+        }
+        if (forceCleanBuild) {
+            result.add("-B")
+        }
+        if (dryRun) {
+            result.add("-n")
+        }
         return result
     }
 
     /** Get the build command  */
-    private fun getBuildCommand(
-        abi: CxxAbiModel, applicationMk: File, removeJobsFlag: Boolean
-    ): String {
-        return (ndkBuild
-                + " "
-                + Joiner.on(" ")
-            .join(getBaseArgs(abi, applicationMk, removeJobsFlag)))
-    }
+    private fun getBuildCommand(abi: CxxAbiModel, removeJobsFlag: Boolean): String =
+        "$ndkBuild " + getBaseArgs(abi, removeJobsFlag).joinToString(" ")
 
     init {
         variant.statsBuilder.nativeBuildSystemType = GradleNativeAndroidModule.NativeBuildSystemType.NDK_BUILD

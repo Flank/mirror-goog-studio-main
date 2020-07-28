@@ -387,10 +387,7 @@ fun createCxxMetadataGenerator(
         ).rewriteCxxAbiModelWithCMakeSettings()
     }
     return when (module.buildSystem) {
-        NativeBuildSystem.NDK_BUILD -> NdkBuildExternalNativeJsonGenerator(
-            variant,
-            abis
-        )
+        NativeBuildSystem.NDK_BUILD -> NdkBuildExternalNativeJsonGenerator(variant, abis)
         NativeBuildSystem.CMAKE -> {
             val cmake =
                 Objects.requireNonNull(variant.module.cmake)!!
