@@ -2903,6 +2903,37 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testMovedField() {
+        // Constant moved up to super interface in API 29; see b/154635330
+        String expected =
+                ""
+                        + "src/test/pkg/Test.java:7: Warning: Field requires API level 29 (current min is 1): android.provider.MediaStore.MediaColumns#BUCKET_DISPLAY_NAME [InlinedApi]\n"
+                        + "        System.out.println(media.BUCKET_DISPLAY_NAME); // ERROR - req 29\n"
+                        + "                           ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/Test.java:9: Warning: Field requires API level 3 (current min is 1): android.provider.MediaStore.Video.VideoColumns#BUCKET_DISPLAY_NAME [InlinedApi]\n"
+                        + "        System.out.println(video.BUCKET_DISPLAY_NAME); // ERROR - req 3\n"
+                        + "                           ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 2 warnings";
+        lint().files(
+                manifest().minSdk(1),
+                java(
+                        ""
+                                + "package test.pkg;\n"
+                                + "import android.provider.MediaStore.Images.ImageColumns;\n"
+                                + "import android.provider.MediaStore.MediaColumns;\n"
+                                + "import android.provider.MediaStore.Video.VideoColumns;\n"
+                                + "public class Test {\n"
+                                + "    public void test(MediaColumns media, ImageColumns image, VideoColumns video) {\n"
+                                + "        System.out.println(media.BUCKET_DISPLAY_NAME); // ERROR - req 29\n"
+                                + "        System.out.println(image.BUCKET_DISPLAY_NAME); // OK\n"
+                                + "        System.out.println(video.BUCKET_DISPLAY_NAME); // ERROR - req 3\n"
+                                + "    }\n"
+                                + "}"))
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect(expected);
+    }
+
+    public void testMovedField2() {
         // Regression test for https://issuetracker.google.com/139695984
         // The baseIntent field moved up from ActivityManager.RecentTaskInfo
         // into new super class TaskInfo; resolve will point to the new

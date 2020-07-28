@@ -1979,33 +1979,46 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         return
                     }
 
-                    if ((api == 28 || api == 29) && owner == "android.app.TaskInfo") {
-                        // A number of fields were moved up from ActivityManager.RecentTaskInfo
-                        // to the new class TaskInfo in Q; however, these field are almost
-                        // always accessed via ActivityManager#taskInfo which is still
-                        // a RecentTaskInfo so this code works prior to Q. If you explicitly
-                        // access it as a TaskInfo the class reference itself will be
-                        // flagged by lint. (The platform change was in
-                        // Change-Id: Iaf1731002196bb89319de141a05ab92a7dcb2928)
-                        // We can't just unconditionally exit here, since there are existing
-                        // API requirements on various fields in the TaskInfo subclasses,
-                        // so try to pick out the real type.
-                        val parent = node.uastParent
-                        if (parent is UQualifiedReferenceExpression) {
-                            val receiver = parent.receiver
-                            owner = receiver.getExpressionType()?.canonicalText
-                                ?: return
-                            api = apiDatabase.getFieldVersion(owner, name)
-                            if (api != -1) {
-                                minSdk = getMinSdk(context)
-                                if (api > minSdk && api > getTargetApi(node)) {
-                                    if (isSuppressed(context, api, node, minSdk)) {
-                                        return
-                                    }
-                                } else {
+                    // Look to see if it's a field reference for a specific sub class
+                    // or interface which defined the field or constant at an earlier
+                    // API level.
+                    //
+                    // For example, for api 28/29 and android.app.TaskInfo,
+                    // A number of fields were moved up from ActivityManager.RecentTaskInfo
+                    // to the new class TaskInfo in Q; however, these field are almost
+                    // always accessed via ActivityManager#taskInfo which is still
+                    // a RecentTaskInfo so this code works prior to Q. If you explicitly
+                    // access it as a TaskInfo the class reference itself will be
+                    // flagged by lint. (The platform change was in
+                    // Change-Id: Iaf1731002196bb89319de141a05ab92a7dcb2928)
+                    // We can't just unconditionally exit here, since there are existing
+                    // API requirements on various fields in the TaskInfo subclasses,
+                    // so try to pick out the real type.
+                    val parent = node.uastParent
+                    if (parent is UQualifiedReferenceExpression) {
+                        val receiver = parent.receiver
+                        val specificOwner = receiver.getExpressionType()?.canonicalText
+                        val specificApi = if (specificOwner != null)
+                            apiDatabase.getFieldVersion(specificOwner, name)
+                        else
+                            -1
+                        if (specificApi != -1 && specificOwner != null) {
+                            if (specificApi < api) {
+                                // Make sure the error message reflects the correct (lower)
+                                // minSdkVersion if we have a more specific match on the field
+                                // type
+                                api = specificApi
+                                owner = specificOwner
+                            }
+                            if (specificApi > minSdk && specificApi > getTargetApi(node)) {
+                                if (isSuppressed(context, specificApi, node, minSdk)) {
                                     return
                                 }
                             } else {
+                                return
+                            }
+                        } else {
+                            if ((specificApi == 28 || specificApi == 29) && specificOwner == "android.app.TaskInfo") {
                                 return
                             }
                         }
