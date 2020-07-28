@@ -60,7 +60,7 @@ public final class HtmlPrinterTest {
 
         // assert
         String out = new String(mByteStream.toByteArray(), StandardCharsets.UTF_8);
-        assertEquals(out, "<h1>test heading</h1>\n");
+        assertEquals("<h1>test heading</h1>\n", out);
     }
 
     @Test
@@ -70,7 +70,7 @@ public final class HtmlPrinterTest {
 
         // assert
         String out = new String(mByteStream.toByteArray(), StandardCharsets.UTF_8);
-        assertEquals(out, "<p>test paragraph</p>\n");
+        assertEquals("<p>test paragraph</p>\n", out);
     }
 
     @Test
@@ -82,15 +82,14 @@ public final class HtmlPrinterTest {
 
         // assert
         String out = new String(mByteStream.toByteArray(), StandardCharsets.UTF_8);
-        assertEquals(out,
-                "<table>\n"
-                        + "<tr style='border: 1px solid black;'>\n"
-                        + "<th style='border: 1px solid black;'>test row heading</th>\n"
-                        + "</tr>\n"
-                        + "<tr>\n"
-                        + "<td>test data</td>\n"
-                        + "</tr>\n"
-                        + "</table>\n");
+        assertEquals("<table>\n"
+                     + "<tr style='border: 1px solid black;'>\n"
+                     + "<th style='border: 1px solid black;'>test row heading</th>\n"
+                     + "</tr>\n"
+                     + "<tr>\n"
+                     + "<td>test data</td>\n"
+                     + "</tr>\n"
+                     + "</table>\n", out);
     }
 
     @Test
@@ -102,12 +101,11 @@ public final class HtmlPrinterTest {
 
         // assert
         String out = new String(mByteStream.toByteArray(), StandardCharsets.UTF_8);
-        assertEquals(out,
-                "<table>\n"
-                        + "<tr>\n"
-                        + "<td>test data</td>\n"
-                        + "</tr>\n"
-                        + "</table>\n");
+        assertEquals("<table>\n"
+                     + "<tr>\n"
+                     + "<td>test data</td>\n"
+                     + "</tr>\n"
+                     + "</table>\n", out);
     }
 
     @Test
@@ -133,10 +131,8 @@ public final class HtmlPrinterTest {
 
         // assert
         String out = new String(mByteStream.toByteArray(), StandardCharsets.UTF_8);
-        System.err.println(out);
-        assertEquals(out,
-                "<img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAA"
-                        + "C0lEQVR42mNgAAIAAAUAAen63NgAAAAASUVORK5CYII=' \\>\n");
+        assertEquals("<img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR"
+                     + "4XmNgAAIAAAUAAQYUdaMAAAAASUVORK5CYII=' \\>\n", out);
     }
 
     @Test
@@ -148,6 +144,7 @@ public final class HtmlPrinterTest {
         String out = mPrinter.formatInstance(mInstanceMock);
 
         // assert
-        assertEquals(out, "mock instance");
+        assertEquals("mock instance", out);
     }
+
 }
