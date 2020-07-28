@@ -53,6 +53,7 @@ import com.android.build.gradle.tasks.NdkBuildExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.getPrefabFromMaven
 import com.android.builder.profile.ChromeTracingProfileConverter
 import com.android.sdklib.AndroidVersion
+import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
 import java.io.File
 import java.util.Objects
@@ -89,6 +90,23 @@ data class CxxConfigurationModel(
     val variantName: String,
     val nativeVariantConfig: NativeBuildSystemVariantConfig
 )
+
+/**
+ * Base folder for .o files
+ *   ex, $moduleRootFolder/build/intermediates/cmake/debug/obj
+ */
+val CxxConfigurationModel.variantObjFolder : File get() {
+    val variantIntermediatesFolder = FileUtils.join(
+        intermediatesFolder,
+        buildSystem.tag,
+        variantName)
+    return if (buildSystem == NativeBuildSystem.NDK_BUILD) {
+        // ndkPlatform-build create libraries in a "local" subfolder.
+        FileUtils.join(variantIntermediatesFolder, "obj", "local")
+    } else {
+        FileUtils.join(variantIntermediatesFolder, "obj")
+    }
+}
 
 /**
  * This creates the [CxxConfigurationModel]. After deserialization it is used to construct
