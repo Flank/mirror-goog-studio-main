@@ -67,7 +67,10 @@ public class ModelInfo {
             modelVersion = Strings.nullToEmpty(modelMetadata.version());
             modelAuthor = Strings.nullToEmpty(modelMetadata.author());
             modelLicense = Strings.nullToEmpty(modelMetadata.license());
-            minParserVersion = Strings.nullToEmpty(modelMetadata.minParserVersion());
+            minParserVersion =
+                    Strings.isNullOrEmpty(modelMetadata.minParserVersion())
+                            ? "1.0.0"
+                            : modelMetadata.minParserVersion();
         } else {
             metadataExisted = false;
             minParserVersionSatisfied = true;
@@ -76,7 +79,7 @@ public class ModelInfo {
             modelVersion = "";
             modelAuthor = "";
             modelLicense = "";
-            minParserVersion = "";
+            minParserVersion = "1.0.0";
         }
         inputs = new ArrayList<>();
         outputs = new ArrayList<>();
