@@ -3322,13 +3322,15 @@ public abstract class TaskManager<
                 creationConfig.getGlobalScope().getProject().getObjects().fileProperty();
         TaskProvider<Task> kaptTaskProvider = taskFactory.named(kaptTask.getName());
 
-        // Data binding artifacts are part of the annotation processing outputs
+        // Register data binding artifacts as outputs
         JavaCompileKt.registerDataBindingOutputs(
                 dataBindingArtifactDir,
                 exportClassListFile,
                 creationConfig.getVariantType().isExportDataBindingClassList(),
                 kaptTaskProvider,
-                creationConfig.getArtifacts());
+                creationConfig.getArtifacts(),
+                false // forJavaCompile = false as this task is Kapt
+                );
 
         // Register the DirectoryProperty / RegularFileProperty as outputs as they are not yet
         // annotated as outputs (same with the code in JavaCompileCreationAction.configure).
