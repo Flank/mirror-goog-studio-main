@@ -16,46 +16,5 @@
 package com.android.ide.common.gradle.model
 
 import com.android.builder.model.DependenciesInfo
-import java.io.Serializable
-import java.util.Objects
 
-class IdeDependenciesInfo : DependenciesInfo, Serializable {
-    override val includeInApk: Boolean
-    override val includeInBundle: Boolean
-    val hashCode: Int
-
-    companion object {
-        @JvmStatic
-        fun createOrNull(model: DependenciesInfo?) = model?.let { IdeDependenciesInfo(it) }
-    }
-
-    constructor(model: DependenciesInfo) {
-        this.includeInApk = model.includeInApk
-        this.includeInBundle = model.includeInBundle
-        this.hashCode = calculateHashCode()
-    }
-
-    constructor() {
-        this.includeInApk = true
-        this.includeInBundle = true
-        this.hashCode = 0
-    }
-
-    override fun equals(other: Any?): Boolean {
-        return when {
-            this === other -> true
-            other !is IdeDependenciesInfo -> false
-            else -> includeInApk == other.includeInApk && includeInBundle == other.includeInBundle
-        }
-    }
-
-    override fun hashCode(): Int = hashCode;
-
-    override fun toString(): String = "IdeDependenciesInfo{" +
-            "includeInApk=$includeInApk, "+
-            "includeInBundle=$includeInBundle" +
-            "}"
-
-
-    private fun calculateHashCode(): Int = Objects.hash(includeInApk, includeInBundle)
-}
+interface IdeDependenciesInfo: DependenciesInfo

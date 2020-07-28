@@ -15,12 +15,6 @@
  */
 package com.android.ide.common.gradle.model
 
-interface IdeVariantBuildInformation {
-  val variantName: String
-  val assembleTaskName: String
-  val assembleTaskOutputListingFile: String?
-  val bundleTaskName: String?
-  val bundleTaskOutputListingFile: String?
-  val apkFromBundleTaskName: String?
-  val apkFromBundleTaskOutputListingFile: String?
-}
+import com.android.builder.model.NativeArtifact
+
+interface IdeNativeArtifact: NativeArtifact

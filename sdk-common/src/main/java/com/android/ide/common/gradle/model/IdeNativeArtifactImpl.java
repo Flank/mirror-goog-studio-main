@@ -26,7 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 
-public final class IdeNativeArtifact implements NativeArtifact, Serializable {
+public final class IdeNativeArtifactImpl implements IdeNativeArtifact, Serializable {
     @NonNull private final String myName;
     @NonNull private final String myToolChain;
     @NonNull private final String myGroupName;
@@ -39,13 +39,12 @@ public final class IdeNativeArtifact implements NativeArtifact, Serializable {
 
     // Used for serialization by the IDE.
     @SuppressWarnings("unused")
-    public IdeNativeArtifact() {
+    public IdeNativeArtifactImpl() {
         myName = "";
         myToolChain = "";
         myGroupName = "";
         mySourceFiles = Collections.emptyList();
         myExportedHeaders = Collections.emptyList();
-        //noinspection ConstantConditions
         myOutputFile = null;
         myAbi = "";
         myTargetName = "";
@@ -53,7 +52,7 @@ public final class IdeNativeArtifact implements NativeArtifact, Serializable {
         myHashCode = 0;
     }
 
-    public IdeNativeArtifact(@NonNull NativeArtifact artifact, @NonNull ModelCache modelCache) {
+    public IdeNativeArtifactImpl(@NonNull NativeArtifact artifact, @NonNull ModelCache modelCache) {
         myName = artifact.getName();
         myToolChain = artifact.getToolChain();
         myGroupName = artifact.getGroupName();
@@ -139,10 +138,10 @@ public final class IdeNativeArtifact implements NativeArtifact, Serializable {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof IdeNativeArtifact)) {
+        if (!(o instanceof IdeNativeArtifactImpl)) {
             return false;
         }
-        IdeNativeArtifact artifact = (IdeNativeArtifact) o;
+        IdeNativeArtifactImpl artifact = (IdeNativeArtifactImpl) o;
         return Objects.equals(myName, artifact.myName)
                 && Objects.equals(myToolChain, artifact.myToolChain)
                 && Objects.equals(myGroupName, artifact.myGroupName)

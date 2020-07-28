@@ -26,7 +26,7 @@ import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeNativeVariantAbi}. */
+/** Tests for {@link IdeNativeVariantAbiImpl}. */
 public class IdeNativeVariantAbiTest {
     private ModelCache myModelCache;
 
@@ -37,13 +37,13 @@ public class IdeNativeVariantAbiTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeNativeVariantAbi.class).isAssignableTo(Serializable.class);
+        assertThat(IdeNativeVariantAbiImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeNativeVariantAbi nativeVariantAbi =
-                new IdeNativeVariantAbi(new NativeVariantAbiStub(), myModelCache);
+        IdeNativeVariantAbiImpl nativeVariantAbi =
+                new IdeNativeVariantAbiImpl(new NativeVariantAbiStub(), myModelCache);
         byte[] bytes = Serialization.serialize(nativeVariantAbi);
         Object o = Serialization.deserialize(bytes);
         assertEquals(nativeVariantAbi, o);
@@ -52,13 +52,13 @@ public class IdeNativeVariantAbiTest {
     @Test
     public void constructor() throws Throwable {
         NativeVariantAbi original = new NativeVariantAbiStub();
-        IdeNativeVariantAbi copy = new IdeNativeVariantAbi(original, myModelCache);
+        IdeNativeVariantAbiImpl copy = new IdeNativeVariantAbiImpl(original, myModelCache);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeNativeVariantAbi.class).verify();
+        createEqualsVerifier(IdeNativeVariantAbiImpl.class).verify();
     }
 }

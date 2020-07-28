@@ -85,7 +85,7 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
                 IdeModel.copy(
                         project.getArtifacts(),
                         modelCache,
-                        artifact -> new IdeNativeArtifact(artifact, modelCache));
+                        artifact -> new IdeNativeArtifactImpl(artifact, modelCache));
         myToolChains =
                 IdeModel.copy(
                         project.getToolChains(),
@@ -110,7 +110,7 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
                     project.getVariantInfos(),
                     modelCache,
                     variantInfo ->
-                            new IdeNativeVariantInfo(
+                            new IdeNativeVariantInfoImpl(
                                     variantInfo.getAbiNames(),
                                     Objects.requireNonNull(
                                             IdeModel.copyNewProperty(

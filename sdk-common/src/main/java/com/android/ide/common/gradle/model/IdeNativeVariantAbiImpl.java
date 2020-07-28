@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class IdeNativeVariantAbi implements NativeVariantAbi, Serializable {
+public final class IdeNativeVariantAbiImpl implements IdeNativeVariantAbi, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
@@ -45,7 +45,7 @@ public final class IdeNativeVariantAbi implements NativeVariantAbi, Serializable
 
     // Used for serialization by the IDE.
     @SuppressWarnings("unused")
-    public IdeNativeVariantAbi() {
+    public IdeNativeVariantAbiImpl() {
         myBuildFiles = Collections.emptyList();
         myArtifacts = Collections.emptyList();
         myToolChains = Collections.emptyList();
@@ -57,18 +57,18 @@ public final class IdeNativeVariantAbi implements NativeVariantAbi, Serializable
         myHashCode = 0;
     }
 
-    public IdeNativeVariantAbi(@NonNull NativeVariantAbi variantAbi) {
+    public IdeNativeVariantAbiImpl(@NonNull NativeVariantAbi variantAbi) {
         this(variantAbi, new ModelCache());
     }
 
-    public IdeNativeVariantAbi(
+    public IdeNativeVariantAbiImpl(
             @NonNull NativeVariantAbi variantAbi, @NonNull ModelCache modelCache) {
         myBuildFiles = ImmutableList.copyOf(variantAbi.getBuildFiles());
         myArtifacts =
                 IdeModel.copy(
                         variantAbi.getArtifacts(),
                         modelCache,
-                        artifact -> new IdeNativeArtifact(artifact, modelCache));
+                        artifact -> new IdeNativeArtifactImpl(artifact, modelCache));
         myToolChains =
                 IdeModel.copy(
                         variantAbi.getToolChains(),
@@ -167,8 +167,8 @@ public final class IdeNativeVariantAbi implements NativeVariantAbi, Serializable
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof IdeNativeVariantAbi)) return false;
-        IdeNativeVariantAbi that = (IdeNativeVariantAbi) o;
+        if (!(o instanceof IdeNativeVariantAbiImpl)) return false;
+        IdeNativeVariantAbiImpl that = (IdeNativeVariantAbiImpl) o;
         return Objects.equals(myBuildFiles, that.myBuildFiles)
                 && Objects.equals(myArtifacts, that.myArtifacts)
                 && Objects.equals(myToolChains, that.myToolChains)

@@ -202,11 +202,11 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
 
         IdeViewBindingOptions viewBindingOptionsCopy =
                 IdeModel.copyNewProperty(
-                        () -> new IdeViewBindingOptions(project.getViewBindingOptions()), null);
+                  () -> new IdeViewBindingOptionsImpl(project.getViewBindingOptions()), null);
 
         IdeDependenciesInfo dependenciesInfoCopy =
                 IdeModel.copyNewProperty(
-                        () -> IdeDependenciesInfo.createOrNull(project.getDependenciesInfo()),
+                        () -> IdeDependenciesInfoImpl.createOrNull(project.getDependenciesInfo()),
                         null);
 
         String buildToolsVersionCopy =
@@ -300,8 +300,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myBuildFolder = null;
         myDynamicFeatures = Collections.emptyList();
         myVariantBuildInformation = Collections.emptyList();
-        myViewBindingOptions = new IdeViewBindingOptions();
-        myDependenciesInfo = new IdeDependenciesInfo();
+        myViewBindingOptions = new IdeViewBindingOptionsImpl();
+        myDependenciesInfo = new IdeDependenciesInfoImpl();
         myBuildToolsVersion = null;
         myNdkVersion = null;
         myResourcePrefix = null;
@@ -392,7 +392,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         if (agpVersion != null && agpVersion.compareIgnoringQualifiers("4.1.0") >= 0) {
             // make deep copy of VariantBuildInformation.
             return project.getVariantsBuildInformation().stream()
-                    .map(it -> new IdeVariantBuildInformation(it))
+                    .map(it -> new IdeVariantBuildInformationImpl(it))
                     .collect(ImmutableList.toImmutableList());
         }
         // VariantBuildInformation is not available.

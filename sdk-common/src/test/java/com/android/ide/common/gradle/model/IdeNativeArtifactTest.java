@@ -31,7 +31,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link IdeNativeArtifact}. */
+/** Tests for {@link IdeNativeArtifactImpl}. */
 public class IdeNativeArtifactTest {
     private ModelCache myModelCache;
 
@@ -42,13 +42,13 @@ public class IdeNativeArtifactTest {
 
     @Test
     public void serializable() {
-        assertThat(IdeNativeArtifact.class).isAssignableTo(Serializable.class);
+        assertThat(IdeNativeArtifactImpl.class).isAssignableTo(Serializable.class);
     }
 
     @Test
     public void serialization() throws Exception {
-        IdeNativeArtifact nativeArtifact =
-                new IdeNativeArtifact(new NativeArtifactStub(), myModelCache);
+        IdeNativeArtifactImpl nativeArtifact =
+                new IdeNativeArtifactImpl(new NativeArtifactStub(), myModelCache);
         byte[] bytes = Serialization.serialize(nativeArtifact);
         Object o = Serialization.deserialize(bytes);
         assertEquals(nativeArtifact, o);
@@ -78,7 +78,7 @@ public class IdeNativeArtifactTest {
                                 getOutputFile());
                     }
                 };
-        IdeNativeArtifact artifact = new IdeNativeArtifact(original, myModelCache);
+        IdeNativeArtifactImpl artifact = new IdeNativeArtifactImpl(original, myModelCache);
         artifact.getRuntimeFiles();
     }
 
@@ -106,7 +106,7 @@ public class IdeNativeArtifactTest {
                                 getRuntimeFiles());
                     }
                 };
-        IdeNativeArtifact artifact = new IdeNativeArtifact(original, myModelCache);
+        IdeNativeArtifactImpl artifact = new IdeNativeArtifactImpl(original, myModelCache);
         artifact.getAssembleTaskName();
     }
 
@@ -134,7 +134,7 @@ public class IdeNativeArtifactTest {
                                 getRuntimeFiles());
                     }
                 };
-        IdeNativeArtifact artifact = new IdeNativeArtifact(original, myModelCache);
+        IdeNativeArtifactImpl artifact = new IdeNativeArtifactImpl(original, myModelCache);
         try {
             artifact.getAbi();
             Assert.fail("Expecting UnsupportedOperationException");
@@ -167,7 +167,7 @@ public class IdeNativeArtifactTest {
                                 getRuntimeFiles());
                     }
                 };
-        IdeNativeArtifact artifact = new IdeNativeArtifact(original, myModelCache);
+        IdeNativeArtifactImpl artifact = new IdeNativeArtifactImpl(original, myModelCache);
         try {
             artifact.getTargetName();
             Assert.fail("Expecting UnsupportedOperationException");
@@ -179,13 +179,13 @@ public class IdeNativeArtifactTest {
     @Test
     public void constructor() throws Throwable {
         NativeArtifact original = new NativeArtifactStub();
-        IdeNativeArtifact copy = new IdeNativeArtifact(original, myModelCache);
+        IdeNativeArtifactImpl copy = new IdeNativeArtifactImpl(original, myModelCache);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
     public void equalsAndHashCode() {
-        createEqualsVerifier(IdeNativeArtifact.class).verify();
+        createEqualsVerifier(IdeNativeArtifactImpl.class).verify();
     }
 }
