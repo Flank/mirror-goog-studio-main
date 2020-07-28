@@ -54,18 +54,21 @@ import com.android.builder.model.VectorDrawablesOptions;
 import com.android.builder.model.ViewBindingOptions;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
+import com.android.ide.common.gradle.model.IdeAaptOptions;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeBuildType;
 import com.android.ide.common.gradle.model.IdeBuildTypeContainer;
 import com.android.ide.common.gradle.model.IdeJavaArtifact;
+import com.android.ide.common.gradle.model.IdeJavaCompileOptions;
 import com.android.ide.common.gradle.model.IdeLintOptions;
 import com.android.ide.common.gradle.model.IdeProductFlavor;
 import com.android.ide.common.gradle.model.IdeProductFlavorContainer;
 import com.android.ide.common.gradle.model.IdeSourceProvider;
 import com.android.ide.common.gradle.model.IdeSourceProviderContainer;
 import com.android.ide.common.gradle.model.IdeVariant;
+import com.android.ide.common.gradle.model.IdeViewBindingOptions;
 import com.android.ide.common.gradle.model.level2.IdeAndroidLibrary;
 import com.android.ide.common.gradle.model.level2.IdeAndroidLibraryCore;
 import com.android.ide.common.gradle.model.level2.IdeDependencies;
@@ -180,10 +183,10 @@ public class GradleModelMocker {
     private final Map<String, Dep> graphs = Maps.newHashMap();
     private boolean useBuildCache;
     private VectorDrawablesOptions vectorDrawablesOptions;
-    private AaptOptions aaptOptions;
+    private IdeAaptOptions aaptOptions;
     private boolean allowUnrecognizedConstructs;
     private boolean fullDependencies;
-    private JavaCompileOptions compileOptions;
+    private IdeJavaCompileOptions compileOptions;
     private boolean javaPlugin;
     private boolean javaLibraryPlugin;
 
@@ -358,7 +361,7 @@ public class GradleModelMocker {
         lintOptions = new IdeLintOptions();
         when(project.getLintOptions()).thenAnswer(invocation -> lintOptions);
 
-        compileOptions = mock(JavaCompileOptions.class);
+        compileOptions = mock(IdeJavaCompileOptions.class);
         when(compileOptions.getSourceCompatibility()).thenReturn("1.7");
         when(compileOptions.getTargetCompatibility()).thenReturn("1.7");
         when(compileOptions.getEncoding()).thenReturn("UTF-8");
@@ -1495,7 +1498,7 @@ public class GradleModelMocker {
 
             switch (key) {
                 case "viewBinding":
-                    ViewBindingOptions viewBindingOptions = mock(ViewBindingOptions.class);
+                    IdeViewBindingOptions viewBindingOptions = mock(IdeViewBindingOptions.class);
                     when(viewBindingOptions.isEnabled()).thenReturn(toBoolean(arg));
                     when(project.getViewBindingOptions()).thenReturn(viewBindingOptions);
                     break;
@@ -1655,9 +1658,9 @@ public class GradleModelMocker {
         return vectorDrawablesOptions;
     }
 
-    private AaptOptions getAaptOptions() {
+    private IdeAaptOptions getAaptOptions() {
         if (aaptOptions == null) {
-            aaptOptions = mock(AaptOptions.class);
+            aaptOptions = mock(IdeAaptOptions.class);
             when(project.getAaptOptions()).thenReturn(aaptOptions);
             when(aaptOptions.getNamespacing()).thenReturn(AaptOptions.Namespacing.DISABLED);
         }

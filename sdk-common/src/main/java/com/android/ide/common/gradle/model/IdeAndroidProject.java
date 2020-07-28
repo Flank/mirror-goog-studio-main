@@ -17,15 +17,7 @@ package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.BuildType;
-import com.android.builder.model.JavaCompileOptions;
-import com.android.builder.model.ProductFlavor;
-import com.android.builder.model.ProductFlavorContainer;
-import com.android.builder.model.SigningConfig;
-import com.android.builder.model.SyncIssue;
-import com.android.builder.model.ViewBindingOptions;
 import com.android.ide.common.repository.GradleVersion;
 import java.io.File;
 import java.io.Serializable;
@@ -121,7 +113,7 @@ public interface IdeAndroidProject extends Serializable {
     int getProjectType();
 
     /**
-     * Returns the {@link ProductFlavorContainer} for the 'main' default config.
+     * Returns the {@link IdeProductFlavorContainer} for the 'main' default config.
      *
      * @return the product flavor.
      */
@@ -129,7 +121,7 @@ public interface IdeAndroidProject extends Serializable {
     IdeProductFlavorContainer getDefaultConfig();
 
     /**
-     * Returns a list of all the {@link BuildType} in their container.
+     * Returns a list of all the {@link IdeBuildType} in their container.
      *
      * @return a list of build type containers.
      */
@@ -137,7 +129,7 @@ public interface IdeAndroidProject extends Serializable {
     Collection<IdeBuildTypeContainer> getBuildTypes();
 
     /**
-     * Returns a list of all the {@link ProductFlavor} in their container.
+     * Returns a list of all the {@link IdeProductFlavor} in their container.
      *
      * @return a list of product flavor containers.
      */
@@ -204,13 +196,13 @@ public interface IdeAndroidProject extends Serializable {
     @NonNull
     Collection<String> getBootClasspath();
 
-    /** Returns a list of {@link SigningConfig}. */
+    /** Returns a list of {@link IdeSigningConfig}. */
     @NonNull
-    Collection<SigningConfig> getSigningConfigs();
+    Collection<IdeSigningConfig> getSigningConfigs();
 
     /** Returns the aapt options. */
     @NonNull
-    AaptOptions getAaptOptions();
+    IdeAaptOptions getAaptOptions();
 
     /** Returns the lint options. */
     @NonNull
@@ -238,11 +230,11 @@ public interface IdeAndroidProject extends Serializable {
      * set to {@code true}.
      */
     @NonNull
-    Collection<SyncIssue> getSyncIssues();
+    Collection<IdeSyncIssue> getSyncIssues();
 
     /** Returns the compile options for Java code. */
     @NonNull
-    JavaCompileOptions getJavaCompileOptions();
+    IdeJavaCompileOptions getJavaCompileOptions();
 
     /** Returns the build folder of this project. */
     @NonNull
@@ -295,7 +287,7 @@ public interface IdeAndroidProject extends Serializable {
     Collection<String> getDynamicFeatures();
 
     @Nullable
-    ViewBindingOptions getViewBindingOptions();
+    IdeViewBindingOptions getViewBindingOptions();
 
     @Nullable
     IdeDependenciesInfo getDependenciesInfo();

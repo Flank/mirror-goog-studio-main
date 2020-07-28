@@ -17,21 +17,21 @@ package com.android.ide.common.gradle.model.impl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.NativeToolchain;
-import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
-import com.android.builder.model.ViewBindingOptions;
+import com.android.ide.common.gradle.model.IdeAaptOptions;
 import com.android.ide.common.gradle.model.IdeAndroidGradlePluginProjectFlags;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeBuildTypeContainer;
 import com.android.ide.common.gradle.model.IdeDependenciesInfo;
+import com.android.ide.common.gradle.model.IdeJavaCompileOptions;
 import com.android.ide.common.gradle.model.IdeLintOptions;
 import com.android.ide.common.gradle.model.IdeModel;
 import com.android.ide.common.gradle.model.IdeProductFlavorContainer;
+import com.android.ide.common.gradle.model.IdeSigningConfig;
+import com.android.ide.common.gradle.model.IdeSyncIssue;
 import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.ide.common.gradle.model.IdeVariantBuildInformation;
 import com.android.ide.common.gradle.model.IdeViewBindingOptions;
@@ -67,7 +67,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     @NonNull private final IdeProductFlavorContainer myDefaultConfig;
     @NonNull private final Collection<IdeBuildTypeContainer> myBuildTypes;
     @NonNull private final Collection<IdeProductFlavorContainer> myProductFlavors;
-    @NonNull private final Collection<SyncIssue> mySyncIssues;
+    @NonNull private final Collection<IdeSyncIssue> mySyncIssues;
     @NonNull private final Collection<IdeVariant> myVariants;
     @NonNull private final Collection<String> myVariantNames;
     @Nullable private final String myDefaultVariant;
@@ -75,16 +75,16 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     @NonNull private final String myCompileTarget;
     @NonNull private final Collection<String> myBootClassPath;
     @NonNull private final Collection<NativeToolchain> myNativeToolchains;
-    @NonNull private final Collection<SigningConfig> mySigningConfigs;
+    @NonNull private final Collection<IdeSigningConfig> mySigningConfigs;
     @NonNull private final IdeLintOptions myLintOptions;
     @Nullable private final List<File> myLintRuleJars;
     @NonNull private final Set<String> myUnresolvedDependencies;
-    @NonNull private final JavaCompileOptions myJavaCompileOptions;
-    @NonNull private final AaptOptions myAaptOptions;
+    @NonNull private final IdeJavaCompileOptions myJavaCompileOptions;
+    @NonNull private final IdeAaptOptions myAaptOptions;
     @NonNull private final File myBuildFolder;
     @NonNull private final Collection<String> myDynamicFeatures;
     @NonNull private final Collection<IdeVariantBuildInformation> myVariantBuildInformation;
-    @Nullable private final ViewBindingOptions myViewBindingOptions;
+    @Nullable private final IdeViewBindingOptions myViewBindingOptions;
     @Nullable private final IdeDependenciesInfo myDependenciesInfo;
     @Nullable private final GradleVersion myParsedModelVersion;
     @Nullable private final String myBuildToolsVersion;
@@ -139,7 +139,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                         modelCache,
                         container -> new IdeProductFlavorContainerImpl(container, modelCache));
 
-        Collection<SyncIssue> syncIssuesCopy =
+        Collection<IdeSyncIssue> syncIssuesCopy =
                 new ArrayList<>(IdeModel.copy(syncIssues, modelCache, IdeSyncIssueImpl::new));
 
         Collection<IdeVariant> variantsCopy =
@@ -177,7 +177,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                         modelCache,
                         toolChain -> new IdeNativeToolchainImpl(toolChain));
 
-        Collection<SigningConfig> signingConfigsCopy =
+        Collection<IdeSigningConfig> signingConfigsCopy =
                 IdeModel.copy(
                         project.getSigningConfigs(),
                         modelCache,
@@ -332,7 +332,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             @NonNull IdeProductFlavorContainer defaultConfig,
             @NonNull Collection<IdeBuildTypeContainer> buildTypes,
             @NonNull Collection<IdeProductFlavorContainer> productFlavors,
-            @NonNull Collection<SyncIssue> syncIssues,
+            @NonNull Collection<IdeSyncIssue> syncIssues,
             @NonNull Collection<IdeVariant> variants,
             @NonNull Collection<String> variantNames,
             @Nullable String defaultVariant,
@@ -340,16 +340,16 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             @NonNull String compileTarget,
             @NonNull Collection<String> bootClassPath,
             @NonNull Collection<NativeToolchain> nativeToolchains,
-            @NonNull Collection<SigningConfig> signingConfigs,
+            @NonNull Collection<IdeSigningConfig> signingConfigs,
             @NonNull IdeLintOptions lintOptions,
             @Nullable List<File> lintRuleJars,
             @NonNull Set<String> unresolvedDependencies,
-            @NonNull JavaCompileOptions javaCompileOptions,
-            @NonNull AaptOptions aaptOptions,
+            @NonNull IdeJavaCompileOptions javaCompileOptions,
+            @NonNull IdeAaptOptions aaptOptions,
             @NonNull File buildFolder,
             @NonNull Collection<String> dynamicFeatures,
             @NonNull Collection<IdeVariantBuildInformation> variantBuildInformation,
-            @Nullable ViewBindingOptions viewBindingOptions,
+            @Nullable IdeViewBindingOptions viewBindingOptions,
             @Nullable IdeDependenciesInfo dependenciesInfo,
             @Nullable String buildToolsVersion,
             @Nullable String ndkVersion,
@@ -503,7 +503,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
 
     @Override
     @NonNull
-    public Collection<SyncIssue> getSyncIssues() {
+    public Collection<IdeSyncIssue> getSyncIssues() {
         return ImmutableList.copyOf(mySyncIssues);
     }
 
@@ -545,13 +545,13 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
 
     @Override
     @NonNull
-    public AaptOptions getAaptOptions() {
+    public IdeAaptOptions getAaptOptions() {
         return myAaptOptions;
     }
 
     @Override
     @NonNull
-    public Collection<SigningConfig> getSigningConfigs() {
+    public Collection<IdeSigningConfig> getSigningConfigs() {
         return mySigningConfigs;
     }
 
@@ -570,7 +570,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
 
     @Override
     @NonNull
-    public JavaCompileOptions getJavaCompileOptions() {
+    public IdeJavaCompileOptions getJavaCompileOptions() {
         return myJavaCompileOptions;
     }
 
@@ -609,7 +609,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
 
     @Nullable
     @Override
-    public ViewBindingOptions getViewBindingOptions() {
+    public IdeViewBindingOptions getViewBindingOptions() {
         return myViewBindingOptions;
     }
 

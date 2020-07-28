@@ -19,12 +19,11 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
-import com.android.builder.model.ClassField;
 import com.android.builder.model.CodeShrinker;
 import com.android.builder.model.NativeLibrary;
-import com.android.builder.model.TestOptions;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
+import com.android.ide.common.gradle.model.IdeClassField;
 import com.android.ide.common.gradle.model.IdeInstantRun;
 import com.android.ide.common.gradle.model.IdeModel;
 import com.android.ide.common.gradle.model.IdeTestOptions;
@@ -191,7 +190,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
 
     @Override
     @NonNull
-    public Map<String, ClassField> getResValues() {
+    public Map<String, IdeClassField> getResValues() {
         return Collections.emptyMap();
     }
 
@@ -213,7 +212,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
 
     @Override
     @Nullable
-    public TestOptions getTestOptions() {
+    public IdeTestOptions getTestOptions() {
         return myTestOptions;
     }
 
