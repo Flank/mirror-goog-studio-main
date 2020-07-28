@@ -19,6 +19,7 @@
 
 #include <fcntl.h>
 #include <stddef.h>
+#include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -122,6 +123,10 @@ bool WriteFile(const std::string& file_path, const T& content) {
     return false;
   }
 
+  if (flock(fd, LOCK_EX)) {
+    return false;
+  }
+
   size_t count = 0;
   while (count < content.size()) {
     ssize_t len = write(fd, content.data() + count, content.size() - count);
@@ -133,6 +138,7 @@ bool WriteFile(const std::string& file_path, const T& content) {
     count += len;
   }
 
+  // This also releases the advisory lock on the file.
   close(fd);
   if (count < content.size()) {
     ErrEvent("Failed to write all bytes of file '" + file_path + "'");
