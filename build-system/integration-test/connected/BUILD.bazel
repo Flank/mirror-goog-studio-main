@@ -76,7 +76,6 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA,
     maven_repos = TEST_MAVEN_REPOS,
-    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -85,7 +84,6 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA,
     maven_repos = TEST_MAVEN_REPOS,
-    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -94,7 +92,6 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/api"],
     maven_repos = TEST_MAVEN_REPOS,
-    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -103,7 +100,6 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/basic"],
     maven_repos = TEST_MAVEN_REPOS,
-    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -112,7 +108,6 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/basic"],
     maven_repos = TEST_MAVEN_REPOS,
-    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -121,7 +116,6 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/composeHelloWorld"],
     maven_repos = TEST_MAVEN_REPOS,
-    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -130,7 +124,6 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA,
     maven_repos = TEST_MAVEN_REPOS,
-    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -139,7 +132,6 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/densitySplit"],
     maven_repos = TEST_MAVEN_REPOS,
-    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -148,7 +140,6 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/flavored"],
     maven_repos = TEST_MAVEN_REPOS,
-    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -157,7 +148,6 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/parentLibsTest"],
     maven_repos = TEST_MAVEN_REPOS,
-    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -169,7 +159,7 @@ gradle_connected_test(
         "//prebuilts/tools/common/mlkit/testData",
     ],
     maven_repos = TEST_MAVEN_REPOS,
-    tags = ["manual"],  # b/149226404
+    tags = ["manual"],  # b/162323560
     deps = TEST_DEPS,
 )
 
@@ -215,6 +205,7 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/androidx/constraintlayout/constraintlayout/2.0.0-beta4:aar",
         "//prebuilts/tools/common/m2/repository/androidx/core/core-ktx/1.1.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/core/core/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/core/core/1.2.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/dynamicanimation/dynamicanimation/1.0.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/fragment/fragment/1.1.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/lifecycle/lifecycle-common/2.1.0:jar",
@@ -274,9 +265,31 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.7.9:jar",
         "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.7.4.201502262128:jar",
         "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.7.9:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions-runtime/1.3.70:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions/1.3.70:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-build-common/1.3.70:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-embeddable/1.3.70-dev-withExperimentalGoogleExtensions-20200424:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-runner/1.3.70:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-daemon-client/1.3.70:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-daemon-embeddable/1.3.70:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-gradle-plugin-api/1.3.70:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-gradle-plugin-model/1.3.70:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-native-utils/1.3.70:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.3.70:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-script-runtime/1.3.70:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-scripting-common/1.3.70:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-scripting-compiler-embeddable/1.3.70:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-scripting-compiler-impl-embeddable/1.3.70:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-scripting-jvm/1.3.70:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-common/1.3.70:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-common/1.3.71:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.3.70:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.3.70:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.3.71:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-util-io/1.3.70:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-collections-immutable-jvm/0.3:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.3.6:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core-common/1.3.6:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.3.6:jar",
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/5.0.1:jar",
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-debug-all/5.0.1:jar",
