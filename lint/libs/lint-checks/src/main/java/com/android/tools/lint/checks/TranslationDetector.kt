@@ -859,7 +859,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
                 which is only referenced from some other resource with the same qualifiers \
                 (such as a `-fr` style), which itself has safe fallbacks. However, this still \
                 makes it possible for somebody to accidentally reference the drawable and \
-                crash, so it is safer to create a default dummy fallback in the base folder. \
+                crash, so it is safer to create a default fallback in the base folder. \
                 Alternatively, you can suppress the issue by adding \
                 `tools:ignore="MissingDefaultResource"` on the element.
 

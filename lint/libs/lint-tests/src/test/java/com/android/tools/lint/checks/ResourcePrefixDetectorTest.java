@@ -239,8 +239,8 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         ProjectDescription main =
                 project(
-                        // Master project
-                        manifest().pkg("foo.master").minSdk(14),
+                        // Main project
+                        manifest().pkg("foo.main").minSdk(14),
                         java(
                                 ""
                                         + "package foo.main;\n"
@@ -274,7 +274,7 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
     }
 
     public void testSuppressGeneratedRs() {
-        lint().files(source("res/raw/blend.bc", "dummy file")).run().expectClean();
+        lint().files(source("res/raw/blend.bc", "placeholder file")).run().expectClean();
     }
 
     public void testAndroidPrefix() {

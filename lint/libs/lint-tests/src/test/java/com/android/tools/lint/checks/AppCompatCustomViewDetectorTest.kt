@@ -40,7 +40,6 @@ class AppCompatCustomViewDetectorTest : AbstractCheckTest() {
         """
     ).indented()
 
-    // Dummy file
     private val appCompatJar = jar("libs/appcompat-v7-18.0.0.jar")
 
     override fun getDetector(): Detector {

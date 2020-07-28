@@ -928,7 +928,7 @@ class MissingClassDetectorTest : AbstractCheckTest() {
             public void onReceive(Context context, Intent intent) {
             }
            // Anonymous classes should NOT be counted as a must-register
-            private BroadcastReceiver dummy() {
+            private BroadcastReceiver sample() {
                 return new BroadcastReceiver() {
                     @Override
                     public void onReceive(Context context, Intent intent) {

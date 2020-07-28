@@ -87,10 +87,10 @@ public class ReadWriteThreadLockTest {
         assertThat(barObject).isNotSameAs(lock1);
     }
 
-    /** Dummy class used by {@link #testLockObjectClassLoadedOnlyOnce}. */
+    /** Sample class used by {@link #testLockObjectClassLoadedOnlyOnce}. */
     private static class Foo {}
 
-    /** Dummy class used by {@link #testLockObjectClassLoadedOnlyOnce}. */
+    /** Sample class used by {@link #testLockObjectClassLoadedOnlyOnce}. */
     private static class Bar {}
 
     @Test

@@ -2837,7 +2837,7 @@ class VersionChecksTest : AbstractCheckTest() {
                     }
 
                     @ChecksSdkIntAtLeast(parameter = 2)
-                    public static boolean getVersionCheck3(String dummy, boolean dummy2, int apiLevel) {
+                    public static boolean getVersionCheck3(String sample, boolean sample2, int apiLevel) {
                         return false;
                     }
 

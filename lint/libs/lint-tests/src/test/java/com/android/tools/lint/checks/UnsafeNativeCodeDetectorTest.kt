@@ -64,7 +64,7 @@ class UnsafeNativeCodeDetectorTest : AbstractCheckTest() {
     }
 
     fun testNativeCode() {
-        val dummyBytesWithElfHeader = byteArrayOf(
+        val bytesWithElfHeader = byteArrayOf(
             0x7F.toByte(),
             0x45.toByte(),
             0x4C.toByte(),
@@ -72,12 +72,12 @@ class UnsafeNativeCodeDetectorTest : AbstractCheckTest() {
             0
         )
         lint().files(
-            bytes("res/raw/hello", dummyBytesWithElfHeader),
-            bytes("res/raw/libhello-jni.so", dummyBytesWithElfHeader),
-            bytes("assets/hello", dummyBytesWithElfHeader),
-            bytes("assets/libhello-jni.so", dummyBytesWithElfHeader),
-            bytes("lib/armeabi/hello", dummyBytesWithElfHeader),
-            bytes("lib/armeabi/libhello-jni.so", dummyBytesWithElfHeader)
+            bytes("res/raw/hello", bytesWithElfHeader),
+            bytes("res/raw/libhello-jni.so", bytesWithElfHeader),
+            bytes("assets/hello", bytesWithElfHeader),
+            bytes("assets/libhello-jni.so", bytesWithElfHeader),
+            bytes("lib/armeabi/hello", bytesWithElfHeader),
+            bytes("lib/armeabi/libhello-jni.so", bytesWithElfHeader)
         ).run().expect(
             """
             assets/hello: Warning: Embedding non-shared library native executables into applications should be avoided when possible, as there is an increased risk that the executables could be tampered with after installation. Instead, native code should be placed in a shared library, and the features of the development environment should be used to place the shared library in the lib directory of the compiled APK. [UnsafeNativeCodeLocation]
@@ -90,7 +90,7 @@ class UnsafeNativeCodeDetectorTest : AbstractCheckTest() {
     }
 
     fun testNoWorkInInteractiveMode() {
-        val dummyBytesWithElfHeader = byteArrayOf(
+        val bytesWithElfHeader = byteArrayOf(
             0x7F.toByte(),
             0x45.toByte(),
             0x4C.toByte(),
@@ -105,12 +105,12 @@ class UnsafeNativeCodeDetectorTest : AbstractCheckTest() {
                 "src/test/pkg/Load.java",
                 "package test.pkg;\npublic class Load { }\n"
             ),
-            bytes("res/raw/hello", dummyBytesWithElfHeader),
-            bytes("res/raw/libhello-jni.so", dummyBytesWithElfHeader),
-            bytes("assets/hello", dummyBytesWithElfHeader),
-            bytes("assets/libhello-jni.so", dummyBytesWithElfHeader),
-            bytes("lib/armeabi/hello", dummyBytesWithElfHeader),
-            bytes("lib/armeabi/libhello-jni.so", dummyBytesWithElfHeader)
+            bytes("res/raw/hello", bytesWithElfHeader),
+            bytes("res/raw/libhello-jni.so", bytesWithElfHeader),
+            bytes("assets/hello", bytesWithElfHeader),
+            bytes("assets/libhello-jni.so", bytesWithElfHeader),
+            bytes("lib/armeabi/hello", bytesWithElfHeader),
+            bytes("lib/armeabi/libhello-jni.so", bytesWithElfHeader)
         ).incremental("src/test/pkg/Load.java").run().expectClean()
     }
 }

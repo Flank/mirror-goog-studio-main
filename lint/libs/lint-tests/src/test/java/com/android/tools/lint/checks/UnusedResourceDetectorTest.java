@@ -238,8 +238,8 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
 
     public void testMultiProjectIgnoreLibraries() {
         lint().files(
-                        // Master project
-                        manifest().pkg("foo.master").minSdk(14),
+                        // Main project
+                        manifest().pkg("foo.Main").minSdk(14),
                         projectProperties()
                                 .property("android.library.reference.1", "../LibraryProject"),
                         java(
@@ -483,20 +483,20 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                 mLibraryCode,
                                 mLibraryStrings)
                         .name("LibraryProject");
-        ProjectDescription master =
+        ProjectDescription main =
                 project(
-                                // Master project
-                                manifest().pkg("foo.master").minSdk(14),
+                                // Main project
+                                manifest().pkg("foo.main").minSdk(14),
                                 projectProperties()
                                         .property(
                                                 "android.library.reference.1", "../LibraryProject")
                                         .property("manifestmerger.enabled", "true"),
                                 mMainCode)
-                        .name("MasterProject")
+                        .name("MainProject")
                         .dependsOn(library);
         // The strings are all referenced in the library project's manifest file
         // which in this project is merged in
-        lint().projects(library, master).run().expectClean();
+        lint().projects(library, main).run().expectClean();
     }
 
     public void testCornerCase() {
@@ -2071,7 +2071,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                             + "            </intent-filter>\n"
                             + "        </activity>\n"
                             + "\n"
-                            + "        <!-- Dummy string references for unused resource check -->\n"
+                            + "        <!-- Sample string references for unused resource check -->\n"
                             + "        <meta-data\n"
                             + "            android:name=\"com.google.android.backup.api_key\"\n"
                             + "            android:value=\"@string/string3\" />\n"

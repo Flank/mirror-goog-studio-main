@@ -71,7 +71,7 @@ open class LintClassLoaderProvider {
             uriMap.remove(name)
         }
 
-        // Convert to URLs (and sanity check the result)
+        // Convert to URLs (and check the result)
         val urls = ArrayList<URL>(uriMap.size)
         var seenLint = false
         for ((name, uri) in uriMap) {

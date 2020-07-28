@@ -357,7 +357,7 @@ public class DeviceManagerTest {
     public final void testGetDevices_SysImgDevice() throws Exception {
 
         File location = sdkManager.getSdkHandler().getLocation();
-        FakePackage.FakeLocalPackage p = new FakePackage.FakeLocalPackage("dummy");
+        FakePackage.FakeLocalPackage p = new FakePackage.FakeLocalPackage("sample");
 
         // Create a system image directory with one device
         DetailsTypes.AddonDetailsType details = AndroidSdkHandler.getAddonModule()
@@ -573,7 +573,7 @@ public class DeviceManagerTest {
     @Test
     public final void testDeviceOverrides() throws Exception {
         File location = sdkManager.getSdkHandler().getLocation();
-        FakePackage.FakeLocalPackage p = new FakePackage.FakeLocalPackage("dummy");
+        FakePackage.FakeLocalPackage p = new FakePackage.FakeLocalPackage("sample");
 
         // Create a local DeviceManager, get the number of devices, and verify one device
         DeviceManager localDeviceManager = createDeviceManager();

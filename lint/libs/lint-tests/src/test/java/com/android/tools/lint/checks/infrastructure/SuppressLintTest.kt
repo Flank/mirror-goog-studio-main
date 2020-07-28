@@ -345,7 +345,7 @@ class SuppressLintTest {
             )
     }
 
-    // Dummy detector which just flags calls to a method called "forbidden"
+    // Sample detector which just flags calls to a method called "forbidden"
     @SuppressWarnings("ALL")
     class MySecurityDetector : Detector(), Detector.UastScanner {
         override fun getApplicableUastTypes() = listOf(UImportStatement::class.java)

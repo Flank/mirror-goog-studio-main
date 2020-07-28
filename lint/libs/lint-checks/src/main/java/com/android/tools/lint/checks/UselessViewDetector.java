@@ -138,7 +138,7 @@ public class UselessViewDetector extends LayoutDetector {
             // Check to see if this is a leaf layout that can be removed
             checkUselessLeaf(context, element);
         } else {
-            // Check to see if this is a middle-man layout which can be removed
+            // Check to see if this is a middle layout which can be removed
             checkUselessMiddleLayout(context, element);
         }
     }

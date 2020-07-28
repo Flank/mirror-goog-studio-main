@@ -227,7 +227,7 @@ private class ProjectInitializer(
         val document = client.xmlParser.parseXml(file)
 
         if (document == null || document.documentElement == null) {
-            // Lint isn't quite up and running yet, so create a dummy context
+            // Lint isn't quite up and running yet, so create a placeholder context
             // in order to be able to report an error
             reportError("Failed to parse project descriptor $file")
             return ProjectMetadata()
@@ -241,7 +241,7 @@ private class ProjectInitializer(
         // To report an error using the lint infrastructure, we have to have
         // an associated "project", but there isn't an actual project yet
         // (that's what this whole class is attempting to compute and initialize).
-        // Therefore, we'll make a dummy project. A project has to have an
+        // Therefore, we'll make a placeholder project. A project has to have an
         // associated directory, so we'll just randomly pick the folder containing
         // the project.xml folder itself. (In case it's not a full path, e.g.
         // just "project.xml", get the current directory instead.)

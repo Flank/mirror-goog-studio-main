@@ -643,7 +643,7 @@ public class AvdManagerTest extends TestCase {
         fop.recordExistingFile("/sdk/system-images/android-21/default/x86/"
                         + AvdManager.USERDATA_IMG);
         fop.recordExistingFile("/sdk/system-images/android-21/default/x86/skins/res1/layout");
-        fop.recordExistingFile("/sdk/system-images/android-21/default/x86/skins/dummy");
+        fop.recordExistingFile("/sdk/system-images/android-21/default/x86/skins/sample");
         fop.recordExistingFile("/sdk/system-images/android-21/default/x86/skins/res2/layout");
         fop.recordExistingFile("/sdk/system-images/android-21/default/x86/package.xml",
                                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
@@ -669,7 +669,7 @@ public class AvdManagerTest extends TestCase {
         // Include data/ directory, but no userdata.img file
         fop.mkdirs(new File("/sdk/system-images/android-23/default/x86/data"));
         fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/res1/layout");
-        fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/dummy");
+        fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/sample");
         fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/res2/layout");
         fop.recordExistingFile("/sdk/system-images/android-23/default/x86/package.xml",
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"

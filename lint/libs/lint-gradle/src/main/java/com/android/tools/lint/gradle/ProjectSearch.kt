@@ -340,7 +340,7 @@ class ProjectSearch {
         libraryProjectsByCoordinate[coordinates] = project
         for (dependentItem in libraryItem.dependencies) {
             val dependent = dependentItem.findLibrary() ?: continue
-            // just a sanity check; Java libraries cannot depend on Android libraries
+            // just a validity check; Java libraries cannot depend on Android libraries
             if (dependent is LintModelJavaLibrary) {
                 project.addDirectLibrary(
                     getLibrary(client, dependentItem, dependent)

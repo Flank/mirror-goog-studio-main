@@ -115,7 +115,7 @@ public class SystemImageManagerTest extends TestCase {
         fop.recordExistingFile("/sdk/platforms/android-13/android.jar");
         fop.recordExistingFile("/sdk/platforms/android-13/framework.aidl");
         fop.recordExistingFile("/sdk/platforms/android-13/skins/HVGA/layout");
-        fop.recordExistingFile("/sdk/platforms/android-13/skins/dummy.txt");
+        fop.recordExistingFile("/sdk/platforms/android-13/skins/sample.txt");
         fop.recordExistingFile("/sdk/platforms/android-13/skins/WVGA800/layout");
         fop.recordExistingFile("/sdk/platforms/android-13/sdk.properties",
                                "sdk.ant.templates.revision=1\n" +
@@ -159,7 +159,7 @@ public class SystemImageManagerTest extends TestCase {
                         + "<uses-license ref=\"license-A06C75BE\"/></localPackage>"
                         + "</ns5:sdk-addon>\n");
         fop.recordExistingFile("/sdk/add-ons/addon-google_tv_addon-google-13/skins/1080p/layout");
-        fop.recordExistingFile("/sdk/add-ons/addon-google_tv_addon-google-13/skins/dummy.txt");
+        fop.recordExistingFile("/sdk/add-ons/addon-google_tv_addon-google-13/skins/sample.txt");
         fop.recordExistingFile("/sdk/add-ons/addon-google_tv_addon-google-13/skins/720p-overscan/layout");
         fop.recordExistingFile("/sdk/add-ons/addon-google_tv_addon-google-13/images/x86/system.img");
     }
@@ -167,7 +167,7 @@ public class SystemImageManagerTest extends TestCase {
     private static void recordSysImg23(MockFileOp fop) {
         fop.recordExistingFile("/sdk/system-images/android-23/default/x86/system.img");
         fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/res1/layout");
-        fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/dummy");
+        fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/sample");
         fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/res2/layout");
 
         fop.recordExistingFile("/sdk/system-images/android-23/default/x86/package.xml",

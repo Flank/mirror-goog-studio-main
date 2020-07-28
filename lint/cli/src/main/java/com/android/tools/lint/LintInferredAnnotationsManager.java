@@ -23,7 +23,7 @@ import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiModifierListOwner;
 
 /**
- * Dummy implementation. Some annotation lookup insists on calling into the
+ * Empty implementation. Some annotation lookup insists on calling into the
  * InferredAnnotationsManager; prevent that from throwing exceptions.
  *
  * <pre>

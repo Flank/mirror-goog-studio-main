@@ -55,7 +55,7 @@ class UastTest : TestCase() {
         assertNotNull(uastFile)
         check(uastFile!!)
 
-        // Sanity check: everything should be convertible
+        // Validity check: everything should be convertible
         pair.first.psiFile?.accept(object : PsiRecursiveElementVisitor() {
             override fun visitElement(element: PsiElement) {
                 try {

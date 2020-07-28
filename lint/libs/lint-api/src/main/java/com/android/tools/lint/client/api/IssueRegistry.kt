@@ -373,7 +373,7 @@ protected constructor() {
         private var cachedIdToIssue: Map<String, Issue>? = null
         private var cachedScopeIssues: MutableMap<EnumSet<Scope>, List<Issue>> = Maps.newHashMap()
 
-        private val DUMMY_IMPLEMENTATION = Implementation(
+        private val EMPTY_IMPLEMENTATION = Implementation(
             Detector::class.java,
             EnumSet.noneOf(Scope::class.java)
         )
@@ -393,7 +393,7 @@ protected constructor() {
             category = Category.LINT,
             priority = 10,
             severity = Severity.ERROR,
-            implementation = DUMMY_IMPLEMENTATION
+            implementation = EMPTY_IMPLEMENTATION
         )
 
         /**
@@ -416,7 +416,7 @@ protected constructor() {
             category = Category.LINT,
             priority = 10,
             severity = Severity.ERROR,
-            implementation = DUMMY_IMPLEMENTATION
+            implementation = EMPTY_IMPLEMENTATION
         )
 
         /**
@@ -434,7 +434,7 @@ protected constructor() {
             category = Category.LINT,
             priority = 1,
             severity = Severity.WARNING,
-            implementation = DUMMY_IMPLEMENTATION
+            implementation = EMPTY_IMPLEMENTATION
         )
 
         /**
@@ -448,7 +448,7 @@ protected constructor() {
             category = Category.LINT,
             priority = 0,
             severity = Severity.INFORMATIONAL,
-            implementation = DUMMY_IMPLEMENTATION
+            implementation = EMPTY_IMPLEMENTATION
         )
 
         /**
@@ -481,7 +481,7 @@ protected constructor() {
             category = Category.LINT,
             priority = 10,
             severity = Severity.INFORMATIONAL,
-            implementation = DUMMY_IMPLEMENTATION
+            implementation = EMPTY_IMPLEMENTATION
         )
 
         /**
@@ -510,7 +510,7 @@ protected constructor() {
             category = Category.LINT,
             priority = 10,
             severity = Severity.WARNING,
-            implementation = DUMMY_IMPLEMENTATION
+            implementation = EMPTY_IMPLEMENTATION
         )
 
         /**

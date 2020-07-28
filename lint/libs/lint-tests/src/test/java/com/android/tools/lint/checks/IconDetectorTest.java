@@ -84,7 +84,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                                 .fill(10, 10, 20, 20, 0xFF00FFFF),
                         image("res/drawable-mdpi/sample_icon.gif", 48, 48)
                                 .fill(10, 10, 20, 20, 0xFF00FFFF),
-                        // Make a dummy file named .svn to make sure it doesn't get seen as
+                        // Make a placeholder file named .svn to make sure it doesn't get seen as
                         // an icon name
                         source("res/drawable-hdpi/.svn", ""),
                         image("res/drawable-hdpi/ic_launcher.png", 72, 72)

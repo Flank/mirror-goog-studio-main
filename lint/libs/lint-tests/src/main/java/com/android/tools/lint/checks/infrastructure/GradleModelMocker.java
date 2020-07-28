@@ -861,9 +861,9 @@ public class GradleModelMocker {
             try (JarOutputStream jarOutputStream =
                     new JarOutputStream(
                             new BufferedOutputStream(new FileOutputStream(jar)), manifest)) {
-                jarOutputStream.putNextEntry(new ZipEntry("dummy.txt"));
+                jarOutputStream.putNextEntry(new ZipEntry("sample.txt"));
                 ByteStreams.copy(
-                        new ByteArrayInputStream("Dummy".getBytes(Charsets.UTF_8)),
+                        new ByteArrayInputStream("Sample".getBytes(Charsets.UTF_8)),
                         jarOutputStream);
                 jarOutputStream.closeEntry();
             } catch (IOException e) {

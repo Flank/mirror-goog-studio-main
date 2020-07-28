@@ -265,7 +265,7 @@ res/values-fil: Error: The app will crash on platforms older than v21 (minSdkVer
     <string name="menu_wallpaper">Wallpaper</string>
     <string name="menu_search">Search</string>
     <string name="menu_settings">Settings</string>
-    <string name="dummy" translatable="false">Ignore Me</string>
+    <string name="sample" translatable="false">Ignore Me</string>
 
     <!-- Wallpaper -->
     <string name="wallpaper_instructions">Tap picture to set portrait wallpaper</string>

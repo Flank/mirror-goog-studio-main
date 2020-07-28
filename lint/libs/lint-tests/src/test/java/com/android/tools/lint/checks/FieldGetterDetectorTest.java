@@ -126,7 +126,7 @@ public class FieldGetterDetectorTest extends AbstractCheckTest {
                                         + "    public void test(TestFieldGetter other) {\n"
                                         + "        getPath(); // Should be flagged\n"
                                         + "        other.getPath(); // Ignore\n"
-                                        + "        File file = new File(\"/dummy\");\n"
+                                        + "        File file = new File(\"/sample\");\n"
                                         + "        file.getPath(); // Ignore\n"
                                         + "    }\n"
                                         + "\n"

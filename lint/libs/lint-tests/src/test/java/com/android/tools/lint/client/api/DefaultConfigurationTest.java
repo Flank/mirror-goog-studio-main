@@ -543,7 +543,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
                         ObsoleteLayoutParamsDetector.ISSUE,
                         Location.create(windowsFile),
                         ""));
-        // directory whitelist
+        // directory allowlist
         assertTrue(
                 configuration.isIgnored(
                         landscapeContext,

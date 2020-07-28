@@ -132,7 +132,7 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
                             + "import android.app.Activity;\n"
                             + "import android.support.v7.view.ActionMode;\n"
                             + "/**\n"
-                            + " * Just a dumb stub for unit test\n"
+                            + " * Just a stub for unit test\n"
                             + " */\n"
                             + "public class ActionBarActivity extends Activity {\n"
                             + "    protected ActionBar getSupportActionBar() {\n"
@@ -198,7 +198,6 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
                             + "    }\n"
                             + "}\n");
 
-    // Dummy file
     private final JarTestFile mAppCompatJar = jar("libs/appcompat-v7-18.0.0.jar");
 
     @SuppressWarnings("all") // Sample code

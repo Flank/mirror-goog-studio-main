@@ -599,7 +599,7 @@ class ProjectInitializerTest {
                 </resources>"""
             ).indented(),
             bytes(
-                "res/raw/dummy.txt",
+                "res/raw/sample.txt",
                 "a\uFEFFb".toByteArray()
             )
         ).createProjects(root)
@@ -613,7 +613,7 @@ class ProjectInitializerTest {
             <root dir="$projectDir" />
             <module name="M" android="true" library="true">
                 <manifest file="AndroidManifest.xml" />
-                <resource file="res/raw/dummy.txt" />
+                <resource file="res/raw/sample.txt" />
                 <resource file="res/values/strings.xml" />
                 <src file="src/main/pkg/MainActivity.java" />
             </module>

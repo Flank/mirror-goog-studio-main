@@ -98,7 +98,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     }
 
     public void testMissingUsesSdkInGradle() {
-        lint().files(mMissingusessdk, mLibrary) // dummy; only name counts
+        lint().files(mMissingusessdk, mLibrary) // placeholder; only name counts
                 .issues(ManifestDetector.SET_VERSION)
                 .run()
                 .expectClean();
@@ -434,7 +434,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                 mLibraryCode,
                                 mLibraryStrings)
                         .name("LibraryProject");
-        ProjectDescription master =
+        ProjectDescription main =
                 project(
                                 manifest().minSdk(14),
                                 projectProperties()
@@ -442,9 +442,9 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                                 "android.library.reference.1", "../LibraryProject")
                                         .property("manifestmerger.enabled", "true"),
                                 mMainCode)
-                        .name("MasterProject")
+                        .name("MainProject")
                         .dependsOn(library);
-        lint().projects(library, master)
+        lint().projects(library, main)
                 .issues(ManifestDetector.DUPLICATE_ACTIVITY)
                 .run()
                 .expectClean();
@@ -850,7 +850,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     }
 
     public void testVersionNotMissingInGradleProjects() {
-        lint().files(mNo_version, mLibrary) // dummy; only name counts
+        lint().files(mNo_version, mLibrary) // placeholder; only name counts
                 .issues(ManifestDetector.SET_VERSION)
                 .run()
                 .expectClean();
@@ -2200,7 +2200,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                             + "    <string name=\"menu_wallpaper\">Wallpaper</string>\n"
                             + "    <string name=\"menu_search\">Search</string>\n"
                             + "    <string name=\"menu_settings\">Settings</string>\n"
-                            + "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n"
+                            + "    <string name=\"sample\" translatable=\"false\">Ignore Me</string>\n"
                             + "\n"
                             + "    <!-- Wallpaper -->\n"
                             + "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n"

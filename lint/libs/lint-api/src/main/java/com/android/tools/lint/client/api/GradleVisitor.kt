@@ -33,7 +33,7 @@ open class GradleVisitor {
      * are run.
      */
     open fun visitBuildScript(context: GradleContext, detectors: List<GradleScanner>) {
-        // Dummy implementation. This class is overridden in modules which have
+        // Empty implementation. This class is overridden in modules which have
         // access to Groovy (e.g. the Groovy parser itself from Gradle and the
         // test infrastructure, the Gradle PSI model in the IDE, etc.
     }

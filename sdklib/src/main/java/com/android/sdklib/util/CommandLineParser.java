@@ -343,13 +343,13 @@ public class CommandLineParser {
                             if (arg.getMode() != Mode.STRING_ARRAY) {
                                 // We never accept something that looks like a valid argument
                                 // unless we see -- first
-                                Arg dummyArg = null;
+                                Arg sampleArg = null;
                                 if (b.startsWith("--")) {                              //$NON-NLS-1$
-                                    dummyArg = findLongArg(verb, directObject, b.substring(2));
+                                    sampleArg = findLongArg(verb, directObject, b.substring(2));
                                 } else if (b.startsWith("-")) {                        //$NON-NLS-1$
-                                    dummyArg = findShortArg(verb, directObject, b.substring(1));
+                                    sampleArg = findShortArg(verb, directObject, b.substring(1));
                                 }
-                                if (dummyArg != null) {
+                                if (sampleArg != null) {
                                     errorMsg = String.format(
                                             "Oops, it looks like you didn't provide an argument for '%1$s'.\n'%2$s' was found instead.",
                                             a, b);

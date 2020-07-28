@@ -209,7 +209,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 return
             }
 
-            // Sanity check (since Kotlin UAST creates several light classes around
+            // Validity check (since Kotlin UAST creates several light classes around
             // PSI files that sometimes fail equality tests)
             if (containingFile1?.virtualFile == containingFile2.virtualFile) {
                 return

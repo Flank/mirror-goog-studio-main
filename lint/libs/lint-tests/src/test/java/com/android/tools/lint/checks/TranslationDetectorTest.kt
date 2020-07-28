@@ -195,7 +195,7 @@ class TranslationDetectorTest : AbstractCheckTest() {
             "    <string name=\"menu_wallpaper\">Wallpaper</string>\n" +
             "    <string name=\"menu_search\">Search</string>\n" +
             "    <string name=\"menu_settings\">Settings</string>\n" +
-            "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n" +
+            "    <string name=\"sample\" translatable=\"false\">Ignore Me</string>\n" +
             "\n" +
             "    <!-- Wallpaper -->\n" +
             "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n" +
@@ -483,7 +483,7 @@ class TranslationDetectorTest : AbstractCheckTest() {
                         "    <string name=\"menu_wallpaper\" tools:ignore=\"MissingTranslation\">Wallpaper</string>\n" +
                         "    <string name=\"menu_search\">Search</string>\n" +
                         "    <string name=\"menu_settings\" tools:ignore=\"all\">Settings</string>\n" +
-                        "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n" +
+                        "    <string name=\"sample\" translatable=\"false\">Ignore Me</string>\n" +
                         "\n" +
                         "    <!-- Wallpaper -->\n" +
                         "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n" +
@@ -576,7 +576,7 @@ class TranslationDetectorTest : AbstractCheckTest() {
                     "    <string name=\"menu_wallpaper\">Wallpaper</string>\n" +
                     "    <string name=\"menu_search\">Search</string>\n" +
                     "    <string name=\"menu_settings\">Settings</string>\n" +
-                    "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n" +
+                    "    <string name=\"sample\" translatable=\"false\">Ignore Me</string>\n" +
                     "\n" +
                     "    <!-- Wallpaper -->\n" +
                     "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n" +
@@ -658,23 +658,23 @@ class TranslationDetectorTest : AbstractCheckTest() {
     fun testNonTranslatable1() {
         val expected =
             """
-            res/values-nb/nontranslatable.xml:2: Warning: The resource string "dummy" has been marked as translatable="false" elsewhere (usually in the values folder), but is translated to "nb" (Norwegian Bokmål) here [Untranslatable]
-                <string name="dummy">Ignore Me</string>
-                        ~~~~~~~~~~~~
+            res/values-nb/nontranslatable.xml:2: Warning: The resource string "sample" has been marked as translatable="false" elsewhere (usually in the values folder), but is translated to "nb" (Norwegian Bokmål) here [Untranslatable]
+                <string name="sample">Ignore Me</string>
+                        ~~~~~~~~~~~~~
             0 errors, 1 warnings
             """
         val fixes =
             """
             Fix for res/values-nb/nontranslatable.xml line 1: Remove translation:
             @@ -2 +2
-            -     <string name="dummy">Ignore Me</string>
+            -     <string name="sample">Ignore Me</string>
             """
         lint().files(
             xml(
                 "res/values/nontranslatable.xml",
                 """
                     <resources>
-                        <string name="dummy" translatable="false">Ignore Me</string>
+                        <string name="sample" translatable="false">Ignore Me</string>
                     </resources>
                     """
             ).indented(),
@@ -682,7 +682,7 @@ class TranslationDetectorTest : AbstractCheckTest() {
                 "res/values-nb/nontranslatable.xml",
                 """
                     <resources>
-                        <string name="dummy">Ignore Me</string>
+                        <string name="sample">Ignore Me</string>
                     </resources>
 
                     """
@@ -860,7 +860,7 @@ class TranslationDetectorTest : AbstractCheckTest() {
                         "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n" +
                         "\n" +
                         "    <string name=\"dateFormat\">ukformat</string>\n" +
-                        "    <string name=\"dummy\" tools:ignore=\"ExtraTranslation\">DeleteMeToGetRidOfOtherWarning</string>\n" +
+                        "    <string name=\"sample\" tools:ignore=\"ExtraTranslation\">DeleteMeToGetRidOfOtherWarning</string>\n" +
                         "\n" +
                         "</resources>\n"
                     )

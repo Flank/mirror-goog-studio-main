@@ -130,7 +130,7 @@ class NamespaceDetectorTest : AbstractCheckTest() {
             1 errors, 0 warnings
             """
         lint().files(
-            mLibrary, // dummy; only name counts
+            mLibrary, // placeholder; only name counts
             mCustomview
         ).run().expect(expected)
     }

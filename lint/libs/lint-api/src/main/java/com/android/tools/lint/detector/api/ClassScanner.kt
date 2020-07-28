@@ -54,7 +54,7 @@ interface ClassScanner : FileScanner {
     /**
      * Return the list of method call names (in VM format, e.g. `"<init>"` for
      * constructors, etc) for method calls this detector is interested in,
-     * or null. T his will be used to dispatch calls to
+     * or null. This will be used to dispatch calls to
      * [.checkCall]
      * for only the method calls in owners that the detector is interested
      * in.

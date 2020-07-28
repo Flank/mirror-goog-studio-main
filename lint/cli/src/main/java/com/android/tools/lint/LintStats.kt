@@ -92,7 +92,7 @@ class LintStats constructor(
             if (baselines.isNotEmpty()) {
                 // Figure out the actual overlap; later I could stash these into temporary
                 // objects to compare
-                // For now just combine them in a dumb way
+                // For now just combine them in a simplistic way
                 for (baseline in baselines) {
                     baselineErrorCount = max(baselineErrorCount, baseline.foundErrorCount)
                     baselineWarningCount =

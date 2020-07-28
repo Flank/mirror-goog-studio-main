@@ -39,10 +39,10 @@ class FragmentDetectorTest : AbstractCheckTest() {
                 public static class Fragment4 extends Fragment {
                                     ~~~~~~~~~
             src/test/pkg/FragmentTest.java:27: Error: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-                    private Fragment4(int dummy) {
+                    private Fragment4(int sample) {
                             ~~~~~~~~~
             src/test/pkg/FragmentTest.java:36: Error: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-                    public Fragment5(int dummy) {
+                    public Fragment5(int sample) {
                            ~~~~~~~~~
             6 errors, 0 warnings
             """
@@ -77,7 +77,7 @@ class FragmentDetectorTest : AbstractCheckTest() {
 
                     // Should have a public constructor with no arguments
                     public static class Fragment4 extends Fragment {
-                        private Fragment4(int dummy) {
+                        private Fragment4(int sample) {
                         }
                     }
 
@@ -86,7 +86,7 @@ class FragmentDetectorTest : AbstractCheckTest() {
                     public static class Fragment5 extends Fragment {
                         public Fragment5() {
                         }
-                        public Fragment5(int dummy) {
+                        public Fragment5(int sample) {
                         }
                     }
 
@@ -151,7 +151,7 @@ class FragmentDetectorTest : AbstractCheckTest() {
                 public static class Fragment1 extends android.support.v4.app.Fragment {
                                     ~~~~~~~~~
             src/test/pkg/Parent.java:6: Error: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-                    private Fragment1(int dummy) { // ERROR
+                    private Fragment1(int sample) { // ERROR
                             ~~~~~~~~~
             2 errors, 0 warnings
         """
@@ -165,12 +165,12 @@ class FragmentDetectorTest : AbstractCheckTest() {
                     public class FragmentTest {
                         // Should have a public constructor with no arguments
                         public static class Fragment1 extends android.support.v4.app.Fragment {
-                            private Fragment1(int dummy) { // ERROR
+                            private Fragment1(int sample) { // ERROR
                             }
                         }
                         // androidx is okay
                         public static class Fragment2 extends androidx.fragment.app.Fragment {
-                            private Fragment2(int dummy) { // OK
+                            private Fragment2(int sample) { // OK
                             }
                         }
                     }
@@ -179,7 +179,7 @@ class FragmentDetectorTest : AbstractCheckTest() {
             java(
                 """
                 package android.support.v4.app;
-                // Dummy stub
+                // Stub
                 public class Fragment {
                 }
                 """
@@ -187,7 +187,7 @@ class FragmentDetectorTest : AbstractCheckTest() {
             java(
                 """
                 package androidx.fragment.app;
-                // Dummy stub
+                // Stub
                 public class Fragment {
                 }
                 """

@@ -1292,7 +1292,7 @@ class GradleDetectorTest : AbstractCheckTest() {
 
     fun testPreviewVersionsNoGoogleMaven() {
         // regression test for b/144442233: if we don't have google() in buildscript repositories,
-        // we probably shouldn't blindly update AGP version dependencies.
+        // we probably shouldn't unconditionally update AGP version dependencies.
         val expected = "" +
             "build.gradle:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is " +
             GRADLE_PLUGIN_RECOMMENDED_VERSION +
@@ -3370,22 +3370,22 @@ class GradleDetectorTest : AbstractCheckTest() {
                 createRelativePaths(
                     gradleUserHome!!,
                     arrayOf(
-                        "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.2.0/dummy",
-                        "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.2.3/dummy",
-                        "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.3.0/dummy",
-                        "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.3.1/dummy",
-                        "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.4.0-alpha3/dummy",
-                        "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.4.0-alpha5/dummy",
-                        "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.4.0-alpha6/dummy",
-                        "caches/modules-2/files-2.1/com.google.guava/guava/17.0/dummy",
-                        "caches/modules-2/files-2.1/org.apache.httpcomponents/httpcomponents-core/4.1/dummy",
-                        "caches/modules-2/files-2.1/org.apache.httpcomponents/httpcomponents-core/4.2.1/dummy",
-                        "caches/modules-2/files-2.1/org.apache.httpcomponents/httpcomponents-core/4.2.5/dummy",
-                        "caches/modules-2/files-2.1/org.apache.httpcomponents/httpcomponents-core/4.4/dummy",
+                        "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.2.0/sample",
+                        "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.2.3/sample",
+                        "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.3.0/sample",
+                        "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.3.1/sample",
+                        "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.4.0-alpha3/sample",
+                        "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.4.0-alpha5/sample",
+                        "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.4.0-alpha6/sample",
+                        "caches/modules-2/files-2.1/com.google.guava/guava/17.0/sample",
+                        "caches/modules-2/files-2.1/org.apache.httpcomponents/httpcomponents-core/4.1/sample",
+                        "caches/modules-2/files-2.1/org.apache.httpcomponents/httpcomponents-core/4.2.1/sample",
+                        "caches/modules-2/files-2.1/org.apache.httpcomponents/httpcomponents-core/4.2.5/sample",
+                        "caches/modules-2/files-2.1/org.apache.httpcomponents/httpcomponents-core/4.4/sample",
 
                         // SDK distributed via Maven
-                        "caches/modules-2/files-2.1/com.android.support/recyclerview-v7/26.0.0/dummy",
-                        "caches/modules-2/files-2.1/com.google.firebase/firebase-messaging/11.0.0/dummy"
+                        "caches/modules-2/files-2.1/com.android.support/recyclerview-v7/26.0.0/sample",
+                        "caches/modules-2/files-2.1/com.google.firebase/firebase-messaging/11.0.0/sample"
                     )
                 )
             }

@@ -917,7 +917,7 @@ public class PositionXmlParser {
                 mCurrentOffset++;
             }
 
-            // Sanity check -- the parser will sometimes pass newlines with columns that are
+            // Validity check -- the parser will sometimes pass newlines with columns that are
             // out of bounds for the line; check for this
             // (https://issuetracker.google.com/123835101)
             // so instead of

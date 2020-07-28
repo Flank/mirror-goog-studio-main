@@ -441,7 +441,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "    <!--\n"
                                         + "    This layout is a two-pane layout for the Items\n"
-                                        + "    master/detail flow. See res/values-large/refs.xml and\n"
+                                        + "    flow. See res/values-large/refs.xml and\n"
                                         + "    res/values-sw600dp/refs.xml for an example of layout aliases\n"
                                         + "    that replace the single-pane version of the layout with\n"
                                         + "    this two-pane version.\n"
@@ -452,7 +452,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "    <fragment\n"
                                         + "        android:id=\"@+id/item_list\"\n"
-                                        + "        android:name=\"com.example.master.ItemListFragment\"\n"
+                                        + "        android:name=\"com.example.main.ItemListFragment\"\n"
                                         + "        android:layout_width=\"0dp\"\n"
                                         + "        android:layout_height=\"match_parent\"\n"
                                         + "        android:layout_weight=\"1\"\n"
@@ -3589,7 +3589,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "1 errors, 0 warnings\n";
         //noinspection all // Sample code
         lint().files(
-                        manifest().pkg("foo.master").minSdk(14),
+                        manifest().pkg("foo.main").minSdk(14),
                         projectProperties()
                                 .property("android.library.reference.1", "../LibraryProject"),
                         java(
@@ -5571,10 +5571,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
         // Regression test for 65549795: NewApi violations not detected on android.view.View
         String expected =
                 ""
-                        + "src/com/google/android/apps/common/testing/sanity/lint/BrokenNewApi.java:11: Error: Call requires API level 25 (current min is 4): android.view.View#setRevealOnFocusHint [NewApi]\n"
+                        + "src/com/google/android/apps/common/testing/lint/BrokenNewApi.java:11: Error: Call requires API level 25 (current min is 4): android.view.View#setRevealOnFocusHint [NewApi]\n"
                         + "    setRevealOnFocusHint(true); // API 25\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/com/google/android/apps/common/testing/sanity/lint/BrokenNewApi.java:12: Error: Call requires API level 11 (current min is 4): android.view.View#setPivotY [NewApi]\n"
+                        + "src/com/google/android/apps/common/testing/lint/BrokenNewApi.java:12: Error: Call requires API level 11 (current min is 4): android.view.View#setPivotY [NewApi]\n"
                         + "    setPivotY(1.0f); // api 11\n"
                         + "    ~~~~~~~~~\n"
                         + "2 errors, 0 warnings\n";
@@ -5584,7 +5584,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         manifest().minSdk(4),
                         java(
                                 ""
-                                        + "package com.google.android.apps.common.testing.sanity.lint;\n"
+                                        + "package com.google.android.apps.common.testing.lint;\n"
                                         + "\n"
                                         + "import android.content.Context;\n"
                                         + "import android.view.View;\n"

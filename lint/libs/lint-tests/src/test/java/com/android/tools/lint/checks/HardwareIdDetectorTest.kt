@@ -59,9 +59,11 @@ class HardwareIdDetectorTest : AbstractCheckTest() {
             ).indented(),
             java(
                 """
-                package com.google.android.gms.dummy;import com.google.android.gms.common.GooglePlayServicesNotAvailableException;public class GmsDummyClient {
+                package com.google.android.gms;
+                import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+                public class GmsSampleClient {
                     public static String getId() throws GooglePlayServicesNotAvailableException {
-                        return "dummyId";
+                        return "sampleId";
                     }
                 }
                 """
@@ -73,7 +75,7 @@ class HardwareIdDetectorTest : AbstractCheckTest() {
                 import android.bluetooth.BluetoothAdapter;
                 import android.content.Context;
 
-                import com.google.android.gms.dummy.GmsDummyClient;
+                import com.google.android.gms.GmsSampleClient;
                 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 
                 import java.io.IOException;
@@ -82,7 +84,7 @@ class HardwareIdDetectorTest : AbstractCheckTest() {
 
                     public String getAdvertisingId(Context context) {
                         try {
-                            return GmsDummyClient.getId();
+                            return GmsSampleClient.getId();
                         } catch (RuntimeException | GooglePlayServicesNotAvailableException e) {
                             // not available so get one of the ids.
                             return BluetoothAdapter.getDefaultAdapter().getAddress();
@@ -304,9 +306,11 @@ class HardwareIdDetectorTest : AbstractCheckTest() {
             ).indented(),
             java(
                 """
-                package com.google.android.gms.dummy;import com.google.android.gms.common.GooglePlayServicesNotAvailableException;public class GmsDummyClient {
+                package com.google.android.gms;
+                import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+                public class GmsSampleClient {
                     public static String getId() throws GooglePlayServicesNotAvailableException {
-                        return "dummyId";
+                        return "sampleId";
                     }
                 }
                 """
@@ -317,7 +321,7 @@ class HardwareIdDetectorTest : AbstractCheckTest() {
 
                 import android.content.Context;
 
-                import com.google.android.gms.dummy.GmsDummyClient;
+                import com.google.android.gms.GmsSampleClient;
                 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 
                 import java.lang.reflect.Method;
@@ -353,7 +357,7 @@ class HardwareIdDetectorTest : AbstractCheckTest() {
                     // Should not result in a warning since it's called within the catch block
                     public static String doPlayServicesCall(Context context) throws Exception {
                         try {
-                            return GmsDummyClient.getId();
+                            return GmsSampleClient.getId();
                         } catch (RuntimeException | GooglePlayServicesNotAvailableException e) {
                             // not available so get one of the ids.
                             return getSystemProperty(context, "ro.serialno", "ID");

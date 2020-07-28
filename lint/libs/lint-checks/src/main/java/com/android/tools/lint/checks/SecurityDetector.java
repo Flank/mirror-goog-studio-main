@@ -385,7 +385,7 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
         }
 
         if (exported) {
-            // Just check for some use of permissions. Other Lint checks can check the saneness
+            // Just check for some use of permissions. Other Lint checks can check the validity
             // of the permissions. We'll accept the permission, readPermission, or writePermission
             // attributes on the provider element, or a path-permission element.
             String permission = element.getAttributeNS(ANDROID_URI, ATTR_READ_PERMISSION);

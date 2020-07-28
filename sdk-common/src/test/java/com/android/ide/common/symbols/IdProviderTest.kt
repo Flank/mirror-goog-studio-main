@@ -23,7 +23,7 @@ import org.junit.Test
 class IdProviderTest {
     @Test
     fun aaptFormat() {
-        // Sanity check.
+        // Validity check.
         assertThat(ResourceType.ANIM.ordinal).isEqualTo(0)
         assertThat(ResourceType.ATTR.ordinal).isEqualTo(3)
 

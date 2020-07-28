@@ -178,7 +178,7 @@ class AnnotationHandlerTest {
         )
     }
 
-    // Dummy detector which just flags certain annotation references
+    // Simple detector which just flags certain annotation references
     @SuppressWarnings("ALL")
     class MyAnnotationDetector : Detector(), Detector.UastScanner {
         override fun applicableAnnotations(): List<String>? {

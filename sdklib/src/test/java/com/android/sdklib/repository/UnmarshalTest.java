@@ -113,7 +113,7 @@ public class UnmarshalTest extends TestCase {
             "<repo:repository\n"
                     + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
                     + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
-                    + "    <localPackage path=\"dummy;foo\" obsolete=\"true\">\n"
+                    + "    <localPackage path=\"sample;foo\" obsolete=\"true\">\n"
                     + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
                     + "        <revision>\n"
                     + "            <major>1</major>\n"
@@ -138,7 +138,7 @@ public class UnmarshalTest extends TestCase {
                                 progress);
         assertFalse(progress.getWarnings().isEmpty());
         LocalPackage local = repo.getLocalPackage();
-        assertEquals("dummy;foo", local.getPath());
+        assertEquals("sample;foo", local.getPath());
         assertEquals(new Revision(1, 2, 3), local.getVersion());
 
         try {
@@ -158,7 +158,7 @@ public class UnmarshalTest extends TestCase {
             "<repo:repository\n"
                     + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/99\"\n"
                     + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
-                    + "    <localPackage path=\"dummy;foo\" obsolete=\"true\">\n"
+                    + "    <localPackage path=\"sample;foo\" obsolete=\"true\">\n"
                     + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
                     + "        <revision>\n"
                     + "            <major>1</major>\n"
@@ -184,7 +184,7 @@ public class UnmarshalTest extends TestCase {
                                 progress);
         assertFalse(progress.getWarnings().isEmpty());
         LocalPackage local = repo.getLocalPackage();
-        assertEquals("dummy;foo", local.getPath());
+        assertEquals("sample;foo", local.getPath());
         assertEquals(new Revision(1, 2, 3), local.getVersion());
 
         try {

@@ -474,7 +474,7 @@ class LintDetectorDetectorTest {
         lint()
             .issues(*(issues.filter { it != PSI_COMPARE }.toTypedArray()))
             .files(
-                gradle("// dummy"), // such that it's seen as a project by lint
+                gradle("// placeholder"), // such that it's seen as a project by lint
                 *srcFiles.toTypedArray(),
                 *libs.mapIndexed { index, file ->
                     // Include unique index at the end to prevent conflicts

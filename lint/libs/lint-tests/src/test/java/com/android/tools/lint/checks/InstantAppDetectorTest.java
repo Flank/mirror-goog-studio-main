@@ -331,7 +331,7 @@ public class InstantAppDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "import android.content.ContentResolver;\n"
                                         + "\n"
-                                        + "// Dummy stub\n"
+                                        + "// Stub\n"
                                         + "public class Gservices {\n"
                                         + "    public static long getLong(ContentResolver cr, String key, long defValue) {\n"
                                         + "        return 0L;\n"

@@ -88,7 +88,7 @@ class UastLintUtils {
             val containingFile = element as? PsiFile ?: element.containingFile
 
             // In Kotlin files identifiers are sometimes using LightElements that are hosted in
-            // a dummy file, these do not have the right PsiFile as containing elements
+            // a placeholder file, these do not have the right PsiFile as containing elements
             val cls = containingFile.javaClass
             val name = cls.name
             if (name.startsWith(

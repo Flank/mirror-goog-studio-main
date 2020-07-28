@@ -21,7 +21,7 @@ import com.android.annotations.Nullable;
 
 /**
  * <p>
- * Dummy implementation of an {@link ILogger}.
+ * Sample implementation of an {@link ILogger}.
  * </p>
  * Use {@link #getLogger()} to get a default instance of this {@link NullLogger}.
  */

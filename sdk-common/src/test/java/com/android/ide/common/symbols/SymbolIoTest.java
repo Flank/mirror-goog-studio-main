@@ -1045,7 +1045,7 @@ public class SymbolIoTest {
                 new BufferedInputStream(java.nio.file.Files.newInputStream(publicTxt.toPath()))) {
             table = SymbolIo.readFromPublicTxtFile(is, publicTxt.getName(), "foo.bar.com");
         }
-        // Sanity check for the package.
+        // Validity check for the package.
         assertThat(table.getTablePackage()).isEqualTo("foo.bar.com");
         //Check the size.
         assertThat(table.getSymbols().values().size()).isEqualTo(5);
@@ -1172,7 +1172,7 @@ public class SymbolIoTest {
                         .add(Symbol.normalSymbol(ResourceType.STRING, "e_ë", 0))
                         .build();
 
-        // Sanity check.
+        // Validity check.
         assertTrue(table.containsSymbol(ResourceType.STRING, "e_ë"));
 
         // Test standard R.txt.

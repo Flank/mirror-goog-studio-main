@@ -644,7 +644,7 @@ fun getCommonParent(file1: File, file2: File): File? {
         file1.path.startsWith(file2.path) -> return file2
         file2.path.startsWith(file1.path) -> return file1
         else -> {
-            // Dumb and simple implementation
+            // Simple implementation
             var first: File? = file1.parentFile
             while (first != null) {
                 var second: File? = file2.parentFile
