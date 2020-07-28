@@ -163,9 +163,6 @@ enum class BooleanOption(
     // Options related to new Variant API
     USE_SAFE_PROPERTIES("android.variant.safe.properties", false, FeatureStage.Experimental),
 
-    /** Incremental dexing transform. */
-    ENABLE_INCREMENTAL_DEXING_TRANSFORM("android.enableIncrementalDexingTransform", false, FeatureStage.Experimental),
-
     USE_NEW_DSL_INTERFACES("android.experimental.newDslInterfaces", false, FeatureStage.Experimental),
 
     /* ------------------------
@@ -180,6 +177,9 @@ enum class BooleanOption(
 
     /** Incremental dexing task using D8's new API for desugaring graph computation. */
     ENABLE_INCREMENTAL_DEXING_TASK_V2("android.enableIncrementalDexingTaskV2", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_5_0)),
+
+    /** Incremental dexing transform. */
+    ENABLE_INCREMENTAL_DEXING_TRANSFORM("android.enableIncrementalDexingTransform", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_5_0)),
 
     ENABLE_JVM_RESOURCE_COMPILER("android.enableJvmResourceCompiler", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_4_2)),
 
