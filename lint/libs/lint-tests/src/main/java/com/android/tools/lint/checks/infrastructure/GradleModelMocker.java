@@ -36,14 +36,12 @@ import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
-import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.Dependencies;
-import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Library;
 import com.android.builder.model.LintOptions;
@@ -51,7 +49,6 @@ import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.VectorDrawablesOptions;
-import com.android.builder.model.ViewBindingOptions;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
 import com.android.ide.common.gradle.model.IdeAaptOptions;
@@ -1357,8 +1354,8 @@ public class GradleModelMocker {
         } else if (key.startsWith("android.aaptOptions.namespaced ")) {
             String value = getUnquotedValue(key);
             if (VALUE_TRUE.equals(value)) {
-                AaptOptions options = getAaptOptions();
-                when(options.getNamespacing()).thenReturn(AaptOptions.Namespacing.REQUIRED);
+                IdeAaptOptions options = getAaptOptions();
+                when(options.getNamespacing()).thenReturn(IdeAaptOptions.Namespacing.REQUIRED);
             }
         } else if (key.startsWith("groupId ")) {
             String groupId = getUnquotedValue(key);
@@ -1662,7 +1659,7 @@ public class GradleModelMocker {
         if (aaptOptions == null) {
             aaptOptions = mock(IdeAaptOptions.class);
             when(project.getAaptOptions()).thenReturn(aaptOptions);
-            when(aaptOptions.getNamespacing()).thenReturn(AaptOptions.Namespacing.DISABLED);
+            when(aaptOptions.getNamespacing()).thenReturn(IdeAaptOptions.Namespacing.DISABLED);
         }
         return aaptOptions;
     }

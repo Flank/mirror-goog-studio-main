@@ -52,14 +52,6 @@ public class IdeAaptOptionsTest {
     }
 
     @Test
-    public void constructor() throws Throwable {
-        AaptOptions original = new AaptOptionsStub();
-        IdeAaptOptionsImpl copy = new IdeAaptOptionsImpl(original);
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
     public void equalsAndHashCode() {
         createEqualsVerifier(IdeClassFieldImpl.class).verify();
     }

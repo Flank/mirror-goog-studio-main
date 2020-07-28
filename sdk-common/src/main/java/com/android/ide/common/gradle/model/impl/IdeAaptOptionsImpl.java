@@ -31,14 +31,26 @@ public class IdeAaptOptionsImpl implements IdeAaptOptions, Serializable {
 
     // Used for serialization by the IDE.
     IdeAaptOptionsImpl() {
-        namespacing = DISABLED;
+        namespacing = Namespacing.DISABLED;
     }
 
     // copyNewProperty won't return null for a non-null getter with a non-null default value.
     @SuppressWarnings("ConstantConditions")
     @VisibleForTesting
     public IdeAaptOptionsImpl(@NonNull AaptOptions original) {
-        namespacing = IdeModel.copyNewProperty(original::getNamespacing, DISABLED);
+        AaptOptions.Namespacing namespacing =
+                IdeModel.copyNewProperty(original::getNamespacing, DISABLED);
+        switch (namespacing) {
+            case DISABLED:
+                this.namespacing = Namespacing.DISABLED;
+                break;
+            case REQUIRED:
+                this.namespacing = Namespacing.REQUIRED;
+                break;
+            default:
+                // No forward compatibility.
+                throw new IllegalStateException("Unknown namespacing option: " + namespacing);
+        }
     }
 
     @Override

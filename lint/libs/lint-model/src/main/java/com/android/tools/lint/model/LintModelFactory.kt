@@ -24,6 +24,7 @@ import com.android.builder.model.BuildType
 import com.android.builder.model.ClassField
 import com.android.builder.model.LintOptions
 import com.android.builder.model.ProductFlavor
+import com.android.ide.common.gradle.model.IdeAaptOptions
 import com.android.ide.common.gradle.model.IdeAndroidArtifact
 import com.android.ide.common.gradle.model.IdeAndroidProject
 import com.android.ide.common.gradle.model.IdeBaseArtifact
@@ -628,8 +629,8 @@ class LintModelFactory : LintModelModuleLoader {
 
     private fun getNamespacingMode(project: IdeAndroidProject): LintModelNamespacingMode {
         return when (project.aaptOptions.namespacing) {
-            AaptOptions.Namespacing.DISABLED -> LintModelNamespacingMode.DISABLED
-            AaptOptions.Namespacing.REQUIRED -> LintModelNamespacingMode.REQUIRED
+            IdeAaptOptions.Namespacing.DISABLED -> LintModelNamespacingMode.DISABLED
+            IdeAaptOptions.Namespacing.REQUIRED -> LintModelNamespacingMode.REQUIRED
         }
     }
 
