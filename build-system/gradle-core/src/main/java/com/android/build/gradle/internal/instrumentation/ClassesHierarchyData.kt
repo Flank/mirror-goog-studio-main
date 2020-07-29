@@ -112,13 +112,18 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
     }
 
     @GuardedBy("lock")
-    private fun loadClassData(className: String): ClassData {
+    private fun loadClassData(className: String): ClassData? {
         synchronized(lock) {
-            return loadedClassesData.computeIfAbsent(className, this::computeClassData)
+            return loadedClassesData.getOrElse(className) {
+                val classData = computeClassData(className)?.also {
+                    loadedClassesData[className] = it
+                }
+                classData
+            }
         }
     }
 
-    private fun computeClassData(className: String): ClassData {
+    private fun computeClassData(className: String): ClassData? {
         val classFileName = className + DOT_CLASS
         sourceJars.forEach { jar ->
             ZipFile(jar).use { jarFile ->
@@ -135,11 +140,12 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
             }
         }
 
-        throw RuntimeException("Unable to find classes hierarchy for class $className")
+        return null
     }
 
     fun getAnnotations(className: String): List<String> {
-        return loadClassData(className).annotations.map { it.replace('/', '.') }
+        return loadClassData(className)?.annotations?.map { it.replace('/', '.') }
+            ?: emptyList()
     }
 
     /**
@@ -176,7 +182,7 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
 
     private fun doGetAllSuperClasses(className: String): MutableList<String> {
         val classData = loadClassData(className)
-        if (classData.superClass == null) {
+        if (classData?.superClass == null) {
             return mutableListOf()
         }
         return doGetAllSuperClasses(classData.superClass).apply { add(classData.superClass) }
@@ -185,10 +191,10 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
     private fun doGetAllInterfaces(className: String): MutableSet<String> {
         val classData = loadClassData(className)
         return mutableSetOf<String>().apply {
-            if (classData.superClass != null) {
+            if (classData?.superClass != null) {
                 addAll(doGetAllInterfaces(classData.superClass))
             }
-            classData.interfaces.forEach { interfaceClass ->
+            classData?.interfaces?.forEach { interfaceClass ->
                 if (add(interfaceClass)) {
                     addAll(doGetAllInterfaces(interfaceClass))
                 }
