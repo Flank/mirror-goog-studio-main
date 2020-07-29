@@ -24,7 +24,7 @@ fun colorKt(
 ) = """
 package ${escapeKotlinIdentifier(packageName)}.ui
 
-import androidx.ui.graphics.Color
+import androidx.compose.ui.graphics.Color
 
 ${MaterialColor.PURPLE_200.kotlinVal()}
 ${MaterialColor.PURPLE_500.kotlinVal()}
