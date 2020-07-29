@@ -1358,13 +1358,6 @@ class LintDriver
             return
         }
 
-        // We need to read in all the classes up front such that we can initialize
-        // the parent chains (such that for example for a virtual dispatch, we can
-        // also check the super classes).
-
-        val libraries = project.getJavaLibraries(false)
-        val libraryEntries = ClassEntry.fromClassPath(client, libraries, true)
-
         val classFolders = project.javaClassFolders
         val classEntries: List<ClassEntry>
         classEntries = if (classFolders.isEmpty()) {
@@ -1383,9 +1376,13 @@ class LintDriver
             ClassEntry.fromClassPath(client, classFolders, true)
         }
 
-        // Actually run the detectors. Libraries should be called before the
-        // main classes.
-        runClassDetectors(Scope.JAVA_LIBRARIES, libraryEntries, project, main)
+        // Actually run the detectors. Libraries should be called before the main classes.
+
+        if (!scopeDetectors[Scope.JAVA_LIBRARIES].isNullOrEmpty()) {
+            val libraries = project.getJavaLibraries(false)
+            val libraryEntries = ClassEntry.fromClassPath(client, libraries, true)
+            runClassDetectors(Scope.JAVA_LIBRARIES, libraryEntries, project, main)
+        }
 
         if (isCanceled) {
             return
