@@ -85,7 +85,7 @@ data class FakeApiVersion(override val apiLevel: Int, override val codename: Str
 
 class FakeFileNormalizer: FileNormalizer {
     override fun normalize(file: File): String = file.absolutePath
-    override fun unscrupulouslyReplace(value: JsonElement): JsonElement = value
+    override fun normalize(value: JsonElement): JsonElement = value
 }
 
 // impl of BuildType for testing

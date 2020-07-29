@@ -126,7 +126,7 @@ class NativeModelBuilderTest : ModelComparator() {
         val compileCommandsJsonEntries: List<JsonElement> =
             syncedAbi.sourceFlagsFile.reader(StandardCharsets.UTF_8).use {
                 gson.fromJson(it, JsonArray::class.java)
-                    .map { result.normalizer.unscrupulouslyReplace(it) }
+                    .map { result.normalizer.normalize(it) }
             }
 
         when (CURRENT_PLATFORM) {

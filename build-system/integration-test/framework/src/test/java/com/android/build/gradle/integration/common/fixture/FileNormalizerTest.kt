@@ -100,7 +100,7 @@ class FileNormalizerTest {
     fun `Test unscrupulouslyReplace(JsonElement)`() {
         AssumeUtil.assumeNotWindows()
         Truth.assertThat(
-            normalizer.unscrupulouslyReplace(
+            normalizer.normalize(
                 gson.fromJson(
                     """
                         {
@@ -143,7 +143,7 @@ class FileNormalizerTest {
         )
 
         Truth.assertThat(
-            normalizer.unscrupulouslyReplace(
+            normalizer.normalize(
                 gson.fromJson(
                     """
                     {

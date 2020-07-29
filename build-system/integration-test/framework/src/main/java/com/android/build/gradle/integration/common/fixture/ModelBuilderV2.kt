@@ -418,22 +418,24 @@ class FileNormalizerImpl(
         return null
     }
 
-    override fun unscrupulouslyReplace(value: JsonElement): JsonElement = when (value) {
+    override fun normalize(value: JsonElement): JsonElement = when (value) {
         is JsonNull -> value
         is JsonPrimitive -> when {
-            value.isString -> JsonPrimitive(unscrupulouslyReplace(value.asString))
+            value.isString -> JsonPrimitive(normalize(value.asString))
             else -> value
         }
         is JsonArray -> JsonArray().apply {
-            value.map(::unscrupulouslyReplace).forEach(::add)
+            value.map(::normalize).forEach(::add)
         }
         is JsonObject -> JsonObject().apply {
-            value.entrySet().forEach { (key, value) -> add(key, unscrupulouslyReplace(value)) }
+            value.entrySet().forEach { (key, value) ->
+                add(key, normalize(value))
+            }
         }
         else -> throw IllegalArgumentException("Unrecognized JsonElement")
     }
 
-    private fun unscrupulouslyReplace(string: String): String {
+    private fun normalize(string: String): String {
         // On windows, various native tools use '\' and '/' interchangeably. Hence we unscrupulously
         // normalize them.
         var s = string.replace('\\', '/')

@@ -34,7 +34,7 @@ interface FileNormalizer {
      * Note that this method replace all matched strings and it could return non-sense result if
      * some well-known paths are too common.
      */
-    fun unscrupulouslyReplace(value: JsonElement): JsonElement
+    fun normalize(value: JsonElement): JsonElement
 }
 
 /**
