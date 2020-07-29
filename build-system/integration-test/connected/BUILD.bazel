@@ -159,7 +159,6 @@ gradle_connected_test(
         "//prebuilts/tools/common/mlkit/testData",
     ],
     maven_repos = TEST_MAVEN_REPOS,
-    tags = ["manual"],  # b/162323560
     deps = TEST_DEPS,
 )
 

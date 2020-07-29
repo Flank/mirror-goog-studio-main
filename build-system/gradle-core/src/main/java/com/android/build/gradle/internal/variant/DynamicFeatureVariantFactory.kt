@@ -131,7 +131,8 @@ internal class DynamicFeatureVariantFactory(
                 false
             } else {
                 null // means whatever is default.
-            }
+            },
+            mlModelBindingOverride = false
         )
     }
 

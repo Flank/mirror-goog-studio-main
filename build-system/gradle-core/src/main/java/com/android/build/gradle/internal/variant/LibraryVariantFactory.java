@@ -154,7 +154,7 @@ public class LibraryVariantFactory
                 buildFeatures,
                 projectOptions,
                 null, /* dataBindingOverride */
-                null /* mlModelBindingOverride */);
+                false /* mlModelBindingOverride */);
     }
 
     @NonNull

@@ -148,7 +148,8 @@ class ApplicationVariantFactory(
                 false
             } else {
                 null // means whatever is default.
-            }
+            },
+            mlModelBindingOverride = false
         )
     }
 
