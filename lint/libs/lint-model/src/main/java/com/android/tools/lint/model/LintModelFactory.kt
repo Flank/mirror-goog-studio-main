@@ -26,6 +26,7 @@ import com.android.ide.common.gradle.model.IdeAndroidProject
 import com.android.ide.common.gradle.model.IdeApiVersion
 import com.android.ide.common.gradle.model.IdeBaseArtifact
 import com.android.ide.common.gradle.model.IdeBuildType
+import com.android.ide.common.gradle.model.IdeClassField
 import com.android.ide.common.gradle.model.IdeJavaArtifact
 import com.android.ide.common.gradle.model.IdeLintOptions
 import com.android.ide.common.gradle.model.IdeProductFlavor
@@ -559,7 +560,7 @@ class LintModelFactory : LintModelModuleLoader {
         )
     }
 
-    private fun ClassField.toResourceField(): LintModelResourceField {
+    private fun IdeClassField.toResourceField(): LintModelResourceField {
         return DefaultLintModelResourceField(
             type = type,
             name = name,

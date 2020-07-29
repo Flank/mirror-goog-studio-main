@@ -16,7 +16,7 @@
 
 package com.android.ide.common.gradle.model
 
-import com.android.ide.common.gradle.model.level2.IdeAndroidLibrary
+import com.android.ide.common.gradle.model.impl.IdeClassFieldImpl
 import com.android.ide.common.gradle.model.stubs.AndroidLibraryStubBuilder
 import com.android.ide.common.util.PathString
 import com.android.ide.common.util.toPathString
@@ -26,7 +26,6 @@ import com.android.projectmodel.RecursiveResourceFolder
 import com.android.resources.ResourceType
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import java.io.File
 
 /**
  * Tests for [GradleModelConverterUtil].
@@ -35,8 +34,8 @@ class GradleModelConverterUtilTest {
     @Test
     fun testClassFieldsToDynamicResourceValues() {
         val input = mapOf(
-            "foo" to ClassFieldStub(ResourceType.STRING.getName(), "foo", "baz"),
-            "foo2" to ClassFieldStub(ResourceType.INTEGER.getName(), "foo2", "123")
+            "foo" to IdeClassFieldImpl(ClassFieldStub(ResourceType.STRING.getName(), "foo", "baz")),
+            "foo2" to IdeClassFieldImpl(ClassFieldStub(ResourceType.INTEGER.getName(), "foo2", "123"))
         )
         val output = classFieldsToDynamicResourceValues(input)
 

@@ -22,6 +22,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.BaseConfig;
 import com.android.builder.model.ClassField;
 import com.android.ide.common.gradle.model.IdeBaseConfig;
+import com.android.ide.common.gradle.model.IdeClassField;
 import com.android.ide.common.gradle.model.IdeModel;
 import com.android.ide.common.gradle.model.ModelCache;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
@@ -40,7 +41,7 @@ public abstract class IdeBaseConfigImpl implements IdeBaseConfig, Serializable {
     private static final long serialVersionUID = 2L;
 
     @NonNull private final String myName;
-    @NonNull private final Map<String, ClassField> myResValues;
+    @NonNull private final Map<String, IdeClassField> myResValues;
     @NonNull private final Collection<File> myProguardFiles;
     @NonNull private final Collection<File> myConsumerProguardFiles;
     @NonNull private final Map<String, Object> myManifestPlaceholders;
@@ -95,13 +96,13 @@ public abstract class IdeBaseConfigImpl implements IdeBaseConfig, Serializable {
 
     @Override
     @NonNull
-    public Map<String, ClassField> getBuildConfigFields() {
+    public Map<String, IdeClassField> getBuildConfigFields() {
         throw new UnusedModelMethodException("getBuildConfigFields");
     }
 
     @Override
     @NonNull
-    public Map<String, ClassField> getResValues() {
+    public Map<String, IdeClassField> getResValues() {
         return myResValues;
     }
 

@@ -103,17 +103,17 @@ public class IdeModel {
     }
 
     @NonNull
-    public static <K, V> Map<K, V> copy(
+    public static <K, V, R> Map<K, R> copy(
             @NonNull Map<K, V> original,
             @NonNull ModelCache modelCache,
-            @NonNull Function<V, V> mapper) {
+            @NonNull Function<V, R> mapper) {
         if (original.isEmpty()) {
             return Collections.emptyMap();
         }
-        ImmutableMap.Builder<K, V> copies = ImmutableMap.builder();
+        ImmutableMap.Builder<K, R> copies = ImmutableMap.builder();
         original.forEach(
                 (k, v) -> {
-                    V copy = modelCache.computeIfAbsent(v, mapper);
+                    R copy = modelCache.computeIfAbsent(v, mapper);
                     copies.put(k, copy);
                 });
         return copies.build();

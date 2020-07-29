@@ -38,12 +38,12 @@ interface IdeBaseConfig {
     /**
      * Map of Build Config Fields where the key is the field name.
      */
-    val buildConfigFields: Map<String, ClassField>
+    val buildConfigFields: Map<String, IdeClassField>
 
     /**
      * Map of generated res values where the key is the res name.
      */
-    val resValues: Map<String, ClassField>
+    val resValues: Map<String, IdeClassField>
 
     /**
      * Specifies the ProGuard configuration files that the plugin should use.

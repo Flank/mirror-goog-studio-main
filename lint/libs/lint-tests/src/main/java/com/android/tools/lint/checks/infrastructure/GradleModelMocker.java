@@ -54,6 +54,7 @@ import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeApiVersion;
 import com.android.ide.common.gradle.model.IdeBuildType;
 import com.android.ide.common.gradle.model.IdeBuildTypeContainer;
+import com.android.ide.common.gradle.model.IdeClassField;
 import com.android.ide.common.gradle.model.IdeJavaArtifact;
 import com.android.ide.common.gradle.model.IdeJavaCompileOptions;
 import com.android.ide.common.gradle.model.IdeLintOptions;
@@ -584,7 +585,7 @@ public class GradleModelMocker {
         String versionName = defaultFlavor.getVersionName();
         Map<String, Object> manifestPlaceholders =
                 new HashMap<>(defaultFlavor.getManifestPlaceholders());
-        Map<String, ClassField> resValues = new HashMap<>(defaultFlavor.getResValues());
+        Map<String, IdeClassField> resValues = new HashMap<>(defaultFlavor.getResValues());
         Collection<String> resourceConfigurations =
                 new HashSet<>(defaultFlavor.getResourceConfigurations());
         for (IdeProductFlavorContainer container : flavorContainers) {
@@ -1277,7 +1278,7 @@ public class GradleModelMocker {
             int index = key.indexOf(".resValue ");
             String name = key.substring("android.".length(), index);
 
-            Map<String, ClassField> resValues;
+            Map<String, IdeClassField> resValues;
             if (name.startsWith("buildTypes.")) {
                 name = name.substring("buildTypes.".length());
                 IdeBuildType buildType = getBuildType(name, false);
@@ -1324,7 +1325,7 @@ public class GradleModelMocker {
                 resIndex++;
             }
 
-            ClassField field = mock(ClassField.class);
+            IdeClassField field = mock(IdeClassField.class);
             when(field.getName()).thenReturn(fieldName);
             when(field.getType()).thenReturn(type);
             when(field.getValue()).thenReturn(value);

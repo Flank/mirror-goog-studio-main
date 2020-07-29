@@ -15,23 +15,12 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
-import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.*;
+import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.createEqualsVerifier;
 
-import com.android.builder.model.BaseConfig;
-import com.android.ide.common.gradle.model.ModelCache;
-import com.android.ide.common.gradle.model.stubs.BaseConfigStub;
 import org.junit.Test;
 
 /** Tests for {@link IdeBaseConfigImpl}. */
 public class IdeBaseConfigTest {
-    @Test
-    public void constructor() throws Throwable {
-        BaseConfig original = new BaseConfigStub();
-        IdeBaseConfigImpl copy = new IdeBaseConfigImpl(original, new ModelCache()) {};
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
-    }
-
     @Test
     public void equalsAndHashCode() {
         createEqualsVerifier(IdeBaseConfigImpl.class, "hashCode")

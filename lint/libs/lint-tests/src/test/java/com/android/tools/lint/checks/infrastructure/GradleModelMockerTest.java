@@ -33,6 +33,7 @@ import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeBuildType;
 import com.android.ide.common.gradle.model.IdeBuildTypeContainer;
+import com.android.ide.common.gradle.model.IdeClassField;
 import com.android.ide.common.gradle.model.IdeProductFlavor;
 import com.android.ide.common.gradle.model.IdeProductFlavorContainer;
 import com.android.ide.common.gradle.model.IdeVariant;
@@ -476,12 +477,12 @@ public class GradleModelMockerTest {
         IdeAndroidProject project = mocker.getProject();
 
         // Check default config
-        Map<String, ClassField> resValues =
+        Map<String, IdeClassField> resValues =
                 project.getDefaultConfig().getProductFlavor().getResValues();
         assertThat(resValues).isNotEmpty();
         String name = resValues.keySet().iterator().next();
         assertThat(name).isEqualTo("defaultConfigName");
-        ClassField field = resValues.get(name);
+        IdeClassField field = resValues.get(name);
         assertThat(field.getType()).isEqualTo("string");
         assertThat(field.getName()).isEqualTo("defaultConfigName");
         assertThat(field.getValue()).isEqualTo("Some DefaultConfig Data");

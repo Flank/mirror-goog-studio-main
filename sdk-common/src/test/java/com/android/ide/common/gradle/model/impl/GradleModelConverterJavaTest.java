@@ -18,9 +18,9 @@ package com.android.ide.common.gradle.model.impl;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.builder.model.ClassField;
 import com.android.ide.common.gradle.model.ClassFieldStub;
 import com.android.ide.common.gradle.model.GradleModelConverterUtil;
+import com.android.ide.common.gradle.model.IdeClassField;
 import com.android.projectmodel.DynamicResourceValue;
 import com.android.resources.ResourceType;
 import java.util.HashMap;
@@ -36,11 +36,11 @@ public class GradleModelConverterJavaTest {
      */
     @Test
     public void testResultIsStillImmutableFromJava() {
-        ClassFieldStub foo1 = new ClassFieldStub(ResourceType.STRING.getName(), "foo1", "baz");
-        ClassFieldStub foo2 = new ClassFieldStub(ResourceType.STRING.getName(), "foo2", "baz");
-        ClassFieldStub foo3 = new ClassFieldStub(ResourceType.STRING.getName(), "foo3", "baz");
+        IdeClassField foo1 = new IdeClassFieldImpl(new ClassFieldStub(ResourceType.STRING.getName(), "foo1", "baz"));
+        IdeClassField foo2 = new IdeClassFieldImpl(new ClassFieldStub(ResourceType.STRING.getName(), "foo2", "baz"));
+        IdeClassField foo3 = new IdeClassFieldImpl(new ClassFieldStub(ResourceType.STRING.getName(), "foo3", "baz"));
 
-        Map<String, ClassField> input = new HashMap<>();
+        Map<String, IdeClassField> input = new HashMap<>();
         input.put("foo1", foo1);
         input.put("foo2", foo2);
         input.put("foo3", foo3);

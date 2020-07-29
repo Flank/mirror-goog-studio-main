@@ -17,7 +17,6 @@
 
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.ClassField
 import com.android.ide.common.gradle.model.level2.IdeLibrary
 import com.android.ide.common.util.PathString
 import com.android.ide.common.util.toPathString
@@ -53,7 +52,7 @@ class GradleModelConverter(
         cache.computeIfAbsent(key) { key.second.lambda() }
 }
 
-fun classFieldsToDynamicResourceValues(classFields: Map<String, ClassField>): Map<String, DynamicResourceValue> {
+fun classFieldsToDynamicResourceValues(classFields: Map<String, IdeClassField>): Map<String, DynamicResourceValue> {
     val result = HashMap<String, DynamicResourceValue>()
     for (field in classFields.values) {
         val resourceType = ResourceType.fromClassName(field.type)
