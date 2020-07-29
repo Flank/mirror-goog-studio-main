@@ -17,13 +17,12 @@ package com.android.ide.common.gradle.model.impl;
 
 import com.android.annotations.NonNull;
 import com.android.build.FilterData;
-import com.android.ide.common.gradle.model.IdeFilterData;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.Serializable;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link FilterData}. */
-public final class IdeFilterDataImpl implements IdeFilterData, Serializable {
+public final class IdeFilterDataImpl implements FilterData, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 

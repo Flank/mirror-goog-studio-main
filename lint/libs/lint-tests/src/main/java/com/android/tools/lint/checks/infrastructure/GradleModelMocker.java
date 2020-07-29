@@ -38,7 +38,6 @@ import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ClassField;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Library;
