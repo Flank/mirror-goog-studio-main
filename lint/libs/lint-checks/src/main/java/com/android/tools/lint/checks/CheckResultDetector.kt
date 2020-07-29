@@ -109,7 +109,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 return
             }
 
-            if (method.returnType == PsiType.VOID) {
+            if (method.returnType == PsiType.VOID || method.isConstructor) {
                 return
             }
 

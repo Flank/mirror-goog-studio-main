@@ -683,6 +683,50 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
         )
     }
 
+    fun testIgnoreThisAndSuper() {
+        // Regression test for b/140616532: Lint was flagging this() and super() constructor
+        // calls
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import com.google.errorprone.annotations.CheckReturnValue;
+
+                @CheckReturnValue
+                public class CheckResultTest1 {
+                    CheckResultTest1() {
+                        this(null);
+                    }
+
+                    CheckResultTest1(String foo) {
+                    }
+
+                    public class SubClass extends CheckResultTest1 {
+                        SubClass(String foo) {
+                            super(null);
+                        }
+                    }
+                }
+                """
+            ),
+            kotlin(
+                """
+                package test.pkg
+
+                import com.google.errorprone.annotations.CheckReturnValue
+
+                @CheckReturnValue
+                open class CheckResultTest2 @JvmOverloads internal constructor(foo: String? = null) {
+                    constructor(s: String, s2: String) : this(s)
+                    inner class SubClass internal constructor(foo: String?) : CheckResultTest2(null)
+                }
+                """
+            ),
+            errorProneCheckReturnValueSource
+        ).run().expectClean()
+    }
+
     private val javaxCheckReturnValueSource = java(
         """
         package javax.annotation;
