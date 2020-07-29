@@ -69,7 +69,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 public class FontDetector extends ResourceXmlDetector {
-    // TODO: Change this to the API version where we don't have to rely on appcompat for downloadable
+    // TODO: Change this to the API version where we don't have to rely on appcompat for
+    // downloadable
     // fonts loading at runtime.
     public static final int FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK =
             Integer.MAX_VALUE - 1;

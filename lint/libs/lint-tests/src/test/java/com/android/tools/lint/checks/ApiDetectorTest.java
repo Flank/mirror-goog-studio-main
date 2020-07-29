@@ -2914,20 +2914,20 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "                           ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 2 warnings";
         lint().files(
-                manifest().minSdk(1),
-                java(
-                        ""
-                                + "package test.pkg;\n"
-                                + "import android.provider.MediaStore.Images.ImageColumns;\n"
-                                + "import android.provider.MediaStore.MediaColumns;\n"
-                                + "import android.provider.MediaStore.Video.VideoColumns;\n"
-                                + "public class Test {\n"
-                                + "    public void test(MediaColumns media, ImageColumns image, VideoColumns video) {\n"
-                                + "        System.out.println(media.BUCKET_DISPLAY_NAME); // ERROR - req 29\n"
-                                + "        System.out.println(image.BUCKET_DISPLAY_NAME); // OK\n"
-                                + "        System.out.println(video.BUCKET_DISPLAY_NAME); // ERROR - req 3\n"
-                                + "    }\n"
-                                + "}"))
+                        manifest().minSdk(1),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "import android.provider.MediaStore.Images.ImageColumns;\n"
+                                        + "import android.provider.MediaStore.MediaColumns;\n"
+                                        + "import android.provider.MediaStore.Video.VideoColumns;\n"
+                                        + "public class Test {\n"
+                                        + "    public void test(MediaColumns media, ImageColumns image, VideoColumns video) {\n"
+                                        + "        System.out.println(media.BUCKET_DISPLAY_NAME); // ERROR - req 29\n"
+                                        + "        System.out.println(image.BUCKET_DISPLAY_NAME); // OK\n"
+                                        + "        System.out.println(video.BUCKET_DISPLAY_NAME); // ERROR - req 3\n"
+                                        + "    }\n"
+                                        + "}"))
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
