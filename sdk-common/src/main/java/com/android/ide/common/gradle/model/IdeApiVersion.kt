@@ -15,6 +15,29 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.ApiVersion
+interface IdeApiVersion {
+  /**
+   * Returns the api level as an integer.
+   *
+   * For target that are in preview mode, this can be superseded by [codename].
+   */
+  val apiLevel: Int
 
-interface IdeApiVersion : ApiVersion
+  /**
+   * Returns the version code name if applicable, null otherwise.
+   *
+   * If the codename is non null, then the API level should be ignored, and this should be
+   * used as a unique identifier of the target instead.
+   */
+  val codename: String?
+
+  /**
+   * Returns the API value as a string.
+   *
+   * If there's a codename, this returns it, otherwise this returns the string version
+   * of the integer api level.
+   * @return a String.
+   */
+  val apiString: String
+
+}

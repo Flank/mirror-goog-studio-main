@@ -22,7 +22,7 @@ import com.android.ide.common.gradle.model.IdeApiVersion;
 import java.io.Serializable;
 import java.util.Objects;
 
-/** Creates a deep copy of an {@link ApiVersion}. */
+/** Creates a deep copy of an {@link IdeApiVersion}. */
 public final class IdeApiVersionImpl implements IdeApiVersion, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;

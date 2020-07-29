@@ -21,9 +21,9 @@ import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.VectorDrawablesOptions;
+import com.android.ide.common.gradle.model.IdeApiVersion;
 import com.android.ide.common.gradle.model.IdeProductFlavor;
 import com.android.ide.common.gradle.model.ModelCache;
-import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
@@ -44,8 +44,8 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
     @Nullable private final String myApplicationId;
     @Nullable private final Integer myVersionCode;
     @Nullable private final String myVersionName;
-    @Nullable private final ApiVersion myMinSdkVersion;
-    @Nullable private final ApiVersion myTargetSdkVersion;
+    @Nullable private final IdeApiVersion myMinSdkVersion;
+    @Nullable private final IdeApiVersion myTargetSdkVersion;
     @Nullable private final Integer myMaxSdkVersion;
     @Nullable private final String myTestApplicationId;
     @Nullable private final String myTestInstrumentationRunner;
@@ -181,13 +181,13 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
 
     @Override
     @Nullable
-    public ApiVersion getMinSdkVersion() {
+    public IdeApiVersion getMinSdkVersion() {
         return myMinSdkVersion;
     }
 
     @Override
     @Nullable
-    public ApiVersion getTargetSdkVersion() {
+    public IdeApiVersion getTargetSdkVersion() {
         return myTargetSdkVersion;
     }
 

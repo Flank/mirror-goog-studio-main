@@ -38,7 +38,6 @@ import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
@@ -52,6 +51,7 @@ import com.android.ide.common.gradle.model.IdeAaptOptions;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
+import com.android.ide.common.gradle.model.IdeApiVersion;
 import com.android.ide.common.gradle.model.IdeBuildType;
 import com.android.ide.common.gradle.model.IdeBuildTypeContainer;
 import com.android.ide.common.gradle.model.IdeJavaArtifact;
@@ -578,8 +578,8 @@ public class GradleModelMocker {
         }
 
         // Merge values into mergedFlavor
-        ApiVersion minSdkVersion = defaultFlavor.getMinSdkVersion();
-        ApiVersion targetSdkVersion = defaultFlavor.getTargetSdkVersion();
+        IdeApiVersion minSdkVersion = defaultFlavor.getMinSdkVersion();
+        IdeApiVersion targetSdkVersion = defaultFlavor.getTargetSdkVersion();
         Integer versionCode = defaultFlavor.getVersionCode();
         String versionName = defaultFlavor.getVersionName();
         Map<String, Object> manifestPlaceholders =
@@ -1097,7 +1097,7 @@ public class GradleModelMocker {
                 error("Unexpected flavor context " + context);
             }
         } else if (line.startsWith("minSdkVersion ")) {
-            ApiVersion apiVersion = createApiVersion(key);
+            IdeApiVersion apiVersion = createApiVersion(key);
             IdeProductFlavor flavor = getFlavorFromContext(context);
             if (flavor != null) {
                 when(flavor.getMinSdkVersion()).thenReturn(apiVersion);
@@ -1105,7 +1105,7 @@ public class GradleModelMocker {
                 error("Unexpected flavor context " + context);
             }
         } else if (line.startsWith("targetSdkVersion ")) {
-            ApiVersion version = createApiVersion(key);
+            IdeApiVersion version = createApiVersion(key);
             IdeProductFlavor flavor = getFlavorFromContext(context);
             if (flavor != null) {
                 when(flavor.getTargetSdkVersion()).thenReturn(version);
@@ -1782,8 +1782,8 @@ public class GradleModelMocker {
     }
 
     @NonNull
-    private ApiVersion createApiVersion(@NonNull String value) {
-        ApiVersion version = mock(ApiVersion.class);
+    private IdeApiVersion createApiVersion(@NonNull String value) {
+        IdeApiVersion version = mock(IdeApiVersion.class);
         String s = value.substring(value.indexOf(' ') + 1);
         if (s.startsWith("'")) {
             String codeName = getUnquotedValue(s);

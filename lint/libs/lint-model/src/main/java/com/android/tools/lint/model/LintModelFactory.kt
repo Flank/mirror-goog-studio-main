@@ -18,12 +18,12 @@ package com.android.tools.lint.model
 
 import com.android.AndroidProjectTypes
 import com.android.builder.model.AndroidProject
-import com.android.builder.model.ApiVersion
 import com.android.builder.model.ClassField
 import com.android.builder.model.LintOptions
 import com.android.ide.common.gradle.model.IdeAaptOptions
 import com.android.ide.common.gradle.model.IdeAndroidArtifact
 import com.android.ide.common.gradle.model.IdeAndroidProject
+import com.android.ide.common.gradle.model.IdeApiVersion
 import com.android.ide.common.gradle.model.IdeBaseArtifact
 import com.android.ide.common.gradle.model.IdeBuildType
 import com.android.ide.common.gradle.model.IdeJavaArtifact
@@ -701,7 +701,7 @@ class LintModelFactory : LintModelModuleLoader {
         )
     }
 
-    private fun ApiVersion.toAndroidVersion(): AndroidVersion? {
+    private fun IdeApiVersion.toAndroidVersion(): AndroidVersion? {
         return AndroidVersion(apiLevel, codename)
     }
 

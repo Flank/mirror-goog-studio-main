@@ -17,9 +17,7 @@ package com.android.ide.common.gradle.model
 
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
-import com.android.builder.model.ApiVersion
 import com.android.builder.model.BuildType
-import com.android.builder.model.SigningConfig
 import com.android.builder.model.Variant
 import com.android.builder.model.VectorDrawablesOptions
 
@@ -50,10 +48,10 @@ interface IdeProductFlavor : IdeBaseConfig {
     val versionName: String?
 
     /** The minSdkVersion, or null if not specified. This is only the value set on this product flavor. */
-    val minSdkVersion: ApiVersion?
+    val minSdkVersion: IdeApiVersion?
 
     /** The targetSdkVersion, or null if not specified. This is only the value set on this product flavor. */
-    val targetSdkVersion: ApiVersion?
+    val targetSdkVersion: IdeApiVersion?
 
     /** The maxSdkVersion, or null if not specified. This is only the value set on this produce flavor. */
     val maxSdkVersion: Int?
