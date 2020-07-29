@@ -52,7 +52,7 @@ public final class IdeLibraries {
             // getProject() isn't available for pre-2.0 plugins. Proceed with MavenCoordinates.
             // Anyway pre-2.0 plugins don't have variant information for module dependency.
         }
-        MavenCoordinates coordinate = computeResolvedCoordinate(library, new ModelCache());
+        IdeMavenCoordinates coordinate = computeResolvedCoordinate(library, new ModelCache());
         String artifactId = coordinate.getArtifactId();
         if (artifactId.startsWith(":")) {
             artifactId = artifactId.substring(1);
