@@ -16,21 +16,66 @@
 
 package com.android.build.gradle.internal.core
 
+import com.android.build.api.component.ComponentProperties
+import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.api.BaseVariantImpl
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.DefaultVectorDrawablesOptions
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.BaseConfig
 import com.android.builder.model.ProductFlavor
 import com.google.common.collect.Lists
+import org.gradle.api.provider.Property
 
 /**
  * The merger of the default config and all of a variant's flavors (if any)
  */
 class MergedFlavor(
     name: String,
+    private val _applicationId: Property<String>,
     private val dslServices: DslServices
 ) : AbstractProductFlavor(name), InternalBaseVariant.MergedFlavor {
+
+    // in the merged flavor scenario which is still accessible from the old variant API, we need
+    // to reset the value in the VariantProperties which we can do through the DslInfo reference.
+    override var applicationId: String?
+        get() {
+            // consider throwing an exception instead, as this is not reliable.
+            dslServices.deprecationReporter
+                .reportDeprecatedApi(
+                    "VariantProperties.getApplicationId()",
+                    "MergedFlavor.getApplicationId()",
+                    BaseVariantImpl.USE_PROPERTIES_DEPRECATION_URL,
+                    DeprecationReporter.DeprecationTarget.USE_PROPERTIES
+                )
+
+            if (!dslServices.projectOptions.get(BooleanOption.ENABLE_LEGACY_API)) {
+                dslServices.issueReporter
+                    .reportError(
+                        IssueReporter.Type.GENERIC,
+                        RuntimeException(
+                            """
+                                Access to deprecated legacy com.android.builder.model.ProductFlavor.getApplicationId() requires compatibility mode for Property values in new com.android.build.api.variant.VariantOutput.versionCode
+                                $ComponentPropertiesImpl.ENABLE_LEGACY_API
+                                """.trimIndent()
+                        )
+                    )
+                // return default value
+                return null
+            }
+            return _applicationId.get()
+        }
+        set(value) {
+            setApplicationId(value)
+        }
+
+    override fun setApplicationId(applicationId: String?): ProductFlavor {
+        _applicationId.set(applicationId)
+        return this
+    }
 
     companion object {
 
@@ -41,8 +86,8 @@ class MergedFlavor(
          * @return a new MergedFlavor instance that is a clone of the flavor.
          */
         @JvmStatic
-        fun clone(productFlavor: ProductFlavor, dslServices: DslServices): MergedFlavor {
-            val mergedFlavor = MergedFlavor(productFlavor.name, dslServices)
+        fun clone(productFlavor: ProductFlavor, applicationId: Property<String>, dslServices: DslServices): MergedFlavor {
+            val mergedFlavor = MergedFlavor(productFlavor.name, applicationId, dslServices)
             mergedFlavor._initWith(productFlavor)
             return mergedFlavor
         }
@@ -64,9 +109,10 @@ class MergedFlavor(
         fun mergeFlavors(
             lowestPriority: ProductFlavor,
             flavors: List<ProductFlavor>,
+            applicationId: Property<String>,
             dslServices: DslServices
         ): MergedFlavor {
-            val mergedFlavor = clone(lowestPriority, dslServices)
+            val mergedFlavor = clone(lowestPriority, applicationId, dslServices)
             for (flavor in Lists.reverse(flavors)) {
                 mergedFlavor.mergeWithHigherPriorityFlavor(flavor)
             }

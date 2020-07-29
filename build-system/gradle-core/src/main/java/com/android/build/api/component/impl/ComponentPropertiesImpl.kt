@@ -581,4 +581,9 @@ abstract class ComponentPropertiesImpl(
             BuildConfigType.JAVA_CLASS
         }
     }
+
+    companion object {
+        // String to
+        final val ENABLE_LEGACY_API: String = "Turn on with by putting '${BooleanOption.ENABLE_LEGACY_API.propertyName}=true in gradle.properties'"
+    }
 }

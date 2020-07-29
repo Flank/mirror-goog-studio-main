@@ -50,7 +50,6 @@ public class PseudoApiChangesTest {
                     "ManifestAttributeSupplier",
                     "StandardOutErrMessageReceiver",
                     "ToolsRevisionUtils",
-                    "VariantAttributesProvider",
                     "VariantType",
                     "VariantTypeImpl");
 

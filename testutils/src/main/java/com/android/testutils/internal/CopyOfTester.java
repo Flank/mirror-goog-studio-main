@@ -22,7 +22,9 @@ import static org.mockito.Mockito.mock;
 import com.android.annotations.NonNull;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -39,6 +41,10 @@ public class CopyOfTester {
     private static final Predicate<Method> IS_GETTER =
             m -> GETTER_NAME.matcher(m.getName()).matches();
 
+    public static <T> void assertAllGettersCalled(
+            @NonNull Class<T> klass, @NonNull T object, @NonNull Consumer<T> copyingCode) {
+        assertAllGettersCalled(klass, object, Collections.emptyList(), copyingCode);
+    }
     /**
      * Checks that all getters declared in the given class (and superclasses) are called when the
      * copying code is invoked.
@@ -55,7 +61,10 @@ public class CopyOfTester {
      * <p>Thus, this test will fail and you will be notified of the getter that was not called
      */
     public static <T> void assertAllGettersCalled(
-            @NonNull Class<T> klass, @NonNull T object, @NonNull Consumer<T> copyingCode) {
+            @NonNull Class<T> klass,
+            @NonNull T object,
+            @NonNull List<String> excluded,
+            @NonNull Consumer<T> copyingCode) {
         // We're keeping track of names, and not Method instances to handle interface
         // implementations  that change the return type to be more specific. In such case
         // klass.getMethods() returns both methods, but the overridden one cannot be invoked.
@@ -66,6 +75,7 @@ public class CopyOfTester {
                         .map(Method::getName)
                         .collect(Collectors.toSet());
         assertThat(allGetters).named("getters declared in " + klass.getName()).isNotEmpty();
+        allGetters.removeAll(excluded);
 
         Set<String> gettersCalled = new HashSet<>();
 
