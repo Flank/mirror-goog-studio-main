@@ -26,7 +26,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.ClassField;
-import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.MavenCoordinates;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
@@ -34,6 +33,7 @@ import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeBuildType;
 import com.android.ide.common.gradle.model.IdeBuildTypeContainer;
 import com.android.ide.common.gradle.model.IdeClassField;
+import com.android.ide.common.gradle.model.IdeJavaCompileOptions;
 import com.android.ide.common.gradle.model.IdeProductFlavor;
 import com.android.ide.common.gradle.model.IdeProductFlavorContainer;
 import com.android.ide.common.gradle.model.IdeVariant;
@@ -1140,7 +1140,7 @@ public class GradleModelMockerTest {
         assertThat(mocker).isNotNull();
         IdeAndroidProject project = mocker.getProject();
         assertThat(project).isNotNull();
-        JavaCompileOptions compileOptions = project.getJavaCompileOptions();
+        IdeJavaCompileOptions compileOptions = project.getJavaCompileOptions();
         assertThat(compileOptions.getSourceCompatibility()).isEqualTo("1.8");
         assertThat(compileOptions.getTargetCompatibility()).isEqualTo("1.8");
     }
@@ -1159,7 +1159,7 @@ public class GradleModelMockerTest {
         assertThat(mocker).isNotNull();
         IdeAndroidProject project = mocker.getProject();
         assertThat(project).isNotNull();
-        JavaCompileOptions compileOptions = project.getJavaCompileOptions();
+        IdeJavaCompileOptions compileOptions = project.getJavaCompileOptions();
         assertThat(compileOptions.getSourceCompatibility()).isEqualTo("1.7");
         assertThat(compileOptions.getTargetCompatibility()).isEqualTo("1.7");
     }
