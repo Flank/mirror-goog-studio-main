@@ -154,6 +154,14 @@ val CxxAbiModel.compileCommandsJsonFile: File
     get() = FileUtils.join(originalCxxBuildFolder, "compile_commands.json")
 
 /**
+ * compile_commands.json.bin file for this ABI. This is equivalent to a compile_commands.json file
+ * but more compact.
+ * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/compile_commands.json.bin
+ */
+val CxxAbiModel.compileCommandsJsonBinFile: File
+    get() = FileUtils.join(originalCxxBuildFolder, "compile_commands.json.bin")
+
+/**
  * Text file containing absolute paths to folders containing the generated symbols, one per line.
  * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/symbol_folder_index.txt
  */

@@ -45,7 +45,9 @@ public class FlowAnalyzerTest {
     private static void assertFlowAnalysisEquals(
             @NonNull String string, @NonNull FlowAnalysisBuilder expected) {
         ListMultimap<String, List<BuildStepInfo>> io =
-                FlowAnalyzer.analyze(string, AbstractOsFileConventions.createForCurrentHost());
+                FlowAnalyzer.analyze(
+                        CommandClassifier.classify(
+                                string, AbstractOsFileConventions.createForCurrentHost()));
 
         assertThat(io).isEqualTo(expected.map);
     }

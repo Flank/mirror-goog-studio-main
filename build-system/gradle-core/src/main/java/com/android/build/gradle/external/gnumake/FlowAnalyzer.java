@@ -44,8 +44,7 @@ class FlowAnalyzer {
      */
     @NonNull
     static ListMultimap<String, List<BuildStepInfo>> analyze(
-            @NonNull String commands, @NonNull OsFileConventions policy) {
-        List<BuildStepInfo> commandSummaries = CommandClassifier.classify(commands, policy);
+            @NonNull List<BuildStepInfo> commandSummaries) {
 
         // For each filename, record the last command that created it.
         Map<String, Integer> outputToCommand = new HashMap<>();

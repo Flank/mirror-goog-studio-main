@@ -17,6 +17,9 @@
 package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
+import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.dump;
+import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.readAsFileIndex;
+import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.readCompileCommandsJsonBinEntries;
 import static com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.FileSubject.assertThat;
@@ -24,7 +27,10 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2;
+import com.android.build.gradle.integration.common.fixture.ModelContainerV2;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.fixture.model.CompileCommandsJsonBinEntry;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
@@ -33,31 +39,52 @@ import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.NativeBuildSystem;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
+import com.android.builder.model.v2.models.ndk.NativeAbi;
+import com.android.builder.model.v2.models.ndk.NativeModule;
+import com.android.builder.model.v2.models.ndk.NativeVariant;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Assemble tests for ndk-build. */
+@RunWith(Parameterized.class)
 public class NdkBuildTest {
 
-    @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestApp(HelloWorldJniApp.builder().build())
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-                    .addFile(HelloWorldJniApp.androidMkC("src/main/jni"))
-                    // TODO(b/161169301): Support v2 model with ndk-build
-                    .addGradleProperties(
-                            BooleanOption.ENABLE_V2_NATIVE_MODEL.getPropertyName() + "=false")
-                    .create();
+    @Rule public final GradleTestProject project;
+    private final boolean useV2NativeModel;
+
+    public NdkBuildTest(boolean useV2NativeModel) {
+        project =
+                GradleTestProject.builder()
+                        .fromTestApp(HelloWorldJniApp.builder().build())
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                        .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+                        .addFile(HelloWorldJniApp.androidMkC("src/main/jni"))
+                        .addGradleProperties(
+                                BooleanOption.ENABLE_V2_NATIVE_MODEL.getPropertyName()
+                                        + "="
+                                        + useV2NativeModel)
+                        .create();
+        this.useV2NativeModel = useV2NativeModel;
+    }
+
+    @Parameterized.Parameters(name = "useV2NativeModel={0}")
+    public static Collection<Object[]> data() {
+        return ImmutableList.of(new Object[] {false}, new Object[] {true});
+    }
 
     @Before
     public void setUp() throws IOException {
@@ -142,56 +169,243 @@ public class NdkBuildTest {
 
     @Test
     public void model() throws IOException {
-        project.model().fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
-        NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
-        assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.NDK_BUILD.getTag());
-        assertThat(model.getBuildFiles()).hasSize(1);
-        assertThat(model.getName()).isEqualTo("project");
-        int abiCount = 2;
-        assertThat(model.getArtifacts()).hasSize(abiCount * 2);
-        assertThat(model.getFileExtensions()).hasSize(1);
+        if (useV2NativeModel) {
+            ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> fetchResult =
+                    project.modelV2()
+                            .fetchNativeModules(
+                                    ImmutableList.of("debug"), ImmutableList.of("arm64-v8a"));
+            assertThat(dump(fetchResult))
+                    .isEqualTo(
+                            "[:]\n"
+                                    + "> NativeModule:\n"
+                                    + "    - name                    = \"project\"\n"
+                                    + "    > variants:\n"
+                                    + "       * NativeVariant:\n"
+                                    + "          * name = \"debug\"\n"
+                                    + "          > abis:\n"
+                                    + "             * NativeAbi:\n"
+                                    + "                * name                  = \"armeabi-v7a\"\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/debug/armeabi-v7a/compile_commands.json.bin{!}\n"
+                                    + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/debug/armeabi-v7a/symbol_folder_index.txt{!}\n"
+                                    + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/debug/armeabi-v7a/build_file_index.txt{!}\n"
+                                    + "             * NativeAbi:\n"
+                                    + "                * name                  = \"arm64-v8a\"\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/debug/arm64-v8a/compile_commands.json.bin{F}\n"
+                                    + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/debug/arm64-v8a/symbol_folder_index.txt{F}\n"
+                                    + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/debug/arm64-v8a/build_file_index.txt{F}\n"
+                                    + "          < abis\n"
+                                    + "       * NativeVariant:\n"
+                                    + "          * name = \"release\"\n"
+                                    + "          > abis:\n"
+                                    + "             * NativeAbi:\n"
+                                    + "                * name                  = \"armeabi-v7a\"\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/release/armeabi-v7a/compile_commands.json.bin{!}\n"
+                                    + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/release/armeabi-v7a/symbol_folder_index.txt{!}\n"
+                                    + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/release/armeabi-v7a/build_file_index.txt{!}\n"
+                                    + "             * NativeAbi:\n"
+                                    + "                * name                  = \"arm64-v8a\"\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/release/arm64-v8a/compile_commands.json.bin{!}\n"
+                                    + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/release/arm64-v8a/symbol_folder_index.txt{!}\n"
+                                    + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/release/arm64-v8a/build_file_index.txt{!}\n"
+                                    + "          < abis\n"
+                                    + "    < variants\n"
+                                    + "    - nativeBuildSystem       = NDK_BUILD\n"
+                                    + "    - ndkVersion              = \"{DEFAULT_NDK_VERSION}\"\n"
+                                    + "    - defaultNdkVersion       = \"{DEFAULT_NDK_VERSION}\"\n"
+                                    + "    - externalNativeBuildFile = {PROJECT}/src/main/jni/Android.mk{F}\n"
+                                    + "< NativeModule");
+            NativeVariant debugVariant =
+                    fetchResult.getContainer().getSingleModel().getVariants().stream()
+                            .filter(variant -> variant.getName().equals("debug"))
+                            .findFirst()
+                            .get();
+            NativeAbi debugX86Abi =
+                    debugVariant.getAbis().stream()
+                            .filter(abi -> abi.getName().equals("arm64-v8a"))
+                            .findFirst()
+                            .get();
+            List<CompileCommandsJsonBinEntry> commandsJsonBinEntries =
+                    readCompileCommandsJsonBinEntries(
+                            debugX86Abi.getSourceFlagsFile(), fetchResult.getNormalizer());
+            assertThat(
+                            commandsJsonBinEntries.stream()
+                                    .map(CompileCommandsJsonBinEntry::getSourceFile)
+                                    .collect(Collectors.toList()))
+                    .containsExactly("{PROJECT}/src/main/jni/hello-jni.c{F}");
+            assertThat(
+                            readAsFileIndex(
+                                    debugX86Abi.getSymbolFolderIndexFile(),
+                                    fetchResult.getNormalizer()))
+                    .containsExactly(
+                            "{PROJECT}/build/intermediates/ndkBuild/debug/obj/local/arm64-v8a{!}");
+            assertThat(
+                            readAsFileIndex(
+                                    debugX86Abi.getBuildFileIndexFile(),
+                                    fetchResult.getNormalizer()))
+                    .containsExactly("{PROJECT}/src/main/jni/Android.mk{F}");
+        } else {
+            project.model()
+                    .fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
+            NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
+            assertThat(model.getBuildSystems())
+                    .containsExactly(NativeBuildSystem.NDK_BUILD.getTag());
+            assertThat(model.getBuildFiles()).hasSize(1);
+            assertThat(model.getName()).isEqualTo("project");
+            int abiCount = 2;
+            assertThat(model.getArtifacts()).hasSize(abiCount * 2);
+            assertThat(model.getFileExtensions()).hasSize(1);
 
-        for (File file : model.getBuildFiles()) {
-            assertThat(file).isFile();
+            for (File file : model.getBuildFiles()) {
+                assertThat(file).isFile();
+            }
+
+            Multimap<String, NativeArtifact> groupToArtifacts = ArrayListMultimap.create();
+
+            for (NativeArtifact artifact : model.getArtifacts()) {
+                List<String> pathElements = TestFileUtils.splitPath(artifact.getOutputFile());
+                assertThat(pathElements).contains("obj");
+                assertThat(pathElements).doesNotContain("lib");
+                groupToArtifacts.put(artifact.getGroupName(), artifact);
+            }
+
+            assertThat(model).hasArtifactGroupsNamed("debug", "release");
+            assertThat(model).hasArtifactGroupsOfSize(abiCount);
         }
-
-        Multimap<String, NativeArtifact> groupToArtifacts = ArrayListMultimap.create();
-
-        for (NativeArtifact artifact : model.getArtifacts()) {
-            List<String> pathElements = TestFileUtils.splitPath(artifact.getOutputFile());
-            assertThat(pathElements).contains("obj");
-            assertThat(pathElements).doesNotContain("lib");
-            groupToArtifacts.put(artifact.getGroupName(), artifact);
-        }
-
-        assertThat(model).hasArtifactGroupsNamed("debug", "release");
-        assertThat(model).hasArtifactGroupsOfSize(abiCount);
     }
 
     @Test
-    public void clean() throws IOException, InterruptedException {
+    public void clean() throws IOException {
         project.execute("clean", "assembleDebug", "assembleRelease");
-        NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
-        assertThat(model).hasBuildOutputCountEqualTo(4);
-        assertThat(model).allBuildOutputsExist();
-        assertThat(model).hasExactObjectFilesInBuildFolder("hello-jni.o");
-        assertThat(model).hasExactSharedObjectFilesInBuildFolder("libhello-jni.so");
-        project.execute("clean");
-        assertThat(model).noBuildOutputsExist();
-        assertThat(model).hasExactObjectFilesInBuildFolder();
-        assertThat(model).hasExactSharedObjectFilesInBuildFolder();
+        if (useV2NativeModel) {
+            ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> fetchResult =
+                    project.modelV2().fetchNativeModules(ImmutableList.of(), ImmutableList.of());
+            assertThat(dump(fetchResult))
+                    .isEqualTo(
+                            "[:]\n"
+                                    + "> NativeModule:\n"
+                                    + "    - name                    = \"project\"\n"
+                                    + "    > variants:\n"
+                                    + "       * NativeVariant:\n"
+                                    + "          * name = \"debug\"\n"
+                                    + "          > abis:\n"
+                                    + "             * NativeAbi:\n"
+                                    + "                * name                  = \"armeabi-v7a\"\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/debug/armeabi-v7a/compile_commands.json.bin{F}\n"
+                                    + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/debug/armeabi-v7a/symbol_folder_index.txt{F}\n"
+                                    + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/debug/armeabi-v7a/build_file_index.txt{F}\n"
+                                    + "             * NativeAbi:\n"
+                                    + "                * name                  = \"arm64-v8a\"\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/debug/arm64-v8a/compile_commands.json.bin{F}\n"
+                                    + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/debug/arm64-v8a/symbol_folder_index.txt{F}\n"
+                                    + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/debug/arm64-v8a/build_file_index.txt{F}\n"
+                                    + "          < abis\n"
+                                    + "       * NativeVariant:\n"
+                                    + "          * name = \"release\"\n"
+                                    + "          > abis:\n"
+                                    + "             * NativeAbi:\n"
+                                    + "                * name                  = \"armeabi-v7a\"\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/release/armeabi-v7a/compile_commands.json.bin{F}\n"
+                                    + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/release/armeabi-v7a/symbol_folder_index.txt{F}\n"
+                                    + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/release/armeabi-v7a/build_file_index.txt{F}\n"
+                                    + "             * NativeAbi:\n"
+                                    + "                * name                  = \"arm64-v8a\"\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/release/arm64-v8a/compile_commands.json.bin{F}\n"
+                                    + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/release/arm64-v8a/symbol_folder_index.txt{F}\n"
+                                    + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/release/arm64-v8a/build_file_index.txt{F}\n"
+                                    + "          < abis\n"
+                                    + "    < variants\n"
+                                    + "    - nativeBuildSystem       = NDK_BUILD\n"
+                                    + "    - ndkVersion              = \"{DEFAULT_NDK_VERSION}\"\n"
+                                    + "    - defaultNdkVersion       = \"{DEFAULT_NDK_VERSION}\"\n"
+                                    + "    - externalNativeBuildFile = {PROJECT}/src/main/jni/Android.mk{F}\n"
+                                    + "< NativeModule");
+            NativeVariant debugVariant =
+                    fetchResult.getContainer().getSingleModel().getVariants().stream()
+                            .filter(variant -> variant.getName().equals("debug"))
+                            .findFirst()
+                            .get();
+            NativeAbi debugX86Abi =
+                    debugVariant.getAbis().stream()
+                            .filter(abi -> abi.getName().equals("arm64-v8a"))
+                            .findFirst()
+                            .get();
+            File soFolder = readAsFileIndex(debugX86Abi.getSymbolFolderIndexFile()).get(0);
+            assertThat(Arrays.asList(soFolder.list())).contains("libhello-jni.so");
+            project.execute("clean");
+            assertThat(soFolder).doesNotExist();
+        } else {
+            NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
+            assertThat(model).hasBuildOutputCountEqualTo(4);
+            assertThat(model).allBuildOutputsExist();
+            assertThat(model).hasExactObjectFilesInBuildFolder("hello-jni.o");
+            assertThat(model).hasExactSharedObjectFilesInBuildFolder("libhello-jni.so");
+            project.execute("clean");
+            assertThat(model).noBuildOutputsExist();
+            assertThat(model).hasExactObjectFilesInBuildFolder();
+            assertThat(model).hasExactSharedObjectFilesInBuildFolder();
+        }
     }
 
     @Test
-    public void abiSubset() throws IOException, InterruptedException {
-        project.execute("clean", "assembleDebug", "assembleRelease");
-        NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
-        assertThat(model).hasBuildOutputCountEqualTo(4);
-
+    public void abiSubset() throws IOException {
         List<File> allBuildOutputs = Lists.newArrayList();
-        for (NativeArtifact artifact : model.getArtifacts()) {
-            assertThat(artifact.getOutputFile()).isFile();
-            allBuildOutputs.add(artifact.getOutputFile());
+        project.execute("clean", "assembleDebug", "assembleRelease");
+        if (useV2NativeModel) {
+            ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> fetchResult =
+                    project.modelV2().fetchNativeModules(ImmutableList.of(), ImmutableList.of());
+            assertThat(dump(fetchResult))
+                    .isEqualTo(
+                            "[:]\n"
+                                    + "> NativeModule:\n"
+                                    + "    - name                    = \"project\"\n"
+                                    + "    > variants:\n"
+                                    + "       * NativeVariant:\n"
+                                    + "          * name = \"debug\"\n"
+                                    + "          > abis:\n"
+                                    + "             * NativeAbi:\n"
+                                    + "                * name                  = \"armeabi-v7a\"\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/debug/armeabi-v7a/compile_commands.json.bin{F}\n"
+                                    + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/debug/armeabi-v7a/symbol_folder_index.txt{F}\n"
+                                    + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/debug/armeabi-v7a/build_file_index.txt{F}\n"
+                                    + "             * NativeAbi:\n"
+                                    + "                * name                  = \"arm64-v8a\"\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/debug/arm64-v8a/compile_commands.json.bin{F}\n"
+                                    + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/debug/arm64-v8a/symbol_folder_index.txt{F}\n"
+                                    + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/debug/arm64-v8a/build_file_index.txt{F}\n"
+                                    + "          < abis\n"
+                                    + "       * NativeVariant:\n"
+                                    + "          * name = \"release\"\n"
+                                    + "          > abis:\n"
+                                    + "             * NativeAbi:\n"
+                                    + "                * name                  = \"armeabi-v7a\"\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/release/armeabi-v7a/compile_commands.json.bin{F}\n"
+                                    + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/release/armeabi-v7a/symbol_folder_index.txt{F}\n"
+                                    + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/release/armeabi-v7a/build_file_index.txt{F}\n"
+                                    + "             * NativeAbi:\n"
+                                    + "                * name                  = \"arm64-v8a\"\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/release/arm64-v8a/compile_commands.json.bin{F}\n"
+                                    + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/release/arm64-v8a/symbol_folder_index.txt{F}\n"
+                                    + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/release/arm64-v8a/build_file_index.txt{F}\n"
+                                    + "          < abis\n"
+                                    + "    < variants\n"
+                                    + "    - nativeBuildSystem       = NDK_BUILD\n"
+                                    + "    - ndkVersion              = \"{DEFAULT_NDK_VERSION}\"\n"
+                                    + "    - defaultNdkVersion       = \"{DEFAULT_NDK_VERSION}\"\n"
+                                    + "    - externalNativeBuildFile = {PROJECT}/src/main/jni/Android.mk{F}\n"
+                                    + "< NativeModule");
+            fetchResult.getContainer().getSingleModel().getVariants().stream()
+                    .flatMap(variant -> variant.getAbis().stream())
+                    .flatMap(abi -> readAsFileIndex(abi.getSymbolFolderIndexFile()).stream())
+                    .flatMap(folder -> Arrays.stream(folder.listFiles()))
+                    .forEach(allBuildOutputs::add);
+        } else {
+            NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
+            assertThat(model).hasBuildOutputCountEqualTo(4);
+
+            for (NativeArtifact artifact : model.getArtifacts()) {
+                assertThat(artifact.getOutputFile()).isFile();
+                allBuildOutputs.add(artifact.getOutputFile());
+            }
         }
 
         // Change the build file to only have "arm64-v8a"

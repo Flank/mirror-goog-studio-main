@@ -431,3 +431,69 @@ fun streamCompileCommands(file: File,
         }
     }
 }
+
+/**
+ * Strips off arguments that don't affect IDE functionalities from the given list of arguments
+ * passed to clang.
+ *
+ * @param sourceFile the source file to compile
+ * @param args the raw args passed to the compiler
+ * @param scratchSpace the list used to build the final result. This is useful if caller would like
+ * to save some object allocations when stripping a large amount of commands. Caller don't need to
+ * clear the scratch space.
+ */
+fun stripArgsForIde(
+    sourceFile: String,
+    args: List<String>,
+    scratchSpace: MutableList<String> = ArrayList()
+): List<String> {
+    scratchSpace.clear()
+    var i = 0
+    while (i < args.size) {
+        when (val arg = args[i]) {
+            in STRIP_FLAGS_WITHOUT_ARG -> {
+            }
+            in STRIP_FLAGS_WITH_ARG -> i++
+            else -> if (STRIP_FLAGS_WITH_IMMEDIATE_ARG.none { arg.startsWith(it) } && arg != sourceFile) {
+                // Skip args that starts with flags that we should strip. Also skip source file.
+                scratchSpace += arg
+            }
+        }
+        i++
+    }
+    return scratchSpace
+}
+
+// Skip -M* flags because these govern the creation of .d files in gcc. We don't want
+// spurious files dropped by Cidr. See see b.android.com/215555 and
+// b.android.com/213429.
+// Also, removing these flags reduces the number of Settings groups that have to be
+// passed to Android Studio.
+
+/** These are flags that should be stripped and have a following argument. */
+private val STRIP_FLAGS_WITH_ARG =
+    listOf(
+        "-o",
+        "--output",
+        "-MF",
+        "-MT",
+        "-MQ"
+    )
+
+/** These are flags that have arguments immediate following them. */
+private val STRIP_FLAGS_WITH_IMMEDIATE_ARG = listOf(
+    "--output=",
+    "-MF",
+    "-MT",
+    "-MQ"
+)
+
+/** These are flags that should be stripped and don't have a following argument. */
+private val STRIP_FLAGS_WITHOUT_ARG: List<String> =
+    listOf( // Skip -M* flags because these govern the creation of .d files in gcc. We don't want
+        // spurious files dropped by Cidr. See see b.android.com/215555 and
+        // b.android.com/213429
+        "-M", "-MM", "-MD", "-MG", "-MP", "-MMD",
+        // -c tells the compiler to skip linking, which is always true for Android build.
+        "-c"
+    )

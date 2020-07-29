@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerat
 import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.model.buildFileIndexFile
+import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.symbolFolderIndexFile
 import com.android.build.gradle.internal.errors.SyncIssueReporter
@@ -95,17 +96,16 @@ class NativeModelBuilder(
         val cxxModuleModel = generators.first().variant.module
         val buildSystem = when (cxxModuleModel.buildSystem) {
             com.android.build.gradle.tasks.NativeBuildSystem.CMAKE -> NativeBuildSystem.CMAKE
-            com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD -> {
-                // TODO(161169301): The ndk-build path currently don't generate compile_commands.json
-                // So we return null and let studio to fallback to V1 API.
-                return null
-            }
+            com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD -> NativeBuildSystem.NDK_BUILD
         }
         val variants: List<NativeVariant> = generators.map { generator ->
             NativeVariantImpl(generator.variant.variantName, generator.abis.map { cxxAbiModel ->
                 NativeAbiImpl(
                     cxxAbiModel.abi.tag,
-                    cxxAbiModel.compileCommandsJsonFile.canonicalFile,
+                    when (cxxModuleModel.buildSystem) {
+                        com.android.build.gradle.tasks.NativeBuildSystem.CMAKE -> cxxAbiModel.compileCommandsJsonFile.canonicalFile
+                        com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD -> cxxAbiModel.compileCommandsJsonBinFile.canonicalFile
+                    },
                     cxxAbiModel.symbolFolderIndexFile.canonicalFile,
                     cxxAbiModel.buildFileIndexFile.canonicalFile
                 )

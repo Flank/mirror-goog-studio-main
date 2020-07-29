@@ -497,12 +497,12 @@ public abstract class BasePlugin<
                     new com.android.build.gradle.internal.ide.v2.NativeModelBuilder(
                             projectServices.getIssueReporter(), globalScope, variantModel);
             registry.register(nativeModelBuilderV2);
+        } else {
+            NativeModelBuilder nativeModelBuilder =
+                    new NativeModelBuilder(
+                            projectServices.getIssueReporter(), globalScope, variantModel);
+            registry.register(nativeModelBuilder);
         }
-        // TODO(b/161169301): registering V1 in an `else` branch when ndk-build is properly supported by V2.
-        NativeModelBuilder nativeModelBuilder =
-                new NativeModelBuilder(
-                        projectServices.getIssueReporter(), globalScope, variantModel);
-        registry.register(nativeModelBuilder);
     }
 
     /** Registers a builder for the custom tooling model. */

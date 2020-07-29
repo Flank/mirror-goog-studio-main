@@ -22,7 +22,8 @@ import com.android.build.gradle.internal.cxx.json.NativeToolchainValue
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.android.utils.NativeSourceFileExtensions
 import com.android.utils.NdkUtils
-import com.google.common.base.Joiner
+import com.android.utils.cxx.CompileCommandsEncoder
+import com.android.utils.cxx.stripArgsForIde
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import com.google.common.io.Files
@@ -67,6 +68,26 @@ class NativeBuildConfigValueBuilder internal constructor(
     private var buildTargetsCommand: List<String>? = null
 
     /**
+     * Skips processing compiler flags so that the generated [NativeBuildConfigValue] won't contain
+     * any native compiler flags.
+     */
+    var skipProcessingCompilerFlags = false
+
+    /**
+     * Location of compile_commands.json.bin used with V2 native models. If non-null the file will
+     * be generated as a side effect during [build].
+     */
+    var compileCommandsJsonBinFile: File? = null
+
+    /**
+     * Notes on implementation details: This is an implicit writer that generates the
+     * compile_commands.json.bin. This is used by implementation of the [build] method. It's created
+     * in [build] if [compileCommandsJsonBinFile] is set. If it's nonnull, callees of [build] will
+     * output compile commands to it.
+     */
+    private var compileCommandsEncoder: CompileCommandsEncoder? = null
+
+    /**
      * Constructs a NativeBuildConfigValueBuilder which can be used to build a [ ].
      *
      *
@@ -88,8 +109,8 @@ class NativeBuildConfigValueBuilder internal constructor(
         if (outputs.isNotEmpty()) {
             throw RuntimeException("setCommands should be called once")
         }
-        val outputs =
-            FlowAnalyzer.analyze(dryRunOutput, fileConventions)
+        val buildSteps = CommandClassifier.classify(dryRunOutput, fileConventions)
+        val outputs = FlowAnalyzer.analyze(buildSteps)
         for ((key, value) in outputs.entries()) {
             this.outputs.add(Output(key, value, buildCommand, cleanCommand, variantName))
         }
@@ -99,9 +120,29 @@ class NativeBuildConfigValueBuilder internal constructor(
     }
 
     /**
+     * Skips processing compiler flags so that the generated [NativeBuildConfigValue] won't contain
+     * any native compiler flags.
+     */
+    fun skipProcessingCompilerFlags() {
+        skipProcessingCompilerFlags = true
+    }
+
+    /**
      * Builds the [NativeBuildConfigValue] from the given information.
      */
     fun build(): NativeBuildConfigValue {
+        val compileCommandsJsonBinFile = this.compileCommandsJsonBinFile
+        return if (compileCommandsJsonBinFile == null) {
+            buildImpl()
+        } else {
+            CompileCommandsEncoder(compileCommandsJsonBinFile).use { encoder ->
+                compileCommandsEncoder = encoder
+                buildImpl()
+            }
+        }
+    }
+
+    private fun buildImpl(): NativeBuildConfigValue {
         findLibraryNames()
         findToolchainNames()
         findToolChainCompilers()
@@ -224,6 +265,19 @@ class NativeBuildConfigValueBuilder internal constructor(
             value.artifactName = output.artifactName
             value.toolchain = output.toolchain
             value.output = fileConventions.toFile(output.outputFileName)
+            compileCommandsEncoder?.let { encoder ->
+                val workingDirPath = executionRootPath.absolutePath
+                for (commandInput in output.commandInputs) {
+                    val command = commandInput.command
+                    encoder.writeCompileCommand(
+                        fileConventions.toFile(commandInput.onlyInput),
+                        File(command.executable),
+                        stripArgsForIde(commandInput.onlyInput, command.escapedFlags),
+                        File(workingDirPath)
+                    )
+                }
+            }
+            if (skipProcessingCompilerFlags) continue
             val nativeSourceFiles = ArrayList<NativeSourceFileValue>()
             value.files = nativeSourceFiles
             for (input in output.commandInputs) {
@@ -233,27 +287,15 @@ class NativeBuildConfigValueBuilder internal constructor(
                 if (!fileConventions.isPathAbsolute(input.onlyInput)) {
                     file.src = fileConventions.toFile(executionRootPath, input.onlyInput)
                 }
-                val flags: MutableList<String?> = ArrayList()
-                var i = 0
-                while (i < input.command.escapedFlags.size) {
-                    val arg = input.command.escapedFlags[i]
-                    if (STRIP_FLAGS_WITH_ARG.contains(arg)) {
-                        ++i // skip the next argument.
-                        ++i
-                        continue
-                    }
-                    if (startsWithStripFlag(arg)) {
-                        ++i
-                        continue
-                    }
-                    if (STRIP_FLAGS_WITHOUT_ARG.contains(arg)) {
-                        ++i
-                        continue
-                    }
-                    flags.add(input.command.rawFlags[i])
-                    ++i
+                val rawFlagsLookUpMap = mutableMapOf<String, String>()
+                for (i in 0 until input.command.rawFlags.size) {
+                    rawFlagsLookUpMap[input.command.escapedFlags[i]] = input.command.rawFlags[i]
                 }
-                file.flags = Joiner.on(" ").join(flags)
+                file.flags =
+                    stripArgsForIde(
+                        input.onlyInput,
+                        input.command.escapedFlags
+                    ).map { rawFlagsLookUpMap[it] }.joinToString(" ")
             }
         }
         return librariesMap
@@ -293,41 +335,10 @@ class NativeBuildConfigValueBuilder internal constructor(
     }
 
     companion object {
-        // These are flags which have a following argument.
-        private val STRIP_FLAGS_WITH_ARG =
-            listOf(
-                "-c",
-                "-o",  // Skip -M* flags because these govern the creation of .d files in gcc. We don't want
-                // spurious files dropped by Cidr. See see b.android.com/215555 and
-                // b.android.com/213429.
-                // Also, removing these flags reduces the number of Settings groups that have to be
-                // passed to Android Studio.
-                "-MF",
-                "-MT",
-                "-MQ"
-            )
-
-        // These are flags which don't have a following argument.
-        private val STRIP_FLAGS_WITHOUT_ARG: List<String> =
-            Lists.newArrayList( // Skip -M* flags because these govern the creation of .d files in gcc. We don't want
-                // spurious files dropped by Cidr. See see b.android.com/215555 and
-                // b.android.com/213429
-                "-M", "-MM", "-MD", "-MG", "-MP", "-MMD"
-            )
-
         private fun generateExtensions(extensionSet: Set<String>): Collection<String> {
             val extensionList: MutableList<String> = Lists.newArrayList(extensionSet)
             extensionList.sort()
             return extensionList
-        }
-
-        private fun startsWithStripFlag(arg: String): Boolean {
-            for (flag in STRIP_FLAGS_WITH_ARG) {
-                if (arg.startsWith(flag)) {
-                    return true
-                }
-            }
-            return false
         }
     }
 

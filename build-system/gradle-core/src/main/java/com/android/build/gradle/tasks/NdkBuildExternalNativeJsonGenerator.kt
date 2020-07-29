@@ -21,7 +21,13 @@ import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
-import com.android.build.gradle.internal.cxx.model.*
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.CxxVariantModel
+import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
+import com.android.build.gradle.internal.cxx.model.jsonFile
+import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
+import com.android.build.gradle.internal.cxx.model.metadataGenerationStderrFile
+import com.android.build.gradle.internal.cxx.model.metadataGenerationStdoutFile
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.google.common.base.Charsets
@@ -107,27 +113,31 @@ internal class NdkBuildExternalNativeJsonGenerator(
         // TODO(jomof): This NativeBuildConfigValue is probably consuming a lot of memory for large
         // projects. Should be changed to a streaming model where NativeBuildConfigValueBuilder
         // provides a streaming JsonReader rather than a full object.
-        val buildConfig =
-                NativeBuildConfigValueBuilder(
-                        makeFile,
-                        variant.module.moduleRootFolder
+        val builder =
+            NativeBuildConfigValueBuilder(
+                makeFile,
+                variant.module.moduleRootFolder
+            )
+                .setCommands(
+                    getBuildCommand(abi, removeJobsFlag = false),
+                    getBuildCommand(abi, removeJobsFlag = true) + listOf("clean"),
+                    variant.variantName,
+                    buildOutput
                 )
-                        .setCommands(
-                                getBuildCommand(abi, removeJobsFlag = false),
-                                getBuildCommand(abi, removeJobsFlag = true) + listOf("clean"),
-                                variant.variantName,
-                                buildOutput
-                        )
-                        .build()
+        if (variant.module.project.isV2NativeModelEnabled) {
+            builder.skipProcessingCompilerFlags = true
+            builder.compileCommandsJsonBinFile = abi.compileCommandsJsonBinFile
+        }
+        val buildConfig = builder.build()
         applicationMk?.let {
             infoln("found application make file %s", it.absolutePath)
             buildConfig.buildFiles!!.add(it)
         }
         val actualResult = GsonBuilder()
-                .registerTypeAdapter(File::class.java, PlainFileGsonTypeAdaptor())
-                .setPrettyPrinting()
-                .create()
-                .toJson(buildConfig)
+            .registerTypeAdapter(File::class.java, PlainFileGsonTypeAdaptor())
+            .setPrettyPrinting()
+            .create()
+            .toJson(buildConfig)
 
         // Write the captured ndk-build output to JSON file
         Files.write(
