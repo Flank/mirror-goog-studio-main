@@ -15,11 +15,10 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
-import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.*;
+import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.createEqualsVerifier;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.ide.common.gradle.model.ModelCache;
 import com.android.ide.common.gradle.model.stubs.AndroidArtifactOutputStub;
 import com.android.testutils.Serialization;
@@ -48,15 +47,6 @@ public class IdeAndroidArtifactOutputTest {
         byte[] bytes = Serialization.serialize(output);
         Object o = Serialization.deserialize(bytes);
         assertEquals(output, o);
-    }
-
-    @Test
-    public void constructor() throws Throwable {
-        AndroidArtifactOutput original = new AndroidArtifactOutputStub();
-        IdeAndroidArtifactOutputImpl copy =
-                new IdeAndroidArtifactOutputImpl(original, myModelCache);
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
     }
 
     @Test

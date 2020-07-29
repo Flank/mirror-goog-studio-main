@@ -15,13 +15,10 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
-import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.assertEqualsOrSimilar;
 import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.createEqualsVerifier;
-import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.verifyUsageOfImmutableCollections;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
-import com.android.builder.model.AaptOptions;
 import com.android.ide.common.gradle.model.ModelCache;
 import com.android.ide.common.gradle.model.stubs.AaptOptionsStub;
 import com.android.testutils.Serialization;

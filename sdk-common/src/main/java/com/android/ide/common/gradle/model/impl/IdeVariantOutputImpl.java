@@ -21,7 +21,6 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.ide.common.gradle.model.IdeModel;
-import com.android.ide.common.gradle.model.IdeVariantOutput;
 import com.android.ide.common.gradle.model.ModelCache;
 import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
@@ -30,7 +29,7 @@ import java.util.Collections;
 import java.util.Objects;
 
 /** Creates a deep copy of a {@link VariantOutput}. */
-public abstract class IdeVariantOutputImpl implements IdeVariantOutput, Serializable {
+public abstract class IdeVariantOutputImpl implements VariantOutput, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 

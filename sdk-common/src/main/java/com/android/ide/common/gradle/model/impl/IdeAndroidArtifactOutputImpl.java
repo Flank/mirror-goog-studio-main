@@ -21,7 +21,6 @@ import com.android.builder.model.AndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeModel;
 import com.android.ide.common.gradle.model.ModelCache;
-import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import java.io.File;
 import java.util.Objects;
 
@@ -32,7 +31,6 @@ public final class IdeAndroidArtifactOutputImpl extends IdeVariantOutputImpl
     private static final long serialVersionUID = 2L;
 
     @Nullable private final File myOutputFile;
-    @Nullable private final String myAssembleTaskName;
     private final int myHashCode;
 
     // Used for serialization by the IDE.
@@ -41,7 +39,6 @@ public final class IdeAndroidArtifactOutputImpl extends IdeVariantOutputImpl
         super();
 
         myOutputFile = null;
-        myAssembleTaskName = null;
 
         myHashCode = 0;
     }
@@ -49,14 +46,6 @@ public final class IdeAndroidArtifactOutputImpl extends IdeVariantOutputImpl
     public IdeAndroidArtifactOutputImpl(
             @NonNull AndroidArtifactOutput output, @NonNull ModelCache modelCache) {
         super(output, modelCache);
-        String assembleTaskName;
-        try {
-            //noinspection deprecation
-            assembleTaskName = output.getAssembleTaskName();
-        } catch (RuntimeException e) {
-            assembleTaskName = null;
-        }
-        myAssembleTaskName = assembleTaskName;
         // Even though getOutputFile is not new, the class hierarchies in builder-model have changed a lot (e.g. new interfaces have been
         // created, and existing methods have been moved around to new interfaces) making Gradle think that this is a new method.
         // When using the plugin v2.4 or older, we fall back to calling getMainOutputFile().getOutputFile(), which is the older plugins
@@ -66,21 +55,6 @@ public final class IdeAndroidArtifactOutputImpl extends IdeVariantOutputImpl
                         output::getOutputFile, output.getMainOutputFile().getOutputFile());
 
         myHashCode = calculateHashCode();
-    }
-
-    @Override
-    @NonNull
-    public String getAssembleTaskName() {
-        if (myAssembleTaskName != null) {
-            return myAssembleTaskName;
-        }
-        throw new RuntimeException("Method 'getAssembleTaskName' is no longer supported");
-    }
-
-    @Override
-    @NonNull
-    public File getGeneratedManifest() {
-        throw new UnusedModelMethodException("getGeneratedManifest");
     }
 
     @Override
@@ -105,7 +79,6 @@ public final class IdeAndroidArtifactOutputImpl extends IdeVariantOutputImpl
         }
         IdeAndroidArtifactOutputImpl output = (IdeAndroidArtifactOutputImpl) o;
         return output.canEquals(this)
-                && Objects.equals(myAssembleTaskName, output.myAssembleTaskName)
                 && Objects.equals(myOutputFile, output.myOutputFile);
     }
 
@@ -121,16 +94,13 @@ public final class IdeAndroidArtifactOutputImpl extends IdeVariantOutputImpl
 
     @Override
     protected int calculateHashCode() {
-        return Objects.hash(super.calculateHashCode(), myAssembleTaskName, myOutputFile);
+        return Objects.hash(super.calculateHashCode(), myOutputFile);
     }
 
     @Override
     public String toString() {
         return "IdeAndroidArtifactOutput{"
                 + super.toString()
-                + ", myAssembleTaskName='"
-                + myAssembleTaskName
-                + '\''
                 + ", myOutputFile="
                 + myOutputFile
                 + "}";
