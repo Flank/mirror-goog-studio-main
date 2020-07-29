@@ -23,6 +23,7 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.ide.common.gradle.model.IdeApiVersion;
 import com.android.ide.common.gradle.model.IdeProductFlavor;
+import com.android.ide.common.gradle.model.IdeSigningConfig;
 import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions;
 import com.android.ide.common.gradle.model.ModelCache;
 import com.google.common.collect.ImmutableList;
@@ -52,7 +53,7 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
     @Nullable private final String myTestInstrumentationRunner;
     @Nullable private final Boolean myTestFunctionalTest;
     @Nullable private final Boolean myTestHandleProfiling;
-    @Nullable private final SigningConfig mySigningConfig;
+    @Nullable private final IdeSigningConfig mySigningConfig;
     private final int myHashCode;
 
     // Used for serialization by the IDE.
@@ -125,7 +126,7 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
     }
 
     @Nullable
-    private static SigningConfig copy(
+    private static IdeSigningConfig copy(
             @NonNull ModelCache modelCache, @Nullable SigningConfig signingConfig) {
         if (signingConfig != null) {
             return modelCache.computeIfAbsent(
