@@ -58,7 +58,7 @@ public class ArchivePathEntry extends ArchiveEntry {
     @Override
     @NonNull
     public String getSummaryDisplayString() {
-        return getPathPrefix() + getPath().toString();
+        return getPathPrefix() + PathUtils.pathWithTrailingSeparator(getPath());
     }
 
     @NonNull
