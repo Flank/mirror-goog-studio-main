@@ -24,7 +24,6 @@ import com.android.builder.model.NativeLibrary;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeClassField;
-import com.android.ide.common.gradle.model.IdeInstantRun;
 import com.android.ide.common.gradle.model.IdeModel;
 import com.android.ide.common.gradle.model.IdeTestOptions;
 import com.android.ide.common.gradle.model.ModelCache;
@@ -54,7 +53,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     @NonNull private final String mySourceGenTaskName;
     @NonNull private final List<File> myGeneratedResourceFolders;
     @NonNull private final List<File> myAdditionalRuntimeApks;
-    @Nullable private final IdeInstantRun myInstantRun;
     @Nullable private final String mySigningConfigName;
     @NonNull private final Set<String> myAbiFilters;
     @Nullable private final IdeTestOptions myTestOptions;
@@ -76,7 +74,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         mySourceGenTaskName = "";
         myGeneratedResourceFolders = Collections.emptyList();
         myAdditionalRuntimeApks = Collections.emptyList();
-        myInstantRun = null;
         mySigningConfigName = null;
         myAbiFilters = Collections.emptySet();
         myTestOptions = null;
@@ -101,9 +98,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         myApplicationId = artifact.getApplicationId();
         mySourceGenTaskName = artifact.getSourceGenTaskName();
         myGeneratedResourceFolders = ImmutableList.copyOf(artifact.getGeneratedResourceFolders());
-        myInstantRun =
-                IdeModel.copyNewProperty(
-                        modelCache, artifact::getInstantRun, IdeInstantRunImpl::new, null);
         mySigningConfigName = artifact.getSigningConfigName();
         // In AGP 4.0 and below abiFilters was nullable, normalize null to empty set.
         myAbiFilters =
@@ -196,16 +190,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
 
     @Override
     @NonNull
-    public IdeInstantRun getInstantRun() {
-        if (myInstantRun != null) {
-            return myInstantRun;
-        }
-        throw new UnsupportedOperationException(
-                "Unsupported method: AndroidArtifact.getInstantRun()");
-    }
-
-    @Override
-    @NonNull
     public List<File> getAdditionalRuntimeApks() {
         return myAdditionalRuntimeApks;
     }
@@ -287,7 +271,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 && Objects.equals(myApplicationId, artifact.myApplicationId)
                 && Objects.equals(mySourceGenTaskName, artifact.mySourceGenTaskName)
                 && Objects.equals(myGeneratedResourceFolders, artifact.myGeneratedResourceFolders)
-                && Objects.equals(myInstantRun, artifact.myInstantRun)
                 && Objects.equals(mySigningConfigName, artifact.mySigningConfigName)
                 && Objects.equals(myAbiFilters, artifact.myAbiFilters)
                 && Objects.equals(myAdditionalRuntimeApks, artifact.myAdditionalRuntimeApks)
@@ -320,7 +303,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 myApplicationId,
                 mySourceGenTaskName,
                 myGeneratedResourceFolders,
-                myInstantRun,
                 mySigningConfigName,
                 myAbiFilters,
                 mySigned,
@@ -348,8 +330,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 + '\''
                 + ", myGeneratedResourceFolders="
                 + myGeneratedResourceFolders
-                + ", myInstantRun="
-                + myInstantRun
                 + ", mySigningConfigName='"
                 + mySigningConfigName
                 + '\''

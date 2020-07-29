@@ -87,7 +87,6 @@ public class IdeAndroidArtifactImplTest {
         IdeAndroidArtifact artifact =
                 new IdeAndroidArtifactImpl(
                         original, myModelCache, myDependenciesFactory, myGradleVersion);
-        expectUnsupportedOperationException(artifact::getInstantRun);
     }
 
     // See http://b/64305584

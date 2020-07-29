@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.DependenciesInfo
-
-interface IdeDependenciesInfo: DependenciesInfo
+interface IdeDependenciesInfo {
+    val includeInApk: Boolean
+    val includeInBundle: Boolean
+}

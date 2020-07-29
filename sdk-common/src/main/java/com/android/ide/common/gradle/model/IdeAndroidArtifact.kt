@@ -50,8 +50,6 @@ interface IdeAndroidArtifact : Serializable, IdeBaseArtifact {
   @Deprecated("Returns empty map")
   val resValues: Map<String, IdeClassField>
 
-  val instantRun: IdeInstantRun
-
   /**
    * Returns a list of additional APKs that need to installed on the device for this artifact to
    * work correctly.
