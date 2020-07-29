@@ -303,6 +303,19 @@ public class AvdManager {
     /** AVD/config.ini key name representing the Android display settings file */
     public static final String AVD_INI_DISPLAY_SETTINGS_FILE = "display.settings.xml";
 
+    /** AVD/config.ini key name representing the hinge settings */
+    public static final String AVD_INI_HINGE = "hw.sensor.hinge";
+
+    public static final String AVD_INI_HINGE_COUNT = "hw.sensor.hinge.count";
+    public static final String AVD_INI_HINGE_TYPE = "hw.sensor.hinge.type";
+    public static final String AVD_INI_HINGE_SUB_TYPE = "hw.sensor.hinge.sub_type";
+    public static final String AVD_INI_HINGE_RANGES = "hw.sensor.hinge.ranges";
+    public static final String AVD_INI_HINGE_DEFAULTS = "hw.sensor.hinge.defaults";
+    public static final String AVD_INI_HINGE_AREAS = "hw.sensor.hinge.areas";
+    public static final String AVD_INI_POSTURE_LISTS = "hw.sensor.posture_list";
+    public static final String AVD_INI_HINGE_ANGLES_POSTURE_DEFINITIONS =
+            "hw.sensor.hinge_angles_posture_definitions";
+
     /**
      * The API level of this AVD. Derived from the target hash.
      */

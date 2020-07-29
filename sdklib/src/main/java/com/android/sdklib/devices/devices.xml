@@ -90,7 +90,7 @@
         </d:state>
     </d:device>
     <d:device>
-        <d:name>7.3" Foldable</d:name>
+        <d:name>7.3" Fold-in with outer display</d:name>
         <d:id>7.3in Foldable</d:id>
         <d:manufacturer>Generic</d:manufacturer>
         <d:hardware>
@@ -111,10 +111,10 @@
                     <d:screen-type>capacitive</d:screen-type>
                 </d:touch>
                 <d:foldable-region>
-                  <d:x-folded-offset>696</d:x-folded-offset>
+                  <d:x-folded-offset>0</d:x-folded-offset>
                   <d:y-folded-offset>0</d:y-folded-offset>
-                  <d:x-folded-dimension>840</d:x-folded-dimension>
-                  <d:y-folded-dimension>1960</d:y-folded-dimension>
+                  <d:x-folded-dimension>720</d:x-folded-dimension>
+                  <d:y-folded-dimension>1680</d:y-folded-dimension>
                 </d:foldable-region>
             </d:screen>
             <d:networking>

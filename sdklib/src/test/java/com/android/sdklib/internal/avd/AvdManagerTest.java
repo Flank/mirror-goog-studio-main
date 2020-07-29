@@ -582,7 +582,7 @@ public class AvdManagerTest extends TestCase {
         // property and the user-settable property did not change.
         Map<String, String> updatedHardwareProperties = updatedDeviceInfo.getProperties();
         assertEquals("2152", updatedHardwareProperties.get("hw.lcd.height"));
-        assertEquals("1960",  updatedHardwareProperties.get("hw.displayRegion.0.1.height"));
+        assertEquals("1680",  updatedHardwareProperties.get("hw.displayRegion.0.1.height"));
         assertEquals("1536", updatedHardwareProperties.get("hw.ramSize"));
         assertEquals("yes",  updatedHardwareProperties.get("hw.keyboard"));
     }

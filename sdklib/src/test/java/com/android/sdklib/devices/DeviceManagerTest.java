@@ -105,7 +105,7 @@ public class DeviceManagerTest {
                         "5.1\" WVGA",
                         "5.4\" FWVGA",
                         "7\" WSVGA (Tablet)",
-                        "7.3\" Foldable",
+                        "7.3\" Fold-in with outer display",
                         "8\" Foldable",
                         "13.5\" Freeform");
 
@@ -165,7 +165,7 @@ public class DeviceManagerTest {
                         "5.1\" WVGA",
                         "5.4\" FWVGA",
                         "7\" WSVGA (Tablet)",
-                        "7.3\" Foldable",
+                        "7.3\" Fold-in with outer display",
                         "8\" Foldable",
                         "13.5\" Freeform",
                         "Android TV (1080p)",
@@ -261,7 +261,7 @@ public class DeviceManagerTest {
                         "5.1\" WVGA",
                         "5.4\" FWVGA",
                         "7\" WSVGA (Tablet)",
-                        "7.3\" Foldable",
+                        "7.3\" Fold-in with outer display",
                         "8\" Foldable",
                         "13.5\" Freeform");
 
@@ -317,7 +317,7 @@ public class DeviceManagerTest {
                         "5.1\" WVGA",
                         "5.4\" FWVGA",
                         "7\" WSVGA (Tablet)",
-                        "7.3\" Foldable",
+                        "7.3\" Fold-in with outer display",
                         "8\" Foldable",
                         "13.5\" Freeform",
                         "Android TV (1080p)",
@@ -403,7 +403,7 @@ public class DeviceManagerTest {
                         "5.1\" WVGA",
                         "5.4\" FWVGA",
                         "7\" WSVGA (Tablet)",
-                        "7.3\" Foldable",
+                        "7.3\" Fold-in with outer display",
                         "8\" Foldable",
                         "13.5\" Freeform");
 
@@ -459,7 +459,7 @@ public class DeviceManagerTest {
                         "5.1\" WVGA",
                         "5.4\" FWVGA",
                         "7\" WSVGA (Tablet)",
-                        "7.3\" Foldable",
+                        "7.3\" Fold-in with outer display",
                         "8\" Foldable",
                         "13.5\" Freeform",
                         "Android TV (1080p)",
