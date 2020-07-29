@@ -58,12 +58,7 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
         loadedClassesData[className] = ClassData(annotations, superClass, interfaces)
     }
 
-    private fun addClass(className: String, classData: ClassData) {
-        loadedClassesData[className] = classData
-    }
-
     private fun addClass(classInputStream: InputStream): ClassData {
-        var className: String? = null
         var superclassName: String? = null
         val annotationsList = mutableListOf<String>()
         val interfacesList = mutableListOf<String>()
@@ -89,15 +84,12 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
                     superName: String?,
                     interfaces: Array<out String>?
                 ) {
-                    className = name
                     superclassName = superName
                     interfacesList.addAll(interfaces!!)
                 }
             }, SKIP_CODE or SKIP_FRAMES or SKIP_DEBUG)
         }
-        val classData = ClassData(annotationsList, superclassName, interfacesList)
-        addClass(className!!, classData)
-        return classData
+        return ClassData(annotationsList, superclassName, interfacesList)
     }
 
     private fun loadClassData(className: String): ClassData {
