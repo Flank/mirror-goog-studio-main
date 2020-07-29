@@ -51,7 +51,7 @@
           < abis
     < variants
     - nativeBuildSystem       = CMAKE
-    - ndkVersion              = "21.2.6472646"
-    - defaultNdkVersion       = "21.2.6472646"
+    - ndkVersion              = "{DEFAULT_NDK_VERSION}"
+    - defaultNdkVersion       = "{DEFAULT_NDK_VERSION}"
     - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}
 < NativeModule

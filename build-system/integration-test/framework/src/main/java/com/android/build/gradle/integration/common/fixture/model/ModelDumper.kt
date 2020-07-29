@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.fixture.model
 
+import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.builder.model.v2.dsl.BaseConfig
 import com.android.builder.model.v2.dsl.BuildType
 import com.android.builder.model.v2.dsl.ProductFlavor
@@ -122,8 +123,14 @@ fun NativeModule.writeToBuilder(builder: DumpBuilder) {
             variant.writeToBuilder(this)
         }
         item("nativeBuildSystem", nativeBuildSystem)
-        item("ndkVersion", ndkVersion)
-        item("defaultNdkVersion", defaultNdkVersion)
+        item(
+            "ndkVersion",
+            if (ndkVersion == ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION) "{DEFAULT_NDK_VERSION}" else ndkVersion
+        )
+        item(
+            "defaultNdkVersion",
+            if (defaultNdkVersion == ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION) "{DEFAULT_NDK_VERSION}" else defaultNdkVersion
+        )
         item("externalNativeBuildFile", externalNativeBuildFile)
     }
 }
