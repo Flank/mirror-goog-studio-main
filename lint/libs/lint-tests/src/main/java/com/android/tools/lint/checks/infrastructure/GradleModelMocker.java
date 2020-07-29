@@ -1491,7 +1491,7 @@ public class GradleModelMocker {
             switch (key) {
                 case "viewBinding":
                     IdeViewBindingOptions viewBindingOptions = mock(IdeViewBindingOptions.class);
-                    when(viewBindingOptions.isEnabled()).thenReturn(toBoolean(arg));
+                    when(viewBindingOptions.getEnabled()).thenReturn(toBoolean(arg));
                     when(project.getViewBindingOptions()).thenReturn(viewBindingOptions);
                     break;
             }

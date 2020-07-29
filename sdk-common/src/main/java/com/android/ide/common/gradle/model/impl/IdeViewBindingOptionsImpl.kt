@@ -21,7 +21,7 @@ import java.io.Serializable
 import java.util.Objects
 
 class IdeViewBindingOptionsImpl : IdeViewBindingOptions, Serializable {
-  val enabled : Boolean
+  override val enabled: Boolean
   val hashCode : Int
 
   constructor(model: ViewBindingOptions) {
@@ -35,7 +35,6 @@ class IdeViewBindingOptionsImpl : IdeViewBindingOptions, Serializable {
     hashCode = 0
   }
 
-  override fun isEnabled(): Boolean = enabled
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true

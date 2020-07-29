@@ -18,7 +18,6 @@ package com.android.tools.lint.model
 
 import com.android.AndroidProjectTypes
 import com.android.builder.model.AndroidProject
-import com.android.builder.model.ClassField
 import com.android.builder.model.LintOptions
 import com.android.ide.common.gradle.model.IdeAaptOptions
 import com.android.ide.common.gradle.model.IdeAndroidArtifact
@@ -605,7 +604,7 @@ class LintModelFactory : LintModelModuleLoader {
         gradleVersion: GradleVersion?
     ): Boolean {
         return if (gradleVersion != null && gradleVersion.isAtLeast(3, 6, 0)) {
-            project.viewBindingOptions?.isEnabled == true
+            project.viewBindingOptions?.enabled == true
         } else {
             false
         }

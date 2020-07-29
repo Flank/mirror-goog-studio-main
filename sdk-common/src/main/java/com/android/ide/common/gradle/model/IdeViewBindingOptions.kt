@@ -15,6 +15,9 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.ViewBindingOptions
+/** Options for view binding */
+interface IdeViewBindingOptions {
 
-interface IdeViewBindingOptions : ViewBindingOptions
+  /** Whether to enable view binding. */
+  val enabled: Boolean
+}
