@@ -199,30 +199,6 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
 
     @Override
     @Nullable
-    public Integer getRenderscriptTargetApi() {
-        throw new UnusedModelMethodException("getRenderscriptTargetApi");
-    }
-
-    @Override
-    @Nullable
-    public Boolean getRenderscriptSupportModeEnabled() {
-        throw new UnusedModelMethodException("getRenderscriptSupportModeEnabled");
-    }
-
-    @Override
-    @Nullable
-    public Boolean getRenderscriptSupportModeBlasEnabled() {
-        throw new UnusedModelMethodException("getRenderscriptSupportModeBlasEnabled");
-    }
-
-    @Override
-    @Nullable
-    public Boolean getRenderscriptNdkModeEnabled() {
-        throw new UnusedModelMethodException("getRenderscriptNdkModeEnabled");
-    }
-
-    @Override
-    @Nullable
     public String getTestApplicationId() {
         return myTestApplicationId;
     }
@@ -243,18 +219,6 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
     @Nullable
     public Boolean getTestFunctionalTest() {
         return myTestFunctionalTest;
-    }
-
-    @Override
-    @Nullable
-    public SigningConfig getSigningConfig() {
-        return mySigningConfig;
-    }
-
-    @Override
-    @Nullable
-    public Boolean getWearAppUnbundled() {
-        throw new UnusedModelMethodException("getWearAppUnbundled");
     }
 
     @Override

@@ -17,19 +17,18 @@
 package com.android.tools.lint.model
 
 import com.android.AndroidProjectTypes
-import com.android.builder.model.AaptOptions
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.ApiVersion
-import com.android.builder.model.BuildType
 import com.android.builder.model.ClassField
 import com.android.builder.model.LintOptions
-import com.android.builder.model.ProductFlavor
 import com.android.ide.common.gradle.model.IdeAaptOptions
 import com.android.ide.common.gradle.model.IdeAndroidArtifact
 import com.android.ide.common.gradle.model.IdeAndroidProject
 import com.android.ide.common.gradle.model.IdeBaseArtifact
+import com.android.ide.common.gradle.model.IdeBuildType
 import com.android.ide.common.gradle.model.IdeJavaArtifact
 import com.android.ide.common.gradle.model.IdeLintOptions
+import com.android.ide.common.gradle.model.IdeProductFlavor
 import com.android.ide.common.gradle.model.impl.IdeMavenCoordinatesImpl
 import com.android.ide.common.gradle.model.IdeSourceProvider
 import com.android.ide.common.gradle.model.IdeSourceProviderContainer
@@ -300,7 +299,7 @@ class LintModelFactory : LintModelModuleLoader {
         }
     }
 
-    private fun getBuildType(project: IdeAndroidProject, variant: IdeVariant): BuildType {
+    private fun getBuildType(project: IdeAndroidProject, variant: IdeVariant): IdeBuildType {
         val buildTypeName = variant.buildType
         return project.buildTypes.first { it.buildType.name == buildTypeName }.buildType
     }
@@ -508,8 +507,8 @@ class LintModelFactory : LintModelModuleLoader {
 
     /** Merges place holders from the merged product flavor and the build type */
     private fun getPlaceholders(
-        mergedFlavor: ProductFlavor,
-        buildType: BuildType
+        mergedFlavor: IdeProductFlavor,
+        buildType: IdeBuildType
     ): Map<String, String> {
         return if (mergedFlavor.manifestPlaceholders.isEmpty()) {
             if (buildType.manifestPlaceholders.isEmpty()) {
@@ -569,8 +568,8 @@ class LintModelFactory : LintModelModuleLoader {
     }
 
     private fun getResValues(
-        mergedFlavor: ProductFlavor,
-        buildType: BuildType
+        mergedFlavor: IdeProductFlavor,
+        buildType: IdeBuildType
     ): Map<String, LintModelResourceField> {
         return if (mergedFlavor.resValues.isEmpty()) {
             if (buildType.resValues.isEmpty()) {

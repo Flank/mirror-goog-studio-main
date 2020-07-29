@@ -54,14 +54,6 @@ public class IdeProductFlavorTest {
     }
 
     @Test
-    public void constructor() throws Throwable {
-        ProductFlavor original = new ProductFlavorStub();
-        IdeProductFlavorImpl copy = new IdeProductFlavorImpl(original, myModelCache);
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
     public void model1_dot_5() {
         ProductFlavor original =
                 new ProductFlavorStub() {

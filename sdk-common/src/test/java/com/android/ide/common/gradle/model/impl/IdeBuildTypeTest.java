@@ -50,14 +50,6 @@ public class IdeBuildTypeTest {
     }
 
     @Test
-    public void constructor() throws Throwable {
-        BuildType original = new BuildTypeStub();
-        IdeBuildTypeImpl copy = new IdeBuildTypeImpl(original, myModelCache);
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
     public void equalsAndHashCode() {
         createEqualsVerifier(IdeBuildTypeImpl.class)
                 .withIgnoredFields("hashCode")

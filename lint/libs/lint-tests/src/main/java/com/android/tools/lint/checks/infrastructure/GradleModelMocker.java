@@ -39,15 +39,12 @@ import com.android.build.FilterData;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
-import com.android.builder.model.BuildType;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Library;
 import com.android.builder.model.LintOptions;
 import com.android.builder.model.MavenCoordinates;
-import com.android.builder.model.ProductFlavor;
-import com.android.builder.model.SigningConfig;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
@@ -495,12 +492,12 @@ public class GradleModelMocker {
         when(artifact.getOutputs()).thenReturn(outputs);
 
         Set<String> seenDimensions = Sets.newHashSet();
-        BuildType defaultBuildType = buildTypes.get(0);
+        IdeBuildType defaultBuildType = buildTypes.get(0);
         String defaultBuildTypeName = defaultBuildType.getName();
         StringBuilder variantNameSb = new StringBuilder();
         Collection<String> flavorDimensions = project.getFlavorDimensions();
         for (String dimension : flavorDimensions) {
-            for (ProductFlavor flavor : productFlavors) {
+            for (IdeProductFlavor flavor : productFlavors) {
                 if (flavor != defaultFlavor && dimension.equals(flavor.getDimension())) {
                     if (seenDimensions.contains(dimension)) {
                         continue;
@@ -515,7 +512,7 @@ public class GradleModelMocker {
                 }
             }
         }
-        for (ProductFlavor flavor : productFlavors) {
+        for (IdeProductFlavor flavor : productFlavors) {
             if (flavor != defaultFlavor && flavor.getDimension() == null) {
                 String name = flavor.getName();
                 if (variantNameSb.length() == 0) {
@@ -591,7 +588,7 @@ public class GradleModelMocker {
         Collection<String> resourceConfigurations =
                 new HashSet<>(defaultFlavor.getResourceConfigurations());
         for (IdeProductFlavorContainer container : flavorContainers) {
-            ProductFlavor flavor = container.getProductFlavor();
+            IdeProductFlavor flavor = container.getProductFlavor();
             manifestPlaceholders.putAll(flavor.getManifestPlaceholders());
             resValues.putAll(flavor.getResValues());
             resourceConfigurations.addAll(flavor.getResourceConfigurations());
@@ -611,10 +608,10 @@ public class GradleModelMocker {
         // Attempt to make additional variants?
         List<IdeVariant> variants = new ArrayList<>();
         variants.add(variant);
-        for (BuildType buildType : buildTypes) {
+        for (IdeBuildType buildType : buildTypes) {
             String buildTypeName = buildType.getName();
 
-            for (ProductFlavor flavor : productFlavors) {
+            for (IdeProductFlavor flavor : productFlavors) {
                 if (flavor == defaultFlavor) {
                     continue;
                 }
@@ -632,7 +629,6 @@ public class GradleModelMocker {
                     targetSdkVersion = mergedFlavor.getTargetSdkVersion();
                     String flavorName = mergedFlavor.getName();
                     VectorDrawablesOptions vectorDrawables = mergedFlavor.getVectorDrawables();
-                    SigningConfig signingConfig = mergedFlavor.getSigningConfig();
 
                     IdeProductFlavor variantFlavor = mock(IdeProductFlavor.class);
                     when(variantFlavor.getMinSdkVersion()).thenReturn(minSdkVersion);
@@ -644,7 +640,6 @@ public class GradleModelMocker {
                     when(variantFlavor.getResValues()).thenReturn(Collections.emptyMap());
                     when(variantFlavor.getManifestPlaceholders())
                             .thenReturn(Collections.emptyMap());
-                    when(variantFlavor.getSigningConfig()).thenReturn(signingConfig);
 
                     when(newVariant.getMergedFlavor()).thenReturn(variantFlavor);
 
@@ -1095,7 +1090,7 @@ public class GradleModelMocker {
             addDependency(declaration, null, true);
         } else if (line.startsWith("applicationId ") || line.startsWith("packageName ")) {
             String id = getUnquotedValue(key);
-            ProductFlavor flavor = getFlavorFromContext(context);
+            IdeProductFlavor flavor = getFlavorFromContext(context);
             if (flavor != null) {
                 when(flavor.getApplicationId()).thenReturn(id);
             } else {
@@ -1103,7 +1098,7 @@ public class GradleModelMocker {
             }
         } else if (line.startsWith("minSdkVersion ")) {
             ApiVersion apiVersion = createApiVersion(key);
-            ProductFlavor flavor = getFlavorFromContext(context);
+            IdeProductFlavor flavor = getFlavorFromContext(context);
             if (flavor != null) {
                 when(flavor.getMinSdkVersion()).thenReturn(apiVersion);
             } else {
@@ -1111,7 +1106,7 @@ public class GradleModelMocker {
             }
         } else if (line.startsWith("targetSdkVersion ")) {
             ApiVersion version = createApiVersion(key);
-            ProductFlavor flavor = getFlavorFromContext(context);
+            IdeProductFlavor flavor = getFlavorFromContext(context);
             if (flavor != null) {
                 when(flavor.getTargetSdkVersion()).thenReturn(version);
             } else {
@@ -1121,7 +1116,7 @@ public class GradleModelMocker {
             String value = key.substring(key.indexOf(' ') + 1).trim();
             if (Character.isDigit(value.charAt(0))) {
                 int number = Integer.decode(value);
-                ProductFlavor flavor = getFlavorFromContext(context);
+                IdeProductFlavor flavor = getFlavorFromContext(context);
                 if (flavor != null) {
                     when(flavor.getVersionCode()).thenReturn(number);
                 } else {
@@ -1132,7 +1127,7 @@ public class GradleModelMocker {
             }
         } else if (line.startsWith("versionName ")) {
             String name = getUnquotedValue(key);
-            ProductFlavor flavor = getFlavorFromContext(context);
+            IdeProductFlavor flavor = getFlavorFromContext(context);
             if (flavor != null) {
                 when(flavor.getVersionName()).thenReturn(name);
             } else {
@@ -1140,7 +1135,7 @@ public class GradleModelMocker {
             }
         } else if (line.startsWith("versionNameSuffix ")) {
             String name = getUnquotedValue(key);
-            ProductFlavor flavor = getFlavorFromContext(context);
+            IdeProductFlavor flavor = getFlavorFromContext(context);
             if (flavor != null) {
                 when(flavor.getVersionNameSuffix()).thenReturn(name);
             } else {
@@ -1148,7 +1143,7 @@ public class GradleModelMocker {
             }
         } else if (line.startsWith("applicationIdSuffix ")) {
             String name = getUnquotedValue(key);
-            ProductFlavor flavor = getFlavorFromContext(context);
+            IdeProductFlavor flavor = getFlavorFromContext(context);
             if (flavor != null) {
                 when(flavor.getApplicationIdSuffix()).thenReturn(name);
             } else {
@@ -1166,7 +1161,7 @@ public class GradleModelMocker {
         } else if (line.startsWith("minifyEnabled ") && key.startsWith("android.buildTypes.")) {
             String name =
                     key.substring("android.buildTypes.".length(), key.indexOf(".minifyEnabled"));
-            BuildType buildType = getBuildType(name, true);
+            IdeBuildType buildType = getBuildType(name, true);
             String value = getUnquotedValue(line);
             when(buildType.isMinifyEnabled()).thenReturn(VALUE_TRUE.equals(value));
         } else if (key.startsWith("android.compileSdkVersion ")) {
@@ -1174,7 +1169,7 @@ public class GradleModelMocker {
             when(project.getCompileTarget())
                     .thenReturn(Character.isDigit(value.charAt(0)) ? "android-" + value : value);
         } else if (line.startsWith("resConfig")) { // and resConfigs
-            ProductFlavor flavor;
+            IdeProductFlavor flavor;
             if (context.startsWith("android.productFlavors.")) {
                 String flavorName = context.substring("android.productFlavors.".length());
                 flavor = getProductFlavor(flavorName, true);
@@ -1230,7 +1225,7 @@ public class GradleModelMocker {
             Map<String, Object> manifestPlaceholders;
             if (context.startsWith("android.buildTypes.")) {
                 String name = context.substring("android.buildTypes.".length());
-                BuildType buildType = getBuildType(name, false);
+                IdeBuildType buildType = getBuildType(name, false);
                 if (buildType != null) {
                     manifestPlaceholders = buildType.getManifestPlaceholders();
                 } else {
@@ -1239,7 +1234,7 @@ public class GradleModelMocker {
                 }
             } else if (context.startsWith("android.productFlavors.")) {
                 String name = context.substring("android.productFlavors.".length());
-                ProductFlavor flavor = getProductFlavor(name, false);
+                IdeProductFlavor flavor = getProductFlavor(name, false);
                 if (flavor != null) {
                     manifestPlaceholders = flavor.getManifestPlaceholders();
                 } else {
@@ -1272,7 +1267,7 @@ public class GradleModelMocker {
         } else if (line.startsWith("dimension ") && key.startsWith("android.productFlavors.")) {
             String name =
                     key.substring("android.productFlavors.".length(), key.indexOf(".dimension"));
-            ProductFlavor productFlavor = getProductFlavor(name, true);
+            IdeProductFlavor productFlavor = getProductFlavor(name, true);
             String dimension = getUnquotedValue(line);
             when(productFlavor.getDimension()).thenReturn(dimension);
         } else if (key.startsWith("android.") && line.startsWith("resValue ")) {
@@ -1285,7 +1280,7 @@ public class GradleModelMocker {
             Map<String, ClassField> resValues;
             if (name.startsWith("buildTypes.")) {
                 name = name.substring("buildTypes.".length());
-                BuildType buildType = getBuildType(name, false);
+                IdeBuildType buildType = getBuildType(name, false);
                 if (buildType != null) {
                     resValues = buildType.getResValues();
                 } else {
@@ -1294,7 +1289,7 @@ public class GradleModelMocker {
                 }
             } else if (name.startsWith("productFlavors.")) {
                 name = name.substring("productFlavors.".length());
-                ProductFlavor flavor = getProductFlavor(name, false);
+                IdeProductFlavor flavor = getProductFlavor(name, false);
                 if (flavor != null) {
                     resValues = flavor.getResValues();
                 } else {
@@ -1636,7 +1631,7 @@ public class GradleModelMocker {
     }
 
     @Nullable
-    private ProductFlavor getFlavorFromContext(@NonNull String context) {
+    private IdeProductFlavor getFlavorFromContext(@NonNull String context) {
         if (context.equals("android.defaultConfig")) {
             return defaultFlavor;
         } else if (context.startsWith("android.productFlavors.")) {
@@ -1666,8 +1661,8 @@ public class GradleModelMocker {
 
     @Contract("_,true -> !null")
     @Nullable
-    private BuildType getBuildType(@NonNull String name, boolean create) {
-        for (BuildType type : buildTypes) {
+    private IdeBuildType getBuildType(@NonNull String name, boolean create) {
+        for (IdeBuildType type : buildTypes) {
             if (type.getName().equals(name)) {
                 return type;
             }
@@ -1681,7 +1676,7 @@ public class GradleModelMocker {
     }
 
     @NonNull
-    private BuildType createBuildType(@NonNull String name) {
+    private IdeBuildType createBuildType(@NonNull String name) {
         IdeBuildType buildType = mock(IdeBuildType.class);
         when(buildType.getName()).thenReturn(name);
         when(buildType.toString()).thenReturn(name);
@@ -2220,12 +2215,12 @@ public class GradleModelMocker {
         Splitter splitter = Splitter.on('_');
         List<String> flavors = Lists.newArrayList();
         for (String s : splitter.split(SdkVersionInfo.camelCaseToUnderlines(variantName))) {
-            BuildType buildType = getBuildType(s, false);
+            IdeBuildType buildType = getBuildType(s, false);
             //noinspection VariableNotUsedInsideIf
             if (buildType != null) {
                 when(variant.getBuildType()).thenReturn(s);
             } else {
-                ProductFlavor flavor = getProductFlavor(s, false);
+                IdeProductFlavor flavor = getProductFlavor(s, false);
                 //noinspection VariableNotUsedInsideIf
                 if (flavor != null) {
                     flavors.add(s);

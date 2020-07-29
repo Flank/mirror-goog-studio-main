@@ -16,9 +16,7 @@
 package com.android.ide.common.gradle.model.impl;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.builder.model.BuildType;
-import com.android.builder.model.SigningConfig;
 import com.android.ide.common.gradle.model.IdeBuildType;
 import com.android.ide.common.gradle.model.ModelCache;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
@@ -60,12 +58,6 @@ public final class IdeBuildTypeImpl extends IdeBaseConfigImpl implements IdeBuil
         myZipAlignEnabled = buildType.isZipAlignEnabled();
 
         myHashCode = calculateHashCode();
-    }
-
-    @Override
-    @Nullable
-    public SigningConfig getSigningConfig() {
-        throw new UnusedModelMethodException("getSigningConfig");
     }
 
     @Override
