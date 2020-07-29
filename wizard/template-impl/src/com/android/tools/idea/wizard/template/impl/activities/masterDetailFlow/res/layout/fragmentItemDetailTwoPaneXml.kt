@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.values_w900dp
+package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.layout
 
 
-fun refsXml(
-  itemListLayout: String
+fun fragmentItemDetailTwoPaneXml(
+  detailName: String,
+  detailNameLayout: String,
+  packageName: String
 ) = """
-<resources>
-    <!--
-    Layout alias to replace the single-pane version of the layout with a
-    two-pane version on screens with a width of at least 900 density-independent pixels (dips).
-
-    For more on layout aliases, see:
-    http://developer.android.com/training/multiscreen/screensizes.html#TaskUseAliasFilters
-    -->
-    <item type="layout" name="${itemListLayout}">@layout/${itemListLayout}_twopane</item>
-</resources>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/${detailNameLayout}"
+    style="?android:attr/textAppearanceLarge"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:textIsSelectable="true"
+    tools:context="${packageName}.${detailName}Fragment" />
 """

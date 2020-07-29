@@ -43,38 +43,44 @@ import ${packageName}.dummy.DummyContent
 
 /**
  * A fragment representing a single ${objectKind} detail screen.
- * This fragment is either contained in a [${collectionName}Activity]
- * in two-pane mode (on tablets) or a [${detailName}Activity]
+ * This fragment is either contained in a [${collectionName}Fragment]
+ * in two-pane mode (on larger screen devices) or self-contained
  * on handsets.
  */
 class ${detailName}Fragment : Fragment() {
 
     /**
-     * The dummy content this fragment is presenting.
+     * The placeholder content this fragment is presenting.
      */
     private var item: DummyContent.DummyItem? = null
+
+    lateinit var itemDetailTextView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         arguments?.let {
             if (it.containsKey(ARG_ITEM_ID)) {
-                // Load the dummy content specified by the fragment
+                // Load the placeholder content specified by the fragment
                 // arguments. In a real-world scenario, use a Loader
                 // to load content from a content provider.
                 item = DummyContent.ITEM_MAP[it.getString(ARG_ITEM_ID)]
-                activity?.findViewById<CollapsingToolbarLayout>(R.id.toolbar_layout)?.title = item?.content
             }
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
-        val rootView = inflater.inflate(R.layout.${detailNameLayout}, container, false)
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val rootView = inflater.inflate(R.layout.fragment_${detailNameLayout}, container, false)
 
-        // Show the dummy content as text in a TextView.
+        rootView.findViewById<CollapsingToolbarLayout>(R.id.toolbar_layout)?.title = item?.content
+
+        itemDetailTextView = rootView.findViewById(R.id.${detailNameLayout})
+        // Show the placeholder content as text in a TextView.
         item?.let {
-            rootView.findViewById<TextView>(R.id.${detailNameLayout}).text = it.details
+            itemDetailTextView.text = it.details
         }
 
         return rootView

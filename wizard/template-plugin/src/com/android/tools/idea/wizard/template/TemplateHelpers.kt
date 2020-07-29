@@ -102,6 +102,7 @@ fun getMaterialComponentName(mavenCoordinate: String, useAndroidX: Boolean): Str
     "android.support.annotation.Nullable" to "androidx.annotation.Nullable",
     "android.support.annotation.StringRes" to "androidx.annotation.StringRes",
     "android.support.constraint.ConstraintLayout" to "androidx.constraintlayout.widget.ConstraintLayout",
+    "android.support.constraint.Guideline" to "androidx.constraintlayout.widget.Guideline",
     "android.support.design.widget.AppBarLayout" to "com.google.android.material.appbar.AppBarLayout",
     "android.support.design.widget.BottomNavigationView" to "com.google.android.material.bottomnavigation.BottomNavigationView",
     "android.support.design.widget.BottomSheetDialog" to "com.google.android.material.bottomsheet.BottomSheetDialog",

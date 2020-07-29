@@ -18,6 +18,7 @@ package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow
 
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.CheckBoxWidget
+import com.android.tools.idea.wizard.template.Constraint
 import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
 import com.android.tools.idea.wizard.template.FormFactor
 import com.android.tools.idea.wizard.template.LanguageWidget
@@ -27,19 +28,21 @@ import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.booleanParameter
+import com.android.tools.idea.wizard.template.extractLetters
 import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.impl.defaultPackageNameParameter
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import java.io.File
+import java.util.Locale
 
-val masterDetailFlowTemplate
+val primaryDetailFlowTemplate
   get() = template {
     revision = 1
-    name = "Master/Detail Flow"
+    name = "Primary/Detail Flow"
     minApi = MIN_API
     minBuildApi = MIN_API
-    description = "Creates a new master/detail flow, allowing users to view a collection of objects as well as details for each object. This flow is presented using two columns on tablet-size screens and one column on handsets and smaller screens. This template creates two activities, a master fragment, and a detail fragment"
+    description = "Creates a new primary/detail flow, allowing users to view a collection of objects as well as details for each object. This flow is presented using two columns on larger screen devices and one column on handsets and smaller screens. It also includes support for right click on the list items as well as two keyboard shortcuts. This template creates one activity, an item list fragment, and a detail fragment"
 
     category = Category.Activity
     formFactor = FormFactor.Mobile
@@ -59,6 +62,7 @@ val masterDetailFlowTemplate
       constraints = listOf(NONEMPTY)
     }
 
+
     val activityTitle = stringParameter {
       name = "Title"
       default = "Items"
@@ -73,6 +77,32 @@ val masterDetailFlowTemplate
       help = "If true, the primary activity in the flow will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher"
     }
 
+    val mainNavGraphFile = stringParameter {
+      name = "Main navigation graph file"
+      default = "primary_details_nav_graph"
+      help = "The main navigation graph file name"
+      visible = { false }
+      constraints = listOf(Constraint.NAVIGATION, Constraint.UNIQUE)
+      suggest = { "primary_details_nav_graph" }
+    }
+
+    val childNavGraphFile = stringParameter {
+      name = "Child navigation graph file"
+      default = "primary_details_sub_nav_graph"
+      help = "The main navigation graph file name"
+      visible = { false }
+      constraints = listOf(Constraint.NAVIGATION, Constraint.UNIQUE)
+      suggest = { "primary_details_sub_nav_graph" }
+    }
+
+    val detailNameFragmentLayout = stringParameter {
+      name = "Detail layout name"
+      constraints = listOf(Constraint.LAYOUT, Constraint.UNIQUE, NONEMPTY)
+      default = "fragment_${extractLetters(objectKind.value.toLowerCase(Locale.getDefault()))}_detail"
+      suggest = { "fragment_${extractLetters(objectKind.value.toLowerCase(Locale.getDefault()))}_detail" }
+      visible = { false }
+    }
+
     val packageName = defaultPackageNameParameter
 
     widgets(
@@ -81,12 +111,22 @@ val masterDetailFlowTemplate
       CheckBoxWidget(isLauncher),
       PackageNameWidget(packageName),
       LanguageWidget(),
-      TextFieldWidget(activityTitle)
+      TextFieldWidget(activityTitle),
+      TextFieldWidget(mainNavGraphFile),
+      TextFieldWidget(childNavGraphFile),
+      TextFieldWidget(detailNameFragmentLayout)
     )
 
     thumb { File("template_master_detail.png") }
 
     recipe = { data: TemplateData ->
-      masterDetailFlowRecipe(data as ModuleTemplateData, objectKind.value, objectKindPlural.value, isLauncher.value, packageName.value)
+      primaryDetailFlowRecipe(data as ModuleTemplateData,
+                              objectKind.value,
+                              objectKindPlural.value,
+                              isLauncher.value,
+                              mainNavGraphFile.value,
+                              childNavGraphFile.value,
+                              detailNameFragmentLayout.value,
+                              packageName.value)
     }
   }
