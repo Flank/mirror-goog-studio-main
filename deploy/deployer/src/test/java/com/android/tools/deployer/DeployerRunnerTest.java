@@ -102,7 +102,10 @@ public class DeployerRunnerTest {
     public static void prepare() throws Exception {
         dexDbFile = File.createTempFile("cached_db", ".bin");
         dexDbFile.delete();
-        new SqlApkFileDatabase(dexDbFile, null);
+        // Fill in the database file by calling dump() at least once.
+        // From then on, we will just keep copying this file and reusing it
+        // for every test.
+        new SqlApkFileDatabase(dexDbFile, null).dump();
         dexDbFile.deleteOnExit();
     }
 
@@ -1484,7 +1487,11 @@ public class DeployerRunnerTest {
 
         TestUtils.eventually(
                 () -> {
-                    if (dexDB.dump().size() == 0) {
+                    try {
+                        if (dexDB.dump().isEmpty()) {
+                            Assert.fail();
+                        }
+                    } catch (DeployerException e) {
                         Assert.fail();
                     }
                 },

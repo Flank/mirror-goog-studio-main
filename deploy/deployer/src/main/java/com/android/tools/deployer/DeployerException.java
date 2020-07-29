@@ -296,6 +296,12 @@ public class DeployerException extends Exception {
                 "Reinstall and restart app",
                 ResolutionAction.RUN_APP),
 
+        JDBC_NATIVE_LIB(
+                "Unable to establish JDBC connection to DEX file database",
+                "Verify Android Studio is able to extract executable file to %s",
+                "Retry",
+                ResolutionAction.RETRY),
+
         OPERATION_NOT_SUPPORTED("Operation not supported.", "%s", "", ResolutionAction.NONE),
 
         RUN_TIME_EXCEPTION("Runtime Exception.", "%s", "Retry", ResolutionAction.RETRY);
@@ -560,6 +566,10 @@ public class DeployerException extends Exception {
 
     public static DeployerException interrupted(String reason) {
         return new DeployerException(Error.INTERRUPTED, NO_ARGS, reason);
+    }
+
+    public static DeployerException jdbcNativeLibError(String nativeLibLoc) {
+        return new DeployerException(Error.JDBC_NATIVE_LIB, NO_ARGS, nativeLibLoc);
     }
 
     public static DeployerException operationNotSupported(String reason) {
