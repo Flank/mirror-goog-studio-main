@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.buildOutputFiles
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
 import com.android.build.gradle.internal.cxx.settings.Macro.*
+import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.NativeAndroidProject
 import com.android.utils.FileUtils.join
 import org.junit.Before
@@ -52,6 +53,8 @@ class CmakeSettingsSharedBuildTest(cmakeVersionInDsl: String) {
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         .setCmakeVersion(cmakeVersionInDsl)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+        // TODO(tgeng): Cover v2
+        .addGradleProperties(BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName + "=false")
         .create()
 
 

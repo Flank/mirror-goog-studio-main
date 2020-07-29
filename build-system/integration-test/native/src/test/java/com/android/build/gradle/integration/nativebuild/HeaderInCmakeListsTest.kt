@@ -25,6 +25,7 @@ import com.android.builder.model.NativeAndroidProject
 import org.junit.Rule
 import org.junit.Test
 import com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject.assertThat
+import com.android.build.gradle.options.BooleanOption
 import org.junit.Before
 import java.io.File
 import com.google.common.truth.Truth.assertThat
@@ -53,6 +54,8 @@ class HeaderInCmakeListsTest {
         .setCmakeVersion("3.10.4819442")
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .setWithCmakeDirInLocalProp(true)
+        // TODO(tgeng): Cover v2
+        .addGradleProperties(BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName + "=false")
         .create()
 
     @Before
