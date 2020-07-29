@@ -313,6 +313,7 @@ public class AvdManager {
     public static final String AVD_INI_HINGE_DEFAULTS = "hw.sensor.hinge.defaults";
     public static final String AVD_INI_HINGE_AREAS = "hw.sensor.hinge.areas";
     public static final String AVD_INI_POSTURE_LISTS = "hw.sensor.posture_list";
+    public static final String AVD_INI_FOLD_AT_POSTURE = "hw.sensor.hinge.fold_to_displayRegion.0.1_at_posture";
     public static final String AVD_INI_HINGE_ANGLES_POSTURE_DEFINITIONS =
             "hw.sensor.hinge_angles_posture_definitions";
 
