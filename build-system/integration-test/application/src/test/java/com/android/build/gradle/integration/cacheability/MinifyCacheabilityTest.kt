@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.truth.TaskStateList.Execution
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.SKIPPED
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
 import com.android.build.gradle.integration.common.utils.CacheabilityTestHelper
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.builder.model.CodeShrinker
 import org.junit.Rule
@@ -104,6 +105,12 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             } else {
                 emptySet()
             }
+        ).plus(
+                if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
+                    setOf(":mapMinifiedSourceSetPaths")
+                } else {
+                    emptySet()
+                }
         ),
         SKIPPED to setOf(
             ":assembleMinified",

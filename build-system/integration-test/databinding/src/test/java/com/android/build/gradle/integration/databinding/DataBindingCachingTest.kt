@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.truth.TaskStateList.Execution
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
 import com.android.build.gradle.integration.common.utils.CacheabilityTestHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import org.junit.Before
 import org.junit.Rule
@@ -92,6 +93,12 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
                 ":javaPreCompileDebug" to FROM_CACHE
             )
         }
+    ).plus(
+            if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
+                mapOf(":mapDebugSourceSetPaths" to FROM_CACHE)
+            }else {
+                emptyMap()
+            }
     )
 
     @get:Rule

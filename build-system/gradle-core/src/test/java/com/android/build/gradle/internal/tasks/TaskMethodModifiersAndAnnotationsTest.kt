@@ -130,6 +130,7 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.tasks.LintStandaloneTask::setLintChecks",
                 "com.android.build.gradle.internal.tasks.LintStandaloneTask::setLintOptions",
                 "com.android.build.gradle.internal.tasks.LintStandaloneTask::setReportDir",
+                "com.android.build.gradle.tasks.MapSourceSetPathsTask::setResourceComputer",
                 "com.android.build.gradle.internal.tasks.ManagedDeviceCleanTask::setPreserveDefinedOption",
                 "com.android.build.gradle.internal.tasks.MergeFileTask::setInputFiles",
                 "com.android.build.gradle.internal.tasks.NdkTask::setNdkConfig",

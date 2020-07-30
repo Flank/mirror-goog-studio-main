@@ -100,6 +100,10 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.*
 import com.android.build.gradle.tasks.GenerateTestConfig.TestConfigInputs
 import com.android.build.gradle.tasks.LintPerVariantTask.VitalCreationAction
+import com.android.build.gradle.tasks.ManifestProcessorTask
+import com.android.build.gradle.tasks.MapSourceSetPathsTask
+import com.android.build.gradle.tasks.MergeResources
+import com.android.build.gradle.tasks.MergeSourceSetFolders
 import com.android.build.gradle.tasks.MergeSourceSetFolders.MergeMlModelsSourceFoldersCreationAction
 import com.android.build.gradle.tasks.MergeSourceSetFolders.MergeShaderSourceFoldersCreationAction
 import com.android.build.gradle.tasks.factory.AndroidUnitTest
@@ -635,7 +639,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val alsoOutputNotCompiledResources = (creationConfig.variantType.isApk
                 && !creationConfig.variantType.isForTesting
                 && creationConfig.useResourceShrinker())
-        basicCreateMergeResourcesTask(
+        val mergeResourcesTask = basicCreateMergeResourcesTask(
                 creationConfig,
                 MergeType.MERGE,
                 null /*outputLocation*/,
@@ -644,6 +648,12 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 alsoOutputNotCompiledResources,
                 flags,
                 null /*configCallback*/)
+        if (creationConfig
+                        .services
+                        .projectOptions[BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP]) {
+            taskFactory.register(
+                    MapSourceSetPathsTask.CreateAction(creationConfig, mergeResourcesTask))
+        }
     }
 
     /** Defines the merge type for [.basicCreateMergeResourcesTask]  */
@@ -1328,11 +1338,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                 .map(ComponentInfo<VariantBuilderT, VariantT>::variant)
                                 .collect(Collectors.toList())),
                 null,
-                 object: TaskConfigAction<Task> {
+                object : TaskConfigAction<Task> {
                     override fun configure(task: Task) {
                         task.dependsOn(variant.taskContainer.javacTask)
                     }
-                 },
+                },
                 null)
         variant.taskContainer.assembleTask.dependsOn(lintReleaseCheck)
 
@@ -1574,7 +1584,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                             creationConfig,
                             transform,
                             null,
-                            object: TaskConfigAction<TransformTask> {
+                            object : TaskConfigAction<TransformTask> {
                                 override fun configure(task: TransformTask) {
                                     if (deps.isNotEmpty()) {
                                         task.dependsOn(deps)
@@ -1582,7 +1592,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                 }
 
                             },
-                            object: TaskProviderCallback<TransformTask> {
+                            object : TaskProviderCallback<TransformTask> {
                                 override fun handleProvider(taskProvider: TaskProvider<TransformTask>) {
                                     // if the task is a no-op then we make assemble task depend
                                     // on it.
@@ -1590,7 +1600,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                         creationConfig
                                                 .taskContainer
                                                 .assembleTask.dependsOn<Task>(taskProvider)
-                                    }                                }
+                                    }
+                                }
 
                             }
                     )
@@ -1656,13 +1667,13 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             val testedType: QualifiedContent.ScopeType? =
                     creationConfig.onTestedConfig<QualifiedContent.Scope>() {
                         testedConfig: VariantCreationConfig ->
-                            if (!testedConfig.variantType.isAar) {
-                                // test variants, except for library, should not package
-                                // try-with-resources jar
-                                // as the tested variant already contains it.
-                                return@onTestedConfig QualifiedContent.Scope.PROVIDED_ONLY
-                            }
-                            null
+                        if (!testedConfig.variantType.isAar) {
+                            // test variants, except for library, should not package
+                            // try-with-resources jar
+                            // as the tested variant already contains it.
+                            return@onTestedConfig QualifiedContent.Scope.PROVIDED_ONLY
+                        }
+                        null
                     }
             val scopeType = testedType ?: QualifiedContent.Scope.EXTERNAL_LIBRARIES
 
@@ -1935,7 +1946,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         manifests,
                         manifestType),
                 null,
-                object: TaskConfigAction<PackageApplication> {
+                object : TaskConfigAction<PackageApplication> {
                     override fun configure(task: PackageApplication) {
                         task.dependsOn(taskContainer.javacTask)
                         if (taskContainer.packageSplitResourcesTask != null) {
@@ -2132,14 +2143,14 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         taskFactory.register(
                 component.computeTaskName("assemble"),
                 null /*preConfigAction*/,
-                object: TaskConfigAction<Task> {
+                object : TaskConfigAction<Task> {
                     override fun configure(task: Task) {
                         task.description =
                                 "Assembles main output for variant " + component.name
                     }
 
                 },
-                object: TaskProviderCallback<Task> {
+                object : TaskProviderCallback<Task> {
                     override fun handleProvider(taskProvider: TaskProvider<Task>) {
                         component.taskContainer.assembleTask =
                                 taskProvider
@@ -2152,19 +2163,19 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         taskFactory.register(
                 component.computeTaskName("bundle"),
                 null,
-                object: TaskConfigAction<Task> {
+                object : TaskConfigAction<Task> {
                     override fun configure(task: Task) {
                         task.description = "Assembles bundle for variant " + component.name
                         task.dependsOn(component.artifacts.get(ArtifactType.BUNDLE))
                         task.dependsOn(component.artifacts.get(InternalArtifactType.BUNDLE_IDE_MODEL))
                     }
                 },
-                object: TaskProviderCallback<Task> {
+                object : TaskProviderCallback<Task> {
                     override fun handleProvider(taskProvider: TaskProvider<Task>) {
                         component.taskContainer.bundleTask = taskProvider
                     }
                 }
-            )
+        )
     }
 
     protected open fun maybeCreateJavaCodeShrinkerTask(

@@ -20,7 +20,6 @@ import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.AndroidJarInput
 import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.processResources
@@ -32,6 +31,7 @@ import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.files.SerializableInputChanges
 import com.android.builder.internal.aapt.AaptException
@@ -94,6 +94,9 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
     // Not an input as it doesn't affect task outputs
     @get:Internal
     abstract val mergeBlameFolder: DirectoryProperty
+
+    @get:Internal
+    abstract val sourceSetMaps: ConfigurableFileCollection
 
     @get:Nested
     abstract val androidJarInput: AndroidJarInput
@@ -233,6 +236,17 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
             task.androidJarInput.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
+            if (creationConfig.services
+                            .projectOptions[BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP]) {
+                val sourceSetMap =
+                        creationConfig.artifacts.get(InternalArtifactType.SOURCE_SET_PATH_MAP)
+                task.sourceSetMaps.fromDisallowChanges(
+                        creationConfig.services.fileCollection(sourceSetMap)
+                )
+                task.dependsOn(sourceSetMap)
+            } else {
+                task.sourceSetMaps.disallowChanges()
+            }
         }
     }
 

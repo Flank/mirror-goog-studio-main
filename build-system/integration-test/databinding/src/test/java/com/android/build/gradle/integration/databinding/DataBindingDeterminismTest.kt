@@ -45,6 +45,7 @@ class DataBindingDeterminismTest {
             "build/intermediates/manifest_merge_blame_file/debug/manifest-merger-blame-debug-report.txt",
             "build/intermediates/merged_res_blame_folder/debug/out",
             "build/intermediates/res/merged/debug",
+            "build/intermediates/source_set_path_map/debug/file-map.txt",
             "build/outputs/logs/manifest-merger-debug-report.txt",
 
             // The following are specific to data binding.

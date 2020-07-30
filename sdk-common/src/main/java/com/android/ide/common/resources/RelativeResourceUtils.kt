@@ -29,21 +29,6 @@ fun produceRelativeSourceSetPath(
         }
     }
 
-    // TODO(lukeedgar) Improve handling of these edge case source sets.
-    //Handle cases where resources do not originate from source-sets.
-    val dirs = invariantFilePath.split('/')
-    if ("generated" in dirs && "pngs" in dirs){
-        val variant = dirs[dirs.indexOf("pngs") + 1]
-        val relativePathToSourceSet =
-                invariantFilePath.substringAfterLast(variant)
-        return "$packageName-generated-pngs-$variant:$relativePathToSourceSet"
-    } else if ("incremental" in dirs && "merged.dir" in dirs) {
-        val variant = dirs[dirs.indexOf("incremental") + 1]
-        val relativePathToSourceSet =
-                invariantFilePath.substringAfterLast("merged.dir")
-        return "$packageName-incremental-$variant-merged.dir:$relativePathToSourceSet"
-    }
-
     throw IllegalArgumentException(
             "Unable to locate resourceFile (${resourceFile.absolutePath}) in source-sets.")
 }
@@ -80,7 +65,7 @@ fun relativeResourcePathToAbsolutePath(
 
 /**
  * Parses identifier and file path into a map from a file
- * in the format '<Int source set id> <String file path>`.
+ * in the format 'packageName.projectName-sortedOrderPosition absolutePath'.
  */
 fun readFromSourceSetPathsFile(artifactFile: File) : Map<String, String> {
     if (!artifactFile.exists() || !artifactFile.isFile) {
@@ -88,5 +73,32 @@ fun readFromSourceSetPathsFile(artifactFile: File) : Map<String, String> {
     }
     return artifactFile.bufferedReader().lineSequence().associate {
         it.substringBefore(" ") to it.substringAfter(" ")
+    }
+}
+
+/**
+ * Writes a file containing a mapping of resource source-set absolute paths to a unique identifier
+ * in the format of 'packageName.projectName-sortedOrderPosition absolutePath'.
+ */
+fun writeIdentifiedSourceSetsFile(
+        resourceSourceSets: Collection<File>,
+        packageName: String,
+        projectName: String,
+        output: File
+) {
+    var i = 0
+    val sourceSetMap: Map<String, String> = resourceSourceSets
+            .sortedBy(File::invariantSeparatorsPath)
+            .associate { sourceSet ->
+                val sourceSetFolderName = sourceSet.parentFile.name
+                val appendProjectName =
+                        if (packageName.endsWith(projectName)) "" else ".$projectName"
+                val appId = "$packageName$appendProjectName-$sourceSetFolderName-${i++}"
+                appId to sourceSet.absolutePath
+            }
+    output.bufferedWriter().use { bw ->
+        sourceSetMap.forEach {
+            bw.write("${it.key} ${it.value}\n")
+        }
     }
 }
