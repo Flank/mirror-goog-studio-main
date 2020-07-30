@@ -15,6 +15,9 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.VectorDrawablesOptions
-
-interface IdeVectorDrawablesOptions : VectorDrawablesOptions
+/**
+ * Options for build-time support for vector drawables.
+ */
+interface IdeVectorDrawablesOptions {
+  val useSupportLibrary: Boolean?
+}

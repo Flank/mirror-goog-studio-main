@@ -23,6 +23,7 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.ide.common.gradle.model.IdeApiVersion;
 import com.android.ide.common.gradle.model.IdeProductFlavor;
+import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions;
 import com.android.ide.common.gradle.model.ModelCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -39,7 +40,7 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
 
     @NonNull private final Map<String, String> myTestInstrumentationRunnerArguments;
     @NonNull private final Collection<String> myResourceConfigurations;
-    @Nullable private final VectorDrawablesOptions myVectorDrawables;
+    @Nullable private final IdeVectorDrawablesOptions myVectorDrawables;
     @Nullable private final String myDimension;
     @Nullable private final String myApplicationId;
     @Nullable private final Integer myVersionCode;
@@ -101,7 +102,7 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
     }
 
     @Nullable
-    private static VectorDrawablesOptions copyVectorDrawables(
+    private static IdeVectorDrawablesOptions copyVectorDrawables(
             @NonNull ProductFlavor flavor, @NonNull ModelCache modelCache) {
         VectorDrawablesOptions vectorDrawables;
         try {
@@ -147,7 +148,7 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
 
     @Override
     @NonNull
-    public VectorDrawablesOptions getVectorDrawables() {
+    public IdeVectorDrawablesOptions getVectorDrawables() {
         if (myVectorDrawables != null) {
             return myVectorDrawables;
         }

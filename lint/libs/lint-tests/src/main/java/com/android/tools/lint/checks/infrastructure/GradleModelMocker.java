@@ -43,7 +43,6 @@ import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Library;
 import com.android.builder.model.LintOptions;
 import com.android.builder.model.MavenCoordinates;
-import com.android.builder.model.VectorDrawablesOptions;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
 import com.android.ide.common.gradle.model.IdeAaptOptions;
@@ -62,6 +61,7 @@ import com.android.ide.common.gradle.model.IdeProductFlavorContainer;
 import com.android.ide.common.gradle.model.IdeSourceProvider;
 import com.android.ide.common.gradle.model.IdeSourceProviderContainer;
 import com.android.ide.common.gradle.model.IdeVariant;
+import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions;
 import com.android.ide.common.gradle.model.IdeViewBindingOptions;
 import com.android.ide.common.gradle.model.level2.IdeAndroidLibrary;
 import com.android.ide.common.gradle.model.level2.IdeAndroidLibraryCore;
@@ -176,7 +176,7 @@ public class GradleModelMocker {
     private GradleVersion modelVersion = GradleVersion.parse("2.2.2");
     private final Map<String, Dep> graphs = Maps.newHashMap();
     private boolean useBuildCache;
-    private VectorDrawablesOptions vectorDrawablesOptions;
+    private IdeVectorDrawablesOptions vectorDrawablesOptions;
     private IdeAaptOptions aaptOptions;
     private boolean allowUnrecognizedConstructs;
     private boolean fullDependencies;
@@ -628,7 +628,7 @@ public class GradleModelMocker {
                     minSdkVersion = mergedFlavor.getMinSdkVersion();
                     targetSdkVersion = mergedFlavor.getTargetSdkVersion();
                     String flavorName = mergedFlavor.getName();
-                    VectorDrawablesOptions vectorDrawables = mergedFlavor.getVectorDrawables();
+                    IdeVectorDrawablesOptions vectorDrawables = mergedFlavor.getVectorDrawables();
 
                     IdeProductFlavor variantFlavor = mock(IdeProductFlavor.class);
                     when(variantFlavor.getMinSdkVersion()).thenReturn(minSdkVersion);
@@ -1189,7 +1189,7 @@ public class GradleModelMocker {
         } else if (key.startsWith("android.defaultConfig.vectorDrawables.useSupportLibrary ")) {
             String value = getUnquotedValue(key);
             if (VALUE_TRUE.equals(value)) {
-                VectorDrawablesOptions options = getVectorDrawableOptions();
+                IdeVectorDrawablesOptions options = getVectorDrawableOptions();
                 when(options.getUseSupportLibrary()).thenReturn(true);
             }
         } else if (key.startsWith(
@@ -1642,9 +1642,9 @@ public class GradleModelMocker {
         }
     }
 
-    private VectorDrawablesOptions getVectorDrawableOptions() {
+    private IdeVectorDrawablesOptions getVectorDrawableOptions() {
         if (vectorDrawablesOptions == null) {
-            vectorDrawablesOptions = mock(VectorDrawablesOptions.class);
+            vectorDrawablesOptions = mock(IdeVectorDrawablesOptions.class);
             when(mergedFlavor.getVectorDrawables()).thenReturn(vectorDrawablesOptions);
         }
         return vectorDrawablesOptions;

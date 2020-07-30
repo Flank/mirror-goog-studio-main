@@ -19,7 +19,6 @@ import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.BuildType
 import com.android.builder.model.Variant
-import com.android.builder.model.VectorDrawablesOptions
 
 interface IdeProductFlavor : IdeBaseConfig {
     /**
@@ -86,5 +85,5 @@ interface IdeProductFlavor : IdeBaseConfig {
      */
     val resourceConfigurations: Collection<String>
 
-    val vectorDrawables: VectorDrawablesOptions
+    val vectorDrawables: IdeVectorDrawablesOptions
 }
