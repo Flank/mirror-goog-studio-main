@@ -41,9 +41,10 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.Aapt2Daemon;
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey;
 import com.android.build.gradle.internal.services.Aapt2Input;
-import com.android.build.gradle.internal.services.Aapt2WorkersBuildService;
+import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService;
 import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.Blocks;
+import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import com.android.build.gradle.internal.variant.VariantPathHelper;
@@ -164,7 +165,7 @@ public abstract class MergeResources extends ResourceAwareTask {
     public abstract SetProperty<String> getResourceDirsOutsideRootProjectDir();
 
     @Internal
-    public abstract Property<Aapt2WorkersBuildService> getAapt2WorkersBuildService();
+    public abstract Property<Aapt2ThreadPoolBuildService> getAapt2ThreadPoolBuildService();
 
     @Nested
     public abstract Aapt2Input getAapt2();
@@ -209,13 +210,12 @@ public abstract class MergeResources extends ResourceAwareTask {
     @Internal
     @NonNull
     public WorkerExecutorFacade getAaptWorkerFacade() {
-        return getAapt2WorkersBuildService()
-                .get()
-                .getWorkerForAapt2(
-                        getProjectName(),
-                        getPath(),
-                        getWorkerExecutor(),
-                        getEnableGradleWorkers().get());
+        return Workers.INSTANCE.preferWorkers(
+                getProjectName(),
+                getPath(),
+                getWorkerExecutor(),
+                getEnableGradleWorkers().get(),
+                getAapt2ThreadPoolBuildService().get().getAapt2ThreadPool());
     }
 
     @NonNull
@@ -953,10 +953,10 @@ public abstract class MergeResources extends ResourceAwareTask {
                             .getProjectOptions()
                             .get(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER);
             HasConfigurableValuesKt.setDisallowChanges(
-                    task.getAapt2WorkersBuildService(),
+                    task.getAapt2ThreadPoolBuildService(),
                     BuildServicesKt.getBuildService(
                             creationConfig.getServices().getBuildServiceRegistry(),
-                            Aapt2WorkersBuildService.class));
+                            Aapt2ThreadPoolBuildService.class));
             creationConfig.getServices().initializeAapt2Input(task.getAapt2());
             task.getAaptEnv()
                     .set(
