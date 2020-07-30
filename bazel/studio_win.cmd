@@ -25,6 +25,7 @@ set TARGETS=
 for /f %%i in (%SCRIPTDIR%targets.win) do set TARGETS=!TARGETS! %%i
 
 @echo studio_win.cmd time: %time%
+@rem Remove --nouse_ijars which is a temporary fix for http://b/162497186
 @rem Run Bazel
 CALL %SCRIPTDIR%bazel.cmd ^
  --max_idle_secs=60 ^
@@ -36,6 +37,7 @@ CALL %SCRIPTDIR%bazel.cmd ^
  --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^
  --test_tag_filters=%TESTTAGFILTERS% ^
  --profile=%DISTDIR%\winprof%BUILDNUMBER%.json.gz ^
+ --nouse_ijars ^
  -- ^
  //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar ^
  %TARGETS%
