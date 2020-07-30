@@ -52,6 +52,7 @@ kotlin_test(
     ],
     jvm_flags = [
         "-Dtest.suite.jar=tests.jar",
+        "-Djdk.attach.allowAttachSelf=true",
         # TODO: Inject the cache directory into tests.
         "-Duser.home=/tmp",
     ],
@@ -73,7 +74,6 @@ kotlin_test(
         "//tools/base/annotations",
         "//tools/base/apkparser:tools.binary-resources",
         "//tools/base/apkparser/analyzer:tools.analyzer",
-        "//tools/base/bazel:langtools",
         "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
