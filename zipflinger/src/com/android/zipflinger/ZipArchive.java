@@ -107,7 +107,7 @@ public class ZipArchive implements Archive {
 
     /** See Archive.add documentation */
     @Override
-    public void add(@NonNull BytesSource source) throws IOException {
+    public void add(@NonNull Source source) throws IOException {
         if (closed) {
             throw new IllegalStateException(
                     String.format("Cannot add source to closed archive %s", file));

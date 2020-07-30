@@ -24,20 +24,20 @@ import java.util.Comparator;
 public class StableArchive implements Archive {
 
     private final Archive archive;
-    private final ArrayList<BytesSource> bytesSources;
+    private final ArrayList<Source> sources;
     private final ArrayList<ZipSource> zipSources;
     private final ArrayList<String> deletedEntries;
 
     public StableArchive(Archive archive) {
         this.archive = archive;
-        bytesSources = new ArrayList<>();
+        sources = new ArrayList<>();
         zipSources = new ArrayList<>();
         deletedEntries = new ArrayList<>();
     }
 
     @Override
-    public void add(@NonNull BytesSource source) {
-        bytesSources.add(source);
+    public void add(@NonNull Source source) {
+        sources.add(source);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class StableArchive implements Archive {
 
     @Override
     public void close() throws IOException {
-        bytesSources.sort(Comparator.comparing(Source::getName));
+        sources.sort(Comparator.comparing(Source::getName));
         zipSources.sort(Comparator.comparing(ZipSource::getName));
         for (ZipSource zipSource : zipSources) {
             zipSource.getSelectedEntries().sort(Comparator.comparing(Source::getName));
@@ -64,7 +64,7 @@ public class StableArchive implements Archive {
                 arch.delete(toDelete);
             }
 
-            for (BytesSource source : bytesSources) {
+            for (Source source : sources) {
                 arch.add(source);
             }
 

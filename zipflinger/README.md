@@ -117,10 +117,10 @@ Locations can be generated when the file is closed and enable incremental V2 sig
 ## Sources
 To add an entry to a zip, Zipflinger is fed sources. Typically two sources ares supported:
 
-- ByteSource
+- Source (usually BytesSource)
 - ZipSource (made of several ZipSourceEntry)
 
-BytesSource are well-suited for payload already located in memory or in a File. The typical usecase
+Source are well-suited for payload already located in memory or in a File. The typical usecase
 is when an APK needs to be updated with a new file and also V1 signed. The new file will have been
 loaded from storage to generate a hash values.
 
