@@ -149,6 +149,18 @@ java_binary(
     ],
 )
 
+coverage_java_test(
+    name = "zip_merger_tests",
+    srcs = ["testSrc/com/android/tools/binaries/ZipMergerTest.java"],
+    test_class = "com.android.tools.binaries.ZipMergerTest",
+    deps = [
+        ":zip_merger",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:junit_junit",
+        "//tools/base/zipflinger",
+    ],
+)
+
 # Verify that the iml_to_build tool does not need to be run.
 java_test(
     name = "iml_to_build_consistency_test",
