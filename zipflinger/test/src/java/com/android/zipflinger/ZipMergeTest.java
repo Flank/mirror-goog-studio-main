@@ -20,7 +20,7 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestZipMerge extends TestBase {
+public class ZipMergeTest extends AbstractZipflingerTest {
     // Test 64 not allowed
     // Test merge zip into an other one
     // Test create zip and merge an other one

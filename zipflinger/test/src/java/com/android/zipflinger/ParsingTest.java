@@ -24,7 +24,7 @@ import java.util.zip.ZipOutputStream;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestParsing extends TestBase {
+public class ParsingTest extends AbstractZipflingerTest {
 
     @Test
     public void testMapWithoutDataDescriptors() throws Exception {

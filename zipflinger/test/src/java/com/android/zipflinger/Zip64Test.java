@@ -25,7 +25,7 @@ import java.nio.file.StandardCopyOption;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestZip64 extends TestBase {
+public class Zip64Test extends AbstractZipflingerTest {
 
     private static final int ONE_GIB = 1 << 30;
 

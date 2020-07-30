@@ -19,7 +19,7 @@ package com.android.zipflinger;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestInts {
+public class IntsTest {
     @Test
     public void testLongToUintOverflow() {
         boolean exceptionCaught = false;

@@ -31,7 +31,7 @@ import java.util.zip.Deflater;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestZipFlinger extends TestBase {
+public class ZipFlingerTest extends AbstractZipflingerTest {
 
     private static final int COMP_SPED = Deflater.BEST_SPEED;
     private static final int COMP_NONE = Deflater.NO_COMPRESSION;

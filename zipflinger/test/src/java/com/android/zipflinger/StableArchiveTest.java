@@ -23,7 +23,7 @@ import java.nio.file.StandardCopyOption;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestStableArchive extends TestBase {
+public class StableArchiveTest extends AbstractZipflingerTest {
 
     private void verifyBinaryIdentical(Path dst1, Path dst2) throws IOException {
         byte[] content1 = Files.readAllBytes(dst1);

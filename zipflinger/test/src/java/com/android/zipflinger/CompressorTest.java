@@ -25,7 +25,7 @@ import java.util.zip.Inflater;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestCompressor extends TestBase {
+public class CompressorTest extends AbstractZipflingerTest {
 
     @Test
     public void testDeflateInflate() throws IOException, DataFormatException {
