@@ -41,6 +41,11 @@ def relative_paths(ctx, files, roots):
     return paths
 
 def resources_impl(ctx, name, roots, resources, resources_jar):
+    rel_paths = relative_paths(ctx, resources, roots)
+    plugin = None
+    for k, v in rel_paths:
+        if k == "META-INF/plugin.xml":
+            plugin = v
     zipper_args = ["c", resources_jar.path]
     zipper_files = "".join([k + "=" + v.path + "\n" for k, v in relative_paths(ctx, resources, roots)])
     zipper_list = create_option_file(ctx, name + ".res.lst", zipper_files)
@@ -53,6 +58,7 @@ def resources_impl(ctx, name, roots, resources, resources_jar):
         progress_message = "Creating resources zip...",
         mnemonic = "zipper",
     )
+    return plugin
 
 def accumulate_provider(provider, deps, runtime, compile_time):
     deps += [provider]
@@ -116,9 +122,10 @@ def _iml_module_jar_impl(
         jars += [kotlin_jar]
 
     # Resources.
+    plugin = None
     if resources:
         resources_jar = ctx.actions.declare_file(name + ".res.jar")
-        resources_impl(ctx, name, roots, resources, resources_jar)
+        plugin = resources_impl(ctx, name, roots, resources, resources_jar)
         jars += [resources_jar]
     if res_zips:
         jars += res_zips
@@ -197,7 +204,7 @@ def _iml_module_jar_impl(
     )]
     providers += exports
 
-    return java_common.merge(providers), forms
+    return java_common.merge(providers), forms, plugin
 
 def _iml_module_impl(ctx):
     names = [iml.basename[:-4] for iml in ctx.files.iml_files if iml.basename.endswith(".iml")]
@@ -259,7 +266,7 @@ def _iml_module_impl(ctx):
 
     # If multiple modules we use the label, otherwise use the exact module name
     module_name = names[0] if len(names) == 1 else ctx.label.name
-    main_provider, main_forms = _iml_module_jar_impl(
+    main_provider, main_forms, plugin_xml = _iml_module_jar_impl(
         ctx,
         ctx.label.name,
         ctx.attr.roots,
@@ -280,7 +287,7 @@ def _iml_module_impl(ctx):
         transitive_runtime_jars,
     )
 
-    test_provider, test_forms = _iml_module_jar_impl(
+    test_provider, test_forms, _ = _iml_module_jar_impl(
         ctx,
         ctx.label.name + "_test",
         ctx.attr.test_roots,
@@ -313,6 +320,7 @@ def _iml_module_impl(ctx):
             test_provider = test_provider,
             main_provider = main_provider,
             names = names,
+            plugin = plugin_xml,
         ),
         providers = [main_provider],
     )
