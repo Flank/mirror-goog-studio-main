@@ -210,12 +210,7 @@ public abstract class MergeResources extends ResourceAwareTask {
     @Internal
     @NonNull
     public WorkerExecutorFacade getAaptWorkerFacade() {
-        return Workers.INSTANCE.preferWorkers(
-                getProjectName(),
-                getPath(),
-                getWorkerExecutor(),
-                getEnableGradleWorkers().get(),
-                getAapt2ThreadPoolBuildService().get().getAapt2ThreadPool());
+        return Workers.INSTANCE.withGradleWorkers(getProjectName(), getPath(), getWorkerExecutor());
     }
 
     @NonNull

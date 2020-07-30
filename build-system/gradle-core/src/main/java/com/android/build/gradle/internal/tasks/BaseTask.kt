@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Property
@@ -42,19 +41,6 @@ abstract class BaseTask : DefaultTask() {
 
     @get:Inject
     abstract val workerExecutor: WorkerExecutor
-
-    @Internal
-    fun getWorkerFacadeWithWorkers(): WorkerExecutorFacade {
-        return Workers.preferWorkers(projectName, path, workerExecutor, enableGradleWorkers.get())
-    }
-
-    fun getWorkerFacadeWithThreads(useGradleExecutor: Boolean = false): WorkerExecutorFacade {
-        return if (useGradleExecutor) {
-            Workers.preferThreads(projectName, path, workerExecutor, enableGradleWorkers.get())
-        } else {
-            Workers.withThreads(projectName, path)
-        }
-    }
 
     /**
      * Called by subclasses that want to record something.

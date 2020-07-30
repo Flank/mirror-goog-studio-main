@@ -33,8 +33,7 @@ import javax.inject.Inject
 
 /**
  * Singleton object responsible for providing instances of [WorkerExecutorFacade]
- * in the context of the current build settings (like whether or not we should use
- * Gradle's [WorkerExecutor] or the level of parallelism allowed by users.
+ * that relies on Gradle's [WorkerExecutor].
  */
 object Workers {
 
@@ -45,69 +44,19 @@ object Workers {
     private val defaultExecutorService: ExecutorService = ForkJoinPool.commonPool()
 
     /**
-     * Creates a [WorkerExecutorFacade] using the passed [WorkerExecutor], using the value of
-     * [enableGradleWorkers] to decide which implementation to use.
-     *
-     * If the Gradle workers are enabled, submission of work items will be handled preferably
-     * by a [WorkerExecutor.submit], otherwise by a [ExecutorService.submit] call.
+     * Creates a [WorkerExecutorFacade] using the passed [WorkerExecutor].
      *
      * @param projectName name of the project owning the task
      * @param owner the task path issuing the request and owning the [WorkerExecutor] instance.
      * @param worker [WorkerExecutor] to use if Gradle's worker executor are enabled.
-     * @param enableGradleWorkers if Gradle workers should be used.
-     * @param executor [ExecutorService] to use if the Gradle's worker are not enabled or null
-     * if the default installed version is to be used.
-     * @return an instance of [WorkerExecutorFacade] using the passed worker or the default
-     * [ExecutorService] depending on the project options.
+     * @return an instance of [WorkerExecutorFacade] using the passed worker
      */
-    @JvmOverloads
-    fun preferWorkers(
+    fun withGradleWorkers(
         projectName: String,
         owner: String,
-        worker: WorkerExecutor,
-        enableGradleWorkers: Boolean,
-        executor: ExecutorService? = null
+        worker: WorkerExecutor
     ): WorkerExecutorFacade {
-        return if (enableGradleWorkers) {
-            WorkerExecutorAdapter(
-                projectName,
-                owner,
-                worker
-            )
-        } else {
-            ProfileAwareExecutorServiceAdapter(
-                projectName,
-                owner,
-                executor ?: defaultExecutorService,
-                WorkerExecutorAdapter(projectName, owner, worker)
-            )
-        }
-    }
-
-    /**
-     * Creates a [WorkerExecutorFacade] using the passed [WorkerExecutor]
-     *
-     * Submission will preferably use a default [ExecutorService] to submit work items, but
-     * environment settings may force to use Gradle Workers instead.
-     *
-     * @param projectName the project name.
-     * @param owner the task path issuing the request and owning the [WorkerExecutor] instance.
-     * @param workerExecutor [WorkerExecutor] to use if Gradle's worker executor are enabled.
-     * @param enableGradleWorkers if Gradle workers can be used.
-     * if the default installed version is to be used.
-     * @return an instance of [WorkerExecutorFacade].
-     */
-    fun preferThreads(
-        projectName: String,
-        owner: String,
-        workerExecutor: WorkerExecutor,
-        enableGradleWorkers: Boolean
-    ): WorkerExecutorFacade {
-        return ProfileAwareExecutorServiceAdapter(
-            projectName,
-            owner,
-            defaultExecutorService,
-            preferWorkers(projectName, owner, workerExecutor, enableGradleWorkers))
+        return WorkerExecutorAdapter(projectName, owner, worker)
     }
 
     /**
