@@ -15,6 +15,20 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.TestOptions
+/** Test options for running tests - e.g. instrumented or not. */
+interface IdeTestOptions {
+  enum class Execution {
+    /** On device orchestration is not used in this case.  */
+    HOST,
 
-interface IdeTestOptions : TestOptions
+    /** On device orchestration is used.  */
+    ANDROID_TEST_ORCHESTRATOR,
+
+    /** On device orchestration is used, with androidx class names.  */
+    ANDROIDX_TEST_ORCHESTRATOR
+  }
+
+  val animationsDisabled: Boolean
+
+  val execution: Execution?
+}

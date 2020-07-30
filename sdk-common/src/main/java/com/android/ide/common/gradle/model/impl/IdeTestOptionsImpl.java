@@ -27,7 +27,7 @@ public class IdeTestOptionsImpl implements IdeTestOptions, Serializable {
     private static final long serialVersionUID = 2L;
 
     private final boolean myAnimationsDisabled;
-    @Nullable private final TestOptions.Execution myExecutionEnum;
+    @Nullable private final IdeTestOptions.Execution myExecutionEnum;
     private final int myHashCode;
 
     // Used for serialization by the IDE.
@@ -41,7 +41,7 @@ public class IdeTestOptionsImpl implements IdeTestOptions, Serializable {
 
     public IdeTestOptionsImpl(@NonNull TestOptions testOptions) {
         myAnimationsDisabled = testOptions.getAnimationsDisabled();
-        myExecutionEnum = testOptions.getExecution();
+        myExecutionEnum = convertExecution(testOptions.getExecution());
         myHashCode = calculateHashCode();
     }
 
@@ -86,5 +86,20 @@ public class IdeTestOptionsImpl implements IdeTestOptions, Serializable {
                 + ", myExecutionEnum='"
                 + myExecutionEnum
                 + "}";
+    }
+
+    @Nullable
+    private static Execution convertExecution(@Nullable TestOptions.Execution execution) {
+        if (execution == null) return null;
+        switch (execution) {
+            case HOST:
+                return Execution.HOST;
+            case ANDROID_TEST_ORCHESTRATOR:
+                return Execution.ANDROID_TEST_ORCHESTRATOR;
+            case ANDROIDX_TEST_ORCHESTRATOR:
+                return Execution.ANDROIDX_TEST_ORCHESTRATOR;
+            default:
+                throw new IllegalStateException("Unknown execution option: " + execution);
+        }
     }
 }
