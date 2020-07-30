@@ -173,9 +173,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
     @get:LocalState
     abstract val previousRunNumberOfBucketsFile: RegularFileProperty
 
-    @get:Input
-    abstract val useGradleWorkers: Property<Boolean>
-
     @get:Incremental
     @get:PathSensitive(PathSensitivity.NONE)
     @get:InputFiles
@@ -271,9 +268,9 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             inputJarHashesFile = inputJarHashesFile.get().asFile,
             dexer = dexer.get(),
             numberOfBuckets = numberOfBuckets.get(),
-            useGradleWorkers = useGradleWorkers.get(),
             workerExecutor = workerExecutor,
-            messageReceiver = MessageReceiverImpl(dexParams.errorFormatMode.get(), logger)
+            projectName = projectName,
+            taskPath = path
         ).doProcess()
 
         if (dexer.get() == DexerTool.DX) {
@@ -544,7 +541,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
 
             task.dexParams.errorFormatMode.set(SyncOptions.getErrorFormatMode(projectOptions))
             task.dexer.set(creationConfig.variantScope.dexer)
-            task.useGradleWorkers.set(projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS))
             task.dxDexParams.inBufferSize.set(
                 task.project.providers.provider {
                     (projectOptions.getProvider(IntegerOption.DEXING_READ_BUFFER_SIZE).getOrElse(DEFAULT_BUFFER_SIZE_IN_KB)) * 1024

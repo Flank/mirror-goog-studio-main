@@ -134,12 +134,6 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
             lint.setDescription(
                     StringHelper.appendCapitalized(
                             "Runs lint on the ", lint.getVariantName(), " build."));
-            lint.getEnableGradleWorkers()
-                    .set(
-                            variantProperties
-                                    .getServices()
-                                    .getProjectOptions()
-                                    .get(BooleanOption.ENABLE_GRADLE_WORKERS));
         }
     }
 
@@ -187,12 +181,6 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
                     "Runs lint on just the fatal issues in the "
                             + task.getVariantName()
                             + " build.");
-            task.getEnableGradleWorkers()
-                    .set(
-                            componentProperties
-                                    .getServices()
-                                    .getProjectOptions()
-                                    .get(BooleanOption.ENABLE_GRADLE_WORKERS));
         }
     }
 }

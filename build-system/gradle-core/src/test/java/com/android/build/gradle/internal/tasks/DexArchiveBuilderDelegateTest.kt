@@ -17,12 +17,10 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.dexing.DexParameters
-import com.android.build.gradle.internal.dexing.DexWorkAction
-import com.android.build.gradle.internal.dexing.DexWorkActionParams
 import com.android.build.gradle.internal.dexing.DxDexParameters
 import com.android.build.gradle.internal.fixtures.FakeFileChange
+import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.DexerTool
 import com.android.testutils.TestClassesGenerator
@@ -37,17 +35,11 @@ import com.google.common.collect.ImmutableList
 import com.google.common.collect.Iterables
 import com.google.common.io.ByteStreams
 import com.google.common.truth.Truth.assertThat
-import org.gradle.api.Action
 import org.gradle.api.file.FileType
+import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.work.ChangeType
 import org.gradle.work.FileChange
-import org.gradle.workers.ClassLoaderWorkerSpec
-import org.gradle.workers.ProcessWorkerSpec
-import org.gradle.workers.WorkQueue
-import org.gradle.workers.WorkerConfiguration
-import org.gradle.workers.WorkerExecutionException
 import org.gradle.workers.WorkerExecutor
-import org.gradle.workers.WorkerSpec
 import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
@@ -55,9 +47,6 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import org.mockito.ArgumentCaptor
-import org.mockito.Mockito
-import org.mockito.Mockito.verify
 import java.io.File
 import java.io.ObjectOutputStream
 import java.nio.file.Files
@@ -81,56 +70,16 @@ class DexArchiveBuilderDelegateTest(
     @Rule
     var tmpDir = TemporaryFolder()
 
-    private val workerExecutor = object : WorkerExecutor {
-        override fun submit(
-            aClass: Class<out Runnable>,
-            action: Action<in WorkerConfiguration>
-        ) {
-            val workerConfiguration = Mockito.mock(WorkerConfiguration::class.java)
-            val captor = ArgumentCaptor.forClass(
-                DexWorkActionParams::class.java
-            )
-            action.execute(workerConfiguration)
-            verify(workerConfiguration).setParams(captor.capture())
-            val workAction = DexWorkAction(
-                captor.value
-            )
-            workAction.run()
-        }
-
-        @Throws(WorkerExecutionException::class)
-        override fun await() {
-            // do nothing;
-        }
-
-        override fun processIsolation(): WorkQueue {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        override fun processIsolation(p0: Action<in ProcessWorkerSpec>?): WorkQueue {
-            TODO("Not yet implemented")
-        }
-
-        override fun noIsolation(): WorkQueue {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        override fun noIsolation(p0: Action<in WorkerSpec>?): WorkQueue {
-            TODO("Not yet implemented")
-        }
-
-        override fun classLoaderIsolation(): WorkQueue {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        override fun classLoaderIsolation(p0: Action<in ClassLoaderWorkerSpec>?): WorkQueue {
-            TODO("Not yet implemented")
-        }
-    }
+    private lateinit var workerExecutor: WorkerExecutor
 
     @Before
     fun setUp() {
         out = tmpDir.root.toPath().resolve("out")
+
+        with(ProjectBuilder.builder().withProjectDir(tmpDir.newFolder()).build()) {
+            workerExecutor = FakeGradleWorkExecutor(objects, tmpDir.newFolder())
+        }
+
         Files.createDirectories(out)
     }
 
@@ -453,10 +402,8 @@ class DexArchiveBuilderDelegateTest(
             incrementalDexingTaskV2 = withIncrementalDexingTaskV2,
             desugarGraphDir =  tmpDir.newFolder().takeIf{ withIncrementalDexingTaskV2 },
             dexer = dexerTool,
-            useGradleWorkers = false,
             projectVariant = "myVariant",
             numberOfBuckets = numberOfBuckets,
-            messageReceiver = NoOpMessageReceiver(),
             workerExecutor = workerExecutor,
             dexParams = DexParameters(
                 minSdkVersion = minSdkVersion,
@@ -472,7 +419,9 @@ class DexArchiveBuilderDelegateTest(
                 outBufferSize = 10,
                 dxNoOptimizeFlagPresent = false,
                 jumboMode = true
-            )
+            ),
+            projectName = "",
+            taskPath = ""
         )
     }
 

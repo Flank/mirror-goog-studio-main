@@ -22,33 +22,23 @@ import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_MIN_SDK
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.options.BooleanOption
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /**
  * Test use of Java 8 language in the application module with data binding.
  *
  * regression test for - http://b.android.com/321693
  */
-@RunWith(Parameterized::class)
-class DataBindingDesugarAppTest(private val enableGradleWorkers: Boolean) {
+class DataBindingDesugarAppTest {
 
     @get:Rule
     val project = GradleTestProject.builder()
         .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
         .create()
 
-    companion object {
-        @Parameterized.Parameters(name = "enableGradleWorkers={0}")
-        @JvmStatic
-        fun getParameters() = arrayOf(java.lang.Boolean.TRUE, java.lang.Boolean.FALSE)
-    }
-
     private val projectExecutor: GradleTaskExecutor
-        get() = project.executor().with(BooleanOption.ENABLE_GRADLE_WORKERS, enableGradleWorkers)
+        get() = project.executor()
 
     @Test
     fun testDatabinding() {

@@ -45,7 +45,6 @@ class RecalculateStackFramesTaskTest {
         addLibraryAsDependency()
         project
             .executor()
-            .with(BooleanOption.ENABLE_GRADLE_WORKERS, true)
             .with(BooleanOption.ENABLE_D8_DESUGARING, false)
             .with(BooleanOption.ENABLE_R8_DESUGARING, false)
             .with(OptionalBooleanOption.ENABLE_R8, false)

@@ -109,11 +109,7 @@ class CompatibleScreensManifestTest {
         `when`(globalScope.projectOptions).thenReturn(
             ProjectOptions(
                 ImmutableMap.of(),
-                FakeProviderFactory(FakeProviderFactory.factory,
-                    ImmutableMap.of<String, Any>(
-                    BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
-                    false
-                ))
+                FakeProviderFactory(FakeProviderFactory.factory, emptyMap())
             )
         )
         val applicationId = project.objects.property(String::class.java)

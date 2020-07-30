@@ -36,9 +36,6 @@ abstract class BaseTask : DefaultTask() {
     @get:Internal
     val projectName: String = project.name
 
-    @get:Input
-    abstract val enableGradleWorkers: Property<Boolean>
-
     @get:Inject
     abstract val workerExecutor: WorkerExecutor
 

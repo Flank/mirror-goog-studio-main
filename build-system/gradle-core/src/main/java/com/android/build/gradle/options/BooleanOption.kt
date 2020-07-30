@@ -21,6 +21,7 @@ import com.android.build.gradle.options.Version.VERSION_3_5
 import com.android.build.gradle.options.Version.VERSION_3_6
 import com.android.build.gradle.options.Version.VERSION_4_0
 import com.android.build.gradle.options.Version.VERSION_4_1
+import com.android.build.gradle.options.Version.VERSION_4_2
 import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0
 import com.android.builder.model.AndroidProject
 
@@ -109,7 +110,6 @@ enum class BooleanOption(
     ENABLE_TEST_SHARDING("android.androidTest.shardBetweenDevices", false, FeatureStage.Experimental),
     VERSION_CHECK_OVERRIDE_PROPERTY("android.overrideVersionCheck", false, FeatureStage.Experimental),
     OVERRIDE_PATH_CHECK_PROPERTY("android.overridePathCheck", false, FeatureStage.Experimental),
-    ENABLE_GRADLE_WORKERS("android.enableGradleWorkers", true, FeatureStage.Experimental),
     DISABLE_RESOURCE_VALIDATION("android.disableResourceValidation", false, FeatureStage.Experimental),
     CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES("android.consumeDependenciesAsSharedLibraries", false, FeatureStage.Experimental),
     DISABLE_EARLY_MANIFEST_PARSING("android.disableEarlyManifestParsing", false, FeatureStage.Experimental),
@@ -328,6 +328,16 @@ enum class BooleanOption(
         FeatureStage.Enforced(
             VERSION_BEFORE_4_0,
             "Separate R class compilation has been enabled and can no longer be disabled."
+        )
+    ),
+
+    @Suppress("unused")
+    ENABLE_GRADLE_WORKERS(
+        "android.enableGradleWorkers",
+        true,
+        FeatureStage.Enforced(
+            VERSION_4_2,
+            "Gradle workers are always used."
         )
     ),
 

@@ -88,9 +88,6 @@ abstract class VariantTaskCreationAction<TaskT, CreationConfigT: ComponentCreati
         }
 
         task.variantName = creationConfig.name
-        task.enableGradleWorkers.set(
-            creationConfig.services.projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS)
-        )
     }
 }
 
@@ -114,9 +111,6 @@ abstract class GlobalTaskCreationAction<TaskT>(
     }
 
     override fun configure(task: TaskT) {
-        task.enableGradleWorkers.set(
-            globalScope.projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS)
-        )
     }
 }
 /**
