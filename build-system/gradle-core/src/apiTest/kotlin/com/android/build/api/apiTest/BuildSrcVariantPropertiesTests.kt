@@ -79,11 +79,11 @@ TestType.BuildSrc
                     "src/main/kotlin/CustomPlugin.kt",
                     // language=kotlin
                     """
+                    import com.android.build.api.dsl.ApplicationExtension
                     import com.android.build.api.artifact.Artifacts
                     import com.android.build.api.artifact.ArtifactType
                     import com.android.build.api.variant.VariantOutputConfiguration.OutputType
                     import com.android.build.gradle.AppPlugin
-                    import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
                     import org.gradle.api.Plugin
                     import org.gradle.api.Project
 
@@ -92,13 +92,13 @@ TestType.BuildSrc
                             project.plugins.withType(AppPlugin::class.java) {
                                 // NOTE: BaseAppModuleExtension is internal. This will be replaced by a public
                                 // interface
-                                val extension = project.extensions.getByName("android") as BaseAppModuleExtension
+                                val extension = project.extensions.getByName("android") as ApplicationExtension<*,*,*,*,*>
                                 extension.configure(project)
                             }
                         }
                     }
 
-                    fun BaseAppModuleExtension.configure(project: Project) {
+                    fun ApplicationExtension<*,*,*,*,*>.configure(project: Project) {
                         // Note: Everything in there is incubating.
 
                         // onVariantProperties registers an action that configures variant properties during
