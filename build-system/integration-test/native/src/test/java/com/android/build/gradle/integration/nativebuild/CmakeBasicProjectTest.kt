@@ -57,11 +57,12 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
     @Rule
     @JvmField
     val project = GradleTestProject.builder()
-        .fromTestApp(
-            HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
+        .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
         // TODO(159233213) Turn to ON when release configuration is cacheable
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+        // TODO(tgeng): Cover v2
+        .addGradleProperties(BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName + "=false")
         .create()
 
     companion object {
@@ -275,7 +276,7 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
         val groupToArtifacts = ArrayListMultimap.create<String, NativeArtifact>()
 
         for (artifact in model.artifacts) {
-            val pathElements = TestFileUtils.splitPath(artifact.outputFile)
+            val pathElements = TestFileUtils.splitPath(artifact.outputFile!!)
             assertThat(pathElements).contains("obj")
             assertThat(pathElements).doesNotContain("lib")
             groupToArtifacts.put(artifact.groupName, artifact)
