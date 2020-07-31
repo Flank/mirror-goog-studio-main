@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.options
 
-import com.android.ide.common.repository.GradleVersion
-
 /** An Android Gradle plugin version. */
 enum class Version(
 
@@ -28,7 +26,7 @@ enum class Version(
      * getDeprecationTargetMessage()/getRemovedVersionMessage() instead to ensure consistent message
      * format.
      */
-    private val versionString: String?
+     val versionString: String?
 ) {
 
     /**
@@ -56,18 +54,6 @@ enum class Version(
             "It has been removed from the current version of the Android Gradle plugin."
         } else {
             "It was removed in version $versionString of the Android Gradle plugin."
-        }
-    }
-
-    fun getVersion(): GradleVersion? {
-        return versionString?.let { versionString ->
-            // Normalize the version string (e.g., "5.0" => "5.0.0")
-            val normalizedVersionString = if (versionString.count { it == '.' } == 1) {
-                "$versionString.0"
-            } else {
-                versionString
-            }
-            GradleVersion.parseAndroidGradlePluginVersion(normalizedVersionString)
         }
     }
 }

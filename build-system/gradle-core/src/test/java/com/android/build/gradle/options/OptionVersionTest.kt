@@ -69,5 +69,17 @@ class OptionVersionTest {
                 OptionalBooleanOption.values() +
                 StringOption.values() +
                 IntegerOption.values()
+
+    private fun Version.getVersion(): GradleVersion? {
+        return versionString?.let { versionString ->
+            // Normalize the version string (e.g., "5.0" => "5.0.0")
+            val normalizedVersionString = if (versionString.count { it == '.' } == 1) {
+                "$versionString.0"
+            } else {
+                versionString
+            }
+            GradleVersion.parseAndroidGradlePluginVersion(normalizedVersionString)
+        }
+    }
 }
 
