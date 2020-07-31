@@ -31,6 +31,11 @@ if exist %DUMMYLINK% (
   @rem Removing dummy_link as a workaround to http://b/160885823
   del %DUMMYLINK%
 )
+set DUMMYLINK=%EXECROOT%\bazel-out\host\bin\tools\base\bazel\formc.exe.runfiles\dummy_link
+if exist %DUMMYLINK% (
+  @rem Removing dummy_link as a workaround to http://b/160885823
+  del %DUMMYLINK%
+)
 
 @echo studio_win.cmd time: %time%
 @rem Remove --nouse_ijars which is a temporary fix for http://b/162497186
