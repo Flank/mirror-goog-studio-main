@@ -16,20 +16,22 @@
 
 package com.android.build.gradle.integration.nativebuild
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.builder.model.NativeAndroidProject
-import org.junit.Rule
-import org.junit.Test
+import com.android.build.gradle.integration.common.fixture.model.readCompileCommandsJsonEntries
 import com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject.assertThat
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION
 import com.android.build.gradle.options.BooleanOption
-import org.junit.Before
-import java.io.File
+import com.android.builder.model.NativeAndroidProject
 import com.google.common.truth.Truth.assertThat
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+import java.io.File
 
 /**
  * This test is related to b/112611156
@@ -41,7 +43,17 @@ import com.google.common.truth.Truth.assertThat
  * because it won't have flags and Android Studio will reject it. The header file is recorded
  * in android_gradle_build.json but is not in the model sent to Android Studio.
  */
-class HeaderInCmakeListsTest {
+@RunWith(Parameterized::class)
+class HeaderInCmakeListsTest(private val useV2NativeModel: Boolean) {
+
+    companion object {
+        @Parameterized.Parameters(name = "useV2NativeModel = {0}")
+        @JvmStatic
+        fun data() = arrayOf(
+            arrayOf(true),
+            arrayOf(false)
+        )
+    }
 
     @Rule
     @JvmField
@@ -55,8 +67,7 @@ class HeaderInCmakeListsTest {
         .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .setWithCmakeDirInLocalProp(true)
-        // TODO(tgeng): Cover v2
-        .addGradleProperties(BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName + "=false")
+        .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=$useV2NativeModel")
         .create()
 
     @Before
@@ -93,8 +104,19 @@ target_link_libraries(native-lib ${'$'}{log-lib})
 
     @Test
     fun testThatHeaderFileIsExcluded() {
-        val nativeProject = project.model().fetch(NativeAndroidProject::class.java)
-        assertThat(nativeProject).hasArtifactGroupsNamed("debug", "release")
-        assertThat(nativeProject.artifacts.first()!!.sourceFiles.size).isEqualTo(1)
+        if (useV2NativeModel) {
+            val nativeModules = project.modelV2().fetchNativeModules(null, null)
+            val nativeModule = nativeModules.container.singleModel
+            assertThat(nativeModule.variants.map { it.name }).containsExactly("debug", "release")
+            for (variant in nativeModule.variants) {
+                for (abi in variant.abis) {
+                    assertThat(abi.sourceFlagsFile.readCompileCommandsJsonEntries()).hasSize(1)
+                }
+            }
+        } else {
+            val nativeProject = project.model().fetch(NativeAndroidProject::class.java)
+            assertThat(nativeProject).hasArtifactGroupsNamed("debug", "release")
+            assertThat(nativeProject.artifacts.first()!!.sourceFiles.size).isEqualTo(1)
+        }
     }
 }

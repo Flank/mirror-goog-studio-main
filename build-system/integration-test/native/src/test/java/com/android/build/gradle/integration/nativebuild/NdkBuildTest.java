@@ -28,6 +28,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.NativeBuildSystem;
 import com.android.builder.model.NativeAndroidProject;
@@ -53,6 +54,9 @@ public class NdkBuildTest {
                     .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .addFile(HelloWorldJniApp.androidMkC("src/main/jni"))
+                    // TODO(b/161169301): Support v2 model with ndk-build
+                    .addGradleProperties(
+                            BooleanOption.ENABLE_V2_NATIVE_MODEL.getPropertyName() + "=false")
                     .create();
 
     @Before

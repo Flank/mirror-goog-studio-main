@@ -43,7 +43,7 @@ import org.junit.Test
 import java.io.File
 import java.nio.charset.StandardCharsets
 
-class NativeModelBuilderTest : ModelComparator() {
+class V2NativeModelTest : ModelComparator() {
 
     @get:Rule
     var project = builder()

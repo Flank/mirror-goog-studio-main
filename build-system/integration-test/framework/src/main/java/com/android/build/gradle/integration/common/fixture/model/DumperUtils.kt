@@ -25,6 +25,18 @@ import java.io.File
 // dumping a model into a String.
 
 interface FileNormalizer {
+    /**
+     * Converts the given file path to a normalized string form. If the path is absolute and its
+     * prefix matches a known directory, for example, project root, Android SDK, etc, the prefix is
+     * replaced by a descriptive placeholder. Hence test assertion does not need to worry about
+     * changes introduced by the platform or test session.
+     *
+     * In addition, the normalized string contains a suffix indicating the presence of the file:
+     *
+     * - `{!}`: the path does not exist
+     * - `{F}`: the path refers to a file
+     * - `{D}`: the path refers to a directory
+     */
     fun normalize(file: File): String
 
     /**

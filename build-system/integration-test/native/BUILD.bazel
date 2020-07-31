@@ -167,14 +167,6 @@ single_gradle_integration_test(
 )
 
 single_gradle_integration_test(
-    name = "CmakeVanillaBasicProjectTest",
-    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK,
-    maven_repos = MAVEN_REPOS,
-    deps = DEPS,
-)
-
-single_gradle_integration_test(
     name = "CombinedAbiDensitySplits",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + NDK + ["//tools/base/build-system/integration-test:test-projects/combinedAbiDensitySplits"],
@@ -216,10 +208,19 @@ single_gradle_integration_test(
 )
 
 single_gradle_integration_test(
-    name = "NativeModelTest",
+    name = "V1NativeModelTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
+    deps = DEPS,
+)
+
+single_gradle_integration_test(
+    name = "V2NativeModelTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
+    data = DATA + CMAKE + NDK,
+    maven_repos = MAVEN_REPOS,
+    resources = glob(["src/test/resources/**"]),
     deps = DEPS,
 )
 
@@ -376,15 +377,6 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    deps = DEPS,
-)
-
-single_gradle_integration_test(
-    name = "NativeModelBuilderTest",
-    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK,
-    maven_repos = MAVEN_REPOS,
-    resources = glob(["src/test/resources/**"]),
     deps = DEPS,
 )
 

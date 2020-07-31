@@ -29,27 +29,45 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.StringOption;
 import com.android.testutils.apk.Apk;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Check cmake build with split and injected ABI. */
+@RunWith(Parameterized.class)
 public class CmakeInjectedAbiSplitTest {
-    @ClassRule
-    public static GradleTestProject sProject =
-            GradleTestProject.builder()
-                    .fromTestApp(HelloWorldJniApp.builder().withCmake().build())
-                    .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
-                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-                    .setWithCmakeDirInLocalProp(true)
-                    .create();
+    @Rule
+    public GradleTestProject sProject;
 
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @Parameterized.Parameters(name = "useV2NativeModel={0}")
+    public static Collection<Object[]> data() {
+        return ImmutableList.of(new Object[]{false}, new Object[]{true});
+    }
+
+    public CmakeInjectedAbiSplitTest(boolean useV2NativeModel) {
+        sProject =
+                GradleTestProject.builder()
+                        .fromTestApp(HelloWorldJniApp.builder().withCmake().build())
+                        .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
+                        .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+                        .setWithCmakeDirInLocalProp(true)
+                        .addGradleProperties(
+                                BooleanOption.ENABLE_V2_NATIVE_MODEL.getPropertyName()
+                                        + "="
+                                        + useV2NativeModel)
+                        .create();
+    }
+
+    @Before
+    public void setUp() throws Exception {
         TestFileUtils.appendToFile(
                 sProject.getBuildFile(),
                 "apply plugin: 'com.android.application'\n"
@@ -131,12 +149,12 @@ public class CmakeInjectedAbiSplitTest {
         checkApkContent(universalApk, Abi.ARM64_V8A, Abi.X86);
     }
 
-    private static File getCmakeOutputLib(Abi abi) {
+    private File getCmakeOutputLib(Abi abi) {
         return sProject.file(
                 "build/intermediates/cmake/debug/obj/" + abi.getTag() + "/libhello-jni.so");
     }
 
-    private static void checkApkContent(Apk apk, Abi... abis) throws IOException {
+    private void checkApkContent(Apk apk, Abi... abis) throws IOException {
         List<Abi> abiList = Arrays.asList(abis);
         for (Abi abi : NdkHelper.getAbiList(sProject)) {
             String path = "lib/" + abi.getTag() + '/' + "libhello-jni.so";

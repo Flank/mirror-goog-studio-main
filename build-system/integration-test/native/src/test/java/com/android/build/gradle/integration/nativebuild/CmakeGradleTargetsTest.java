@@ -24,6 +24,7 @@ import static com.android.testutils.truth.FileSubject.assertThat;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.StringOption;
 import com.android.testutils.apk.Apk;
 import com.google.common.base.Joiner;
@@ -45,6 +46,7 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class CmakeGradleTargetsTest {
     private List<Target> targets;
+    private boolean useV2NativeModel;
 
     @Rule
     public GradleTestProject project =
@@ -55,19 +57,26 @@ public class CmakeGradleTargetsTest {
                     .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .setWithCmakeDirInLocalProp(true)
+                    .addGradleProperties(
+                            BooleanOption.ENABLE_V2_NATIVE_MODEL.getPropertyName()
+                                    + "="
+                                    + useV2NativeModel)
                     .create();
 
-    @Parameterized.Parameters(name = "gradle target(s) = {0}")
+    @Parameterized.Parameters(name = "gradleTargets={0} useV2NativeModel={1}")
     public static Collection<Object[]> data() {
         return ImmutableList.of(
-                new Object[] {Collections.emptyList()},
-                new Object[] {ImmutableList.of(Target.HELLO_JNI, Target.HELLO_EXECUTABLE)},
-                new Object[] {ImmutableList.of(Target.HELLO_JNI)},
-                new Object[] {ImmutableList.of(Target.HELLO_EXECUTABLE)});
+                new Object[]{Collections.emptyList(), false},
+                new Object[]{ImmutableList.of(Target.HELLO_JNI, Target.HELLO_EXECUTABLE), false},
+                new Object[]{Collections.emptyList(), true},
+                new Object[]{ImmutableList.of(Target.HELLO_JNI, Target.HELLO_EXECUTABLE), true},
+                new Object[]{ImmutableList.of(Target.HELLO_JNI), true},
+                new Object[]{ImmutableList.of(Target.HELLO_EXECUTABLE), true});
     }
 
-    public CmakeGradleTargetsTest(List<Target> targets) {
+    public CmakeGradleTargetsTest(List<Target> targets, boolean useV2NativeModel) {
         this.targets = targets;
+        this.useV2NativeModel = useV2NativeModel;
     }
 
     @Before

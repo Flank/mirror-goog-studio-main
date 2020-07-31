@@ -20,12 +20,12 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatNativeLib;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.apk.Apk;
 import java.io.File;
 import java.io.IOException;
@@ -90,6 +90,9 @@ public class NdkBuildAndroidMkLibraryTest {
                     .addFile(includedAndroidMkBar)
                     .addFile(includingAndroidMk)
                     .addFile(applicationMk)
+                    // TODO(b/161169301): Support v2 model with ndk-build
+                    .addGradleProperties(
+                            BooleanOption.ENABLE_V2_NATIVE_MODEL.getPropertyName() + "=false")
                     .create();
 
     @Before

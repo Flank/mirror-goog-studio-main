@@ -27,7 +27,6 @@ import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.FilterConfiguration;
 import com.android.build.api.variant.VariantOutputConfiguration;
 import com.android.build.api.variant.impl.BuiltArtifactsImpl;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.VariantOutputUtils;

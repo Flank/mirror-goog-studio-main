@@ -17,22 +17,27 @@
 package com.android.build.gradle.integration.nativebuild
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
-import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
-import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.testutils.truth.PathSubject.assertThat
+import com.android.build.gradle.integration.common.fixture.model.readAsFileIndex
+import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_FLAGS
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_C_FLAGS
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfig
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
 import com.android.build.gradle.internal.cxx.model.jsonFile
-import com.android.build.gradle.internal.cxx.settings.Macro.*
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PROJECT_DIR
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_NAME
+import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.NativeAndroidProject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils.join
+import com.google.common.truth.Truth
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -40,7 +45,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 @RunWith(Parameterized::class)
-class CmakeSettingsTest(cmakeVersionInDsl: String) {
+class CmakeSettingsTest(cmakeVersionInDsl: String, private val useV2NativeModel: Boolean) {
 
     @Rule
     @JvmField
@@ -53,15 +58,19 @@ class CmakeSettingsTest(cmakeVersionInDsl: String) {
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .setCmakeVersion(cmakeVersionInDsl)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+        .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=$useV2NativeModel")
         .create()
 
 
     companion object {
-        @Parameterized.Parameters(name = "model = {0}")
+        @Parameterized.Parameters(name = "version={0} useV2NativeModel={1}")
         @JvmStatic
         fun data() = arrayOf(
-            arrayOf("3.6.0-x"),
-            arrayOf(DEFAULT_CMAKE_VERSION))
+            arrayOf("3.6.0-x", false),
+            arrayOf(DEFAULT_CMAKE_VERSION, false),
+            arrayOf("3.6.0-x", true),
+            arrayOf(DEFAULT_CMAKE_VERSION, true)
+        )
     }
 
     @Before
@@ -122,11 +131,24 @@ class CmakeSettingsTest(cmakeVersionInDsl: String) {
     @Test
     fun checkBuildFoldersRedirected() {
         project.execute("clean", "assemble")
-        val model = project.model().fetch(NativeAndroidProject::class.java)
         val abis = 2
         val buildTypes = 4
-        assertThat(model).hasBuildOutputCountEqualTo(abis * buildTypes)
-        assertThat(model).allBuildOutputsExist()
+        if (useV2NativeModel) {
+            val model = project.modelV2().fetchNativeModules(emptyList(), emptyList())
+            val allBuildOutputs = model.container.singleModel.variants.flatMap { variant ->
+                variant.abis.flatMap { abi ->
+                    abi.symbolFolderIndexFile.readAsFileIndex().flatMap {
+                        it.list()!!.toList()
+                    }
+                }
+            }
+            Truth.assertThat(allBuildOutputs).hasSize(abis * buildTypes)
+            Truth.assertThat(allBuildOutputs.toSet()).containsExactly("libhello-jni.so")
+        } else {
+            val model = project.model().fetch(NativeAndroidProject::class.java)
+            assertThat(model).hasBuildOutputCountEqualTo(abis * buildTypes)
+            assertThat(model).allBuildOutputsExist()
+        }
         val projectRoot = project.buildFile.parentFile
         assertThat(join(projectRoot, "cmake/android/debug")).isDirectory()
         assertThat(join(projectRoot, "cmake/android/release")).isDirectory()

@@ -41,6 +41,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValue;
 import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.android.build.gradle.tasks.NativeBuildSystem;
 import com.android.builder.model.NativeAndroidProject;
@@ -78,17 +79,11 @@ import org.junit.runners.Parameterized;
 /** General Model tests */
 @RunWith(Parameterized.class)
 @Ignore
-public class NativeModelTest {
+public class V1NativeModelTest {
     private enum Compiler {
         GCC,
         CLANG,
         IRRELEVANT  // indicates if the compiler being used is irrelevant to the test
-    }
-
-    // Indicates if we need to add cmake.dir in local.properties
-    private enum CmakeInLocalProperties {
-        ADD_CMAKE_DIR,
-        NO_CMAKE_DIR
     }
 
     private static int DEFAULT_ABI_COUNT = NdkHelper.getNdkInfo().getDefaultAbis().size();
@@ -528,6 +523,9 @@ public class NativeModelTest {
                             .setCmakeVersion(cmakeVersionInLocalProperties)
                             .setWithCmakeDirInLocalProp(!cmakeVersionInLocalProperties.isEmpty())
                             .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+                            .addGradleProperties(
+                                    BooleanOption.ENABLE_V2_NATIVE_MODEL.getPropertyName()
+                                            + "=false")
                             .create();
 
             return project;
@@ -562,7 +560,7 @@ public class NativeModelTest {
 
     private final Config config;
 
-    public NativeModelTest(
+    public V1NativeModelTest(
             Config config,
             @NonNull String cmakeVersionInDsl,
             @NonNull String cmakeVersionInLocalProperties) {

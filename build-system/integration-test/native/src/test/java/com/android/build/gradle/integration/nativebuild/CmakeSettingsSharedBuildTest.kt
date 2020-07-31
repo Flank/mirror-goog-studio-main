@@ -17,16 +17,18 @@
 package com.android.build.gradle.integration.nativebuild
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
-import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
-import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
+import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.buildOutputFiles
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_RUNTIME_OUTPUT_DIRECTORY
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
-import com.android.build.gradle.internal.cxx.settings.Macro.*
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CONFIGURATION_HASH
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PROJECT_DIR
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.NativeAndroidProject
 import com.android.utils.FileUtils.join
@@ -42,7 +44,7 @@ import org.junit.runners.Parameterized
  * into the same build and lib folders.
  */
 @RunWith(Parameterized::class)
-class CmakeSettingsSharedBuildTest(cmakeVersionInDsl: String) {
+class CmakeSettingsSharedBuildTest(cmakeVersionInDsl: String, useV2NativeModel: Boolean) {
 
     @Rule
     @JvmField
@@ -50,21 +52,24 @@ class CmakeSettingsSharedBuildTest(cmakeVersionInDsl: String) {
         .fromTestApp(
             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build()
         )
-        // TODO(159233213) Turn to ON when release configuration is cacheable
+        // TODO(b/159233213) Turn to ON when release configuration is cacheable
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         .setCmakeVersion(cmakeVersionInDsl)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-        // TODO(tgeng): Cover v2
-        .addGradleProperties(BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName + "=false")
+        .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=$useV2NativeModel")
         .create()
 
 
     companion object {
-        @Parameterized.Parameters(name = "model = {0}")
+        @Parameterized.Parameters(name = "model = {0} useV2NativeModel = {1}")
         @JvmStatic
         fun data() = arrayOf(
-            arrayOf("3.6.0"),
-            arrayOf(DEFAULT_CMAKE_VERSION))
+            arrayOf("3.6.0", false),
+            arrayOf(DEFAULT_CMAKE_VERSION, false)
+            // TODO(b/134757616): Support V2 models. Currently since the build folder is shared,
+            // concurrently executing V2 sync fails since all compile_commands.json are generated
+            // in the same location.
+        )
     }
 
     @Before

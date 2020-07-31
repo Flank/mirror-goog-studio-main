@@ -21,11 +21,11 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.NdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.google.common.collect.ArrayListMultimap;
@@ -60,10 +60,13 @@ public class NdkBuildJniLibTest {
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .fromTestProject("ndkJniLib")
                     .addFile(androidMk)
+                    // TODO(b/161169301): Support v2 model with ndk-build
+                    .addGradleProperties(
+                            BooleanOption.ENABLE_V2_NATIVE_MODEL.getPropertyName() + "=false")
                     .create();
 
     @BeforeClass
-    public static void setUp() throws IOException, InterruptedException {
+    public static void setUp() throws IOException {
         new File(project.getTestDir(), "lib/src/main/jni")
                 .renameTo(new File(project.getTestDir(), "lib/src/main/cxx"));
         GradleTestProject lib = project.getSubproject("lib");
@@ -93,7 +96,7 @@ public class NdkBuildJniLibTest {
     }
 
     @Test
-    public void checkVersionCode() throws IOException {
+    public void checkVersionCode() {
         GradleTestProject app = project.getSubproject("app");
         assertThatApk(app.getApk("universal", GradleTestProject.ApkType.DEBUG, "gingerbread"))
                 .hasVersionCode(1000123);
@@ -112,7 +115,7 @@ public class NdkBuildJniLibTest {
     }
 
     @Test
-    public void checkApkContent() throws IOException {
+    public void checkApkContent() {
         GradleTestProject app = project.getSubproject("app");
 
         assertThatApk(app.getApk("universal", GradleTestProject.ApkType.DEBUG, "gingerbread"))
