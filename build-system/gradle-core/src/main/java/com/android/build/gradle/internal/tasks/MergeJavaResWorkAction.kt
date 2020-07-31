@@ -35,6 +35,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import java.io.File
 
 /**
@@ -77,12 +78,23 @@ abstract class MergeJavaResWorkAction : ProfileAwareWorkAction<MergeJavaResWorkA
                 contentMap
             )
 
+        val parsedPackagingOptions =
+            if (parameters.packagingOptions.isPresent) {
+                ParsedPackagingOptions(parameters.packagingOptions.get())
+            } else {
+                ParsedPackagingOptions(
+                    parameters.excludes.get(),
+                    parameters.pickFirsts.get(),
+                    parameters.merges.get()
+                )
+            }
+
         val mergeJavaResDelegate =
             MergeJavaResourcesDelegate(
                 inputs,
                 output,
                 contentMap,
-                ParsedPackagingOptions(parameters.packagingOptions.get()),
+                parsedPackagingOptions,
                 contentType,
                 parameters.incrementalStateFile.asFile.get(),
                 isIncremental,
@@ -106,5 +118,8 @@ abstract class MergeJavaResWorkAction : ProfileAwareWorkAction<MergeJavaResWorkA
         abstract val changedInputs: MapProperty<File, FileStatus>
         abstract val contentType: Property<ContentType>
         abstract val noCompress: ListProperty<String>
+        abstract val excludes: SetProperty<String>
+        abstract val pickFirsts: SetProperty<String>
+        abstract val merges: SetProperty<String>
     }
 }

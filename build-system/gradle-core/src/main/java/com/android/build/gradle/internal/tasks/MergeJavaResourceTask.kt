@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.InternalScope.FEATURES
 import com.android.build.gradle.internal.InternalScope.LOCAL_DEPS
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -33,17 +32,18 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.resources.FileStatus
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
@@ -92,9 +92,14 @@ abstract class MergeJavaResourceTask
     lateinit var mergeScopes: Collection<ScopeType>
         private set
 
-    @get:Nested
-    lateinit var packagingOptions: SerializablePackagingOptions
-        private set
+    @get:Input
+    abstract val excludes: SetProperty<String>
+
+    @get:Input
+    abstract val pickFirsts: SetProperty<String>
+
+    @get:Input
+    abstract val merges: SetProperty<String>
 
     @get:Input
     @get:Optional
@@ -130,12 +135,14 @@ abstract class MergeJavaResourceTask
             it.externalLibJavaRes.from(externalLibJavaRes)
             it.featureJavaRes.from(featureJavaRes)
             it.outputFile.set(outputFile)
-            it.packagingOptions.set(packagingOptions)
             it.incrementalStateFile.set(incrementalStateFile)
             it.incremental.set(false)
             it.cacheDir.set(cacheDir)
             it.contentType.set(RESOURCES)
             it.noCompress.set(noCompress)
+            it.excludes.set(excludes)
+            it.pickFirsts.set(pickFirsts)
+            it.merges.set(merges)
         }
     }
 
@@ -151,13 +158,15 @@ abstract class MergeJavaResourceTask
             it.externalLibJavaRes.from(externalLibJavaRes)
             it.featureJavaRes.from(featureJavaRes)
             it.outputFile.set(outputFile)
-            it.packagingOptions.set(packagingOptions)
             it.incrementalStateFile.set(incrementalStateFile)
             it.incremental.set(true)
             it.cacheDir.set(cacheDir)
             it.changedInputs.set(changedInputs)
             it.contentType.set(RESOURCES)
             it.noCompress.set(noCompress)
+            it.excludes.set(excludes)
+            it.pickFirsts.set(pickFirsts)
+            it.merges.set(merges)
         }
     }
 
@@ -241,10 +250,9 @@ abstract class MergeJavaResourceTask
             }
 
             task.mergeScopes = mergeScopes
-            task.packagingOptions =
-                SerializablePackagingOptions(
-                    creationConfig.globalScope.extension.packagingOptions
-                )
+            task.excludes.setDisallowChanges(creationConfig.packagingOptions.resources.excludes)
+            task.pickFirsts.setDisallowChanges(creationConfig.packagingOptions.resources.pickFirsts)
+            task.merges.setDisallowChanges(creationConfig.packagingOptions.resources.merges)
             task.intermediateDir =
                 creationConfig.paths.getIncrementalDir("${creationConfig.name}-mergeJavaRes")
             task.cacheDir = File(task.intermediateDir, "zip-cache")

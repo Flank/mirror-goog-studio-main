@@ -16,29 +16,33 @@
 
 package com.android.build.gradle.integration.packaging;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.ANDROIDTEST_DEBUG;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.RELEASE;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.testutils.truth.FileSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 /**
- * Checks that the packaging options filtering are honored. Currently, only tests for excluding
- * regular expressions.
+ * Checks that the packaging options filtering are honored.
  */
 public class PackagingOptionsFilteringTest {
 
     private GradleTestProject app;
+    private GradleTestProject lib;
 
     @Rule
     public GradleTestProject project =
@@ -51,29 +55,60 @@ public class PackagingOptionsFilteringTest {
     @Before
     public void setup() {
         app = project.getSubproject(":app");
+        lib = project.getSubproject(":library");
     }
 
     /**
-     * Creates a dummy file.
+     * Creates a java resource in the project's src/<srcDir>/resources/ folder
      *
+     * @param project the project to add the java resource to
+     * @param srcDir the name of the parent of the resources folder
      * @param contents the file's contents
-     * @param paths the path to the file starting from the project base directory
+     * @param paths the path to the file starting from the appropriate resources folder
      * @throws IOException I/O failed
      */
-    private void dummyFile(@NonNull byte[] contents, @NonNull String... paths) throws Exception {
-        File file = FileUtils.join(app.getTestDir(), paths);
+    private void addJavaRes(
+            @NonNull GradleTestProject project,
+            @NonNull String srcDir,
+            @NonNull byte[] contents,
+            @NonNull String... paths) throws Exception {
+        File file =
+                FileUtils.join(
+                        FileUtils.join(project.getTestDir(), "src", srcDir, "resources"), paths);
         FileUtils.mkdirs(file.getParentFile());
         Files.write(file.toPath(), contents);
     }
 
     /**
+     * Creates a java resource in the project's src/<srcDir>/resources/ folder
+     *
+     * @param project the project to add the java resource to
+     * @param srcDir the name of the parent of the resources folder
+     * @param text the file's contents
+     * @param paths the path to the file starting from the appropriate resources folder
+     * @throws IOException I/O failed
+     */
+    private void addJavaRes(
+            @NonNull GradleTestProject project,
+            @NonNull String srcDir,
+            @NonNull String text,
+            @NonNull String... paths) throws Exception {
+        File file =
+                FileUtils.join(
+                        FileUtils.join(project.getTestDir(), "src", srcDir, "resources"), paths);
+        FileUtils.mkdirs(file.getParentFile());
+        Files.write(file.toPath(), Collections.singletonList(text));
+    }
+
+    /**
      * Appends text to the build file.
      *
+     * @param project the project whose build file gets the text appended
      * @param text text to append
      * @throws IOException I/O failed
      */
-    private void appendBuild(@NonNull String text) throws Exception {
-        File buildFile = app.getBuildFile();
+    private void appendBuild(GradleTestProject project, @NonNull String text) throws Exception {
+        File buildFile = project.getBuildFile();
         String contents = com.google.common.io.Files.toString(buildFile, Charsets.US_ASCII);
         contents += System.lineSeparator() + text;
         com.google.common.io.Files.asCharSink(buildFile, Charsets.US_ASCII).write(contents);
@@ -91,13 +126,13 @@ public class PackagingOptionsFilteringTest {
         byte[] c2 = new byte[] { 6, 7, 8 };
         byte[] c3 = new byte[] { 9 };
 
-        dummyFile(c0, "src", "main", "resources", ".svn", "ignored-1");
-        dummyFile(c0, "src", "main", "resources", "not-ignored-1");
-        dummyFile(c1, "src", "main", "resources", "foo", ".svn", "ignored-2");
-        dummyFile(c1, "src", "main", "resources", "foo", "not-ignored-2");
-        dummyFile(c2, "src", "main", "resources", "foo", "bar", ".svn", "ignored-3");
-        dummyFile(c2, "src", "main", "resources", "foo", "bar", "not-ignored-3");
-        dummyFile(c3, "src", "main", "resources", "foo", "svn", "not-ignored-4");
+        addJavaRes(app, "main", c0, ".svn", "ignored-1");
+        addJavaRes(app, "main", c0, "not-ignored-1");
+        addJavaRes(app, "main", c1, "foo", ".svn", "ignored-2");
+        addJavaRes(app, "main", c1, "foo", "not-ignored-2");
+        addJavaRes(app, "main", c2, "foo", "bar", ".svn", "ignored-3");
+        addJavaRes(app, "main", c2, "foo", "bar", "not-ignored-3");
+        addJavaRes(app, "main", c3, "foo", "svn", "not-ignored-4");
 
         app.execute("assembleDebug");
 
@@ -123,13 +158,13 @@ public class PackagingOptionsFilteringTest {
         byte[] c2 = new byte[] { 6, 7, 8 };
         byte[] c3 = new byte[] { 9 };
 
-        dummyFile(c0, "src", "main", "resources", "CVS", "ignored-1");
-        dummyFile(c0, "src", "main", "resources", "not-ignored-1");
-        dummyFile(c1, "src", "main", "resources", "foo", "CVS", "ignored-2");
-        dummyFile(c1, "src", "main", "resources", "foo", "not-ignored-2");
-        dummyFile(c2, "src", "main", "resources", "foo", "bar", "CVS", "ignored-3");
-        dummyFile(c2, "src", "main", "resources", "foo", "bar", "not-ignored-3");
-        dummyFile(c3, "src", "main", "resources", "foo", "cvs.cvs", "not-ignored-4");
+        addJavaRes(app, "main", c0, "CVS", "ignored-1");
+        addJavaRes(app, "main", c0, "not-ignored-1");
+        addJavaRes(app, "main", c1, "foo", "CVS", "ignored-2");
+        addJavaRes(app, "main", c1, "foo", "not-ignored-2");
+        addJavaRes(app, "main", c2, "foo", "bar", "CVS", "ignored-3");
+        addJavaRes(app, "main", c2, "foo", "bar", "not-ignored-3");
+        addJavaRes(app, "main", c3, "foo", "cvs.cvs", "not-ignored-4");
 
         app.execute("assembleDebug");
 
@@ -155,13 +190,13 @@ public class PackagingOptionsFilteringTest {
         byte[] c2 = new byte[] { 6, 7, 8 };
         byte[] c3 = new byte[] { 9 };
 
-        dummyFile(c0, "src", "main", "resources", "SCCS", "ignored-1");
-        dummyFile(c0, "src", "main", "resources", "not-ignored-1");
-        dummyFile(c1, "src", "main", "resources", "foo", "sccs", "ignored-2");
-        dummyFile(c1, "src", "main", "resources", "foo", "not-ignored-2");
-        dummyFile(c2, "src", "main", "resources", "foo", "bar", "SccS", "ignored-3");
-        dummyFile(c2, "src", "main", "resources", "foo", "bar", "not-ignored-3");
-        dummyFile(c3, "src", "main", "resources", "foo", "SCCS.1", "not-ignored-4");
+        addJavaRes(app, "main", c0, "SCCS", "ignored-1");
+        addJavaRes(app, "main", c0, "not-ignored-1");
+        addJavaRes(app, "main", c1, "foo", "sccs", "ignored-2");
+        addJavaRes(app, "main", c1, "foo", "not-ignored-2");
+        addJavaRes(app, "main", c2, "foo", "bar", "SccS", "ignored-3");
+        addJavaRes(app, "main", c2, "foo", "bar", "not-ignored-3");
+        addJavaRes(app, "main", c3, "foo", "SCCS.1", "not-ignored-4");
 
         app.execute("assembleDebug");
 
@@ -187,13 +222,13 @@ public class PackagingOptionsFilteringTest {
         byte[] c2 = new byte[] { 6, 7, 8 };
         byte[] c3 = new byte[] { 9 };
 
-        dummyFile(c0, "src", "main", "resources", "_", "ignored-1");
-        dummyFile(c0, "src", "main", "resources", "not-ignored-1");
-        dummyFile(c1, "src", "main", "resources", "foo", "__", "ignored-2");
-        dummyFile(c1, "src", "main", "resources", "foo", "not-ignored-2");
-        dummyFile(c2, "src", "main", "resources", "foo", "bar", "_blah", "ignored-3");
-        dummyFile(c2, "src", "main", "resources", "foo", "bar", "not-ignored-3");
-        dummyFile(c3, "src", "main", "resources", "foo", "x_", "not-ignored-4");
+        addJavaRes(app, "main", c0, "_", "ignored-1");
+        addJavaRes(app, "main", c0, "not-ignored-1");
+        addJavaRes(app, "main", c1, "foo", "__", "ignored-2");
+        addJavaRes(app, "main", c1, "foo", "not-ignored-2");
+        addJavaRes(app, "main", c2, "foo", "bar", "_blah", "ignored-3");
+        addJavaRes(app, "main", c2, "foo", "bar", "not-ignored-3");
+        addJavaRes(app, "main", c3, "foo", "x_", "not-ignored-4");
 
         app.execute("assembleDebug");
 
@@ -221,24 +256,24 @@ public class PackagingOptionsFilteringTest {
      */
     @Test
     public void redefineExcludePatterns() throws Exception {
-        appendBuild("android {");
-        appendBuild("    packagingOptions {");
-        appendBuild("        exclude '**/*ign'");
-        appendBuild("        exclude '**/sensitive/**'");
-        appendBuild("    }");
-        appendBuild("}");
+        appendBuild(app, "android {");
+        appendBuild(app, "    packagingOptions {");
+        appendBuild(app, "        exclude '**/*ign'");
+        appendBuild(app, "        exclude '**/sensitive/**'");
+        appendBuild(app, "    }");
+        appendBuild(app, "}");
 
         byte[] c0 = new byte[] { 0, 1, 2, 3 };
         byte[] c1 = new byte[] { 4, 5 };
         byte[] c2 = new byte[] { 6, 7, 8 };
 
         // FIXME figure out what to do with the test using folders now excluded by Gradle's Sync task or that windows handles differently.
-        dummyFile(c0, "src", "main", "resources", "I_am_ign");
-        dummyFile(c0, "src", "main", "resources", "ssccs", "I stay");
-        dummyFile(c1, "src", "main", "resources", "Ignoring", "this", "fileign");
-        dummyFile(c1, "src", "main", "resources", "SSensitive", "files", "may", "leak");
-        dummyFile(c2, "src", "main", "resources", "some", "sensitive", "files", "dont");
-        dummyFile(c2, "src", "main", "resources", "pkg", "ccvs", "very-sensitive-info");
+        addJavaRes(app, "main", c0, "I_am_ign");
+        addJavaRes(app, "main", c0, "ssccs", "I stay");
+        addJavaRes(app, "main", c1, "Ignoring", "this", "fileign");
+        addJavaRes(app, "main", c1, "SSensitive", "files", "may", "leak");
+        addJavaRes(app, "main", c2, "some", "sensitive", "files", "dont");
+        addJavaRes(app, "main", c2, "pkg", "ccvs", "very-sensitive-info");
 
         app.execute("assembleDebug");
 
@@ -259,27 +294,27 @@ public class PackagingOptionsFilteringTest {
      */
     @Test
     public void redefineExcludePatterns2() throws Exception {
-        appendBuild("android {");
-        appendBuild("    packagingOptions {");
-        appendBuild("        excludes = [");
-        appendBuild("            '**/*ign',");
-        appendBuild("            '**/sensitive/**',");
-        appendBuild("            '/META-INF/MANIFEST.MF',");
-        appendBuild("        ]");
-        appendBuild("    }");
-        appendBuild("}");
+        appendBuild(app, "android {");
+        appendBuild(app, "    packagingOptions {");
+        appendBuild(app, "        excludes = [");
+        appendBuild(app, "            '**/*ign',");
+        appendBuild(app, "            '**/sensitive/**',");
+        appendBuild(app, "            '/META-INF/MANIFEST.MF',");
+        appendBuild(app, "        ]");
+        appendBuild(app, "    }");
+        appendBuild(app, "}");
 
         byte[] c0 = new byte[] { 0, 1, 2, 3 };
         byte[] c1 = new byte[] { 4, 5 };
         byte[] c2 = new byte[] { 6, 7, 8 };
 
         // FIXME figure out what to do with the test using folders now excluded by Gradle's Sync task
-        dummyFile(c0, "src", "main", "resources", "I_am_ign");
-        dummyFile(c0, "src", "main", "resources", "sccs2", "I stay");
-        dummyFile(c1, "src", "main", "resources", "Ignoring", "this", "fileign");
-        dummyFile(c1, "src", "main", "resources", "SSensitive", "files", "may", "leak");
-        dummyFile(c2, "src", "main", "resources", "some", "sensitive", "files", "dont");
-        dummyFile(c2, "src", "main", "resources", "pkg", "cvs2", "very-sensitive-info");
+        addJavaRes(app, "main", c0, "I_am_ign");
+        addJavaRes(app, "main", c0, "sccs2", "I stay");
+        addJavaRes(app, "main", c1, "Ignoring", "this", "fileign");
+        addJavaRes(app, "main", c1, "SSensitive", "files", "may", "leak");
+        addJavaRes(app, "main", c2, "some", "sensitive", "files", "dont");
+        addJavaRes(app, "main", c2, "pkg", "cvs2", "very-sensitive-info");
 
         app.execute("assembleDebug");
 
@@ -290,5 +325,235 @@ public class PackagingOptionsFilteringTest {
         apk.containsJavaResourceWithContent("SSensitive/files/may/leak", c1);
         apk.doesNotContainJavaResource("some/sensitive/files/dont");
         apk.containsJavaResourceWithContent("pkg/cvs2/very-sensitive-info", c2);
+    }
+
+    /**
+     * Exclude patterns can be changed with new DSL.
+     */
+    @Test
+    public void addExcludePatternsViaNewDsl() throws Exception {
+        // modify app's build file
+        appendBuild(app, "android {");
+        appendBuild(app, "    packagingOptions {");
+        appendBuild(app, "        resources {");
+        appendBuild(app, "            excludes += '**/*.exclude'");
+        appendBuild(app, "        }");
+        appendBuild(app, "    }");
+        appendBuild(app, "}");
+
+        // modify lib's build file
+        appendBuild(lib, "android {");
+        appendBuild(lib, "    packagingOptions {");
+        appendBuild(lib, "        resources {");
+        appendBuild(lib, "            excludes += '**/*.exclude'");
+        appendBuild(lib, "        }");
+        appendBuild(lib, "    }");
+        appendBuild(lib, "}");
+
+        byte[] c0 = new byte[] { 0, 1, 2, 3 };
+
+        // add java resources to app and lib
+        addJavaRes(app, "main", c0, "foo.exclude");
+        addJavaRes(app, "main", c0, "foo.keep");
+        addJavaRes(lib, "main", c0, "foo.exclude");
+        addJavaRes(lib, "main", c0, "foo.keep");
+
+        app.execute("assembleDebug");
+
+        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
+        apk.doesNotContainJavaResource("foo.exclude");
+        apk.containsJavaResourceWithContent("foo.keep", c0);
+
+        lib.execute("assembleDebug");
+
+        lib.assertThatAar(
+                "debug",
+                aar -> {
+                    aar.doesNotContainJavaResource("foo.exclude");
+                    aar.containsJavaResourceWithContent("foo.keep", c0);
+                    return null;
+                }
+        );
+    }
+
+    /**
+     * PickFirst patterns can be changed with new DSL.
+     */
+    @Test
+    public void addPickFirstPatternsViaNewDsl() throws Exception {
+        appendBuild(app, "android {");
+        appendBuild(app, "    packagingOptions {");
+        appendBuild(app, "        resources {");
+        appendBuild(app, "            pickFirsts += '**/*.pickFirst'");
+        appendBuild(app, "        }");
+        appendBuild(app, "    }");
+        appendBuild(app, "}");
+
+        byte[] c0 = new byte[] { 0, 1, 2, 3 };
+        byte[] c1 = new byte[] { 4, 5 };
+
+        // add java resources to app and lib
+        addJavaRes(app, "main", c0, "foo.pickFirst");
+        addJavaRes(lib, "main", c1, "foo.pickFirst");
+
+        app.execute("assembleDebug");
+
+        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
+        apk.containsJavaResourceWithContent("foo.pickFirst", c0);
+    }
+
+    /**
+     * Merge patterns can be changed with new DSL.
+     */
+    @Test
+    public void addMergePatternsViaNewDsl() throws Exception {
+        appendBuild(app, "android {");
+        appendBuild(app, "    packagingOptions {");
+        appendBuild(app, "        resources {");
+        appendBuild(app, "            merges += '**/*.merge'");
+        appendBuild(app, "        }");
+        appendBuild(app, "    }");
+        appendBuild(app, "}");
+
+        // add java resources to app and lib
+        addJavaRes(app, "main", "fromApp", "foo.merge");
+        addJavaRes(lib, "main", "fromLib", "foo.merge");
+
+        app.execute("assembleDebug");
+
+        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
+        apk.containsJavaResourceWithContent("foo.merge", "fromApp\nfromLib");
+    }
+
+    /**
+     * Exclude patterns can be changed via variant properties API
+     */
+    @Test
+    public void addExcludePatternsViaVariantPropertiesApi() throws Exception {
+        // modify app's build file
+        appendBuild(app, "android {");
+        appendBuild(app, "    onVariantProperties.withName('debug') {");
+        appendBuild(app, "        packagingOptions.resources.excludes.add('**/*.debugExclude')");
+        appendBuild(app, "    }");
+        appendBuild(app, "    onVariantProperties.withName('release') {");
+        appendBuild(app, "        packagingOptions.resources.excludes.add('**/*.releaseExclude')");
+        appendBuild(app, "    }");
+        appendBuild(app, "    onVariants {");
+        appendBuild(app, "        androidTestProperties {");
+        appendBuild(app, "            packagingOptions.resources.excludes.add('**/*.testExclude')");
+        appendBuild(app, "        }");
+        appendBuild(app, "    }");
+        appendBuild(app, "}");
+
+        // modify lib's build file
+        appendBuild(lib, "android {");
+        appendBuild(lib, "    onVariantProperties {");
+        appendBuild(lib, "        packagingOptions.resources.excludes.add('**/*.libExclude')");
+        appendBuild(lib, "    }");
+        appendBuild(lib, "    onVariants {");
+        appendBuild(lib, "        androidTestProperties {");
+        appendBuild(lib, "            packagingOptions.resources.excludes.add('**/*.testExclude')");
+        appendBuild(lib, "        }");
+        appendBuild(lib, "    }");
+        appendBuild(lib, "}");
+
+        byte[] c0 = new byte[] { 0, 1, 2, 3 };
+
+        // add java resources to app
+        addJavaRes(app, "main", c0, "foo.debugExclude");
+        addJavaRes(app, "main", c0, "foo.debugKeep");
+        addJavaRes(app, "main", c0, "foo.releaseExclude");
+        addJavaRes(app, "main", c0, "foo.releaseKeep");
+        addJavaRes(app, "androidTest", c0, "foo.testExclude");
+        addJavaRes(app, "androidTest", c0, "foo.testKeep");
+
+        // add java resources to lib
+        addJavaRes(lib, "main", c0, "foo.libExclude");
+        addJavaRes(lib, "main", c0, "foo.libKeep");
+        addJavaRes(lib, "androidTest", c0, "foo.testExclude");
+        addJavaRes(lib, "androidTest", c0, "foo.testKeep");
+
+        app.execute("assemble", "assembleDebugAndroidTest");
+
+        FileSubject.assertThat(app.getApk(DEBUG).getFile().toFile()).exists();
+        ApkSubject debugApk = TruthHelper.assertThat(app.getApk(DEBUG));
+        debugApk.doesNotContainJavaResource("foo.debugExclude");
+        debugApk.containsJavaResourceWithContent("foo.debugKeep", c0);
+        debugApk.containsJavaResourceWithContent("foo.releaseExclude", c0);
+        debugApk.containsJavaResourceWithContent("foo.releaseKeep", c0);
+
+        FileSubject.assertThat(app.getApk(RELEASE).getFile().toFile()).exists();
+        ApkSubject releaseApk = TruthHelper.assertThat(app.getApk(RELEASE));
+        releaseApk.doesNotContainJavaResource("foo.releaseExclude");
+        releaseApk.containsJavaResourceWithContent("foo.debugExclude", c0);
+        releaseApk.containsJavaResourceWithContent("foo.debugKeep", c0);
+        releaseApk.containsJavaResourceWithContent("foo.releaseKeep", c0);
+
+        FileSubject.assertThat(app.getApk(ANDROIDTEST_DEBUG).getFile().toFile()).exists();
+        ApkSubject androidTestApk = TruthHelper.assertThat(app.getApk(ANDROIDTEST_DEBUG));
+        androidTestApk.doesNotContainJavaResource("foo.testExclude");
+        androidTestApk.containsJavaResourceWithContent("foo.testKeep", c0);
+
+        lib.execute("assembleDebug", "assembleDebugAndroidTest");
+
+        lib.assertThatAar(
+                "debug",
+                aar -> {
+                    aar.doesNotContainJavaResource("foo.libExclude");
+                    aar.containsJavaResourceWithContent("foo.libKeep", c0);
+                    return null;
+                }
+        );
+
+        FileSubject.assertThat(lib.getApk(ANDROIDTEST_DEBUG).getFile().toFile()).exists();
+        ApkSubject libAndroidTestApk = TruthHelper.assertThat(lib.getApk(ANDROIDTEST_DEBUG));
+        libAndroidTestApk.doesNotContainJavaResource("foo.testExclude");
+        libAndroidTestApk.containsJavaResourceWithContent("foo.testKeep", c0);
+    }
+
+
+    /**
+     * PickFirst patterns can be changed via variant properties API
+     */
+    @Test
+    public void addPickFirstPatternsViaVariantPropertiesApi() throws Exception {
+        appendBuild(app, "android {");
+        appendBuild(app, "    onVariantProperties {");
+        appendBuild(app, "        packagingOptions.resources.pickFirsts.add('**/*.pickFirst')");
+        appendBuild(app, "    }");
+        appendBuild(app, "}");
+
+        byte[] c0 = new byte[] { 0, 1, 2, 3 };
+        byte[] c1 = new byte[] { 4, 5 };
+
+        // add java resources to app and lib
+        addJavaRes(app, "main", c0, "foo.pickFirst");
+        addJavaRes(lib, "main", c1, "foo.pickFirst");
+
+        app.execute("assembleDebug");
+
+        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
+        apk.containsJavaResourceWithContent("foo.pickFirst", c0);
+    }
+
+    /**
+     * Merge patterns can be changed via variant properties API
+     */
+    @Test
+    public void addMergePatternsViaVariantPropertiesApi() throws Exception {
+        appendBuild(app, "android {");
+        appendBuild(app, "    onVariantProperties {");
+        appendBuild(app, "        packagingOptions.resources.merges.add('**/*.merge')");
+        appendBuild(app, "    }");
+        appendBuild(app, "}");
+
+        // add java resources to app and lib
+        addJavaRes(app, "main", "fromApp", "foo.merge");
+        addJavaRes(lib, "main", "fromLib", "foo.merge");
+
+        app.execute("assembleDebug");
+
+        ApkSubject apk = TruthHelper.assertThat(app.getApk(DEBUG));
+        apk.containsJavaResourceWithContent("foo.merge", "fromApp\nfromLib");
     }
 }
