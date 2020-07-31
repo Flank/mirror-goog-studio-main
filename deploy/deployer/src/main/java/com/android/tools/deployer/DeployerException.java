@@ -254,9 +254,9 @@ public class DeployerException extends Exception {
 
         APP_OVERLAY_IN_UNKNOWN_STATE(
                 "The target app on the device is in a state unknown to Studio",
-                "",
-                "Retry",
-                ResolutionAction.RETRY),
+                "Android Studio is unable to recognize the version of the application currently installed on the target device.",
+                "Reinstall and restart app",
+                ResolutionAction.RUN_APP),
 
         UNKNOWN_JVMTI_ERROR("Invalid error code %s", "", "Retry", ResolutionAction.RETRY),
 
