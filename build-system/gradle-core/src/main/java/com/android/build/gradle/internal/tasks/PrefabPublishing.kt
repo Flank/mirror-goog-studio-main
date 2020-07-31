@@ -162,17 +162,11 @@ data class PrefabModuleTaskData(
 )
 
 data class PrefabAbiData(
-    @get:Input
     val abi: Abi,
-    @get:Input
     val minSdkVersion: Int,
-    @get:Input
     val ndkMajorVersion: Int,
-    @get:Input
     val stl: String,
-    @get:InputFile
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
-    val nativeBuildJson: Provider<File>
+    val nativeBuildJson: File
 )
 
 abstract class PrefabPackageTask : NonIncrementalTask() {
@@ -256,7 +250,7 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
                     max(it.abiPlatformVersion, max(minVersionForAbi, minVersionForNdk)),
                     ndkVersion,
                     stl.argumentName,
-                    project.provider { it.jsonFile }
+                    it.jsonFile
             )
         }
     }
@@ -302,7 +296,7 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
 
     private fun findLibraryForAbi(moduleName: String, abi: PrefabAbiData): NativeLibraryValueMini {
         val config =
-            AndroidBuildGradleJsons.getNativeBuildMiniConfig(abi.nativeBuildJson.get(), null)
+            AndroidBuildGradleJsons.getNativeBuildMiniConfig(abi.nativeBuildJson, null)
 
         // The libraries are keyed by $name-$config-$abi. For example, the debug, arm64 variant
         // of gtestjni would be gtestjni-Debug-arm64-v8a. The config here is the CMake build
