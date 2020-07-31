@@ -3335,13 +3335,16 @@ class GradleDetectorTest : AbstractCheckTest() {
             "java.sourceCompatibility JavaVersion.VERSION_1_8",
             "java.sourceCompatibility = JavaVersion.VERSION_1_8",
             "java { sourceCompatibility JavaVersion.VERSION_1_8 }",
-            "java { sourceCompatibility = JavaVersion.VERSION_1_8 }"
+            "java { sourceCompatibility = JavaVersion.VERSION_1_8 }",
+            // special-case syntax (assignment only)
+            "sourceCompatibility = JavaVersion.VERSION_1_8"
         )
         val targetCompatibility = listOf(
             "java.targetCompatibility JavaVersion.VERSION_1_8",
             "java.targetCompatibility = JavaVersion.VERSION_1_8",
             "java { targetCompatibility JavaVersion.VERSION_1_8 }",
-            "java { targetCompatibility = JavaVersion.VERSION_1_8 }"
+            "java { targetCompatibility = JavaVersion.VERSION_1_8 }",
+            "targetCompatibility = JavaVersion.VERSION_1_8"
         )
         sourceCompatibility.forEach { sc ->
             targetCompatibility.forEach { tc ->
@@ -3365,7 +3368,8 @@ class GradleDetectorTest : AbstractCheckTest() {
             "java.targetCompatibility JavaVersion.VERSION_1_8",
             "java.targetCompatibility = JavaVersion.VERSION_1_8",
             "java { targetCompatibility JavaVersion.VERSION_1_8 }",
-            "java { targetCompatibility = JavaVersion.VERSION_1_8 }"
+            "java { targetCompatibility = JavaVersion.VERSION_1_8 }",
+            "targetCompatibility = JavaVersion.VERSION_1_8"
         )
         targetCompatibility.forEach { tc ->
             lint().files(
@@ -3399,7 +3403,8 @@ class GradleDetectorTest : AbstractCheckTest() {
             "java.sourceCompatibility JavaVersion.VERSION_1_8",
             "java.sourceCompatibility = JavaVersion.VERSION_1_8",
             "java { sourceCompatibility JavaVersion.VERSION_1_8 }",
-            "java { sourceCompatibility = JavaVersion.VERSION_1_8 }"
+            "java { sourceCompatibility = JavaVersion.VERSION_1_8 }",
+            "sourceCompatibility = JavaVersion.VERSION_1_8"
         )
         sourceCompatibility.forEach { sc ->
             lint().files(

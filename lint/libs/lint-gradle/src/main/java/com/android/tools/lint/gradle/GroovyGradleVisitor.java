@@ -341,21 +341,19 @@ public class GroovyGradleVisitor extends GradleVisitor {
                             @Nullable String parent,
                             @Nullable String parentParent,
                             BinaryExpression b) {
-                        if (parent != null) {
-                            Expression rightExpression = b.getRightExpression();
-                            if (rightExpression != null) {
-                                String value = getText(rightExpression);
-                                for (GradleScanner scanner : detectors) {
-                                    scanner.checkDslPropertyAssignment(
-                                            context,
-                                            property,
-                                            value,
-                                            parent,
-                                            parentParent,
-                                            b.getLeftExpression(),
-                                            b,
-                                            b);
-                                }
+                        Expression rightExpression = b.getRightExpression();
+                        if (rightExpression != null) {
+                            String value = getText(rightExpression);
+                            for (GradleScanner scanner : detectors) {
+                                scanner.checkDslPropertyAssignment(
+                                        context,
+                                        property,
+                                        value,
+                                        parent,
+                                        parentParent,
+                                        b.getLeftExpression(),
+                                        b,
+                                        b);
                             }
                         }
                     }
