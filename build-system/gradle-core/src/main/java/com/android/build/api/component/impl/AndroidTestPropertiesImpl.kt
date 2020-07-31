@@ -21,7 +21,9 @@ import com.android.build.api.component.AndroidTestProperties
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.PackagingOptions
 import com.android.build.api.variant.SigningConfig
+import com.android.build.api.variant.impl.PackagingOptionsImpl
 import com.android.build.api.variant.impl.ResValue
 import com.android.build.api.variant.impl.SigningConfigImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
@@ -98,8 +100,7 @@ open class AndroidTestPropertiesImpl @Inject constructor(
         internalServices.mapPropertyOf(
             String::class.java,
             String::class.java,
-            variantDslInfo.manifestPlaceholders,
-            "$name:manifestPlaceholders"
+            variantDslInfo.manifestPlaceholders
         )
     }
 
@@ -112,6 +113,17 @@ open class AndroidTestPropertiesImpl @Inject constructor(
 
     override fun aaptOptions(action: AaptOptions.() -> Unit) {
         action.invoke(aaptOptions)
+    }
+
+    override val packagingOptions: PackagingOptions by lazy {
+        PackagingOptionsImpl(
+            globalScope.extension.packagingOptions,
+            variantPropertiesApiServices
+        )
+    }
+
+    override fun packagingOptions(action: PackagingOptions.() -> Unit) {
+        action.invoke(packagingOptions)
     }
 
     override val minifiedEnabled: Boolean
@@ -133,8 +145,7 @@ open class AndroidTestPropertiesImpl @Inject constructor(
         internalServices.mapPropertyOf(
             String::class.java,
             BuildConfigField::class.java,
-            variantDslInfo.getBuildConfigFields(),
-            "$name:buildConfigs"
+            variantDslInfo.getBuildConfigFields()
         )
     }
 
@@ -204,8 +215,7 @@ open class AndroidTestPropertiesImpl @Inject constructor(
         internalServices.mapPropertyOf(
             ResValue.Key::class.java,
             ResValue::class.java,
-            variantDslInfo.getResValues(),
-            "$name:resValues"
+            variantDslInfo.getResValues()
         )
     }
 

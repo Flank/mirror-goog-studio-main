@@ -16,27 +16,19 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.PackagingOptions
+import com.android.build.api.variant.ResourcesPackagingOptions
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
-import org.gradle.api.provider.ListProperty
 
-class AaptOptionsImpl(
-    override val ignoreAssetsPatterns: ListProperty<String>,
-    override val additionalParameters: ListProperty<String>
-) : AaptOptions
-
-internal fun initializeAaptOptionsFromDsl(
-    dslAaptOptions: com.android.build.gradle.internal.dsl.AaptOptions,
+class PackagingOptionsImpl(
+    dslPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions,
     variantPropertiesApiServices: VariantPropertiesApiServices
-) : AaptOptions {
-    return AaptOptionsImpl(
-        ignoreAssetsPatterns = variantPropertiesApiServices.listPropertyOf(
-            String::class.java,
-            dslAaptOptions.ignoreAssetsPattern?.split(':') ?: listOf()
-        ),
-        additionalParameters = variantPropertiesApiServices.listPropertyOf(
-            String::class.java,
-            dslAaptOptions.additionalParameters
-        )
-    )
+) : PackagingOptions {
+
+    override val resources =
+        ResourcesPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
+
+    override fun resources(action: ResourcesPackagingOptions.() -> Unit) {
+        action.invoke(resources)
+    }
 }

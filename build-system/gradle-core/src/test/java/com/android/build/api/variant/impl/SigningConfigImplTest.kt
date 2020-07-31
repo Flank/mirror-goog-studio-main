@@ -17,21 +17,13 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.gradle.internal.dsl.SigningConfig
-import com.android.build.gradle.internal.fixtures.FakeGradleProperty
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.createVariantPropertiesApiServices
 import com.android.build.gradle.internal.signing.SigningConfigData.Companion.MIN_V2_SDK
 import com.android.build.gradle.internal.signing.SigningConfigData.Companion.MIN_V3_SDK
 import com.google.common.truth.Truth.assertThat
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import org.mockito.ArgumentMatchers
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.Mockito.doAnswer
-import org.mockito.MockitoAnnotations
-import java.util.concurrent.Callable
 
 @RunWith(Parameterized::class)
 class SigningConfigImplTest(
@@ -42,43 +34,22 @@ class SigningConfigImplTest(
     private val targetApi: Int?
 ) {
 
-    @Mock
-    lateinit var dslSigningConfig: SigningConfig
-
-    @Mock
-    lateinit var variantPropertiesApiServices: VariantPropertiesApiServices
-
-    @Before
-    fun setUp() {
-        MockitoAnnotations.initMocks(this)
-    }
-
     @Test
     fun testSignatureVersions() {
-        Mockito.`when`(dslSigningConfig.enableV1Signing).thenReturn(enableV1Signing)
-        Mockito.`when`(dslSigningConfig.enableV2Signing).thenReturn(enableV2Signing)
-        Mockito.`when`(dslSigningConfig.enableV3Signing).thenReturn(enableV3Signing)
-
-        doAnswer { invocation ->
-            FakeGradleProperty(invocation.getArgument<Boolean>(1))
-        }.`when`(variantPropertiesApiServices)
-            .propertyOf(
-                anyObject<Class<Boolean>>(),
-                ArgumentMatchers.anyBoolean(),
-                ArgumentMatchers.anyString()
-            )
-
-        doAnswer { invocation ->
-            FakeGradleProperty(invocation.getArgument<Callable<Boolean>>(1).call())
-        }.`when`(variantPropertiesApiServices)
-            .propertyOf(
-                anyObject<Class<Boolean>>(),
-                anyObject<Callable<Boolean>>(),
-                ArgumentMatchers.anyString()
-            )
+        val dslSigningConfig =
+            SigningConfig("test").also {
+                it.enableV1Signing = enableV1Signing
+                it.enableV2Signing = enableV2Signing
+                it.enableV3Signing = enableV3Signing
+            }
 
         val signingConfigImpl =
-            SigningConfigImpl(dslSigningConfig, variantPropertiesApiServices, minSdk, targetApi)
+            SigningConfigImpl(
+                dslSigningConfig,
+                createVariantPropertiesApiServices(),
+                minSdk,
+                targetApi
+            )
 
         val v1Signed = signingConfigImpl.enableV1Signing.get()
         val v2Signed = signingConfigImpl.enableV2Signing.get()
@@ -177,14 +148,4 @@ class SigningConfigImplTest(
             return list.toTypedArray()
         }
     }
-}
-
-/**
- * Workaround for missing [ArgumentMatchers] support for @NonNull / Kotlin non-null. See
- * https://github.com/mockito/mockito/issues/1255
- */
-@Suppress("UNCHECKED_CAST")
-private fun<T> anyObject(): T {
-    ArgumentMatchers.any<T>()
-    return null as T
 }

@@ -19,9 +19,9 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.PackagingOptions
 import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -77,8 +77,7 @@ abstract class VariantPropertiesImpl(
         internalServices.mapPropertyOf(
             String::class.java,
             BuildConfigField::class.java,
-            variantDslInfo.getBuildConfigFields(),
-            "$name:buildConfigs"
+            variantDslInfo.getBuildConfigFields()
         )
     }
 
@@ -115,10 +114,21 @@ abstract class VariantPropertiesImpl(
         internalServices.mapPropertyOf(
             String::class.java,
             String::class.java,
-            variantDslInfo.manifestPlaceholders,
-            "$name:manifestPlaceholders"
+            variantDslInfo.manifestPlaceholders
         )
     }
+
+    override val packagingOptions: PackagingOptions by lazy {
+        PackagingOptionsImpl(
+            globalScope.extension.packagingOptions,
+            variantPropertiesApiServices
+        )
+    }
+
+    override fun packagingOptions(action: PackagingOptions.() -> Unit) {
+        action.invoke(packagingOptions)
+    }
+
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
@@ -130,8 +140,7 @@ abstract class VariantPropertiesImpl(
         internalServices.mapPropertyOf(
             ResValue.Key::class.java,
             ResValue::class.java,
-            variantDslInfo.getResValues(),
-            "$name:resValues"
+            variantDslInfo.getResValues()
         )
     }
 

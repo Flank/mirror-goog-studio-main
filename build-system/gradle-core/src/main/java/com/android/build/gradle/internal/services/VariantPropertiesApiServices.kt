@@ -23,6 +23,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.SetProperty
 import java.io.File
 import java.util.concurrent.Callable
 
@@ -122,7 +123,17 @@ interface VariantPropertiesApiServices:
      * The [ListProperty] will be marked as [Property.finalizeValueOnRead], and will be locked
      * with [Property.disallowChanges] after the variant API(s) have run.
      */
-    fun <T> listPropertyOf(type: Class<T>, value: Collection<T>, id: String): ListProperty<T>
+    fun <T> listPropertyOf(type: Class<T>, value: Collection<T>): ListProperty<T>
+
+    /**
+     * Creates a new [SetProperty].
+     *
+     * This should be used for properties used in the new API.
+     *
+     * The [SetProperty] will be marked as [Property.finalizeValueOnRead], and will be locked
+     * with [Property.disallowChanges] after the variant API(s) have run.
+     */
+    fun <T> setPropertyOf(type: Class<T>, value: Callable<Collection<T>>): SetProperty<T>
 
     /**
      * Creates a new [MapProperty].
@@ -132,7 +143,7 @@ interface VariantPropertiesApiServices:
      * The [MapProperty] will be marked as [Property.finalizeValueOnRead], and will be locked
      * with [Property.disallowChanges] after the variant API(s) have run.
      */
-    fun <K, V> mapPropertyOf(keyType: Class<K>, valueType: Class<V>, value: Map<K, V>, id: String): MapProperty<K, V>
+    fun <K, V> mapPropertyOf(keyType: Class<K>, valueType: Class<V>, value: Map<K, V>): MapProperty<K, V>
 
     /**
      * Creates a new property that is backing an old API returning T.

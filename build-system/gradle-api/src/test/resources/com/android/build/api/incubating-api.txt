@@ -77,8 +77,10 @@ com.android.build.api.component.AndroidTestProperties.getHandleProfiling: org.gr
 com.android.build.api.component.AndroidTestProperties.getInstrumentationRunner: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.component.AndroidTestProperties.getManifestPlaceholders: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.String> ()
 com.android.build.api.component.AndroidTestProperties.getPackageName: org.gradle.api.provider.Provider<java.lang.String> ()
+com.android.build.api.component.AndroidTestProperties.getPackagingOptions: com.android.build.api.variant.PackagingOptions ()
 com.android.build.api.component.AndroidTestProperties.getSigningConfig: com.android.build.api.variant.SigningConfig ()
 com.android.build.api.component.AndroidTestProperties.getTestLabel: org.gradle.api.provider.Property<java.lang.String> ()
+com.android.build.api.component.AndroidTestProperties.packagingOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.PackagingOptions, kotlin.Unit>)
 com.android.build.api.component.AndroidTestProperties.signingConfig: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.SigningConfig, kotlin.Unit>)
 com.android.build.api.component.BuildTypedComponentActionRegistrar
 com.android.build.api.component.BuildTypedComponentActionRegistrar.withFlavor: com.android.build.api.component.BuildTypedComponentActionRegistrar<ComponentT> (kotlin.Pair<java.lang.String, java.lang.String>)
@@ -865,6 +867,13 @@ com.android.build.api.variant.FilterConfiguration.toString: java.lang.String ()
 com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.LibraryVariantProperties implements com.android.build.api.variant.VariantProperties
 com.android.build.api.variant.LibraryVariantProperties.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
+com.android.build.api.variant.PackagingOptions
+com.android.build.api.variant.PackagingOptions.getResources: com.android.build.api.variant.ResourcesPackagingOptions ()
+com.android.build.api.variant.PackagingOptions.resources: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.ResourcesPackagingOptions, kotlin.Unit>)
+com.android.build.api.variant.ResourcesPackagingOptions
+com.android.build.api.variant.ResourcesPackagingOptions.getExcludes: org.gradle.api.provider.SetProperty<java.lang.String> ()
+com.android.build.api.variant.ResourcesPackagingOptions.getMerges: org.gradle.api.provider.SetProperty<java.lang.String> ()
+com.android.build.api.variant.ResourcesPackagingOptions.getPickFirsts: org.gradle.api.provider.SetProperty<java.lang.String> ()
 com.android.build.api.variant.SigningConfig
 com.android.build.api.variant.SigningConfig.getEnableV1Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.SigningConfig.getEnableV2Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
@@ -913,3 +922,5 @@ com.android.build.api.variant.VariantProperties.getApplicationId: org.gradle.api
 com.android.build.api.variant.VariantProperties.getBuildConfigFields: org.gradle.api.provider.MapProperty<java.lang.String, com.android.build.api.variant.BuildConfigField<? extends java.io.Serializable>> ()
 com.android.build.api.variant.VariantProperties.getManifestPlaceholders: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.String> ()
 com.android.build.api.variant.VariantProperties.getPackageName: org.gradle.api.provider.Provider<java.lang.String> ()
+com.android.build.api.variant.VariantProperties.getPackagingOptions: com.android.build.api.variant.PackagingOptions ()
+com.android.build.api.variant.VariantProperties.packagingOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.PackagingOptions, kotlin.Unit>)

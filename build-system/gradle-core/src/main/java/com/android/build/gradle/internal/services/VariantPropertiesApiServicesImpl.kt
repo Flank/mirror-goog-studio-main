@@ -26,6 +26,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.SetProperty
 import java.io.File
 import java.util.concurrent.Callable
 
@@ -126,13 +127,21 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
-    override fun <T> listPropertyOf(
-        type: Class<T>,
-        value: Collection<T>,
-        id: String
-    ): ListProperty<T> {
+    override fun <T> listPropertyOf(type: Class<T>, value: Collection<T>): ListProperty<T> {
         return projectServices.objectFactory.listProperty(type).also {
             it.set(value)
+            it.finalizeValueOnRead()
+
+            // FIXME when Gradle supports this
+            // it.preventGet()
+
+            delayedLock(it)
+        }
+    }
+
+    override fun <T> setPropertyOf(type: Class<T>, value: Callable<Collection<T>>): SetProperty<T> {
+        return projectServices.objectFactory.setProperty(type).also {
+            it.set(projectServices.providerFactory.provider(value))
             it.finalizeValueOnRead()
 
             // FIXME when Gradle supports this
@@ -145,8 +154,7 @@ class VariantPropertiesApiServicesImpl(
     override fun <K, V> mapPropertyOf(
         keyType: Class<K>,
         valueType: Class<V>,
-        value: Map<K, V>,
-        id: String
+        value: Map<K, V>
     ): MapProperty<K, V> {
         return projectServices.objectFactory.mapProperty(keyType, valueType).also {
             it.set(value)
