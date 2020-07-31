@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableList
 import javax.inject.Inject
 import org.gradle.api.provider.Property
 
-open class ProductFlavor @Inject constructor(name: String, dslServices: DslServices) :
+abstract class ProductFlavor @Inject constructor(name: String, dslServices: DslServices) :
     BaseFlavor(name, dslServices),
     ApplicationProductFlavor<SigningConfig>,
     DynamicFeatureProductFlavor,

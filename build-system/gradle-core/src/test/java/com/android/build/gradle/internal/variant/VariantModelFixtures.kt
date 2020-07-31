@@ -64,8 +64,12 @@ class VariantInputModelBuilder(
     private val dslServices: DslServices = createDslServices()
 ): VariantInputModelDsl {
     val defaultConfig: DefaultConfig = DefaultConfig(BuilderConstants.MAIN, dslServices)
-    val buildTypes: ContainerImpl<BuildType> = ContainerImpl { name -> BuildType(name, dslServices) }
-    val productFlavors: ContainerImpl<ProductFlavor> = ContainerImpl { name -> ProductFlavor(name, dslServices) }
+    val buildTypes: ContainerImpl<BuildType> = ContainerImpl { name ->
+        dslServices.newInstance(BuildType::class.java, name, dslServices)
+    }
+    val productFlavors: ContainerImpl<ProductFlavor> = ContainerImpl { name ->
+        dslServices.newInstance(ProductFlavor::class.java, name, dslServices)
+    }
 
     override fun defaultConfig(action: DefaultConfig.() -> Unit) {
         action(defaultConfig)

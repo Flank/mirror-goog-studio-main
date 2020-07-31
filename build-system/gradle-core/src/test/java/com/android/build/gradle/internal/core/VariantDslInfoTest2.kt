@@ -37,9 +37,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
 import org.mockito.Mockito
-import java.io.File
-import java.util.function.BooleanSupplier
-import kotlin.math.exp
 
 class VariantDslInfoTest2 :
     AbstractBuildGivenBuildExpectTest<
@@ -681,13 +678,15 @@ class VariantDslInfoTest2 :
             action(defaultConfig)
         }
 
-        val buildType: BuildType = BuildType("Build-Type", dslServices)
+        val buildType: BuildType = dslServices.newInstance(BuildType::class.java, "Build-Type", dslServices)
 
         fun buildType(action: BuildType.() -> Unit) {
             action(buildType)
         }
 
-        private val productFlavors: ContainerImpl<ProductFlavor> = ContainerImpl { name -> ProductFlavor(name, dslServices) }
+        private val productFlavors: ContainerImpl<ProductFlavor> = ContainerImpl { name ->
+            dslServices.newInstance(ProductFlavor::class.java, name, dslServices)
+        }
         val flavors: List<ProductFlavor>
             get() = productFlavors.values.toList()
 

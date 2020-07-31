@@ -290,7 +290,7 @@ com.android.build.api.dsl.BuildFeatures.setRenderScript: void (java.lang.Boolean
 com.android.build.api.dsl.BuildFeatures.setResValues: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setShaders: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setViewBinding: void (java.lang.Boolean)
-com.android.build.api.dsl.BuildType implements org.gradle.api.Named, com.android.build.api.dsl.VariantDimension
+com.android.build.api.dsl.BuildType implements org.gradle.api.Named, com.android.build.api.dsl.VariantDimension, org.gradle.api.plugins.ExtensionAware
 com.android.build.api.dsl.BuildType.getMatchingFallbacks: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.BuildType.getRenderscriptOptimLevel: int ()
 com.android.build.api.dsl.BuildType.isJniDebuggable: boolean ()
@@ -632,7 +632,7 @@ com.android.build.api.dsl.PrefabPackagingOptions.getName: java.lang.String ()
 com.android.build.api.dsl.PrefabPackagingOptions.setHeaders: void (java.lang.String)
 com.android.build.api.dsl.PrefabPackagingOptions.setLibraryName: void (java.lang.String)
 com.android.build.api.dsl.PrefabPackagingOptions.setName: void (java.lang.String)
-com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named, com.android.build.api.dsl.BaseFlavor
+com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named, com.android.build.api.dsl.BaseFlavor, org.gradle.api.plugins.ExtensionAware
 com.android.build.api.dsl.ProductFlavor.getDimension: java.lang.String ()
 com.android.build.api.dsl.ProductFlavor.getMatchingFallbacks: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.ProductFlavor.setDimension: void (java.lang.String)
