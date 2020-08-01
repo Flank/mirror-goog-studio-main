@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.gradle.model.impl;
+package com.android.ide.common.gradle.model.impl.ndk.v1;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeFile;
 import com.android.ide.common.gradle.model.IdeModel;
-import com.android.ide.common.gradle.model.IdeNativeArtifact;
+import com.android.ide.common.gradle.model.ndk.v1.IdeNativeArtifact;
 import com.android.ide.common.gradle.model.ModelCache;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import com.google.common.collect.ImmutableList;

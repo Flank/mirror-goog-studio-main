@@ -36,6 +36,7 @@ import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.ide.common.gradle.model.IdeVariantBuildInformation;
 import com.android.ide.common.gradle.model.IdeViewBindingOptions;
 import com.android.ide.common.gradle.model.ModelCache;
+import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeToolchainImpl;
 import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.repository.GradleVersion;
 import com.google.common.annotations.VisibleForTesting;

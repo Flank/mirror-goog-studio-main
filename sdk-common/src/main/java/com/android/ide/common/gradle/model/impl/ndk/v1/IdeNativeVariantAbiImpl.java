@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.gradle.model.impl;
+package com.android.ide.common.gradle.model.impl.ndk.v1;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.NativeArtifact;
@@ -21,7 +21,7 @@ import com.android.builder.model.NativeSettings;
 import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.NativeVariantAbi;
 import com.android.ide.common.gradle.model.IdeModel;
-import com.android.ide.common.gradle.model.IdeNativeVariantAbi;
+import com.android.ide.common.gradle.model.ndk.v1.IdeNativeVariantAbi;
 import com.android.ide.common.gradle.model.ModelCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

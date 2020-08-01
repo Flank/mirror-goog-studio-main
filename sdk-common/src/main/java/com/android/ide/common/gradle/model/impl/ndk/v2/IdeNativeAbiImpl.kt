@@ -13,17 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.gradle.model
+package com.android.ide.common.gradle.model.impl.ndk.v2
 
 import com.android.builder.model.v2.models.ndk.NativeAbi
+import com.android.ide.common.gradle.model.ndk.v2.IdeNativeAbi
 import java.io.File
 
-data class IdeNativeAbi private constructor(
-    override val name: String,
-    override val sourceFlagsFile: File,
-    override val symbolFolderIndexFile: File,
-    override val buildFileIndexFile: File
-) : NativeAbi {
+data class IdeNativeAbiImpl(
+  override val name: String,
+  override val sourceFlagsFile: File,
+  override val symbolFolderIndexFile: File,
+  override val buildFileIndexFile: File
+) : IdeNativeAbi {
     constructor(nativeAbi: NativeAbi) : this(
         nativeAbi.name,
         nativeAbi.sourceFlagsFile,

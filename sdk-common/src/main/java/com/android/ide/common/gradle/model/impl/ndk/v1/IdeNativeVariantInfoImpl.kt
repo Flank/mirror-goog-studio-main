@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.ide.common.gradle.model.impl
+package com.android.ide.common.gradle.model.impl.ndk.v1
 
 import com.android.builder.model.NativeVariantInfo
-import com.android.ide.common.gradle.model.IdeNativeVariantInfo
+import com.android.ide.common.gradle.model.ndk.v1.IdeNativeVariantInfo
 import com.google.common.collect.ImmutableList
 import java.io.File
 

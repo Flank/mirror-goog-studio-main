@@ -21,7 +21,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.NativeAndroidProject;
-import com.android.ide.common.gradle.model.IdeNativeAndroidProject;
+import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeAndroidProjectImpl;
+import com.android.ide.common.gradle.model.ndk.v1.IdeNativeAndroidProject;
 import com.android.ide.common.gradle.model.ModelCache;
 import com.android.ide.common.gradle.model.stubs.NativeAndroidProjectStub;
 import com.android.testutils.Serialization;
@@ -53,14 +54,6 @@ public class IdeNativeAndroidProjectImplTest {
         byte[] bytes = Serialization.serialize(nativeAndroidProject);
         Object o = Serialization.deserialize(bytes);
         assertEquals(nativeAndroidProject, o);
-    }
-
-    @Test
-    public void constructor() throws Throwable {
-        NativeAndroidProject original = new NativeAndroidProjectStub();
-        IdeNativeAndroidProjectImpl copy = new IdeNativeAndroidProjectImpl(original, myModelCache);
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
     }
 
     @Test

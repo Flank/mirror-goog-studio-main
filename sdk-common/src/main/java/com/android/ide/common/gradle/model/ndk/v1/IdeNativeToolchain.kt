@@ -13,15 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.gradle.model
+package com.android.ide.common.gradle.model.ndk.v1
 
-import com.android.builder.model.v2.models.ndk.NativeVariant
+import com.android.builder.model.NativeToolchain
 
-data class IdeNativeVariant private constructor(
-    override val name: String,
-    override val abis: List<IdeNativeAbi>
-) : NativeVariant {
-    constructor(nativeVariant: NativeVariant) : this(
-        nativeVariant.name,
-        nativeVariant.abis.map { IdeNativeAbi(it) })
-}
+interface IdeNativeToolchain: NativeToolchain

@@ -23,6 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.builder.model.NativeArtifact;
 import com.android.ide.common.gradle.model.ModelCache;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
+import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeArtifactImpl;
 import com.android.ide.common.gradle.model.stubs.NativeArtifactStub;
 import com.android.testutils.Serialization;
 import java.io.File;

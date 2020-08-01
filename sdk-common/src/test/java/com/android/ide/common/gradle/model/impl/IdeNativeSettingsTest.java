@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.builder.model.NativeSettings;
 import com.android.ide.common.gradle.model.ModelCache;
+import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeSettingsImpl;
 import com.android.ide.common.gradle.model.stubs.NativeSettingsStub;
 import com.android.testutils.Serialization;
 import java.io.Serializable;

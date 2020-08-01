@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.gradle.model.impl;
+package com.android.ide.common.gradle.model.impl.ndk.v1;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -23,7 +23,7 @@ import com.android.builder.model.NativeSettings;
 import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.NativeVariantInfo;
 import com.android.ide.common.gradle.model.IdeModel;
-import com.android.ide.common.gradle.model.IdeNativeAndroidProject;
+import com.android.ide.common.gradle.model.ndk.v1.IdeNativeAndroidProject;
 import com.android.ide.common.gradle.model.ModelCache;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -77,7 +77,7 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
     }
 
     @VisibleForTesting
-    IdeNativeAndroidProjectImpl(
+    public IdeNativeAndroidProjectImpl(
             @NonNull NativeAndroidProject project, @NonNull ModelCache modelCache) {
         myModelVersion = project.getModelVersion();
         myApiVersion = project.getApiVersion();

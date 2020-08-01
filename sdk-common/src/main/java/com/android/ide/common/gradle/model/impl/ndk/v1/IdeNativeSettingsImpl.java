@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.gradle.model.impl;
+package com.android.ide.common.gradle.model.impl.ndk.v1;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.NativeSettings;
-import com.android.ide.common.gradle.model.IdeNativeSettings;
+import com.android.ide.common.gradle.model.ndk.v1.IdeNativeSettings;
 import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.Collections;

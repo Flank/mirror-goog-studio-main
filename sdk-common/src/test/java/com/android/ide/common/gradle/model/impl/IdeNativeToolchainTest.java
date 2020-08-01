@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.builder.model.NativeToolchain;
 import com.android.ide.common.gradle.model.ModelCache;
+import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeToolchainImpl;
 import com.android.ide.common.gradle.model.stubs.NativeToolchainStub;
 import com.android.testutils.Serialization;
 import java.io.Serializable;

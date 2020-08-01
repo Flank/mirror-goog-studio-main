@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.gradle.model
+package com.android.ide.common.gradle.model.ndk.v1
 
 import com.android.builder.model.NativeVariantAbi
 
