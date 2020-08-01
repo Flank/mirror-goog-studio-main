@@ -34,6 +34,7 @@ import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.ide.common.gradle.model.IdeAndroidGradlePluginProjectFlags;
+import com.android.ide.common.gradle.model.impl.IdeAndroidGradlePluginProjectFlagsImpl;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.truth.Truth;
@@ -179,7 +180,7 @@ public class ModelTest {
                         .fetchAndroidProjects()
                         .getOnlyModel();
         IdeAndroidGradlePluginProjectFlags flags =
-                new IdeAndroidGradlePluginProjectFlags(model.getFlags());
+                new IdeAndroidGradlePluginProjectFlagsImpl(model.getFlags());
         assertThat(flags.getApplicationRClassConstantIds()).isTrue();
         assertThat(flags.getTestRClassConstantIds()).isTrue();
         assertThat(flags.getTransitiveRClasses()).isTrue();
@@ -194,7 +195,7 @@ public class ModelTest {
                         .fetchAndroidProjects()
                         .getOnlyModel();
         IdeAndroidGradlePluginProjectFlags flags =
-                new IdeAndroidGradlePluginProjectFlags(model.getFlags());
+                new IdeAndroidGradlePluginProjectFlagsImpl(model.getFlags());
         assertThat(flags.getApplicationRClassConstantIds()).isFalse();
         assertThat(flags.getTestRClassConstantIds()).isFalse();
         assertThat(flags.getTransitiveRClasses()).isFalse();

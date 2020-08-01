@@ -26,7 +26,6 @@ import com.android.ide.common.gradle.model.IdeLintOptions;
 import com.android.ide.common.gradle.model.ModelCache;
 import com.android.ide.common.gradle.model.stubs.LintOptionsStub;
 import com.android.ide.common.repository.GradleVersion;
-import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -42,13 +41,8 @@ public class IdeLintOptionsTest {
     }
 
     @Test
-    public void serializable() {
-        assertThat(IdeLintOptions.class).isAssignableTo(Serializable.class);
-    }
-
-    @Test
     public void serialization() throws Exception {
-        IdeLintOptions lintOptions = new IdeLintOptions(new LintOptionsStub(), myModelVersion);
+        IdeLintOptions lintOptions = new IdeLintOptionsImpl(new LintOptionsStub(), myModelVersion);
         byte[] bytes = serialize(lintOptions);
         Object o = deserialize(bytes);
         assertEquals(lintOptions, o);
@@ -57,7 +51,7 @@ public class IdeLintOptionsTest {
     @Test
     public void constructor() throws Throwable {
         LintOptions original = new LintOptionsStub();
-        IdeLintOptions copy = new IdeLintOptions(original, myModelVersion);
+        IdeLintOptions copy = new IdeLintOptionsImpl(original, myModelVersion);
         assertThat(copy.getBaselineFile()).isEqualTo(original.getBaselineFile());
         assertThat(copy.getLintConfig()).isEqualTo(original.getLintConfig());
         assertThat(copy.getSeverityOverrides()).isEqualTo(original.getSeverityOverrides());

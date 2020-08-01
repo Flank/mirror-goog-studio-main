@@ -63,6 +63,7 @@ import com.android.ide.common.gradle.model.IdeSourceProviderContainer;
 import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions;
 import com.android.ide.common.gradle.model.IdeViewBindingOptions;
+import com.android.ide.common.gradle.model.impl.IdeLintOptionsImpl;
 import com.android.ide.common.gradle.model.level2.IdeAndroidLibrary;
 import com.android.ide.common.gradle.model.level2.IdeAndroidLibraryCore;
 import com.android.ide.common.gradle.model.level2.IdeDependencies;
@@ -352,7 +353,7 @@ public class GradleModelMocker {
         variant = mock(IdeVariant.class);
         when(project.getVariants()).thenReturn(Collections.singletonList(variant));
 
-        lintOptions = new IdeLintOptions();
+        lintOptions = new IdeLintOptionsImpl();
         when(project.getLintOptions()).thenAnswer(invocation -> lintOptions);
 
         compileOptions = mock(IdeJavaCompileOptions.class);
@@ -1560,7 +1561,7 @@ public class GradleModelMocker {
             Boolean dependencies) {
         // No mocking IdeLintOptions; it's final
         lintOptions =
-                new IdeLintOptions(
+                new IdeLintOptionsImpl(
                         baseline != null ? baseline : lintOptions.getBaselineFile(),
                         lintConfig != null ? lintConfig : lintOptions.getLintConfig(),
                         severities != null ? severities : severityOverrides,

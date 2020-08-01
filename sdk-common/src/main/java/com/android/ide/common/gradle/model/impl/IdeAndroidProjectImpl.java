@@ -186,7 +186,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         IdeLintOptions lintOptionsCopy =
                 modelCache.computeIfAbsent(
                         project.getLintOptions(),
-                        options -> new IdeLintOptions(options, parsedModelVersion));
+                        options -> new IdeLintOptionsImpl(options, parsedModelVersion));
 
         // We need to use the unresolved dependencies to support older versions of the Android
         // Gradle Plugin.
@@ -239,13 +239,13 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         //noinspection ConstantConditions
         boolean isBaseSplit = IdeModel.copyNewProperty(project::isBaseSplit, false);
 
-        IdeAndroidGradlePluginProjectFlags agpFlags =
+        IdeAndroidGradlePluginProjectFlagsImpl agpFlags =
                 Objects.requireNonNull(
                         IdeModel.copyNewProperty(
                                 modelCache,
                                 project::getFlags,
-                                IdeAndroidGradlePluginProjectFlags::new,
-                                new IdeAndroidGradlePluginProjectFlags()));
+                                IdeAndroidGradlePluginProjectFlagsImpl::new,
+                                new IdeAndroidGradlePluginProjectFlagsImpl()));
 
         return new IdeAndroidProjectImpl(
                 project.getModelVersion(),
@@ -302,7 +302,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myBootClassPath = Collections.emptyList();
         myNativeToolchains = Collections.emptyList();
         mySigningConfigs = Collections.emptyList();
-        myLintOptions = new IdeLintOptions();
+        myLintOptions = new IdeLintOptionsImpl();
         myLintRuleJars = Collections.emptyList();
         myUnresolvedDependencies = Collections.emptySet();
         myJavaCompileOptions = new IdeJavaCompileOptionsImpl();
@@ -321,7 +321,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myApiVersion = 0;
         myProjectType = 0;
         myBaseSplit = false;
-        myAgpFlags = new IdeAndroidGradlePluginProjectFlags();
+        myAgpFlags = new IdeAndroidGradlePluginProjectFlagsImpl();
         myHashCode = 0;
     }
 
@@ -359,7 +359,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             int apiVersion,
             int projectType,
             boolean baseSplit,
-            @NonNull IdeAndroidGradlePluginProjectFlags agpFlags) {
+            @NonNull IdeAndroidGradlePluginProjectFlagsImpl agpFlags) {
         myModelVersion = modelVersion;
         myParsedModelVersion = parsedModelVersion;
         myName = name;
