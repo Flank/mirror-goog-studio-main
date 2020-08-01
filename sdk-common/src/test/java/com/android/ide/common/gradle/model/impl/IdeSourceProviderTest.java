@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.android.builder.model.SourceProvider;
 import com.android.ide.common.gradle.model.IdeSourceProvider;
-import com.android.ide.common.gradle.model.ModelCache;
 import com.android.ide.common.gradle.model.stubs.SourceProviderStub;
 import java.io.File;
 import java.util.Collection;

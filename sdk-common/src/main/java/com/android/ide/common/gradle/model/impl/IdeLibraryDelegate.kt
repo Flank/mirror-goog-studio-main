@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
-package com.android.ide.common.gradle.model.level2
+package com.android.ide.common.gradle.model.impl
+
+import com.android.ide.common.gradle.model.IdeLibrary
 
 open class IdeLibraryDelegate(private val delegate: IdeLibrary): IdeLibrary by delegate

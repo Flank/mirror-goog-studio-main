@@ -16,9 +16,9 @@
 @file:JvmName("GradleStubBuilderUtil")
 package com.android.ide.common.gradle.model.stubs
 
-import com.android.ide.common.gradle.model.level2.IdeAndroidLibrary
-import com.android.ide.common.gradle.model.level2.IdeJavaLibrary
-import com.android.ide.common.gradle.model.level2.IdeModuleLibrary
+import com.android.ide.common.gradle.model.impl.IdeAndroidLibrary
+import com.android.ide.common.gradle.model.impl.IdeJavaLibrary
+import com.android.ide.common.gradle.model.impl.IdeModuleLibrary
 import java.io.File
 
 fun l2AndroidLibrary(address: String): IdeAndroidLibrary =

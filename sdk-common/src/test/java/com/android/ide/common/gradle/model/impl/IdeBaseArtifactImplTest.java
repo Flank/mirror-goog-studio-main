@@ -22,8 +22,6 @@ import com.android.annotations.NonNull;
 import com.android.builder.model.BaseArtifact;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.level2.DependencyGraphs;
-import com.android.ide.common.gradle.model.ModelCache;
-import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.gradle.model.stubs.BaseArtifactStub;
 import com.android.ide.common.repository.GradleVersion;
 import java.io.File;

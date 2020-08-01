@@ -23,12 +23,9 @@ import com.android.builder.model.Variant
 import com.android.ide.common.gradle.model.IdeAndroidArtifact
 import com.android.ide.common.gradle.model.IdeBaseArtifact
 import com.android.ide.common.gradle.model.IdeJavaArtifact
-import com.android.ide.common.gradle.model.IdeModel
 import com.android.ide.common.gradle.model.IdeProductFlavor
 import com.android.ide.common.gradle.model.IdeTestedTargetVariant
 import com.android.ide.common.gradle.model.IdeVariant
-import com.android.ide.common.gradle.model.ModelCache
-import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory
 import com.android.ide.common.repository.GradleVersion
 import com.google.common.collect.ImmutableList
 import java.io.Serializable
@@ -88,7 +85,8 @@ class IdeVariantImpl : IdeVariant, Serializable {
     }
     testedTargetVariants = getTestedTargetVariants(variant, modelCache)
     instantAppCompatible = (modelVersion != null && modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) && variant.isInstantAppCompatible)
-    desugaredMethods = ImmutableList.copyOf(IdeModel.copyNewPropertyNonNull({ variant.desugaredMethods }, emptyList()))
+    desugaredMethods = ImmutableList.copyOf(
+      IdeModel.copyNewPropertyNonNull({ variant.desugaredMethods }, emptyList()))
     hashCode = calculateHashCode()
   }
 

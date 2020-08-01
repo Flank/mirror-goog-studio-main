@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.android.builder.model.ClassField;
-import com.android.ide.common.gradle.model.ModelCache;
 import com.android.ide.common.gradle.model.stubs.ClassFieldStub;
 import com.android.testutils.Serialization;
 import java.io.Serializable;

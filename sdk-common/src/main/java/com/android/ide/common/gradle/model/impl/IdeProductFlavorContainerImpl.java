@@ -17,12 +17,10 @@ package com.android.ide.common.gradle.model.impl;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.ProductFlavorContainer;
-import com.android.ide.common.gradle.model.IdeModel;
 import com.android.ide.common.gradle.model.IdeProductFlavor;
 import com.android.ide.common.gradle.model.IdeProductFlavorContainer;
 import com.android.ide.common.gradle.model.IdeSourceProvider;
 import com.android.ide.common.gradle.model.IdeSourceProviderContainer;
-import com.android.ide.common.gradle.model.ModelCache;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;

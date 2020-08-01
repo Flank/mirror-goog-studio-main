@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
-import com.android.ide.common.gradle.model.ModelCache;
 import com.android.ide.common.gradle.model.stubs.OutputFileStub;
 import com.google.common.collect.Lists;
 import java.io.Serializable;

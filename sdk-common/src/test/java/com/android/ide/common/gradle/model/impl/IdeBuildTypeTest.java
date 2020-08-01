@@ -19,8 +19,6 @@ import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.*;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
-import com.android.builder.model.BuildType;
-import com.android.ide.common.gradle.model.ModelCache;
 import com.android.ide.common.gradle.model.stubs.BuildTypeStub;
 import com.android.testutils.Serialization;
 import java.io.Serializable;

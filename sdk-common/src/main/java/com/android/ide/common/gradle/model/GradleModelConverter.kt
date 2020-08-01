@@ -17,7 +17,7 @@
 
 package com.android.ide.common.gradle.model
 
-import com.android.ide.common.gradle.model.level2.IdeLibrary
+import com.android.ide.common.gradle.model.impl.ModelCache
 import com.android.ide.common.util.PathString
 import com.android.ide.common.util.toPathString
 import com.android.projectmodel.DynamicResourceValue

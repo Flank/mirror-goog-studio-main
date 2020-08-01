@@ -29,8 +29,6 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeVariant;
-import com.android.ide.common.gradle.model.ModelCache;
-import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.gradle.model.stubs.AndroidProjectStub;
 import com.android.ide.common.gradle.model.stubs.VariantStub;
 import com.google.common.collect.ImmutableList;

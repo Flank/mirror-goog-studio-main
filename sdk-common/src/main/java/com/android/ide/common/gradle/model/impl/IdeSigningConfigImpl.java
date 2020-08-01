@@ -18,7 +18,6 @@ package com.android.ide.common.gradle.model.impl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.SigningConfig;
-import com.android.ide.common.gradle.model.IdeModel;
 import com.android.ide.common.gradle.model.IdeSigningConfig;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import java.io.File;

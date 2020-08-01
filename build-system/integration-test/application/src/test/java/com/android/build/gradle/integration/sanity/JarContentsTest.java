@@ -529,7 +529,6 @@ public class JarContentsTest {
                 "com/android/ide/common/gradle/model/ndk/v1/",
                 "com/android/ide/common/gradle/model/ndk/v2/",
                 "com/android/ide/common/gradle/model/impl/",
-                "com/android/ide/common/gradle/model/level2/",
                 "com/android/ide/common/gradle/model/impl/ndk/",
                 "com/android/ide/common/gradle/model/impl/ndk/v1/",
                 "com/android/ide/common/gradle/model/impl/ndk/v2/",

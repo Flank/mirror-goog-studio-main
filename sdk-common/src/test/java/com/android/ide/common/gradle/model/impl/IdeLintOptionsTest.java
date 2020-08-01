@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.builder.model.LintOptions;
 import com.android.ide.common.gradle.model.IdeLintOptions;
-import com.android.ide.common.gradle.model.ModelCache;
 import com.android.ide.common.gradle.model.stubs.LintOptionsStub;
 import com.android.ide.common.repository.GradleVersion;
 import org.junit.Before;

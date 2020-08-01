@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.gradle.model;
+package com.android.ide.common.gradle.model.impl;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -28,7 +28,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link com.android.ide.common.gradle.model.IdeModel}. */
+/** Tests for {@link com.android.ide.common.gradle.model.impl.IdeModel}. */
 public class IdeModelTest {
     private ModelCache myModelCache;
 

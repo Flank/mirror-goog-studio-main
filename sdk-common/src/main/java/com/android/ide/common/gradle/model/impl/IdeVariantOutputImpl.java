@@ -20,8 +20,6 @@ import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
-import com.android.ide.common.gradle.model.IdeModel;
-import com.android.ide.common.gradle.model.ModelCache;
 import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.Collection;

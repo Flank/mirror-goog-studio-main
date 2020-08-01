@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.gradle.model.level2
+package com.android.ide.common.gradle.model.impl
 
 import com.android.SdkConstants
 import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.JavaLibrary
-import com.android.ide.common.gradle.model.IdeLibraries
-import com.android.ide.common.gradle.model.IdeModel
+import com.android.ide.common.gradle.model.IdeLibrary
 import com.google.common.annotations.VisibleForTesting
 import java.io.File
 
@@ -40,7 +39,6 @@ class IdeLibraryFactory {
    * path to build directory for all modules.
    * @return Instance of [Library] based on dependency type.
    */
-  @VisibleForTesting
   fun create(androidLibrary: AndroidLibrary, moduleBuildDirs: BuildFolderPaths): IdeLibrary {
     // If the dependency is a sub-module that wraps local aar, it should be considered as external dependency, i.e. type LIBRARY_ANDROID.
     // In AndroidLibrary, getProject() of such dependency returns non-null project name, but they should be converted to IdeLevel2AndroidLibrary.
@@ -55,9 +53,11 @@ class IdeLibraryFactory {
         folder = androidLibrary.folder,
         manifest = androidLibrary.manifest.path,
         jarFile = androidLibrary.jarFile.path,
-        compileJarFile = defaultValueIfNotPresent({ androidLibrary.compileJarFile }, androidLibrary.jarFile).path,
+        compileJarFile = defaultValueIfNotPresent(
+          { androidLibrary.compileJarFile }, androidLibrary.jarFile).path,
         resFolder = androidLibrary.resFolder.path,
-        resStaticLibrary = defaultValueIfNotPresent({ androidLibrary.resStaticLibrary }, null),
+        resStaticLibrary = defaultValueIfNotPresent(
+          { androidLibrary.resStaticLibrary }, null),
         assetsFolder = androidLibrary.assetsFolder.path,
         localJars = androidLibrary.localJars.map { it.path },
         jniFolder = androidLibrary.jniFolder.path,
@@ -68,10 +68,12 @@ class IdeLibraryFactory {
         externalAnnotations = androidLibrary.externalAnnotations.path,
         publicResources = androidLibrary.publicResources.path,
         artifact = androidLibrary.bundle,
-        symbolFile = getSymbolFilePath(androidLibrary),
+        symbolFile = getSymbolFilePath(
+          androidLibrary),
         deduplicate = { strings.getOrPut(this) { this } }
       )
-      val isProvided = defaultValueIfNotPresent({ androidLibrary.isProvided }, false)
+      val isProvided = defaultValueIfNotPresent(
+        { androidLibrary.isProvided }, false)
       IdeAndroidLibrary(androidLibraryCores.internCore(core), isProvided)
     }
   }
@@ -80,9 +82,9 @@ class IdeLibraryFactory {
    * @param javaLibrary Instance of [JavaLibrary] returned by android plugin.
    * @return Instance of [Library] based on dependency type.
    */
-  @VisibleForTesting
   fun create(javaLibrary: JavaLibrary): IdeLibrary {
-    val project = defaultValueIfNotPresent({ javaLibrary.project }, null)
+    val project = defaultValueIfNotPresent(
+      { javaLibrary.project }, null)
     return if (project != null) {
       // Java modules don't have variant.
       createIdeModuleLibrary(javaLibrary, IdeLibraries.computeAddress(javaLibrary))
@@ -92,7 +94,8 @@ class IdeLibraryFactory {
         artifactAddress = IdeLibraries.computeAddress(javaLibrary),
         artifact = javaLibrary.jarFile
       )
-      val isProvided = defaultValueIfNotPresent({ javaLibrary.isProvided }, false)
+      val isProvided = defaultValueIfNotPresent(
+        { javaLibrary.isProvided }, false)
       IdeJavaLibrary(javaLibraryCores.internCore(core), isProvided)
     }
   }
@@ -103,10 +106,13 @@ class IdeLibraryFactory {
       buildId = IdeModel.copyNewProperty({ library.buildId }, null),
       projectPath = IdeModel.copyNewProperty({ library.project }, null),
       variant = IdeModel.copyNewProperty({ library.projectVariant }, null),
-      folder = defaultValueIfNotPresent({ library.folder }, null),
-      lintJar = defaultValueIfNotPresent({ library.lintJar.path }, null)
+      folder = defaultValueIfNotPresent(
+        { library.folder }, null),
+      lintJar = defaultValueIfNotPresent(
+        { library.lintJar.path }, null)
     )
-    val isProvided = defaultValueIfNotPresent({ library.isProvided }, false)
+    val isProvided = defaultValueIfNotPresent(
+      { library.isProvided }, false)
     return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided)
   }
 
@@ -119,7 +125,8 @@ class IdeLibraryFactory {
       folder = null,
       lintJar = null
     )
-    val isProvided = defaultValueIfNotPresent({ library.isProvided }, false)
+    val isProvided = defaultValueIfNotPresent(
+      { library.isProvided }, false)
     return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided)
   }
 

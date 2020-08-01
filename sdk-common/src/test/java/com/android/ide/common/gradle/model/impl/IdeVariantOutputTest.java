@@ -18,7 +18,6 @@ package com.android.ide.common.gradle.model.impl;
 import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.*;
 
 import com.android.build.VariantOutput;
-import com.android.ide.common.gradle.model.ModelCache;
 import com.android.ide.common.gradle.model.stubs.VariantOutputStub;
 import org.junit.Test;
 

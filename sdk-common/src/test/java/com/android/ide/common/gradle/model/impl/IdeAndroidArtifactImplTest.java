@@ -16,7 +16,6 @@
 package com.android.ide.common.gradle.model.impl;
 
 import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.createEqualsVerifier;
-import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.expectUnsupportedOperationException;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
@@ -25,8 +24,6 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.InstantRun;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
-import com.android.ide.common.gradle.model.ModelCache;
-import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.gradle.model.stubs.AndroidArtifactStub;
 import com.android.ide.common.repository.GradleVersion;
 import java.util.Collection;

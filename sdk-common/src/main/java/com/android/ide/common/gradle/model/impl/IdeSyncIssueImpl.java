@@ -18,7 +18,6 @@ package com.android.ide.common.gradle.model.impl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.SyncIssue;
-import com.android.ide.common.gradle.model.IdeModel;
 import com.android.ide.common.gradle.model.IdeSyncIssue;
 import java.io.Serializable;
 import java.util.List;

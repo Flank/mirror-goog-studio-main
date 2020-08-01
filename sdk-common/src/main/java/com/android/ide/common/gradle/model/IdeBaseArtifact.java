@@ -18,7 +18,6 @@ package com.android.ide.common.gradle.model;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.ArtifactMetaData;
-import com.android.ide.common.gradle.model.level2.IdeDependencies;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;

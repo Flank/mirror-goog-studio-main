@@ -25,7 +25,6 @@ import com.android.ide.common.gradle.model.IdeApiVersion;
 import com.android.ide.common.gradle.model.IdeProductFlavor;
 import com.android.ide.common.gradle.model.IdeSigningConfig;
 import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions;
-import com.android.ide.common.gradle.model.ModelCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collection;

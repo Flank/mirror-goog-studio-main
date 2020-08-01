@@ -25,11 +25,8 @@ import com.android.builder.model.BaseArtifact;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.gradle.model.IdeBaseArtifact;
-import com.android.ide.common.gradle.model.IdeModel;
+import com.android.ide.common.gradle.model.IdeDependencies;
 import com.android.ide.common.gradle.model.IdeSourceProvider;
-import com.android.ide.common.gradle.model.ModelCache;
-import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
-import com.android.ide.common.gradle.model.level2.IdeDependenciesImpl;
 import com.android.ide.common.repository.GradleVersion;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -59,8 +56,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
     @NonNull private final Set<File> myGeneratedSourceFolders;
     @NonNull private final Set<File> myAdditionalClassFolders;
 
-    @NonNull
-    private final com.android.ide.common.gradle.model.level2.IdeDependencies myLevel2Dependencies;
+    @NonNull private final IdeDependencies myLevel2Dependencies;
 
     @Nullable private final File myJavaResourcesFolder;
     @Nullable private final DependencyGraphs myDependencyGraphs;
@@ -205,7 +201,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
 
     @Override
     @NonNull
-    public com.android.ide.common.gradle.model.level2.IdeDependencies getLevel2Dependencies() {
+    public IdeDependencies getLevel2Dependencies() {
         return myLevel2Dependencies;
     }
 

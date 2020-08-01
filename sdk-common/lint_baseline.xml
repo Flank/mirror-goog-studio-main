@@ -98,22 +98,6 @@
     </issue>
 
     <issue
-        id="NoInterning"
-        message="Do not intern strings; if reusing strings is truly necessary build a local cache">
-        <location
-            file="src/main/java/com/android/ide/common/gradle/model/IdeLibraries.java"
-            line="68"/>
-    </issue>
-
-    <issue
-        id="NoInterning"
-        message="Do not intern strings; if reusing strings is truly necessary build a local cache">
-        <location
-            file="src/main/java/com/android/ide/common/gradle/model/IdeLibraries.java"
-            line="78"/>
-    </issue>
-
-    <issue
         id="VisibleForTests"
         message="This method should only be accessed from tests or within private scope">
         <location
@@ -302,31 +286,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/ide/common/gradle/model/impl/IdeAndroidProjectImpl.java"
-            line="205"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ide/common/gradle/model/level2/IdeDependenciesFactory.kt"
-            line="119"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ide/common/gradle/model/level2/IdeDependenciesFactory.kt"
-            line="142"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ide/common/gradle/model/level2/IdeLibraryFactory.kt"
-            line="127"/>
+            line="202"/>
     </issue>
 
     <issue
@@ -446,7 +406,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/ide/common/gradle/model/impl/IdeAndroidArtifactOutputImpl.java"
-            line="82"/>
+            line="80"/>
     </issue>
 
     <issue
@@ -454,7 +414,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/ide/common/gradle/model/impl/IdeAndroidProjectImpl.java"
-            line="728"/>
+            line="725"/>
     </issue>
 
     <issue
@@ -462,7 +422,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/ide/common/gradle/model/impl/IdeBaseArtifactImpl.java"
-            line="259"/>
+            line="255"/>
     </issue>
 
     <issue
@@ -470,7 +430,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/ide/common/gradle/model/impl/IdeBaseArtifactImpl.java"
-            line="261"/>
+            line="257"/>
     </issue>
 
     <issue
@@ -478,7 +438,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/ide/common/gradle/model/impl/IdeJavaArtifactImpl.java"
-            line="69"/>
+            line="66"/>
     </issue>
 
     <issue
@@ -526,7 +486,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/ide/common/gradle/model/impl/IdeOutputFileImpl.java"
-            line="190"/>
+            line="188"/>
     </issue>
 
     <issue
@@ -534,7 +494,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/ide/common/gradle/model/impl/IdeSigningConfigImpl.java"
-            line="128"/>
+            line="127"/>
     </issue>
 
     <issue

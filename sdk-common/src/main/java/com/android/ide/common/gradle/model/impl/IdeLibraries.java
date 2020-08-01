@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.gradle.model;
+package com.android.ide.common.gradle.model.impl;
 
 import static com.android.utils.FileUtils.isFileInDirectory;
 import static com.google.common.base.Strings.nullToEmpty;
@@ -25,8 +25,7 @@ import com.android.builder.model.Dependencies.ProjectIdentifier;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Library;
 import com.android.builder.model.MavenCoordinates;
-import com.android.ide.common.gradle.model.impl.IdeMavenCoordinatesImpl;
-import com.android.ide.common.gradle.model.level2.BuildFolderPaths;
+import com.android.ide.common.gradle.model.IdeMavenCoordinates;
 import java.io.File;
 
 public final class IdeLibraries {
@@ -65,7 +64,7 @@ public final class IdeLibraries {
         }
         String packaging = coordinate.getPackaging();
         address = address + "@" + packaging;
-        return address.intern();
+        return address;
     }
 
     /**
@@ -74,8 +73,7 @@ public final class IdeLibraries {
      */
     @NonNull
     public static String computeAddress(@NonNull ProjectIdentifier projectIdentifier) {
-        String address = projectIdentifier.getBuildId() + "@@" + projectIdentifier.getProjectPath();
-        return address.intern();
+        return projectIdentifier.getBuildId() + "@@" + projectIdentifier.getProjectPath();
     }
 
     /** Indicates whether the given library is a module wrapping an AAR file. */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.gradle.model;
+package com.android.ide.common.gradle.model.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -23,7 +23,7 @@ import java.util.Objects;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests for {@link ModelCache}. */
+/** Tests for {@link com.android.ide.common.gradle.model.impl.ModelCache}. */
 public class ModelCacheTest {
     private ModelCache myModelCache;
 

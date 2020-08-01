@@ -15,8 +15,8 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
-import static com.android.ide.common.gradle.model.IdeLibraries.computeAddress;
-import static com.android.ide.common.gradle.model.IdeLibraries.isLocalAarModule;
+import static com.android.ide.common.gradle.model.impl.IdeLibraries.computeAddress;
+import static com.android.ide.common.gradle.model.impl.IdeLibraries.isLocalAarModule;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -26,8 +26,6 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.Library;
 import com.android.builder.model.MavenCoordinates;
-import com.android.ide.common.gradle.model.IdeLibraries;
-import com.android.ide.common.gradle.model.level2.BuildFolderPaths;
 import com.android.ide.common.gradle.model.stubs.AndroidLibraryStub;
 import com.android.ide.common.gradle.model.stubs.JavaLibraryStub;
 import com.android.ide.common.gradle.model.stubs.LibraryStub;

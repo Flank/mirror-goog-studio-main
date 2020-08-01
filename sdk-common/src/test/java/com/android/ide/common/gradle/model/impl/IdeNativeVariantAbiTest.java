@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertEquals;
 
 import com.android.builder.model.NativeVariantAbi;
-import com.android.ide.common.gradle.model.ModelCache;
 import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeVariantAbiImpl;
 import com.android.ide.common.gradle.model.stubs.NativeVariantAbiStub;
 import com.android.testutils.Serialization;

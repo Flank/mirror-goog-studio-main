@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.gradle.model.level2
+package com.android.ide.common.gradle.model.impl
 
 import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.BaseArtifact
 import com.android.builder.model.Dependencies
 import com.android.builder.model.JavaLibrary
-import com.android.ide.common.gradle.model.IdeLibraries
+import com.android.ide.common.gradle.model.IdeDependencies
+import com.android.ide.common.gradle.model.IdeLibrary
+import com.android.ide.common.gradle.model.impl.BuildFolderPaths
+import com.android.ide.common.gradle.model.impl.IdeDependenciesImpl
+import com.android.ide.common.gradle.model.impl.IdeLibraries
+import com.android.ide.common.gradle.model.impl.IdeLibraryFactory
 import com.google.common.collect.ImmutableList
 import java.io.File
 

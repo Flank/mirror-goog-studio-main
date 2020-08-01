@@ -19,8 +19,6 @@ import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.createE
 import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.verifyUsageOfImmutableCollections;
 
 import com.android.builder.model.Variant;
-import com.android.ide.common.gradle.model.ModelCache;
-import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.gradle.model.stubs.VariantStub;
 import com.android.ide.common.repository.GradleVersion;
 import org.junit.Before;

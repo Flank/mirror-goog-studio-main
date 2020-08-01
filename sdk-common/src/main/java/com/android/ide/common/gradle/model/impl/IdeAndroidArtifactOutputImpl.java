@@ -19,8 +19,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
-import com.android.ide.common.gradle.model.IdeModel;
-import com.android.ide.common.gradle.model.ModelCache;
 import java.io.File;
 import java.util.Objects;
 

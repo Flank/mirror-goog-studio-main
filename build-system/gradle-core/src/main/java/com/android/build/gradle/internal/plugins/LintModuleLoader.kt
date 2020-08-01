@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.plugins
 import com.android.builder.model.AndroidProject
 import com.android.ide.common.gradle.model.IdeAndroidProject
 import com.android.ide.common.gradle.model.impl.IdeAndroidProjectImpl
-import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory
+import com.android.ide.common.gradle.model.impl.IdeDependenciesFactory
 import com.android.tools.lint.model.LintModelDependency
 import com.android.tools.lint.model.LintModelFactory
 import com.android.tools.lint.model.LintModelModule

@@ -20,7 +20,6 @@ import static com.android.builder.model.AaptOptions.Namespacing.DISABLED;
 import com.android.annotations.NonNull;
 import com.android.builder.model.AaptOptions;
 import com.android.ide.common.gradle.model.IdeAaptOptions;
-import com.android.ide.common.gradle.model.IdeModel;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.Serializable;
 import java.util.Objects;

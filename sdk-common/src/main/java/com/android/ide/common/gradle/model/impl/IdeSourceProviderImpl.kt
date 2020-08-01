@@ -16,7 +16,6 @@
 package com.android.ide.common.gradle.model.impl
 
 import com.android.builder.model.SourceProvider
-import com.android.ide.common.gradle.model.IdeModel
 import com.android.ide.common.gradle.model.IdeSourceProvider
 import com.google.common.annotations.VisibleForTesting
 import java.io.File

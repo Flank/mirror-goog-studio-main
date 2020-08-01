@@ -21,8 +21,6 @@ import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.verifyU
 
 import com.android.builder.model.JavaArtifact;
 import com.android.ide.common.gradle.model.IdeJavaArtifact;
-import com.android.ide.common.gradle.model.ModelCache;
-import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.gradle.model.stubs.JavaArtifactStub;
 import com.android.ide.common.repository.GradleVersion;
 import org.junit.Before;

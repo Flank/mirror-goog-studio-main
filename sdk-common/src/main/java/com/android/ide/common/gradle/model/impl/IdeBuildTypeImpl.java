@@ -18,7 +18,6 @@ package com.android.ide.common.gradle.model.impl;
 import com.android.annotations.NonNull;
 import com.android.builder.model.BuildType;
 import com.android.ide.common.gradle.model.IdeBuildType;
-import com.android.ide.common.gradle.model.ModelCache;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import java.util.Objects;
 

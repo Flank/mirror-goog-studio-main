@@ -19,7 +19,6 @@ import com.android.annotations.NonNull;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.ide.common.gradle.model.IdeSourceProvider;
 import com.android.ide.common.gradle.model.IdeSourceProviderContainer;
-import com.android.ide.common.gradle.model.ModelCache;
 import java.io.Serializable;
 import java.util.Objects;
 

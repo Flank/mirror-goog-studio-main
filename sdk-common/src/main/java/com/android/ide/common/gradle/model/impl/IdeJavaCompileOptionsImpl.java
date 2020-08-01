@@ -18,7 +18,6 @@ package com.android.ide.common.gradle.model.impl;
 import com.android.annotations.NonNull;
 import com.android.builder.model.JavaCompileOptions;
 import com.android.ide.common.gradle.model.IdeJavaCompileOptions;
-import com.android.ide.common.gradle.model.IdeModel;
 import java.io.Serializable;
 import java.util.Objects;
 
