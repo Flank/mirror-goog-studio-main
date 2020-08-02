@@ -172,7 +172,8 @@ public class ArtToolingTest {
             AppInspection.AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
             assertThat(event.getRawEvent().getContent().toByteArray())
                     .isEqualTo(
-                            TodoInspectorApi.Event.TODO_LOGGING_ITEM.toByteArrayWithArg((byte) 2));
+                            TodoInspectorApi.Event.TODO_LOGGING_ITEM.toByteArrayWithArg(
+                                    new byte[] {(byte) 1, (byte) 2}));
         }
 
         { // removeNewestGroup: Group[4] removed. Group[3] is now the last group
@@ -232,6 +233,7 @@ public class ArtToolingTest {
         androidDriver.triggerMethod(TODO_ACTIVITY, "clearAllItems");
         androidDriver.triggerMethod(TODO_ACTIVITY, "hasEmptyTodoList");
 
+        androidDriver.triggerMethod(TODO_ACTIVITY, "callEcho");
         { // getItemsCount
             AppInspection.AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
             assertThat(event.getRawEvent().getContent().toByteArray())
@@ -312,10 +314,15 @@ public class ArtToolingTest {
                             TodoInspectorApi.Event.TODO_HAS_EMPTY_TODO_LIST.toByteArrayWithArg(
                                     (byte) 1));
         }
+        { // callEcho
+            AppInspection.AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(TodoInspectorApi.Event.TODO_ECHOED.toByteArray());
+        }
     }
 
     @Test
-    public void entryHookWithHighRegisties() throws Exception {
+    public void hooksWithHighRegisties() throws Exception {
         String inspectorId = "todo.inspector";
         assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
@@ -328,6 +335,14 @@ public class ArtToolingTest {
             AppInspection.AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
             assertThat(event.getRawEvent().getContent().toByteArray())
                     .isEqualTo(TodoInspectorApi.Event.TODO_ITEMS_PREFILLING.toByteArray());
+        }
+
+        { // prefillItems entry
+            AppInspection.AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_ITEMS_PREFILLED.toByteArrayWithArg(
+                                    (byte) 12));
         }
 
         assertThat(appInspectionRule.hasEventToCollect()).isFalse();
@@ -484,10 +499,18 @@ public class ArtToolingTest {
                     .isEqualTo(TodoInspectorApi.Event.TODO_GROUP_CREATED.toByteArray());
         }
 
+        { // Group #2 enter
+            AppInspection.AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_NAMED_GROUP_CREATING.toByteArrayWithArg(
+                                    "High Priority Group".getBytes()));
+        }
+
         { // Group #2 exit
             AppInspection.AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
             assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(TodoInspectorApi.Event.TODO_GROUP_CREATED.toByteArray());
+                    .isEqualTo(TodoInspectorApi.Event.TODO_NAMED_GROUP_CREATED.toByteArray());
         }
 
         assertThat(appInspectionRule.hasEventToCollect()).isFalse();

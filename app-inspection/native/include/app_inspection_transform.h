@@ -46,6 +46,7 @@ class AppInspectionTransform {
         auto tweak = transform.HasPrimitiveOrVoidReturnType()
                          ? slicer::ExitHook::Tweak::None
                          : slicer::ExitHook::Tweak::ReturnAsObject;
+        tweak = tweak | slicer::ExitHook::Tweak::PassMethodSignature;
         mi.AddTransformation<slicer::ExitHook>(
             ir::MethodId(
                 "Lcom/android/tools/agent/app/inspection/AppInspectionService;",

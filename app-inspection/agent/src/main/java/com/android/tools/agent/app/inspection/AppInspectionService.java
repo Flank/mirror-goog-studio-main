@@ -29,10 +29,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
@@ -66,14 +64,6 @@ public class AppInspectionService {
 
     private static final String INSPECTOR_ID_MISSING_ERROR =
             "Argument inspectorId must not be null";
-
-    // TODO: b/159250979
-    // Special work around to support overloads and exit hooks
-    // currently our labels (keys in mExitTransforms)
-    // lose important information about parameters of methods.
-    // This set stores full information about instrumented methods
-    private final Set<String> mExitTransformsFullLabels =
-            Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     private CrashListener mCrashListener =
             new CrashListener() {
@@ -264,14 +254,7 @@ public class AppInspectionService {
     }
 
     private static String createLabel(Class origin, String method) {
-        if (method.indexOf('(') == -1) {
-            return "";
-        }
-        return origin.getCanonicalName() + method.substring(0, method.indexOf('('));
-    }
-
-    private static String createFullLabel(Class origin, String method) {
-        return origin.getCanonicalName() + method;
+        return origin.getCanonicalName() + "->" + method;
     }
 
     public static void addEntryHook(
@@ -292,10 +275,6 @@ public class AppInspectionService {
 
     public static void addExitHook(
             String inspectorId, Class origin, String method, ArtTooling.ExitHook<?> hook) {
-        if (sInstance.mExitTransformsFullLabels.add(createFullLabel(origin, method))) {
-            nativeRegisterExitHook(sInstance.mNativePtr, origin, method);
-        }
-
         List<HookInfo<ExitHook>> hooks =
                 sInstance.mExitTransforms.computeIfAbsent(
                         createLabel(origin, method),
@@ -303,98 +282,85 @@ public class AppInspectionService {
 
                             @Override
                             public List<HookInfo<ExitHook>> apply(String key) {
+                                nativeRegisterExitHook(sInstance.mNativePtr, origin, method);
                                 return new CopyOnWriteArrayList<>();
                             }
                         });
         hooks.add(new HookInfo<>(inspectorId, hook));
     }
 
-    private static <T> T onExitInternal(T returnObject) {
-        Error error = new Error();
-        error.fillInStackTrace();
-        StackTraceElement[] stackTrace = error.getStackTrace();
-        if (stackTrace.length < 3) {
-            return returnObject;
-        }
-        StackTraceElement element = stackTrace[2];
-        String label = element.getClassName() + element.getMethodName();
-
+    private static <T> T onExitInternal(String label, T returnObject) {
         AppInspectionService instance = AppInspectionService.instance();
         List<HookInfo<ExitHook>> hooks = instance.mExitTransforms.get(label);
         if (hooks == null) {
             return returnObject;
         }
 
-        // TODO: b/159250979, we currently do this deduplication, because
-        // hooks for different methods end up at the same place
-        // to avoid calling the same hook twice we add them to a set
-        Set<ExitHook> calledHooks = new HashSet<>();
         for (HookInfo<ExitHook> info : hooks) {
             //noinspection unchecked
-            if (calledHooks.add(info.hook)) {
-                returnObject = (T) info.hook.onExit(returnObject);
-            }
+            returnObject = (T) info.hook.onExit(returnObject);
         }
         return returnObject;
     }
 
-    public static Object onExit(Object returnObject) {
-        return onExitInternal(returnObject);
+    public static Object onExit(String methodSignature, Object returnObject) {
+        return onExitInternal(methodSignature, returnObject);
     }
 
-    public static void onExit() {
-        onExitInternal(null);
+    public static void onExit(String methodSignature) {
+        onExitInternal(methodSignature, null);
     }
 
-    public static boolean onExit(boolean result) {
-        return onExitInternal(result);
+    public static boolean onExit(String methodSignature, boolean result) {
+        return onExitInternal(methodSignature, result);
     }
 
-    public static byte onExit(byte result) {
-        return onExitInternal(result);
+    public static byte onExit(String methodSignature, byte result) {
+        return onExitInternal(methodSignature, result);
     }
 
-    public static char onExit(char result) {
-        return onExitInternal(result);
+    public static char onExit(String methodSignature, char result) {
+        return onExitInternal(methodSignature, result);
     }
 
-    public static short onExit(short result) {
-        return onExitInternal(result);
+    public static short onExit(String methodSignature, short result) {
+        return onExitInternal(methodSignature, result);
     }
 
-    public static int onExit(int result) {
-        return onExitInternal(result);
+    public static int onExit(String methodSignature, int result) {
+        return onExitInternal(methodSignature, result);
     }
 
-    public static float onExit(float result) {
-        return onExitInternal(result);
+    public static float onExit(String methodSignature, float result) {
+        return onExitInternal(methodSignature, result);
     }
 
-    public static long onExit(long result) {
-        return onExitInternal(result);
+    public static long onExit(String methodSignature, long result) {
+        return onExitInternal(methodSignature, result);
     }
 
-    public static double onExit(double result) {
-        return onExitInternal(result);
+    public static double onExit(String methodSignature, double result) {
+        return onExitInternal(methodSignature, result);
     }
 
     /**
-     * Receives an array where the first parameter is the "this" reference and all remaining
-     * arguments are the function's parameters.
+     * Receives an array where:
+     *
+     * <ol>
+     *   <li>the first parameter is the method signature,
+     *   <li>the second parameter is the "this" reference,
+     *   <li>all remaining arguments are the function's parameters.
+     * </ol>
      *
      * <p>For example, the function {@code Client#sendMessage(Receiver r, String message)} will
-     * receive the array: [this, r, message]
+     * receive the array: ["(Lcom/example/Receiver;Ljava/lang/String;)Lcom/example/Client;", this,
+     * r, message]
      */
-    public static void onEntry(Object[] thisAndParams) {
-        assert (thisAndParams.length >= 1); // Should always at least contain "this"
-        Error error = new Error();
-        error.fillInStackTrace();
-        StackTraceElement[] stackTrace = error.getStackTrace();
-        if (stackTrace.length < 2) {
-            return;
-        }
-        StackTraceElement element = stackTrace[1];
-        String label = element.getClassName() + element.getMethodName();
+    public static void onEntry(Object[] signatureThisParams) {
+        // Should always at least contain signature and "this"
+        assert (signatureThisParams.length >= 2);
+        String signature = (String) signatureThisParams[0];
+        String label = signature;
         List<HookInfo<EntryHook>> hooks =
                 AppInspectionService.instance().mEntryTransforms.get(label);
 
@@ -402,10 +368,12 @@ public class AppInspectionService {
             return;
         }
 
-        Object thisObject = thisAndParams[0];
+        Object thisObject = signatureThisParams[1];
         List<Object> params = Collections.emptyList();
-        if (thisAndParams.length > 1) {
-            params = Arrays.asList(Arrays.copyOfRange(thisAndParams, 1, thisAndParams.length));
+        if (signatureThisParams.length > 2) {
+            params =
+                    Arrays.asList(
+                            Arrays.copyOfRange(signatureThisParams, 2, signatureThisParams.length));
         }
 
         for (HookInfo<EntryHook> info : hooks) {

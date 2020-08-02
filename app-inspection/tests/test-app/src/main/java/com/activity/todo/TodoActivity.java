@@ -68,6 +68,21 @@ public final class TodoActivity extends TransportTestActivity {
         return item;
     }
 
+    // tests overloads
+    @NonNull
+    public TodoItem newItem(String name) {
+        if (activeGroup == null) {
+            newGroup();
+        }
+        TodoItem item = new TodoItem(name);
+        activeGroup.addItem(item);
+        return item;
+    }
+
+    public void newCustomNamedItem() {
+        newItem("Custom named todo");
+    }
+
     @NonNull
     public TodoItem newRedItem() {
         if (activeGroup == null) {
@@ -163,7 +178,8 @@ public final class TodoActivity extends TransportTestActivity {
     // this function allocates more than 16 variables
     // it checks that we don't fail once high registers
     // are in the picture.
-    public void prefillItems() {
+    // returns number of prefilled items;
+    public int prefillItems() {
         TodoItem item1 = new TodoItem("1");
         TodoItem item2 = new TodoItem("2");
         TodoItem item3 = new TodoItem("3");
@@ -199,6 +215,7 @@ public final class TodoActivity extends TransportTestActivity {
         groups.add(group3);
         groups.add(group4);
         activeGroup = group4;
+        return 12;
     }
 
     // A function that needs at max one register,
@@ -206,7 +223,7 @@ public final class TodoActivity extends TransportTestActivity {
     // it is important to keep it this way, because it tests
     // special code path in slicer/instrumentation.cc
     // that allocates additional registers to add entry hook
-    public void logItem(int severity, String tag, TodoItem item) {
+    public static void logItem(int severity, String tag, TodoItem item) {
         Log.printlns(severity, tag, item.getDescription());
     }
 
@@ -227,5 +244,16 @@ public final class TodoActivity extends TransportTestActivity {
         if (size != 0) {
             activeGroup = groups.get(size - 1);
         }
+    }
+
+    // function that needs exactly 2 registries
+    // it forces exitHooks to allocate additional registry
+    // for storing signature
+    public static long echo(long input) {
+        return input;
+    }
+
+    public static void callEcho() {
+        echo(5L);
     }
 }

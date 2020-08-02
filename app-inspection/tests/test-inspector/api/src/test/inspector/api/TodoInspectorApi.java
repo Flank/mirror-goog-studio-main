@@ -36,6 +36,8 @@ public final class TodoInspectorApi {
 
         TODO_GROUP_CREATING,
         TODO_GROUP_CREATED,
+        TODO_NAMED_GROUP_CREATING,
+        TODO_NAMED_GROUP_CREATED,
         TODO_ITEM_CREATING,
         TODO_ITEM_CREATED,
 
@@ -56,10 +58,14 @@ public final class TodoInspectorApi {
         TODO_HAS_EMPTY_TODO_LIST,
 
         TODO_ITEMS_PREFILLING,
+        TODO_ITEMS_PREFILLED,
         TODO_LOGGING_ITEM,
 
         TODO_LAST_ITEM_SELECTING,
-        TODO_LAST_ITEM_SELECTED;
+        TODO_LAST_ITEM_SELECTED,
+
+        TODO_ECHOING,
+        TODO_ECHOED;
 
         @NonNull
         public byte[] toByteArray() {
