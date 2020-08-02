@@ -492,7 +492,6 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                         + "     ~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";
         lint().files(
-                        manifest().minSdk(14),
                         xml(
                                 "AndroidManifest.xml",
                                 ""

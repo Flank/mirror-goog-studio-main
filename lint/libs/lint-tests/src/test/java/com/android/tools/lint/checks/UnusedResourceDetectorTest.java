@@ -253,7 +253,10 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "}\n"),
 
                         // Library project
-                        manifest().pkg("foo.library").minSdk(14),
+                        manifest()
+                                .pkg("foo.library")
+                                .minSdk(14)
+                                .to("../LibraryProject/AndroidManifest.xml"),
                         source(
                                 "../LibraryProject/project.properties",
                                 "target=android-14\nandroid.library=true\n"),
@@ -807,10 +810,9 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    package=\"test.pkg\"\n"
                                         + "    android:versionCode=\"1\"\n"
                                         + "    android:versionName=\"1.0\" >\n"
-                                        + "\n"
+                                        + "    <uses-sdk android:minSdkVersion=\"14\" />\n"
                                         + "    <meta-data android:name=\"account_type\" android:value=\"${account_type}\" />\n"
                                         + "</manifest>\n"),
-                        manifest().minSdk(14),
                         gradle(
                                 ""
                                         + "android {\n"

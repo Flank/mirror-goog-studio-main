@@ -668,7 +668,6 @@ public class IconDetectorTest extends AbstractCheckTest {
         lint().files(
                         image("res/drawable-hdpi/ic_launcher1.png", 48, 48).fill(0xFF00FF16),
                         image("res/drawable-mdpi/ic_launcher2.png", 48, 48).fill(0xFF00FF16),
-                        image("res/drawable-xhdpi/ic_launcher1.png", 48, 48).fill(0xFF00FF17),
                         image("res/drawable-xxhdpi/ic_launcher1.png", 48, 48).fill(0xFF00FF18),
                         image("res/drawable-xhdpi/ic_launcher1.png", 48, 48).fill(0xFF00FF18))
                 .issues(ICON_DENSITIES)

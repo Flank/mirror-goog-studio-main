@@ -690,6 +690,8 @@ public class TestLintTask {
         List<File> projectDirs = Lists.newArrayList();
         for (ProjectDescription project : allProjects) {
             try {
+                project.ensureUnique();
+
                 TestFile[] files = project.getFiles();
 
                 // Also create dependency files

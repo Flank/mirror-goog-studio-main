@@ -3627,7 +3627,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        getActivity().getDrawable(R.color.my_color);\n"
                                         + "    }\n"
                                         + "}\n"),
-                        manifest().pkg("foo.library").minSdk(14),
+                        manifest()
+                                .pkg("foo.library")
+                                .minSdk(14)
+                                .to("../LibraryProject/AndroidManifest.xml"),
                         source(
                                 "../LibraryProject/project.properties",
                                 ""
