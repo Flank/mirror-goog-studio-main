@@ -203,6 +203,12 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
         abstract val androidTestArtifact: Property<AndroidArtifactInput>
 
         @get:Input
+        abstract val mergedManifest: Property<File>
+
+        @get:Input
+        abstract val manifestMergeReport: Property<File>
+
+        @get:Input
         abstract val packageName: Property<String>
 
         @get:Nested
@@ -252,6 +258,8 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
                 mainArtifact = mainArtifact.get().convert(libraryResolver),
                 testArtifact = testArtifact.orNull?.convert(libraryResolver),
                 androidTestArtifact = androidTestArtifact.orNull?.convert(libraryResolver),
+                mergedManifest = mergedManifest.get(),
+                manifestMergeReport = manifestMergeReport.get(),
                 `package` = packageName.get(),
                 minSdkVersion = minSdkVersion.get().convert(),
                 targetSdkVersion = targetSdkVersion.get().convert(),

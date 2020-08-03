@@ -1135,6 +1135,65 @@ class LintModelSerializationTest {
             .hasContents("Fake Android manifest")
     }
 
+
+    @Test
+    fun testLintModelSerializationManifest() {
+        val temp = temporaryFolder.newFolder()
+        val projectDirectory = temp.resolve("projectDir").createDirectories()
+        val buildDirectory = temp.resolve("buildDir").createDirectories()
+        val modelsDir = buildDirectory.resolve("intermediates/lint-models").createDirectories()
+        val mergedManifest = buildDirectory.resolve("intermediates/merged_manifest/debug").createDirectories()
+            .resolve("AndroidManifest.xml").apply { writeText("Merged manifest") }
+        val mergeReport = buildDirectory.resolve("outputs/reports/manifest/debug").createDirectories()
+            .resolve("ManifestMergeReport.xml").apply { writeText("Manifest merge report") }
+        modelsDir.resolve("module.xml")
+            .writeText(
+                """<lint-module
+                    format="1"
+                    dir="${projectDirectory.absolutePath}"
+                    name="test_project"
+                    type="APP"
+                    maven="com.android.tools.demo:test_project:"
+                    gradle="4.0.0-beta01"
+                    buildFolder="${buildDirectory.absolutePath}"
+                    javaSourceLevel="1.7"
+                    compileTarget="android-25"
+                    neverShrinking="true">
+                  <lintOptions />
+                  <variant name="debug"/>
+                </lint-module>"""
+            )
+        val debugXml = """<variant
+                    name="debug"
+                    minSdkVersion="5"
+                    targetSdkVersion="16"
+                    debuggable="true"
+                    mergedManifest="${mergedManifest.absolutePath}"
+                    manifestMergeReport="${mergeReport.absolutePath}">
+                  <buildFeatures />
+                  <mainArtifact applicationId="com.android.tools.test">
+                  </mainArtifact>
+                </variant>"""
+        modelsDir.resolve("debug.xml").writeText(debugXml)
+
+        val module = LintModelSerialization.readModule(
+            source = modelsDir,
+            readDependencies = false
+        )
+
+        val debugVariant = module.defaultVariant()!!
+
+        assertWithMessage("Merged manifest is read correctly")
+            .about(PathSubject.paths())
+            .that(debugVariant.mergedManifest?.toPath())
+            .hasContents("Merged manifest")
+
+        assertWithMessage("Merged manifest is read correctly")
+            .about(PathSubject.paths())
+            .that(debugVariant.manifestMergeReport?.toPath())
+            .hasContents("Manifest merge report")
+    }
+
     // ----------------------------------------------------------------------------------
     // Test infrastructure below this line
     // ----------------------------------------------------------------------------------

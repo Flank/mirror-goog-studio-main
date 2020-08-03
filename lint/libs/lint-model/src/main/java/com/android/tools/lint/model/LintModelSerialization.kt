@@ -808,6 +808,8 @@ private class LintModelVariantWriter(
         if (variant.shrinkable) {
             printer.printAttribute("shrinking", VALUE_TRUE, indent)
         }
+        variant.mergedManifest?.let { printer.printFile("mergedManifest", it, indent) }
+        variant.manifestMergeReport?.let { printer.printFile("manifestMergeReport", it, indent) }
 
         printer.printFiles("proguardFiles", variant.proguardFiles, indent)
         printer.printFiles("consumerProguardFiles", variant.consumerProguardFiles, indent)
@@ -1619,6 +1621,8 @@ private class LintModelVariantReader(
             var mainArtifact: LintModelAndroidArtifact? = null
             var testArtifact: LintModelJavaArtifact? = null
             var androidTestArtifact: LintModelAndroidArtifact? = null
+            val mergedManifest: File? = getOptionalFile("mergedManifest")
+            val manifestMergeReport: File? = getOptionalFile("manifestMergeReport")
             val oldVariant: IdeVariant? = null
 
             val packageName = getOptionalAttribute("package")
@@ -1676,6 +1680,8 @@ private class LintModelVariantReader(
                 mainArtifact = mainArtifact!!,
                 androidTestArtifact = androidTestArtifact,
                 testArtifact = testArtifact,
+                mergedManifest = mergedManifest,
+                manifestMergeReport = manifestMergeReport,
                 oldVariant = oldVariant,
                 `package` = packageName,
                 minSdkVersion = minSdkVersion,
