@@ -110,7 +110,7 @@ open class UnitTestPropertiesImpl @Inject constructor(
     override fun createUserVisibleVariantPropertiesObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledComponentProperties =
+    ): AnalyticsEnabledUnitTestProperties =
         projectServices.objectFactory.newInstance(
             AnalyticsEnabledUnitTestProperties::class.java,
             this,

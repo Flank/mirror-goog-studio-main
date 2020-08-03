@@ -20,7 +20,10 @@ import com.android.SdkConstants
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.AbstractBuildGivenBuildCheckTest
 import com.android.testutils.TestUtils
+import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
+import com.google.wireless.android.sdk.stats.GradleBuildProfile
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Rule
@@ -28,6 +31,7 @@ import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestName
 import java.io.File
 import java.io.FileReader
+import java.nio.file.Files
 import java.util.Properties
 import java.util.logging.Logger
 
@@ -482,4 +486,20 @@ ${repositories.joinToString(
     }
 
     override fun instantiateGiven(): GivenBuilder = GivenBuilder(scriptingLanguage)
+
+    protected fun onVariantStats(block : (GradleBuildVariant) -> Unit) {
+        val androidProfile =
+            File(testProjectDir.root, "${testName.methodName}/build/android-profile")
+        Truth.assertThat(androidProfile.exists()).isTrue()
+        val listFiles = androidProfile.listFiles().filter { it.name.endsWith(".rawproto") }
+        Truth.assertThat(listFiles.size).isEqualTo(1)
+        val gradleBuildProfile =
+            GradleBuildProfile.parseFrom(Files.readAllBytes(listFiles[0].toPath()))
+        Truth.assertThat(gradleBuildProfile).isNotNull()
+        gradleBuildProfile.projectList.first {
+            it.androidPluginVersion.isNotEmpty()
+        }.variantList.forEach { variant ->
+            block.invoke(variant)
+        }
+    }
 }

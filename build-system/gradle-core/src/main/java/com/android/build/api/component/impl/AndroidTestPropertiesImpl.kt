@@ -251,7 +251,8 @@ open class AndroidTestPropertiesImpl @Inject constructor(
         projectServices.objectFactory.newInstance(
             AnalyticsEnabledAndroidTestProperties::class.java,
             this
-
+,
+            stats
         )
 
     override val shouldPackageProfilerDependencies: Boolean = false

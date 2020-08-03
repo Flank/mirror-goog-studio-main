@@ -79,17 +79,7 @@ expected result : An APK with minSdkVersion of 23
         check {
             assertNotNull(this)
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")
-            val androidProfile =
-                File(super.testProjectDir.root, "${testName.methodName}/build/android-profile")
-            Truth.assertThat(androidProfile.exists()).isTrue()
-            val listFiles = androidProfile.listFiles().filter { it.name.endsWith(".rawproto") }
-            Truth.assertThat(listFiles.size).isEqualTo(1)
-            val gradleBuildProfile =
-                GradleBuildProfile.parseFrom(Files.readAllBytes(listFiles[0].toPath()))
-            Truth.assertThat(gradleBuildProfile).isNotNull()
-            gradleBuildProfile.projectList.first {
-                it.androidPluginVersion.isEmpty()
-            }.variantList.forEach { variant ->
+            onVariantStats { variant ->
                 // check that debug variant minSdkVersion was unchanged and check that release
                 // variant minSdkVersion was changed and the change event was recorded.
                 if (variant.isDebug) {

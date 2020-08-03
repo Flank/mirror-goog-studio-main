@@ -25,7 +25,10 @@ import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.TestComponentProperties;
+import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTestProperties;
+import com.android.build.api.component.analytics.AnalyticsEnabledUnitTestProperties;
 import com.android.build.api.component.analytics.AnalyticsEnabledVariant;
+import com.android.build.api.component.analytics.AnalyticsEnabledVariantProperties;
 import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
@@ -466,10 +469,14 @@ public class VariantManager<
                         taskCreationServices);
 
         // Run the VariantProperties actions
-        commonExtension.executeVariantPropertiesOperations(variantProperties);
+        AnalyticsEnabledVariantProperties userVisibleVariantPropertiesObject =
+                ((VariantPropertiesImpl) variantProperties)
+                        .createUserVisibleVariantPropertiesObject(projectServices, apiAccessStats);
+        commonExtension.executeVariantPropertiesOperations(userVisibleVariantPropertiesObject);
 
         // also execute the delayed actions registered on the Variant object itself
-        ((VariantImpl<VariantPropertiesImpl>) variant).executePropertiesActions(variantProperties);
+        ((VariantImpl<VariantProperties>) variant)
+                .executePropertiesActions(userVisibleVariantPropertiesObject);
 
         return new ComponentInfo(variant, variantProperties, userVisibleVariantObject);
     }
@@ -727,9 +734,14 @@ public class VariantManager<
 
             // also execute the delayed actions registered on the Component via
             // androidTest { onProperties {} }
-            testComponent.executePropertiesActions(androidTestProperties);
+            AnalyticsEnabledAndroidTestProperties userVisibleVariantPropertiesObject =
+                    androidTestProperties.createUserVisibleVariantPropertiesObject(
+                            projectServices, apiAccessStats);
+            ((AndroidTestImpl) component)
+                    .executePropertiesActions(userVisibleVariantPropertiesObject);
             // or on the tested variant via unitTestProperties {}
-            userVisibleTestedVariant.executeAndroidTestPropertiesActions(androidTestProperties);
+            userVisibleTestedVariant.executeAndroidTestPropertiesActions(
+                    userVisibleVariantPropertiesObject);
 
             componentProperties = androidTestProperties;
         } else {
@@ -752,9 +764,13 @@ public class VariantManager<
 
             // execute the delayed actions registered on the Component via
             // unitTest { onProperties {} }
-            testComponent.executePropertiesActions(unitTestProperties);
+            AnalyticsEnabledUnitTestProperties userVisibleVariantPropertiesObject =
+                    unitTestProperties.createUserVisibleVariantPropertiesObject(
+                            projectServices, apiAccessStats);
+            ((UnitTestImpl) component).executePropertiesActions(userVisibleVariantPropertiesObject);
             // or on the tested variant via unitTestProperties {}
-            userVisibleTestedVariant.executeUnitTestPropertiesActions(unitTestProperties);
+            userVisibleTestedVariant.executeUnitTestPropertiesActions(
+                    userVisibleVariantPropertiesObject);
 
             componentProperties = unitTestProperties;
         }

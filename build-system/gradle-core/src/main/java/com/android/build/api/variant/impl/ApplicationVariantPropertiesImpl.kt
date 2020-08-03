@@ -17,7 +17,6 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariantProperties
-import com.android.build.api.component.analytics.AnalyticsEnabledVariantProperties
 import com.android.build.api.component.impl.ConsumableCreationConfigImpl
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.ApplicationVariantProperties
@@ -171,11 +170,10 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
                     && globalScope.hasDynamicFeatures()
                     && dexingType.needsMainDexList)
 
-
     override fun createUserVisibleVariantPropertiesObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledVariantProperties =
+    ): AnalyticsEnabledApplicationVariantProperties =
         projectServices.objectFactory.newInstance(
             AnalyticsEnabledApplicationVariantProperties::class.java,
             this,

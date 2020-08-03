@@ -17,8 +17,14 @@
 package com.android.build.api.apiTest.kotlin
 
 import com.android.build.api.apiTest.VariantApiBaseTest
+import com.android.build.gradle.options.BooleanOption
+import com.android.tools.build.gradle.internal.profile.VariantMethodType
+import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
+import com.google.wireless.android.sdk.stats.GradleBuildProfile
 import org.junit.Test
+import java.io.File
+import java.nio.file.Files
 import kotlin.test.assertNotNull
 
 class BuildConfigApiTests: VariantApiBaseTest(
@@ -73,6 +79,7 @@ class BuildConfigApiTests: VariantApiBaseTest(
                     """.trimIndent())
             }
         }
+        withOptions(mapOf(BooleanOption.ENABLE_PROFILE_JSON to true))
         withDocs {
             index =
                     // language=markdown
@@ -88,6 +95,15 @@ The added field is used in the MainActivity.kt file.
         check {
             assertNotNull(this)
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")
+            onVariantStats { variant ->
+                val variantPropertiesAccessList = variant.variantApiAccess.variantPropertiesAccessList
+                Truth.assertThat(variantPropertiesAccessList.size).isAtLeast(3)
+                // make sure our minSdkVersion reset has been recorded.
+                variantPropertiesAccessList.forEach {
+                    Truth.assertThat(it.type).isEqualTo(
+                        VariantPropertiesMethodType.ADD_BUILD_CONFIG_FIELD_VALUE)
+                }
+            }
         }
     }
 
@@ -157,6 +173,7 @@ The added field is used in the MainActivity.kt file.
             """.trimIndent())
             }
         }
+        withOptions(mapOf(BooleanOption.ENABLE_PROFILE_JSON to true))
         withDocs {
             index =
                     // language=markdown
@@ -172,6 +189,15 @@ The added field is used in the MainActivity.kt file.
         check {
             assertNotNull(this)
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")
+            onVariantStats { variant ->
+                val variantPropertiesAccessList = variant.variantApiAccess.variantPropertiesAccessList
+                Truth.assertThat(variantPropertiesAccessList.size).isAtLeast(1)
+                // make sure our minSdkVersion reset has been recorded.
+                variantPropertiesAccessList.forEach {
+                    Truth.assertThat(it.type).isEqualTo(
+                        VariantPropertiesMethodType.BUILD_CONFIG_FIELDS_VALUE)
+                }
+            }
         }
     }
 }

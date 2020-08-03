@@ -18,6 +18,7 @@ package com.android.build.api.component.impl
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.UnitTest
+import com.android.build.api.component.UnitTestProperties
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.VariantApiServices
 import javax.inject.Inject
@@ -26,12 +27,12 @@ open class UnitTestImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity,
     variantApiServices: VariantApiServices
-) : TestComponentImpl<UnitTestPropertiesImpl>(
+) : TestComponentImpl<UnitTestProperties>(
     variantDslInfo,
     variantConfiguration,
     variantApiServices
-), UnitTest<UnitTestPropertiesImpl> {
-    override fun executePropertiesActions(target: UnitTestPropertiesImpl) {
+), UnitTest<UnitTestProperties> {
+    override fun executePropertiesActions(target: UnitTestProperties) {
         propertiesActions.executeActions(target)
     }
 }

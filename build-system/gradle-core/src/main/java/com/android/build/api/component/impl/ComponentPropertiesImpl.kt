@@ -636,7 +636,7 @@ abstract class ComponentPropertiesImpl(
         asmClassVisitorsRegistry.configureAndLock(objectFactory, asmApiVersion)
     }
 
-    internal abstract fun createUserVisibleVariantPropertiesObject(
+    abstract fun createUserVisibleVariantPropertiesObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
     ): AnalyticsEnabledComponentProperties

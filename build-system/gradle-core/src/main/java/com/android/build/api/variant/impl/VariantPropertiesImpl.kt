@@ -16,6 +16,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.analytics.AnalyticsEnabledVariantProperties
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
@@ -29,11 +30,13 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.objectweb.asm.Type
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
@@ -149,4 +152,9 @@ abstract class VariantPropertiesImpl(
 
     override val minSdkVersion: AndroidVersion
         get() = variant.minSdkVersion
+
+    abstract override fun createUserVisibleVariantPropertiesObject(
+        projectServices: ProjectServices,
+        stats: GradleBuildVariant.Builder
+    ): AnalyticsEnabledVariantProperties
 }
