@@ -148,7 +148,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
                 ? modelCache.computeIfAbsent(
                         original,
                         provider ->
-                                IdeSourceProviderImpl.create(
+                                IdeSourceProviderImpl.createFrom(
                                         provider, modelCache::deduplicateString))
                 : null;
     }

@@ -21,6 +21,7 @@ import com.android.ide.common.gradle.model.IdeTestedTargetVariant;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.Serializable;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of a {@link TestedTargetVariant}. */
 public final class IdeTestedTargetVariantImpl implements IdeTestedTargetVariant, Serializable {
@@ -41,9 +42,10 @@ public final class IdeTestedTargetVariantImpl implements IdeTestedTargetVariant,
         myHashCode = 0;
     }
 
-    public IdeTestedTargetVariantImpl(@NonNull TestedTargetVariant variant) {
-        myTargetProjectPath = variant.getTargetProjectPath();
-        myTargetVariant = variant.getTargetVariant();
+    public IdeTestedTargetVariantImpl(
+            @NotNull String targetProjectPath, @NotNull String targetVariant) {
+        myTargetProjectPath = targetProjectPath;
+        myTargetVariant = targetVariant;
 
         myHashCode = calculateHashCode();
     }
@@ -92,5 +94,10 @@ public final class IdeTestedTargetVariantImpl implements IdeTestedTargetVariant,
                 + myTargetVariant
                 + '\''
                 + "}";
+    }
+
+    public static IdeTestedTargetVariantImpl createFrom(@NonNull TestedTargetVariant variant) {
+        return new IdeTestedTargetVariantImpl(
+                variant.getTargetProjectPath(), variant.getTargetVariant());
     }
 }

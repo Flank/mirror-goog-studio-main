@@ -23,6 +23,7 @@ import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of a {@link MavenCoordinates}. */
 public final class IdeMavenCoordinatesImpl implements IdeMavenCoordinates, Serializable {
@@ -48,22 +49,18 @@ public final class IdeMavenCoordinatesImpl implements IdeMavenCoordinates, Seria
         myHashCode = 0;
     }
 
-    public IdeMavenCoordinatesImpl(@NonNull MavenCoordinates coordinates) {
-        myGroupId = coordinates.getGroupId();
-        myArtifactId = coordinates.getArtifactId();
-        myVersion = coordinates.getVersion();
-        myPacking = coordinates.getPackaging();
-        myClassifier = coordinates.getClassifier();
+    public IdeMavenCoordinatesImpl(
+            @NotNull String groupId,
+            @NotNull String artifactId,
+            @NotNull String version,
+            @NotNull String packaging,
+            @Nullable String classifier) {
+        myGroupId = groupId;
+        myArtifactId = artifactId;
+        myVersion = version;
+        myPacking = packaging;
+        myClassifier = classifier;
 
-        myHashCode = calculateHashCode();
-    }
-
-    public IdeMavenCoordinatesImpl(@NonNull File localJar) {
-        myGroupId = LOCAL_AARS;
-        myArtifactId = localJar.getPath();
-        myVersion = "unspecified";
-        myPacking = "jar";
-        myClassifier = null;
         myHashCode = calculateHashCode();
     }
 
@@ -147,5 +144,19 @@ public final class IdeMavenCoordinatesImpl implements IdeMavenCoordinates, Seria
                 + myClassifier
                 + '\''
                 + '}';
+    }
+
+    public static IdeMavenCoordinatesImpl createFrom(@NonNull MavenCoordinates coordinates) {
+        return new IdeMavenCoordinatesImpl(
+                coordinates.getGroupId(),
+                coordinates.getArtifactId(),
+                coordinates.getVersion(),
+                coordinates.getPackaging(),
+                coordinates.getClassifier());
+    }
+
+    public static IdeMavenCoordinatesImpl createFrom(@NonNull File localJar) {
+        return new IdeMavenCoordinatesImpl(
+                LOCAL_AARS, localJar.getPath(), "unspecified", "jar", null);
     }
 }

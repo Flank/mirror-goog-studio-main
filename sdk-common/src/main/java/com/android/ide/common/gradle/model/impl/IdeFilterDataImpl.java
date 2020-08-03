@@ -20,6 +20,7 @@ import com.android.build.FilterData;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.Serializable;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of a {@link FilterData}. */
 public final class IdeFilterDataImpl implements FilterData, Serializable {
@@ -40,9 +41,9 @@ public final class IdeFilterDataImpl implements FilterData, Serializable {
         myHashCode = 0;
     }
 
-    public IdeFilterDataImpl(@NonNull FilterData data) {
-        myIdentifier = data.getIdentifier();
-        myFilterType = data.getFilterType();
+    public IdeFilterDataImpl(@NotNull String identifier, @NotNull String filterType) {
+        myIdentifier = identifier;
+        myFilterType = filterType;
 
         myHashCode = calculateHashCode();
     }
@@ -91,5 +92,9 @@ public final class IdeFilterDataImpl implements FilterData, Serializable {
                 + myFilterType
                 + '\''
                 + "}";
+    }
+
+    public static IdeFilterDataImpl createFrom(@NonNull FilterData data) {
+        return new IdeFilterDataImpl(data.getIdentifier(), data.getFilterType());
     }
 }

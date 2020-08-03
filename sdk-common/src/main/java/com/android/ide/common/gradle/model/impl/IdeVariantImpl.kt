@@ -32,63 +32,38 @@ import java.io.Serializable
 import java.util.Objects
 
 /** Creates a deep copy of a [Variant].  */
-class IdeVariantImpl : IdeVariant, Serializable {
-  override val name: String
-  override val displayName: String
-  override val mainArtifact: IdeAndroidArtifact
-  override val extraAndroidArtifacts: List<IdeAndroidArtifact>
-  override val extraJavaArtifacts: List<IdeJavaArtifact>
-  override val buildType: String
-  override val productFlavors: List<String>
-  override val mergedFlavor: IdeProductFlavor
-  override val testedTargetVariants: List<IdeTestedTargetVariant>
-  private val hashCode: Int
-  override val instantAppCompatible: Boolean
+class IdeVariantImpl(
+  override val name: String,
+  override val displayName: String,
+  override val mainArtifact: IdeAndroidArtifact,
+  override val extraAndroidArtifacts: List<IdeAndroidArtifact>,
+  override val extraJavaArtifacts: List<IdeJavaArtifact>,
+  override val buildType: String,
+  override val productFlavors: List<String>,
+  override val mergedFlavor: IdeProductFlavor,
+  override val testedTargetVariants: List<IdeTestedTargetVariant>,
+  override val instantAppCompatible: Boolean,
   private val desugaredMethods: List<String>
+
+) : IdeVariant, Serializable {
+
+  private val hashCode: Int = calculateHashCode()
 
   // Used for serialization by the IDE.
   @Suppress("unused")
-  internal constructor() {
-    name = ""
-    displayName = ""
-    mainArtifact = IdeAndroidArtifactImpl()
-    extraAndroidArtifacts = mutableListOf()
-    extraJavaArtifacts = mutableListOf()
-    buildType = ""
-    productFlavors = mutableListOf()
-    mergedFlavor = IdeProductFlavorImpl()
-    testedTargetVariants = mutableListOf()
-    instantAppCompatible = false
+  internal constructor() : this(
+    name = "",
+    displayName = "",
+    mainArtifact = IdeAndroidArtifactImpl(),
+    extraAndroidArtifacts = mutableListOf(),
+    extraJavaArtifacts = mutableListOf(),
+    buildType = "",
+    productFlavors = mutableListOf(),
+    mergedFlavor = IdeProductFlavorImpl(),
+    testedTargetVariants = mutableListOf(),
+    instantAppCompatible = false,
     desugaredMethods = mutableListOf()
-    hashCode = 0
-  }
-
-  constructor(variant: Variant, modelCache: ModelCache, dependenciesFactory: IdeDependenciesFactory, modelVersion: GradleVersion?) {
-    name = variant.name
-    displayName = variant.displayName
-    mainArtifact = modelCache.computeIfAbsent(variant.mainArtifact) { artifact: AndroidArtifact ->
-      IdeAndroidArtifactImpl(artifact, modelCache, dependenciesFactory, modelVersion)
-    }
-    extraAndroidArtifacts = IdeModel.copy(variant.extraAndroidArtifacts, modelCache) { artifact: AndroidArtifact ->
-      IdeAndroidArtifactImpl(artifact, modelCache, dependenciesFactory, modelVersion)
-    }
-    extraJavaArtifacts = IdeModel.copy(variant.extraJavaArtifacts, modelCache) { artifact: JavaArtifact ->
-      IdeJavaArtifactImpl(artifact, modelCache, dependenciesFactory, modelVersion)
-    }
-    buildType = variant.buildType
-    productFlavors = ImmutableList.copyOf(variant.productFlavors)
-    mergedFlavor = modelCache.computeIfAbsent(variant.mergedFlavor) { flavor: ProductFlavor ->
-      IdeProductFlavorImpl(
-        flavor,
-        modelCache
-      )
-    }
-    testedTargetVariants = getTestedTargetVariants(variant, modelCache)
-    instantAppCompatible = (modelVersion != null && modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) && variant.isInstantAppCompatible)
-    desugaredMethods = ImmutableList.copyOf(
-      IdeModel.copyNewPropertyNonNull({ variant.desugaredMethods }, emptyList()))
-    hashCode = calculateHashCode()
-  }
+  )
 
   override val testArtifacts: List<IdeBaseArtifact>
     get() = ImmutableList.copyOf(
@@ -149,12 +124,43 @@ class IdeVariantImpl : IdeVariant, Serializable {
     private fun getTestedTargetVariants(variant: Variant, modelCache: ModelCache): List<IdeTestedTargetVariantImpl> {
       return try {
         IdeModel.copy(variant.testedTargetVariants, modelCache) { targetVariant: TestedTargetVariant ->
-          IdeTestedTargetVariantImpl(targetVariant)
+          IdeTestedTargetVariantImpl(targetVariant.targetProjectPath, targetVariant.targetVariant)
         }
       }
       catch (e: UnsupportedOperationException) {
         emptyList()
       }
     }
+
+    @JvmStatic
+    fun createFrom(
+      variant: Variant,
+                   modelCache: ModelCache,
+                   dependenciesFactory: IdeDependenciesFactory,
+                   modelVersion: GradleVersion?
+    ): IdeVariantImpl =
+      IdeVariantImpl(
+        name = variant.name,
+        displayName = variant.displayName,
+        mainArtifact = modelCache.computeIfAbsent(variant.mainArtifact) { artifact: AndroidArtifact ->
+          IdeAndroidArtifactImpl(artifact, modelCache, dependenciesFactory, modelVersion)
+        },
+        extraAndroidArtifacts = IdeModel.copy(variant.extraAndroidArtifacts, modelCache) { artifact: AndroidArtifact ->
+          IdeAndroidArtifactImpl(artifact, modelCache, dependenciesFactory, modelVersion)
+        },
+        extraJavaArtifacts = IdeModel.copy(variant.extraJavaArtifacts, modelCache) { artifact: JavaArtifact ->
+          IdeJavaArtifactImpl(artifact, modelCache, dependenciesFactory, modelVersion)
+        },
+        buildType = variant.buildType,
+        productFlavors = ImmutableList.copyOf(variant.productFlavors),
+        mergedFlavor = modelCache.computeIfAbsent(variant.mergedFlavor) { flavor: ProductFlavor ->
+          IdeProductFlavorImpl(flavor, modelCache)
+        },
+        testedTargetVariants = getTestedTargetVariants(variant, modelCache),
+        instantAppCompatible = (modelVersion != null &&
+                                modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) &&
+                                variant.isInstantAppCompatible),
+        desugaredMethods = ImmutableList.copyOf(IdeModel.copyNewPropertyNonNull({ variant.desugaredMethods }, emptyList()))
+      )
   }
 }

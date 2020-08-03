@@ -39,9 +39,9 @@ public class IdeTestOptionsImpl implements IdeTestOptions, Serializable {
         myHashCode = 0;
     }
 
-    public IdeTestOptionsImpl(@NonNull TestOptions testOptions) {
-        myAnimationsDisabled = testOptions.getAnimationsDisabled();
-        myExecutionEnum = convertExecution(testOptions.getExecution());
+    public IdeTestOptionsImpl(boolean animationsDisabled, @Nullable Execution executionEnum) {
+        myAnimationsDisabled = animationsDisabled;
+        myExecutionEnum = executionEnum;
         myHashCode = calculateHashCode();
     }
 
@@ -89,7 +89,7 @@ public class IdeTestOptionsImpl implements IdeTestOptions, Serializable {
     }
 
     @Nullable
-    private static Execution convertExecution(@Nullable TestOptions.Execution execution) {
+    public static Execution convertExecution(@Nullable TestOptions.Execution execution) {
         if (execution == null) return null;
         switch (execution) {
             case HOST:
@@ -101,5 +101,10 @@ public class IdeTestOptionsImpl implements IdeTestOptions, Serializable {
             default:
                 throw new IllegalStateException("Unknown execution option: " + execution);
         }
+    }
+
+    public static IdeTestOptionsImpl createFrom(@NonNull TestOptions testOptions) {
+        return new IdeTestOptionsImpl(
+                testOptions.getAnimationsDisabled(), convertExecution(testOptions.getExecution()));
     }
 }

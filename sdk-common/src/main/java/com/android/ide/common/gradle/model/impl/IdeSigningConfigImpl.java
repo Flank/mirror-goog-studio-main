@@ -23,6 +23,7 @@ import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of a {@link SigningConfig}. */
 public final class IdeSigningConfigImpl implements IdeSigningConfig, Serializable {
@@ -48,12 +49,17 @@ public final class IdeSigningConfigImpl implements IdeSigningConfig, Serializabl
         myHashCode = 0;
     }
 
-    public IdeSigningConfigImpl(@NonNull SigningConfig config) {
-        myName = config.getName();
-        myStoreFile = config.getStoreFile();
-        myStorePassword = config.getStorePassword();
-        myKeyAlias = config.getKeyAlias();
-        myV1SigningEnabled = IdeModel.copyNewProperty(config::isV1SigningEnabled, null);
+    public IdeSigningConfigImpl(
+            @NotNull String name,
+            @Nullable File storeFile,
+            @Nullable String storePassword,
+            @Nullable String keyAlias,
+            @Nullable Boolean v1SigningEnabled) {
+        myName = name;
+        myStoreFile = storeFile;
+        myStorePassword = storePassword;
+        myKeyAlias = keyAlias;
+        myV1SigningEnabled = v1SigningEnabled;
 
         myHashCode = calculateHashCode();
     }
@@ -155,5 +161,14 @@ public final class IdeSigningConfigImpl implements IdeSigningConfig, Serializabl
                 + ", myV1SigningEnabled="
                 + myV1SigningEnabled
                 + '}';
+    }
+
+    public static IdeSigningConfigImpl createFrom(@NonNull SigningConfig config) {
+        return new IdeSigningConfigImpl(
+                config.getName(),
+                config.getStoreFile(),
+                config.getStorePassword(),
+                config.getKeyAlias(),
+                IdeModel.copyNewProperty(config::isV1SigningEnabled, null));
     }
 }

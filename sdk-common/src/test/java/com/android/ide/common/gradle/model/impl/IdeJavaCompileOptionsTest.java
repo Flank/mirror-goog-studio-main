@@ -43,7 +43,7 @@ public class IdeJavaCompileOptionsTest {
     @Test
     public void serialization() throws Exception {
         IdeJavaCompileOptionsImpl compileOptions =
-                new IdeJavaCompileOptionsImpl(new JavaCompileOptionsStub());
+                IdeJavaCompileOptionsImpl.createFrom(new JavaCompileOptionsStub());
         byte[] bytes = Serialization.serialize(compileOptions);
         Object o = Serialization.deserialize(bytes);
         assertEquals(compileOptions, o);
@@ -52,7 +52,7 @@ public class IdeJavaCompileOptionsTest {
     @Test
     public void constructor() throws Throwable {
         JavaCompileOptions original = new JavaCompileOptionsStub();
-        IdeJavaCompileOptionsImpl copy = new IdeJavaCompileOptionsImpl(original);
+        IdeJavaCompileOptionsImpl copy = IdeJavaCompileOptionsImpl.createFrom(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

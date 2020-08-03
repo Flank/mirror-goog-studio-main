@@ -24,7 +24,9 @@ import com.android.ide.common.gradle.model.IdeSourceProviderContainer;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of a {@link BuildTypeContainer}. */
 public final class IdeBuildTypeContainerImpl implements IdeBuildTypeContainer, Serializable {
@@ -47,25 +49,12 @@ public final class IdeBuildTypeContainerImpl implements IdeBuildTypeContainer, S
     }
 
     public IdeBuildTypeContainerImpl(
-            @NonNull BuildTypeContainer container, @NonNull ModelCache modelCache) {
-        myBuildType =
-                modelCache.computeIfAbsent(
-                        container.getBuildType(),
-                        buildType -> new IdeBuildTypeImpl(buildType, modelCache));
-        mySourceProvider =
-                modelCache.computeIfAbsent(
-                        container.getSourceProvider(),
-                        provider ->
-                                IdeSourceProviderImpl.create(
-                                        provider, modelCache::deduplicateString));
-        myExtraSourceProviders =
-                IdeModel.copy(
-                        container.getExtraSourceProviders(),
-                        modelCache,
-                        sourceProviderContainer ->
-                                new IdeSourceProviderContainerImpl(
-                                        sourceProviderContainer, modelCache));
-
+            @NotNull IdeBuildTypeImpl buildType,
+            @NotNull IdeSourceProviderImpl sourceProvider,
+            @NotNull List<IdeSourceProviderContainer> extraSourceProviders) {
+        myBuildType = buildType;
+        mySourceProvider = sourceProvider;
+        myExtraSourceProviders = extraSourceProviders;
         myHashCode = calculateHashCode();
     }
 
@@ -120,5 +109,24 @@ public final class IdeBuildTypeContainerImpl implements IdeBuildTypeContainer, S
                 + ", myExtraSourceProviders="
                 + myExtraSourceProviders
                 + '}';
+    }
+
+    public static IdeBuildTypeContainerImpl createFrom(
+            @NonNull BuildTypeContainer container, @NonNull ModelCache modelCache) {
+        return new IdeBuildTypeContainerImpl(
+                modelCache.computeIfAbsent(
+                        container.getBuildType(),
+                        buildType -> new IdeBuildTypeImpl(buildType, modelCache)),
+                modelCache.computeIfAbsent(
+                        container.getSourceProvider(),
+                        provider ->
+                                IdeSourceProviderImpl.createFrom(
+                                        provider, modelCache::deduplicateString)),
+                IdeModel.copy(
+                        container.getExtraSourceProviders(),
+                        modelCache,
+                        sourceProviderContainer ->
+                                IdeSourceProviderContainerImpl.createFrom(
+                                        sourceProviderContainer, modelCache)));
     }
 }

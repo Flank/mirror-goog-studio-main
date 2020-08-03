@@ -43,7 +43,7 @@ data class IdeSourceProviderImpl(
 
   companion object {
     @JvmStatic
-    fun create(provider: SourceProvider, deduplicate: String.() -> String): IdeSourceProviderImpl {
+    fun createFrom(provider: SourceProvider, deduplicate: String.() -> String): IdeSourceProviderImpl {
       val folder: File? = provider.manifestFile.parentFile
 
       fun File.makeRelativeAndDeduplicate(): String = (if (folder != null) relativeToOrSelf(folder) else this).path.deduplicate()
@@ -75,8 +75,7 @@ data class IdeSourceProviderImpl(
 
     @JvmStatic
     @VisibleForTesting
-    fun create(provider: SourceProvider): IdeSourceProvider =
-      create(provider, deduplicate = { this })
+    fun createFrom(provider: SourceProvider): IdeSourceProvider = createFrom(provider, deduplicate = { this })
   }
 
   // Used for serialization by the IDE.

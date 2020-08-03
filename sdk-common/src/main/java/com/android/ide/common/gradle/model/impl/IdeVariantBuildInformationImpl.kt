@@ -28,16 +28,19 @@ data class IdeVariantBuildInformationImpl(
   override val apkFromBundleTaskName: String?,
   override val apkFromBundleTaskOutputListingFile: String?
 ) : IdeVariantBuildInformation, Serializable {
-  constructor(model: VariantBuildInformation) : this(
-    model.variantName,
-    model.assembleTaskName,
-    model.assembleTaskOutputListingFile,
-    model.bundleTaskName,
-    model.bundleTaskOutputListingFile,
-    model.apkFromBundleTaskName,
-    model.apkFromBundleTaskOutputListingFile)
 
   companion object {
     private const val serialVersionUID: Long = 1L
+
+    @JvmStatic
+    fun createFrom(model: VariantBuildInformation): IdeVariantBuildInformation = IdeVariantBuildInformationImpl(
+      variantName = model.variantName,
+      assembleTaskName = model.assembleTaskName,
+      assembleTaskOutputListingFile = model.assembleTaskOutputListingFile,
+      bundleTaskName = model.bundleTaskName,
+      bundleTaskOutputListingFile = model.bundleTaskOutputListingFile,
+      apkFromBundleTaskName = model.apkFromBundleTaskName,
+      apkFromBundleTaskOutputListingFile = model.apkFromBundleTaskOutputListingFile
+    )
   }
 }

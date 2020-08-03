@@ -285,14 +285,6 @@
         id="VisibleForTests"
         message="This method should only be accessed from tests or within private scope">
         <location
-            file="src/main/java/com/android/ide/common/gradle/model/impl/IdeAndroidProjectImpl.java"
-            line="202"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
             file="src/main/java/com/android/ide/common/blame/parser/aapt/SkippingHiddenFileParser.java"
             line="28"/>
     </issue>
@@ -414,7 +406,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/ide/common/gradle/model/impl/IdeAndroidProjectImpl.java"
-            line="725"/>
+            line="740"/>
     </issue>
 
     <issue
@@ -486,7 +478,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/ide/common/gradle/model/impl/IdeOutputFileImpl.java"
-            line="188"/>
+            line="189"/>
     </issue>
 
     <issue
@@ -494,7 +486,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/ide/common/gradle/model/impl/IdeSigningConfigImpl.java"
-            line="127"/>
+            line="133"/>
     </issue>
 
     <issue

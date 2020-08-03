@@ -23,6 +23,7 @@ import com.google.common.annotations.VisibleForTesting;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Set;
+import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of a {@link ClassField}. */
 public final class IdeClassFieldImpl implements IdeClassField, Serializable {
@@ -45,10 +46,10 @@ public final class IdeClassFieldImpl implements IdeClassField, Serializable {
         myHashCode = 0;
     }
 
-    public IdeClassFieldImpl(@NonNull ClassField classField) {
-        myName = classField.getName();
-        myType = classField.getType();
-        myValue = classField.getValue();
+    public IdeClassFieldImpl(@NotNull String name, @NotNull String type, @NotNull String value) {
+        myName = name;
+        myType = type;
+        myValue = value;
 
         myHashCode = calculateHashCode();
     }
@@ -119,5 +120,10 @@ public final class IdeClassFieldImpl implements IdeClassField, Serializable {
                 + myValue
                 + '\''
                 + '}';
+    }
+
+    public static IdeClassFieldImpl createFrom(@NonNull ClassField classField) {
+        return new IdeClassFieldImpl(
+                classField.getName(), classField.getType(), classField.getValue());
     }
 }

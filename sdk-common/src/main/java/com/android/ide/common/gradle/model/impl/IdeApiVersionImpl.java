@@ -21,6 +21,7 @@ import com.android.builder.model.ApiVersion;
 import com.android.ide.common.gradle.model.IdeApiVersion;
 import java.io.Serializable;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of an {@link IdeApiVersion}. */
 public final class IdeApiVersionImpl implements IdeApiVersion, Serializable {
@@ -42,10 +43,10 @@ public final class IdeApiVersionImpl implements IdeApiVersion, Serializable {
         myHashCode = 0;
     }
 
-    public IdeApiVersionImpl(@NonNull ApiVersion version) {
-        myApiString = version.getApiString();
-        myCodename = version.getCodename();
-        myApiLevel = version.getApiLevel();
+    public IdeApiVersionImpl(@NotNull String apiString, @Nullable String codename, int apiLevel) {
+        myApiString = apiString;
+        myCodename = codename;
+        myApiLevel = apiLevel;
 
         myHashCode = calculateHashCode();
     }
@@ -102,5 +103,10 @@ public final class IdeApiVersionImpl implements IdeApiVersion, Serializable {
                 + ", myApiLevel="
                 + myApiLevel
                 + '}';
+    }
+
+    public static IdeApiVersionImpl createFrom(@NonNull ApiVersion version) {
+        return new IdeApiVersionImpl(
+                version.getApiString(), version.getCodename(), version.getApiLevel());
     }
 }

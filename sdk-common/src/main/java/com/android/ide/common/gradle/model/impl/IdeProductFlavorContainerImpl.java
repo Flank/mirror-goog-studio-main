@@ -24,7 +24,9 @@ import com.android.ide.common.gradle.model.IdeSourceProviderContainer;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of a {@link ProductFlavorContainer}. */
 public final class IdeProductFlavorContainerImpl implements IdeProductFlavorContainer, Serializable {
@@ -45,25 +47,13 @@ public final class IdeProductFlavorContainerImpl implements IdeProductFlavorCont
         myHashCode = 0;
     }
 
-    public IdeProductFlavorContainerImpl(
-            @NonNull ProductFlavorContainer container, @NonNull ModelCache modelCache) {
-        myProductFlavor =
-                modelCache.computeIfAbsent(
-                        container.getProductFlavor(),
-                        flavor -> new IdeProductFlavorImpl(flavor, modelCache));
-        mySourceProvider =
-                modelCache.computeIfAbsent(
-                        container.getSourceProvider(),
-                        provider ->
-                                IdeSourceProviderImpl.create(
-                                        provider, modelCache::deduplicateString));
-        myExtraSourceProviders =
-                IdeModel.copy(
-                        container.getExtraSourceProviders(),
-                        modelCache,
-                        sourceProviderContainer ->
-                                new IdeSourceProviderContainerImpl(
-                                        sourceProviderContainer, modelCache));
+    private IdeProductFlavorContainerImpl(
+            @NotNull IdeProductFlavorImpl productFlavor,
+            @NotNull IdeSourceProviderImpl sourceProvider,
+            @NotNull List<IdeSourceProviderContainer> extraSourceProviders) {
+        myProductFlavor = productFlavor;
+        mySourceProvider = sourceProvider;
+        myExtraSourceProviders = extraSourceProviders;
 
         myHashCode = calculateHashCode();
     }
@@ -119,5 +109,24 @@ public final class IdeProductFlavorContainerImpl implements IdeProductFlavorCont
                 + ", myExtraSourceProviders="
                 + myExtraSourceProviders
                 + "}";
+    }
+
+    public static IdeProductFlavorContainerImpl createFrom(
+            @NonNull ProductFlavorContainer container, @NonNull ModelCache modelCache) {
+        return new IdeProductFlavorContainerImpl(
+                modelCache.computeIfAbsent(
+                        container.getProductFlavor(),
+                        flavor -> new IdeProductFlavorImpl(flavor, modelCache)),
+                modelCache.computeIfAbsent(
+                        container.getSourceProvider(),
+                        provider ->
+                                IdeSourceProviderImpl.createFrom(
+                                        provider, modelCache::deduplicateString)),
+                IdeModel.copy(
+                        container.getExtraSourceProviders(),
+                        modelCache,
+                        sourceProviderContainer ->
+                                IdeSourceProviderContainerImpl.createFrom(
+                                        sourceProviderContainer, modelCache)));
     }
 }

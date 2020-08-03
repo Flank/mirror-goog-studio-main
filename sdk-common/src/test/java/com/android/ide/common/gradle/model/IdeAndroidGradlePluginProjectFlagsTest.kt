@@ -76,8 +76,7 @@ class IdeAndroidGradlePluginProjectFlagsTest {
         assertThat(flags.transitiveRClasses).isFalse()
     }
 
-    private fun parse(vararg flags: Pair<AndroidGradlePluginProjectFlags.BooleanFlag, Boolean>): IdeAndroidGradlePluginProjectFlagsImpl {
-        return IdeAndroidGradlePluginProjectFlagsImpl(
-          AndroidGradlePluginProjectFlagsStub(mapOf(*flags)))
+    private fun parse(vararg flags: Pair<AndroidGradlePluginProjectFlags.BooleanFlag, Boolean>): IdeAndroidGradlePluginProjectFlags {
+        return IdeAndroidGradlePluginProjectFlagsImpl.createFrom(AndroidGradlePluginProjectFlagsStub(mapOf(*flags)))
     }
 }

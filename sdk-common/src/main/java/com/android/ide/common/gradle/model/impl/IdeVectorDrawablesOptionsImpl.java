@@ -38,8 +38,8 @@ public final class IdeVectorDrawablesOptionsImpl
         myHashCode = 0;
     }
 
-    public IdeVectorDrawablesOptionsImpl(@NonNull VectorDrawablesOptions options) {
-        myUseSupportLibrary = options.getUseSupportLibrary();
+    public IdeVectorDrawablesOptionsImpl(Boolean useSupportLibrary) {
+        myUseSupportLibrary = useSupportLibrary;
 
         myHashCode = calculateHashCode();
     }
@@ -77,5 +77,10 @@ public final class IdeVectorDrawablesOptionsImpl
                 + ", myUseSupportLibrary="
                 + myUseSupportLibrary
                 + "}";
+    }
+
+    public static IdeVectorDrawablesOptionsImpl createFrom(
+            @NonNull VectorDrawablesOptions options) {
+        return new IdeVectorDrawablesOptionsImpl(options.getUseSupportLibrary());
     }
 }

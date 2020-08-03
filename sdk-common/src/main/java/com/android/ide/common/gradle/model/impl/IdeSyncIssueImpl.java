@@ -22,6 +22,7 @@ import com.android.ide.common.gradle.model.IdeSyncIssue;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of a {@link SyncIssue}. */
 public final class IdeSyncIssueImpl implements IdeSyncIssue, Serializable {
@@ -47,12 +48,17 @@ public final class IdeSyncIssueImpl implements IdeSyncIssue, Serializable {
         myHashCode = 0;
     }
 
-    public IdeSyncIssueImpl(@NonNull SyncIssue issue) {
-        myMessage = issue.getMessage();
-        myMultiLineMessage = IdeModel.copyNewProperty(issue::getMultiLineMessage, null);
-        myData = issue.getData();
-        mySeverity = issue.getSeverity();
-        myType = issue.getType();
+    public IdeSyncIssueImpl(
+            @NotNull String message,
+            @Nullable List<String> multiLineMessage,
+            @Nullable String data,
+            int severity,
+            int type) {
+        myMessage = message;
+        myMultiLineMessage = multiLineMessage;
+        myData = data;
+        mySeverity = severity;
+        myType = type;
 
         myHashCode = calculateHashCode();
     }
@@ -124,5 +130,14 @@ public final class IdeSyncIssueImpl implements IdeSyncIssue, Serializable {
                 + ", myType="
                 + myType
                 + "}";
+    }
+
+    public static IdeSyncIssueImpl createFrom(@NonNull SyncIssue issue) {
+        return new IdeSyncIssueImpl(
+                issue.getMessage(),
+                IdeModel.copyNewProperty(issue::getMultiLineMessage, null),
+                issue.getData(),
+                issue.getSeverity(),
+                issue.getType());
     }
 }

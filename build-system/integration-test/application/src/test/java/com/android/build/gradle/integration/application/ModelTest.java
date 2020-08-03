@@ -180,7 +180,7 @@ public class ModelTest {
                         .fetchAndroidProjects()
                         .getOnlyModel();
         IdeAndroidGradlePluginProjectFlags flags =
-                new IdeAndroidGradlePluginProjectFlagsImpl(model.getFlags());
+                IdeAndroidGradlePluginProjectFlagsImpl.createFrom(model.getFlags());
         assertThat(flags.getApplicationRClassConstantIds()).isTrue();
         assertThat(flags.getTestRClassConstantIds()).isTrue();
         assertThat(flags.getTransitiveRClasses()).isTrue();
@@ -195,7 +195,7 @@ public class ModelTest {
                         .fetchAndroidProjects()
                         .getOnlyModel();
         IdeAndroidGradlePluginProjectFlags flags =
-                new IdeAndroidGradlePluginProjectFlagsImpl(model.getFlags());
+                IdeAndroidGradlePluginProjectFlagsImpl.createFrom(model.getFlags());
         assertThat(flags.getApplicationRClassConstantIds()).isFalse();
         assertThat(flags.getTestRClassConstantIds()).isFalse();
         assertThat(flags.getTransitiveRClasses()).isFalse();

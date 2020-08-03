@@ -21,6 +21,7 @@ import com.android.ide.common.gradle.model.IdeSourceProvider;
 import com.android.ide.common.gradle.model.IdeSourceProviderContainer;
 import java.io.Serializable;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of a {@link SourceProviderContainer}. */
 public final class IdeSourceProviderContainerImpl
@@ -41,14 +42,9 @@ public final class IdeSourceProviderContainerImpl
     }
 
     public IdeSourceProviderContainerImpl(
-            @NonNull SourceProviderContainer container, @NonNull ModelCache modelCache) {
-        myArtifactName = container.getArtifactName();
-        mySourceProvider =
-                modelCache.computeIfAbsent(
-                        container.getSourceProvider(),
-                        provider ->
-                                IdeSourceProviderImpl.create(
-                                        provider, modelCache::deduplicateString));
+            @NotNull String artifactName, @NotNull IdeSourceProviderImpl sourceProvider) {
+        myArtifactName = artifactName;
+        mySourceProvider = sourceProvider;
 
         myHashCode = calculateHashCode();
     }
@@ -96,5 +92,16 @@ public final class IdeSourceProviderContainerImpl
                 + ", mySourceProvider="
                 + mySourceProvider
                 + '}';
+    }
+
+    public static IdeSourceProviderContainerImpl createFrom(
+            @NonNull SourceProviderContainer container, @NonNull ModelCache modelCache) {
+        return new IdeSourceProviderContainerImpl(
+                container.getArtifactName(),
+                modelCache.computeIfAbsent(
+                        container.getSourceProvider(),
+                        provider ->
+                                IdeSourceProviderImpl.createFrom(
+                                        provider, modelCache::deduplicateString)));
     }
 }

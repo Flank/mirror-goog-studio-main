@@ -34,9 +34,8 @@ class GradleModelConverterUtilTest {
     @Test
     fun testClassFieldsToDynamicResourceValues() {
         val input = mapOf(
-            "foo" to IdeClassFieldImpl(ClassFieldStub(ResourceType.STRING.getName(), "foo", "baz")),
-            "foo2" to IdeClassFieldImpl(ClassFieldStub(ResourceType.INTEGER.getName(), "foo2", "123"))
-        )
+          "foo" to IdeClassFieldImpl.createFrom(ClassFieldStub(ResourceType.STRING.getName(), "foo", "baz")),
+          "foo2" to IdeClassFieldImpl.createFrom(ClassFieldStub(ResourceType.INTEGER.getName(), "foo2", "123")))
         val output = classFieldsToDynamicResourceValues(input)
 
         val expectedOutput = mapOf(

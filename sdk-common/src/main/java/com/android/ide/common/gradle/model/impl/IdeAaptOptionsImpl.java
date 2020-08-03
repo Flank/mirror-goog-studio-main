@@ -20,9 +20,9 @@ import static com.android.builder.model.AaptOptions.Namespacing.DISABLED;
 import com.android.annotations.NonNull;
 import com.android.builder.model.AaptOptions;
 import com.android.ide.common.gradle.model.IdeAaptOptions;
-import com.google.common.annotations.VisibleForTesting;
 import java.io.Serializable;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
 
 public class IdeAaptOptionsImpl implements IdeAaptOptions, Serializable {
 
@@ -30,26 +30,11 @@ public class IdeAaptOptionsImpl implements IdeAaptOptions, Serializable {
 
     // Used for serialization by the IDE.
     IdeAaptOptionsImpl() {
-        namespacing = Namespacing.DISABLED;
+        this(Namespacing.DISABLED);
     }
 
-    // copyNewProperty won't return null for a non-null getter with a non-null default value.
-    @SuppressWarnings("ConstantConditions")
-    @VisibleForTesting
-    public IdeAaptOptionsImpl(@NonNull AaptOptions original) {
-        AaptOptions.Namespacing namespacing =
-                IdeModel.copyNewProperty(original::getNamespacing, DISABLED);
-        switch (namespacing) {
-            case DISABLED:
-                this.namespacing = Namespacing.DISABLED;
-                break;
-            case REQUIRED:
-                this.namespacing = Namespacing.REQUIRED;
-                break;
-            default:
-                // No forward compatibility.
-                throw new IllegalStateException("Unknown namespacing option: " + namespacing);
-        }
+    public IdeAaptOptionsImpl(@NotNull Namespacing namespacing) {
+        this.namespacing = namespacing;
     }
 
     @Override
@@ -73,5 +58,28 @@ public class IdeAaptOptionsImpl implements IdeAaptOptions, Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(namespacing);
+    }
+
+    public static IdeAaptOptionsImpl createFrom(@NonNull AaptOptions original) {
+        return new IdeAaptOptionsImpl(
+                convertNamespacing(
+                        IdeModel.copyNewPropertyNonNull(original::getNamespacing, DISABLED)));
+    }
+
+    @NotNull
+    private static Namespacing convertNamespacing(AaptOptions.Namespacing namespacing) {
+        Namespacing convertedNamespacing;
+        switch (namespacing) {
+            case DISABLED:
+                convertedNamespacing = Namespacing.DISABLED;
+                break;
+            case REQUIRED:
+                convertedNamespacing = Namespacing.REQUIRED;
+                break;
+            default:
+                // No forward compatibility.
+                throw new IllegalStateException("Unknown namespacing option: " + namespacing);
+        }
+        return convertedNamespacing;
     }
 }

@@ -111,7 +111,7 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
             return null;
         }
         return modelCache.computeIfAbsent(
-                vectorDrawables, options -> new IdeVectorDrawablesOptionsImpl(options));
+                vectorDrawables, options -> IdeVectorDrawablesOptionsImpl.createFrom(options));
     }
 
     @Nullable
@@ -119,7 +119,7 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
             @NonNull ModelCache modelCache, @Nullable ApiVersion apiVersion) {
         if (apiVersion != null) {
             return modelCache.computeIfAbsent(
-                    apiVersion, version -> new IdeApiVersionImpl(version));
+                    apiVersion, version -> IdeApiVersionImpl.createFrom(version));
         }
         return null;
     }
@@ -129,7 +129,7 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
             @NonNull ModelCache modelCache, @Nullable SigningConfig signingConfig) {
         if (signingConfig != null) {
             return modelCache.computeIfAbsent(
-                    signingConfig, config -> new IdeSigningConfigImpl(config));
+                    signingConfig, config -> IdeSigningConfigImpl.createFrom(config));
         }
         return null;
     }

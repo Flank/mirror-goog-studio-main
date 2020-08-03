@@ -20,21 +20,21 @@ import com.android.ide.common.gradle.model.IdeViewBindingOptions
 import java.io.Serializable
 import java.util.Objects
 
-class IdeViewBindingOptionsImpl : IdeViewBindingOptions, Serializable {
+class IdeViewBindingOptionsImpl(
   override val enabled: Boolean
-  val hashCode : Int
+) : IdeViewBindingOptions, Serializable {
 
-  constructor(model: ViewBindingOptions) {
-    enabled = model.isEnabled
-    hashCode = calculateHashCode()
-  }
+  val hashCode: Int = calculateHashCode()
 
   // Used for serialization by the IDE.
-  constructor() {
-    enabled = false
-    hashCode = 0
-  }
+  constructor() : this(enabled = false)
 
+  companion object {
+    @JvmStatic
+    fun createFrom(model: ViewBindingOptions): IdeViewBindingOptionsImpl = IdeViewBindingOptionsImpl(
+      enabled = model.isEnabled
+    )
+  }
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true

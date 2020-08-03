@@ -123,22 +123,35 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         IdeProductFlavorContainer defaultConfigCopy =
                 modelCache.computeIfAbsent(
                         project.getDefaultConfig(),
-                        container -> new IdeProductFlavorContainerImpl(container, modelCache));
+                        container ->
+                                IdeProductFlavorContainerImpl.createFrom(container, modelCache));
 
         Collection<IdeBuildTypeContainer> buildTypesCopy =
                 IdeModel.copy(
                         project.getBuildTypes(),
                         modelCache,
-                        container -> new IdeBuildTypeContainerImpl(container, modelCache));
+                        container -> IdeBuildTypeContainerImpl.createFrom(container, modelCache));
 
         Collection<IdeProductFlavorContainer> productFlavorCopy =
                 IdeModel.copy(
                         project.getProductFlavors(),
                         modelCache,
-                        container -> new IdeProductFlavorContainerImpl(container, modelCache));
+                        container ->
+                                IdeProductFlavorContainerImpl.createFrom(container, modelCache));
 
         Collection<IdeSyncIssue> syncIssuesCopy =
-                new ArrayList<>(IdeModel.copy(syncIssues, modelCache, IdeSyncIssueImpl::new));
+                new ArrayList<>(
+                        IdeModel.copy(
+                                syncIssues,
+                                modelCache,
+                                issue ->
+                                        new IdeSyncIssueImpl(
+                                                issue.getMessage(),
+                                                IdeModel.copyNewProperty(
+                                                        issue::getMultiLineMessage, null),
+                                                issue.getData(),
+                                                issue.getSeverity(),
+                                                issue.getType())));
 
         Collection<IdeVariant> variantsCopy =
                 new ArrayList<IdeVariant>(
@@ -146,7 +159,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                                 (variants == null) ? project.getVariants() : variants,
                                 modelCache,
                                 variant ->
-                                        new IdeVariantImpl(
+                                        IdeVariantImpl.createFrom(
                                                 variant,
                                                 modelCache,
                                                 dependenciesFactory,
@@ -179,12 +192,12 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 IdeModel.copy(
                         project.getSigningConfigs(),
                         modelCache,
-                        config -> new IdeSigningConfigImpl(config));
+                        config -> IdeSigningConfigImpl.createFrom(config));
 
         IdeLintOptions lintOptionsCopy =
                 modelCache.computeIfAbsent(
                         project.getLintOptions(),
-                        options -> new IdeLintOptionsImpl(options, parsedModelVersion));
+                        options -> IdeLintOptionsImpl.createFrom(options, parsedModelVersion));
 
         // We need to use the unresolved dependencies to support older versions of the Android
         // Gradle Plugin.
@@ -195,11 +208,12 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         IdeJavaCompileOptionsImpl javaCompileOptionsCopy =
                 modelCache.computeIfAbsent(
                         project.getJavaCompileOptions(),
-                        options -> new IdeJavaCompileOptionsImpl(options));
+                        options -> IdeJavaCompileOptionsImpl.createFrom(options));
 
         IdeAaptOptionsImpl aaptOptionsCopy =
                 modelCache.computeIfAbsent(
-                        project.getAaptOptions(), options -> new IdeAaptOptionsImpl(options));
+                        project.getAaptOptions(),
+                        options -> IdeAaptOptionsImpl.createFrom(options));
 
         Collection<String> dynamicFeaturesCopy =
                 ImmutableList.copyOf(
@@ -211,7 +225,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
 
         IdeViewBindingOptions viewBindingOptionsCopy =
                 IdeModel.copyNewProperty(
-                  () -> new IdeViewBindingOptionsImpl(project.getViewBindingOptions()), null);
+                        () -> IdeViewBindingOptionsImpl.createFrom(project.getViewBindingOptions()),
+                        null);
 
         IdeDependenciesInfo dependenciesInfoCopy =
                 IdeModel.copyNewProperty(
@@ -237,12 +252,12 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         //noinspection ConstantConditions
         boolean isBaseSplit = IdeModel.copyNewProperty(project::isBaseSplit, false);
 
-        IdeAndroidGradlePluginProjectFlagsImpl agpFlags =
+        IdeAndroidGradlePluginProjectFlags agpFlags =
                 Objects.requireNonNull(
                         IdeModel.copyNewProperty(
-                                modelCache,
-                                project::getFlags,
-                                IdeAndroidGradlePluginProjectFlagsImpl::new,
+                                () ->
+                                        IdeAndroidGradlePluginProjectFlagsImpl.createFrom(
+                                                project.getFlags()),
                                 new IdeAndroidGradlePluginProjectFlagsImpl()));
 
         return new IdeAndroidProjectImpl(
@@ -357,7 +372,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             int apiVersion,
             int projectType,
             boolean baseSplit,
-            @NonNull IdeAndroidGradlePluginProjectFlagsImpl agpFlags) {
+            @NonNull IdeAndroidGradlePluginProjectFlags agpFlags) {
         myModelVersion = modelVersion;
         myParsedModelVersion = parsedModelVersion;
         myName = name;
@@ -401,7 +416,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         if (agpVersion != null && agpVersion.compareIgnoringQualifiers("4.1.0") >= 0) {
             // make deep copy of VariantBuildInformation.
             return project.getVariantsBuildInformation().stream()
-                    .map(it -> new IdeVariantBuildInformationImpl(it))
+                    .map(it -> IdeVariantBuildInformationImpl.createFrom(it))
                     .collect(ImmutableList.toImmutableList());
         }
         // VariantBuildInformation is not available.

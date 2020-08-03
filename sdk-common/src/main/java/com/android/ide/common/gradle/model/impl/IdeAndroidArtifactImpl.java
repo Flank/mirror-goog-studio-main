@@ -107,7 +107,14 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                         Collections.emptyList());
         myTestOptions =
                 IdeModel.copyNewProperty(
-                        modelCache, artifact::getTestOptions, IdeTestOptionsImpl::new, null);
+                        modelCache,
+                        artifact::getTestOptions,
+                        testOptions ->
+                                new IdeTestOptionsImpl(
+                                        testOptions.getAnimationsDisabled(),
+                                        IdeTestOptionsImpl.convertExecution(
+                                                testOptions.getExecution())),
+                        null);
         myInstrumentedTestTaskName =
                 IdeModel.copyNewProperty(
                         modelCache,

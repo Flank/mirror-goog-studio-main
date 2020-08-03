@@ -20,6 +20,7 @@ import com.android.builder.model.JavaCompileOptions;
 import com.android.ide.common.gradle.model.IdeJavaCompileOptions;
 import java.io.Serializable;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of a {@link JavaCompileOptions}. */
 public final class IdeJavaCompileOptionsImpl implements IdeJavaCompileOptions, Serializable {
@@ -42,13 +43,15 @@ public final class IdeJavaCompileOptionsImpl implements IdeJavaCompileOptions, S
         myHashCode = 0;
     }
 
-    public IdeJavaCompileOptionsImpl(@NonNull JavaCompileOptions options) {
-        myEncoding = options.getEncoding();
-        mySourceCompatibility = options.getSourceCompatibility();
-        myTargetCompatibility = options.getTargetCompatibility();
-        myCoreLibraryDesugaringEnabled =
-                Objects.requireNonNull(
-                        IdeModel.copyNewProperty(options::isCoreLibraryDesugaringEnabled, false));
+    public IdeJavaCompileOptionsImpl(
+            @NotNull String encoding,
+            @NotNull String sourceCompatibility,
+            @NotNull String targetCompatibility,
+            boolean coreLibraryDesugaringEnabled) {
+        myEncoding = encoding;
+        mySourceCompatibility = sourceCompatibility;
+        myTargetCompatibility = targetCompatibility;
+        myCoreLibraryDesugaringEnabled = coreLibraryDesugaringEnabled;
 
         myHashCode = calculateHashCode();
     }
@@ -121,5 +124,13 @@ public final class IdeJavaCompileOptionsImpl implements IdeJavaCompileOptions, S
                 + myCoreLibraryDesugaringEnabled
                 + '\''
                 + "}";
+    }
+
+    public static IdeJavaCompileOptionsImpl createFrom(@NonNull JavaCompileOptions options) {
+        return new IdeJavaCompileOptionsImpl(
+                options.getEncoding(),
+                options.getSourceCompatibility(),
+                options.getTargetCompatibility(),
+                IdeModel.copyNewPropertyNonNull(options::isCoreLibraryDesugaringEnabled, false));
     }
 }

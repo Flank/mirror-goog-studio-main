@@ -34,7 +34,7 @@ public class IdeVectorDrawablesOptionsTest {
     @Test
     public void serialization() throws Exception {
         IdeVectorDrawablesOptionsImpl options =
-                new IdeVectorDrawablesOptionsImpl(new VectorDrawablesOptionsStub());
+                IdeVectorDrawablesOptionsImpl.createFrom(new VectorDrawablesOptionsStub());
         byte[] bytes = Serialization.serialize(options);
         Object o = Serialization.deserialize(bytes);
         assertEquals(options, o);

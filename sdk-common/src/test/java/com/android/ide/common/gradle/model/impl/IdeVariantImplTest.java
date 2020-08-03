@@ -19,6 +19,7 @@ import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.createE
 import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.verifyUsageOfImmutableCollections;
 
 import com.android.builder.model.Variant;
+import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.ide.common.gradle.model.stubs.VariantStub;
 import com.android.ide.common.repository.GradleVersion;
 import org.junit.Before;
@@ -40,8 +41,9 @@ public class IdeVariantImplTest {
     @Test
     public void constructor() throws Throwable {
         Variant original = new VariantStub();
-        IdeVariantImpl copy =
-                new IdeVariantImpl(original, myModelCache, myDependenciesFactory, myGradleVersion);
+        IdeVariant copy =
+                IdeVariantImpl.createFrom(
+                        original, myModelCache, myDependenciesFactory, myGradleVersion);
         verifyUsageOfImmutableCollections(copy);
     }
 

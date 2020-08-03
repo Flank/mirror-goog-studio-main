@@ -41,7 +41,7 @@ public class IdeAaptOptionsTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeAaptOptionsImpl aaptOptions = new IdeAaptOptionsImpl(new AaptOptionsStub());
+        IdeAaptOptionsImpl aaptOptions = IdeAaptOptionsImpl.createFrom(new AaptOptionsStub());
         byte[] bytes = Serialization.serialize(aaptOptions);
         Object o = Serialization.deserialize(bytes);
         assertEquals(aaptOptions, o);
