@@ -16,12 +16,14 @@
 
 package com.android.tools.lint.model
 
+import com.android.testutils.truth.PathSubject
 import com.android.tools.lint.checks.infrastructure.GradleModelMocker
 import com.android.tools.lint.checks.infrastructure.GradleModelMockerTest
 import com.android.tools.lint.model.LintModelSerialization.LintModelSerializationFileAdapter
 import com.android.tools.lint.model.LintModelSerialization.TargetFile
 import com.android.utils.XmlUtils
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -38,6 +40,7 @@ import java.io.Reader
 import java.io.StringReader
 import java.io.StringWriter
 import java.io.Writer
+import java.nio.file.Files
 
 class LintModelSerializationTest {
     @get:Rule
@@ -1072,6 +1075,66 @@ class LintModelSerializationTest {
         assertEquals(file2, adapter.fromPathString("\$GRADLE/file2", root))
     }
 
+    /** Check that the relative paths in variants are resolved against the project directory */
+    @Test
+    fun testLintModelSerializationFileAdapterRootHandling() {
+        val temp = temporaryFolder.newFolder()
+        val projectDirectory = temp.resolve("projectDir").createDirectories()
+        projectDirectory.resolve("src/main/").createDirectories()
+            .resolve("AndroidManifest.xml").writeText("Fake Android manifest")
+        val buildDirectory = temp.resolve("buildDir").createDirectories()
+        val modelsDir = buildDirectory.resolve("intermediates/lint-models").createDirectories()
+        modelsDir.resolve("module.xml")
+            .writeText(
+                """<lint-module
+                    format="1"
+                    dir="${projectDirectory.absolutePath}"
+                    name="test_project"
+                    type="APP"
+                    maven="com.android.tools.demo:test_project:"
+                    gradle="4.0.0-beta01"
+                    buildFolder="${buildDirectory.absolutePath}"
+                    javaSourceLevel="1.7"
+                    compileTarget="android-25"
+                    neverShrinking="true">
+                  <lintOptions />
+                  <variant name="debug"/>
+                </lint-module>"""
+            )
+        modelsDir.resolve("debug.xml")
+            .writeText(
+                """<variant
+                    name="debug"
+                    minSdkVersion="5"
+                    targetSdkVersion="16"
+                    debuggable="true">
+                  <buildFeatures />
+                  <sourceProviders>
+                    <sourceProvider
+                        manifest="src/main/AndroidManifest.xml"
+                        javaDirectories="src/main/java:src/main/kotlin"
+                        resDirectories="src/main/res"
+                        assetsDirectories="src/main/assets"/>
+                  </sourceProviders>
+                  <mainArtifact
+                      classOutputs="${buildDirectory.absolutePath}/intermediates/javac/freeBetaDebug/classes:${buildDirectory.absolutePath}/intermediates/kotlin-classes/freeBetaDebug"
+                      applicationId="com.android.tools.test">
+                  </mainArtifact>
+                </variant>"""
+            )
+
+        val module = LintModelSerialization.readModule(
+            source = modelsDir,
+            readDependencies = false
+        )
+
+        val manifestFile = module.defaultVariant()!!.sourceProviders.first().manifestFile
+        assertWithMessage("Source file should be resolved relative to the project directory, not the source directory")
+            .about(PathSubject.paths())
+            .that(manifestFile.toPath())
+            .hasContents("Fake Android manifest")
+    }
+
     // ----------------------------------------------------------------------------------
     // Test infrastructure below this line
     // ----------------------------------------------------------------------------------
@@ -1249,6 +1312,11 @@ class LintModelSerializationTest {
             }
             curr = curr.nextSibling
         }
+    }
+
+    private fun File.createDirectories(): File {
+        Files.createDirectories(toPath())
+        return this
     }
 }
 private const val ROOT: String = "\uFF04ROOT"

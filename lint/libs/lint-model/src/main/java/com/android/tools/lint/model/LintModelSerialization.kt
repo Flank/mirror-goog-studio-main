@@ -40,6 +40,7 @@ import java.io.BufferedWriter
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.IOException
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
@@ -199,9 +200,11 @@ object LintModelSerialization : LintModelModuleLoader {
         artifactName: String? = null,
         pathVariables: LintModelPathVariables = emptyList()
     ): LintModelDependencies {
+        val adapter = LintModelSerializationFileAdapter(source, pathVariables)
         return LintModelDependenciesReader(
-            adapter = LintModelSerializationFileAdapter(source, pathVariables),
+            adapter = adapter,
             libraryResolver = resolver,
+            root = adapter.root,
             variantName = variantName ?: "",
             artifactName = artifactName ?: "",
             reader = source.bufferedReader()
@@ -221,9 +224,11 @@ object LintModelSerialization : LintModelModuleLoader {
         artifactName: String? = null,
         pathVariables: LintModelPathVariables = emptyList()
     ): LintModelLibraryResolver {
+        val adapter = LintModelSerializationFileAdapter(source, pathVariables)
         return LintModelLibrariesReader(
-            adapter = LintModelSerializationFileAdapter(source, pathVariables),
+            adapter = adapter,
             libraryResolver = resolver,
+            root = adapter.root,
             variantName = variantName ?: "",
             artifactName = artifactName ?: "",
             reader = source.bufferedReader()
@@ -274,12 +279,14 @@ object LintModelSerialization : LintModelModuleLoader {
      */
     fun readDependencies(
         reader: LintModelSerializationAdapter,
+        root: File?,
         resolver: DefaultLintModelLibraryResolver? = null,
         variantName: String? = null,
         artifactName: String? = null
     ): LintModelDependencies {
         return LintModelDependenciesReader(
             reader,
+            root,
             resolver,
             variantName ?: "",
             artifactName ?: ""
@@ -304,6 +311,7 @@ object LintModelSerialization : LintModelModuleLoader {
         return LintModelLibrariesReader(
             reader,
             resolver,
+            reader.root,
             variantName ?: "",
             artifactName ?: ""
         ).readLibraries()
@@ -1078,10 +1086,10 @@ private class LintModelLibrariesWriter(
 
 private abstract class LintModelReader(
     protected val adapter: LintModelSerializationAdapter,
+    protected var root: File?,
     reader: Reader
 ) {
     protected abstract val path: String
-    protected var root: File? = adapter.root
     protected val parser = KXmlParser()
 
     init {
@@ -1219,7 +1227,7 @@ private abstract class LintModelReader(
 
 private class LintModelModuleReader(
     adapter: LintModelSerializationAdapter
-) : LintModelReader(adapter, adapter.getReader(TargetFile.MODULE)) {
+) : LintModelReader(adapter, adapter.root, adapter.getReader(TargetFile.MODULE)) {
     override val path: String
         get() = adapter.file(TargetFile.MODULE)?.path ?: "<unknown>"
 
@@ -1417,7 +1425,7 @@ private class LintModelModuleReader(
 
             return module
         } catch (e: XmlPullParserException) {
-            error(e)
+            throw IOException(e)
         }
     }
 
@@ -1430,7 +1438,7 @@ private class LintModelModuleReader(
         val variantName = getName()
         finishTag("variant")
         return if (variantNames == null || variantNames.contains(variantName)) {
-            val reader = LintModelVariantReader(adapter, variantName)
+            val reader = LintModelVariantReader(adapter, root, variantName)
             reader.readVariant(module, readDependencies)
         } else {
             null
@@ -1440,9 +1448,10 @@ private class LintModelModuleReader(
 
 private class LintModelVariantReader(
     adapter: LintModelSerializationAdapter,
+    root: File?,
     private val variantName: String,
     reader: Reader = adapter.getReader(TargetFile.VARIANT, variantName)
-) : LintModelReader(adapter, reader) {
+) : LintModelReader(adapter, root, reader) {
     override val path: String
         get() = adapter.file(TargetFile.VARIANT, variantName)?.path ?: "<unknown>"
     private val libraryResolverMap = mutableMapOf<String, LintModelLibrary>()
@@ -1570,11 +1579,11 @@ private class LintModelVariantReader(
         val dependencies: LintModelDependencies
         if (readDependencies) {
             resolver = LintModelLibrariesReader(
-                adapter, variantName = variantName, artifactName = tag
+                adapter, root = root, variantName = variantName, artifactName = tag
             ).readLibraries()
 
             dependencies = readDependencies(
-                adapter, variantName = variantName,
+                adapter, root = root, variantName = variantName,
                 artifactName = tag, resolver = resolver
             )
         } else {
@@ -1684,7 +1693,7 @@ private class LintModelVariantReader(
                 libraryResolver = libraryResolver
             )
         } catch (e: XmlPullParserException) {
-            error(e)
+            throw IOException(e)
         }
     }
 }
@@ -1692,11 +1701,12 @@ private class LintModelVariantReader(
 // per variant: <variant.xml>, <libraries.xml>, <dependencies.xml>
 private class LintModelDependenciesReader(
     adapter: LintModelSerializationAdapter,
+    root: File?,
     libraryResolver: DefaultLintModelLibraryResolver? = null,
     private val variantName: String,
     private val artifactName: String,
     reader: Reader = adapter.getReader(TargetFile.DEPENDENCIES, variantName, artifactName)
-) : LintModelReader(adapter, reader) {
+) : LintModelReader(adapter, root, reader) {
     private val libraryResolverMap: MutableMap<String, LintModelLibrary> =
         libraryResolver?.libraryMap as? MutableMap<String, LintModelLibrary> ?: mutableMapOf()
     private val libraryResolver =
@@ -1818,10 +1828,11 @@ private class LintModelDependenciesReader(
 private class LintModelLibrariesReader(
     adapter: LintModelSerializationAdapter,
     libraryResolver: DefaultLintModelLibraryResolver? = null,
+    root: File?,
     private val variantName: String,
     private val artifactName: String,
     reader: Reader = adapter.getReader(TargetFile.LIBRARY_TABLE, variantName, artifactName)
-) : LintModelReader(adapter, reader) {
+) : LintModelReader(adapter, root, reader) {
     private val libraryResolverMap: MutableMap<String, LintModelLibrary> =
         libraryResolver?.libraryMap as? MutableMap<String, LintModelLibrary> ?: mutableMapOf()
     private val libraryResolver =
