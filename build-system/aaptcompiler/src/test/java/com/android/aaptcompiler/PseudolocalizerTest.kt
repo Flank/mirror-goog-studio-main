@@ -172,4 +172,82 @@ class PseudolocalizerTest() {
     result.append(localizer.text("world!"))
     Truth.assertThat(result.toString()).isEqualTo("Ĥéļļö, world!")
   }
+
+  @Test
+  fun testNonHtmlTags() {
+    simpleTest(
+      "Started &lt; 1 minute ago",
+      "[Šţåŕţéð &ļţ; 1 ḿîñûţé åĝö one two three]",
+      Pseudolocalizer.Method.ACCENT)
+
+    simpleTest(
+      "Started < 1 minute ago",
+      "[Šţåŕţéð < 1 ḿîñûţé åĝö one two three]",
+      Pseudolocalizer.Method.ACCENT)
+
+    simpleTest(
+      "Started &gt; 1 minute ago",
+      "[Šţåŕţéð &gt; 1 ḿîñûţé åĝö one two three]",
+      Pseudolocalizer.Method.ACCENT)
+
+    simpleTest(
+      "Started > 1 minute ago",
+      "[Šţåŕţéð > 1 ḿîñûţé åĝö one two three]",
+      Pseudolocalizer.Method.ACCENT)
+
+    simpleTest(
+      "Started &lt; 1 minute ago",
+      "Started &lt; 1 minute ago",
+      Pseudolocalizer.Method.NONE)
+
+    simpleTest(
+      "Started < 1 minute ago",
+      "Started < 1 minute ago",
+      Pseudolocalizer.Method.NONE)
+
+    simpleTest(
+      "hello\n &lt;\n world\n",
+      "${bidiWordStart}hello$bidiWordEnd\n " +
+              "${bidiWordStart}&lt;$bidiWordEnd\n " +
+              "${bidiWordStart}world$bidiWordEnd\n",
+      Pseudolocalizer.Method.BIDI)
+
+    simpleTest(
+      "hello\n <\n world\n",
+      "${bidiWordStart}hello$bidiWordEnd\n " +
+              "${bidiWordStart}<$bidiWordEnd\n " +
+              "${bidiWordStart}world$bidiWordEnd\n",
+      Pseudolocalizer.Method.BIDI)
+  }
+
+  @Test
+  fun testHtmlTags() {
+    // Words should be translated, but html tags and their contents should not.
+    simpleTest(
+      "hello <i>happy</i> world",
+      "[ĥéļļö <i>ĥåþþý</i> ŵöŕļð one two three]",
+      Pseudolocalizer.Method.ACCENT)
+
+    simpleTest(
+      "hello &lt;i&gt;happy&lt;/i&gt; world",
+      "[ĥéļļö &lt;;i&gt;ĥåþþý&lt;;/i&gt; ŵöŕļð one two three]",
+      Pseudolocalizer.Method.ACCENT)
+
+    // The tag (i.e. "a href="idk"") should not be translated, but the inner content (i.e."world")
+    // should be.
+    simpleTest(
+      "hello <a href=\"idk\"/>world</a>",
+      "[ĥéļļö <a href=\"idk\"/>ŵöŕļð</a> one two]",
+      Pseudolocalizer.Method.ACCENT)
+
+    // Even if from HTML's point of view the tags are placed incorrectly, the pseudolocalizer should
+    // be able to handle them: not translate the tags, and only translate the contents outside and
+    // between them.
+    simpleTest(
+      "Incorrectly <b> nested <i> tags </b> should </i> still <a> work",
+      "[Îñçöŕŕéçţļý <b> ñéšţéð <i> ţåĝš </b> šĥöûļð </i> šţîļļ <a> ŵöŕķ one two three four five six]",
+      Pseudolocalizer.Method.ACCENT)
+  }
+
+
 }

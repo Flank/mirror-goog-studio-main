@@ -266,10 +266,11 @@ class PseudoMethodAccent: PseudoMethodImpl() {
     return currentIndex
   }
 
-  private fun processHtml(partial: StringBuilder, source: String, startIndex: Int): Int {
+  private fun processHtml(sourcePartial: StringBuilder, source: String, startIndex: Int): Int {
     val size = source.length
     var currentIndex = startIndex
     var currentChar = source[currentIndex]
+    val htmlPartial = StringBuilder()
 
     htmlTag@ while (currentIndex < size) {
 
@@ -297,7 +298,7 @@ class PseudoMethodAccent: PseudoMethodImpl() {
             }
           }
         }
-        partial.append(escapeText)
+        htmlPartial.append(escapeText)
         if (escapeText.toString() != "&lt;") {
           break@htmlTag
         }
@@ -305,14 +306,21 @@ class PseudoMethodAccent: PseudoMethodImpl() {
       }
 
       if (currentChar == '>') {
-        partial.append('>')
+        htmlPartial.append('>')
         break@htmlTag
       }
 
-      partial.append(currentChar)
+      htmlPartial.append(currentChar)
       ++currentIndex
+      if (currentIndex >= size) {
+        // we didn't find the closing bracket, it wasn't valid HTML. Needs to be pseudolocalized, so
+        // return starting index, and append the first character to the partial string builder.
+        sourcePartial.append(source[startIndex])
+        return startIndex
+      }
       currentChar = source[currentIndex]
     }
+    sourcePartial.append(htmlPartial.toString())
     return currentIndex
   }
 
