@@ -334,17 +334,19 @@ internal class CmakeServerExternalNativeJsonGenerator(
         nativeBuildConfigValue.cppFileExtensions!!.addAll(CmakeUtils.getCppExtensionSet(codeModel))
 
         // toolchains
-        nativeBuildConfigValue.toolchains =
-            getNativeToolchains(
-                abi,
-                cmakeServer,
-                nativeBuildConfigValue.cppFileExtensions!!,
-                nativeBuildConfigValue.cFileExtensions!!
-            )
-        val toolchainHashString =
-            getOnlyToolchainName(
-                nativeBuildConfigValue.toolchains!!
-            )
+        val toolchainHashString = if (abi.variant.module.project.isV2NativeModelEnabled) {
+            // With V2 model, there is no need to populate the toolchains.
+            null
+        } else {
+            nativeBuildConfigValue.toolchains =
+                getNativeToolchains(
+                    abi,
+                    cmakeServer,
+                    nativeBuildConfigValue.cppFileExtensions!!,
+                    nativeBuildConfigValue.cFileExtensions!!
+                )
+            getOnlyToolchainName(nativeBuildConfigValue.toolchains!!)
+        }
 
         // Fill in the required fields in NativeBuildConfigValue from the code model obtained from
         // Cmake server.
