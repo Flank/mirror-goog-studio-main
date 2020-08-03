@@ -17,6 +17,9 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariant
+import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariantProperties
+import com.android.build.api.component.analytics.AnalyticsEnabledVariantProperties
 import com.android.build.api.component.impl.ConsumableCreationConfigImpl
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.DynamicFeatureVariantProperties
@@ -31,6 +34,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.tasks.ModuleMetadata
@@ -38,6 +42,7 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.dexing.DexingType
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.android.build.gradle.options.StringOption
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -223,4 +228,14 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
 
     override val needsMainDexListForBundle: Boolean
         get() = false
+
+    override fun createUserVisibleVariantPropertiesObject(
+        projectServices: ProjectServices,
+        stats: GradleBuildVariant.Builder
+    ): AnalyticsEnabledDynamicFeatureVariantProperties =
+        projectServices.objectFactory.newInstance(
+            AnalyticsEnabledDynamicFeatureVariantProperties::class.java,
+            this,
+            stats
+        )
 }

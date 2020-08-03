@@ -20,8 +20,9 @@ import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.DynamicFeatureVariantProperties
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import javax.inject.Inject
 
-class AnalyticsEnabledDynamicFeatureVariantProperties(
+open class AnalyticsEnabledDynamicFeatureVariantProperties @Inject constructor(
     override val delegate: DynamicFeatureVariantProperties,
     stats: GradleBuildVariant.Builder
 

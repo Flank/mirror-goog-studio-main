@@ -16,6 +16,8 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariantProperties
+import com.android.build.api.component.analytics.AnalyticsEnabledVariantProperties
 import com.android.build.api.component.impl.ConsumableCreationConfigImpl
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.ApplicationVariantProperties
@@ -29,12 +31,14 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.IntegerOption
 import com.android.builder.dexing.DexingType
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.android.build.gradle.options.StringOption
 import org.gradle.api.provider.Property
 import javax.inject.Inject
@@ -167,4 +171,14 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
                     && globalScope.hasDynamicFeatures()
                     && dexingType.needsMainDexList)
 
+
+    override fun createUserVisibleVariantPropertiesObject(
+        projectServices: ProjectServices,
+        stats: GradleBuildVariant.Builder
+    ): AnalyticsEnabledVariantProperties =
+        projectServices.objectFactory.newInstance(
+            AnalyticsEnabledApplicationVariantProperties::class.java,
+            this,
+            stats
+        )
 }

@@ -17,7 +17,6 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.AndroidTestProperties
-import com.android.build.api.component.TestComponentProperties
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.PackagingOptions
@@ -28,8 +27,9 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.Serializable
+import javax.inject.Inject
 
-class AnalyticsEnabledAndroidTestProperties(
+open class AnalyticsEnabledAndroidTestProperties @Inject constructor(
     override val delegate: AndroidTestProperties,
     stats: GradleBuildVariant.Builder
 ) : AnalyticsEnabledTestComponentProperties(

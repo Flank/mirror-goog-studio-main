@@ -24,8 +24,9 @@ import com.android.build.api.variant.VariantOutput
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Property
+import javax.inject.Inject
 
-class AnalyticsEnabledApplicationVariantProperties(
+open class AnalyticsEnabledApplicationVariantProperties @Inject constructor(
     override val delegate: ApplicationVariantProperties,
     stats: GradleBuildVariant.Builder
 ) : AnalyticsEnabledVariantProperties(
