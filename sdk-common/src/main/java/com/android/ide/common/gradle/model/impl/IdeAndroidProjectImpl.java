@@ -18,7 +18,6 @@ package com.android.ide.common.gradle.model.impl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.ide.common.gradle.model.IdeAaptOptions;
@@ -35,6 +34,7 @@ import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.ide.common.gradle.model.IdeVariantBuildInformation;
 import com.android.ide.common.gradle.model.IdeViewBindingOptions;
 import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeToolchainImpl;
+import com.android.ide.common.gradle.model.ndk.v1.IdeNativeToolchain;
 import com.android.ide.common.repository.GradleVersion;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -72,7 +72,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     @NonNull private final Collection<String> myFlavorDimensions;
     @NonNull private final String myCompileTarget;
     @NonNull private final Collection<String> myBootClassPath;
-    @NonNull private final Collection<NativeToolchain> myNativeToolchains;
+    @NonNull private final Collection<IdeNativeToolchain> myNativeToolchains;
     @NonNull private final Collection<IdeSigningConfig> mySigningConfigs;
     @NonNull private final IdeLintOptions myLintOptions;
     @Nullable private final List<File> myLintRuleJars;
@@ -96,13 +96,13 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     @NonNull private final IdeAndroidGradlePluginProjectFlags myAgpFlags;
     private final int myHashCode;
 
-    public static IdeAndroidProjectImpl create(
+    public static IdeAndroidProjectImpl createFrom(
             @NonNull AndroidProject project,
             @NonNull Map<String, String> stringDeduplicationMap,
             @NonNull IdeDependenciesFactory dependenciesFactory,
             @Nullable Collection<Variant> variants,
             @NotNull Collection<SyncIssue> syncIssues) {
-        return create(
+        return createFrom(
                 project,
                 new ModelCache(stringDeduplicationMap),
                 dependenciesFactory,
@@ -111,7 +111,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     }
 
     @VisibleForTesting
-    public static IdeAndroidProjectImpl create(
+    public static IdeAndroidProjectImpl createFrom(
             @NonNull AndroidProject project,
             @NonNull ModelCache modelCache,
             @NonNull IdeDependenciesFactory dependenciesFactory,
@@ -182,7 +182,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
 
         Collection<String> bootClasspathCopy = ImmutableList.copyOf(project.getBootClasspath());
 
-        Collection<NativeToolchain> nativeToolchainsCopy =
+        Collection<IdeNativeToolchain> nativeToolchainsCopy =
                 IdeModel.copy(
                         project.getNativeToolchains(),
                         modelCache,
@@ -352,7 +352,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             @NonNull Collection<String> flavorDimensions,
             @NonNull String compileTarget,
             @NonNull Collection<String> bootClassPath,
-            @NonNull Collection<NativeToolchain> nativeToolchains,
+            @NonNull Collection<IdeNativeToolchain> nativeToolchains,
             @NonNull Collection<IdeSigningConfig> signingConfigs,
             @NonNull IdeLintOptions lintOptions,
             @Nullable List<File> lintRuleJars,

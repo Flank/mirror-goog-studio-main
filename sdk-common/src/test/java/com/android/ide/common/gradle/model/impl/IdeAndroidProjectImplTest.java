@@ -94,7 +94,7 @@ public class IdeAndroidProjectImplTest {
                     }
                 };
         IdeAndroidProject androidProject =
-                IdeAndroidProjectImpl.create(
+                IdeAndroidProjectImpl.createFrom(
                         original,
                         myModelCache,
                         myDependenciesFactory,
@@ -107,7 +107,7 @@ public class IdeAndroidProjectImplTest {
     public void constructor() throws Throwable {
         AndroidProject original = new AndroidProjectStub("2.4.0");
         IdeAndroidProjectImpl copy =
-                IdeAndroidProjectImpl.create(
+                IdeAndroidProjectImpl.createFrom(
                         original,
                         myModelCache,
                         myDependenciesFactory,
@@ -122,7 +122,7 @@ public class IdeAndroidProjectImplTest {
         original.getVariants().clear();
         Variant variant = new VariantStub();
         IdeAndroidProjectImpl copy =
-                IdeAndroidProjectImpl.create(
+                IdeAndroidProjectImpl.createFrom(
                         original,
                         myModelCache,
                         myDependenciesFactory,
@@ -139,7 +139,7 @@ public class IdeAndroidProjectImplTest {
         original.getVariants().clear();
         Variant variant = new VariantStub();
         IdeAndroidProjectImpl copy =
-                IdeAndroidProjectImpl.create(
+                IdeAndroidProjectImpl.createFrom(
                         original,
                         myModelCache,
                         myDependenciesFactory,
@@ -207,7 +207,7 @@ public class IdeAndroidProjectImplTest {
                     }
                 };
         IdeAndroidProject androidProject =
-                IdeAndroidProjectImpl.create(
+                IdeAndroidProjectImpl.createFrom(
                         original,
                         myModelCache,
                         myDependenciesFactory,
@@ -226,7 +226,7 @@ public class IdeAndroidProjectImplTest {
                     }
                 };
         IdeAndroidProject androidProject =
-                IdeAndroidProjectImpl.create(
+                IdeAndroidProjectImpl.createFrom(
                         original,
                         myModelCache,
                         myDependenciesFactory,
