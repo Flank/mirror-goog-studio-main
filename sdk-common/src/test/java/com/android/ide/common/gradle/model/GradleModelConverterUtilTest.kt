@@ -16,7 +16,7 @@
 
 package com.android.ide.common.gradle.model
 
-import com.android.ide.common.gradle.model.impl.IdeClassFieldImpl
+import com.android.ide.common.gradle.model.impl.ModelCache
 import com.android.ide.common.gradle.model.stubs.AndroidLibraryStubBuilder
 import com.android.ide.common.util.PathString
 import com.android.ide.common.util.toPathString
@@ -34,8 +34,8 @@ class GradleModelConverterUtilTest {
     @Test
     fun testClassFieldsToDynamicResourceValues() {
         val input = mapOf(
-          "foo" to IdeClassFieldImpl.createFrom(ClassFieldStub(ResourceType.STRING.getName(), "foo", "baz")),
-          "foo2" to IdeClassFieldImpl.createFrom(ClassFieldStub(ResourceType.INTEGER.getName(), "foo2", "123")))
+          "foo" to ModelCache.classFieldFrom(ClassFieldStub(ResourceType.STRING.getName(), "foo", "baz")),
+          "foo2" to ModelCache.classFieldFrom(ClassFieldStub(ResourceType.INTEGER.getName(), "foo2", "123")))
         val output = classFieldsToDynamicResourceValues(input)
 
         val expectedOutput = mapOf(

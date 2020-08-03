@@ -100,7 +100,7 @@ public final class IdeLibraries {
         if (library.getResolvedCoordinates() != null) {
             return modelCache.computeIfAbsent(
                     library.getResolvedCoordinates(),
-                    coordinates -> IdeMavenCoordinatesImpl.createFrom(coordinates));
+                    coordinates -> ModelCache.mavenCoordinatesFrom(coordinates));
         } else {
             File jarFile;
             if (library instanceof JavaLibrary) {
@@ -108,7 +108,7 @@ public final class IdeLibraries {
             } else {
                 jarFile = ((AndroidLibrary) library).getBundle();
             }
-            return IdeMavenCoordinatesImpl.createFrom(jarFile);
+            return ModelCache.mavenCoordinatesFrom(jarFile);
         }
     }
 
@@ -118,6 +118,6 @@ public final class IdeLibraries {
         if (requestedCoordinates == null) {
             return null;
         }
-        return IdeMavenCoordinatesImpl.createFrom(requestedCoordinates);
+        return ModelCache.mavenCoordinatesFrom(requestedCoordinates);
     }
 }

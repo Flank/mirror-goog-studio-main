@@ -15,14 +15,12 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
-import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.TestOptions;
 import com.android.ide.common.gradle.model.IdeTestOptions;
 import java.io.Serializable;
 import java.util.Objects;
 
-/** Creates a deep copy of a {@link TestOptions}. */
+/** Creates a deep copy of a `TestOptions`. */
 public class IdeTestOptionsImpl implements IdeTestOptions, Serializable {
     private static final long serialVersionUID = 2L;
 
@@ -86,25 +84,5 @@ public class IdeTestOptionsImpl implements IdeTestOptions, Serializable {
                 + ", myExecutionEnum='"
                 + myExecutionEnum
                 + "}";
-    }
-
-    @Nullable
-    public static Execution convertExecution(@Nullable TestOptions.Execution execution) {
-        if (execution == null) return null;
-        switch (execution) {
-            case HOST:
-                return Execution.HOST;
-            case ANDROID_TEST_ORCHESTRATOR:
-                return Execution.ANDROID_TEST_ORCHESTRATOR;
-            case ANDROIDX_TEST_ORCHESTRATOR:
-                return Execution.ANDROIDX_TEST_ORCHESTRATOR;
-            default:
-                throw new IllegalStateException("Unknown execution option: " + execution);
-        }
-    }
-
-    public static IdeTestOptionsImpl createFrom(@NonNull TestOptions testOptions) {
-        return new IdeTestOptionsImpl(
-                testOptions.getAnimationsDisabled(), convertExecution(testOptions.getExecution()));
     }
 }

@@ -110,23 +110,4 @@ public final class IdeBuildTypeContainerImpl implements IdeBuildTypeContainer, S
                 + myExtraSourceProviders
                 + '}';
     }
-
-    public static IdeBuildTypeContainerImpl createFrom(
-            @NonNull BuildTypeContainer container, @NonNull ModelCache modelCache) {
-        return new IdeBuildTypeContainerImpl(
-                modelCache.computeIfAbsent(
-                        container.getBuildType(),
-                        buildType -> IdeBuildTypeImpl.createFrom(buildType, modelCache)),
-                modelCache.computeIfAbsent(
-                        container.getSourceProvider(),
-                        provider ->
-                                IdeSourceProviderImpl.createFrom(
-                                        provider, modelCache::deduplicateString)),
-                IdeModel.copy(
-                        container.getExtraSourceProviders(),
-                        modelCache,
-                        sourceProviderContainer ->
-                                IdeSourceProviderContainerImpl.createFrom(
-                                        sourceProviderContainer, modelCache)));
-    }
 }

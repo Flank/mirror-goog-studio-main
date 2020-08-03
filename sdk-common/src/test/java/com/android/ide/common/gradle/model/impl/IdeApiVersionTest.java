@@ -41,7 +41,7 @@ public class IdeApiVersionTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeApiVersionImpl apiVersion = IdeApiVersionImpl.createFrom(new ApiVersionStub());
+        IdeApiVersionImpl apiVersion = ModelCache.apiVersionFrom(new ApiVersionStub());
         byte[] bytes = Serialization.serialize(apiVersion);
         Object o = Serialization.deserialize(bytes);
         assertEquals(apiVersion, o);
@@ -50,7 +50,7 @@ public class IdeApiVersionTest {
     @Test
     public void constructor() throws Throwable {
         ApiVersion original = new ApiVersionStub();
-        IdeApiVersionImpl copy = IdeApiVersionImpl.createFrom(original);
+        IdeApiVersionImpl copy = ModelCache.apiVersionFrom(original);
         IdeModelTestUtils.assertEqualsOrSimilar(original, copy);
         IdeModelTestUtils.verifyUsageOfImmutableCollections(copy);
     }

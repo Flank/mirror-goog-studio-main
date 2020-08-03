@@ -16,7 +16,6 @@
 package com.android.ide.common.gradle.model.impl;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.ProductFlavorContainer;
 import com.android.ide.common.gradle.model.IdeProductFlavor;
 import com.android.ide.common.gradle.model.IdeProductFlavorContainer;
 import com.android.ide.common.gradle.model.IdeSourceProvider;
@@ -28,7 +27,7 @@ import java.util.List;
 import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 
-/** Creates a deep copy of a {@link ProductFlavorContainer}. */
+/** Creates a deep copy of a `ProductFlavorContainer`. */
 public final class IdeProductFlavorContainerImpl implements IdeProductFlavorContainer, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
@@ -47,10 +46,10 @@ public final class IdeProductFlavorContainerImpl implements IdeProductFlavorCont
         myHashCode = 0;
     }
 
-    private IdeProductFlavorContainerImpl(
-            @NotNull IdeProductFlavorImpl productFlavor,
-            @NotNull IdeSourceProviderImpl sourceProvider,
-            @NotNull List<IdeSourceProviderContainer> extraSourceProviders) {
+    public IdeProductFlavorContainerImpl(
+      @NotNull IdeProductFlavorImpl productFlavor,
+      @NotNull IdeSourceProviderImpl sourceProvider,
+      @NotNull List<IdeSourceProviderContainer> extraSourceProviders) {
         myProductFlavor = productFlavor;
         mySourceProvider = sourceProvider;
         myExtraSourceProviders = extraSourceProviders;
@@ -109,24 +108,5 @@ public final class IdeProductFlavorContainerImpl implements IdeProductFlavorCont
                 + ", myExtraSourceProviders="
                 + myExtraSourceProviders
                 + "}";
-    }
-
-    public static IdeProductFlavorContainerImpl createFrom(
-            @NonNull ProductFlavorContainer container, @NonNull ModelCache modelCache) {
-        return new IdeProductFlavorContainerImpl(
-                modelCache.computeIfAbsent(
-                        container.getProductFlavor(),
-                        flavor -> IdeProductFlavorImpl.createFrom(flavor, modelCache)),
-                modelCache.computeIfAbsent(
-                        container.getSourceProvider(),
-                        provider ->
-                                IdeSourceProviderImpl.createFrom(
-                                        provider, modelCache::deduplicateString)),
-                IdeModel.copy(
-                        container.getExtraSourceProviders(),
-                        modelCache,
-                        sourceProviderContainer ->
-                                IdeSourceProviderContainerImpl.createFrom(
-                                        sourceProviderContainer, modelCache)));
     }
 }

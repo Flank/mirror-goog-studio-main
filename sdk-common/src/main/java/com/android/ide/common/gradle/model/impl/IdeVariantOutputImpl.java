@@ -75,7 +75,7 @@ public abstract class IdeVariantOutputImpl implements VariantOutput, Serializabl
             @NonNull VariantOutput output, @NonNull ModelCache modelCache) {
         try {
             return IdeModel.copy(
-                    output.getFilters(), modelCache, data -> IdeFilterDataImpl.createFrom(data));
+                    output.getFilters(), modelCache, data -> ModelCache.filterDataFrom(data));
         } catch (UnsupportedOperationException ignored) {
             return null;
         }

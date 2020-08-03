@@ -16,14 +16,13 @@
 package com.android.ide.common.gradle.model.impl;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.SourceProviderContainer;
 import com.android.ide.common.gradle.model.IdeSourceProvider;
 import com.android.ide.common.gradle.model.IdeSourceProviderContainer;
 import java.io.Serializable;
 import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 
-/** Creates a deep copy of a {@link SourceProviderContainer}. */
+/** Creates a deep copy of a `SourceProviderContainer`. */
 public final class IdeSourceProviderContainerImpl
         implements IdeSourceProviderContainer, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
@@ -92,16 +91,5 @@ public final class IdeSourceProviderContainerImpl
                 + ", mySourceProvider="
                 + mySourceProvider
                 + '}';
-    }
-
-    public static IdeSourceProviderContainerImpl createFrom(
-            @NonNull SourceProviderContainer container, @NonNull ModelCache modelCache) {
-        return new IdeSourceProviderContainerImpl(
-                container.getArtifactName(),
-                modelCache.computeIfAbsent(
-                        container.getSourceProvider(),
-                        provider ->
-                                IdeSourceProviderImpl.createFrom(
-                                        provider, modelCache::deduplicateString)));
     }
 }

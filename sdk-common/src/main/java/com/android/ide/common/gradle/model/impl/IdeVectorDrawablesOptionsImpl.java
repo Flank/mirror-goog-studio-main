@@ -15,14 +15,12 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
-import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.VectorDrawablesOptions;
 import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions;
 import java.io.Serializable;
 import java.util.Objects;
 
-/** Creates a deep copy of a {@link VectorDrawablesOptions}. */
+/** Creates a deep copy of a `VectorDrawablesOptions`. */
 public final class IdeVectorDrawablesOptionsImpl
         implements IdeVectorDrawablesOptions, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
@@ -77,10 +75,5 @@ public final class IdeVectorDrawablesOptionsImpl
                 + ", myUseSupportLibrary="
                 + myUseSupportLibrary
                 + "}";
-    }
-
-    public static IdeVectorDrawablesOptionsImpl createFrom(
-            @NonNull VectorDrawablesOptions options) {
-        return new IdeVectorDrawablesOptionsImpl(options.getUseSupportLibrary());
     }
 }

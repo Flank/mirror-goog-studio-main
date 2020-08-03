@@ -15,14 +15,8 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.ApiVersion;
-import com.android.builder.model.ProductFlavor;
-import com.android.builder.model.SigningConfig;
-import com.android.builder.model.VectorDrawablesOptions;
 import com.android.ide.common.gradle.model.IdeApiVersion;
 import com.android.ide.common.gradle.model.IdeClassField;
 import com.android.ide.common.gradle.model.IdeProductFlavor;
@@ -37,7 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 
-/** Creates a deep copy of a {@link ProductFlavor}. */
+/** Creates a deep copy of a `ProductFlavor`. */
 public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements IdeProductFlavor {
     // Increase the value when adding/removing fields or when changing the
     // serialization/deserialization mechanism.
@@ -134,39 +128,6 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
         mySigningConfig = signingConfig;
 
         myHashCode = calculateHashCode();
-    }
-
-    @Nullable
-    private static IdeVectorDrawablesOptions copyVectorDrawables(
-            @NonNull ProductFlavor flavor, @NonNull ModelCache modelCache) {
-        VectorDrawablesOptions vectorDrawables;
-        try {
-            vectorDrawables = flavor.getVectorDrawables();
-        } catch (UnsupportedOperationException e) {
-            return null;
-        }
-        return modelCache.computeIfAbsent(
-                vectorDrawables, options -> IdeVectorDrawablesOptionsImpl.createFrom(options));
-    }
-
-    @Nullable
-    private static IdeApiVersionImpl copy(
-            @NonNull ModelCache modelCache, @Nullable ApiVersion apiVersion) {
-        if (apiVersion != null) {
-            return modelCache.computeIfAbsent(
-                    apiVersion, version -> IdeApiVersionImpl.createFrom(version));
-        }
-        return null;
-    }
-
-    @Nullable
-    private static IdeSigningConfig copy(
-            @NonNull ModelCache modelCache, @Nullable SigningConfig signingConfig) {
-        if (signingConfig != null) {
-            return modelCache.computeIfAbsent(
-                    signingConfig, config -> IdeSigningConfigImpl.createFrom(config));
-        }
-        return null;
     }
 
     @Override
@@ -360,45 +321,5 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
                 + ", mySigningConfig="
                 + mySigningConfig
                 + "}";
-    }
-
-    public static IdeProductFlavorImpl createFrom(
-            @NonNull ProductFlavor flavor, @NonNull ModelCache modelCache) {
-        return new IdeProductFlavorImpl(
-                flavor.getName(),
-                IdeModel.copy(
-                        flavor.getResValues(),
-                        modelCache,
-                        classField -> IdeClassFieldImpl.createFrom(classField)),
-                ImmutableList.copyOf(flavor.getProguardFiles()),
-                ImmutableList.copyOf(flavor.getConsumerProguardFiles()),
-                flavor.getManifestPlaceholders().entrySet().stream()
-                        // AGP may return internal Groovy GString implementation as a value in
-                        // manifestPlaceholders
-                        // map. It cannot be serialized
-                        // with IDEA's external system serialization. We convert values to String to
-                        // make them
-                        // usable as they are converted to String by
-                        // the manifest merger anyway.
-
-                        .collect(toImmutableMap(it -> it.getKey(), it -> it.getValue().toString())),
-                flavor.getApplicationIdSuffix(),
-                IdeModel.copyNewProperty(flavor::getVersionNameSuffix, null),
-                IdeModel.copyNewProperty(flavor::getMultiDexEnabled, null),
-                ImmutableMap.copyOf(flavor.getTestInstrumentationRunnerArguments()),
-                ImmutableList.copyOf(flavor.getResourceConfigurations()),
-                copyVectorDrawables(flavor, modelCache),
-                flavor.getDimension(),
-                flavor.getApplicationId(),
-                flavor.getVersionCode(),
-                flavor.getVersionName(),
-                copy(modelCache, flavor.getMinSdkVersion()),
-                copy(modelCache, flavor.getTargetSdkVersion()),
-                flavor.getMaxSdkVersion(),
-                flavor.getTestApplicationId(),
-                flavor.getTestInstrumentationRunner(),
-                flavor.getTestFunctionalTest(),
-                flavor.getTestHandleProfiling(),
-                copy(modelCache, flavor.getSigningConfig()));
     }
 }

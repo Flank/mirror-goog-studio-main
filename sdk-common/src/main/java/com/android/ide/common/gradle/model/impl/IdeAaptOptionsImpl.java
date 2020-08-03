@@ -59,27 +59,4 @@ public class IdeAaptOptionsImpl implements IdeAaptOptions, Serializable {
     public int hashCode() {
         return Objects.hash(namespacing);
     }
-
-    public static IdeAaptOptionsImpl createFrom(@NonNull AaptOptions original) {
-        return new IdeAaptOptionsImpl(
-                convertNamespacing(
-                        IdeModel.copyNewPropertyNonNull(original::getNamespacing, DISABLED)));
-    }
-
-    @NotNull
-    private static Namespacing convertNamespacing(AaptOptions.Namespacing namespacing) {
-        Namespacing convertedNamespacing;
-        switch (namespacing) {
-            case DISABLED:
-                convertedNamespacing = Namespacing.DISABLED;
-                break;
-            case REQUIRED:
-                convertedNamespacing = Namespacing.REQUIRED;
-                break;
-            default:
-                // No forward compatibility.
-                throw new IllegalStateException("Unknown namespacing option: " + namespacing);
-        }
-        return convertedNamespacing;
-    }
 }

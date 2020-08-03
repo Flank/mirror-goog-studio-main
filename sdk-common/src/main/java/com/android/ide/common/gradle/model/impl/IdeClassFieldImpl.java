@@ -16,7 +16,6 @@
 package com.android.ide.common.gradle.model.impl;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.ClassField;
 import com.android.ide.common.gradle.model.IdeClassField;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import com.google.common.annotations.VisibleForTesting;
@@ -25,7 +24,7 @@ import java.util.Objects;
 import java.util.Set;
 import org.jetbrains.annotations.NotNull;
 
-/** Creates a deep copy of a {@link ClassField}. */
+/** Creates a deep copy of a `ClassField`. */
 public final class IdeClassFieldImpl implements IdeClassField, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
@@ -120,10 +119,5 @@ public final class IdeClassFieldImpl implements IdeClassField, Serializable {
                 + myValue
                 + '\''
                 + '}';
-    }
-
-    public static IdeClassFieldImpl createFrom(@NonNull ClassField classField) {
-        return new IdeClassFieldImpl(
-                classField.getName(), classField.getType(), classField.getValue());
     }
 }

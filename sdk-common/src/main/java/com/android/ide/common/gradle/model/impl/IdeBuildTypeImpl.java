@@ -15,9 +15,6 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
-
-import com.android.annotations.NonNull;
 import com.android.builder.model.BuildType;
 import com.android.ide.common.gradle.model.IdeBuildType;
 import com.android.ide.common.gradle.model.IdeClassField;
@@ -195,36 +192,5 @@ public final class IdeBuildTypeImpl extends IdeBaseConfigImpl implements IdeBuil
                 + ", myZipAlignEnabled="
                 + myZipAlignEnabled
                 + "}";
-    }
-
-    public static IdeBuildTypeImpl createFrom(
-            @NonNull BuildType buildType, @NonNull ModelCache modelCache) {
-        return new IdeBuildTypeImpl(
-                buildType.getName(),
-                IdeModel.copy(
-                        buildType.getResValues(),
-                        modelCache,
-                        classField -> IdeClassFieldImpl.createFrom(classField)),
-                ImmutableList.copyOf(buildType.getProguardFiles()),
-                ImmutableList.copyOf(buildType.getConsumerProguardFiles()),
-                buildType.getManifestPlaceholders().entrySet().stream()
-                        // AGP may return internal Groovy GString implementation as a value in
-                        // manifestPlaceholders
-                        // map. It cannot be serialized
-                        // with IDEA's external system serialization. We convert values to String to
-                        // make them
-                        // usable as they are converted to String by
-                        // the manifest merger anyway.
-
-                        .collect(toImmutableMap(it -> it.getKey(), it -> it.getValue().toString())),
-                buildType.getApplicationIdSuffix(),
-                IdeModel.copyNewProperty(buildType::getVersionNameSuffix, null),
-                IdeModel.copyNewProperty(buildType::getMultiDexEnabled, null),
-                buildType.isDebuggable(),
-                buildType.isJniDebuggable(),
-                buildType.isRenderscriptDebuggable(),
-                buildType.getRenderscriptOptimLevel(),
-                buildType.isMinifyEnabled(),
-                buildType.isZipAlignEnabled());
     }
 }

@@ -37,13 +37,13 @@ public class GradleModelConverterJavaTest {
     @Test
     public void testResultIsStillImmutableFromJava() {
         IdeClassField foo1 =
-                IdeClassFieldImpl.createFrom(
+                ModelCache.classFieldFrom(
                         new ClassFieldStub(ResourceType.STRING.getName(), "foo1", "baz"));
         IdeClassField foo2 =
-                IdeClassFieldImpl.createFrom(
+                ModelCache.classFieldFrom(
                         new ClassFieldStub(ResourceType.STRING.getName(), "foo2", "baz"));
         IdeClassField foo3 =
-                IdeClassFieldImpl.createFrom(
+                ModelCache.classFieldFrom(
                         new ClassFieldStub(ResourceType.STRING.getName(), "foo3", "baz"));
 
         Map<String, IdeClassField> input = new HashMap<>();

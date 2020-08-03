@@ -93,8 +93,4 @@ public final class IdeFilterDataImpl implements FilterData, Serializable {
                 + '\''
                 + "}";
     }
-
-    public static IdeFilterDataImpl createFrom(@NonNull FilterData data) {
-        return new IdeFilterDataImpl(data.getIdentifier(), data.getFilterType());
-    }
 }

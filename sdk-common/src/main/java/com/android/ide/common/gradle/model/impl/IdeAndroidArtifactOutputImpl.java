@@ -116,26 +116,4 @@ public final class IdeAndroidArtifactOutputImpl extends IdeVariantOutputImpl
                 + myOutputFile
                 + "}";
     }
-
-    public static IdeAndroidArtifactOutputImpl createFrom(
-            @NonNull AndroidArtifactOutput output, @NonNull ModelCache modelCache) {
-        return new IdeAndroidArtifactOutputImpl(
-                IdeModel.copy(
-                        output.getOutputs(),
-                        modelCache,
-                        outputFile -> new IdeOutputFileImpl(outputFile, modelCache)),
-                IdeModel.copyNewProperty(
-                        () -> ImmutableList.copyOf(output.getFilterTypes()),
-                        Collections.emptyList()),
-                copyFilters(output, modelCache),
-                IdeModel.copyNewProperty(
-                        modelCache,
-                        output::getMainOutputFile,
-                        file -> new IdeOutputFileImpl(file, modelCache),
-                        null),
-                IdeModel.copyNewProperty(output::getOutputType, null),
-                output.getVersionCode(),
-                IdeModel.copyNewProperty(
-                        output::getOutputFile, output.getMainOutputFile().getOutputFile()));
-    }
 }

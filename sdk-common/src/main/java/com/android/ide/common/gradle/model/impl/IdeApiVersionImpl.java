@@ -104,9 +104,4 @@ public final class IdeApiVersionImpl implements IdeApiVersion, Serializable {
                 + myApiLevel
                 + '}';
     }
-
-    public static IdeApiVersionImpl createFrom(@NonNull ApiVersion version) {
-        return new IdeApiVersionImpl(
-                version.getApiString(), version.getCodename(), version.getApiLevel());
-    }
 }

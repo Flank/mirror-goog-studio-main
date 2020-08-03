@@ -42,7 +42,7 @@ public class IdeSourceProviderContainerTest {
     @Test
     public void serialization() throws Exception {
         IdeSourceProviderContainerImpl classField =
-                IdeSourceProviderContainerImpl.createFrom(
+                ModelCache.sourceProviderContainerFrom(
                         new SourceProviderContainerStub(), myModelCache);
         byte[] bytes = Serialization.serialize(classField);
         Object o = Serialization.deserialize(bytes);

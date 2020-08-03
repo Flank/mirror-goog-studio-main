@@ -81,7 +81,7 @@ public final class IdeOutputFileImpl implements OutputFile, Serializable {
         myFilterTypes = ImmutableList.copyOf(file.getFilterTypes());
         myFilters =
                 IdeModel.copy(
-                        file.getFilters(), modelCache, data -> IdeFilterDataImpl.createFrom(data));
+                        file.getFilters(), modelCache, data -> ModelCache.filterDataFrom(data));
         myOutputFile = file.getOutputFile();
         myMainOutputFile = copyMainOutputFile(file, modelCache);
         //noinspection deprecation

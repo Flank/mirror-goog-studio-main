@@ -16,13 +16,12 @@
 package com.android.ide.common.gradle.model.impl;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.JavaCompileOptions;
 import com.android.ide.common.gradle.model.IdeJavaCompileOptions;
 import java.io.Serializable;
 import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 
-/** Creates a deep copy of a {@link JavaCompileOptions}. */
+/** Creates a deep copy of a `JavaCompileOptions`. */
 public final class IdeJavaCompileOptionsImpl implements IdeJavaCompileOptions, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 3L;
@@ -124,13 +123,5 @@ public final class IdeJavaCompileOptionsImpl implements IdeJavaCompileOptions, S
                 + myCoreLibraryDesugaringEnabled
                 + '\''
                 + "}";
-    }
-
-    public static IdeJavaCompileOptionsImpl createFrom(@NonNull JavaCompileOptions options) {
-        return new IdeJavaCompileOptionsImpl(
-                options.getEncoding(),
-                options.getSourceCompatibility(),
-                options.getTargetCompatibility(),
-                IdeModel.copyNewPropertyNonNull(options::isCoreLibraryDesugaringEnabled, false));
     }
 }

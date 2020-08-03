@@ -17,14 +17,13 @@ package com.android.ide.common.gradle.model.impl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.SyncIssue;
 import com.android.ide.common.gradle.model.IdeSyncIssue;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 
-/** Creates a deep copy of a {@link SyncIssue}. */
+/** Creates a deep copy of a `SyncIssue`. */
 public final class IdeSyncIssueImpl implements IdeSyncIssue, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 3L;
@@ -130,14 +129,5 @@ public final class IdeSyncIssueImpl implements IdeSyncIssue, Serializable {
                 + ", myType="
                 + myType
                 + "}";
-    }
-
-    public static IdeSyncIssueImpl createFrom(@NonNull SyncIssue issue) {
-        return new IdeSyncIssueImpl(
-                issue.getMessage(),
-                IdeModel.copyNewProperty(issue::getMultiLineMessage, null),
-                issue.getData(),
-                issue.getSeverity(),
-                issue.getType());
     }
 }

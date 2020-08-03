@@ -17,19 +17,16 @@ package com.android.ide.common.gradle.model.impl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.MavenCoordinates;
 import com.android.ide.common.gradle.model.IdeMavenCoordinates;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
-import java.io.File;
 import java.io.Serializable;
 import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 
-/** Creates a deep copy of a {@link MavenCoordinates}. */
+/** Creates a deep copy of a `MavenCoordinates`. */
 public final class IdeMavenCoordinatesImpl implements IdeMavenCoordinates, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 3L;
-    public static final String LOCAL_AARS = "__local_aars__";
 
     @NonNull private final String myGroupId;
     @NonNull private final String myArtifactId;
@@ -144,19 +141,5 @@ public final class IdeMavenCoordinatesImpl implements IdeMavenCoordinates, Seria
                 + myClassifier
                 + '\''
                 + '}';
-    }
-
-    public static IdeMavenCoordinatesImpl createFrom(@NonNull MavenCoordinates coordinates) {
-        return new IdeMavenCoordinatesImpl(
-                coordinates.getGroupId(),
-                coordinates.getArtifactId(),
-                coordinates.getVersion(),
-                coordinates.getPackaging(),
-                coordinates.getClassifier());
-    }
-
-    public static IdeMavenCoordinatesImpl createFrom(@NonNull File localJar) {
-        return new IdeMavenCoordinatesImpl(
-                LOCAL_AARS, localJar.getPath(), "unspecified", "jar", null);
     }
 }

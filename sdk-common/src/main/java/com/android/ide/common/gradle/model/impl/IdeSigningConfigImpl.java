@@ -17,7 +17,6 @@ package com.android.ide.common.gradle.model.impl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.SigningConfig;
 import com.android.ide.common.gradle.model.IdeSigningConfig;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import java.io.File;
@@ -25,7 +24,7 @@ import java.io.Serializable;
 import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 
-/** Creates a deep copy of a {@link SigningConfig}. */
+/** Creates a deep copy of a `SigningConfig`. */
 public final class IdeSigningConfigImpl implements IdeSigningConfig, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 3L;
@@ -161,14 +160,5 @@ public final class IdeSigningConfigImpl implements IdeSigningConfig, Serializabl
                 + ", myV1SigningEnabled="
                 + myV1SigningEnabled
                 + '}';
-    }
-
-    public static IdeSigningConfigImpl createFrom(@NonNull SigningConfig config) {
-        return new IdeSigningConfigImpl(
-                config.getName(),
-                config.getStoreFile(),
-                config.getStorePassword(),
-                config.getKeyAlias(),
-                IdeModel.copyNewProperty(config::isV1SigningEnabled, null));
     }
 }
