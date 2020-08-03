@@ -53,6 +53,55 @@ class DeviceUtilsTest {
         Truth.assertThat(device.getLanguages(Duration.ZERO))
             .containsExactly("en", "fr", "es", "it", "de")
     }
+    @Test
+    fun testMdnsConnectionIsFalseForPhysicalDeviceSerialNumber() {
+        // Prepare
+        setUpDeviceSerialNumber("435DT06WH")
+
+        // Act
+        val isClear = device.isMdnsAutoConnectUnencrypted
+        val isTls = device.isMdnsAutoConnectTls
+
+        // Assert
+        Truth.assertThat(isClear).isFalse()
+        Truth.assertThat(isTls).isFalse()
+    }
+
+    @Test
+    fun testMdnsConnectionIsTrueForTlsSerialNumber() {
+        // Prepare
+        setUpDeviceSerialNumber("adb-435DT06WH-vWgJpq._adb-tls-connect._tcp.")
+
+        // Act
+        val isClear = device.isMdnsAutoConnectUnencrypted
+        val isTls = device.isMdnsAutoConnectTls
+
+        // Assert
+        Truth.assertThat(isClear).isFalse()
+        Truth.assertThat(isTls).isTrue()
+    }
+
+    @Test
+    fun testMdnsConnectionIsTrueForClearSerialNumber() {
+        // Prepare
+        setUpDeviceSerialNumber("adb-435DT06WH-vWgJpq._adb._tcp.")
+
+        // Act
+        val isClear = device.isMdnsAutoConnectUnencrypted
+        val isTls = device.isMdnsAutoConnectTls
+
+        // Assert
+        Truth.assertThat(isClear).isTrue()
+        Truth.assertThat(isTls).isFalse()
+    }
+
+    private fun setUpDeviceSerialNumber(serialNumber: String) {
+        Mockito.`when`(
+            device.serialNumber
+        ).thenAnswer {
+            serialNumber
+        }
+    }
 
     private fun setUpDeviceOutput(vararg configs: String) {
         Mockito.`when`(
