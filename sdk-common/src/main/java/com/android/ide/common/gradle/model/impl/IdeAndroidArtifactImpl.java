@@ -24,6 +24,8 @@ import com.android.builder.model.NativeLibrary;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeClassField;
+import com.android.ide.common.gradle.model.IdeDependencies;
+import com.android.ide.common.gradle.model.IdeSourceProvider;
 import com.android.ide.common.gradle.model.IdeTestOptions;
 import com.android.ide.common.repository.GradleVersion;
 import com.google.common.base.MoreObjects;
@@ -33,11 +35,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of {@link AndroidArtifact}. */
 public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
@@ -85,63 +89,62 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         myHashCode = 0;
     }
 
-    public IdeAndroidArtifactImpl(
-            @NonNull AndroidArtifact artifact,
-            @NonNull ModelCache modelCache,
-            @NonNull IdeDependenciesFactory dependenciesFactory,
-            @Nullable GradleVersion agpVersion) {
-        super(artifact, modelCache, dependenciesFactory, agpVersion);
-        myOutputs = copyOutputs(artifact, modelCache, agpVersion);
-        myApplicationId = artifact.getApplicationId();
-        mySourceGenTaskName = artifact.getSourceGenTaskName();
-        myGeneratedResourceFolders = ImmutableList.copyOf(artifact.getGeneratedResourceFolders());
-        mySigningConfigName = artifact.getSigningConfigName();
-        // In AGP 4.0 and below abiFilters was nullable, normalize null to empty set.
-        myAbiFilters =
-                ImmutableSet.copyOf(
-                        MoreObjects.firstNonNull(artifact.getAbiFilters(), ImmutableSet.of()));
-        mySigned = artifact.isSigned();
-        myAdditionalRuntimeApks =
-                IdeModel.copyNewPropertyNonNull(
-                        () -> new ArrayList<>(artifact.getAdditionalRuntimeApks()),
-                        Collections.emptyList());
-        myTestOptions =
-                IdeModel.copyNewProperty(
-                        modelCache,
-                        artifact::getTestOptions,
-                        testOptions ->
-                                new IdeTestOptionsImpl(
-                                        testOptions.getAnimationsDisabled(),
-                                        IdeTestOptionsImpl.convertExecution(
-                                                testOptions.getExecution())),
-                        null);
-        myInstrumentedTestTaskName =
-                IdeModel.copyNewProperty(
-                        modelCache,
-                        artifact::getInstrumentedTestTaskName,
-                        Function.identity(),
-                        null);
-        myBundleTaskName =
-                IdeModel.copyNewProperty(
-                        modelCache, artifact::getBundleTaskName, Function.identity(), null);
-        myPostBundleTaskModelFile =
-                IdeModel.copyNewProperty(
-                        modelCache,
-                        artifact::getBundleTaskOutputListingFile,
-                        Function.identity(),
-                        null);
-        myApkFromBundleTaskName =
-                IdeModel.copyNewProperty(
-                        modelCache, artifact::getApkFromBundleTaskName, Function.identity(), null);
-        myPostApkFromBundleTaskModelFile =
-                IdeModel.copyNewProperty(
-                        modelCache,
-                        artifact::getApkFromBundleTaskOutputListingFile,
-                        Function.identity(),
-                        null);
-        myCodeShrinker =
-                IdeModel.copyNewProperty(
-                        modelCache, artifact::getCodeShrinker, Function.identity(), null);
+    private IdeAndroidArtifactImpl(
+            @NotNull String name,
+            @NotNull String compileTaskName,
+            @NotNull String assembleTaskName,
+            @NotNull String postAssembleModelFile,
+            @NotNull File classesFolder,
+            @Nullable File javaResourcesFolder,
+            @NotNull ImmutableSet<String> ideSetupTaskNames,
+            @NotNull LinkedHashSet<File> generatedSourceFolders,
+            @Nullable IdeSourceProvider variantSourceProvider,
+            @Nullable IdeSourceProvider multiFlavorSourceProvider,
+            @NotNull Set<File> additionalClassFolders,
+            @NotNull IdeDependencies level2Dependencies,
+            @NotNull List<IdeAndroidArtifactOutput> outputs,
+            @NotNull String applicationId,
+            @NotNull String sourceGenTaskName,
+            @NotNull ImmutableList<File> generatedResourceFolders,
+            @Nullable String signingConfigName,
+            @NotNull ImmutableSet<String> abiFilters,
+            boolean signed,
+            @NotNull List<File> additionalRuntimeApks,
+            @Nullable IdeTestOptionsImpl testOptions,
+            @Nullable String instrumentedTestTaskName,
+            @Nullable String bundleTaskName,
+            @Nullable String postBundleTaskModelFile,
+            @Nullable String apkFromBundleTaskName,
+            @Nullable String postApkFromBundleTaskModelFile,
+            @Nullable CodeShrinker codeShrinker) {
+        super(
+                name,
+                compileTaskName,
+                assembleTaskName,
+                postAssembleModelFile,
+                classesFolder,
+                javaResourcesFolder,
+                ideSetupTaskNames,
+                generatedSourceFolders,
+                variantSourceProvider,
+                multiFlavorSourceProvider,
+                additionalClassFolders,
+                level2Dependencies);
+        myOutputs = outputs;
+        myApplicationId = applicationId;
+        mySourceGenTaskName = sourceGenTaskName;
+        myGeneratedResourceFolders = generatedResourceFolders;
+        mySigningConfigName = signingConfigName;
+        myAbiFilters = abiFilters;
+        mySigned = signed;
+        myAdditionalRuntimeApks = additionalRuntimeApks;
+        myTestOptions = testOptions;
+        myInstrumentedTestTaskName = instrumentedTestTaskName;
+        myBundleTaskName = bundleTaskName;
+        myPostBundleTaskModelFile = postBundleTaskModelFile;
+        myApkFromBundleTaskName = apkFromBundleTaskName;
+        myPostApkFromBundleTaskModelFile = postApkFromBundleTaskModelFile;
+        myCodeShrinker = codeShrinker;
         myHashCode = calculateHashCode();
     }
 
@@ -160,7 +163,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
             return IdeModel.copy(
                     outputs,
                     modelCache,
-                    output -> new IdeAndroidArtifactOutputImpl(output, modelCache));
+                    output -> IdeAndroidArtifactOutputImpl.createFrom(output, modelCache));
         } catch (RuntimeException e) {
             System.err.println("Caught exception: " + e);
             // See http://b/64305584
@@ -356,5 +359,66 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 + ", myPostApkFromBundleTaskModelFile="
                 + myPostApkFromBundleTaskModelFile
                 + "}";
+    }
+
+    public static IdeAndroidArtifactImpl createFrom(
+            @NonNull AndroidArtifact artifact,
+            @NonNull ModelCache modelCache,
+            @NonNull IdeDependenciesFactory dependenciesFactory,
+            @Nullable GradleVersion agpVersion) {
+        return new IdeAndroidArtifactImpl(
+                artifact.getName(),
+                artifact.getCompileTaskName(),
+                artifact.getAssembleTaskName(),
+                IdeModel.copyNewPropertyNonNull(artifact::getAssembleTaskOutputListingFile, ""),
+                artifact.getClassesFolder(),
+                IdeModel.copyNewProperty(artifact::getJavaResourcesFolder, null),
+                ImmutableSet.copyOf(getIdeSetupTaskNames(artifact)),
+                new LinkedHashSet<File>(getGeneratedSourceFolders(artifact)),
+                createSourceProvider(modelCache, artifact.getVariantSourceProvider()),
+                createSourceProvider(modelCache, artifact.getMultiFlavorSourceProvider()),
+                IdeModel.copyNewPropertyNonNull(
+                        artifact::getAdditionalClassesFolders, Collections.emptySet()),
+                dependenciesFactory.create(artifact),
+                copyOutputs(artifact, modelCache, agpVersion),
+                artifact.getApplicationId(),
+                artifact.getSourceGenTaskName(),
+                ImmutableList.copyOf(artifact.getGeneratedResourceFolders()),
+                artifact.getSigningConfigName(),
+                ImmutableSet
+                        .copyOf( // In AGP 4.0 and below abiFilters was nullable, normalize null to
+                                // empty set.
+                                MoreObjects.firstNonNull(
+                                        artifact.getAbiFilters(), ImmutableSet.of())),
+                artifact.isSigned(),
+                IdeModel.copyNewPropertyNonNull(
+                        () -> new ArrayList<>(artifact.getAdditionalRuntimeApks()),
+                        Collections.emptyList()),
+                IdeModel.copyNewProperty(
+                        modelCache,
+                        artifact::getTestOptions,
+                        testOptions -> IdeTestOptionsImpl.createFrom(testOptions),
+                        null),
+                IdeModel.copyNewProperty(
+                        modelCache,
+                        artifact::getInstrumentedTestTaskName,
+                        Function.identity(),
+                        null),
+                IdeModel.copyNewProperty(
+                        modelCache, artifact::getBundleTaskName, Function.identity(), null),
+                IdeModel.copyNewProperty(
+                        modelCache,
+                        artifact::getBundleTaskOutputListingFile,
+                        Function.identity(),
+                        null),
+                IdeModel.copyNewProperty(
+                        modelCache, artifact::getApkFromBundleTaskName, Function.identity(), null),
+                IdeModel.copyNewProperty(
+                        modelCache,
+                        artifact::getApkFromBundleTaskOutputListingFile,
+                        Function.identity(),
+                        null),
+                IdeModel.copyNewProperty(
+                        modelCache, artifact::getCodeShrinker, Function.identity(), null));
     }
 }

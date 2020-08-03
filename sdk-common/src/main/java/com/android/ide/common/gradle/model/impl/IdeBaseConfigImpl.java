@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -24,12 +23,14 @@ import com.android.ide.common.gradle.model.IdeBaseConfig;
 import com.android.ide.common.gradle.model.IdeClassField;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of a {@link BaseConfig}. */
 public abstract class IdeBaseConfigImpl implements IdeBaseConfig, Serializable {
@@ -61,26 +62,23 @@ public abstract class IdeBaseConfigImpl implements IdeBaseConfig, Serializable {
         hashCode = 0;
     }
 
-    protected IdeBaseConfigImpl(@NonNull BaseConfig config, @NonNull ModelCache modelCache) {
-        myName = config.getName();
-        myResValues =
-                IdeModel.copy(
-                        config.getResValues(),
-                        modelCache,
-                        classField -> IdeClassFieldImpl.createFrom(classField));
-        myProguardFiles = ImmutableList.copyOf(config.getProguardFiles());
-        myConsumerProguardFiles = ImmutableList.copyOf(config.getConsumerProguardFiles());
-        // AGP may return internal Groovy GString implementation as a value in manifestPlaceholders
-        // map. It cannot be serialized
-        // with IDEA's external system serialization. We convert values to String to make them
-        // usable as they are converted to String by
-        // the manifest merger anyway.
-        myManifestPlaceholders =
-                config.getManifestPlaceholders().entrySet().stream()
-                        .collect(toImmutableMap(it -> it.getKey(), it -> it.getValue().toString()));
-        myApplicationIdSuffix = config.getApplicationIdSuffix();
-        myVersionNameSuffix = IdeModel.copyNewProperty(config::getVersionNameSuffix, null);
-        myMultiDexEnabled = IdeModel.copyNewProperty(config::getMultiDexEnabled, null);
+    protected IdeBaseConfigImpl(
+            @NotNull String name,
+            @NotNull Map<String, IdeClassField> resValues,
+            @NotNull ImmutableList<File> proguardFiles,
+            @NotNull ImmutableList<File> consumerProguardFiles,
+            @NotNull ImmutableMap<String, Object> manifestPlaceholders,
+            @Nullable String applicationIdSuffix,
+            @Nullable String versionNameSuffix,
+            @Nullable Boolean multiDexEnabled) {
+        myName = name;
+        myResValues = resValues;
+        myProguardFiles = proguardFiles;
+        myConsumerProguardFiles = consumerProguardFiles;
+        myManifestPlaceholders = manifestPlaceholders;
+        myApplicationIdSuffix = applicationIdSuffix;
+        myVersionNameSuffix = versionNameSuffix;
+        myMultiDexEnabled = multiDexEnabled;
 
         hashCode = calculateHashCode();
     }

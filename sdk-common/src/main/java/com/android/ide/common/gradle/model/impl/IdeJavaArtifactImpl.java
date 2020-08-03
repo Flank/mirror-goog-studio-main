@@ -18,10 +18,16 @@ package com.android.ide.common.gradle.model.impl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.JavaArtifact;
+import com.android.ide.common.gradle.model.IdeDependencies;
 import com.android.ide.common.gradle.model.IdeJavaArtifact;
-import com.android.ide.common.repository.GradleVersion;
+import com.android.ide.common.gradle.model.IdeSourceProvider;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
+import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of a {@link JavaArtifact}. */
 public final class IdeJavaArtifactImpl extends IdeBaseArtifactImpl implements IdeJavaArtifact {
@@ -40,12 +46,33 @@ public final class IdeJavaArtifactImpl extends IdeBaseArtifactImpl implements Id
     }
 
     public IdeJavaArtifactImpl(
-            @NonNull JavaArtifact artifact,
-            @NonNull ModelCache seen,
-            @NonNull IdeDependenciesFactory dependenciesFactory,
-            @Nullable GradleVersion gradleVersion) {
-        super(artifact, seen, dependenciesFactory, gradleVersion);
-        myMockablePlatformJar = IdeModel.copyNewProperty(artifact::getMockablePlatformJar, null);
+            @NotNull String name,
+            @NotNull String compileTaskName,
+            @NotNull String assembleTaskName,
+            @NotNull String postAssembleModelFile,
+            @NotNull File classesFolder,
+            @Nullable File javaResourcesFolder,
+            @NotNull ImmutableSet<String> ideSetupTaskNames,
+            @NotNull LinkedHashSet<File> generatedSourceFolders,
+            @Nullable IdeSourceProvider variantSourceProvider,
+            @Nullable IdeSourceProvider multiFlavorSourceProvider,
+            @NotNull Set<File> additionalClassFolders,
+            @NotNull IdeDependencies level2Dependencies,
+            @Nullable File mockablePlatformJar) {
+        super(
+                name,
+                compileTaskName,
+                assembleTaskName,
+                postAssembleModelFile,
+                classesFolder,
+                javaResourcesFolder,
+                ideSetupTaskNames,
+                generatedSourceFolders,
+                variantSourceProvider,
+                multiFlavorSourceProvider,
+                additionalClassFolders,
+                level2Dependencies);
+        myMockablePlatformJar = mockablePlatformJar;
 
         myHashCode = calculateHashCode();
     }
@@ -95,5 +122,26 @@ public final class IdeJavaArtifactImpl extends IdeBaseArtifactImpl implements Id
     @Override
     public File getMockablePlatformJar() {
         return myMockablePlatformJar;
+    }
+
+    public static IdeJavaArtifactImpl createFrom(
+            @NonNull JavaArtifact artifact,
+            @NonNull ModelCache seen,
+            @NonNull IdeDependenciesFactory dependenciesFactory) {
+        return new IdeJavaArtifactImpl(
+                artifact.getName(),
+                artifact.getCompileTaskName(),
+                artifact.getAssembleTaskName(),
+                IdeModel.copyNewPropertyNonNull(artifact::getAssembleTaskOutputListingFile, ""),
+                artifact.getClassesFolder(),
+                IdeModel.copyNewProperty(artifact::getJavaResourcesFolder, null),
+                ImmutableSet.copyOf(getIdeSetupTaskNames(artifact)),
+                new LinkedHashSet<File>(getGeneratedSourceFolders(artifact)),
+                createSourceProvider(seen, artifact.getVariantSourceProvider()),
+                createSourceProvider(seen, artifact.getMultiFlavorSourceProvider()),
+                IdeModel.copyNewPropertyNonNull(
+                        artifact::getAdditionalClassesFolders, Collections.emptySet()),
+                dependenciesFactory.create(artifact),
+                IdeModel.copyNewProperty(artifact::getMockablePlatformJar, null));
     }
 }

@@ -143,18 +143,18 @@ class IdeVariantImpl(
         name = variant.name,
         displayName = variant.displayName,
         mainArtifact = modelCache.computeIfAbsent(variant.mainArtifact) { artifact: AndroidArtifact ->
-          IdeAndroidArtifactImpl(artifact, modelCache, dependenciesFactory, modelVersion)
+          IdeAndroidArtifactImpl.createFrom(artifact, modelCache, dependenciesFactory, modelVersion)
         },
         extraAndroidArtifacts = IdeModel.copy(variant.extraAndroidArtifacts, modelCache) { artifact: AndroidArtifact ->
-          IdeAndroidArtifactImpl(artifact, modelCache, dependenciesFactory, modelVersion)
+          IdeAndroidArtifactImpl.createFrom(artifact, modelCache, dependenciesFactory, modelVersion)
         },
         extraJavaArtifacts = IdeModel.copy(variant.extraJavaArtifacts, modelCache) { artifact: JavaArtifact ->
-          IdeJavaArtifactImpl(artifact, modelCache, dependenciesFactory, modelVersion)
+          IdeJavaArtifactImpl.createFrom(artifact, modelCache, dependenciesFactory)
         },
         buildType = variant.buildType,
         productFlavors = ImmutableList.copyOf(variant.productFlavors),
         mergedFlavor = modelCache.computeIfAbsent(variant.mergedFlavor) { flavor: ProductFlavor ->
-          IdeProductFlavorImpl(flavor, modelCache)
+          IdeProductFlavorImpl.createFrom(flavor, modelCache)
         },
         testedTargetVariants = getTestedTargetVariants(variant, modelCache),
         instantAppCompatible = (modelVersion != null &&

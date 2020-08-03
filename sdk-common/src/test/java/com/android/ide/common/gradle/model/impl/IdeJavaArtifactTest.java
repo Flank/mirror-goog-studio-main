@@ -43,8 +43,7 @@ public class IdeJavaArtifactTest {
     public void constructor() throws Throwable {
         JavaArtifact original = new JavaArtifactStub();
         IdeJavaArtifact copy =
-                new IdeJavaArtifactImpl(
-                        original, myModelCache, myDependenciesFactory, myGradleVersion);
+                IdeJavaArtifactImpl.createFrom(original, myModelCache, myDependenciesFactory);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

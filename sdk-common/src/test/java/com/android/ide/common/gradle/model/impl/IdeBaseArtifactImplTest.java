@@ -15,6 +15,9 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
+import static com.android.ide.common.gradle.model.impl.IdeBaseArtifactImpl.createSourceProvider;
+import static com.android.ide.common.gradle.model.impl.IdeBaseArtifactImpl.getGeneratedSourceFolders;
+import static com.android.ide.common.gradle.model.impl.IdeBaseArtifactImpl.getIdeSetupTaskNames;
 import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.*;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -23,9 +26,11 @@ import com.android.builder.model.BaseArtifact;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.gradle.model.stubs.BaseArtifactStub;
-import com.android.ide.common.repository.GradleVersion;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,12 +46,22 @@ public class IdeBaseArtifactImplTest {
     @Test
     public void addGeneratedSourceFolder() {
         BaseArtifact original = new BaseArtifactStub();
+        final ModelCache cache = new ModelCache();
         IdeBaseArtifactImpl copy =
                 new IdeBaseArtifactImpl(
-                        original,
-                        new ModelCache(),
-                        myDependenciesFactory,
-                        GradleVersion.parse("2.3.0")) {};
+                        original.getName(),
+                        original.getCompileTaskName(),
+                        original.getAssembleTaskName(),
+                        IdeModel.copyNewProperty(original::getAssembleTaskOutputListingFile, ""),
+                        original.getClassesFolder(),
+                        IdeModel.copyNewProperty(original::getJavaResourcesFolder, null),
+                        ImmutableSet.copyOf(getIdeSetupTaskNames(original)),
+                        new LinkedHashSet<File>(getGeneratedSourceFolders(original)),
+                        createSourceProvider(cache, original.getVariantSourceProvider()),
+                        createSourceProvider(cache, original.getMultiFlavorSourceProvider()),
+                        IdeModel.copyNewProperty(
+                                original::getAdditionalClassesFolders, Collections.emptySet()),
+                        myDependenciesFactory.create(original)) {};
         File folder = new File("foo");
         copy.addGeneratedSourceFolder(folder);
         Collection<File> generatedSourceFolders = copy.getGeneratedSourceFolders();
@@ -79,12 +94,22 @@ public class IdeBaseArtifactImplTest {
                     }
                 };
 
+        final ModelCache cache = new ModelCache();
         IdeBaseArtifactImpl artifact =
                 new IdeBaseArtifactImpl(
-                        original,
-                        new ModelCache(),
-                        myDependenciesFactory,
-                        GradleVersion.parse("1.5.0")) {};
+                        original.getName(),
+                        original.getCompileTaskName(),
+                        original.getAssembleTaskName(),
+                        IdeModel.copyNewProperty(original::getAssembleTaskOutputListingFile, ""),
+                        original.getClassesFolder(),
+                        IdeModel.copyNewProperty(original::getJavaResourcesFolder, null),
+                        ImmutableSet.copyOf(getIdeSetupTaskNames(original)),
+                        new LinkedHashSet<File>(getGeneratedSourceFolders(original)),
+                        createSourceProvider(cache, original.getVariantSourceProvider()),
+                        createSourceProvider(cache, original.getMultiFlavorSourceProvider()),
+                        IdeModel.copyNewProperty(
+                                original::getAdditionalClassesFolders, Collections.emptySet()),
+                        myDependenciesFactory.create(original)) {};
         expectUnsupportedOperationException(artifact::getJavaResourcesFolder);
     }
 

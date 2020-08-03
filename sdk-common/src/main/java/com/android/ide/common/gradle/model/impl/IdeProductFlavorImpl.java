@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.ApiVersion;
@@ -22,15 +24,18 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.ide.common.gradle.model.IdeApiVersion;
+import com.android.ide.common.gradle.model.IdeClassField;
 import com.android.ide.common.gradle.model.IdeProductFlavor;
 import com.android.ide.common.gradle.model.IdeSigningConfig;
 import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of a {@link ProductFlavor}. */
 public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements IdeProductFlavor {
@@ -78,25 +83,55 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
         myHashCode = 0;
     }
 
-    public IdeProductFlavorImpl(@NonNull ProductFlavor flavor, @NonNull ModelCache modelCache) {
-        super(flavor, modelCache);
+    public IdeProductFlavorImpl(
+            @NotNull String name,
+            @NotNull Map<String, IdeClassField> resValues,
+            @NotNull ImmutableList<File> proguardFiles,
+            @NotNull ImmutableList<File> consumerProguardFiles,
+            @NotNull ImmutableMap<String, Object> manifestPlaceholders,
+            @Nullable String applicationIdSuffix,
+            @Nullable String versionNameSuffix,
+            @Nullable Boolean multiDexEnabled,
+            @NotNull ImmutableMap<String, String> testInstrumentationRunnerArguments,
+            @NotNull ImmutableList<String> resourceConfigurations,
+            @Nullable IdeVectorDrawablesOptions vectorDrawables,
+            @Nullable String dimension,
+            @Nullable String applicationId,
+            @Nullable Integer versionCode,
+            @Nullable String versionName,
+            @Nullable IdeApiVersionImpl minSdkVersion,
+            @Nullable IdeApiVersionImpl targetSdkVersion,
+            @Nullable Integer maxSdkVersion,
+            @Nullable String testApplicationId,
+            @Nullable String testInstrumentationRunner,
+            @Nullable Boolean testFunctionalTest,
+            @Nullable Boolean testHandleProfiling,
+            @Nullable IdeSigningConfig signingConfig) {
+        super(
+                name,
+                resValues,
+                proguardFiles,
+                consumerProguardFiles,
+                manifestPlaceholders,
+                applicationIdSuffix,
+                versionNameSuffix,
+                multiDexEnabled);
 
-        myTestInstrumentationRunnerArguments =
-                ImmutableMap.copyOf(flavor.getTestInstrumentationRunnerArguments());
-        myResourceConfigurations = ImmutableList.copyOf(flavor.getResourceConfigurations());
-        myVectorDrawables = copyVectorDrawables(flavor, modelCache);
-        myDimension = flavor.getDimension();
-        myApplicationId = flavor.getApplicationId();
-        myVersionCode = flavor.getVersionCode();
-        myVersionName = flavor.getVersionName();
-        myMinSdkVersion = copy(modelCache, flavor.getMinSdkVersion());
-        myTargetSdkVersion = copy(modelCache, flavor.getTargetSdkVersion());
-        myMaxSdkVersion = flavor.getMaxSdkVersion();
-        myTestApplicationId = flavor.getTestApplicationId();
-        myTestInstrumentationRunner = flavor.getTestInstrumentationRunner();
-        myTestFunctionalTest = flavor.getTestFunctionalTest();
-        myTestHandleProfiling = flavor.getTestHandleProfiling();
-        mySigningConfig = copy(modelCache, flavor.getSigningConfig());
+        myTestInstrumentationRunnerArguments = testInstrumentationRunnerArguments;
+        myResourceConfigurations = resourceConfigurations;
+        myVectorDrawables = vectorDrawables;
+        myDimension = dimension;
+        myApplicationId = applicationId;
+        myVersionCode = versionCode;
+        myVersionName = versionName;
+        myMinSdkVersion = minSdkVersion;
+        myTargetSdkVersion = targetSdkVersion;
+        myMaxSdkVersion = maxSdkVersion;
+        myTestApplicationId = testApplicationId;
+        myTestInstrumentationRunner = testInstrumentationRunner;
+        myTestFunctionalTest = testFunctionalTest;
+        myTestHandleProfiling = testHandleProfiling;
+        mySigningConfig = signingConfig;
 
         myHashCode = calculateHashCode();
     }
@@ -325,5 +360,45 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
                 + ", mySigningConfig="
                 + mySigningConfig
                 + "}";
+    }
+
+    public static IdeProductFlavorImpl createFrom(
+            @NonNull ProductFlavor flavor, @NonNull ModelCache modelCache) {
+        return new IdeProductFlavorImpl(
+                flavor.getName(),
+                IdeModel.copy(
+                        flavor.getResValues(),
+                        modelCache,
+                        classField -> IdeClassFieldImpl.createFrom(classField)),
+                ImmutableList.copyOf(flavor.getProguardFiles()),
+                ImmutableList.copyOf(flavor.getConsumerProguardFiles()),
+                flavor.getManifestPlaceholders().entrySet().stream()
+                        // AGP may return internal Groovy GString implementation as a value in
+                        // manifestPlaceholders
+                        // map. It cannot be serialized
+                        // with IDEA's external system serialization. We convert values to String to
+                        // make them
+                        // usable as they are converted to String by
+                        // the manifest merger anyway.
+
+                        .collect(toImmutableMap(it -> it.getKey(), it -> it.getValue().toString())),
+                flavor.getApplicationIdSuffix(),
+                IdeModel.copyNewProperty(flavor::getVersionNameSuffix, null),
+                IdeModel.copyNewProperty(flavor::getMultiDexEnabled, null),
+                ImmutableMap.copyOf(flavor.getTestInstrumentationRunnerArguments()),
+                ImmutableList.copyOf(flavor.getResourceConfigurations()),
+                copyVectorDrawables(flavor, modelCache),
+                flavor.getDimension(),
+                flavor.getApplicationId(),
+                flavor.getVersionCode(),
+                flavor.getVersionName(),
+                copy(modelCache, flavor.getMinSdkVersion()),
+                copy(modelCache, flavor.getTargetSdkVersion()),
+                flavor.getMaxSdkVersion(),
+                flavor.getTestApplicationId(),
+                flavor.getTestInstrumentationRunner(),
+                flavor.getTestFunctionalTest(),
+                flavor.getTestHandleProfiling(),
+                copy(modelCache, flavor.getSigningConfig()));
     }
 }

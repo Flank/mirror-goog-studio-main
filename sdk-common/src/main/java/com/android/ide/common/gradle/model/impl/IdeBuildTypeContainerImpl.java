@@ -116,7 +116,7 @@ public final class IdeBuildTypeContainerImpl implements IdeBuildTypeContainer, S
         return new IdeBuildTypeContainerImpl(
                 modelCache.computeIfAbsent(
                         container.getBuildType(),
-                        buildType -> new IdeBuildTypeImpl(buildType, modelCache)),
+                        buildType -> IdeBuildTypeImpl.createFrom(buildType, modelCache)),
                 modelCache.computeIfAbsent(
                         container.getSourceProvider(),
                         provider ->

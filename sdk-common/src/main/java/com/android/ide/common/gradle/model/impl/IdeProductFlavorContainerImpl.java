@@ -116,7 +116,7 @@ public final class IdeProductFlavorContainerImpl implements IdeProductFlavorCont
         return new IdeProductFlavorContainerImpl(
                 modelCache.computeIfAbsent(
                         container.getProductFlavor(),
-                        flavor -> new IdeProductFlavorImpl(flavor, modelCache)),
+                        flavor -> IdeProductFlavorImpl.createFrom(flavor, modelCache)),
                 modelCache.computeIfAbsent(
                         container.getSourceProvider(),
                         provider ->

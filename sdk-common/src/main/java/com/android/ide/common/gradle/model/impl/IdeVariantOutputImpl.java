@@ -20,11 +20,12 @@ import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
-import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of a {@link VariantOutput}. */
 public abstract class IdeVariantOutputImpl implements VariantOutput, Serializable {
@@ -51,32 +52,26 @@ public abstract class IdeVariantOutputImpl implements VariantOutput, Serializabl
         hashCode = 0;
     }
 
-    public IdeVariantOutputImpl(@NonNull VariantOutput output, @NonNull ModelCache modelCache) {
+    public IdeVariantOutputImpl(
+            @NotNull List<IdeOutputFileImpl> outputs,
+            @NotNull List<String> filterTypes,
+            @Nullable Collection<FilterData> filters,
+            @Nullable IdeOutputFileImpl mainOutputFile,
+            @Nullable String outputType,
+            int versionCode) {
         //noinspection deprecation
-        myOutputs =
-                IdeModel.copy(
-                        output.getOutputs(),
-                        modelCache,
-                        outputFile -> new IdeOutputFileImpl(outputFile, modelCache));
-        myFilterTypes =
-                IdeModel.copyNewProperty(
-                        () -> ImmutableList.copyOf(output.getFilterTypes()),
-                        Collections.emptyList());
-        myFilters = copyFilters(output, modelCache);
-        myMainOutputFile =
-                IdeModel.copyNewProperty(
-                        modelCache,
-                        output::getMainOutputFile,
-                        file -> new IdeOutputFileImpl(file, modelCache),
-                        null);
-        myOutputType = IdeModel.copyNewProperty(output::getOutputType, null);
-        myVersionCode = output.getVersionCode();
+        myOutputs = outputs;
+        myFilterTypes = filterTypes;
+        myFilters = filters;
+        myMainOutputFile = mainOutputFile;
+        myOutputType = outputType;
+        myVersionCode = versionCode;
 
         hashCode = calculateHashCode();
     }
 
     @Nullable
-    private static Collection<FilterData> copyFilters(
+    public static Collection<FilterData> copyFilters(
             @NonNull VariantOutput output, @NonNull ModelCache modelCache) {
         try {
             return IdeModel.copy(

@@ -42,7 +42,8 @@ public class IdeAndroidArtifactOutputTest {
     @Test
     public void serialization() throws Exception {
         IdeAndroidArtifactOutputImpl output =
-                new IdeAndroidArtifactOutputImpl(new AndroidArtifactOutputStub(), myModelCache);
+                IdeAndroidArtifactOutputImpl.createFrom(
+                        new AndroidArtifactOutputStub(), myModelCache);
         byte[] bytes = Serialization.serialize(output);
         Object o = Serialization.deserialize(bytes);
         assertEquals(output, o);

@@ -23,11 +23,9 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.BaseArtifact;
 import com.android.builder.model.SourceProvider;
-import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.gradle.model.IdeBaseArtifact;
 import com.android.ide.common.gradle.model.IdeDependencies;
 import com.android.ide.common.gradle.model.IdeSourceProvider;
-import com.android.ide.common.repository.GradleVersion;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -59,7 +57,6 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
     @NonNull private final IdeDependencies myLevel2Dependencies;
 
     @Nullable private final File myJavaResourcesFolder;
-    @Nullable private final DependencyGraphs myDependencyGraphs;
     @Nullable private final IdeSourceProvider myVariantSourceProvider;
     @Nullable private final IdeSourceProvider myMultiFlavorSourceProvider;
     private final int hashCode;
@@ -79,7 +76,6 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
         myLevel2Dependencies = new IdeDependenciesImpl();
 
         myJavaResourcesFolder = null;
-        myDependencyGraphs = null;
         myVariantSourceProvider = null;
         myMultiFlavorSourceProvider = null;
 
@@ -87,35 +83,36 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
     }
 
     protected IdeBaseArtifactImpl(
-            @NonNull BaseArtifact artifact,
-            @NonNull ModelCache modelCache,
-            @NonNull IdeDependenciesFactory dependenciesFactory,
-            @Nullable GradleVersion modelVersion) {
-        myName = artifact.getName();
-        myCompileTaskName = artifact.getCompileTaskName();
-        myAssembleTaskName = artifact.getAssembleTaskName();
-        myPostAssembleModelFile =
-                IdeModel.copyNewProperty(artifact::getAssembleTaskOutputListingFile, "");
-        myClassesFolder = artifact.getClassesFolder();
-        myJavaResourcesFolder = IdeModel.copyNewProperty(artifact::getJavaResourcesFolder, null);
+            @NotNull String name,
+            @NotNull String compileTaskName,
+            @NotNull String assembleTaskName,
+            @NotNull String postAssembleModelFile,
+            @NotNull File classesFolder,
+            @Nullable File javaResourcesFolder,
+            @NotNull ImmutableSet<String> ideSetupTaskNames,
+            @NotNull LinkedHashSet<File> generatedSourceFolders,
+            @Nullable IdeSourceProvider variantSourceProvider,
+            @Nullable IdeSourceProvider multiFlavorSourceProvider,
+            @NotNull Set<File> additionalClassFolders,
+            @NotNull IdeDependencies level2Dependencies) {
+        myName = name;
+        myCompileTaskName = compileTaskName;
+        myAssembleTaskName = assembleTaskName;
+        myPostAssembleModelFile = postAssembleModelFile;
+        myClassesFolder = classesFolder;
+        myJavaResourcesFolder = javaResourcesFolder;
 
-        myDependencyGraphs = null;
-
-        myIdeSetupTaskNames = ImmutableSet.copyOf(getIdeSetupTaskNames(artifact));
-        myGeneratedSourceFolders = new LinkedHashSet<File>(getGeneratedSourceFolders(artifact));
-        myVariantSourceProvider =
-                createSourceProvider(modelCache, artifact.getVariantSourceProvider());
-        myMultiFlavorSourceProvider =
-                createSourceProvider(modelCache, artifact.getMultiFlavorSourceProvider());
-        myAdditionalClassFolders =
-                IdeModel.copyNewProperty(
-                        artifact::getAdditionalClassesFolders, Collections.emptySet());
-        myLevel2Dependencies = dependenciesFactory.create(artifact);
+        myIdeSetupTaskNames = ideSetupTaskNames;
+        myGeneratedSourceFolders = generatedSourceFolders;
+        myVariantSourceProvider = variantSourceProvider;
+        myMultiFlavorSourceProvider = multiFlavorSourceProvider;
+        myAdditionalClassFolders = additionalClassFolders;
+        myLevel2Dependencies = level2Dependencies;
         hashCode = calculateHashCode();
     }
 
     @NonNull
-    private static Set<String> getIdeSetupTaskNames(@NonNull BaseArtifact artifact) {
+    public static Set<String> getIdeSetupTaskNames(@NonNull BaseArtifact artifact) {
         try {
             // This method was added in 1.1 - we have to handle the case when it's missing on the Gradle side.
             return ImmutableSet.copyOf(artifact.getIdeSetupTaskNames());
@@ -128,7 +125,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
     }
 
     @NonNull
-    private static Collection<File> getGeneratedSourceFolders(@NonNull BaseArtifact artifact) {
+    public static Collection<File> getGeneratedSourceFolders(@NonNull BaseArtifact artifact) {
         try {
             Collection<File> folders = artifact.getGeneratedSourceFolders();
             // JavaArtifactImpl#getGeneratedSourceFolders returns null even though BaseArtifact#getGeneratedSourceFolders is marked as @NonNull.
@@ -142,7 +139,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
     }
 
     @Nullable
-    private static IdeSourceProvider createSourceProvider(
+    public static IdeSourceProvider createSourceProvider(
             @NonNull ModelCache modelCache, @Nullable SourceProvider original) {
         return original != null
                 ? modelCache.computeIfAbsent(
@@ -256,7 +253,6 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
                 && Objects.equals(myAdditionalClassFolders, artifact.myAdditionalClassFolders)
                 && Objects.equals(myJavaResourcesFolder, artifact.myJavaResourcesFolder)
                 && Objects.equals(myLevel2Dependencies, artifact.myLevel2Dependencies)
-                && Objects.equals(myDependencyGraphs, artifact.myDependencyGraphs)
                 && Objects.equals(myIdeSetupTaskNames, artifact.myIdeSetupTaskNames)
                 && Objects.equals(myGeneratedSourceFolders, artifact.myGeneratedSourceFolders)
                 && Objects.equals(myVariantSourceProvider, artifact.myVariantSourceProvider)
@@ -282,7 +278,6 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
                 myClassesFolder,
                 myJavaResourcesFolder,
                 myLevel2Dependencies,
-                myDependencyGraphs,
                 myIdeSetupTaskNames,
                 myGeneratedSourceFolders,
                 myVariantSourceProvider,
@@ -307,8 +302,6 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
                 + myJavaResourcesFolder
                 + ", myLevel2Dependencies"
                 + myLevel2Dependencies
-                + ", myDependencyGraphs="
-                + myDependencyGraphs
                 + ", myIdeSetupTaskNames="
                 + myIdeSetupTaskNames
                 + ", myGeneratedSourceFolders="

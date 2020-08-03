@@ -15,11 +15,20 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+
 import com.android.annotations.NonNull;
 import com.android.builder.model.BuildType;
 import com.android.ide.common.gradle.model.IdeBuildType;
+import com.android.ide.common.gradle.model.IdeClassField;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import java.io.File;
+import java.util.Map;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /** Creates a deep copy of a {@link BuildType}. */
 public final class IdeBuildTypeImpl extends IdeBaseConfigImpl implements IdeBuildType {
@@ -47,14 +56,36 @@ public final class IdeBuildTypeImpl extends IdeBaseConfigImpl implements IdeBuil
         myHashCode = 0;
     }
 
-    public IdeBuildTypeImpl(@NonNull BuildType buildType, @NonNull ModelCache modelCache) {
-        super(buildType, modelCache);
-        myDebuggable = buildType.isDebuggable();
-        myJniDebuggable = buildType.isJniDebuggable();
-        myRenderscriptDebuggable = buildType.isRenderscriptDebuggable();
-        myRenderscriptOptimLevel = buildType.getRenderscriptOptimLevel();
-        myMinifyEnabled = buildType.isMinifyEnabled();
-        myZipAlignEnabled = buildType.isZipAlignEnabled();
+    public IdeBuildTypeImpl(
+            @NotNull String name,
+            @NotNull Map<String, IdeClassField> resValues,
+            @NotNull ImmutableList<File> proguardFiles,
+            @NotNull ImmutableList<File> consumerProguardFiles,
+            @NotNull ImmutableMap<String, Object> manifestPlaceholders,
+            @Nullable String applicationIdSuffix,
+            @Nullable String versionNameSuffix,
+            @Nullable Boolean multiDexEnabled,
+            boolean debuggable,
+            boolean jniDebuggable,
+            boolean renderscriptDebuggable,
+            int renderscriptOptimLevel,
+            boolean minifyEnabled,
+            boolean zipAlignEnabled) {
+        super(
+                name,
+                resValues,
+                proguardFiles,
+                consumerProguardFiles,
+                manifestPlaceholders,
+                applicationIdSuffix,
+                versionNameSuffix,
+                multiDexEnabled);
+        myDebuggable = debuggable;
+        myJniDebuggable = jniDebuggable;
+        myRenderscriptDebuggable = renderscriptDebuggable;
+        myRenderscriptOptimLevel = renderscriptOptimLevel;
+        myMinifyEnabled = minifyEnabled;
+        myZipAlignEnabled = zipAlignEnabled;
 
         myHashCode = calculateHashCode();
     }
@@ -164,5 +195,36 @@ public final class IdeBuildTypeImpl extends IdeBaseConfigImpl implements IdeBuil
                 + ", myZipAlignEnabled="
                 + myZipAlignEnabled
                 + "}";
+    }
+
+    public static IdeBuildTypeImpl createFrom(
+            @NonNull BuildType buildType, @NonNull ModelCache modelCache) {
+        return new IdeBuildTypeImpl(
+                buildType.getName(),
+                IdeModel.copy(
+                        buildType.getResValues(),
+                        modelCache,
+                        classField -> IdeClassFieldImpl.createFrom(classField)),
+                ImmutableList.copyOf(buildType.getProguardFiles()),
+                ImmutableList.copyOf(buildType.getConsumerProguardFiles()),
+                buildType.getManifestPlaceholders().entrySet().stream()
+                        // AGP may return internal Groovy GString implementation as a value in
+                        // manifestPlaceholders
+                        // map. It cannot be serialized
+                        // with IDEA's external system serialization. We convert values to String to
+                        // make them
+                        // usable as they are converted to String by
+                        // the manifest merger anyway.
+
+                        .collect(toImmutableMap(it -> it.getKey(), it -> it.getValue().toString())),
+                buildType.getApplicationIdSuffix(),
+                IdeModel.copyNewProperty(buildType::getVersionNameSuffix, null),
+                IdeModel.copyNewProperty(buildType::getMultiDexEnabled, null),
+                buildType.isDebuggable(),
+                buildType.isJniDebuggable(),
+                buildType.isRenderscriptDebuggable(),
+                buildType.getRenderscriptOptimLevel(),
+                buildType.isMinifyEnabled(),
+                buildType.isZipAlignEnabled());
     }
 }

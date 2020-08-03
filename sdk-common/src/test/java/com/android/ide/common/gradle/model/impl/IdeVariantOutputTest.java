@@ -16,9 +16,12 @@
 package com.android.ide.common.gradle.model.impl;
 
 import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.*;
+import static com.android.ide.common.gradle.model.impl.IdeVariantOutputImpl.copyFilters;
 
 import com.android.build.VariantOutput;
 import com.android.ide.common.gradle.model.stubs.VariantOutputStub;
+import com.google.common.collect.ImmutableList;
+import java.util.Collections;
 import org.junit.Test;
 
 /** Tests for {@link com.android.ide.common.gradle.model.impl.IdeVariantOutputImpl}. */
@@ -26,7 +29,24 @@ public class IdeVariantOutputTest {
     @Test
     public void constructor() throws Throwable {
         VariantOutput original = new VariantOutputStub();
-        IdeVariantOutputImpl copy = new IdeVariantOutputImpl(original, new ModelCache()) {};
+        final ModelCache cache = new ModelCache();
+        IdeVariantOutputImpl copy =
+                new IdeVariantOutputImpl(
+                        IdeModel.copy(
+                                original.getOutputs(),
+                                cache,
+                                outputFile -> new IdeOutputFileImpl(outputFile, cache)),
+                        IdeModel.copyNewProperty(
+                                () -> ImmutableList.copyOf(original.getFilterTypes()),
+                                Collections.emptyList()),
+                        copyFilters(original, cache),
+                        IdeModel.copyNewProperty(
+                                cache,
+                                original::getMainOutputFile,
+                                file -> new IdeOutputFileImpl(file, cache),
+                                null),
+                        IdeModel.copyNewProperty(original::getOutputType, null),
+                        original.getVersionCode()) {};
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
