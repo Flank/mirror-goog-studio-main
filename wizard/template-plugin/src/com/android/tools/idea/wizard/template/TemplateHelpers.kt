@@ -54,6 +54,34 @@ fun classToResource(name: String): String =
     AssetNameConverter(Type.CLASS_NAME, name).getValue(Type.RESOURCE)
   else ""
 
+/**
+ * Converts a String to Camel Case. The return will not contain any two consecutive upper case characters
+ * For example:
+ * MyCLASsName to MyClassName
+ * my_class_name to MyClassName
+ * URL to Url
+ **/
+fun toUpperCamelCase(string: String): String {
+  if (string.length <= 1) {
+    return string
+  }
+
+  return buildString(string.length) {
+    var previous = ' '
+    string.forEach { c ->
+      when {
+        c == '_' -> Unit
+        isEmpty() -> append(c.toUpperCase())
+        last().isUpperCase() -> append(c.toLowerCase())
+        previous == '_' -> append(c.toUpperCase())
+        previous.isUpperCase() -> append(c.toLowerCase())
+        else -> append(c)
+      }
+      previous = c
+    }
+  }
+}
+
 fun camelCaseToUnderlines(string: String): String = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, string)
 
 fun underscoreToCamelCase(

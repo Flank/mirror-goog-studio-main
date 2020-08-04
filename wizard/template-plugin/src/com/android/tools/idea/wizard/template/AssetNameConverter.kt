@@ -110,7 +110,7 @@ class AssetNameConverter(private val type: Type, private val name: String) {
    * since that can act as a common base type we can use to reliably covert into all other types.
    */
   private fun toClassName(): String = when (type) {
-    Type.ACTIVITY -> stripActivitySuffix(name)
+    Type.ACTIVITY -> stripActivitySuffix(toUpperCamelCase(name))
     Type.LAYOUT -> {
       val layoutPrefix = layoutPrefixWithTrailingUnderscore
       var layoutName = name
