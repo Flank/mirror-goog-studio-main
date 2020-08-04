@@ -98,7 +98,8 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
             generator =
                 createCxxMetadataGenerator(
                     sdkComponents.get(),
-                    configurationModel
+                    configurationModel,
+                    analyticsService.get()
                 )
         }
         return generator!!

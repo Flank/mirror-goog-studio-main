@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.profile
 
-import com.android.builder.profile.ProcessProfileWriter
-import com.android.builder.profile.ProfileRecordWriter
 import com.google.common.annotations.VisibleForTesting
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import java.time.Clock
@@ -37,7 +35,7 @@ open class TaskProfilingRecord
  * Construct a new task profiling record with the [GradleBuildProfileSpan] and decorations like
  * project path and variant name.
  */(
-    private val recordWriter: ProfileRecordWriter,
+    private val resourceManager: AnalyticsResourceManager,
     span: GradleBuildProfileSpan.Builder,
     private val taskPath: String,
     internal val projectPath: String,
@@ -46,7 +44,7 @@ open class TaskProfilingRecord
 
     val spanBuilder: GradleBuildProfileSpan.Builder = span
     private val workerRecordList: MutableMap<String, WorkerProfilingRecord> = mutableMapOf()
-    private val startTime = clock.instant()
+    private var startTime = Instant.MIN
     private var endTime = Instant.MIN
     private var closeTime = Instant.MIN
     internal val status = AtomicReference(Status.RUNNING)
@@ -99,13 +97,6 @@ open class TaskProfilingRecord
         closeTime = clock.instant()
     }
 
-    fun setTaskFinished() {
-        status.set(Status.FINISHED)
-        if (endTime == Instant.MIN) {
-            endTime = clock.instant()
-        }
-    }
-
     open fun addWorker(key: String) {
         addWorker(key, GradleBuildProfileSpan.ExecutionType.THREAD_EXECUTION)
     }
@@ -139,16 +130,14 @@ open class TaskProfilingRecord
     @Synchronized
     fun workerFinished(workerRecord: WorkerProfilingRecord) {
 
-        val recordWriter = ProcessProfileWriter.get()
-
         // create the span for the worker item itself
         val workerSpan = GradleBuildProfileSpan.newBuilder()
-            .setId(recordWriter.allocateRecordId())
+            .setId(resourceManager.allocateRecordId())
             .setParentId(spanBuilder.id)
 
         workerRecord.fillSpanRecord(workerSpan)
 
-        recordWriter.writeRecord(projectPath, variant, workerSpan, listOf())
+        resourceManager.writeRecord(projectPath, variant, workerSpan, listOf())
 
         // if all of our workers are done, we should record that as our completion time.
         if (status.get() == Status.CLOSED && allWorkersFinished()) {
@@ -166,7 +155,7 @@ open class TaskProfilingRecord
         spanBuilder.type = GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION
         spanBuilder.durationInMs = duration().toMillis()
 
-        recordWriter.writeRecord(
+        resourceManager.writeRecord(
             projectPath,
             variant,
             spanBuilder,
@@ -197,6 +186,17 @@ open class TaskProfilingRecord
     fun addSpan(builder: GradleBuildProfileSpan.Builder) {
         builder.parentId = spanBuilder.id
         taskSpans.add(builder.build())
+    }
+
+    fun setTaskStartTime(startTime: Long) {
+        this.startTime = Instant.ofEpochMilli(startTime)
+    }
+
+    fun setTaskEndTime(endTime: Long) {
+        status.set(Status.FINISHED)
+        if (this.endTime == Instant.MIN) {
+            this.endTime = Instant.ofEpochMilli(endTime)
+        }
     }
 
     companion object {

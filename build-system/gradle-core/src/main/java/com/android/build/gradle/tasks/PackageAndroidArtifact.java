@@ -887,7 +887,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     PackageApplication.recordMetrics(
                             params.getProjectPath().get(),
                             params.getOutputFile().get().getAsFile(),
-                            params.getAndroidResourcesFile().get().getAsFile());
+                            params.getAndroidResourcesFile().get().getAsFile(),
+                            params.getAnalyticsService().get());
                 }
             }
         }

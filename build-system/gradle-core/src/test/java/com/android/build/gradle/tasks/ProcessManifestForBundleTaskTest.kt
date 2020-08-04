@@ -20,6 +20,7 @@ import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.google.common.truth.Truth
 import org.gradle.api.Project
@@ -61,6 +62,7 @@ class ProcessManifestForBundleTaskTest {
             VariantOutputConfiguration.OutputType.SINGLE)
         Mockito.`when`(mainSplit.filters).thenReturn(listOf())
         task.mainSplit.set(mainSplit)
+        task.analyticsService.set(FakeNoOpAnalyticsService())
     }
 
     @Test

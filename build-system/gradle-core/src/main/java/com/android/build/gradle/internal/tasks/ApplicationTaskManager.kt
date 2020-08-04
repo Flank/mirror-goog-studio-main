@@ -52,15 +52,13 @@ class ApplicationTaskManager(
     testComponents: List<ComponentInfo<TestComponentImpl<out TestComponentProperties>, TestComponentPropertiesImpl>>,
     hasFlavors: Boolean,
     globalScope: GlobalScope,
-    extension: BaseExtension,
-    recorder: Recorder
+    extension: BaseExtension
 ) : AbstractAppTaskManager<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>(
     variants,
     testComponents,
     hasFlavors,
     globalScope,
-    extension,
-    recorder
+    extension
 ) {
 
     override fun doCreateTasksForVariant(

@@ -29,19 +29,22 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.createTaskCreationServices
+import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.build.gradle.internal.variant.BaseVariantData
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
 import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth.assertThat
+import com.google.wireless.android.sdk.stats.GradleBuildProfile
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
@@ -54,6 +57,7 @@ import org.mockito.MockitoAnnotations
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
+import java.util.Base64
 
 /** Tests for the [CompatibleScreensManifest] class  */
 class CompatibleScreensManifestTest {
@@ -77,7 +81,16 @@ class CompatibleScreensManifestTest {
     fun setUp() {
         val testDir = projectFolder.newFolder()
         val project = ProjectBuilder.builder().withProjectDir(testDir).build()
-
+        project.gradle.sharedServices.registerIfAbsent(
+            getBuildServiceName(AnalyticsService::class.java),
+            AnalyticsService::class.java
+        ) {
+            val profile = GradleBuildProfile.newBuilder().build().toByteArray()
+            it.parameters.profile.set(Base64.getEncoder().encodeToString(profile))
+            it.parameters.projects.set(mutableMapOf())
+            it.parameters.enableProfileJson.set(true)
+            it.parameters.taskMetadata.set(mutableMapOf())
+        }
         task = project.tasks.create("test", CompatibleScreensManifest::class.java)
 
         val services = createTaskCreationServices()
@@ -119,7 +132,6 @@ class CompatibleScreensManifestTest {
 
     @Test
     fun testConfigAction() {
-
         val configAction = CompatibleScreensManifest.CreationAction(
                 variantProperties, setOf("xxhpi", "xxxhdpi")
         )
@@ -144,6 +156,7 @@ class CompatibleScreensManifestTest {
         assertThat(task.outputFolder.get().asFile).isEqualTo(temporaryFolder.root)
         assertThat(task.applicationId.get()).isEqualTo("com.foo")
         assertThat(task.variantType.get()).isEqualTo(VariantTypeImpl.BASE_APK.toString())
+        assertThat(task.analyticsService.get()).isInstanceOf(AnalyticsService::class.java)
     }
 
     @Test
@@ -163,6 +176,7 @@ class CompatibleScreensManifestTest {
         task.screenSizes = ImmutableSet.of("mdpi", "xhdpi")
         task.applicationId.set("com.foo")
         task.variantType.set(VariantTypeImpl.BASE_APK.toString())
+        task.analyticsService.set(FakeNoOpAnalyticsService())
 
         task.taskAction()
         val buildElements = BuiltArtifactsLoaderImpl.loadFromDirectory(
@@ -190,6 +204,7 @@ class CompatibleScreensManifestTest {
         task.screenSizes = ImmutableSet.of("xhdpi")
         task.applicationId.set("com.foo")
         task.variantType.set(VariantTypeImpl.BASE_APK.toString())
+        task.analyticsService.set(FakeNoOpAnalyticsService())
 
         task.taskAction()
 
@@ -223,6 +238,7 @@ class CompatibleScreensManifestTest {
         task.screenSizes = ImmutableSet.of("xhdpi")
         task.applicationId.set("com.foo")
         task.variantType.set(VariantTypeImpl.BASE_APK.toString())
+        task.analyticsService.set(FakeNoOpAnalyticsService())
 
         task.taskAction()
 
@@ -266,6 +282,7 @@ class CompatibleScreensManifestTest {
         task.screenSizes = ImmutableSet.of("xhdpi", "xxhdpi")
         task.applicationId.set("com.foo")
         task.variantType.set(VariantTypeImpl.BASE_APK.toString())
+        task.analyticsService.set(FakeNoOpAnalyticsService())
 
         task.taskAction()
 

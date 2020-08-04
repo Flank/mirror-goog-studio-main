@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.dependency
 
-import com.android.build.gradle.internal.fixtures.FakeGenericTransformParameters
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
 import com.android.testutils.TestResources
@@ -48,7 +48,11 @@ class PlatformAttrTransformTest {
                     )
                 )
 
-            override fun getParameters()= FakeGenericTransformParameters()
+            override fun getParameters(): GenericTransformParameters {
+                return object : GenericTransformParameters {
+                    override val projectName = FakeGradleProperty("project")
+                }
+            }
         }
 
         var outputFile: File? = null

@@ -18,10 +18,13 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.DexSubject
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Property
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -66,6 +69,9 @@ class L8DexDesugarLibTaskTest {
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(
+                        FakeNoOpAnalyticsService()
+                    )
                 }
             }
         }.execute()

@@ -99,7 +99,7 @@ abstract class IncrementalTask : AndroidVariantTask() {
      */
     @TaskAction
     internal fun taskAction(inputs: IncrementalTaskInputs) {
-        recordTaskAction { handleIncrementalInputs(inputs) }
+        recordTaskAction(analyticsService.get()) { handleIncrementalInputs(inputs) }
     }
 
     private fun handleIncrementalInputs(inputs: IncrementalTaskInputs) {

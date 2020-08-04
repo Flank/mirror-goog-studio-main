@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.profile.AnalyticsService;
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction;
 import com.android.builder.core.DesugarProcessArgs;
 import com.google.common.collect.ImmutableList;
@@ -28,6 +29,8 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.workers.IsolationMode;
+import org.gradle.workers.WorkAction;
+import org.gradle.workers.WorkParameters;
 import org.gradle.workers.WorkerConfiguration;
 
 public final class DesugarWorkerItem {
@@ -68,18 +71,20 @@ public final class DesugarWorkerItem {
         workerConfiguration.setParams(args.getArgs(isWindows));
     }
 
-    public abstract static class DesugarActionParams extends ProfileAwareWorkAction.Parameters {
+    public abstract static class DesugarActionParams implements WorkParameters {
         abstract ListProperty<String> getArgs();
     }
 
     /**
      * Action running in a separate process to desugar java8 byte codes into java7 compliant byte
-     * codes.
+     * codes. It is not a {@link ProfileAwareWorkAction} as this action is submitted in isolation
+     * mode which is not supported by {@link AnalyticsService}.
+     *
      */
-    public abstract static class DesugarAction extends ProfileAwareWorkAction<DesugarActionParams> {
+    public abstract static class DesugarAction implements WorkAction<DesugarActionParams> {
 
         @Override
-        public void run() {
+        public void execute() {
             try {
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug(

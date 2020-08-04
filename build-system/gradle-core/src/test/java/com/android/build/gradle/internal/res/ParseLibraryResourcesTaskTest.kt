@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.builder.files.SerializableChange
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.symbols.SymbolTable
@@ -25,6 +27,7 @@ import com.android.resources.ResourceFolderType
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
@@ -124,6 +127,9 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
             override val projectName = FakeGradleProperty("projectName")
             override val taskOwner = FakeGradleProperty("taskOwner")
             override val workerKey = FakeGradleProperty("workerKey")
+            override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(
+                FakeNoOpAnalyticsService()
+            )
         }
         doFullTaskAction(params)
 
@@ -159,6 +165,7 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
             override val projectName = FakeGradleProperty("projectName")
             override val taskOwner = FakeGradleProperty("taskOwner")
             override val workerKey = FakeGradleProperty("workerKey")
+            override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
         }
 
         doFullTaskAction(params)
@@ -212,6 +219,7 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
             override val projectName = FakeGradleProperty("projectName")
             override val taskOwner = FakeGradleProperty("taskOwner")
             override val workerKey = FakeGradleProperty("workerKey")
+            override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
         }
 
         if (enablePartialRIncrementalBuilds){
@@ -285,6 +293,7 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
             override val projectName = FakeGradleProperty("projectName")
             override val taskOwner = FakeGradleProperty("taskOwner")
             override val workerKey = FakeGradleProperty("workerKey")
+            override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
         }
 
         if (enablePartialRIncrementalBuilds) {
@@ -351,6 +360,7 @@ class ParseLibraryResourcesTaskTest(private val enablePartialRIncrementalBuilds:
             override val projectName = FakeGradleProperty("projectName")
             override val taskOwner = FakeGradleProperty("taskOwner")
             override val workerKey = FakeGradleProperty("workerKey")
+            override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
         }
 
         if (enablePartialRIncrementalBuilds) {

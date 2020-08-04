@@ -19,6 +19,9 @@ package com.android.build.gradle.internal.tasks
 import android.databinding.tool.DataBindingBuilder.BINDING_CLASS_LIST_SUFFIX
 import android.databinding.tool.DataBindingBuilder.INCREMENTAL_BINDING_CLASSES_LIST_DIR
 import android.databinding.tool.DataBindingBuilder.INCREMENTAL_BIN_AAR_DIR
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeBaseClassLogDelegate
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeBaseClassLogRunnable
 import com.android.ide.common.resources.FileStatus
@@ -167,6 +170,8 @@ class DataBindingMergeBaseClassLogTest {
                         override val workerKey: Property<String>
                             get() = project.objects.property(String::class.java)
                                 .also { it.set("workerKey") }
+                        override val analyticsService: Property<AnalyticsService>
+                            get() = FakeGradleProperty(FakeNoOpAnalyticsService())
                     }
                 }
             }.execute()

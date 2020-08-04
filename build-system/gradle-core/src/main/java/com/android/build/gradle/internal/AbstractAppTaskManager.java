@@ -87,9 +87,8 @@ public abstract class AbstractAppTaskManager<
                             testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension,
-            @NonNull Recorder recorder) {
-        super(variants, testComponents, hasFlavors, globalScope, extension, recorder);
+            @NonNull BaseExtension extension) {
+        super(variants, testComponents, hasFlavors, globalScope, extension);
     }
 
     protected void createCommonTasks(

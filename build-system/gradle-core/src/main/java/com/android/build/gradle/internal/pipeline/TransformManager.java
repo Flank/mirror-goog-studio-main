@@ -99,8 +99,6 @@ public class TransformManager extends FilterableStreamCollection {
     private final Project project;
     @NonNull private final IssueReporter issueReporter;
     @NonNull private final Logger logger;
-    @NonNull
-    private final Recorder recorder;
 
     /**
      * These are the streams that are available for new Transforms to consume.
@@ -119,11 +117,9 @@ public class TransformManager extends FilterableStreamCollection {
 
     public TransformManager(
             @NonNull Project project,
-            @NonNull IssueReporter issueReporter,
-            @NonNull Recorder recorder) {
+            @NonNull IssueReporter issueReporter) {
         this.project = project;
         this.issueReporter = issueReporter;
-        this.recorder = recorder;
         this.logger = Logging.getLogger(TransformManager.class);
     }
 
@@ -257,8 +253,7 @@ public class TransformManager extends FilterableStreamCollection {
                                 transform,
                                 inputStreams,
                                 referencedStreams,
-                                outputStream,
-                                recorder),
+                                outputStream),
                         preConfigAction,
                         wrappedConfigAction,
                         providerCallback));

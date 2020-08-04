@@ -21,6 +21,7 @@ import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
 import com.android.build.gradle.internal.fixtures.FakeArtifactCollection
 import com.android.build.gradle.internal.fixtures.FakeComponentIdentifier
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeResolvedArtifactResult
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testfixtures.ProjectBuilder
@@ -55,6 +56,7 @@ class CheckAarMetadataTaskTest {
             CheckAarMetadataTaskForTest::class.java,
             FakeGradleWorkExecutor(project.objects, temporaryFolder.newFolder())
         ).get()
+        task.analyticsService.set(FakeNoOpAnalyticsService())
     }
 
     @Test

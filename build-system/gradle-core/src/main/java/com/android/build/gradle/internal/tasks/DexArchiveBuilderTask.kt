@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.dependency.BaseDexingTransform
 import com.android.build.gradle.internal.dependency.KEEP_RULES_FILE_NAME
 import com.android.build.gradle.internal.dexing.DexParameters
 import com.android.build.gradle.internal.dexing.DxDexParameters
-import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -270,7 +269,8 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             numberOfBuckets = numberOfBuckets.get(),
             workerExecutor = workerExecutor,
             projectName = projectName,
-            taskPath = path
+            taskPath = path,
+            analyticsService = analyticsService
         ).doProcess()
 
         if (dexer.get() == DexerTool.DX) {

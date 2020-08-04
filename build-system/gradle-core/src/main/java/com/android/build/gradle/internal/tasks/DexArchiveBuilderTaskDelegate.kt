@@ -21,10 +21,9 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.crash.PluginCrashReporter
 import com.android.build.gradle.internal.dexing.DexParameters
 import com.android.build.gradle.internal.dexing.DexWorkAction
-import com.android.build.gradle.internal.dexing.DexWorkActionParams
 import com.android.build.gradle.internal.dexing.DxDexParameters
 import com.android.build.gradle.internal.dexing.IncrementalDexSpec
-import com.android.build.gradle.internal.dexing.launchProcessing
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
 import com.android.builder.core.DefaultDexOptions
 import com.android.builder.dexing.ClassBucket
@@ -34,23 +33,16 @@ import com.android.builder.dexing.DexerTool
 import com.android.builder.dexing.DirectoryBucketGroup
 import com.android.builder.dexing.JarBucketGroup
 import com.android.builder.dexing.r8.ClassFileProviderFactory
-import com.android.ide.common.blame.Message
-import com.android.ide.common.blame.MessageReceiver
-import com.android.ide.common.blame.ParsingProcessOutputHandler
-import com.android.ide.common.blame.parser.DexParser
-import com.android.ide.common.blame.parser.ToolOutputParser
 import com.android.ide.common.internal.WaitableExecutor
-import com.android.ide.common.process.ProcessException
-import com.android.ide.common.process.ProcessOutput
 import com.android.utils.FileUtils
 import com.google.common.base.Throwables
 import com.google.common.collect.Iterables
 import com.google.common.collect.Lists
 import com.google.common.hash.Hashing
 import com.google.common.io.Closer
+import org.gradle.api.provider.Provider
 import org.gradle.work.ChangeType
 import org.gradle.work.FileChange
-import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 import java.io.BufferedInputStream
 import java.io.File
@@ -118,7 +110,8 @@ class DexArchiveBuilderTaskDelegate(
     private val workerExecutor: WorkerExecutor,
     private val executor: WaitableExecutor = WaitableExecutor.useGlobalSharedThreadPool(),
     private val projectName: String,
-    private val taskPath: String
+    private val taskPath: String,
+    private val analyticsService: Provider<AnalyticsService>
 ) {
     private val outputMapping = OutputMapping(isIncremental)
 
@@ -461,7 +454,7 @@ class DexArchiveBuilderTaskDelegate(
 
             val classBucket = ClassBucket(inputs, bucketId)
             workerExecutor.noIsolation().submit(DexWorkAction::class.java) { params ->
-                params.initializeWith(projectName, taskPath)
+                params.initializeWith(projectName, taskPath, analyticsService)
                 params.dexer.set(dexer)
                 params.dexSpec.set(
                         IncrementalDexSpec(

@@ -37,6 +37,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.fixtures.ExecutionMode;
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor;
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService;
 import com.android.ide.common.resources.FileStatus;
 import com.android.testutils.Serialization;
 import com.android.testutils.TestInputsGenerator;
@@ -99,6 +100,7 @@ public class FixStackFramesDelegateTest {
         Project project = ProjectBuilder.builder().withProjectDir(tmp.newFolder()).build();
         ObjectFactory objectFactory = project.getObjects();
         task = project.getTasks().register("taskName", AndroidVariantTask.class).get();
+        task.getAnalyticsService().set(new FakeNoOpAnalyticsService());
         executor =
                 new FakeGradleWorkExecutor(
                         objectFactory,

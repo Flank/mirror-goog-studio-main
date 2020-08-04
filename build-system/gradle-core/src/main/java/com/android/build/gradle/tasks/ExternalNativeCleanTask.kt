@@ -59,7 +59,8 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
             val generator =
                 createCxxMetadataGenerator(
                     sdkComponents.get(),
-                    configurationModel
+                    configurationModel,
+                    analyticsService.get()
                 )
             val existingJsons = mutableListOf<File>()
             for (abi in generator.abis) {

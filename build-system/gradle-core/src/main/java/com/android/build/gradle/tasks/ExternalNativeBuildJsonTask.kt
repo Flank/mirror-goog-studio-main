@@ -18,9 +18,9 @@ package com.android.build.gradle.tasks
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
+import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.UnsafeOutputsTask
@@ -54,7 +54,8 @@ abstract class ExternalNativeBuildJsonTask @Inject constructor(private val ops: 
             val generator =
                 createCxxMetadataGenerator(
                     sdkComponents.get(),
-                    configurationModel
+                    configurationModel,
+                    analyticsService = analyticsService.get()
                 )
             for (future in generator.getMetadataGenerators(ops, false, null)) {
                 future.call()

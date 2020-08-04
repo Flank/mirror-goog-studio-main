@@ -18,9 +18,12 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.testutils.truth.ZipFileSubject.assertThat
+import org.gradle.api.provider.Property
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -56,6 +59,9 @@ class BundleLibraryJavaResRunnableTest {
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("task")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(
+                        FakeNoOpAnalyticsService()
+                    )
                 }
             }
         }.execute()
@@ -86,6 +92,7 @@ class BundleLibraryJavaResRunnableTest {
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("task")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -121,6 +128,7 @@ class BundleLibraryJavaResRunnableTest {
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("task")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -154,6 +162,7 @@ class BundleLibraryJavaResRunnableTest {
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("task")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()

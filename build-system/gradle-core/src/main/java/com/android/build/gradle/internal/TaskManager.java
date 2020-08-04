@@ -98,6 +98,7 @@ import com.android.build.gradle.internal.lint.LintModelModuleWriterTask;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.res.GenerateLibraryRFileTask;
 import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
@@ -111,6 +112,7 @@ import com.android.build.gradle.internal.scope.InternalMultipleArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport;
+import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.CheckAarMetadataTask;
@@ -217,8 +219,6 @@ import com.android.builder.dexing.DexingType;
 import com.android.builder.dexing.DexingTypeKt;
 import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.model.CodeShrinker;
-import com.android.builder.profile.ProcessProfileWriter;
-import com.android.builder.profile.Recorder;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.utils.StringHelper;
@@ -331,7 +331,6 @@ public abstract class TaskManager<
 
     private final boolean hasFlavors;
     @NonNull protected final GlobalScope globalScope;
-    @NonNull protected final Recorder recorder;
     @NonNull private final Logger logger;
     @NonNull protected final TaskFactory taskFactory;
     @NonNull protected final ImmutableList<VariantPropertiesT> variantPropertiesList;
@@ -346,7 +345,6 @@ public abstract class TaskManager<
      * @param hasFlavors whether there are flavors
      * @param globalScope the global scope
      * @param extension the extension
-     * @param recorder the recorder
      */
     public TaskManager(
             @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> variants,
@@ -358,15 +356,13 @@ public abstract class TaskManager<
                             testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension,
-            @NonNull Recorder recorder) {
+            @NonNull BaseExtension extension) {
         this.variants = variants;
         this.testComponents = testComponents;
         this.hasFlavors = hasFlavors;
         this.globalScope = globalScope;
         this.project = globalScope.getProject();
         this.extension = extension;
-        this.recorder = recorder;
         this.logger = Logging.getLogger(this.getClass());
 
         taskFactory = new TaskFactoryImpl(project.getTasks());
@@ -719,7 +715,11 @@ public abstract class TaskManager<
                 .getResolutionStrategy().force(kotlinCompilerDependency);
 
         // record in our metrics that compose is enabled.
-        ProcessProfileWriter.getProject(project.getPath()).setComposeEnabled(true);
+        BuildServicesKt
+                .getBuildService(
+                        project.getGradle().getSharedServices(), AnalyticsConfiguratorService.class)
+                .get()
+                .getProjectBuilder(project.getPath()).setComposeEnabled(true);
 
         // Create a project configuration that holds the androidx compose kotlin
         // compiler extension

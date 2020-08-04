@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.services
 
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.tasks.BooleanLatch
 import com.android.testutils.concurrency.OnDemandExecutorService
@@ -46,7 +47,7 @@ class AsyncResourceProcessorTest {
         val counter = AtomicInteger()
 
         createAsyncResourceProcessor(counter).use { processor ->
-            processor.submit {
+            processor.submit(FakeNoOpAnalyticsService()) {
                 it.incrementAndGet()
             }
             assertThat(counter.get()).isEqualTo(0)
@@ -68,7 +69,7 @@ class AsyncResourceProcessorTest {
 
         forkJoinPool.submit {
             createAsyncResourceProcessor(counter).use { processor ->
-                processor.submit {
+                processor.submit(FakeNoOpAnalyticsService()) {
                     it.incrementAndGet()
                 }
                 compileSubmitted.signal()
@@ -78,7 +79,7 @@ class AsyncResourceProcessorTest {
                 awaitComplete.signal()
                 Thread.yield()
 
-                processor.submit {
+                processor.submit(FakeNoOpAnalyticsService()) {
                    it.incrementAndGet()
                 }
                 linkSubmitted.signal()

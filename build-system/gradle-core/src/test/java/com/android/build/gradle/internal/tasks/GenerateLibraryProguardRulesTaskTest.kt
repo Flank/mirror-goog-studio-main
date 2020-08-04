@@ -1,11 +1,14 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.builder.files.SerializableChange
 import com.android.ide.common.resources.FileStatus
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.provider.Property
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -98,6 +101,9 @@ class GenerateLibraryProguardRulesTaskTest {
             override val projectName = FakeGradleProperty("project")
             override val taskOwner = FakeGradleProperty("taskOwner")
             override val workerKey = FakeGradleProperty("workerKey")
+            override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(
+                FakeNoOpAnalyticsService()
+            )
         }
 
         runIncrementalTask(params)
@@ -166,6 +172,7 @@ class GenerateLibraryProguardRulesTaskTest {
             override val projectName = FakeGradleProperty("project")
             override val taskOwner = FakeGradleProperty("taskOwner")
             override val workerKey = FakeGradleProperty("workerKey")
+            override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
         }
 
         runFullTask(params)

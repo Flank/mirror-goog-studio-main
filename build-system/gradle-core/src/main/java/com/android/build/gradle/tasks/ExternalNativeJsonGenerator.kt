@@ -39,12 +39,10 @@ import com.android.build.gradle.internal.cxx.model.modelOutputFile
 import com.android.build.gradle.internal.cxx.model.prefabConfigFile
 import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
 import com.android.build.gradle.internal.cxx.model.soFolder
-import com.android.build.gradle.internal.cxx.model.statsBuilder
 import com.android.build.gradle.internal.cxx.model.symbolFolderIndexFile
 import com.android.build.gradle.internal.cxx.model.writeJsonToFile
 import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
 import com.android.build.gradle.internal.profile.AnalyticsUtil
-import com.android.builder.profile.ProcessProfileWriter
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils
@@ -52,6 +50,7 @@ import com.google.common.base.Charsets
 import com.google.common.collect.Lists
 import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleBuildVariant.NativeBuildConfigInfo
 import com.google.wireless.android.sdk.stats.GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome
 import org.gradle.api.GradleException
@@ -74,7 +73,8 @@ const val ANDROID_GRADLE_BUILD_VERSION = "1"
 abstract class ExternalNativeJsonGenerator internal constructor(
     @get:Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
     final override val variant: CxxVariantModel,
-    @get:Internal override val abis: List<CxxAbiModel>
+    @get:Internal override val abis: List<CxxAbiModel>,
+    @get:Internal override val variantBuilder: GradleBuildVariant.Builder
 ) : CxxMetadataGenerator {
 
     // TODO(153964094) Reconcile this with jsonGenerationDependencyFiles
@@ -88,8 +88,8 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         }
 
         // Now check whether the JSON is out-of-date with respect to the build files it declares.
-        val config =
-            AndroidBuildGradleJsons.getNativeBuildMiniConfig(json, variant.statsBuilder)
+        val config = AndroidBuildGradleJsons
+            .getNativeBuildMiniConfig(json, variantBuilder)
 
         // If anything in the prefab package changes, re-run. Note that this also depends on the
         // directories, so added/removed files will also trigger a re-run.
@@ -138,14 +138,11 @@ abstract class ExternalNativeJsonGenerator internal constructor(
     override fun addCurrentMetadata(
         builder: NativeAndroidProjectBuilder) {
         requireExplicitLogger()
-        val stats = ProcessProfileWriter.getOrCreateVariant(
-            variant.module.gradleModulePathName, variant.variantName
-        )
         val config =
-            if (stats.nativeBuildConfigCount == 0) {
+            if (variantBuilder.nativeBuildConfigCount == 0) {
                 val config =
                     NativeBuildConfigInfo.newBuilder()
-                stats.addNativeBuildConfig(config)
+                variantBuilder.addNativeBuildConfig(config)
                 config
             } else {
                 // Do not include stats if they were gathered during build.
@@ -320,16 +317,17 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                             )
                         )
                     }
-                    synchronized(variant.statsBuilder) {
+
+                    synchronized(variantBuilder) {
                         // Related to https://issuetracker.google.com/69408798
-                        // Targets may have been removed or there could be other orphaned extra .so
-                        // files. Remove these and rely on the build step to replace them if they are
-                        // legitimate. This is to prevent unexpected .so files from being packaged in
-                        // the APK.
+                        // Targets may have been removed or there could be other orphaned extra
+                        // .so files. Remove these and rely on the build step to replace them
+                        // if they are legitimate. This is to prevent unexpected .so files from
+                        // being packaged in the APK.
                         removeUnexpectedSoFiles(
                             abi.soFolder,
                             AndroidBuildGradleJsons.getNativeBuildMiniConfig(
-                                abi.jsonFile, variant.statsBuilder
+                                abi.jsonFile, variantBuilder
                             )
                         )
                     }
@@ -356,7 +354,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     variantStats.outcome = GenerationOutcome.SUCCESS_UP_TO_DATE
                 }
                 abi.generateSymbolFolderIndexFile()
-                abi.generateBuildFilesIndex()
+                abi.generateBuildFilesIndex(variantBuilder)
                 infoln("JSON generation completed without problems")
             } catch (e: GradleException) {
                 variantStats.outcome = GenerationOutcome.FAILED
@@ -372,8 +370,8 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                 throw e
             } finally {
                 variantStats.generationDurationMs = System.currentTimeMillis() - startTime
-                synchronized(variant.statsBuilder) {
-                    variant.statsBuilder.addNativeBuildConfig(variantStats)
+                synchronized(variantBuilder) {
+                    variantBuilder.addNativeBuildConfig(variantStats)
                 }
                 abi.jsonGenerationLoggingRecordFile.parentFile.mkdirs()
                 Files.write(
@@ -395,12 +393,12 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         )
     }
 
-    private fun CxxAbiModel.generateBuildFilesIndex() {
+    private fun CxxAbiModel.generateBuildFilesIndex(variantBuilder: GradleBuildVariant.Builder?) {
         buildFileIndexFile.parentFile.mkdirs()
         buildFileIndexFile.writeText(
             AndroidBuildGradleJsons.getNativeBuildMiniConfig(
                 jsonFile,
-                variant.statsBuilder
+                variantBuilder
             ).buildFiles.joinToString(System.lineSeparator()),
             StandardCharsets.UTF_8
         )

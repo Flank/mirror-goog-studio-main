@@ -135,7 +135,7 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
                 isPseudoLocalize = parameters.pseudoLocalize.get(),
                 isPngCrunching = parameters.crunchPng.get()
             )
-            processor.submit { aapt2 ->
+            processor.submit(parameters.analyticsService.get()) { aapt2 ->
                 aapt2.compile(request, processor.iLogger)
             }
         }

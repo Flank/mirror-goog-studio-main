@@ -19,10 +19,10 @@ package com.android.build.gradle.tasks
 import com.android.build.gradle.internal.fixtures.FakeGradleExecOperations
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeInjectableService
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsRunnable
 import com.android.build.gradle.tasks.AidlCompile.Companion.aidlCompileDelegate
-import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.workers.WorkerExecutor
@@ -60,6 +60,7 @@ class AidlCompileTest {
                 )
             )
             instantiatorTask = tasks.create("task", AndroidVariantTask::class.java)
+            instantiatorTask.analyticsService.set(FakeNoOpAnalyticsService())
         }
     }
 

@@ -95,9 +95,9 @@ public class CompositeBuildTest {
                         + "    buildTypes.debug.testCoverageEnabled true\n"
                         + "}\n"
                         + "dependencies {\n"
-                        + "    compile 'com.example:lib'\n"
-                        + "    compile 'com.example:androidLib1'\n"
-                        + "    compile 'com.example:androidLib2'\n"
+                        + "    api 'com.example:lib'\n"
+                        + "    api 'com.example:androidLib1'\n"
+                        + "    api 'com.example:androidLib2'\n"
                         + "}\n");
 
         // lib is just an empty project.
@@ -161,5 +161,11 @@ public class CompositeBuildTest {
                     .contains(
                             "   > Using multiple versions of the Android Gradle plugin in the same build is not allowed.");
         }
+    }
+
+    @Test
+    public void testFetchingAndroidModel() throws IOException {
+        app.model().fetchAndroidProjects();
+        androidLib.model().fetchAndroidProjects();
     }
 }

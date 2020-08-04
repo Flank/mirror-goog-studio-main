@@ -16,16 +16,16 @@
 
 package com.android.build.gradle.internal.workeractions
 
+import com.android.build.gradle.internal.profile.AnalyticsService
 import org.gradle.api.provider.Property
 import org.gradle.workers.WorkParameters
-import java.io.Serializable
 
 /**
- * Decorated [WorkParameters] that will remember the project name, task name and worker key to be
- * able to sent sensible events to the profiler MBean objects.
+ * Decorated [WorkParameters] that will remember task path and worker key to be able to sent
+ * sensible events to the analytics build service.
  */
 interface DecoratedWorkParameters : WorkParameters {
-    val projectName: Property<String>
-    val taskName: Property<String>
+    val taskPath: Property<String>
     val workerKey: Property<String>
+    val analyticsService: Property<AnalyticsService>
 }

@@ -542,13 +542,10 @@ class CmakeBasicProjectTest(
 
     @Test
     fun generatedChromeTraceFileContainsNativeBuildInformation() {
-        // Disable this test for Gradle since it somehow fails if multiple tests are executed
-        // at the same time. See b/133222337
-        Assume.assumeTrue(TestUtils.runningFromBazel())
         project.executor()
             .with(BooleanOption.ENABLE_PROFILE_JSON, true)
             .run("clean", "assembleDebug")
-        val traceFolder = join(project.testDir, "build", "android-profile", ChromeTracingProfileConverter.EXTRA_CHROME_TRACE_DIRECTORY)
+        val traceFolder = join(project.testDir, "build", "android-profile")
         val traceFile = traceFolder.listFiles()!!.first { it.name.endsWith("json.gz") }
         Truth.assertThat(InputStreamReader(GZIPInputStream(FileInputStream(traceFile))).readText())
             .contains("CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o")

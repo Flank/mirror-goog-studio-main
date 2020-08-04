@@ -26,13 +26,13 @@ import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.jsonFile
-import com.android.build.gradle.internal.cxx.model.statsBuilder
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.settings.getFinalCmakeCommandLineArguments
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.tokenizeCommandLineToEscaped
 import com.google.gson.GsonBuilder
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule.NativeBuildSystemType.CMAKE
 import org.gradle.process.ExecOperations
 import java.io.File
@@ -44,10 +44,11 @@ import java.nio.charset.StandardCharsets
  */
 internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
     variant: CxxVariantModel,
-    abis: List<CxxAbiModel>
-) : ExternalNativeJsonGenerator(variant, abis) {
+    abis: List<CxxAbiModel>,
+    variantBuilder: GradleBuildVariant.Builder
+) : ExternalNativeJsonGenerator(variant, abis, variantBuilder) {
     init {
-        variant.statsBuilder.nativeBuildSystemType = CMAKE
+        variantBuilder.nativeBuildSystemType = CMAKE
         cmakeMakefileChecks(variant)
     }
 

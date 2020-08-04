@@ -15,15 +15,15 @@
  */
 package com.android.build.gradle.tasks
 
-import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.artifact.Artifact
+import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_IDE_MODEL
 import com.android.build.gradle.options.BooleanOption
-import com.android.builder.profile.ProcessProfileWriter
 import com.google.wireless.android.sdk.stats.GradleBuildProjectMetrics
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
@@ -121,7 +121,8 @@ abstract class PackageApplication : PackageAndroidArtifact() {
         fun recordMetrics(
             projectPath: String?,
             apkOutputFile: File?,
-            resourcesApFile: File?
+            resourcesApFile: File?,
+            analyticsService: AnalyticsService
         ) {
             val metricsStartTime = System.nanoTime()
             val metrics = GradleBuildProjectMetrics.newBuilder()
@@ -135,7 +136,7 @@ abstract class PackageApplication : PackageAndroidArtifact() {
                 metrics.resourcesApSize = resourcesApSize
             }
             metrics.metricsTimeNs = System.nanoTime() - metricsStartTime
-            ProcessProfileWriter.getProject(projectPath!!).setMetrics(metrics)
+            analyticsService.getProjectBuillder(projectPath!!).setMetrics(metrics)
         }
 
         private fun getSize(file: File?): Long? {

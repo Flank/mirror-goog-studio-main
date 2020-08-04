@@ -16,14 +16,14 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
-import com.android.build.gradle.internal.profile.ProfilerInitializer
 import com.android.ide.common.workers.ExecutorServiceAdapter
-import com.android.ide.common.workers.GradlePluginMBeans
 import com.android.ide.common.workers.WorkerExecutorException
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.workers.WorkerExecutionException
 import org.gradle.workers.WorkerExecutor
 import java.util.concurrent.ExecutorService
@@ -47,10 +47,16 @@ object Workers {
      * @param projectName name of the project owning the task
      * @param owner the task path issuing the request and owning the [WorkerExecutor] instance.
      * @param worker [WorkerExecutor] to use if Gradle's worker executor are enabled.
+     * @param analyticsService the build service to record worker execution spans
      * @return an instance of [WorkerExecutorFacade] using the passed worker
      */
-    fun withGradleWorkers(projectName: String, owner: String, worker: WorkerExecutor): WorkerExecutorFacade {
-        return WorkerExecutorAdapter(projectName, owner, worker)
+    fun withGradleWorkers(
+        projectName: String,
+        owner: String,
+        worker: WorkerExecutor,
+        analyticsService: Provider<AnalyticsService>
+    ): WorkerExecutorFacade {
+        return WorkerExecutorAdapter(projectName, owner, worker, analyticsService)
     }
 
     /**
@@ -59,12 +65,12 @@ object Workers {
      * Callers cannot use a [WorkerExecutor] probably due to Serialization requirement of parameters
      * being not possible.
      *
-     * @param projectName the project name.
      * @param owner the task path issuing the request.
+     * @param analyticsService the build service to record worker execution spans
      * @return an instance of [WorkerExecutorFacade]
      */
-    fun withThreads(projectName: String, owner: String) =
-        ProfileAwareExecutorServiceAdapter(projectName, owner, defaultExecutorService)
+    fun withThreads(owner: String, analyticsService: AnalyticsService) =
+        ProfileAwareExecutorServiceAdapter(owner, defaultExecutorService, null, analyticsService)
 
     /**
      * Simple implementation of [WorkerExecutorFacade] that uses a Gradle [WorkerExecutor]
@@ -74,11 +80,12 @@ object Workers {
     private class WorkerExecutorAdapter(
         private val projectName: String,
         private val owner: String,
-        private val workerExecutor: WorkerExecutor
+        private val workerExecutor: WorkerExecutor,
+        private val analyticsService: Provider<AnalyticsService>
     ) : WorkerExecutorFacade {
 
         val taskRecord by lazy {
-            ProfilerInitializer.getListener()?.getTaskRecord(owner)
+           analyticsService.get().getTaskRecord(owner)
         }
 
         override fun submit(action: WorkerExecutorFacade.WorkAction) {
@@ -92,6 +99,7 @@ object Workers {
                 params.taskOwner.set(owner)
                 params.workerKey.set(workerKey)
                 params.runnableAction.set(action)
+                params.analyticsService.set(analyticsService)
             }
         }
 
@@ -120,7 +128,6 @@ object Workers {
          * @TaskAction starts (so, we are safe!).
          */
         override fun close() {
-            taskRecord?.setTaskClosed()
         }
     }
 
@@ -130,18 +137,18 @@ object Workers {
      * This will allow to record thread execution, just like WorkerItems.
      */
     class ProfileAwareExecutorServiceAdapter(
-        private val projectName: String,
         private val owner: String,
         executor: ExecutorService,
         /**
          * [WorkerExecutorFacade] to delegate submissions that cannot be handled by this adapter or
          * null if no delegation expected.
          */
-        val delegate: WorkerExecutorFacade? = null
+        val delegate: WorkerExecutorFacade? = null,
+        private val analyticsService: AnalyticsService
     ) : ExecutorServiceAdapter(executor), WorkerExecutorFacade {
 
         private val taskRecord by lazy {
-            ProfilerInitializer.getListener()?.getTaskRecord(owner)
+            analyticsService.getTaskRecord(owner)
         }
 
         override fun workerSubmission(workerKey: String) {
@@ -154,9 +161,9 @@ object Workers {
             workerSubmission(key)
 
             val submission = executor.submit {
-                GradlePluginMBeans.getProfileMBean(projectName)?.workerStarted(owner, key)
+                analyticsService.workerStarted(owner, key)
                 action.run()
-                GradlePluginMBeans.getProfileMBean(projectName)?.workerFinished(owner, key)
+                analyticsService.workerFinished(owner, key)
             }
             synchronized(this) {
                 futures.add(submission)

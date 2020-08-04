@@ -16,6 +16,9 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.builder.testing.api.DeviceConnector
 import com.android.builder.testing.api.DeviceProvider
 import com.android.utils.ILogger
@@ -78,7 +81,8 @@ class InstallVariantViaBundleTaskTest {
                 get() = project.objects.property(String::class.java).value("taskOwner")
             override val workerKey: Property<String>
                 get() = project.objects.property(String::class.java).value("workerKey")
-
+            override val analyticsService: Property<AnalyticsService>
+                get() = FakeGradleProperty(FakeNoOpAnalyticsService())
         }
 
     }

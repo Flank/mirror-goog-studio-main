@@ -16,12 +16,13 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
+import org.gradle.workers.WorkAction
+import org.gradle.workers.WorkParameters
 import java.io.File
 
 /**
@@ -52,7 +53,6 @@ abstract class AssetPackManifestGenerationTask : NonIncrementalTask() {
 
     public override fun doTaskAction() {
         workerExecutor.noIsolation().submit(AssetPackManifestGenerationRunnable::class.java) {
-            it.initializeFromAndroidVariantTask(this)
             it.manifestFile.set(manifestFile.asFile)
             it.packName.set(packName)
             it.deliveryType.set(deliveryType)
@@ -61,9 +61,10 @@ abstract class AssetPackManifestGenerationTask : NonIncrementalTask() {
     }
 }
 
+//TODO(b/162727093) record worker execution span
 abstract class AssetPackManifestGenerationRunnable :
-    ProfileAwareWorkAction<AssetPackManifestGenerationRunnable.Params>() {
-    override fun run() {
+    WorkAction<AssetPackManifestGenerationRunnable.Params> {
+    override fun execute() {
         var manifestText =
             ("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" "
                     + "xmlns:dist=\"http://schemas.android.com/apk/distribution\" "
@@ -85,7 +86,7 @@ abstract class AssetPackManifestGenerationRunnable :
         parameters.manifestFile.get().writeText(manifestText)
     }
 
-    abstract class Params: ProfileAwareWorkAction.Parameters() {
+    abstract class Params: WorkParameters {
         abstract val manifestFile: Property<File>
         abstract val packName: Property<String>
         abstract val deliveryType: Property<String>

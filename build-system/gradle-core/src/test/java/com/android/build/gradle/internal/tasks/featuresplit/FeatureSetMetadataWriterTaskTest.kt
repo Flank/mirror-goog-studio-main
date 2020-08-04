@@ -17,10 +17,13 @@
 package com.android.build.gradle.internal.tasks.featuresplit
 
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.sdklib.AndroidVersion
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.provider.Property
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -70,6 +73,9 @@ class FeatureSetMetadataWriterTaskTest(val minSdkVersion: Int) {
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("task")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(
+                        FakeNoOpAnalyticsService()
+                    )
                 }
             }
         }.execute()

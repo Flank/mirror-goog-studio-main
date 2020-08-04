@@ -104,7 +104,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
     fun writeBaseClasses(inputs: IncrementalTaskInputs) {
         // TODO extend NewIncrementalTask when moved to new API so that we can remove the manual call to recordTaskAction
 
-        recordTaskAction {
+        recordTaskAction(analyticsService.get()) {
             // TODO figure out why worker execution makes the task flake.
             // Some files cannot be accessed even though they show up when directory listing is
             // invoked.

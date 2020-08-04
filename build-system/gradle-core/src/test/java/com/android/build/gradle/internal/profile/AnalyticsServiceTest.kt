@@ -94,7 +94,7 @@ class AnalyticsServiceTest {
                 return object: Params {
                     override val profile: Property<String>
                         get() = getProfile()
-                    override val projects: MapProperty<String, SerializableCustomProject>
+                    override val projects: MapProperty<String, ProjectData>
                         get() = getProjects()
                     override val enableProfileJson: Property<Boolean>
                         get() = FakeGradleProperty(true)
@@ -110,13 +110,13 @@ class AnalyticsServiceTest {
                 return FakeGradleProperty(Base64.getEncoder().encodeToString(profile))
             }
 
-            private fun getProjects(): MapProperty<String, SerializableCustomProject> {
-                val map: MutableMap<String, SerializableCustomProject> = mutableMapOf()
-                val customProject = CustomProject(GradleBuildProject.newBuilder().setId(1L))
+            private fun getProjects(): MapProperty<String, ProjectData> {
+                val map: MutableMap<String, ProjectData> = mutableMapOf()
+                val customProject = ProjectData(GradleBuildProject.newBuilder().setId(1L))
                 customProject.variantBuilders[variantName] = GradleBuildVariant.newBuilder().setId(2L)
-                map[projectPath] = customProject.toSerializable()
+                map[projectPath] = customProject
                 return FakeObjectFactory.factory
-                    .mapProperty(String::class.java, SerializableCustomProject::class.java)
+                    .mapProperty(String::class.java, ProjectData::class.java)
                     .value(map)
             }
 

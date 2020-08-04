@@ -210,7 +210,7 @@ public abstract class MergeResources extends ResourceAwareTask {
     @Internal
     @NonNull
     public WorkerExecutorFacade getAaptWorkerFacade() {
-        return Workers.INSTANCE.withGradleWorkers(getProjectName(), getPath(), getWorkerExecutor());
+        return Workers.INSTANCE.withGradleWorkers(getProjectName(), getPath(), getWorkerExecutor(), getAnalyticsService());
     }
 
     @NonNull
@@ -265,9 +265,9 @@ public abstract class MergeResources extends ResourceAwareTask {
             SingleFileProcessor dataBindingLayoutProcessor = maybeCreateLayoutProcessor();
 
             Blocks.recordSpan(
-                    getProjectName(),
                     getPath(),
                     GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_1,
+                    getAnalyticsService().get(),
                     () -> {
                         for (ResourceSet resourceSet : resourceSets) {
                             resourceSet.loadFromFiles(new LoggerWrapper(getLogger()));
@@ -292,15 +292,15 @@ public abstract class MergeResources extends ResourceAwareTask {
                             getCrunchPng());
 
             Blocks.recordSpan(
-                    getProjectName(),
                     getPath(),
                     GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_2,
+                    getAnalyticsService().get(),
                     () -> merger.mergeData(writer, false /*doCleanUp*/));
 
             Blocks.recordSpan(
-                    getProjectName(),
                     getPath(),
                     GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_3,
+                    getAnalyticsService().get(),
                     () -> {
                         if (dataBindingLayoutProcessor != null) {
                             dataBindingLayoutProcessor.end();
@@ -309,9 +309,9 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             // No exception? Write the known state.
             Blocks.recordSpan(
-                    getProjectName(),
                     getPath(),
                     GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_4,
+                    getAnalyticsService().get(),
                     () -> merger.writeBlobTo(getIncrementalFolder(), writer, false));
 
         } catch (Exception e) {

@@ -80,7 +80,6 @@ import com.android.build.gradle.tasks.VerifyLibraryResourcesTask;
 import com.android.build.gradle.tasks.ZipMergingTask;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
-import com.android.builder.profile.Recorder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -109,9 +108,8 @@ public class LibraryTaskManager
                             testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension,
-            @NonNull Recorder recorder) {
-        super(variants, testComponents, hasFlavors, globalScope, extension, recorder);
+            @NonNull BaseExtension extension) {
+        super(variants, testComponents, hasFlavors, globalScope, extension);
     }
 
     @Override

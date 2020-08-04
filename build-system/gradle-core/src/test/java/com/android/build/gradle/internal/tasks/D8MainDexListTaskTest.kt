@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ERROR_DUPLICATE_HELP_PAGE
 import com.android.builder.multidex.D8MainDexList
@@ -25,6 +27,7 @@ import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.provider.Property
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -65,6 +68,9 @@ class D8MainDexListTaskTest {
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("task")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(
+                        FakeNoOpAnalyticsService()
+                    )
                 }
             }
         }.execute()
@@ -98,6 +104,7 @@ class D8MainDexListTaskTest {
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("task")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -134,6 +141,7 @@ class D8MainDexListTaskTest {
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("task")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -161,6 +169,7 @@ class D8MainDexListTaskTest {
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("task")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -192,6 +201,7 @@ class D8MainDexListTaskTest {
                         override val projectName = FakeGradleProperty("project")
                         override val taskOwner = FakeGradleProperty("task")
                         override val workerKey = FakeGradleProperty("workerKey")
+                        override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                     }
                 }
             }.execute()
@@ -225,6 +235,7 @@ class D8MainDexListTaskTest {
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("task")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -259,6 +270,7 @@ class D8MainDexListTaskTest {
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("task")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()

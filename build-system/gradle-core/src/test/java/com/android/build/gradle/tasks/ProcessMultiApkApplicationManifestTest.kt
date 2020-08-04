@@ -24,8 +24,9 @@ import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.google.common.truth.Truth.*
+import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 import org.gradle.testfixtures.ProjectBuilder
@@ -60,7 +61,7 @@ class ProcessMultiApkApplicationManifestTest {
         task.compatibleScreensManifest.set(temporaryFolder.newFolder("compatible_screen_manifests"))
         task.applicationId.set("com.android.test")
         task.variantName = "debug"
-
+        task.analyticsService.set(FakeNoOpAnalyticsService())
         initSourceMainManifest(task.mainMergedManifest.get().asFile)
     }
 

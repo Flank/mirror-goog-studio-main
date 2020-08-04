@@ -20,11 +20,13 @@ import com.android.build.api.transform.QualifiedContent.ContentType
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.gradle.internal.dsl.PackagingOptions
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.packaging.defaultExcludes
 import com.android.build.gradle.internal.packaging.defaultMerges
 import com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.builder.merge.DuplicateRelativeFileException
 import com.android.builder.packaging.JarFlinger
 import com.android.ide.common.resources.FileStatus
@@ -112,6 +114,9 @@ class MergeJavaResWorkActionTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(
+                        FakeNoOpAnalyticsService()
+                    )
                 }
             }
         }.execute()
@@ -206,6 +211,7 @@ class MergeJavaResWorkActionTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -275,6 +281,7 @@ class MergeJavaResWorkActionTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -345,6 +352,7 @@ class MergeJavaResWorkActionTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -405,6 +413,7 @@ class MergeJavaResWorkActionTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -468,6 +477,7 @@ class MergeJavaResWorkActionTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -521,6 +531,7 @@ class MergeJavaResWorkActionTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -585,6 +596,7 @@ class MergeJavaResWorkActionTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }

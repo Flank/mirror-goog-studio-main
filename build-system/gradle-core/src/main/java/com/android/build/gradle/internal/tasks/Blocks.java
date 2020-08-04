@@ -16,20 +16,14 @@
 
 package com.android.build.gradle.internal.tasks;
 
+import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.profile.AnalyticsService;
 import com.android.build.gradle.internal.profile.TaskProfilingRecord;
-import com.android.ide.common.workers.GradlePluginMBeans;
-import com.android.ide.common.workers.ProfileMBean;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
-import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 
 public class Blocks {
-
-    @FunctionalInterface
-    public interface ThrowingBlockWithReturn<T, E extends Exception> {
-        T invoke() throws E;
-    }
 
     @FunctionalInterface
     public interface ThrowingBlock<E extends Exception> {
@@ -39,59 +33,25 @@ public class Blocks {
     /**
      * Record execution span for a task phase.
      *
-     * @param projectName the project name executing
      * @param taskPath the task path executing
      * @param type the type of the execution phase
+     * @param analyticsService the build service to record execution spans
      * @param block the block of code to record execution on.
      * @param <E> exception thrown by the block
      * @throws E re-thrown exception if the block threw it.
      */
     public static <E extends Exception> void recordSpan(
-            String projectName,
             String taskPath,
             GradleBuildProfileSpan.ExecutionType type,
+            @Nullable AnalyticsService analyticsService,
             ThrowingBlock<E> block)
             throws E {
 
-        ProfileMBean profileMBean = GradlePluginMBeans.INSTANCE.getProfileMBean(projectName);
         Instant before = TaskProfilingRecord.Companion.getClock().instant();
         block.invoke();
         Instant after = TaskProfilingRecord.Companion.getClock().instant();
-        if (profileMBean != null) {
-            profileMBean.registerSpan(
-                    taskPath,
-                    GradleBuildProfileSpan.newBuilder()
-                        .setType(type)
-                        .setThreadId(Thread.currentThread().getId())
-                        .setStartTimeInMs(before.toEpochMilli())
-                        .setDurationInMs(Duration.between(before, after).toMillis()));
-        }
-    }
-
-    /**
-     * Record execution span for a task phase that returns a value.
-     *
-     * @param projectName the project name executing
-     * @param taskPath the task path executing
-     * @param type the type of the execution phase
-     * @param block the block of code to record execution on.
-     * @param <T> the type of return value from the block.
-     * @param <E> exception thrown by the block
-     * @throws E re-thrown exception if the block threw it.
-     */
-    public static <T, E extends Exception> T recordSpan(
-            String projectName,
-            String taskPath,
-            GradleBuildProfileSpan.ExecutionType type,
-            ThrowingBlockWithReturn<T, E> block)
-            throws E {
-
-        ProfileMBean profileMBean = GradlePluginMBeans.INSTANCE.getProfileMBean(projectName);
-        Instant before = Clock.systemDefaultZone().instant();
-        T t = block.invoke();
-        Instant after = TaskProfilingRecord.Companion.getClock().instant();
-        if (profileMBean != null) {
-            profileMBean.registerSpan(
+        if (analyticsService != null) {
+            analyticsService.registerSpan(
                     taskPath,
                     GradleBuildProfileSpan.newBuilder()
                             .setType(type)
@@ -99,6 +59,5 @@ public class Blocks {
                             .setStartTimeInMs(before.toEpochMilli())
                             .setDurationInMs(Duration.between(before, after).toMillis()));
         }
-        return t;
     }
 }

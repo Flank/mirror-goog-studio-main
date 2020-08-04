@@ -16,20 +16,27 @@
 
 package com.android.build.gradle.internal.profile
 
-import com.android.builder.profile.ProcessProfileWriter
 import com.google.common.truth.Truth
+import com.google.wireless.android.sdk.stats.GradleBuildProfile
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import org.junit.Test
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
+import java.util.concurrent.ConcurrentHashMap
 
 class WorkerProfilingRecordTest {
 
     private val testTaskRecord =
         object: TaskProfilingRecord(
-            ProcessProfileWriter.get(),
+            AnalyticsResourceManager(
+                GradleBuildProfile.newBuilder(),
+                ConcurrentHashMap(),
+                false,
+                null,
+                ConcurrentHashMap()
+            ),
             GradleBuildProfileSpan.newBuilder(),
             "dummy",
             ":dummy",

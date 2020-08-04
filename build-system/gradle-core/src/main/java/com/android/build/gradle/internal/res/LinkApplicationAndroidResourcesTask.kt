@@ -361,7 +361,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
 
 
-                processor.submit { aapt2 ->
+                processor.submit(parameters.analyticsService.get()) { aapt2 ->
                     invokeAaptForSplit(
                             mainOutput,
                             manifestBuiltArtifacts.getBuiltArtifact(mainOutput.variantOutputConfiguration)
@@ -381,7 +381,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     for (variantOutput in unprocessedOutputs) {
                         // If we're supporting stable IDs we need to make sure the splits get exactly
                         // the same IDs as the main one.
-                        processor.submit { aapt2 ->
+                        processor.submit(parameters.analyticsService.get()) { aapt2 ->
                             invokeAaptForSplit(
                                 variantOutput,
                                 manifestBuiltArtifacts.getBuiltArtifact(variantOutput.variantOutputConfiguration)

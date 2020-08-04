@@ -33,11 +33,11 @@ import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
-import com.android.build.gradle.internal.cxx.model.statsBuilder
 import com.android.build.gradle.internal.cxx.settings.rewriteCxxAbiModelWithCMakeSettings
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
 import com.android.build.gradle.internal.ndk.NdkHandler
-import com.android.build.gradle.internal.profile.ProfilerInitializer
+import com.android.build.gradle.internal.profile.AnalyticsService
+import com.android.build.gradle.internal.profile.PROFILE_DIRECTORY
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.BooleanOption.BUILD_ONLY_TARGET_ABI
@@ -57,7 +57,6 @@ import com.android.builder.profile.ChromeTracingProfileConverter
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.*
 import java.io.File
 import java.util.Objects
 
@@ -263,7 +262,7 @@ fun tryCreateCxxConfigurationModel(
             val gradle = global.project.gradle
             val profileDir = option(PROFILE_OUTPUT_DIR)
                 ?.let { gradle.rootProject.file(it) }
-                ?: gradle.rootProject.buildDir.resolve(ProfilerInitializer.PROFILE_DIRECTORY)
+                ?: gradle.rootProject.buildDir.resolve(PROFILE_DIRECTORY)
             profileDir.resolve(ChromeTracingProfileConverter.EXTRA_CHROME_TRACE_DIRECTORY)
         } else {
             null
@@ -359,7 +358,8 @@ private fun getProjectPath(config: ExternalNativeBuild)
  */
 fun createCxxMetadataGenerator(
     sdkComponents: SdkComponentsBuildService,
-    configurationModel: CxxConfigurationModel
+    configurationModel: CxxConfigurationModel,
+    analyticsService: AnalyticsService
 ): CxxMetadataGenerator {
     if(ENABLE_CHECK_CONFIG_TIME_CONSTRUCTION) {
         check(!isGradleConfiguration()) {
@@ -386,15 +386,21 @@ fun createCxxMetadataGenerator(
             abi
         ).rewriteCxxAbiModelWithCMakeSettings()
     }
+    val variantBuilder = analyticsService.getVariantBuilder(
+        variant.module.gradleModulePathName, variant.variantName)
     return when (module.buildSystem) {
-        NativeBuildSystem.NDK_BUILD -> NdkBuildExternalNativeJsonGenerator(variant, abis)
+        NativeBuildSystem.NDK_BUILD -> NdkBuildExternalNativeJsonGenerator(
+            variant,
+            abis,
+            variantBuilder
+        )
         NativeBuildSystem.CMAKE -> {
             val cmake =
                 Objects.requireNonNull(variant.module.cmake)!!
             val cmakeRevision = cmake.minimumCmakeVersion
-            variant.statsBuilder.nativeCmakeVersion = cmakeRevision.toString()
+            variantBuilder.nativeCmakeVersion = cmakeRevision.toString()
             if (cmakeRevision.isCmakeForkVersion()) {
-                return CmakeAndroidNinjaExternalNativeJsonGenerator(variant, abis)
+                return CmakeAndroidNinjaExternalNativeJsonGenerator(variant, abis, variantBuilder)
             }
             if (cmakeRevision.major < 3
                 || cmakeRevision.major == 3 && cmakeRevision.minor <= 6
@@ -405,7 +411,7 @@ fun createCxxMetadataGenerator(
                             + ". Try 3.7.0 or later."
                 )
             }
-            CmakeServerExternalNativeJsonGenerator(variant, abis)
+            CmakeServerExternalNativeJsonGenerator(variant, abis, variantBuilder)
         }
     }
 }

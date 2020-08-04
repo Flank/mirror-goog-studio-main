@@ -279,7 +279,6 @@ class DesugarTaskDelegate(
                     "-Djdk.internal.lambda.dumpProxyClasses=$lambdaDir"
                 )
             }.submit(DesugarWorkerItem.DesugarAction::class.java) {
-                it.initializeFromAndroidVariantTask(initiator)
                 it.args.set(desugarArgs)
             }
         }

@@ -17,14 +17,14 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.api.variant.impl.ResValue
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.generators.ResValueGenerator
 import com.android.testutils.truth.FileSubject.assertThat
-
-import java.io.File
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 
 /**
  * Unit test for GenerateResValues
@@ -46,6 +46,7 @@ class GenerateResValuesTest {
         task.items.put(
             ResValue.Key("string", "VALUE_DEFAULT"), ResValue("1"))
         task.resOutputDir = testDir
+        task.analyticsService.set(FakeNoOpAnalyticsService())
 
         task.taskAction()
 

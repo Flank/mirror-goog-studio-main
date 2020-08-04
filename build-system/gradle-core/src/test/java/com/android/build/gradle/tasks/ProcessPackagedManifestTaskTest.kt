@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.utils.toSystemLineSeparator
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
@@ -100,6 +101,9 @@ class ProcessPackagedManifestTaskTest {
         workItemParameters.inputXmlFile.set(inputXmlFile)
         val outputFolder = temporaryFolder.newFolder("target_folder")
         workItemParameters.outputXmlFile.set(File(outputFolder, SdkConstants.ANDROID_MANIFEST_XML))
+        workItemParameters.analyticsService.set(FakeNoOpAnalyticsService())
+        workItemParameters.taskPath.set("taskPath")
+        workItemParameters.workerKey.set("workerKey")
 
         project.objects.newInstance(
             ProcessPackagedManifestTask.WorkItem::class.java,
@@ -156,6 +160,9 @@ class ProcessPackagedManifestTaskTest {
                 SdkConstants.ANDROID_MANIFEST_XML
             )
         )
+        workItemParameters.analyticsService.set(FakeNoOpAnalyticsService())
+        workItemParameters.taskPath.set("taskPath")
+        workItemParameters.workerKey.set("workerKey")
 
         project.objects.newInstance(
             ProcessPackagedManifestTask.WorkItem::class.java,

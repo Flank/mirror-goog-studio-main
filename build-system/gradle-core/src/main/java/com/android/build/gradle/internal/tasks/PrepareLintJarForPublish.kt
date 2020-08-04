@@ -17,12 +17,15 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.FN_LINT_JAR
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
@@ -55,6 +58,9 @@ abstract class PrepareLintJarForPublish : DefaultTask() {
     @get:Inject
     abstract val workerExecutor: WorkerExecutor
 
+    @get:Internal
+    abstract val analyticsService: Property<AnalyticsService>
+
     companion object {
         const val NAME = "prepareLintJarForPublish"
     }
@@ -62,7 +68,7 @@ abstract class PrepareLintJarForPublish : DefaultTask() {
     @TaskAction
     fun prepare() {
         workerExecutor.noIsolation().submit(PublishLintJarWorkerRunnable::class.java) {
-            it.initializeWith(projectName, path)
+            it.initializeWith(projectName, path, analyticsService)
             it.files.from(lintChecks)
             it.outputLintJar.set(outputLintJar)
         }
@@ -84,6 +90,7 @@ abstract class PrepareLintJarForPublish : DefaultTask() {
 
         override fun configure(task: PrepareLintJarForPublish) {
             task.lintChecks.from(scope.publishedCustomLintChecks)
+            task.analyticsService.set(getBuildService(task.project.gradle.sharedServices))
         }
     }
 }

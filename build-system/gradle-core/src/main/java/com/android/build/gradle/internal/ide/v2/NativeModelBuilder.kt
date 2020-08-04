@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.cxx.model.buildFileIndexFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.symbolFolderIndexFile
 import com.android.build.gradle.internal.errors.SyncIssueReporter
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.variant.VariantModel
@@ -70,7 +71,8 @@ class NativeModelBuilder(
             scopes.map { scope ->
                 createCxxMetadataGenerator(
                     getBuildService<SdkComponentsBuildService>(globalScope.project.gradle.sharedServices).get(),
-                    scope.taskContainer.cxxConfigurationModel!!
+                    scope.taskContainer.cxxConfigurationModel!!,
+                    getBuildService<AnalyticsService>(globalScope.project.gradle.sharedServices).get()
                 )
             }
         }

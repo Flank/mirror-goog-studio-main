@@ -21,15 +21,21 @@ import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.build.gradle.internal.plugins.AppPlugin
 import com.android.build.gradle.internal.plugins.runAfterEvaluate
+import com.android.build.gradle.internal.profile.AnalyticsService
+import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.testutils.MavenRepoGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
+import com.google.wireless.android.sdk.stats.GradleBuildProfile
+import org.gradle.api.Project
+import org.gradle.api.services.BuildServiceRegistration
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.Base64
 import java.util.stream.Collectors.joining
 import java.util.stream.Collectors.toList
 
@@ -59,6 +65,7 @@ class LintModelDependenciesWriterTaskTest {
         plugin.runAfterEvaluate()
 
         val task = project.tasks.getByName("generateDebugDependenciesForLint") as LintModelDependenciesWriterTask
+        configureAnalyticsService(project)
         task.taskAction()
 
         val outputDirectory = task.outputDirectory.get().asFile.toPath()
@@ -66,5 +73,21 @@ class LintModelDependenciesWriterTaskTest {
         assertThat(Files.list(outputDirectory).use { it.collect(toList()) }).isNotEmpty()
         assertThat(Files.lines(outputDirectory.resolve("debug--libraries.xml")).use { it.collect(joining("\n")) }).contains("com.example:jar:1")
 
+    }
+
+    private fun configureAnalyticsService(project: Project) {
+        val serviceRegistration = project.gradle
+            .sharedServices
+            .registrations
+            .getByName(
+                getBuildServiceName(AnalyticsService::class.java)
+            ) as BuildServiceRegistration<AnalyticsService, AnalyticsService.Params>
+        serviceRegistration.parameters.let {
+            val profile = GradleBuildProfile.newBuilder().build().toByteArray()
+            it.profile.set(Base64.getEncoder().encodeToString(profile))
+            it.projects.set(mutableMapOf())
+            it.enableProfileJson.set(true)
+            it.taskMetadata.set(mutableMapOf())
+        }
     }
 }

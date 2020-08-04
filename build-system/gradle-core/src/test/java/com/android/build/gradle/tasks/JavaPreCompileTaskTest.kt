@@ -17,12 +17,15 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.google.common.base.Charsets
 import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.BeforeClass
@@ -119,6 +122,8 @@ class JavaPreCompileTaskTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService>
+                        get() = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }

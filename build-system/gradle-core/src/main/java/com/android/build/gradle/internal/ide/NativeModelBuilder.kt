@@ -18,15 +18,16 @@ package com.android.build.gradle.internal.ide
 
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
-import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.variant.VariantModel
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.internal.cxx.gradle.generator.NativeAndroidProjectBuilder
-import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
+import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.errors.SyncIssueReporter
+import com.android.build.gradle.internal.profile.AnalyticsService
+import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.variant.VariantModel
+import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.ModelBuilderParameter
 import com.android.builder.model.NativeAndroidProject
 import com.android.builder.model.NativeVariantAbi
@@ -67,7 +68,8 @@ class NativeModelBuilder(
         IssueReporterLoggingEnvironment(issueReporter).use {
             createCxxMetadataGenerator(
                 getBuildService<SdkComponentsBuildService>(globalScope.project.gradle.sharedServices).get(),
-                scope.taskContainer.cxxConfigurationModel!!
+                scope.taskContainer.cxxConfigurationModel!!,
+                getBuildService<AnalyticsService>(globalScope.project.gradle.sharedServices).get()
             )
         }
     }

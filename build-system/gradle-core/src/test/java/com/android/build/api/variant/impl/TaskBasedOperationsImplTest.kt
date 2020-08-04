@@ -22,19 +22,22 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
-import com.android.build.gradle.internal.profile.ProfileAgent
-import com.android.build.gradle.internal.profile.RecordingBuildListener
+import com.android.build.gradle.internal.profile.AnalyticsService
+import com.android.build.gradle.internal.profile.ProjectData
+import com.android.build.gradle.internal.profile.TaskMetadata
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.build.gradle.internal.tasks.NonIncrementalGlobalTask
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters
 import com.android.build.gradle.internal.workeractions.WorkActionAdapter
-import com.android.builder.profile.ProfileRecordWriter
-import com.android.ide.common.workers.GradlePluginMBeans
+import com.google.common.base.Joiner
 import com.google.common.truth.Truth
+import com.google.wireless.android.sdk.stats.GradleBuildProfile
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
-import org.gradle.api.Action
+import com.google.wireless.android.sdk.stats.GradleBuildProject
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
@@ -45,10 +48,10 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.api.tasks.TaskState
 import org.gradle.testfixtures.ProjectBuilder
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
+import org.gradle.tooling.events.task.TaskFinishEvent
+import org.gradle.tooling.events.task.TaskOperationDescriptor
+import org.gradle.tooling.events.task.TaskSuccessResult
 import org.gradle.workers.WorkQueue
 import org.gradle.workers.WorkerExecutor
 import org.junit.Assert
@@ -59,9 +62,10 @@ import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
 import java.io.File
 import java.nio.charset.Charset
+import java.nio.file.Files
+import java.util.Base64
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 
 /**
@@ -75,6 +79,7 @@ class TaskBasedOperationsImplTest {
     private lateinit var artifacts: ArtifactsImpl
     private val taskInitialized = AtomicBoolean(false)
     private val component = Mockito.mock(VariantPropertiesImpl::class.java)
+    private lateinit var profileDir: File
 
     @Before
     fun setUp() {
@@ -93,6 +98,7 @@ class TaskBasedOperationsImplTest {
         artifacts.getArtifactContainer(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST)
             .setInitialProvider(inputFolderProperty)
         Mockito.`when`(component.artifacts).thenReturn(artifacts)
+        profileDir = tmpDir.newFolder("profile_proto")
     }
 
     abstract class SynchronousTask @Inject constructor(val workers: WorkerExecutor): VariantAwareTask, DefaultTask() {
@@ -176,7 +182,7 @@ class TaskBasedOperationsImplTest {
         @get:OutputDirectory
         abstract val outputDir: DirectoryProperty
 
-        private val waiting = AtomicBoolean(false)
+        private val waiting = AtomicBoolean(true)
 
         @get:Internal
         lateinit var replacementRequest: ArtifactTransformationRequest<InternalApiTask>
@@ -259,8 +265,36 @@ class TaskBasedOperationsImplTest {
     }
 
     private fun asynchronousTest(
-        workers: WorkerExecutor,
-        recordingBuildListener: RecordingBuildListener? = null) {
+        workers: WorkerExecutor) {
+
+        val projectPath = project.path
+        val taskPath = ":replace"
+        val finishEvent: TaskFinishEvent = Mockito.mock(TaskFinishEvent::class.java)
+        val operationDescriptor: TaskOperationDescriptor = Mockito.mock(TaskOperationDescriptor::class.java)
+        val finishResult: TaskSuccessResult = Mockito.mock(TaskSuccessResult::class.java)
+        val startTime = 1L
+        val endTime = 2L
+
+        Mockito.doReturn(operationDescriptor).`when`(finishEvent).descriptor
+        Mockito.doReturn(taskPath).`when`(operationDescriptor).taskPath
+        Mockito.doReturn(finishResult).`when`(finishEvent).result
+        Mockito.doReturn(false).`when`(finishResult).isUpToDate
+        Mockito.doReturn(startTime).`when`(finishResult).startTime
+        Mockito.doReturn(endTime).`when`(finishResult).endTime
+
+        project.gradle.sharedServices.registerIfAbsent(getBuildServiceName(AnalyticsService::class.java), AnalyticsService::class.java) {
+            it.parameters.enableProfileJson.set(true)
+            it.parameters.profileDir.set(profileDir)
+            val profile = GradleBuildProfile.newBuilder().build().toByteArray()
+            it.parameters.profile.set(Base64.getEncoder().encodeToString(profile))
+
+            val taskInfo = mutableMapOf<String, TaskMetadata>()
+            taskInfo[taskPath] = TaskMetadata(projectPath,"variantName", "typeName")
+            it.parameters.taskMetadata.set(taskInfo)
+            val projects = mutableMapOf<String, ProjectData>()
+            projects[projectPath] = ProjectData(GradleBuildProject.newBuilder().setId(1L))
+            it.parameters.projects.set(projects)
+        }
 
         val taskACreationAction = InternalApiTask.CreationAction(component)
         val taskProvider= project.tasks.register("replace", InternalApiTask::class.java)
@@ -273,6 +307,7 @@ class TaskBasedOperationsImplTest {
             taskACreationAction.apply {
                 configure(it)
                 it.outputDir.set(outputFolder)
+                it.analyticsService.set(getBuildService(project.gradle.sharedServices))
             }
         }
 
@@ -283,14 +318,15 @@ class TaskBasedOperationsImplTest {
 
         val task = taskProvider.get()
         task.workers = workers
-        recordingBuildListener?.beforeExecute(task)
         task.taskAction()
-        recordingBuildListener?.afterExecute(task, Mockito.mock(TaskState::class.java))
 
+        val analyticsService = getBuildService<AnalyticsService>(project.gradle.sharedServices)
+        analyticsService.get().onFinish(finishEvent)
         // force wrap up
         @Suppress("UNCHECKED_CAST")
         (task.replacementRequest as ArtifactTransformationRequestImpl<InternalApiTask>).wrapUp(task)
 
+        analyticsService.get().close()
         checkOutputFolderCorrectness(outputFolder)
     }
 
@@ -305,37 +341,22 @@ class TaskBasedOperationsImplTest {
     }
 
     private fun internalAgpApiTestWithProfiler(waiting: Boolean) {
-
-        val recordWriter= object: ProfileRecordWriter {
-            val counter = AtomicLong(0)
-            val records = mutableListOf<GradleBuildProfileSpan>()
-            override fun allocateRecordId(): Long = counter.incrementAndGet()
-            override fun writeRecord(
-                project: String,
-                variant: String?,
-                executionRecord: GradleBuildProfileSpan.Builder,
-                taskExecutionPhases: MutableList<GradleBuildProfileSpan>
-            ) {
-                records.add(executionRecord.build())
-            }
-        }
-
-        val projectName = "project_name_${tmpDir.root.path.hashCode()}"
-        val recordingBuildListener =
-            RecordingBuildListener(projectName, recordWriter)
-        try {
-            ProfileAgent.register(projectName, recordingBuildListener)
-            asynchronousTest(
-                workers = getFakeWorkerExecutor(waiting = waiting),
-                recordingBuildListener = recordingBuildListener)
-            val profileMBean =
-                GradlePluginMBeans.getProfileMBean(projectName)
-            Truth.assertThat(profileMBean).isNotNull()
-            // assert that the task span was written.
-            Truth.assertThat(recordWriter.records).hasSize(1)
-        } finally {
-            ProfileAgent.unregister()
-        }
+        asynchronousTest(
+            workers = getFakeWorkerExecutor(waiting = waiting))
+        val profile = loadProfile(profileDir)
+        Truth.assertThat(profile.spanCount).isEqualTo(6)
+        // assert task execution span is recorded
+        Truth.assertThat(getRecordForId(profile.spanList, 2).type).isEqualTo(
+            GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION)
+        // assert worker spans are recorded
+        val workerSpans = profile.spanList.filter {
+            it.hasId() && it.type == GradleBuildProfileSpan.ExecutionType.THREAD_EXECUTION }
+        Truth.assertThat(workerSpans.size).isEqualTo(3)
+        // assert gradle pre task span and task execution all phases span are recorded
+        val spansWithoutId = mutableListOf<GradleBuildProfileSpan.ExecutionType>()
+        profile.spanList.filterNot { it.hasId() }.map { it.type }.toCollection(spansWithoutId)
+        Truth.assertThat(spansWithoutId).contains(GradleBuildProfileSpan.ExecutionType.GRADLE_PRE_TASK_SPAN)
+        Truth.assertThat(spansWithoutId).contains(GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_ALL_PHASES)
     }
 
     /**
@@ -393,4 +414,19 @@ class TaskBasedOperationsImplTest {
             variantName = "debug",
             elements = elements.toList()
         )
+
+    private fun loadProfile(mProfileDir: File): GradleBuildProfile {
+        val rawProto = mProfileDir.listFiles().first { it.extension == "rawproto" }.toPath()
+        return GradleBuildProfile.parseFrom(Files.readAllBytes(rawProto))
+    }
+
+    private fun getRecordForId(records: List<GradleBuildProfileSpan>, recordId: Long): GradleBuildProfileSpan {
+        for (record in records) {
+            if (record.id == recordId) {
+                return record
+            }
+        }
+        throw AssertionError(
+            "No record with id $recordId  found in [${Joiner.on(", ").join(records)}]")
+    }
 }

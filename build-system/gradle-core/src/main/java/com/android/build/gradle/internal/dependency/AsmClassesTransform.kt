@@ -22,8 +22,6 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.instrumentation.AsmInstrumentationManager
 import com.android.build.gradle.internal.instrumentation.ClassesHierarchyData
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.tasks.recordArtifactTransformSpan
-import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.InputArtifact
@@ -105,28 +103,23 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
     abstract val inputArtifact: Provider<FileSystemLocation>
 
     override fun transform(outputs: TransformOutputs) {
-        recordArtifactTransformSpan(
-            parameters.projectName.get(),
-            GradleTransformExecutionType.ASM_CLASSES_ARTIFACT_TRANSFORM
-        ) {
-            val inputFile = inputArtifact.get().asFile
+        //TODO(b/162813654) record transform execution span
+        val inputFile = inputArtifact.get().asFile
+        // TODO: Share ClassesHierarchyData in a build service
+        val classesHierarchyData = ClassesHierarchyData(parameters.asmApiVersion.get())
+        classesHierarchyData.addClasses(setOf(inputArtifact.get().asFile))
+        classesHierarchyData.addClasses(classpath.files)
+        classesHierarchyData.addClasses(parameters.bootClasspath.files)
 
-            // TODO: Share ClassesHierarchyData in a build service
-            val classesHierarchyData = ClassesHierarchyData(parameters.asmApiVersion.get())
-            classesHierarchyData.addClasses(setOf(inputArtifact.get().asFile))
-            classesHierarchyData.addClasses(classpath.files)
-            classesHierarchyData.addClasses(parameters.bootClasspath.files)
-
-            AsmInstrumentationManager(
-                parameters.visitorsList.get(),
-                parameters.asmApiVersion.get(),
-                classesHierarchyData,
-                parameters.framesComputationMode.get()
-            ).instrumentClassesFromJarToJar(
-                inputFile,
-                outputs.file(inputFile.name)
-            )
-        }
+        AsmInstrumentationManager(
+            parameters.visitorsList.get(),
+            parameters.asmApiVersion.get(),
+            classesHierarchyData,
+            parameters.framesComputationMode.get()
+        ).instrumentClassesFromJarToJar(
+            inputFile,
+            outputs.file(inputFile.name)
+        )
     }
 
     interface Parameters : GenericTransformParameters {

@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.dexing.writeDesugarGraph
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.recordArtifactTransformSpan
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.tasks.toSerializable
@@ -39,7 +38,6 @@ import com.android.builder.dexing.isJarFile
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.builder.files.SerializableFileChanges
 import com.android.sdklib.AndroidVersion
-import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType
 import com.android.utils.FileUtils
 import com.google.common.io.Closer
 import com.google.common.io.Files
@@ -100,14 +98,10 @@ abstract class BaseDexingTransform<T : BaseDexingTransform.Parameters> : Transfo
     protected abstract fun computeClasspathFiles(): List<Path>
 
     override fun transform(outputs: TransformOutputs) {
-        recordArtifactTransformSpan(
-            parameters.projectName.get(),
-            GradleTransformExecutionType.DEX_ARTIFACT_TRANSFORM
-        ) {
-            val input = primaryInput.get().asFile
-            val outputDir = outputs.dir(Files.getNameWithoutExtension(input.name))
-            doTransform(input, outputDir)
-        }
+        //TODO(b/162813654) record transform execution span
+        val input = primaryInput.get().asFile
+        val outputDir = outputs.dir(Files.getNameWithoutExtension(input.name))
+        doTransform(input, outputDir)
     }
 
     private fun doTransform(inputFile: File, outputDir: File) {

@@ -18,7 +18,6 @@ package com.android.builder.profile;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import com.google.wireless.android.sdk.stats.GradleTransformExecution;
@@ -26,7 +25,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,11 +37,6 @@ import java.util.logging.Logger;
  */
 public final class ThreadRecorder implements Recorder {
 
-    // Dummy implementation that records nothing but comply to the overall recording contracts.
-    private static final Recorder NO_OP_RECORDER = new NoOpRecorder();
-    private static final AtomicLong THREAD_ID_ALLOCATOR = new AtomicLong(1);
-    private static final Recorder RECORDER = new ThreadRecorder();
-
     /**
      * Do not put anything else than JDK classes in the ThreadLocal as it prevents that class and
      * therefore the plugin classloader to be gc'ed leading to OOM or PermGen issues.
@@ -51,76 +44,56 @@ public final class ThreadRecorder implements Recorder {
     protected final ThreadLocal<Deque<Long>> recordStacks =
             ThreadLocal.withInitial(ArrayDeque::new);
 
-    //protected final ThreadLocal<Long> threadId =
-    //        ThreadLocal.withInitial(THREAD_ID_ALLOCATOR::getAndIncrement);
-
-    public static Recorder get() {
-        return ProcessProfileWriterFactory.getFactory().isInitialized() ? RECORDER : NO_OP_RECORDER;
-    }
-
-
-    @Nullable
     @Override
-    public <T> T record(
+    public GradleBuildProfileSpan record(
             @NonNull ExecutionType executionType,
-            @NonNull String projectPath,
-            @Nullable String variant,
-            @NonNull Block<T> block) {
-        return record(executionType, null, projectPath, variant, block);
-    }
-
-    @Override
-    public void record(
-            @NonNull ExecutionType executionType,
-            @NonNull String projectPath,
-            @Nullable String variant,
+            @NonNull Long projectId,
+            @NonNull Long variantId,
+            @NonNull Long recordId,
             @NonNull VoidBlock block) {
-        ProfileRecordWriter profileRecordWriter = ProcessProfileWriter.get();
-        GradleBuildProfileSpan.Builder currentRecord =
-                create(profileRecordWriter, executionType, null);
-        try {
-            block.call();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        } finally {
-            write(profileRecordWriter, currentRecord, projectPath, variant);
-            if (recordStacks.get().isEmpty()) {
-                recordStacks.remove();
-            }
-        }
+        return record(executionType, null, projectId, variantId, recordId, block);
     }
 
-    @Nullable
     @Override
-    public <T> T record(
+    public GradleBuildProfileSpan record(
             @NonNull ExecutionType executionType,
             @Nullable GradleTransformExecution transform,
-            @NonNull String projectPath,
-            @Nullable String variant,
-            @NonNull Block<T> block) {
-        ProfileRecordWriter profileRecordWriter = ProcessProfileWriter.get();
+            @Nullable Long projectId,
+            @Nullable Long variantId,
+            @NonNull Long recordId,
+            @NonNull VoidBlock block) {
 
         GradleBuildProfileSpan.Builder currentRecord =
-                create(profileRecordWriter, executionType, transform);
+                create(recordId, executionType, transform);
         try {
-            return block.call();
+            block.call();
         } catch (Exception e) {
-            block.handleException(e);
+            throw new RuntimeException(e);
         } finally {
-            write(profileRecordWriter, currentRecord, projectPath, variant);
+            // pop this record from the stack.
+            if (recordStacks.get().pop() != currentRecord.getId()) {
+                Logger.getLogger(ThreadRecorder.class.getName())
+                        .log(Level.SEVERE, "Profiler stack corrupted");
+            }
+            currentRecord.setDurationInMs(
+                    System.currentTimeMillis() - currentRecord.getStartTimeInMs());
+            if (projectId != null) {
+                currentRecord.setProject(projectId);
+            }
+            if (variantId != null) {
+                currentRecord.setVariant(variantId);
+            }
             if (recordStacks.get().isEmpty()) {
                 recordStacks.remove();
             }
         }
-        // we always return null when an exception occurred and was not rethrown.
-        return null;
+        return currentRecord.build();
     }
 
     private GradleBuildProfileSpan.Builder create(
-            @NonNull ProfileRecordWriter profileRecordWriter,
+            @NonNull Long recordId,
             @NonNull ExecutionType executionType,
             @Nullable GradleTransformExecution transform) {
-        long thisRecordId = profileRecordWriter.allocateRecordId();
 
         // am I a child ?
         @Nullable
@@ -130,7 +103,7 @@ public final class ThreadRecorder implements Recorder {
 
         final GradleBuildProfileSpan.Builder currentRecord =
                 GradleBuildProfileSpan.newBuilder()
-                        .setId(thisRecordId)
+                        .setId(recordId)
                         .setType(executionType)
                         .setThreadId(Thread.currentThread().getId())
                         .setStartTimeInMs(startTimeInMs);
@@ -144,22 +117,7 @@ public final class ThreadRecorder implements Recorder {
         }
 
         currentRecord.setThreadId(Thread.currentThread().getId());
-        recordStacks.get().push(thisRecordId);
+        recordStacks.get().push(recordId);
         return currentRecord;
-    }
-
-    private void write(
-            @NonNull ProfileRecordWriter profileRecordWriter,
-            @NonNull GradleBuildProfileSpan.Builder currentRecord,
-            @NonNull String projectPath,
-            @Nullable String variant) {
-        // pop this record from the stack.
-        if (recordStacks.get().pop() != currentRecord.getId()) {
-            Logger.getLogger(ThreadRecorder.class.getName())
-                    .log(Level.SEVERE, "Profiler stack corrupted");
-        }
-        currentRecord.setDurationInMs(
-                System.currentTimeMillis() - currentRecord.getStartTimeInMs());
-        profileRecordWriter.writeRecord(projectPath, variant, currentRecord, ImmutableList.of());
     }
 }

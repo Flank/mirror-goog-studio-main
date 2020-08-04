@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.tasks.ProcessManifestForInstantAppTask.WorkItem
 import com.android.build.gradle.tasks.ProcessManifestForInstantAppTask.WorkItemParameters
 import com.android.utils.PositionXmlParser
@@ -108,6 +109,9 @@ class ProcessManifestForInstantAppTaskTest {
             File(temporaryFolder.newFolder("target_manifests"),
                 SdkConstants.ANDROID_MANIFEST_XML)
         )
+        workItemParameters.analyticsService.set(FakeNoOpAnalyticsService())
+        workItemParameters.taskPath.set("taskPath")
+        workItemParameters.workerKey.set("workerKey")
         project.objects.newInstance(WorkItem::class.java, workItemParameters as WorkItemParameters).execute()
 
         val xmlDocument =

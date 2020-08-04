@@ -23,9 +23,7 @@ import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationMo
 import com.android.build.gradle.internal.cxx.gradle.generator.variantJsonFolder
 import com.android.build.gradle.internal.cxx.gradle.generator.variantObjFolder
 import com.android.build.gradle.internal.cxx.gradle.generator.variantSoFolder
-import com.android.builder.profile.ProcessProfileWriter
 import com.android.utils.FileUtils.join
-import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import java.io.File
 
 /**
@@ -80,10 +78,4 @@ fun createCxxVariantModel(
  */
 val CxxVariantModel.gradleBuildOutputFolder
         get() = join(module.cxxFolder, "cxx", variantName)
-
-/**
- * Gradle stats builder proto for this variant
- */
-val CxxVariantModel.statsBuilder : GradleBuildVariant.Builder
-    get() = ProcessProfileWriter.getOrCreateVariant(module.gradleModulePathName, variantName)
 

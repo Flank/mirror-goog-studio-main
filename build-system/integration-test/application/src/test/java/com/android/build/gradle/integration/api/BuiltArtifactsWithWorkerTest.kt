@@ -65,6 +65,8 @@ android {
 import javax.inject.Inject
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.api.artifact.ArtifactType
+import com.android.build.gradle.internal.services.BuildServicesKt
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.BuiltArtifactsLoader
@@ -153,7 +155,7 @@ abstract class ConsumerTask extends BaseTask {
       WorkItem(MyWorkItemParameters parameters) {
          myParameters = parameters;
       }
-      
+
       @Override
       MyWorkItemParameters getParameters() {
         return myParameters;
@@ -168,7 +170,7 @@ abstract class ConsumerTask extends BaseTask {
 
     @TaskAction
     void taskAction() {
-    
+
       replacementRequest.submit(
                 this,
                 workerExecutor.noIsolation(),
@@ -186,7 +188,7 @@ abstract class VerifierTask extends DefaultTask {
     abstract DirectoryProperty getInputDir()
 
     @Internal
-    abstract Property<BuiltArtifactsLoader> getArtifactsLoader() 
+    abstract Property<BuiltArtifactsLoader> getArtifactsLoader()
 
     @TaskAction
     void taskAction() {
@@ -221,8 +223,9 @@ android.onVariantProperties {
   consumerTask.configure { task ->
     task.replacementRequest = replacementRequest
     task.getOutputDir().set(new File(project.layout.buildDir.getAsFile().get(), "build/acme_apks"))
+    task.analyticsService.set(BuildServicesKt.getBuildService(task.project.gradle.sharedServices, AnalyticsService.class))
   }
-  
+
   tasks.register(it.getName() + 'Verifier', VerifierTask) { task ->
     task.getInputDir().set(
       it.artifacts.get(ArtifactType.APK.INSTANCE)

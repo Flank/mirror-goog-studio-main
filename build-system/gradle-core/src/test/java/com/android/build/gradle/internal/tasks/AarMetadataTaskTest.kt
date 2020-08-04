@@ -20,6 +20,7 @@ import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.testutils.truth.FileSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testfixtures.ProjectBuilder
@@ -56,6 +57,7 @@ class AarMetadataTaskTest {
             AarMetadataForTest::class.java,
             FakeGradleWorkExecutor(project.objects, temporaryFolder.newFolder())
         ).get()
+        task.analyticsService.set(FakeNoOpAnalyticsService())
         outputFile = temporaryFolder.newFile("AarMetadata.xml")
     }
 

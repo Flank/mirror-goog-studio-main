@@ -21,6 +21,7 @@ import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.utils.PositionXmlParser
 import com.google.common.truth.Truth
 import org.gradle.api.Project
@@ -68,6 +69,7 @@ class ProcessManifestForMetadataFeatureTaskTest {
             ProcessManifestForMetadataFeatureTaskForTest::class.java,
             FakeGradleWorkExecutor(project.objects, temporaryFolder.newFolder())
         ).get()
+        task.analyticsService.set(FakeNoOpAnalyticsService())
         sourceManifestFolder = temporaryFolder.newFolder("source_manifest")
         Mockito.`when`(mainSplit.variantOutputConfiguration).thenReturn(variantOutputConfiguration)
         Mockito.`when`(variantOutputConfiguration.outputType).thenReturn(

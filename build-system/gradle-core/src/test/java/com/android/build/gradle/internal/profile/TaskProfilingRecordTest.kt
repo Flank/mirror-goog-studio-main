@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.profile
 
-import com.android.builder.profile.ProcessProfileWriter
 import com.google.common.truth.Truth.assertThat
+import com.google.wireless.android.sdk.stats.GradleBuildProfile
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import org.junit.Before
 import org.junit.Test
@@ -25,6 +25,7 @@ import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
+import java.util.concurrent.ConcurrentHashMap
 
 class TaskProfilingRecordTest {
 
@@ -34,9 +35,16 @@ class TaskProfilingRecordTest {
     fun setup() {
         resetClockTo(100)
         testTaskRecord = TaskProfilingRecord(
-            ProcessProfileWriter.get(),
+            AnalyticsResourceManager(
+                GradleBuildProfile.newBuilder(),
+                ConcurrentHashMap(),
+                false,
+                null,
+                ConcurrentHashMap()
+            ),
             GradleBuildProfileSpan.newBuilder(),
             "dummy", ":dummy", "variant")
+        testTaskRecord.setTaskStartTime(100)
     }
 
     @Test
@@ -119,7 +127,7 @@ class TaskProfilingRecordTest {
         resetClockTo(135)
         testTaskRecord.setTaskClosed()
         resetClockTo(140)
-        testTaskRecord.setTaskFinished()
+        testTaskRecord.setTaskEndTime(140)
 
         assertThat(testTaskRecord.minimumWaitTime()).isEqualTo(Duration.ZERO)
         assertThat(testTaskRecord.lastWorkerCompletionTime()).isEqualTo(Instant.ofEpochMilli(220))
@@ -145,7 +153,7 @@ class TaskProfilingRecordTest {
         resetClockTo(235)
         testTaskRecord.setTaskClosed()
         resetClockTo(240)
-        testTaskRecord.setTaskFinished()
+        testTaskRecord.setTaskEndTime(240)
 
         assertThat(testTaskRecord.minimumWaitTime()).isEqualTo(Duration.ZERO)
         assertThat(testTaskRecord.lastWorkerCompletionTime()).isEqualTo(Instant.ofEpochMilli(220))

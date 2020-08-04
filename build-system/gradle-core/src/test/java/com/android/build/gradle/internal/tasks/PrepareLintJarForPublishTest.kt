@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.testutils.truth.PathSubject.assertThat
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
@@ -56,6 +57,7 @@ class PrepareLintJarForPublishTest {
         task.configure {
             it.lintChecks.from(inputJar)
             it.outputLintJar.set(outputLocation)
+            it.analyticsService.set(FakeNoOpAnalyticsService())
         }
 
         task.get().prepare()

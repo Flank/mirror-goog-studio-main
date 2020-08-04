@@ -48,6 +48,7 @@ import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.component.SoftwareComponentFactory;
+import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects, applied on the base application module */
@@ -55,8 +56,10 @@ public class AppPlugin
         extends AbstractAppPlugin<ApplicationVariantImpl, ApplicationVariantPropertiesImpl> {
     @Inject
     public AppPlugin(
-            ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
-        super(registry, componentFactory);
+            ToolingModelBuilderRegistry registry,
+            SoftwareComponentFactory componentFactory,
+            BuildEventsListenerRegistry listenerRegistry) {
+        super(registry, componentFactory, listenerRegistry);
     }
 
     @Override
@@ -130,10 +133,9 @@ public class AppPlugin
                             testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension,
-            @NonNull Recorder threadRecorder) {
+            @NonNull BaseExtension extension) {
         return new ApplicationTaskManager(
-                variants, testComponents, hasFlavors, globalScope, extension, threadRecorder);
+                variants, testComponents, hasFlavors, globalScope, extension);
     }
 
     @NonNull

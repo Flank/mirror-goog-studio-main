@@ -24,7 +24,6 @@ import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters
-import com.android.ide.common.workers.GradlePluginMBeans
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocationProperty
@@ -70,13 +69,13 @@ class ArtifactTransformationRequestImpl<TaskT: Task>(
                 if (task is BaseTask && parameters is DecoratedWorkParameters) {
                     // Record the worker creation and provide enough context to the WorkerActionAdapter
                     // to be able to send the necessary events.
-                    val workerKey = "${task.projectName}${task.name}${builtArtifact.hashCode()}"
-                    parameters.projectName.set(task.projectName)
-                    parameters.taskName.set(task.name)
+                    val workerKey = "${task.path}${builtArtifact.hashCode()}"
+                    parameters.taskPath.set(task.path)
                     parameters.workerKey.set(workerKey)
+                    parameters.analyticsService.set(task.analyticsService)
 
-                    GradlePluginMBeans.getProfileMBean(task.projectName)
-                        ?.workerAdded(task.name, workerKey)
+                    parameters.analyticsService.get()
+                        .workerAdded(task.path, workerKey)
                 }
 
                 mapOfBuiltArtifactsToParameters[builtArtifact] =

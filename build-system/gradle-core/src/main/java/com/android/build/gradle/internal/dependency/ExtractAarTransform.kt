@@ -18,23 +18,21 @@ package com.android.build.gradle.internal.dependency
 
 import com.android.SdkConstants.FD_JARS
 import com.android.SdkConstants.FN_CLASSES_JAR
-import com.android.build.gradle.internal.tasks.recordArtifactTransformSpan
 import com.android.builder.aar.AarExtractor
-import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType
 import com.android.utils.FileUtils
 import com.google.common.io.Files
-import java.io.BufferedOutputStream
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.util.jar.JarOutputStream
-import java.util.jar.Manifest
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
+import java.io.BufferedOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.util.jar.JarOutputStream
+import java.util.jar.Manifest
 
 /** Transform that extracts an AAR file into a directory.  */
 abstract class ExtractAarTransform: TransformAction<GenericTransformParameters> {
@@ -44,31 +42,27 @@ abstract class ExtractAarTransform: TransformAction<GenericTransformParameters> 
     abstract val primaryInput: Provider<FileSystemLocation>
 
     override fun transform(outputs: TransformOutputs) {
-        recordArtifactTransformSpan(
-            parameters.projectName.get(),
-            GradleTransformExecutionType.EXTRACT_AAR_ARTIFACT_TRANSFORM
-        ) {
-            val inputFile = primaryInput.get().asFile
-            val name = Files.getNameWithoutExtension(inputFile.name)
-            val outputDir = outputs.dir(name)
-            FileUtils.mkdirs(outputDir)
-            val aarExtractor = AarExtractor()
-            aarExtractor.extract(inputFile, outputDir)
+        //TODO(b/162813654) record transform execution span
+        val inputFile = primaryInput.get().asFile
+        val name = Files.getNameWithoutExtension(inputFile.name)
+        val outputDir = outputs.dir(name)
+        FileUtils.mkdirs(outputDir)
+        val aarExtractor = AarExtractor()
+        aarExtractor.extract(inputFile, outputDir)
 
-            // Verify that we have a classes.jar, if we don't just create an empty one.
-            val classesJar = File(File(outputDir, FD_JARS), FN_CLASSES_JAR)
-            if (!classesJar.exists()) {
-                try {
-                    Files.createParentDirs(classesJar)
-                    FileOutputStream(classesJar).use { out ->
-                        // FileOutputStream above is the actual OS resource that will get closed,
-                        // JarOutputStream writes the bytes or an empty jar in it.
-                        val jarOutputStream = JarOutputStream(BufferedOutputStream(out), Manifest())
-                        jarOutputStream.close()
-                    }
-                } catch (e: IOException) {
-                    throw RuntimeException("Cannot create missing classes.jar", e)
+        // Verify that we have a classes.jar, if we don't just create an empty one.
+        val classesJar = File(File(outputDir, FD_JARS), FN_CLASSES_JAR)
+        if (!classesJar.exists()) {
+            try {
+                Files.createParentDirs(classesJar)
+                FileOutputStream(classesJar).use { out ->
+                    // FileOutputStream above is the actual OS resource that will get closed,
+                    // JarOutputStream writes the bytes or an empty jar in it.
+                    val jarOutputStream = JarOutputStream(BufferedOutputStream(out), Manifest())
+                    jarOutputStream.close()
                 }
+            } catch (e: IOException) {
+                throw RuntimeException("Cannot create missing classes.jar", e)
             }
         }
     }

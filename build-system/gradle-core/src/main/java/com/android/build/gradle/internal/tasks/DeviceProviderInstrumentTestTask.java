@@ -229,7 +229,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     @NonNull
     @Internal
     public ExecutorServiceAdapter getExecutorServiceAdapter() {
-        return Workers.INSTANCE.withThreads(getProjectName(), getPath());
+        return Workers.INSTANCE.withThreads(getPath(), getAnalyticsService().get());
     }
 
     @Override
@@ -298,7 +298,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                     InstrumentationTestAnalytics.recordCrashedTestRun(
                                             dependencies,
                                             getTestRunnerFactory().getExecutionEnum().get(),
-                                            getCodeCoverageEnabled().get());
+                                            getCodeCoverageEnabled().get(),
+                                            getAnalyticsService().get());
                                     throw e;
                                 }
                             });
@@ -315,7 +316,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 dependencies,
                 getTestRunnerFactory().getExecutionEnum().get(),
                 getCodeCoverageEnabled().get(),
-                results.getTestCount());
+                results.getTestCount(),
+                getAnalyticsService().get());
 
         if (!success) {
             testFailed = true;

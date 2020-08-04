@@ -19,9 +19,7 @@ package com.android.build.gradle.internal.dependency
 import com.android.SdkConstants
 import com.android.SdkConstants.COM_ANDROID_TOOLS_FOLDER
 import com.android.builder.model.CodeShrinker
-import com.android.build.gradle.internal.tasks.recordArtifactTransformSpan
 import com.android.ide.common.repository.GradleVersion
-import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.artifacts.transform.InputArtifact
@@ -45,63 +43,59 @@ abstract class FilterShrinkerRulesTransform :
     abstract val inputArtifact: Provider<FileSystemLocation>
 
     override fun transform(transformOutputs: TransformOutputs) {
-        recordArtifactTransformSpan(
-            parameters.projectName.get(),
-            GradleTransformExecutionType.FILTER_SHRINKER_RULES_ARTIFACT_TRANSFORM
-        ) {
-            val input = inputArtifact.get().asFile
-            if (input.isFile) {
-                // if input is a regular file, it is simply always accepted, no need to filter
-                transformOutputs.file(input.absolutePath)
-            } else if (input.isDirectory) {
-                // this will handle inputs that look like this:
-                // input/
-                // ├── lib0/
-                // |   ├── proguard.txt (optional, coming from AAR)
-                // │   └── META-INF/
-                // |       ├── proguard/ (optional, coming from JAR)
-                // │       └── com.android.tools/ (optional, coming from JAR)
-                // │           ├── r8[...][...]
-                // │           └── proguard[...][...]
-                // ├── lib1/
-                // │   └── ...
-                // ...
+        //TODO(b/162813654) record transform execution span
+        val input = inputArtifact.get().asFile
+        if (input.isFile) {
+            // if input is a regular file, it is simply always accepted, no need to filter
+            transformOutputs.file(input.absolutePath)
+        } else if (input.isDirectory) {
+            // this will handle inputs that look like this:
+            // input/
+            // ├── lib0/
+            // |   ├── proguard.txt (optional, coming from AAR)
+            // │   └── META-INF/
+            // |       ├── proguard/ (optional, coming from JAR)
+            // │       └── com.android.tools/ (optional, coming from JAR)
+            // │           ├── r8[...][...]
+            // │           └── proguard[...][...]
+            // ├── lib1/
+            // │   └── ...
+            // ...
 
-                // loop through top-level directories and join the results into a list
-                input.listFiles { file -> file.isDirectory }.flatMap { libDir ->
-                    // if there is a com.android.tools directory, it takes precedence over legacy rules
-                    val toolsDir = FileUtils.join(libDir, "META-INF", COM_ANDROID_TOOLS_FOLDER)
-                    if (toolsDir.isDirectory) {
-                        // gather all directories under com.android.tools that match shrinker version...
-                        return@flatMap toolsDir.listFiles { file ->
-                            file.isDirectory && configDirMatchesVersion(
-                                file.name,
-                                parameters.shrinker.get()
-                            )
-                        }.flatMap { shrinkerConfigDir ->
-                            // ...then gather all regular files under the matching directories
-                            shrinkerConfigDir.listFiles { file -> file.isFile }.asIterable()
-                        }
+            // loop through top-level directories and join the results into a list
+            input.listFiles { file -> file.isDirectory }.flatMap { libDir ->
+                // if there is a com.android.tools directory, it takes precedence over legacy rules
+                val toolsDir = FileUtils.join(libDir, "META-INF", COM_ANDROID_TOOLS_FOLDER)
+                if (toolsDir.isDirectory) {
+                    // gather all directories under com.android.tools that match shrinker version...
+                    return@flatMap toolsDir.listFiles { file ->
+                        file.isDirectory && configDirMatchesVersion(
+                            file.name,
+                            parameters.shrinker.get()
+                        )
+                    }.flatMap { shrinkerConfigDir ->
+                        // ...then gather all regular files under the matching directories
+                        shrinkerConfigDir.listFiles { file -> file.isFile }.asIterable()
+                    }
+                } else {
+                    // there will be either a libDir/proguard.txt file or libDir/META-INF/proguard/*
+                    // order doesn't really matter, as there never should be both
+                    val proguardTxtFile = File(libDir, SdkConstants.FN_PROGUARD_TXT)
+                    if (proguardTxtFile.isFile) {
+                        return@flatMap listOf(proguardTxtFile)
                     } else {
-                        // there will be either a libDir/proguard.txt file or libDir/META-INF/proguard/*
-                        // order doesn't really matter, as there never should be both
-                        val proguardTxtFile = File(libDir, SdkConstants.FN_PROGUARD_TXT)
-                        if (proguardTxtFile.isFile) {
-                            return@flatMap listOf(proguardTxtFile)
-                        } else {
-                            val proguardConfigDir = FileUtils.join(libDir, "META-INF", "proguard")
-                            if (proguardConfigDir.isDirectory) {
-                                // gets all files from the META-INF/proguard/ directory
-                                return@flatMap proguardConfigDir
-                                    .listFiles { file -> file.isFile }
-                                    .asIterable()
-                            }
+                        val proguardConfigDir = FileUtils.join(libDir, "META-INF", "proguard")
+                        if (proguardConfigDir.isDirectory) {
+                            // gets all files from the META-INF/proguard/ directory
+                            return@flatMap proguardConfigDir
+                                .listFiles { file -> file.isFile }
+                                .asIterable()
                         }
                     }
-                    emptyList<File>()
-                }.forEach { file ->
-                    transformOutputs.file(file.absolutePath)
                 }
+                emptyList<File>()
+            }.forEach { file ->
+                transformOutputs.file(file.absolutePath)
             }
         }
     }

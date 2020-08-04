@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
@@ -44,6 +45,7 @@ class LibraryJniLibsTaskTest {
         with(ProjectBuilder.builder().withProjectDir(tmpDir.newFolder()).build()) {
             workers = FakeGradleWorkExecutor(objects, tmpDir.newFolder())
             task = tasks.create("task", AndroidVariantTask::class.java)
+            task.analyticsService.set(FakeNoOpAnalyticsService())
         }
     }
 

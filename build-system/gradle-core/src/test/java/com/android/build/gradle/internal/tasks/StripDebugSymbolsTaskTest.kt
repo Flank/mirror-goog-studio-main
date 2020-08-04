@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.fixtures.FakeGradleExecOperations
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeInjectableService
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.ide.common.resources.FileStatus
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
@@ -91,6 +92,7 @@ class StripDebugSymbolsTaskTest {
                 )
             )
             instantiatorTask = tasks.create("task", AndroidVariantTask::class.java)
+            instantiatorTask.analyticsService.set(FakeNoOpAnalyticsService())
         }
     }
 

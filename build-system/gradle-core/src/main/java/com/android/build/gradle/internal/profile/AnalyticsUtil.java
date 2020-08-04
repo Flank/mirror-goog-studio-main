@@ -24,6 +24,7 @@ import com.android.build.api.variant.AndroidVersion;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
@@ -33,7 +34,6 @@ import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.model.CodeShrinker;
 import com.android.builder.model.TestOptions;
-import com.android.builder.profile.ProcessProfileWriter;
 import com.android.resources.Density;
 import com.android.tools.analytics.CommonMetricsData;
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
@@ -105,7 +105,6 @@ public class AnalyticsUtil {
         }
     }
 
-    @VisibleForTesting
     @NonNull
     static String getPotentialTaskExecutionTypeName(Class<?> taskClass) {
         String taskImpl = taskClass.getSimpleName();
@@ -409,7 +408,11 @@ public class AnalyticsUtil {
         if (version == null) {
             return;
         }
-        ProcessProfileWriter.getProject(project.getPath())
+        AnalyticsConfiguratorService configuratorService =
+                BuildServicesKt.getBuildService(
+                        project.getGradle().getSharedServices(), AnalyticsConfiguratorService.class)
+                        .get();
+        configuratorService.getProjectBuilder(project.getPath())
                 .setFirebasePerformancePluginVersion(version);
     }
 

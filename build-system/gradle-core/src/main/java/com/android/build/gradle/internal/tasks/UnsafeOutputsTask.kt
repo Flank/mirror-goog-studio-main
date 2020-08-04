@@ -46,7 +46,7 @@ abstract class UnsafeOutputsTask(reasonToLog: String) : AndroidVariantTask() {
 
     @TaskAction
     fun taskAction() {
-        recordTaskAction {
+        recordTaskAction(analyticsService.get()) {
             doTaskAction()
         }
     }

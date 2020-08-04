@@ -27,8 +27,6 @@ import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
-import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.DetermineUsedStlResult
 import com.android.build.gradle.internal.cxx.model.determineUsedStl
 import com.android.build.gradle.internal.cxx.model.jsonFile
@@ -42,7 +40,17 @@ import com.google.gson.annotations.SerializedName
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.StringWriter
 import kotlin.math.max
@@ -216,7 +224,7 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
     }
 
     private fun createAbiData() : List<PrefabAbiData> {
-        val generator = createCxxMetadataGenerator(sdkComponents.get(), configurationModel)
+        val generator = createCxxMetadataGenerator(sdkComponents.get(), configurationModel, analyticsService.get())
         val variantModel = generator.variant
         val abiModels = generator.abis
 

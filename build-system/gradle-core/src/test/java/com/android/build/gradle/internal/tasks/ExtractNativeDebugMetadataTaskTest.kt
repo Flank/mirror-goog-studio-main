@@ -22,10 +22,14 @@ import com.android.build.gradle.internal.fixtures.FakeGradleExecOperations
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeInjectableService
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.Project
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.workers.WorkerExecutor
 import org.junit.Before
@@ -50,6 +54,7 @@ class ExtractNativeDebugMetadataTaskTest {
     private lateinit var fakeExe: File
     private lateinit var objcopyExecutableMap: Map<Abi, File>
     private lateinit var workers: WorkerExecutor
+    private lateinit var project: Project
     private lateinit var objectFactory: ObjectFactory
     private val fakeExecOperations = FakeGradleExecOperations()
 
@@ -69,8 +74,8 @@ class ExtractNativeDebugMetadataTaskTest {
         fakeExe = temporaryFolder.newFile("fake.exe")
         objcopyExecutableMap = mapOf(Pair(Abi.X86, fakeExe), Pair(Abi.ARMEABI, fakeExe))
 
-        objectFactory =
-            ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build().objects
+        project = ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build()
+        objectFactory = project.objects
 
         workers = FakeGradleWorkExecutor(
             objectFactory, temporaryFolder.newFolder(), listOf(
@@ -102,6 +107,10 @@ class ExtractNativeDebugMetadataTaskTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService>
+                      get() = project.objects.property(AnalyticsService::class.java).also {
+                          it.set(FakeNoOpAnalyticsService())
+                      }
                 }
             }
         }.execute()
@@ -148,6 +157,10 @@ class ExtractNativeDebugMetadataTaskTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService>
+                        get() = project.objects.property(AnalyticsService::class.java).also {
+                            it.set(FakeNoOpAnalyticsService())
+                        }
                 }
             }
         }.execute()
@@ -194,6 +207,10 @@ class ExtractNativeDebugMetadataTaskTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService>
+                        get() = project.objects.property(AnalyticsService::class.java).also {
+                            it.set(FakeNoOpAnalyticsService())
+                        }
                 }
             }
         }.execute()

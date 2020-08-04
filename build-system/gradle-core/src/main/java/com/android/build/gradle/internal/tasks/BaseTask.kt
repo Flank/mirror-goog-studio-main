@@ -16,8 +16,10 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import org.gradle.api.DefaultTask
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
@@ -37,17 +39,23 @@ abstract class BaseTask : DefaultTask() {
     @get:Inject
     abstract val workerExecutor: WorkerExecutor
 
+    @get:Internal
+    abstract val analyticsService: Property<AnalyticsService>
+
     /**
      * Called by subclasses that want to record something.
      *
      * The task execution will use [GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_ALL_PHASES]
      * as the span type to record the [AndroidVariantTask.recordedTaskAction].
      */
-    protected inline fun recordTaskAction(crossinline block: () -> Unit) {
-        Blocks.recordSpan<Unit, Exception>(
-                projectName,
-                path,
-                GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_ALL_PHASES
+    protected inline fun recordTaskAction(
+        analyticsService: AnalyticsService?,
+        crossinline block: () -> Unit
+    ) {
+        Blocks.recordSpan<Exception>(
+            path,
+            GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_ALL_PHASES,
+            analyticsService
         ) { block() }
     }
 }

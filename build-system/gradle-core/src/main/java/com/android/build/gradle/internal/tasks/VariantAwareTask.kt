@@ -16,8 +16,10 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.profile.AnalyticsService
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 
 /**
  * A task associated with a variant name.
@@ -26,4 +28,7 @@ interface VariantAwareTask {
 
     /** the name of the variant */
     var variantName: String
+
+    @get:Internal
+    val analyticsService: Property<AnalyticsService>
 }
