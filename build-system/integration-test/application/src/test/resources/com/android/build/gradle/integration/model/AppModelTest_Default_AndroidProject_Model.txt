@@ -68,12 +68,6 @@
           > renderscriptDirectories:
              * {PROJECT}/src/main/rs{!}
           < renderscriptDirectories
-          > cDirectories:
-             * {PROJECT}/src/main/jni{!}
-          < cDirectories
-          > cppDirectories:
-             * {PROJECT}/src/main/jni{!}
-          < cppDirectories
           > resDirectories:
              * {PROJECT}/src/main/res{D}
           < resDirectories
@@ -103,12 +97,6 @@
           > renderscriptDirectories:
              * {PROJECT}/src/androidTest/rs{!}
           < renderscriptDirectories
-          > cDirectories:
-             * {PROJECT}/src/androidTest/jni{!}
-          < cDirectories
-          > cppDirectories:
-             * {PROJECT}/src/androidTest/jni{!}
-          < cppDirectories
           > resDirectories:
              * {PROJECT}/src/androidTest/res{!}
           < resDirectories
@@ -138,12 +126,6 @@
           > renderscriptDirectories:
              * {PROJECT}/src/test/rs{!}
           < renderscriptDirectories
-          > cDirectories:
-             * {PROJECT}/src/test/jni{!}
-          < cDirectories
-          > cppDirectories:
-             * {PROJECT}/src/test/jni{!}
-          < cppDirectories
           > resDirectories:
              * {PROJECT}/src/test/res{!}
           < resDirectories
@@ -200,12 +182,6 @@
              > renderscriptDirectories:
                 * {PROJECT}/src/debug/rs{!}
              < renderscriptDirectories
-             > cDirectories:
-                * {PROJECT}/src/debug/jni{!}
-             < cDirectories
-             > cppDirectories:
-                * {PROJECT}/src/debug/jni{!}
-             < cppDirectories
              > resDirectories:
                 * {PROJECT}/src/debug/res{!}
              < resDirectories
@@ -235,12 +211,6 @@
              > renderscriptDirectories:
                 * {PROJECT}/src/androidTestDebug/rs{!}
              < renderscriptDirectories
-             > cDirectories:
-                * {PROJECT}/src/androidTestDebug/jni{!}
-             < cDirectories
-             > cppDirectories:
-                * {PROJECT}/src/androidTestDebug/jni{!}
-             < cppDirectories
              > resDirectories:
                 * {PROJECT}/src/androidTestDebug/res{!}
              < resDirectories
@@ -270,12 +240,6 @@
              > renderscriptDirectories:
                 * {PROJECT}/src/testDebug/rs{!}
              < renderscriptDirectories
-             > cDirectories:
-                * {PROJECT}/src/testDebug/jni{!}
-             < cDirectories
-             > cppDirectories:
-                * {PROJECT}/src/testDebug/jni{!}
-             < cppDirectories
              > resDirectories:
                 * {PROJECT}/src/testDebug/res{!}
              < resDirectories
@@ -331,12 +295,6 @@
              > renderscriptDirectories:
                 * {PROJECT}/src/release/rs{!}
              < renderscriptDirectories
-             > cDirectories:
-                * {PROJECT}/src/release/jni{!}
-             < cDirectories
-             > cppDirectories:
-                * {PROJECT}/src/release/jni{!}
-             < cppDirectories
              > resDirectories:
                 * {PROJECT}/src/release/res{!}
              < resDirectories
@@ -366,12 +324,6 @@
              > renderscriptDirectories:
                 * {PROJECT}/src/androidTestRelease/rs{!}
              < renderscriptDirectories
-             > cDirectories:
-                * {PROJECT}/src/androidTestRelease/jni{!}
-             < cDirectories
-             > cppDirectories:
-                * {PROJECT}/src/androidTestRelease/jni{!}
-             < cppDirectories
              > resDirectories:
                 * {PROJECT}/src/androidTestRelease/res{!}
              < resDirectories
@@ -401,12 +353,6 @@
              > renderscriptDirectories:
                 * {PROJECT}/src/testRelease/rs{!}
              < renderscriptDirectories
-             > cDirectories:
-                * {PROJECT}/src/testRelease/jni{!}
-             < cDirectories
-             > cppDirectories:
-                * {PROJECT}/src/testRelease/jni{!}
-             < cppDirectories
              > resDirectories:
                 * {PROJECT}/src/testRelease/res{!}
              < resDirectories

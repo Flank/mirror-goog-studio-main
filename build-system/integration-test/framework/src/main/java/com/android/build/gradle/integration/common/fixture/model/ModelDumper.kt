@@ -300,12 +300,6 @@ private fun SourceProvider.writeToBuilder(builder: DumpBuilder) {
         multiLineList("renderscriptDirectories", renderscriptDirectories?.sorted()) {
             value(it)
         }
-        multiLineList("cDirectories", cDirectories.sorted()) {
-            value(it)
-        }
-        multiLineList("cppDirectories", cppDirectories.sorted()) {
-            value(it)
-        }
         multiLineList("resDirectories", resDirectories?.sorted()) {
             value(it)
         }

@@ -30,8 +30,6 @@ data class SourceProviderImpl(
     override val resourcesDirectories: Collection<File>,
     override val aidlDirectories: Collection<File>?,
     override val renderscriptDirectories: Collection<File>?,
-    override val cDirectories: Collection<File>,
-    override val cppDirectories: Collection<File>,
     override val resDirectories: Collection<File>?,
     override val assetsDirectories: Collection<File>?,
     override val jniLibsDirectories: Collection<File>,
