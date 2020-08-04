@@ -63,6 +63,7 @@ readonly invocation_id="$(uuidgen)"
   -- \
   //tools/idea/updater:updater_deploy.jar \
   //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar \
+  //tools/base/profiler/native/trace_processor_daemon \
   $(< "${script_dir}/targets")
 # Workaround: This invocation [ab]uses --runs_per_test to disable caching for the
 # iml_to_build_consistency_test see https://github.com/bazelbuild/bazel/issues/6038
@@ -88,6 +89,7 @@ if [[ -d "${DIST_DIR}" ]]; then
   cp -a ${bin_dir}/tools/idea/updater/updater_deploy.jar ${DIST_DIR}/android-studio-updater.jar
   cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${DIST_DIR}
   cp -a ${bin_dir}/tools/base/sdklib/commandlinetools_*.zip "${DIST_DIR}"
+  cp -a ${bin_dir}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon "${DIST_DIR}"
 
 fi
 

@@ -26,6 +26,7 @@ readonly invocation_id=$(uuidgen | tr A-F a-f)
         --profile=${dist_dir}/mac-profile-${build_number}.json.gz \
         -- \
         //tools/... \
+        //tools/base/profiler/native/trace_processor_daemon \
         -//tools/base/build-system/integration-test/... \
         -//tools/adt/idea/android-lang:intellij.android.lang.tests_tests \
         -//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests \
@@ -36,6 +37,7 @@ readonly bazel_status=$?
 if [[ -d "${dist_dir}" ]]; then
   readonly bin_dir="$("${script_dir}"/bazel info bazel-bin)"
   cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${dist_dir}
+  cp -a ${bin_dir}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${dist_dir}
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 fi
 

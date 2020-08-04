@@ -53,6 +53,7 @@ CALL %SCRIPTDIR%bazel.cmd ^
  --nouse_ijars ^
  -- ^
  //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar ^
+ //tools/base/profiler/native/trace_processor_daemon ^
  %TARGETS%
 
 SET EXITCODE=%errorlevel%
@@ -65,6 +66,10 @@ echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.co
 
 @rem copy skia parser artifact to dist dir
 copy %BASEDIR%\bazel-bin\tools\base\dynamic-layout-inspector\skiaparser.zip %DISTDIR%
+
+@rem copy trace processor daemon artifact to dist dir
+copy %BASEDIR%\bazel-bin\tools\base\profiler\native\trace_processor_daemon\trace_processor_daemon.exe %DISTDIR%
+
 @echo studio_win.cmd time: %time%
 
 set JAVA=%BASEDIR%\prebuilts\studio\jdk\win64\jre\bin\java.exe
