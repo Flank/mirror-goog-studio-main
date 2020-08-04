@@ -117,9 +117,10 @@ _archives = [
     # Perfetto Dependencies:
     # These are external dependencies to build Perfetto (from external/perfetto)
     {
+        # https://github.com/google/perfetto/blob/063034c1deea22dced25d8714fd525e3a8a120d3/bazel/deps.bzl#L59
         "name": "perfetto-jsoncpp-1.0.0",
-        "archive": "//prebuilts/tools/common/external-src-archives/jsoncpp/1.0.0:jsoncpp-1.0.0.tar.gz",
-        "strip_prefix": "jsoncpp-1.0.0",
+        "archive": "//prebuilts/tools/common/external-src-archives/jsoncpp/1.9.3:jsoncpp-1.9.3.tar.gz",
+        "strip_prefix": "jsoncpp-1.9.3",
         "build_file": "@perfetto//bazel:jsoncpp.BUILD",
     },
     {
