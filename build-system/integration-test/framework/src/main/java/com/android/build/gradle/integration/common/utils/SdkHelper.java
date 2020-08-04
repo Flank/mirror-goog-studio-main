@@ -42,22 +42,22 @@ public class SdkHelper {
      * Returns the SDK folder as built from the Android source tree.
      */
     public static File findSdkDir() {
-        File androidHome;
-        String envCustomAndroidHome =
-                Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_HOME"));
+        File androidSdk;
+        String envCustomAndroidSdk =
+                Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_SDK_ROOT"));
 
-        if (envCustomAndroidHome != null) {
-            androidHome = new File(envCustomAndroidHome);
+        if (envCustomAndroidSdk != null) {
+            androidSdk = new File(envCustomAndroidSdk);
             Preconditions.checkState(
-                    androidHome.isDirectory(),
-                    "CUSTOM_ANDROID_HOME must point to a directory, "
-                            + androidHome.getAbsolutePath()
+                    androidSdk.isDirectory(),
+                    "CUSTOM_ANDROID_SDK_ROOT must point to a directory, "
+                            + androidSdk.getAbsolutePath()
                             + " is not a directory");
         } else {
-            androidHome = TestUtils.getSdk();
+            androidSdk = TestUtils.getSdk();
         }
 
-        return androidHome;
+        return androidSdk;
     }
 
     @NonNull

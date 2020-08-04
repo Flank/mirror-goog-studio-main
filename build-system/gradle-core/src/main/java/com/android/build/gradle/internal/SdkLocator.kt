@@ -93,7 +93,14 @@ object SdkLocator {
 
         }, ENV_ANDROID_HOME(SdkType.REGULAR) {
             override fun getSdkPathProperty(sourceSet: SdkLocationSourceSet): String? {
-                return sourceSet.environmentProperties.getProperty(SdkConstants.ANDROID_HOME_ENV)
+                // FIXME b/162859043
+                return sourceSet.environmentProperties.getProperty(SdkConstants.ANDROID_HOME_ENV)?.also {
+                    println("""
+Usage of ANDROID_HOME to set custom SDK location is deprecated and will be removed in 6.0
+Please use ANDROID_SDK_ROOT instead.
+"""
+                    )
+                }
             }
 
         }, ENV_SDK_ROOT(SdkType.REGULAR) {

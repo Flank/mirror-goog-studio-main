@@ -158,7 +158,7 @@ kotlin_test(
     jvm_flags = [
         "-Dtest.suite.jar=tests.jar",
         # TODO: Make it easier to configure AndroidLocation per project.
-        "-DANDROID_SDK_HOME=/tmp/android_sdk_home",
+        "-DANDROID_PREFS_ROOT=/tmp/android_prefs_root",
     ],
     resources = glob(["src/test/resources/**"]),
     tags = [

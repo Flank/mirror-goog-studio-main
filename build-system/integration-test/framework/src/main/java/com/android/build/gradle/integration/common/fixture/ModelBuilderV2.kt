@@ -164,13 +164,13 @@ class ModelBuilderV2 : BaseGradleExecutor<ModelBuilderV2> {
 
     private fun getFileNormalizer(buildIdentifier: BuildIdentifier): FileNormalizerImpl {
         return FileNormalizerImpl(
-            buildIdentifier,
-            GradleTestProject.getGradleUserHome(GradleTestProject.BUILD_DIR).toFile(),
-            project?.androidHome,
-            androidSdkHome,
-            project?.androidNdkSxSRootSymlink,
-            GradleTestProject.localRepositories,
-            DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+            buildId = buildIdentifier,
+            gradleUserHome = GradleTestProject.getGradleUserHome(GradleTestProject.BUILD_DIR).toFile(),
+            androidSdk = project?.androidSdkDir,
+            androidPrefsDir = preferencesRootDir,
+            androidNdkSxSRoot = project?.androidNdkSxSRootSymlink,
+            localRepos = GradleTestProject.localRepositories,
+            defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION
         )
     }
 
@@ -291,7 +291,7 @@ class FileNormalizerImpl(
     buildId: BuildIdentifier,
     gradleUserHome: File,
     androidSdk: File?,
-    androidHome: File?,
+    androidPrefsDir: File?,
     androidNdkSxSRoot: File?,
     localRepos: List<Path>,
     private val defaultNdkSideBySideVersion: String
@@ -327,22 +327,22 @@ class FileNormalizerImpl(
         mutableList.add(RootData(gradleUserHome, "GRADLE"))
 
         androidNdkSxSRoot?.resolve(defaultNdkSideBySideVersion)?.let {
-            mutableList.add(RootData(it, "NDK_ROOT"))
+            mutableList.add(RootData(it, "ANDROID_NDK"))
             // Some tools in NDK follows symbolic links. So do the same and add the real location
             // of NDK to the known roots.
             mutableList.add(
                 RootData(
                     it.resolve("source.properties").canonicalFile.parentFile,
-                    "NDK_ROOT"
+                    "ANDROID_NDK"
                 )
             )
         }
 
         androidSdk?.let {
-            mutableList.add(RootData(it, "SDK"))
+            mutableList.add(RootData(it, "ANDROID_SDK"))
         }
-        androidHome?.let {
-            mutableList.add(RootData(it, "ANDROID_HOME"))
+        androidPrefsDir?.let {
+            mutableList.add(RootData(it, "ANDROID_PREFS"))
         }
 
         localRepos.asSequence().map { it.toFile() }.forEach {

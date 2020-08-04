@@ -45,7 +45,7 @@ public class AdbPoolDeviceProvider extends DeviceProvider {
     private String serial = null;
 
     public AdbPoolDeviceProvider(@NonNull Project project) {
-        File adb = new File(System.getenv("ANDROID_HOME") + "/platform-tools/adb");
+        File adb = new File(System.getenv("ANDROID_SDK_ROOT") + "/platform-tools/adb");
         ILogger logger = new LoggerWrapper(project.getLogger());
         deviceProvider = new ConnectedDeviceProvider(adb, 40000, logger);
         Object serialProperty = project.getProperties().get("com.android.test.devicepool.serial");

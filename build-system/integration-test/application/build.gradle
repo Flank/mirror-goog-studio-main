@@ -70,7 +70,7 @@ tempFile.mkdirs()
 configure([test, testPrebuilts]) {
     description =
             "Runs the project integration tests. This requires an SDK either from the Android " +
-                    "source tree, under out/..., or an env var ANDROID_HOME."
+                    "source tree, under out/..., or an env var ANDROID_SDK_ROOT."
     systemProperties['jar.path'] = jar.archivePath
     systemProperties['java.io.tmpdir'] = tempFile.absolutePath
     environment = testEnvironment
@@ -148,7 +148,7 @@ configure(allConnectedTestTasks) {
 
     description =
             "Runs the project integration tests with device tests. This requires an SDK either " +
-                    "from the Android source tree, under out/..., or an env var ANDROID_HOME " +
+                    "from the Android source tree, under out/..., or an env var ANDROID_SDK_ROOT " +
                     "and a device."
     group = "verification"
     systemProperties['jar.path'] = jar.archivePath

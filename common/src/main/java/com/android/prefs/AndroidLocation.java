@@ -24,6 +24,8 @@ import java.io.File;
 
 /**
  * Manages the location of the android files (including emulator files, ddms config, debug keystore)
+ *
+ * <p>This does not manages the SDK location. For that see [SdkLocator]
  */
 public final class AndroidLocation {
 
@@ -36,6 +38,8 @@ public final class AndroidLocation {
      * Virtual Device folder inside the path returned by {@link #getFolder}
      */
     public static final String FOLDER_AVD = "avd";
+
+    public static final String ANDROID_PREFS_ROOT = "ANDROID_PREFS_ROOT";
 
     /**
      * Throw when the location of the android folder couldn't be found.
@@ -58,7 +62,9 @@ public final class AndroidLocation {
      */
     private enum Global {
         ANDROID_AVD_HOME("ANDROID_AVD_HOME", true,  true),  // both sys prop and env var
-        ANDROID_SDK_HOME("ANDROID_SDK_HOME", true,  true),  // both sys prop and env var
+        ANDROID_PREFS_ROOT(AndroidLocation.ANDROID_PREFS_ROOT, true, true), // both sys prop and env var
+        @Deprecated // FIXME b/162859043
+        ANDROID_SDK_HOME("ANDROID_SDK_HOME", true, true), // both sys prop and env var
         TEST_TMPDIR     ("TEST_TMPDIR",      false, true),  // Bazel kludge
         USER_HOME       ("user.home",        true,  false), // sys prop only
         HOME            ("HOME",             false, true);  // env var only
@@ -115,6 +121,12 @@ public final class AndroidLocation {
                 return null;
             }
             if (!(this == ANDROID_SDK_HOME && isSdkRootWithoutDotAndroid(file))) {
+                // FIXME b/162859043
+                System.out.println(
+                        "Using ANDROID_SDK_HOME for the location of the '.android' preferences location is deprecated, please use "
+                        + ANDROID_PREFS_ROOT
+                        + " instead.\n"
+                        + "Support for ANDROID_SDK_HOME will be removed in 6.0");
                 return path;
             }
             if (!silent) {
@@ -123,7 +135,9 @@ public final class AndroidLocation {
                                 "ANDROID_SDK_HOME is set to the root of your SDK: %1$s\n"
                                         + "This is the path of the preference folder expected by the Android tools.\n"
                                         + "It should NOT be set to the same as the root of your SDK.\n"
-                                        + "Please set it to a different folder or do not set it at all.\n"
+                                        + "To set a custom SDK Location, use ANDROID_SDK_ROOT.\n"
+                                        + "To set a custom location for '.android', use " + ANDROID_PREFS_ROOT+ ".\n"
+                                        + "ANDROID_SDK_HOME is deprecated and will be removed in 6.0.\n"
                                         + "If this is not set we default to: %2$s",
                                 path,
                                 findValidPath(environmentProvider, TEST_TMPDIR, USER_HOME, HOME)));
@@ -157,7 +171,7 @@ public final class AndroidLocation {
      * will be created here.
      *
      * @return an OS specific path, terminated by a separator.
-     * @throws AndroidLocationException
+     * @throws AndroidLocationException if the location is not found
      */
     public static String getFolder(@NonNull EnvironmentProvider environmentProvider)
             throws AndroidLocationException {
@@ -209,16 +223,6 @@ public final class AndroidLocation {
         return sPrefsLocation;
     }
 
-
-    /**
-     * Check the if ANDROID_SDK_HOME variable points to a SDK.
-     * If it points to an SDK
-     * @throws AndroidLocationException
-     */
-    public static void checkAndroidSdkHome() throws AndroidLocationException {
-        Global.ANDROID_SDK_HOME.validatePath(EnvironmentProvider.DIRECT, false);
-    }
-
     /**
      * Returns the folder where the users AVDs are stored.
      * @return an OS specific path, terminated by a separator.
@@ -249,6 +253,7 @@ public final class AndroidLocation {
         String home =
                 findValidPath(
                         environmentProvider,
+                        Global.ANDROID_PREFS_ROOT,
                         Global.ANDROID_SDK_HOME,
                         Global.TEST_TMPDIR,
                         Global.USER_HOME,
@@ -257,7 +262,7 @@ public final class AndroidLocation {
         // if the above failed, we throw an exception.
         if (home == null) {
             throw new AndroidLocationException(
-                    "prop: " + environmentProvider.getSystemProperty("ANDROID_SDK_HOME"));
+                    "prop: " + environmentProvider.getSystemProperty(ANDROID_PREFS_ROOT));
         }
         if (!home.endsWith(File.separator)) {
             home += File.separator;

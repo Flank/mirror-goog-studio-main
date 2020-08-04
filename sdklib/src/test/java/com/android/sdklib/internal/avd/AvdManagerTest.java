@@ -35,7 +35,7 @@ import junit.framework.TestCase;
 
 public class AvdManagerTest extends TestCase {
 
-    private static final File ANDROID_HOME = new File("/android-home");
+    private static final File ANDROID_PREFS_ROOT = new File("/android-home");
 
     private AndroidSdkHandler mAndroidSdkHandler;
     private AvdManager mAvdManager;
@@ -64,11 +64,11 @@ public class AvdManagerTest extends TestCase {
         recordWearSysImgChina(mFileOp);
         recordChromeOsSysImg(mFileOp);
         mAndroidSdkHandler =
-                new AndroidSdkHandler(new File("/sdk"), ANDROID_HOME,  mFileOp);
+                new AndroidSdkHandler(new File("/sdk"), ANDROID_PREFS_ROOT, mFileOp);
         mAvdManager =
                 AvdManager.getInstance(
                         mAndroidSdkHandler,
-                        new File(ANDROID_HOME, AndroidLocation.FOLDER_AVD),
+                        new File(ANDROID_PREFS_ROOT, AndroidLocation.FOLDER_AVD),
                         new NullLogger());
         mAvdFolder =
                 AvdInfo.getDefaultAvdFolder(mAvdManager, getName(), mFileOp, false);

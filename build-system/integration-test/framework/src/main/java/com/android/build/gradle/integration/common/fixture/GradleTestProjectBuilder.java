@@ -71,8 +71,8 @@ public final class GradleTestProjectBuilder {
     private String ndkSymlinkPath = ".";
     @Nullable String cmakeVersion;
     @Nullable private List<Path> repoDirectories;
-    @Nullable private File androidHome;
-    @Nullable private File androidNdkHome;
+    @Nullable private File androidSdkDir;
+    @Nullable private File androidNdkDir;
     @Nullable private String sideBySideNdkVersion = null;
     @Nullable private File gradleDistributionDirectory;
     @Nullable private File gradleBuildCacheDirectory;
@@ -96,36 +96,38 @@ public final class GradleTestProjectBuilder {
             targetGradleVersion = GradleTestProject.GRADLE_TEST_VERSION;
         }
 
-        if (androidHome == null && withSdk) {
-            androidHome = SdkHelper.findSdkDir();
+        if (androidSdkDir == null && withSdk) {
+            androidSdkDir = SdkHelper.findSdkDir();
         }
 
-        if (androidNdkHome == null) {
+        if (androidNdkDir == null) {
             String envCustomAndroidNdkHome =
-                    Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_NDK_HOME"));
+                    Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_NDK_ROOT"));
             if (envCustomAndroidNdkHome != null) {
-                androidNdkHome = new File(envCustomAndroidNdkHome);
+                androidNdkDir = new File(envCustomAndroidNdkHome);
                 Preconditions.checkState(
-                        androidNdkHome.isDirectory(),
-                        "CUSTOM_ANDROID_NDK_HOME must point to a directory, "
-                                + androidNdkHome.getAbsolutePath()
+                        androidNdkDir.isDirectory(),
+                        "CUSTOM_ANDROID_NDK_ROOT must point to a directory, "
+                                + androidNdkDir.getAbsolutePath()
                                 + " is not a directory");
             } else {
                 if (sideBySideNdkVersion != null) {
-                    androidNdkHome =
+                    androidNdkDir =
                             TestUtils.runningFromBazel()
                                     ? new File(
                                             BazelIntegrationTestsSuite.NDK_SIDE_BY_SIDE_ROOT
                                                     .toFile(),
                                             sideBySideNdkVersion)
                                     : new File(
-                                            new File(androidHome, SdkConstants.FD_NDK_SIDE_BY_SIDE),
+                                            new File(
+                                                    androidSdkDir,
+                                                    SdkConstants.FD_NDK_SIDE_BY_SIDE),
                                             sideBySideNdkVersion);
                 } else {
-                    androidNdkHome =
+                    androidNdkDir =
                             TestUtils.runningFromBazel()
                                     ? BazelIntegrationTestsSuite.NDK_IN_TMP.toFile()
-                                    : new File(androidHome, SdkConstants.FD_NDK);
+                                    : new File(androidSdkDir, SdkConstants.FD_NDK);
                 }
             }
         }
@@ -166,8 +168,8 @@ public final class GradleTestProjectBuilder {
                 testDir,
                 repoDirectories,
                 additionalMavenRepo,
-                androidHome,
-                androidNdkHome,
+                androidSdkDir,
+                androidNdkDir,
                 gradleDistributionDirectory,
                 gradleBuildCacheDirectory,
                 kotlinVersion,
@@ -227,8 +229,8 @@ public final class GradleTestProjectBuilder {
         return this;
     }
 
-    public GradleTestProjectBuilder withAndroidHome(File androidHome) {
-        this.androidHome = androidHome;
+    public GradleTestProjectBuilder withAndroidSdkDir(File androidSdkDir) {
+        this.androidSdkDir = androidSdkDir;
         return this;
     }
 

@@ -113,8 +113,8 @@ class GradleTestProject @JvmOverloads internal constructor(
     var _testDir: File?,
     private val repoDirectories: List<Path>?,
     private val additionalMavenRepo: MavenRepoGenerator?,
-    val androidHome: File?,
-    val androidNdkHome: File,
+    val androidSdkDir: File?,
+    val androidNdkDir: File,
     private val gradleDistributionDirectory: File,
     private val gradleBuildCacheDirectory: File?,
     val kotlinVersion: String,
@@ -152,7 +152,7 @@ class GradleTestProject @JvmOverloads internal constructor(
         var OUT_DIR: File? = null
         private var GRADLE_USER_HOME: Path? = null
         @JvmField
-        var ANDROID_SDK_HOME: File? = null
+        var ANDROID_PREFS_ROOT: File? = null
 
         /**
          * List of Apk file reference that should be closed and deleted once the TestRule is done. This
@@ -401,7 +401,7 @@ apply from: "../commonLocalRepo.gradle"
                     }
                 }
                 OUT_DIR = File(BUILD_DIR, "tests")
-                ANDROID_SDK_HOME = File(BUILD_DIR, "ANDROID_SDK_HOME")
+                ANDROID_PREFS_ROOT = File(BUILD_DIR, "ANDROID_PREFS_ROOT")
                 GRADLE_USER_HOME = getGradleUserHome(BUILD_DIR)
                 GRADLE_TEST_VERSION = if (USE_LATEST_NIGHTLY_GRADLE_VERSION) {
                     Preconditions.checkNotNull(
@@ -459,7 +459,7 @@ apply from: "../commonLocalRepo.gradle"
 
     /** Returns a path to NDK suitable for embedding in build.gradle. It has slashes escaped for Windows */
     val ndkPath: String
-        get() = androidNdkHome.absolutePath.replace("\\", "\\\\")
+        get() = androidNdkDir.absolutePath.replace("\\", "\\\\")
 
     private var additionalMavenRepoDir: Path? = null
 
@@ -532,8 +532,8 @@ apply from: "../commonLocalRepo.gradle"
             _testDir = File(rootProject.testDir, subProject.replace(":", "/")),
             repoDirectories = rootProject.repoDirectories,
             additionalMavenRepo = rootProject.additionalMavenRepo,
-            androidHome = rootProject.androidHome,
-            androidNdkHome = rootProject.androidNdkHome,
+            androidSdkDir = rootProject.androidSdkDir,
+            androidNdkDir = rootProject.androidNdkDir,
             gradleDistributionDirectory = rootProject.gradleDistributionDirectory,
             gradleBuildCacheDirectory = rootProject.gradleBuildCacheDirectory,
             kotlinVersion = rootProject.kotlinVersion,
@@ -1272,7 +1272,7 @@ allprojects { proj ->
 
     /** Fluent method to get the model.  */
     fun modelV2(): ModelBuilderV2 {
-        return applyOptions(ModelBuilderV2(this, projectConnection)).withLocalAndroidSdkHome()
+        return applyOptions(ModelBuilderV2(this, projectConnection)).withPerTestPrefsRoot()
     }
 
     private fun <T : BaseGradleExecutor<T>> applyOptions(executor: T): T {
@@ -1455,9 +1455,9 @@ allprojects { proj ->
             destDir.absolutePath, ProjectProperties.PropertyType.LOCAL
         )
         if (withSdk) {
-            val androidHome = this.androidHome
+            val androidSdkDir = this.androidSdkDir
                 ?: throw RuntimeException("androidHome is null while withSdk is true")
-            localProp.setProperty(ProjectProperties.PROPERTY_SDK, androidHome.absolutePath)
+            localProp.setProperty(ProjectProperties.PROPERTY_SDK, androidSdkDir.absolutePath)
         }
 
         if (withCmakeDirInLocalProp && cmakeVersion != null && cmakeVersion.isNotEmpty()) {

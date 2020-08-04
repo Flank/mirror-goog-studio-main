@@ -32,7 +32,7 @@ class FileNormalizerTest {
         buildId = BuildIdentifierImpl(File("/path/to/Project")),
         gradleUserHome = File("/path/to/Gradle"),
         androidSdk = File("/path/to/Sdk"),
-        androidHome = File("/path/to/Home"),
+        androidPrefsDir = File("/path/to/Home"),
         androidNdkSxSRoot = File("/path/to/ndkSxSRoot"),
         localRepos = listOf(Paths.get("/path/to/localRepo1"), Paths.get("/path/to/localRepo2")),
         defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION
@@ -81,19 +81,19 @@ class FileNormalizerTest {
     @Test
     fun `Test android Sdk`() {
         Truth.assertThat(normalizer.normalize(File("/path/to/Sdk/foo")))
-            .isEqualTo("{SDK}/foo{!}")
+            .isEqualTo("{ANDROID_SDK}/foo{!}")
     }
 
     @Test
     fun `Test android Home`() {
         Truth.assertThat(normalizer.normalize(File("/path/to/Home/foo")))
-            .isEqualTo("{ANDROID_HOME}/foo{!}")
+            .isEqualTo("{ANDROID_PREFS}/foo{!}")
     }
 
     @Test
     fun `Test android NDK Root`() {
         Truth.assertThat(normalizer.normalize(File("/path/to/ndkSxSRoot/$DEFAULT_NDK_SIDE_BY_SIDE_VERSION/foo")))
-            .isEqualTo("{NDK_ROOT}/foo{!}")
+            .isEqualTo("{ANDROID_NDK}/foo{!}")
     }
 
     @Test
@@ -117,9 +117,9 @@ class FileNormalizerTest {
                 """
                 {
                     gradleUserHome = "{GRADLE}",
-                    androidSdk = "{SDK}",
-                    androidHome = "{ANDROID_HOME}",
-                    androidNdkRoot = "{NDK_ROOT}"
+                    androidSdk = "{ANDROID_SDK}",
+                    androidHome = "{ANDROID_PREFS}",
+                    androidNdkRoot = "{ANDROID_NDK}"
                 }
                 """, JsonObject::class.java
             )
@@ -133,7 +133,7 @@ class FileNormalizerTest {
             buildId = BuildIdentifierImpl(File("C:\\path\\to\\Project")),
             gradleUserHome = File("C:\\path\\to\\Gradle"),
             androidSdk = File("C:\\path\\to\\Sdk"),
-            androidHome = File("C:\\path\\to\\Home"),
+            androidPrefsDir = File("C:\\path\\to\\Home"),
             androidNdkSxSRoot = File("C:\\path\\to\\ndkSxSRoot"),
             localRepos = listOf(
                 Paths.get("C:\\path\\to\\localRepo1"),
@@ -160,9 +160,9 @@ class FileNormalizerTest {
                 """
                 {
                     gradleUserHome = "{GRADLE}",
-                    androidSdk = "{SDK}",
-                    androidHome = "{ANDROID_HOME}",
-                    androidNdkRoot = "{NDK_ROOT}"
+                    androidSdk = "{ANDROID_SDK}",
+                    androidHome = "{ANDROID_PREFS}",
+                    androidNdkRoot = "{ANDROID_NDK}"
                 }
                 """, JsonObject::class.java
             )

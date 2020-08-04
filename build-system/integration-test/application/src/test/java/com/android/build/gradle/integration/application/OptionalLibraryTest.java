@@ -72,7 +72,7 @@ public class OptionalLibraryTest {
         AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
 
         // get the SDK folder
-        File sdkLocation = project.getAndroidHome();
+        File sdkLocation = project.getAndroidSdkDir();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager targetMgr =
                 AndroidSdkHandler.getInstance(sdkLocation).getAndroidTargetManager(progress);
@@ -110,7 +110,7 @@ public class OptionalLibraryTest {
         AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
 
         // get the SDK folder
-        File sdkLocation = project.getAndroidHome();
+        File sdkLocation = project.getAndroidSdkDir();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager targetMgr =
                 AndroidSdkHandler.getInstance(sdkLocation).getAndroidTargetManager(progress);

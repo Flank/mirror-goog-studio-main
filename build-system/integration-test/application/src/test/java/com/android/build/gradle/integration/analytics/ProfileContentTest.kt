@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.ProfileCapturer
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp
-import com.google.common.collect.ImmutableList
 import com.google.common.collect.Iterables
 import com.google.wireless.android.sdk.stats.GradleBuildProject
 import java.util.HashSet

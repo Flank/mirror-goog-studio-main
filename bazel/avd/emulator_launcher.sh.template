@@ -15,7 +15,7 @@ emulator_boot_timeout=70
 
 # Set environment variables.
 export HOME=$(pwd)
-export ANDROID_SDK_HOME=$HOME
+export ANDROID_PREFS_ROOT=$HOME
 export ANDROID_SDK_ROOT=$HOME/prebuilts/studio/sdk/linux
 export ANDROID_EMULATOR_HOME=$HOME/.android
 export ANDROID_AVD_HOME=$ANDROID_EMULATOR_HOME/avd
