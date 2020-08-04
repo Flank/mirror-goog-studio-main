@@ -15,10 +15,10 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
-import static com.android.ide.common.gradle.model.impl.IdeAndroidProjectImpl.getDefaultVariant;
 import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.createEqualsVerifier;
 import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.expectUnsupportedOperationException;
 import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.verifyUsageOfImmutableCollections;
+import static com.android.ide.common.gradle.model.impl.ModelCache.getDefaultVariant;
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.mock;
@@ -94,12 +94,8 @@ public class IdeAndroidProjectImplTest {
                     }
                 };
         IdeAndroidProject androidProject =
-                IdeAndroidProjectImpl.createFrom(
-                        original,
-                        myModelCache,
-                        myDependenciesFactory,
-                        null,
-                        Collections.emptyList());
+                myModelCache.androidProjectFrom(
+                        original, myDependenciesFactory, null, Collections.emptyList());
         expectUnsupportedOperationException(androidProject::getBuildToolsVersion);
     }
 
@@ -107,12 +103,8 @@ public class IdeAndroidProjectImplTest {
     public void constructor() throws Throwable {
         AndroidProject original = new AndroidProjectStub("2.4.0");
         IdeAndroidProjectImpl copy =
-                IdeAndroidProjectImpl.createFrom(
-                        original,
-                        myModelCache,
-                        myDependenciesFactory,
-                        null,
-                        Collections.emptyList());
+                myModelCache.androidProjectFrom(
+                        original, myDependenciesFactory, null, Collections.emptyList());
         verifyUsageOfImmutableCollections(copy);
     }
 
@@ -122,9 +114,8 @@ public class IdeAndroidProjectImplTest {
         original.getVariants().clear();
         Variant variant = new VariantStub();
         IdeAndroidProjectImpl copy =
-                IdeAndroidProjectImpl.createFrom(
+                myModelCache.androidProjectFrom(
                         original,
-                        myModelCache,
                         myDependenciesFactory,
                         singletonList(variant),
                         Collections.emptyList());
@@ -139,9 +130,8 @@ public class IdeAndroidProjectImplTest {
         original.getVariants().clear();
         Variant variant = new VariantStub();
         IdeAndroidProjectImpl copy =
-                IdeAndroidProjectImpl.createFrom(
+                myModelCache.androidProjectFrom(
                         original,
-                        myModelCache,
                         myDependenciesFactory,
                         singletonList(variant),
                         Collections.emptyList());
@@ -207,12 +197,8 @@ public class IdeAndroidProjectImplTest {
                     }
                 };
         IdeAndroidProject androidProject =
-                IdeAndroidProjectImpl.createFrom(
-                        original,
-                        myModelCache,
-                        myDependenciesFactory,
-                        null,
-                        Collections.emptyList());
+                myModelCache.androidProjectFrom(
+                        original, myDependenciesFactory, null, Collections.emptyList());
         assertThat(androidProject.getDefaultVariant()).isEqualTo("betaDebug");
     }
 
@@ -226,12 +212,8 @@ public class IdeAndroidProjectImplTest {
                     }
                 };
         IdeAndroidProject androidProject =
-                IdeAndroidProjectImpl.createFrom(
-                        original,
-                        myModelCache,
-                        myDependenciesFactory,
-                        null,
-                        Collections.emptyList());
+                myModelCache.androidProjectFrom(
+                        original, myDependenciesFactory, null, Collections.emptyList());
         assertThat(androidProject.getDefaultVariant()).isEqualTo("release");
     }
 

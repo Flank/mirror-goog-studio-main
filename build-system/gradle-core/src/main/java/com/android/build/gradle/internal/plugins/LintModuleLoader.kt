@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.plugins
 
 import com.android.builder.model.AndroidProject
 import com.android.ide.common.gradle.model.IdeAndroidProject
-import com.android.ide.common.gradle.model.impl.IdeAndroidProjectImpl
 import com.android.ide.common.gradle.model.impl.IdeDependenciesFactory
+import com.android.ide.common.gradle.model.impl.ModelCache
 import com.android.tools.lint.model.LintModelDependency
 import com.android.tools.lint.model.LintModelFactory
 import com.android.tools.lint.model.LintModelModule
@@ -70,9 +70,8 @@ class LintModuleLoader(
                 val model = modelBuilder.buildAll(modelName, project) as AndroidProject
                 val factory = IdeDependenciesFactory()
                 // Sync issues are not used in lint.
-                IdeAndroidProjectImpl.createFrom(
+                ModelCache(HashMap()).androidProjectFrom(
                     model,
-                    HashMap(),
                     factory,
                     model.variants,
                     emptyList()

@@ -18,8 +18,6 @@ package com.android.ide.common.gradle.model.impl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.SyncIssue;
-import com.android.builder.model.Variant;
 import com.android.ide.common.gradle.model.IdeAaptOptions;
 import com.android.ide.common.gradle.model.IdeAndroidGradlePluginProjectFlags;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
@@ -33,16 +31,11 @@ import com.android.ide.common.gradle.model.IdeSyncIssue;
 import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.ide.common.gradle.model.IdeVariantBuildInformation;
 import com.android.ide.common.gradle.model.IdeViewBindingOptions;
-import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeToolchainImpl;
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeToolchain;
 import com.android.ide.common.repository.GradleVersion;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -52,7 +45,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of an {@link AndroidProject}. */
 public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializable {
@@ -96,207 +88,6 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     @NonNull private final IdeAndroidGradlePluginProjectFlags myAgpFlags;
     private final int myHashCode;
 
-    public static IdeAndroidProjectImpl createFrom(
-            @NonNull AndroidProject project,
-            @NonNull Map<String, String> stringDeduplicationMap,
-            @NonNull IdeDependenciesFactory dependenciesFactory,
-            @Nullable Collection<Variant> variants,
-            @NotNull Collection<SyncIssue> syncIssues) {
-        return createFrom(
-                project,
-                new ModelCache(stringDeduplicationMap),
-                dependenciesFactory,
-                variants,
-                syncIssues);
-    }
-
-    @VisibleForTesting
-    public static IdeAndroidProjectImpl createFrom(
-            @NonNull AndroidProject project,
-            @NonNull ModelCache modelCache,
-            @NonNull IdeDependenciesFactory dependenciesFactory,
-            @Nullable Collection<Variant> variants,
-            @NotNull Collection<SyncIssue> syncIssues) {
-        // Old plugin versions do not return model version.
-        GradleVersion parsedModelVersion = GradleVersion.tryParse(project.getModelVersion());
-
-        IdeProductFlavorContainer defaultConfigCopy =
-                modelCache.computeIfAbsent(
-                        project.getDefaultConfig(),
-                        container ->
-                                IdeProductFlavorContainerImpl.createFrom(container, modelCache));
-
-        Collection<IdeBuildTypeContainer> buildTypesCopy =
-                IdeModel.copy(
-                        project.getBuildTypes(),
-                        modelCache,
-                        container -> IdeBuildTypeContainerImpl.createFrom(container, modelCache));
-
-        Collection<IdeProductFlavorContainer> productFlavorCopy =
-                IdeModel.copy(
-                        project.getProductFlavors(),
-                        modelCache,
-                        container ->
-                                IdeProductFlavorContainerImpl.createFrom(container, modelCache));
-
-        Collection<IdeSyncIssue> syncIssuesCopy =
-                new ArrayList<>(
-                        IdeModel.copy(
-                                syncIssues,
-                                modelCache,
-                                issue ->
-                                        new IdeSyncIssueImpl(
-                                                issue.getMessage(),
-                                                IdeModel.copyNewProperty(
-                                                        issue::getMultiLineMessage, null),
-                                                issue.getData(),
-                                                issue.getSeverity(),
-                                                issue.getType())));
-
-        Collection<IdeVariant> variantsCopy =
-                new ArrayList<IdeVariant>(
-                        IdeModel.copy(
-                                (variants == null) ? project.getVariants() : variants,
-                                modelCache,
-                                variant ->
-                                        IdeVariantImpl.createFrom(
-                                                variant,
-                                                modelCache,
-                                                dependenciesFactory,
-                                                parsedModelVersion)));
-
-        Collection<String> variantNamesCopy =
-                Objects.requireNonNull(
-                        IdeModel.copyNewPropertyWithDefault(
-                                () -> ImmutableList.copyOf(project.getVariantNames()),
-                                () -> computeVariantNames(variantsCopy)));
-
-        String defaultVariantCopy =
-                IdeModel.copyNewPropertyWithDefault(
-                        project::getDefaultVariant, () -> getDefaultVariant(variantNamesCopy));
-
-        Collection<String> flavorDimensionCopy =
-                IdeModel.copyNewPropertyNonNull(
-                        () -> ImmutableList.copyOf(project.getFlavorDimensions()),
-                        Collections.emptyList());
-
-        Collection<String> bootClasspathCopy = ImmutableList.copyOf(project.getBootClasspath());
-
-        Collection<IdeNativeToolchain> nativeToolchainsCopy =
-                IdeModel.copy(
-                        project.getNativeToolchains(),
-                        modelCache,
-                        toolChain -> new IdeNativeToolchainImpl(toolChain));
-
-        Collection<IdeSigningConfig> signingConfigsCopy =
-                IdeModel.copy(
-                        project.getSigningConfigs(),
-                        modelCache,
-                        config -> IdeSigningConfigImpl.createFrom(config));
-
-        IdeLintOptions lintOptionsCopy =
-                modelCache.computeIfAbsent(
-                        project.getLintOptions(),
-                        options -> IdeLintOptionsImpl.createFrom(options, parsedModelVersion));
-
-        // We need to use the unresolved dependencies to support older versions of the Android
-        // Gradle Plugin.
-        //noinspection deprecation
-        Set<String> unresolvedDependenciesCopy =
-                ImmutableSet.copyOf(project.getUnresolvedDependencies());
-
-        IdeJavaCompileOptionsImpl javaCompileOptionsCopy =
-                modelCache.computeIfAbsent(
-                        project.getJavaCompileOptions(),
-                        options -> IdeJavaCompileOptionsImpl.createFrom(options));
-
-        IdeAaptOptionsImpl aaptOptionsCopy =
-                modelCache.computeIfAbsent(
-                        project.getAaptOptions(),
-                        options -> IdeAaptOptionsImpl.createFrom(options));
-
-        Collection<String> dynamicFeaturesCopy =
-                ImmutableList.copyOf(
-                        IdeModel.copyNewPropertyNonNull(
-                                project::getDynamicFeatures, ImmutableList.of()));
-
-        Collection<IdeVariantBuildInformation> variantBuildInformation =
-                createVariantBuildInformation(project, parsedModelVersion);
-
-        IdeViewBindingOptions viewBindingOptionsCopy =
-                IdeModel.copyNewProperty(
-                        () -> IdeViewBindingOptionsImpl.createFrom(project.getViewBindingOptions()),
-                        null);
-
-        IdeDependenciesInfo dependenciesInfoCopy =
-                IdeModel.copyNewProperty(
-                        () -> IdeDependenciesInfoImpl.createOrNull(project.getDependenciesInfo()),
-                        null);
-
-        String buildToolsVersionCopy =
-                IdeModel.copyNewProperty(project::getBuildToolsVersion, null);
-
-        String ndkVersionCopy = IdeModel.copyNewProperty(project::getNdkVersion, null);
-
-        String groupId = null;
-        if (parsedModelVersion != null
-                && parsedModelVersion.isAtLeast(3, 6, 0, "alpha", 5, false)) {
-            groupId = project.getGroupId();
-        }
-
-        List<File> lintRuleJarsCopy =
-                IdeModel.copyNewProperty(
-                        () -> ImmutableList.copyOf(project.getLintRuleJars()), null);
-
-        // AndroidProject#isBaseSplit is always non null.
-        //noinspection ConstantConditions
-        boolean isBaseSplit = IdeModel.copyNewProperty(project::isBaseSplit, false);
-
-        IdeAndroidGradlePluginProjectFlags agpFlags =
-                Objects.requireNonNull(
-                        IdeModel.copyNewProperty(
-                                () ->
-                                        IdeAndroidGradlePluginProjectFlagsImpl.createFrom(
-                                                project.getFlags()),
-                                new IdeAndroidGradlePluginProjectFlagsImpl()));
-
-        return new IdeAndroidProjectImpl(
-                project.getModelVersion(),
-                parsedModelVersion,
-                project.getName(),
-                defaultConfigCopy,
-                buildTypesCopy,
-                productFlavorCopy,
-                syncIssuesCopy,
-                variantsCopy,
-                variantNamesCopy,
-                defaultVariantCopy,
-                flavorDimensionCopy,
-                project.getCompileTarget(),
-                bootClasspathCopy,
-                nativeToolchainsCopy,
-                signingConfigsCopy,
-                lintOptionsCopy,
-                lintRuleJarsCopy,
-                unresolvedDependenciesCopy,
-                javaCompileOptionsCopy,
-                aaptOptionsCopy,
-                project.getBuildFolder(),
-                dynamicFeaturesCopy,
-                variantBuildInformation,
-                viewBindingOptionsCopy,
-                dependenciesInfoCopy,
-                buildToolsVersionCopy,
-                ndkVersionCopy,
-                project.getResourcePrefix(),
-                groupId,
-                IdeModel.copyNewProperty(project::getPluginGeneration, null) != null,
-                project.getApiVersion(),
-                getProjectType(project, parsedModelVersion),
-                isBaseSplit,
-                agpFlags);
-    }
-
     // Used for serialization by the IDE.
     @SuppressWarnings("unused")
     private IdeAndroidProjectImpl() {
@@ -338,7 +129,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myHashCode = 0;
     }
 
-    private IdeAndroidProjectImpl(
+    public IdeAndroidProjectImpl(
             @NonNull String modelVersion,
             @Nullable GradleVersion parsedModelVersion,
             @NonNull String name,
@@ -408,58 +199,6 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myBaseSplit = baseSplit;
         myAgpFlags = agpFlags;
         myHashCode = calculateHashCode();
-    }
-
-    @NonNull
-    private static Collection<IdeVariantBuildInformation> createVariantBuildInformation(
-            @NonNull AndroidProject project, @Nullable GradleVersion agpVersion) {
-        if (agpVersion != null && agpVersion.compareIgnoringQualifiers("4.1.0") >= 0) {
-            // make deep copy of VariantBuildInformation.
-            return project.getVariantsBuildInformation().stream()
-                    .map(it -> IdeVariantBuildInformationImpl.createFrom(it))
-                    .collect(ImmutableList.toImmutableList());
-        }
-        // VariantBuildInformation is not available.
-        return Collections.emptyList();
-    }
-
-    @NonNull
-    private static ImmutableList<String> computeVariantNames(Collection<IdeVariant> variants) {
-        return variants.stream().map(IdeVariant::getName).collect(ImmutableList.toImmutableList());
-    }
-
-    private static int getProjectType(
-            @NonNull AndroidProject project, @Nullable GradleVersion modelVersion) {
-        if (modelVersion != null && modelVersion.isAtLeast(2, 3, 0)) {
-            return project.getProjectType();
-        }
-        // Support for old Android Gradle Plugins must be maintained.
-        //noinspection deprecation
-        return project.isLibrary() ? PROJECT_TYPE_LIBRARY : PROJECT_TYPE_APP;
-    }
-
-    /** For older AGP versions pick a variant name based on a heuristic */
-    @VisibleForTesting
-    @Nullable
-    static String getDefaultVariant(Collection<String> variantNames) {
-        // Corner case of variant filter accidentally removing all variants.
-        if (variantNames.isEmpty()) {
-            return null;
-        }
-
-        // Favor the debug variant
-        if (variantNames.contains("debug")) {
-            return "debug";
-        }
-        // Otherwise the first alphabetically that has debug as a build type.
-        ImmutableSortedSet<String> sortedNames = ImmutableSortedSet.copyOf(variantNames);
-        for (String variantName : sortedNames) {
-            if (variantName.endsWith("Debug")) {
-                return variantName;
-            }
-        }
-        // Otherwise fall back to the first alphabetically
-        return sortedNames.first();
     }
 
     @Override
