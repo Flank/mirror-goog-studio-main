@@ -31,13 +31,16 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.PathSensitive
@@ -61,6 +64,9 @@ abstract class PrepareKotlinCompileTask() : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.ABSOLUTE)
     abstract val kotlinCompilerExtension: ConfigurableFileCollection
 
+    @get:Input
+    abstract val debuggable: Property<Boolean>
+
     override fun doTaskAction() {
         val task = project.tasks.getByName(taskNameToConfigure.get()) as KotlinCompile
         task.kotlinOptions.useIR = true
@@ -68,9 +74,14 @@ abstract class PrepareKotlinCompileTask() : NonIncrementalTask() {
             listOf(
                 "-Xplugin=${kotlinCompilerExtension.files.first().absolutePath}",
                 "-XXLanguage:+NonParenthesizedAnnotationsOnFunctionalTypes",
-                "-P",
-                "plugin:androidx.compose.plugins.idea:enabled=true"
-            )
+                "-P", "plugin:androidx.compose.plugins.idea:enabled=true",
+                "-Xallow-jvm-ir-dependencies"
+            ) + if(debuggable.get()) {
+                listOf(
+                    "-P", "plugin:androidx.compose.compiler.plugins.kotlin:liveLiterals=true",
+                    "-P", "plugin:androidx.compose.compiler.plugins.kotlin:sourceInformation=true"
+                )
+            } else { listOf() }
     }
 
     class CreationAction(
@@ -80,7 +91,6 @@ abstract class PrepareKotlinCompileTask() : NonIncrementalTask() {
     ) : VariantTaskCreationAction<PrepareKotlinCompileTask, ComponentCreationConfig>(
         creationConfig
     ) {
-
         override val name: String = computeTaskName("prepare", "KotlinCompileTask")
         override val type: Class<PrepareKotlinCompileTask> = PrepareKotlinCompileTask::class.java
 
@@ -91,6 +101,13 @@ abstract class PrepareKotlinCompileTask() : NonIncrementalTask() {
 
             task.taskNameToConfigure.set(taskToConfigure.name)
             task.kotlinCompilerExtension.from(kotlinExtension)
+
+            task.debuggable.setDisallowChanges(
+                    if (creationConfig is ApkCreationConfig) {
+                        creationConfig.debuggable
+                    } else {
+                        false
+                    })
         }
     }
 
