@@ -21,13 +21,7 @@ import com.android.SdkConstants.CURRENT_PLATFORM
 import com.android.SdkConstants.NDK_SYMLINK_DIR
 import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.android.build.gradle.internal.SdkComponentsBuildService
-import com.android.build.gradle.internal.cxx.configure.CmakeLocator
-import com.android.build.gradle.internal.cxx.configure.NdkAbiFile
-import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
-import com.android.build.gradle.internal.cxx.configure.findCmakeVersion
-import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
-import com.android.build.gradle.internal.cxx.configure.ndkMetaAbisFile
-import com.android.build.gradle.internal.cxx.configure.trySymlinkNdk
+import com.android.build.gradle.internal.cxx.configure.*
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.gradle.generator.cxxFolder
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
@@ -107,7 +101,7 @@ fun createCxxModuleModel(
                     val exe = if (CURRENT_PLATFORM == PLATFORM_WINDOWS) ".exe" else ""
                     object: CxxCmakeModuleModel {
                         override val minimumCmakeVersion by lazy {
-                            findCmakeVersion(configurationModel.cmakeVersion)
+                            CmakeDslVersionInfo(configurationModel.cmakeVersion).effectiveRequestVersion
                         }
                         private val cmakeFolder by lazy {
                             cmakeLocator.findCmakePath(
