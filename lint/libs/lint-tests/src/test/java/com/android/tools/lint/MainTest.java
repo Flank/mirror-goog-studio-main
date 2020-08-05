@@ -79,22 +79,17 @@ public class MainTest extends AbstractCheckTest {
             final ByteArrayOutputStream error = new ByteArrayOutputStream();
             System.setErr(new PrintStream(error));
 
-            int exitCode = 0;
-            try {
-                Main main =
-                        new Main() {
-                            @Override
-                            protected void initializeDriver(@NonNull LintDriver driver) {
-                                super.initializeDriver(driver);
-                                if (listener != null) {
-                                    driver.addLintListener(listener);
-                                }
+            Main main =
+                    new Main() {
+                        @Override
+                        protected void initializeDriver(@NonNull LintDriver driver) {
+                            super.initializeDriver(driver);
+                            if (listener != null) {
+                                driver.addLintListener(listener);
                             }
-                        };
-                main.run(args);
-            } catch (Main.ExitException e) {
-                exitCode = e.getStatus();
-            }
+                        }
+                    };
+            int exitCode = main.run(args);
 
             String stderr = error.toString();
             if (cleanup != null) {

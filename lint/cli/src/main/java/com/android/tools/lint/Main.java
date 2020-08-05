@@ -52,7 +52,6 @@ import com.android.tools.lint.model.LintModelVariant;
 import com.android.utils.SdkUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import com.intellij.openapi.util.Ref;
@@ -158,10 +157,9 @@ public class Main {
      * @param args program arguments
      */
     public static void main(String[] args) {
-        try {
-            new Main().run(args);
-        } catch (ExitException exitException) {
-            System.exit(exitException.getStatus());
+        int exitCode = new Main().run(args);
+        if (exitCode != ERRNO_SUCCESS) {
+            System.exit(exitCode);
         }
     }
 
@@ -172,12 +170,13 @@ public class Main {
      * Runs the static analysis command line driver
      *
      * @param args program arguments
+     * @return the return code for lint
      */
     @SuppressWarnings("UnnecessaryLocalVariable")
-    public void run(String[] args) {
+    public int run(String[] args) {
         if (args.length < 1) {
             printUsage(System.err);
-            exit(ERRNO_USAGE);
+            return ERRNO_USAGE;
         }
 
         LintClient.setClientName(LintClient.CLIENT_CLI);
@@ -598,14 +597,14 @@ public class Main {
                     String topic = args[index + 1];
                     if (topic.equals("suppress") || topic.equals("ignore")) {
                         printHelpTopicSuppress();
-                        exit(ERRNO_HELP);
+                        return ERRNO_HELP;
                     } else {
                         System.err.println(String.format("Unknown help topic \"%1$s\"", topic));
-                        exit(ERRNO_INVALID_ARGS);
+                        return ERRNO_INVALID_ARGS;
                     }
                 }
                 printUsage(System.out);
-                exit(ERRNO_HELP);
+                return ERRNO_HELP;
             } else if (arg.equals(ARG_LIST_IDS)) {
                 IssueRegistry registry = getGlobalRegistry(client);
                 // Did the user provide a category list?
@@ -626,13 +625,13 @@ public class Main {
                         } else {
                             System.err.println("Invalid category \"" + id + "\".\n");
                             displayValidIds(registry, System.err);
-                            exit(ERRNO_INVALID_ARGS);
+                            return ERRNO_INVALID_ARGS;
                         }
                     }
                 } else {
                     displayValidIds(registry, System.out);
                 }
-                exit(ERRNO_SUCCESS);
+                return ERRNO_SUCCESS;
             } else if (arg.equals(ARG_SHOW)) {
                 IssueRegistry registry = getGlobalRegistry(client);
                 // Show specific issues?
@@ -657,13 +656,13 @@ public class Main {
                         } else {
                             System.err.println("Invalid id or category \"" + id + "\".\n");
                             displayValidIds(registry, System.err);
-                            exit(ERRNO_INVALID_ARGS);
+                            return ERRNO_INVALID_ARGS;
                         }
                     }
                 } else {
                     showIssues(registry);
                 }
-                exit(ERRNO_SUCCESS);
+                return ERRNO_SUCCESS;
             } else if (arg.equals(ARG_FULL_PATH)
                     || arg.equals(ARG_FULL_PATH + "s")) { // allow "--fullpaths" too
                 flags.setFullPath(true);
@@ -679,11 +678,11 @@ public class Main {
                 flags.setFatalOnly(true);
             } else if (arg.equals(ARG_VERSION)) {
                 printVersion(client);
-                exit(ERRNO_SUCCESS);
+                return ERRNO_SUCCESS;
             } else if (arg.equals(ARG_URL)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing URL mapping string");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 String map = args[++index];
                 // Allow repeated usage of the argument instead of just comma list
@@ -696,18 +695,18 @@ public class Main {
             } else if (arg.equals(ARG_CONFIG)) {
                 if (index == args.length - 1 || !endsWith(args[index + 1], DOT_XML)) {
                     System.err.println("Missing XML configuration file argument");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 File file = getInArgumentPath(args[++index]);
                 if (!file.exists()) {
                     System.err.println(file.getAbsolutePath() + " does not exist");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 flags.setDefaultConfiguration(file);
             } else if (arg.equals(ARG_HTML) || arg.equals(ARG_SIMPLE_HTML)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing HTML output file name");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 File output = getOutArgumentPath(args[++index]);
                 // Get an absolute path such that we can ask its parent directory for
@@ -719,7 +718,7 @@ public class Main {
                         boolean mkdirs = output.mkdirs();
                         if (!mkdirs) {
                             log(null, "Could not create output directory %1$s", output);
-                            exit(ERRNO_EXISTS);
+                            return ERRNO_EXISTS;
                         }
                     }
                     MultiProjectHtmlReporter reporter =
@@ -734,24 +733,24 @@ public class Main {
                     boolean delete = output.delete();
                     if (!delete) {
                         System.err.println("Could not delete old " + output);
-                        exit(ERRNO_EXISTS);
+                        return ERRNO_EXISTS;
                     }
                 }
                 if (output.getParentFile() != null && !output.getParentFile().canWrite()) {
                     System.err.println("Cannot write HTML output file " + output);
-                    exit(ERRNO_EXISTS);
+                    return ERRNO_EXISTS;
                 }
                 try {
                     Reporter reporter = Reporter.createHtmlReporter(client, output, flags);
                     flags.getReporters().add(reporter);
                 } catch (IOException e) {
                     log(e, null);
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
             } else if (arg.equals(ARG_XML)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing XML output file name");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 File output = getOutArgumentPath(args[++index]);
                 // Get an absolute path such that we can ask its parent directory for
@@ -762,12 +761,12 @@ public class Main {
                     boolean delete = output.delete();
                     if (!delete) {
                         System.err.println("Could not delete old " + output);
-                        exit(ERRNO_EXISTS);
+                        return ERRNO_EXISTS;
                     }
                 }
                 if (output.getParentFile() != null && !output.getParentFile().canWrite()) {
                     System.err.println("Cannot write XML output file " + output);
-                    exit(ERRNO_EXISTS);
+                    return ERRNO_EXISTS;
                 }
                 try {
                     flags.getReporters()
@@ -776,12 +775,12 @@ public class Main {
                                             client, output, false, flags.isIncludeXmlFixes()));
                 } catch (IOException e) {
                     log(e, null);
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
             } else if (arg.equals(ARG_TEXT)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing text output file name");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
 
                 Writer writer = null;
@@ -802,19 +801,19 @@ public class Main {
                         boolean delete = output.delete();
                         if (!delete) {
                             System.err.println("Could not delete old " + output);
-                            exit(ERRNO_EXISTS);
+                            return ERRNO_EXISTS;
                         }
                     }
                     if (output.getParentFile() != null && !output.getParentFile().canWrite()) {
                         System.err.println("Cannot write text output file " + output);
-                        exit(ERRNO_EXISTS);
+                        return ERRNO_EXISTS;
                     }
                     try {
                         //noinspection IOResourceOpenedButNotSafelyClosed,resource
                         writer = new BufferedWriter(new FileWriter(output));
                     } catch (IOException e) {
                         log(e, null);
-                        exit(ERRNO_INVALID_ARGS);
+                        return ERRNO_INVALID_ARGS;
                     }
                     closeWriter = true;
                 }
@@ -822,7 +821,7 @@ public class Main {
             } else if (arg.equals(ARG_DISABLE) || arg.equals(ARG_IGNORE)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing categories or id's to disable");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 IssueRegistry registry = getGlobalRegistry(client);
                 String[] ids = args[++index].split(",");
@@ -845,7 +844,7 @@ public class Main {
             } else if (arg.equals(ARG_ENABLE)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing categories or id's to enable");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 IssueRegistry registry = getGlobalRegistry(client);
                 String[] ids = args[++index].split(",");
@@ -865,7 +864,7 @@ public class Main {
             } else if (arg.equals(ARG_CHECK)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing categories or id's to check");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 Set<String> checkedIds = flags.getExactCheckedIds();
                 if (checkedIds == null) {
@@ -913,14 +912,14 @@ public class Main {
             } else if (arg.equals(ARG_CLASSES)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing class folder name");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 String paths = args[++index];
                 for (String path : Lint.splitPath(paths)) {
                     File input = getInArgumentPath(path);
                     if (!input.exists()) {
                         System.err.println("Class path entry " + input + " does not exist.");
-                        exit(ERRNO_INVALID_ARGS);
+                        return ERRNO_INVALID_ARGS;
                     }
                     List<File> classes = flags.getClassesOverride();
                     if (classes == null) {
@@ -932,14 +931,14 @@ public class Main {
             } else if (arg.equals(ARG_SOURCES)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing source folder name");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 String paths = args[++index];
                 for (String path : Lint.splitPath(paths)) {
                     File input = getInArgumentPath(path);
                     if (!input.exists()) {
                         System.err.println("Source folder " + input + " does not exist.");
-                        exit(ERRNO_INVALID_ARGS);
+                        return ERRNO_INVALID_ARGS;
                     }
                     List<File> sources = flags.getSourcesOverride();
                     if (sources == null) {
@@ -951,14 +950,14 @@ public class Main {
             } else if (arg.equals(ARG_RESOURCES)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing resource folder name");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 String paths = args[++index];
                 for (String path : Lint.splitPath(paths)) {
                     File input = getInArgumentPath(path);
                     if (!input.exists()) {
                         System.err.println("Resource folder " + input + " does not exist.");
-                        exit(ERRNO_INVALID_ARGS);
+                        return ERRNO_INVALID_ARGS;
                     }
                     List<File> resources = flags.getResourcesOverride();
                     if (resources == null) {
@@ -970,14 +969,14 @@ public class Main {
             } else if (arg.equals(ARG_LIBRARIES)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing library folder name");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 String paths = args[++index];
                 for (String path : Lint.splitPath(paths)) {
                     File input = getInArgumentPath(path);
                     if (!input.exists()) {
                         System.err.println("Library " + input + " does not exist.");
-                        exit(ERRNO_INVALID_ARGS);
+                        return ERRNO_INVALID_ARGS;
                     }
                     List<File> libraries = flags.getLibrariesOverride();
                     if (libraries == null) {
@@ -989,32 +988,32 @@ public class Main {
             } else if (arg.equals(ARG_BUILD_API)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing compileSdkVersion");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 String version = args[++index];
                 flags.setCompileSdkVersionOverride(version);
             } else if (arg.equals(ARG_JAVA_LANGUAGE_LEVEL)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing Java language level");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 String version = args[++index];
                 LanguageLevel level = LanguageLevel.parse(version);
                 if (level == null) {
                     System.err.println("Invalid Java language level \"" + version + "\"");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 javaLanguageLevel.set(level);
             } else if (arg.equals(ARG_KOTLIN_LANGUAGE_LEVEL)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing Kotlin language level");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 String version = args[++index];
                 LanguageVersion languageLevel = LanguageVersion.fromVersionString(version);
                 if (languageLevel == null) {
                     System.err.println("Invalid Kotlin language level \"" + version + "\"");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 ApiVersion apiVersion = ApiVersion.createByLanguageVersion(languageLevel);
                 LanguageVersionSettingsImpl settings =
@@ -1023,14 +1022,14 @@ public class Main {
             } else if (arg.equals(ARG_PROJECT)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing project description file");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 String paths = args[++index];
                 for (String path : Lint.splitPath(paths)) {
                     File input = getInArgumentPath(path);
                     if (!input.exists()) {
                         System.err.println("Project descriptor " + input + " does not exist.");
-                        exit(ERRNO_INVALID_ARGS);
+                        return ERRNO_INVALID_ARGS;
                     }
                     if (!input.isFile()) {
                         System.err.println(
@@ -1038,33 +1037,33 @@ public class Main {
                                         + input
                                         + " should be an XML descriptor file"
                                         + (input.isDirectory() ? ", not a directory" : ""));
-                        exit(ERRNO_INVALID_ARGS);
+                        return ERRNO_INVALID_ARGS;
                     }
                     File descriptor = flags.getProjectDescriptorOverride();
                     //noinspection VariableNotUsedInsideIf
                     if (descriptor != null) {
                         System.err.println("Project descriptor should only be specified once");
-                        exit(ERRNO_INVALID_ARGS);
+                        return ERRNO_INVALID_ARGS;
                     }
                     flags.setProjectDescriptorOverride(input);
                 }
             } else if (arg.equals(ARG_VARIANT)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing variant name after " + ARG_VARIANT);
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 variantName = args[++index];
             } else if (arg.equals(ARG_LINT_MODEL)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing lint model argument after " + ARG_LINT_MODEL);
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 String paths = args[++index];
                 for (String path : Lint.splitPath(paths)) {
                     File input = getInArgumentPath(path);
                     if (!input.exists()) {
                         System.err.println("Lint model " + input + " does not exist.");
-                        exit(ERRNO_INVALID_ARGS);
+                        return ERRNO_INVALID_ARGS;
                     }
                     if (!input.isDirectory()) {
                         System.err.println(
@@ -1072,7 +1071,7 @@ public class Main {
                                         + input
                                         + " should be a folder containing the XML descriptor files"
                                         + (input.isDirectory() ? ", not a file" : ""));
-                        exit(ERRNO_INVALID_ARGS);
+                        return ERRNO_INVALID_ARGS;
                     }
                     try {
                         LintModelSerialization reader = LintModelSerialization.INSTANCE;
@@ -1090,37 +1089,37 @@ public class Main {
                                         + input
                                         + " to a lint model: "
                                         + error.toString());
-                        exit(ERRNO_INVALID_ARGS);
+                        return ERRNO_INVALID_ARGS;
                     }
                 }
             } else if (arg.equals(ARG_SDK_HOME)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing SDK home directory");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 sdkHome = new File(args[++index]);
                 if (!sdkHome.isDirectory()) {
                     System.err.println(sdkHome + " is not a directory");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
             } else if (arg.equals(ARG_JDK_HOME)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing JDK home directory");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 jdkHome = new File(args[++index]);
                 if (!jdkHome.isDirectory()) {
                     System.err.println(jdkHome + " is not a directory");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 if (!Lint.isJreFolder(jdkHome)) {
                     System.err.println(jdkHome + " is not a JRE/JDK");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
             } else if (arg.equals(ARG_BASELINE)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing baseline file path");
-                    exit(ERRNO_INVALID_ARGS);
+                    return ERRNO_INVALID_ARGS;
                 }
                 String path = args[++index];
                 File input = getInArgumentPath(path);
@@ -1150,14 +1149,14 @@ public class Main {
             } else if (arg.startsWith("--")) {
                 System.err.println("Invalid argument " + arg + "\n");
                 printUsage(System.err);
-                exit(ERRNO_INVALID_ARGS);
+                return ERRNO_INVALID_ARGS;
             } else {
                 String filename = arg;
                 File file = getInArgumentPath(filename);
 
                 if (!file.exists()) {
                     System.err.println(String.format("%1$s does not exist.", filename));
-                    exit(ERRNO_EXISTS);
+                    return ERRNO_EXISTS;
                 }
                 files.add(file);
             }
@@ -1165,7 +1164,7 @@ public class Main {
 
         if (files.isEmpty() && flags.getProjectDescriptorOverride() == null) {
             System.err.println("No files to analyze.");
-            exit(ERRNO_INVALID_ARGS);
+            return ERRNO_INVALID_ARGS;
         } else if (files.size() > 1
                 && (flags.getClassesOverride() != null
                         || flags.getSourcesOverride() != null
@@ -1175,7 +1174,7 @@ public class Main {
                     String.format(
                             "The %1$s, %2$s, %3$s and %4$s arguments can only be used with a single project",
                             ARG_SOURCES, ARG_CLASSES, ARG_LIBRARIES, ARG_RESOURCES));
-            exit(ERRNO_INVALID_ARGS);
+            return ERRNO_INVALID_ARGS;
         }
 
         client.syncConfigOptions();
@@ -1202,7 +1201,7 @@ public class Main {
                     if (index == -1) {
                         System.err.println(
                                 "The URL map argument must be of the form 'path_prefix=url_prefix'");
-                        exit(ERRNO_INVALID_ARGS);
+                        return ERRNO_INVALID_ARGS;
                     }
                     String key = s.substring(0, index);
                     String value = s.substring(index + 1);
@@ -1219,7 +1218,7 @@ public class Main {
             if (!files.isEmpty()) {
                 System.err.println(
                         "Do not specify both files and lint models: lint models should instead include the files");
-                exit(ERRNO_INVALID_ARGS);
+                return ERRNO_INVALID_ARGS;
             }
             List<Project> projects = new ArrayList<>();
             for (LintModelModule module : modules) {
@@ -1254,11 +1253,10 @@ public class Main {
             // Not using globalIssueRegistry; LintClient will do its own registry merging
             // also including project rules.
 
-            int exitCode = client.run(new BuiltinIssueRegistry(), lintRequest);
-            exit(exitCode);
+            return client.run(new BuiltinIssueRegistry(), lintRequest);
         } catch (IOException e) {
             log(e, null);
-            exit(ERRNO_INVALID_ARGS);
+            return ERRNO_INVALID_ARGS;
         }
     }
 
@@ -1736,23 +1734,5 @@ public class Main {
         if (exception != null) {
             exception.printStackTrace();
         }
-    }
-
-    @VisibleForTesting
-    static final class ExitException extends RuntimeException {
-
-        private final int status;
-
-        ExitException(int status) {
-            this.status = status;
-        }
-
-        int getStatus() {
-            return status;
-        }
-    }
-
-    private static void exit(int value) {
-        throw new ExitException(value);
     }
 }
