@@ -45,7 +45,7 @@ import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX
 import androidx.navigation.findNavController
 import ${getMaterialComponentName("android.support.v7.widget.RecyclerView", useAndroidX)}
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
-import ${packageName}.dummy.DummyContent;
+import ${packageName}.placeholder.PlaceholderContent;
 
 /**
  * A Fragment representing a list of Pings. This fragment
@@ -103,7 +103,7 @@ class ${collectionName}Fragment : Fragment() {
          * a single pane layout or two pane layout
          */
         val onClickListener = View.OnClickListener { itemView ->
-            val item = itemView.tag as DummyContent.DummyItem
+            val item = itemView.tag as PlaceholderContent.PlaceholderItem
             val bundle = Bundle()
             bundle.putString(
                 ${detailName}Fragment.ARG_ITEM_ID,
@@ -123,7 +123,7 @@ class ${collectionName}Fragment : Fragment() {
          * experience on larger screen devices
          */
         val onContextClickListener = View.OnContextClickListener { v ->
-            val item = v.tag as DummyContent.DummyItem
+            val item = v.tag as PlaceholderContent.PlaceholderItem
             Toast.makeText(
                 v.context,
                 "Context click of item " + item.id,
@@ -141,14 +141,14 @@ class ${collectionName}Fragment : Fragment() {
     ) {
 
         recyclerView.adapter = SimpleItemRecyclerViewAdapter(
-            DummyContent.ITEMS,
+            PlaceholderContent.ITEMS,
             onClickListener,
             onContextClickListener
         )
     }
 
     class SimpleItemRecyclerViewAdapter(
-        private val values: List<DummyContent.DummyItem>,
+        private val values: List<PlaceholderContent.PlaceholderItem>,
         private val onClickListener: View.OnClickListener,
         private val onContextClickListener: View.OnContextClickListener
     ) :

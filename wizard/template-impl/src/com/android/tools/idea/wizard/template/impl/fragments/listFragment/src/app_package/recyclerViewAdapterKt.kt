@@ -35,14 +35,14 @@ import android.view.ViewGroup
 import android.widget.TextView
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
 
-import ${kotlinEscapedPackageName}.dummy.DummyContent.DummyItem
+import ${kotlinEscapedPackageName}.placeholder.PlaceholderContent.PlaceholderItem
 
 /**
- * [RecyclerView.Adapter] that can display a [DummyItem].
+ * [RecyclerView.Adapter] that can display a [PlaceholderItem].
  * TODO: Replace the implementation with code for your data type.
  */
 class ${adapterClassName}(
-        private val values: List<DummyItem>)
+        private val values: List<PlaceholderItem>)
     : RecyclerView.Adapter<${adapterClassName}.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

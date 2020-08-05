@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.dummy
+package com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.placeholder
 
 
-fun dummyContentJava(
+fun placeholderContentJava(
 packageName: String
 ) = """
-package ${packageName}.dummy;
+package ${packageName}.placeholder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,34 +33,34 @@ import java.util.Map;
  * <p>
  * TODO: Replace all uses of this class before publishing your app.
  */
-public class DummyContent {
+public class PlaceholderContent {
 
     /**
-     * An array of sample (dummy) items.
+     * An array of sample (placeholder) items.
      */
-    public static final List<DummyItem> ITEMS = new ArrayList<DummyItem>();
+    public static final List<PlaceholderItem> ITEMS = new ArrayList<PlaceholderItem>();
 
     /**
-     * A map of sample (dummy) items, by ID.
+     * A map of sample (placeholder) items, by ID.
      */
-    public static final Map<String, DummyItem> ITEM_MAP = new HashMap<String, DummyItem>();
+    public static final Map<String, PlaceholderItem> ITEM_MAP = new HashMap<String, PlaceholderItem>();
 
     private static final int COUNT = 25;
 
     static {
         // Add some sample items.
         for (int i = 1; i <= COUNT; i++) {
-            addItem(createDummyItem(i));
+            addItem(createPlaceholderItem(i));
         }
     }
 
-    private static void addItem(DummyItem item) {
+    private static void addItem(PlaceholderItem item) {
         ITEMS.add(item);
         ITEM_MAP.put(item.id, item);
     }
 
-    private static DummyItem createDummyItem(int position) {
-        return new DummyItem(String.valueOf(position), "Item " + position, makeDetails(position));
+    private static PlaceholderItem createPlaceholderItem(int position) {
+        return new PlaceholderItem(String.valueOf(position), "Item " + position, makeDetails(position));
     }
 
     private static String makeDetails(int position) {
@@ -73,14 +73,14 @@ public class DummyContent {
     }
 
     /**
-     * A dummy item representing a piece of content.
+     * A placeholder item representing a piece of content.
      */
-    public static class DummyItem {
+    public static class PlaceholderItem {
         public final String id;
         public final String content;
         public final String details;
 
-        public DummyItem(String id, String content, String details) {
+        public PlaceholderItem(String id, String content, String details) {
             this.id = id;
             this.content = content;
             this.details = details;

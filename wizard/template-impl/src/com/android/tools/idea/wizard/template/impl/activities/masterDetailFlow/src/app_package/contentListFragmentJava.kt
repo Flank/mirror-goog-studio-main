@@ -48,7 +48,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
 
-import ${packageName}.dummy.DummyContent;
+import ${packageName}.placeholder.PlaceholderContent;
 
 import java.util.List;
 
@@ -107,8 +107,8 @@ public class ${collectionName}Fragment extends Fragment {
          * a single pane layout or two pane layout
          */
         View.OnClickListener onClickListener = itemView -> {
-            DummyContent.DummyItem item =
-                    (DummyContent.DummyItem) itemView.getTag();
+            PlaceholderContent.PlaceholderItem item =
+                    (PlaceholderContent.PlaceholderItem) itemView.getTag();
             Bundle arguments = new Bundle();
             arguments.putString(${detailName}Fragment.ARG_ITEM_ID, item.id);
             if (itemDetailFragmentContainer != null) {
@@ -125,8 +125,8 @@ public class ${collectionName}Fragment extends Fragment {
          * experience on larger screen devices
          */
         View.OnContextClickListener onContextClickListener = itemView -> {
-            DummyContent.DummyItem item =
-                    (DummyContent.DummyItem) itemView.getTag();
+            PlaceholderContent.PlaceholderItem item =
+                    (PlaceholderContent.PlaceholderItem) itemView.getTag();
             Toast.makeText(
                     itemView.getContext(),
                     "Context click of item " + item.id,
@@ -145,7 +145,7 @@ public class ${collectionName}Fragment extends Fragment {
     ) {
 
         recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(
-                DummyContent.ITEMS,
+                PlaceholderContent.ITEMS,
                 onClickListener,
                 onContextClickListener
         ));
@@ -154,11 +154,11 @@ public class ${collectionName}Fragment extends Fragment {
     public static class SimpleItemRecyclerViewAdapter
             extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder> {
 
-        private final List<DummyContent.DummyItem> mValues;
+        private final List<PlaceholderContent.PlaceholderItem> mValues;
         private final View.OnClickListener mOnClickListener;
         private final View.OnContextClickListener mOnContextClickListener;
 
-        SimpleItemRecyclerViewAdapter(List<DummyContent.DummyItem> items,
+        SimpleItemRecyclerViewAdapter(List<PlaceholderContent.PlaceholderItem> items,
                                       View.OnClickListener onClickListener,
                                       View.OnContextClickListener onContextClickListener) {
             mValues = items;

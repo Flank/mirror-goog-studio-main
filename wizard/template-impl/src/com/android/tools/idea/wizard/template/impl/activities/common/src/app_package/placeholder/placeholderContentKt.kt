@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.dummy
+package com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.placeholder
 
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 
-fun dummyContentKt(
+fun placeholderContentKt(
 packageName: String
 ) = """
-package ${escapeKotlinIdentifier(packageName)}.dummy
+package ${escapeKotlinIdentifier(packageName)}.placeholder
 
 import java.util.ArrayList
 import java.util.HashMap
@@ -32,34 +32,34 @@ import java.util.HashMap
  *
  * TODO: Replace all uses of this class before publishing your app.
  */
-object DummyContent {
+object PlaceholderContent {
 
     /**
-     * An array of sample (dummy) items.
+     * An array of sample (placeholder) items.
      */
-    val ITEMS: MutableList<DummyItem> = ArrayList()
+    val ITEMS: MutableList<PlaceholderItem> = ArrayList()
 
     /**
-     * A map of sample (dummy) items, by ID.
+     * A map of sample (placeholder) items, by ID.
      */
-    val ITEM_MAP: MutableMap<String, DummyItem> = HashMap()
+    val ITEM_MAP: MutableMap<String, PlaceholderItem> = HashMap()
 
     private val COUNT = 25
 
     init {
         // Add some sample items.
         for (i in 1..COUNT) {
-            addItem(createDummyItem(i))
+            addItem(createPlaceholderItem(i))
         }
     }
 
-    private fun addItem(item: DummyItem) {
+    private fun addItem(item: PlaceholderItem) {
         ITEMS.add(item)
         ITEM_MAP.put(item.id, item)
     }
 
-    private fun createDummyItem(position: Int): DummyItem {
-        return DummyItem(position.toString(), "Item " + position, makeDetails(position))
+    private fun createPlaceholderItem(position: Int): PlaceholderItem {
+        return PlaceholderItem(position.toString(), "Item " + position, makeDetails(position))
     }
 
     private fun makeDetails(position: Int): String {
@@ -72,9 +72,9 @@ object DummyContent {
     }
 
     /**
-     * A dummy item representing a piece of content.
+     * A placeholder item representing a piece of content.
      */
-    data class DummyItem(val id: String, val content: String, val details: String) {
+    data class PlaceholderItem(val id: String, val content: String, val details: String) {
         override fun toString(): String = content
     }
 }

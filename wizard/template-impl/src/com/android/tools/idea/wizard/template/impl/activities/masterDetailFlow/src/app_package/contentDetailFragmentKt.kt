@@ -39,7 +39,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
-import ${packageName}.dummy.DummyContent
+import ${packageName}.placeholder.PlaceholderContent
 
 /**
  * A fragment representing a single ${objectKind} detail screen.
@@ -52,7 +52,7 @@ class ${detailName}Fragment : Fragment() {
     /**
      * The placeholder content this fragment is presenting.
      */
-    private var item: DummyContent.DummyItem? = null
+    private var item: PlaceholderContent.PlaceholderItem? = null
 
     lateinit var itemDetailTextView: TextView
 
@@ -64,7 +64,7 @@ class ${detailName}Fragment : Fragment() {
                 // Load the placeholder content specified by the fragment
                 // arguments. In a real-world scenario, use a Loader
                 // to load content from a content provider.
-                item = DummyContent.ITEM_MAP[it.getString(ARG_ITEM_ID)]
+                item = PlaceholderContent.ITEM_MAP[it.getString(ARG_ITEM_ID)]
             }
         }
     }

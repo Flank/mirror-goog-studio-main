@@ -40,7 +40,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import ${getMaterialComponentName("android.support.design.widget.CollapsingToolbarLayout", useAndroidX)};
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
-import ${packageName}.dummy.DummyContent;
+import ${packageName}.placeholder.PlaceholderContent;
 
 /**
  * A fragment representing a single ${objectKind} detail screen.
@@ -57,9 +57,9 @@ public class ${collection}DetailFragment extends Fragment {
     public static final String ARG_ITEM_ID = "item_id";
 
     /**
-     * The dummy content this fragment is presenting.
+     * The placeholder content this fragment is presenting.
      */
-    private DummyContent.DummyItem mItem;
+    private PlaceholderContent.PlaceholderItem mItem;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -73,10 +73,10 @@ public class ${collection}DetailFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         if (getArguments().containsKey(ARG_ITEM_ID)) {
-            // Load the dummy content specified by the fragment
+            // Load the placeholder content specified by the fragment
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
-            mItem = DummyContent.ITEM_MAP.get(getArguments().getString(ARG_ITEM_ID));
+            mItem = PlaceholderContent.ITEM_MAP.get(getArguments().getString(ARG_ITEM_ID));
         }
     }
 
@@ -86,7 +86,7 @@ public class ${collection}DetailFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_${detailNameLayout}, container, false);
         CollapsingToolbarLayout toolbarLayout = rootView.findViewById(R.id.toolbar_layout);
 
-        // Show the dummy content as text in a TextView & in the toolbar if available.
+        // Show the placeholder content as text in a TextView & in the toolbar if available.
         if (mItem != null) {
             ((TextView) rootView.findViewById(R.id.${detailNameLayout})).setText(mItem.details);
             if (toolbarLayout != null) {

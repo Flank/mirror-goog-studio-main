@@ -39,7 +39,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
-import ${kotlinEscapedPackageName}.dummy.DummyContent
+import ${kotlinEscapedPackageName}.placeholder.PlaceholderContent
 
 /**
  * A fragment representing a list of Items.
@@ -67,7 +67,7 @@ class ${fragmentClass} : Fragment() {
                     columnCount <= 1 -> LinearLayoutManager(context)
                     else -> GridLayoutManager(context, columnCount)
                 }
-                adapter = ${adapterClassName}(DummyContent.ITEMS)
+                adapter = ${adapterClassName}(PlaceholderContent.ITEMS)
             }
         }
         return view

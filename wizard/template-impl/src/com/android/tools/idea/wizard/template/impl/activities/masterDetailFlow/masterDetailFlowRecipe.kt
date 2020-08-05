@@ -25,8 +25,8 @@ import com.android.tools.idea.wizard.template.impl.activities.common.addMaterial
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
 import com.android.tools.idea.wizard.template.impl.activities.common.generateNoActionBarStyles
 import com.android.tools.idea.wizard.template.impl.activities.common.generateThemeStyles
-import com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.dummy.dummyContentJava
-import com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.dummy.dummyContentKt
+import com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.placeholder.placeholderContentJava
+import com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.placeholder.placeholderContentKt
 import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.layout.fragmentItemDetailXml
 import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.layout.fragmentItemDetailTwoPaneXml
 import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.layout.fragmentItemListTwoPaneXml
@@ -141,11 +141,11 @@ fun RecipeExecutor.primaryDetailFlowRecipe(
   }
   save(contentListFragment, srcOut.resolve("${collectionName}Fragment.${ktOrJavaExt}"))
 
-  val dummyContent = when (projectData.language) {
-    Language.Java -> dummyContentJava(packageName)
-    Language.Kotlin -> dummyContentKt(packageName)
+  val placeholderContent = when (projectData.language) {
+    Language.Java -> placeholderContentJava(packageName)
+    Language.Kotlin -> placeholderContentKt(packageName)
   }
-  save(dummyContent, srcOut.resolve("dummy/DummyContent.${ktOrJavaExt}"))
+  save(placeholderContent, srcOut.resolve("placeholder/PlaceholderContent.${ktOrJavaExt}"))
 
   save(mobileNavigationXml(packageName,
                            itemListLayout,
