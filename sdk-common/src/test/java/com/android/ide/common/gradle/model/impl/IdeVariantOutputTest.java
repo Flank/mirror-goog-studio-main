@@ -32,14 +32,13 @@ public class IdeVariantOutputTest {
         final ModelCache cache = new ModelCache();
         IdeVariantOutputImpl copy =
                 new IdeVariantOutputImpl(
-                        IdeModel.copy(
+                        ModelCache.copy(
                                 original.getOutputs(),
-                                cache,
                                 outputFile -> new IdeOutputFileImpl(outputFile, cache)),
                         IdeModel.copyNewProperty(
                                 () -> ImmutableList.copyOf(original.getFilterTypes()),
                                 Collections.emptyList()),
-                        copyFilters(original, cache),
+                        copyFilters(original),
                         IdeModel.copyNewProperty(
                                 cache,
                                 original::getMainOutputFile,

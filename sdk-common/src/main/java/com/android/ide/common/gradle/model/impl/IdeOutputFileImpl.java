@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
+import static com.android.ide.common.gradle.model.impl.ModelCache.copy;
 import static com.android.utils.ImmutableCollectors.toImmutableList;
 
 import com.android.annotations.NonNull;
@@ -79,9 +80,7 @@ public final class IdeOutputFileImpl implements OutputFile, Serializable {
     public IdeOutputFileImpl(@NonNull OutputFile file, @NonNull ModelCache modelCache) {
         myOutputType = file.getOutputType();
         myFilterTypes = ImmutableList.copyOf(file.getFilterTypes());
-        myFilters =
-                IdeModel.copy(
-                        file.getFilters(), modelCache, data -> ModelCache.filterDataFrom(data));
+        myFilters = copy(file.getFilters(), data -> ModelCache.filterDataFrom(data));
         myOutputFile = file.getOutputFile();
         myMainOutputFile = copyMainOutputFile(file, modelCache);
         //noinspection deprecation

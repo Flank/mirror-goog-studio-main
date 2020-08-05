@@ -115,8 +115,7 @@ public class ModelCache {
                         "Self reference detected while constructing an instance for: "
                                 + key
                                 + "\n while constructing:\n"
-                                + myData.entrySet()
-                                        .stream()
+                                + myData.entrySet().stream()
                                         .filter(it -> it.getValue() == BAD_BAD)
                                         .map(it -> it.getKey().toString())
                                         .collect(Collectors.joining(",\n ")));
@@ -211,48 +210,40 @@ public class ModelCache {
                         container -> productFlavorContainerFrom(container, this));
 
         Collection<IdeBuildTypeContainer> buildTypesCopy =
-                IdeModel.copy(
-                        project.getBuildTypes(),
-                        this,
-                        container -> buildTypeContainerFrom(container, this));
+                copy(project.getBuildTypes(), container -> buildTypeContainerFrom(container, this));
 
         Collection<IdeProductFlavorContainer> productFlavorCopy =
-                IdeModel.copy(
+                copy(
                         project.getProductFlavors(),
-                        this,
                         container -> productFlavorContainerFrom(container, this));
 
         Collection<IdeSyncIssue> syncIssuesCopy =
-                new ArrayList<>(
-                        IdeModel.copy(
-                                syncIssues,
-                                this,
-                                issue ->
-                                        new IdeSyncIssueImpl(
-                                                issue.getMessage(),
-                                                IdeModel.copyNewProperty(
-                                                        issue::getMultiLineMessage, null),
-                                                issue.getData(),
-                                                issue.getSeverity(),
-                                                issue.getType())));
+                copy(
+                        syncIssues,
+                        issue ->
+                                new IdeSyncIssueImpl(
+                                        issue.getMessage(),
+                                        IdeModel.copyNewProperty(issue::getMultiLineMessage, null),
+                                        issue.getData(),
+                                        issue.getSeverity(),
+                                        issue.getType()));
 
         Set<String> variantNames =
                 variants.stream().map(it -> it.getName()).collect(Collectors.toSet());
         Collection<IdeVariant> variantsCopy =
-                ImmutableList.copyOf(
-                        Iterables.concat(
-                                IdeModel.copy(
-                                        variants,
-                                        this,
-                                        variant ->
-                                                IdeVariantImpl.createFrom(
-                                                        variant,
-                                                        this,
-                                                        dependenciesFactory,
-                                                        parsedModelVersion)),
-                                cachedVariants.stream()
-                                        .filter(it -> !variantNames.contains(it.getName()))
-                                        .collect(Collectors.toList())));
+          ImmutableList.copyOf(
+            Iterables.concat(
+              copy(
+                variants,
+                variant ->
+                  IdeVariantImpl.createFrom(
+                    variant,
+                    this,
+                    dependenciesFactory,
+                    parsedModelVersion)),
+              cachedVariants.stream()
+                .filter(it -> !variantNames.contains(it.getName()))
+                .collect(Collectors.toList())));
 
         Collection<String> variantNamesCopy =
                 Objects.requireNonNull(
@@ -272,16 +263,12 @@ public class ModelCache {
         Collection<String> bootClasspathCopy = ImmutableList.copyOf(project.getBootClasspath());
 
         Collection<IdeNativeToolchain> nativeToolchainsCopy =
-                IdeModel.copy(
+                copy(
                         project.getNativeToolchains(),
-                        this,
                         toolChain -> new IdeNativeToolchainImpl(toolChain));
 
         Collection<IdeSigningConfig> signingConfigsCopy =
-                IdeModel.copy(
-                        project.getSigningConfigs(),
-                        this,
-                        config -> signingConfigFrom(config));
+                copy(project.getSigningConfigs(), config -> signingConfigFrom(config));
 
         IdeLintOptions lintOptionsCopy =
                 computeIfAbsent(
@@ -410,9 +397,9 @@ public class ModelCache {
 
     @NonNull
     private static List<IdeAndroidArtifactOutput> copyOutputs(
-      @NonNull AndroidArtifact artifact,
-      @NonNull ModelCache modelCache,
-      @Nullable GradleVersion agpVersion) {
+            @NonNull AndroidArtifact artifact,
+            @NonNull ModelCache modelCache,
+            @Nullable GradleVersion agpVersion) {
         // getOutputs is deprecated in AGP 4.0.0.
         if (agpVersion != null && agpVersion.compareIgnoringQualifiers("4.0.0") >= 0) {
             return Collections.emptyList();
@@ -420,10 +407,7 @@ public class ModelCache {
         List<AndroidArtifactOutput> outputs;
         try {
             outputs = new ArrayList<>(artifact.getOutputs());
-            return IdeModel.copy(
-              outputs,
-              modelCache,
-                    output -> androidArtifactOutputFrom(output, modelCache));
+            return copy(outputs, output -> androidArtifactOutputFrom(output, modelCache));
         } catch (RuntimeException e) {
             System.err.println("Caught exception: " + e);
             // See http://b/64305584
@@ -432,79 +416,87 @@ public class ModelCache {
     }
 
     public static IdeAndroidArtifactImpl androidArtifactFrom(
-      @NonNull AndroidArtifact artifact,
-      @NonNull ModelCache modelCache,
-      @NonNull IdeDependenciesFactory dependenciesFactory,
-      @Nullable GradleVersion agpVersion
-    ) {
-        return new IdeAndroidArtifactImpl(artifact.getName(),
-                                          artifact.getCompileTaskName(),
-                                          artifact.getAssembleTaskName(),
-                                          IdeModel.copyNewPropertyNonNull(artifact::getAssembleTaskOutputListingFile, ""),
-                                          artifact.getClassesFolder(),
-                                          IdeModel.copyNewProperty(artifact::getJavaResourcesFolder, null),
-                                          ImmutableSet.copyOf(IdeBaseArtifactImpl.getIdeSetupTaskNames(artifact)),
-                                          new LinkedHashSet<File>(IdeBaseArtifactImpl.getGeneratedSourceFolders(artifact)),
-                                          IdeBaseArtifactImpl.createSourceProvider(modelCache, artifact.getVariantSourceProvider()),
-                                          IdeBaseArtifactImpl.createSourceProvider(modelCache, artifact.getMultiFlavorSourceProvider()),
-                                          IdeModel.copyNewPropertyNonNull(artifact::getAdditionalClassesFolders, Collections.emptySet()),
-                                          dependenciesFactory.create(artifact),
-                                          copyOutputs(artifact, modelCache, agpVersion),
-                                          artifact.getApplicationId(),
-                                          artifact.getSourceGenTaskName(),
-                                          ImmutableList.copyOf(artifact.getGeneratedResourceFolders()),
-                                          artifact.getSigningConfigName(),
-                                          ImmutableSet.copyOf(// In AGP 4.0 and below abiFilters was nullable, normalize null to empty set.
-                                                              MoreObjects.firstNonNull(artifact.getAbiFilters(), ImmutableSet.of())),
-                                          artifact.isSigned(),
-                                          IdeModel.copyNewPropertyNonNull(
-                                            () -> new ArrayList<>(artifact.getAdditionalRuntimeApks()),
-                                            Collections.emptyList()),
-                                          IdeModel.copyNewProperty(
-                                            modelCache, artifact::getTestOptions,
-                                            testOptions -> testOptionsFrom(testOptions), null),
-                                          IdeModel.copyNewProperty(
-                                            modelCache,
-                                            artifact::getInstrumentedTestTaskName,
-                                            Function.identity(),
-                                            null),
-                                          IdeModel.copyNewProperty(
-                                            modelCache, artifact::getBundleTaskName, Function.identity(), null),
-                                          IdeModel.copyNewProperty(
-                                            modelCache,
-                                            artifact::getBundleTaskOutputListingFile,
-                                            Function.identity(),
-                                            null),
-                                          IdeModel.copyNewProperty(
-                                            modelCache, artifact::getApkFromBundleTaskName, Function.identity(), null),
-                                          IdeModel.copyNewProperty(
-                                            modelCache,
-                                            artifact::getApkFromBundleTaskOutputListingFile,
-                                            Function.identity(),
-                                            null),
-                                          IdeModel.copyNewProperty(
-                                            modelCache, artifact::getCodeShrinker, Function.identity(), null));
+            @NonNull AndroidArtifact artifact,
+            @NonNull ModelCache modelCache,
+            @NonNull IdeDependenciesFactory dependenciesFactory,
+            @Nullable GradleVersion agpVersion) {
+        return new IdeAndroidArtifactImpl(
+                artifact.getName(),
+                artifact.getCompileTaskName(),
+                artifact.getAssembleTaskName(),
+                IdeModel.copyNewPropertyNonNull(artifact::getAssembleTaskOutputListingFile, ""),
+                artifact.getClassesFolder(),
+                IdeModel.copyNewProperty(artifact::getJavaResourcesFolder, null),
+                ImmutableSet.copyOf(IdeBaseArtifactImpl.getIdeSetupTaskNames(artifact)),
+                new LinkedHashSet<File>(IdeBaseArtifactImpl.getGeneratedSourceFolders(artifact)),
+                IdeBaseArtifactImpl.createSourceProvider(
+                        modelCache, artifact.getVariantSourceProvider()),
+                IdeBaseArtifactImpl.createSourceProvider(
+                        modelCache, artifact.getMultiFlavorSourceProvider()),
+                IdeModel.copyNewPropertyNonNull(
+                        artifact::getAdditionalClassesFolders, Collections.emptySet()),
+                dependenciesFactory.create(artifact),
+                copyOutputs(artifact, modelCache, agpVersion),
+                artifact.getApplicationId(),
+                artifact.getSourceGenTaskName(),
+                ImmutableList.copyOf(artifact.getGeneratedResourceFolders()),
+                artifact.getSigningConfigName(),
+                ImmutableSet
+                        .copyOf( // In AGP 4.0 and below abiFilters was nullable, normalize null to
+                                // empty set.
+                                MoreObjects.firstNonNull(
+                                        artifact.getAbiFilters(), ImmutableSet.of())),
+                artifact.isSigned(),
+                IdeModel.copyNewPropertyNonNull(
+                        () -> new ArrayList<>(artifact.getAdditionalRuntimeApks()),
+                        Collections.emptyList()),
+                IdeModel.copyNewProperty(
+                        modelCache,
+                        artifact::getTestOptions,
+                        testOptions -> testOptionsFrom(testOptions),
+                        null),
+                IdeModel.copyNewProperty(
+                        modelCache,
+                        artifact::getInstrumentedTestTaskName,
+                        Function.identity(),
+                        null),
+                IdeModel.copyNewProperty(
+                        modelCache, artifact::getBundleTaskName, Function.identity(), null),
+                IdeModel.copyNewProperty(
+                        modelCache,
+                        artifact::getBundleTaskOutputListingFile,
+                        Function.identity(),
+                        null),
+                IdeModel.copyNewProperty(
+                        modelCache, artifact::getApkFromBundleTaskName, Function.identity(), null),
+                IdeModel.copyNewProperty(
+                        modelCache,
+                        artifact::getApkFromBundleTaskOutputListingFile,
+                        Function.identity(),
+                        null),
+                IdeModel.copyNewProperty(
+                        modelCache, artifact::getCodeShrinker, Function.identity(), null));
     }
 
     public static IdeAndroidArtifactOutputImpl androidArtifactOutputFrom(
-      @NonNull AndroidArtifactOutput output, @NonNull ModelCache modelCache) {
-        return new IdeAndroidArtifactOutputImpl(IdeModel.copy(
-          output.getOutputs(),
-          modelCache,
-          outputFile -> new IdeOutputFileImpl(outputFile, modelCache)),
-                                                IdeModel.copyNewProperty(
-                                                  () -> ImmutableList.copyOf(output.getFilterTypes()),
-                                                  Collections.emptyList()),
-                                                IdeVariantOutputImpl.copyFilters(output, modelCache),
-                                                IdeModel.copyNewProperty(
-                                                  modelCache,
-                                                  output::getMainOutputFile,
-                                                  file -> new IdeOutputFileImpl(file, modelCache),
-                                                  null),
-                                                IdeModel.copyNewProperty(output::getOutputType, null),
-                                                output.getVersionCode(),
-                                                IdeModel.copyNewProperty(
-                                                  output::getOutputFile, output.getMainOutputFile().getOutputFile()));
+            @NonNull AndroidArtifactOutput output, @NonNull ModelCache modelCache) {
+        return new IdeAndroidArtifactOutputImpl(
+                copy(
+                        output.getOutputs(),
+                        outputFile -> new IdeOutputFileImpl(outputFile, modelCache)),
+                IdeModel.copyNewProperty(
+                        () -> ImmutableList.copyOf(output.getFilterTypes()),
+                        Collections.emptyList()),
+                IdeVariantOutputImpl.copyFilters(output),
+                IdeModel.copyNewProperty(
+                        modelCache,
+                        output::getMainOutputFile,
+                        file -> new IdeOutputFileImpl(file, modelCache),
+                        null),
+                IdeModel.copyNewProperty(output::getOutputType, null),
+                output.getVersionCode(),
+                IdeModel.copyNewProperty(
+                        output::getOutputFile, output.getMainOutputFile().getOutputFile()));
     }
 
     public static IdeApiVersionImpl apiVersionFrom(@NonNull ApiVersion version) {
@@ -513,7 +505,7 @@ public class ModelCache {
     }
 
     public static IdeBuildTypeContainerImpl buildTypeContainerFrom(
-      @NonNull BuildTypeContainer container, @NonNull ModelCache modelCache) {
+            @NonNull BuildTypeContainer container, @NonNull ModelCache modelCache) {
         return new IdeBuildTypeContainerImpl(
                 modelCache.computeIfAbsent(
                         container.getBuildType(),
@@ -523,39 +515,40 @@ public class ModelCache {
                         provider ->
                                 IdeSourceProviderImpl.createFrom(
                                         provider, modelCache::deduplicateString)),
-                IdeModel.copy(
+                copy(
                         container.getExtraSourceProviders(),
-                        modelCache,
                         sourceProviderContainer ->
-                                sourceProviderContainerFrom(
-                                        sourceProviderContainer, modelCache)));
+                                sourceProviderContainerFrom(sourceProviderContainer, modelCache)));
     }
 
     public static IdeBuildTypeImpl buildTypeFrom(@NonNull BuildType buildType, @NonNull ModelCache modelCache) {
-        return new IdeBuildTypeImpl(buildType.getName(),
-                                    IdeModel.copy(
-                                      buildType.getResValues(),
-                                      modelCache,
-                                      classField -> classFieldFrom(classField)),
-                                    ImmutableList.copyOf(buildType.getProguardFiles()),
-                                    ImmutableList.copyOf(buildType.getConsumerProguardFiles()),
-                                    buildType.getManifestPlaceholders().entrySet().stream()
-                                      // AGP may return internal Groovy GString implementation as a value in manifestPlaceholders
-                                      // map. It cannot be serialized
-                                      // with IDEA's external system serialization. We convert values to String to make them
-                                      // usable as they are converted to String by
-                                      // the manifest merger anyway.
+        return new IdeBuildTypeImpl(
+                buildType.getName(),
+                IdeModel.copy(
+                        buildType.getResValues(),
+                        modelCache,
+                        classField -> classFieldFrom(classField)),
+                ImmutableList.copyOf(buildType.getProguardFiles()),
+                ImmutableList.copyOf(buildType.getConsumerProguardFiles()),
+                buildType.getManifestPlaceholders().entrySet().stream()
+                        // AGP may return internal Groovy GString implementation as a value in
+                        // manifestPlaceholders
+                        // map. It cannot be serialized
+                        // with IDEA's external system serialization. We convert values to String to
+                        // make them
+                        // usable as they are converted to String by
+                        // the manifest merger anyway.
 
-                                      .collect(toImmutableMap(it -> it.getKey(), it -> it.getValue().toString())),
-                                    buildType.getApplicationIdSuffix(),
-                                    IdeModel.copyNewProperty(buildType::getVersionNameSuffix, null),
-                                    IdeModel.copyNewProperty(buildType::getMultiDexEnabled, null),
-                                    buildType.isDebuggable(),
-                                    buildType.isJniDebuggable(),
-                                    buildType.isRenderscriptDebuggable(),
-                                    buildType.getRenderscriptOptimLevel(),
-                                    buildType.isMinifyEnabled(),
-                                    buildType.isZipAlignEnabled());
+                        .collect(toImmutableMap(it -> it.getKey(), it -> it.getValue().toString())),
+                buildType.getApplicationIdSuffix(),
+                IdeModel.copyNewProperty(buildType::getVersionNameSuffix, null),
+                IdeModel.copyNewProperty(buildType::getMultiDexEnabled, null),
+                buildType.isDebuggable(),
+                buildType.isJniDebuggable(),
+                buildType.isRenderscriptDebuggable(),
+                buildType.getRenderscriptOptimLevel(),
+                buildType.isMinifyEnabled(),
+                buildType.isZipAlignEnabled());
     }
 
     public static IdeClassFieldImpl classFieldFrom(@NonNull ClassField classField) {
@@ -568,22 +561,25 @@ public class ModelCache {
     }
 
     public static IdeJavaArtifactImpl javaArtifactFrom(
-      @NonNull JavaArtifact artifact,
-      @NonNull ModelCache seen,
-      @NonNull IdeDependenciesFactory dependenciesFactory) {
-        return new IdeJavaArtifactImpl(artifact.getName(),
-                                       artifact.getCompileTaskName(),
-                                       artifact.getAssembleTaskName(),
-                                       IdeModel.copyNewPropertyNonNull(artifact::getAssembleTaskOutputListingFile, ""),
-                                       artifact.getClassesFolder(),
-                                       IdeModel.copyNewProperty(artifact::getJavaResourcesFolder, null),
-                                       ImmutableSet.copyOf(IdeBaseArtifactImpl.getIdeSetupTaskNames(artifact)),
-                                       new LinkedHashSet<File>(IdeBaseArtifactImpl.getGeneratedSourceFolders(artifact)),
-                                       IdeBaseArtifactImpl.createSourceProvider(seen, artifact.getVariantSourceProvider()),
-                                       IdeBaseArtifactImpl.createSourceProvider(seen, artifact.getMultiFlavorSourceProvider()),
-                                       IdeModel.copyNewPropertyNonNull(artifact::getAdditionalClassesFolders, Collections.emptySet()),
-                                       dependenciesFactory.create(artifact),
-                                       IdeModel.copyNewProperty(artifact::getMockablePlatformJar, null));
+            @NonNull JavaArtifact artifact,
+            @NonNull ModelCache seen,
+            @NonNull IdeDependenciesFactory dependenciesFactory) {
+        return new IdeJavaArtifactImpl(
+                artifact.getName(),
+                artifact.getCompileTaskName(),
+                artifact.getAssembleTaskName(),
+                IdeModel.copyNewPropertyNonNull(artifact::getAssembleTaskOutputListingFile, ""),
+                artifact.getClassesFolder(),
+                IdeModel.copyNewProperty(artifact::getJavaResourcesFolder, null),
+                ImmutableSet.copyOf(IdeBaseArtifactImpl.getIdeSetupTaskNames(artifact)),
+                new LinkedHashSet<File>(IdeBaseArtifactImpl.getGeneratedSourceFolders(artifact)),
+                IdeBaseArtifactImpl.createSourceProvider(seen, artifact.getVariantSourceProvider()),
+                IdeBaseArtifactImpl.createSourceProvider(
+                        seen, artifact.getMultiFlavorSourceProvider()),
+                IdeModel.copyNewPropertyNonNull(
+                        artifact::getAdditionalClassesFolders, Collections.emptySet()),
+                dependenciesFactory.create(artifact),
+                IdeModel.copyNewProperty(artifact::getMockablePlatformJar, null));
     }
 
     public static IdeJavaCompileOptionsImpl javaCompileOptionsFrom(@NonNull JavaCompileOptions options) {
@@ -609,21 +605,25 @@ public class ModelCache {
     }
 
     public static IdeProductFlavorContainerImpl productFlavorContainerFrom(
-      @NonNull ProductFlavorContainer container, @NonNull ModelCache modelCache) {
+            @NonNull ProductFlavorContainer container, @NonNull ModelCache modelCache) {
         return new IdeProductFlavorContainerImpl(
-          modelCache.computeIfAbsent(container.getProductFlavor(), flavor -> productFlavorFrom(flavor, modelCache)),
-          modelCache.computeIfAbsent(container.getSourceProvider(),
-                                     provider -> IdeSourceProviderImpl.createFrom(provider, modelCache::deduplicateString)),
-          IdeModel.copy(container.getExtraSourceProviders(),
-                        modelCache,
+                modelCache.computeIfAbsent(
+                        container.getProductFlavor(),
+                        flavor -> productFlavorFrom(flavor, modelCache)),
+                modelCache.computeIfAbsent(
+                        container.getSourceProvider(),
+                        provider ->
+                                IdeSourceProviderImpl.createFrom(
+                                        provider, modelCache::deduplicateString)),
+                copy(
+                        container.getExtraSourceProviders(),
                         sourceProviderContainer ->
-                          sourceProviderContainerFrom(
-                            sourceProviderContainer, modelCache)));
+                                sourceProviderContainerFrom(sourceProviderContainer, modelCache)));
     }
 
     @Nullable
     private static IdeVectorDrawablesOptions copyVectorDrawables(
-      @NonNull ProductFlavor flavor, @NonNull ModelCache modelCache) {
+            @NonNull ProductFlavor flavor, @NonNull ModelCache modelCache) {
         VectorDrawablesOptions vectorDrawables;
         try {
             vectorDrawables = flavor.getVectorDrawables();
@@ -655,28 +655,42 @@ public class ModelCache {
     }
 
     public static IdeProductFlavorImpl productFlavorFrom(@NonNull ProductFlavor flavor, @NonNull ModelCache modelCache) {
-        return new IdeProductFlavorImpl(flavor.getName(), IdeModel.copy(
-          flavor.getResValues(),
-          modelCache,
-          classField -> classFieldFrom(classField)), ImmutableList.copyOf(flavor.getProguardFiles()),
-                                        ImmutableList.copyOf(flavor.getConsumerProguardFiles()),
-                                        flavor.getManifestPlaceholders().entrySet().stream()
-                                          // AGP may return internal Groovy GString implementation as a value in manifestPlaceholders
-                                          // map. It cannot be serialized
-                                          // with IDEA's external system serialization. We convert values to String to make them
-                                          // usable as they are converted to String by
-                                          // the manifest merger anyway.
+        return new IdeProductFlavorImpl(
+                flavor.getName(),
+                IdeModel.copy(
+                        flavor.getResValues(),
+                        modelCache,
+                        classField -> classFieldFrom(classField)),
+                ImmutableList.copyOf(flavor.getProguardFiles()),
+                ImmutableList.copyOf(flavor.getConsumerProguardFiles()),
+                flavor.getManifestPlaceholders().entrySet().stream()
+                        // AGP may return internal Groovy GString implementation as a value in
+                        // manifestPlaceholders
+                        // map. It cannot be serialized
+                        // with IDEA's external system serialization. We convert values to String to
+                        // make them
+                        // usable as they are converted to String by
+                        // the manifest merger anyway.
 
-                                          .collect(toImmutableMap(it -> it.getKey(), it -> it.getValue().toString())),
-                                        flavor.getApplicationIdSuffix(), IdeModel.copyNewProperty(flavor::getVersionNameSuffix, null),
-                                        IdeModel.copyNewProperty(flavor::getMultiDexEnabled, null),
-                                        ImmutableMap.copyOf(flavor.getTestInstrumentationRunnerArguments()),
-                                        ImmutableList.copyOf(flavor.getResourceConfigurations()), copyVectorDrawables(flavor, modelCache),
-                                        flavor.getDimension(), flavor.getApplicationId(), flavor.getVersionCode(), flavor.getVersionName(),
-                                        copy(modelCache, flavor.getMinSdkVersion()), copy(modelCache, flavor.getTargetSdkVersion()),
-                                        flavor.getMaxSdkVersion(), flavor.getTestApplicationId(), flavor.getTestInstrumentationRunner(),
-                                        flavor.getTestFunctionalTest(), flavor.getTestHandleProfiling(),
-                                        copy(modelCache, flavor.getSigningConfig()));
+                        .collect(toImmutableMap(it -> it.getKey(), it -> it.getValue().toString())),
+                flavor.getApplicationIdSuffix(),
+                IdeModel.copyNewProperty(flavor::getVersionNameSuffix, null),
+                IdeModel.copyNewProperty(flavor::getMultiDexEnabled, null),
+                ImmutableMap.copyOf(flavor.getTestInstrumentationRunnerArguments()),
+                ImmutableList.copyOf(flavor.getResourceConfigurations()),
+                copyVectorDrawables(flavor, modelCache),
+                flavor.getDimension(),
+                flavor.getApplicationId(),
+                flavor.getVersionCode(),
+                flavor.getVersionName(),
+                copy(modelCache, flavor.getMinSdkVersion()),
+                copy(modelCache, flavor.getTargetSdkVersion()),
+                flavor.getMaxSdkVersion(),
+                flavor.getTestApplicationId(),
+                flavor.getTestInstrumentationRunner(),
+                flavor.getTestFunctionalTest(),
+                flavor.getTestHandleProfiling(),
+                copy(modelCache, flavor.getSigningConfig()));
     }
 
     public static IdeSigningConfigImpl signingConfigFrom(@NonNull SigningConfig config) {
@@ -689,7 +703,7 @@ public class ModelCache {
     }
 
     public static IdeSourceProviderContainerImpl sourceProviderContainerFrom(
-      @NonNull SourceProviderContainer container, @NonNull ModelCache modelCache) {
+            @NonNull SourceProviderContainer container, @NonNull ModelCache modelCache) {
         return new IdeSourceProviderContainerImpl(
                 container.getArtifactName(),
                 modelCache.computeIfAbsent(
@@ -736,5 +750,18 @@ public class ModelCache {
     public static IdeVectorDrawablesOptionsImpl vectorDrawablesOptionsFrom(
             @NonNull VectorDrawablesOptions options) {
         return new IdeVectorDrawablesOptionsImpl(options.getUseSupportLibrary());
+    }
+
+    @NonNull
+    public static <K, V> List<V> copy(
+            @NonNull Collection<K> original, @NonNull Function<K, V> mapper) {
+        if (original.isEmpty()) {
+            return Collections.emptyList();
+        }
+        ImmutableList.Builder<V> copies = ImmutableList.builder();
+        for (K item : original) {
+            copies.add(mapper.apply(item));
+        }
+        return copies.build();
     }
 }

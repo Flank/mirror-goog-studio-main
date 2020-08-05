@@ -15,12 +15,13 @@
  */
 package com.android.ide.common.gradle.model.impl.ndk.v1;
 
+import static com.android.ide.common.gradle.model.impl.ModelCache.copy;
+
 import com.android.annotations.NonNull;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeSettings;
 import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.NativeVariantAbi;
-import com.android.ide.common.gradle.model.impl.IdeModel;
 import com.android.ide.common.gradle.model.impl.ModelCache;
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeVariantAbi;
 import com.google.common.collect.ImmutableList;
@@ -68,20 +69,15 @@ public final class IdeNativeVariantAbiImpl implements IdeNativeVariantAbi, Seria
             @NonNull NativeVariantAbi variantAbi, @NonNull ModelCache modelCache) {
         myBuildFiles = ImmutableList.copyOf(variantAbi.getBuildFiles());
         myArtifacts =
-                IdeModel.copy(
+                copy(
                         variantAbi.getArtifacts(),
-                        modelCache,
                         artifact -> new IdeNativeArtifactImpl(artifact, modelCache));
         myToolChains =
-                IdeModel.copy(
+                copy(
                         variantAbi.getToolChains(),
-                        modelCache,
                         toolchain -> new IdeNativeToolchainImpl(toolchain));
         mySettings =
-                IdeModel.copy(
-                        variantAbi.getSettings(),
-                        modelCache,
-                        settings -> new IdeNativeSettingsImpl(settings));
+                copy(variantAbi.getSettings(), settings -> new IdeNativeSettingsImpl(settings));
         myFileExtensions = ImmutableMap.copyOf(variantAbi.getFileExtensions());
         myVariantName = variantAbi.getVariantName();
         myAbi = variantAbi.getAbi();

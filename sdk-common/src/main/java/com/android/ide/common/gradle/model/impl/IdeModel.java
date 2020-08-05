@@ -74,35 +74,6 @@ public class IdeModel {
     }
 
     @NonNull
-    public static <K, V> List<V> copy(
-            @NonNull Collection<K> original,
-            @NonNull ModelCache modelCache,
-            @NonNull Function<K, V> mapper) {
-        if (original.isEmpty()) {
-            return Collections.emptyList();
-        }
-        ImmutableList.Builder<V> copies = ImmutableList.builder();
-        for (K item : original) {
-            V copy = modelCache.computeIfAbsent(item, mapper);
-            copies.add(copy);
-        }
-        return copies.build();
-    }
-
-    @NonNull
-    public static <K, V> List<V> copy(
-            @NonNull Supplier<Collection<K>> propertyInvoker,
-            @NonNull ModelCache modelCache,
-            @NonNull Function<K, V> mapper) {
-
-        try {
-            return copy(propertyInvoker.get(), modelCache, mapper);
-        } catch (UnsupportedOperationException ignored) {
-            return Collections.emptyList();
-        }
-    }
-
-    @NonNull
     public static <K, V, R> Map<K, R> copy(
             @NonNull Map<K, V> original,
             @NonNull ModelCache modelCache,

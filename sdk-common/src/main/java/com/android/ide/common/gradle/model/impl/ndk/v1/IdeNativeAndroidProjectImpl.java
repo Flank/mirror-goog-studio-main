@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.gradle.model.impl.ndk.v1;
 
+import static com.android.ide.common.gradle.model.impl.ModelCache.copy;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.NativeAndroidProject;
@@ -85,20 +87,12 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
         myBuildFiles = ImmutableList.copyOf(project.getBuildFiles());
         myVariantInfos = copyVariantInfos(project, modelCache);
         myArtifacts =
-                IdeModel.copy(
+                copy(
                         project.getArtifacts(),
-                        modelCache,
                         artifact -> new IdeNativeArtifactImpl(artifact, modelCache));
         myToolChains =
-                IdeModel.copy(
-                        project.getToolChains(),
-                        modelCache,
-                        toolchain -> new IdeNativeToolchainImpl(toolchain));
-        mySettings =
-                IdeModel.copy(
-                        project.getSettings(),
-                        modelCache,
-                        settings -> new IdeNativeSettingsImpl(settings));
+                copy(project.getToolChains(), toolchain -> new IdeNativeToolchainImpl(toolchain));
+        mySettings = copy(project.getSettings(), settings -> new IdeNativeSettingsImpl(settings));
         myFileExtensions = ImmutableMap.copyOf(project.getFileExtensions());
         myDefaultNdkVersion = copyDefaultNdkVersion(project);
         myBuildSystems = copyBuildSystems(project);

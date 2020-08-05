@@ -74,13 +74,6 @@ public class IdeModelTest {
     }
 
     @Test
-    public void copyCollection() {
-        List<String> original = Arrays.asList("One", "Two", "Three");
-        List<String> copy = IdeModel.copy(original, myModelCache, s -> s + "_copied");
-        assertThat(copy).containsExactly("One_copied", "Two_copied", "Three_copied");
-    }
-
-    @Test
     public void copyMap() {
         Map<String, String> original = new HashMap<>();
         original.put("1", "One");

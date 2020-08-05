@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.gradle.model.impl.ndk.v1;
 
+import static com.android.ide.common.gradle.model.impl.ModelCache.copy;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.NativeArtifact;
@@ -60,9 +62,7 @@ public final class IdeNativeArtifactImpl implements IdeNativeArtifact, Serializa
         myName = artifact.getName();
         myToolChain = artifact.getToolChain();
         myGroupName = artifact.getGroupName();
-        mySourceFiles =
-                IdeModel.copy(
-                        artifact.getSourceFiles(), modelCache, file -> new IdeNativeFileImpl(file));
+        mySourceFiles = copy(artifact.getSourceFiles(), file -> new IdeNativeFileImpl(file));
         myExportedHeaders = ImmutableList.copyOf(artifact.getExportedHeaders());
         myAbi = IdeModel.copyNewProperty(artifact::getAbi, null);
         myTargetName = IdeModel.copyNewProperty(artifact::getTargetName, null);

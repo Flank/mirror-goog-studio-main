@@ -26,6 +26,7 @@ import com.android.ide.common.gradle.model.IdeJavaArtifact
 import com.android.ide.common.gradle.model.IdeProductFlavor
 import com.android.ide.common.gradle.model.IdeTestedTargetVariant
 import com.android.ide.common.gradle.model.IdeVariant
+import com.android.ide.common.gradle.model.impl.ModelCache.copy
 import com.android.ide.common.repository.GradleVersion
 import com.google.common.collect.ImmutableList
 import java.io.Serializable
@@ -123,7 +124,7 @@ class IdeVariantImpl(
     private const val serialVersionUID = 4L
     private fun getTestedTargetVariants(variant: Variant, modelCache: ModelCache): List<IdeTestedTargetVariantImpl> {
       return try {
-        IdeModel.copy(variant.testedTargetVariants, modelCache) { targetVariant: TestedTargetVariant ->
+        copy(variant.testedTargetVariants) { targetVariant: TestedTargetVariant ->
           IdeTestedTargetVariantImpl(targetVariant.targetProjectPath, targetVariant.targetVariant)
         }
       }
@@ -146,11 +147,11 @@ class IdeVariantImpl(
           ModelCache.androidArtifactFrom(artifact, modelCache,
                                          dependenciesFactory, modelVersion)
         },
-        extraAndroidArtifacts = IdeModel.copy(variant.extraAndroidArtifacts, modelCache) { artifact: AndroidArtifact ->
+        extraAndroidArtifacts = copy(variant.extraAndroidArtifacts) { artifact: AndroidArtifact ->
           ModelCache.androidArtifactFrom(artifact, modelCache,
                                          dependenciesFactory, modelVersion)
         },
-        extraJavaArtifacts = IdeModel.copy(variant.extraJavaArtifacts, modelCache) { artifact: JavaArtifact ->
+        extraJavaArtifacts = copy(variant.extraJavaArtifacts) { artifact: JavaArtifact ->
           ModelCache.javaArtifactFrom(artifact, modelCache, dependenciesFactory)
         },
         buildType = variant.buildType,
