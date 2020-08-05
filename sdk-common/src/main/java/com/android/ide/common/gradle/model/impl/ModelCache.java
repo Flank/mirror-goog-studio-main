@@ -509,7 +509,7 @@ public class ModelCache {
         return new IdeBuildTypeContainerImpl(
                 modelCache.computeIfAbsent(
                         container.getBuildType(),
-                        buildType -> buildTypeFrom(buildType, modelCache)),
+                        buildType -> buildTypeFrom(buildType)),
                 modelCache.computeIfAbsent(
                         container.getSourceProvider(),
                         provider ->
@@ -521,12 +521,11 @@ public class ModelCache {
                                 sourceProviderContainerFrom(sourceProviderContainer, modelCache)));
     }
 
-    public static IdeBuildTypeImpl buildTypeFrom(@NonNull BuildType buildType, @NonNull ModelCache modelCache) {
+    public static IdeBuildTypeImpl buildTypeFrom(@NonNull BuildType buildType) {
         return new IdeBuildTypeImpl(
                 buildType.getName(),
-                IdeModel.copy(
+                copy(
                         buildType.getResValues(),
-                        modelCache,
                         classField -> classFieldFrom(classField)),
                 ImmutableList.copyOf(buildType.getProguardFiles()),
                 ImmutableList.copyOf(buildType.getConsumerProguardFiles()),
@@ -657,9 +656,8 @@ public class ModelCache {
     public static IdeProductFlavorImpl productFlavorFrom(@NonNull ProductFlavor flavor, @NonNull ModelCache modelCache) {
         return new IdeProductFlavorImpl(
                 flavor.getName(),
-                IdeModel.copy(
+                copy(
                         flavor.getResValues(),
-                        modelCache,
                         classField -> classFieldFrom(classField)),
                 ImmutableList.copyOf(flavor.getProguardFiles()),
                 ImmutableList.copyOf(flavor.getConsumerProguardFiles()),
@@ -754,7 +752,7 @@ public class ModelCache {
 
     @NonNull
     public static <K, V> List<V> copy(
-            @NonNull Collection<K> original, @NonNull Function<K, V> mapper) {
+      @NonNull Collection<K> original, @NonNull Function<K, V> mapper) {
         if (original.isEmpty()) {
             return Collections.emptyList();
         }
@@ -762,6 +760,18 @@ public class ModelCache {
         for (K item : original) {
             copies.add(mapper.apply(item));
         }
+        return copies.build();
+    }
+
+    @NonNull
+    public static <K, V, R> Map<K, R> copy(
+      @NonNull Map<K, V> original,
+      @NonNull Function<V, R> mapper) {
+        if (original.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        ImmutableMap.Builder<K, R> copies = ImmutableMap.builder();
+        original.forEach((k, v) -> copies.put(k, mapper.apply(v)));
         return copies.build();
     }
 }

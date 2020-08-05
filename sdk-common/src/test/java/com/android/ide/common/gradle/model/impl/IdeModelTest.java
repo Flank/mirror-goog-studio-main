@@ -74,18 +74,6 @@ public class IdeModelTest {
     }
 
     @Test
-    public void copyMap() {
-        Map<String, String> original = new HashMap<>();
-        original.put("1", "One");
-        original.put("2", "Two");
-        original.put("3", "Three");
-        Map<String, String> copy = IdeModel.copy(original, myModelCache, s -> s + "_copied");
-        assertThat(copy).containsEntry("1", "One_copied");
-        assertThat(copy).containsEntry("2", "Two_copied");
-        assertThat(copy).containsEntry("3", "Three_copied");
-    }
-
-    @Test
     public void copyStringSet() {
         Set<String> original = Sets.newHashSet("1", "2", "3");
         Set<String> copy = IdeModel.copy(original);

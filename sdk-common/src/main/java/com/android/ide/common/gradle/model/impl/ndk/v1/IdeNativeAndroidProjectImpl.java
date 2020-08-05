@@ -85,11 +85,11 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
         myApiVersion = project.getApiVersion();
         myName = project.getName();
         myBuildFiles = ImmutableList.copyOf(project.getBuildFiles());
-        myVariantInfos = copyVariantInfos(project, modelCache);
+        myVariantInfos = copyVariantInfos(project);
         myArtifacts =
-                copy(
-                        project.getArtifacts(),
-                        artifact -> new IdeNativeArtifactImpl(artifact, modelCache));
+          copy(
+            project.getArtifacts(),
+            artifact -> new IdeNativeArtifactImpl(artifact, modelCache));
         myToolChains =
                 copy(project.getToolChains(), toolchain -> new IdeNativeToolchainImpl(toolchain));
         mySettings = copy(project.getSettings(), settings -> new IdeNativeSettingsImpl(settings));
@@ -100,19 +100,17 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
     }
 
     @NonNull
-    private static Map<String, NativeVariantInfo> copyVariantInfos(
-            @NonNull NativeAndroidProject project, @NonNull ModelCache modelCache) {
+    private static Map<String, NativeVariantInfo> copyVariantInfos(@NonNull NativeAndroidProject project) {
         try {
-            return IdeModel.copy(
-                    project.getVariantInfos(),
-                    modelCache,
-                    variantInfo ->
-                            new IdeNativeVariantInfoImpl(
-                                    variantInfo.getAbiNames(),
-                                    Objects.requireNonNull(
-                                            IdeModel.copyNewProperty(
-                                                    () -> variantInfo.getBuildRootFolderMap(),
-                                                    Collections.emptyMap()))));
+            return copy(
+              project.getVariantInfos(),
+              variantInfo ->
+                new IdeNativeVariantInfoImpl(
+                  variantInfo.getAbiNames(),
+                  Objects.requireNonNull(
+                    IdeModel.copyNewProperty(
+                      () -> variantInfo.getBuildRootFolderMap(),
+                      Collections.emptyMap()))));
         } catch (UnsupportedOperationException e) {
             return Maps.newHashMap();
         }

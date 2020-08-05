@@ -73,23 +73,6 @@ public class IdeModel {
         }
     }
 
-    @NonNull
-    public static <K, V, R> Map<K, R> copy(
-            @NonNull Map<K, V> original,
-            @NonNull ModelCache modelCache,
-            @NonNull Function<V, R> mapper) {
-        if (original.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        ImmutableMap.Builder<K, R> copies = ImmutableMap.builder();
-        original.forEach(
-                (k, v) -> {
-                    R copy = modelCache.computeIfAbsent(v, mapper);
-                    copies.put(k, copy);
-                });
-        return copies.build();
-    }
-
     @Nullable
     public static Set<String> copy(@Nullable Set<String> original) {
         return original != null ? ImmutableSet.copyOf(original) : null;
