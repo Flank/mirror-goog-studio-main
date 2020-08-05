@@ -19,7 +19,6 @@ import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.Dependencies
 import com.android.builder.model.JavaLibrary
 import com.android.builder.model.Library
-import com.android.builder.model.MavenCoordinates
 import com.android.ide.common.gradle.model.IdeMavenCoordinates
 import com.android.utils.FileUtils
 import java.io.File
@@ -44,7 +43,7 @@ object IdeLibraries {
             // getProject() isn't available for pre-2.0 plugins. Proceed with MavenCoordinates.
             // Anyway pre-2.0 plugins don't have variant information for module dependency.
         }
-        val coordinate: IdeMavenCoordinates = computeResolvedCoordinate(library, ModelCache())
+        val coordinate: IdeMavenCoordinates = computeResolvedCoordinate(library)
         var artifactId = coordinate.artifactId
         if (artifactId.startsWith(":")) {
             artifactId = artifactId.substring(1)
@@ -83,16 +82,11 @@ object IdeLibraries {
                 && !FileUtils.isFileInDirectory(androidLibrary.bundle, buildFolderPath))
     }
 
-    fun computeResolvedCoordinate(
-        library: Library,
-        modelCache: ModelCache
-    ): IdeMavenCoordinatesImpl {
+    private fun computeResolvedCoordinate(library: Library): IdeMavenCoordinatesImpl {
         // Although getResolvedCoordinates is annotated with @NonNull, it can return null for plugin 1.5,
         // when the library dependency is from local jar.
         return if (library.resolvedCoordinates != null) {
-            modelCache.computeIfAbsent(
-                library.resolvedCoordinates,
-                { coordinates: MavenCoordinates -> ModelCache.mavenCoordinatesFrom(coordinates) })
+            ModelCache.mavenCoordinatesFrom(library.resolvedCoordinates)
         } else {
             val jarFile: File =
                 if (library is JavaLibrary) {
