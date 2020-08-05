@@ -21,10 +21,6 @@ import com.android.builder.model.Dependencies
 import com.android.builder.model.JavaLibrary
 import com.android.ide.common.gradle.model.IdeDependencies
 import com.android.ide.common.gradle.model.IdeLibrary
-import com.android.ide.common.gradle.model.impl.BuildFolderPaths
-import com.android.ide.common.gradle.model.impl.IdeDependenciesImpl
-import com.android.ide.common.gradle.model.impl.IdeLibraries
-import com.android.ide.common.gradle.model.impl.IdeLibraryFactory
 import com.google.common.collect.ImmutableList
 import java.io.File
 
@@ -88,7 +84,7 @@ class IdeDependenciesFactory {
           createModuleLibrary(
             visited,
             identifier.projectPath,
-            IdeLibraries.computeAddress(identifier),
+            IdeLibraryFactory.computeAddress(identifier),
             identifier.buildId)
         }
       }
@@ -118,7 +114,7 @@ class IdeDependenciesFactory {
       visited: MutableSet<String>
     ) {
       for (androidLibrary in androidLibraries) {
-        val address = IdeLibraries.computeAddress(androidLibrary)
+        val address = IdeLibraryFactory.computeAddress(androidLibrary)
         if (!visited.contains(address)) {
           visited.add(address)
           librariesById.computeIfAbsent(address) { libraryFactory.create(androidLibrary, buildFolderPaths) }
@@ -141,7 +137,7 @@ class IdeDependenciesFactory {
       javaLibraries: Collection<JavaLibrary>,
       visited: MutableSet<String>) {
       for (javaLibrary in javaLibraries) {
-        val address = IdeLibraries.computeAddress(javaLibrary)
+        val address = IdeLibraryFactory.computeAddress(javaLibrary)
         if (!visited.contains(address)) {
           visited.add(address)
           librariesById.computeIfAbsent(address) { libraryFactory.create(javaLibrary) }

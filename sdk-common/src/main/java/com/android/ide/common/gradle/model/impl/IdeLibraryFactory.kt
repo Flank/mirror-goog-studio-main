@@ -17,8 +17,12 @@ package com.android.ide.common.gradle.model.impl
 
 import com.android.SdkConstants
 import com.android.builder.model.AndroidLibrary
+import com.android.builder.model.Dependencies
 import com.android.builder.model.JavaLibrary
+import com.android.builder.model.Library
 import com.android.ide.common.gradle.model.IdeLibrary
+import com.android.ide.common.gradle.model.IdeMavenCoordinates
+import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import java.io.File
 
@@ -44,12 +48,12 @@ class IdeLibraryFactory {
     // In AndroidLibrary, getProject() of such dependency returns non-null project name, but they should be converted to IdeLevel2AndroidLibrary.
     // Identify such case with the location of aar bundle.
     // If the aar bundle is inside of build directory of sub-module, then it's regular library module dependency, otherwise it's a wrapped aar module.
-    return if (androidLibrary.project != null && !IdeLibraries.isLocalAarModule(androidLibrary, moduleBuildDirs)) {
-      createIdeModuleLibrary(androidLibrary, IdeLibraries.computeAddress(androidLibrary))
+    return if (androidLibrary.project != null && !isLocalAarModule(androidLibrary, moduleBuildDirs)) {
+      createIdeModuleLibrary(androidLibrary, computeAddress(androidLibrary))
     }
     else {
       val core = IdeAndroidLibraryCore.create(
-        artifactAddress = IdeLibraries.computeAddress(androidLibrary),
+        artifactAddress = computeAddress(androidLibrary),
         folder = androidLibrary.folder,
         manifest = androidLibrary.manifest.path,
         jarFile = androidLibrary.jarFile.path,
@@ -87,11 +91,11 @@ class IdeLibraryFactory {
       { javaLibrary.project }, null)
     return if (project != null) {
       // Java modules don't have variant.
-      createIdeModuleLibrary(javaLibrary, IdeLibraries.computeAddress(javaLibrary))
+      createIdeModuleLibrary(javaLibrary, computeAddress(javaLibrary))
     }
     else {
       val core = IdeJavaLibraryCore(
-        artifactAddress = IdeLibraries.computeAddress(javaLibrary),
+        artifactAddress = computeAddress(javaLibrary),
         artifact = javaLibrary.jarFile
       )
       val isProvided = defaultValueIfNotPresent(
@@ -151,6 +155,83 @@ class IdeLibraryFactory {
       }
       catch (ignored: UnsupportedOperationException) {
         defaultValue
+      }
+    }
+
+    /**
+     * @param library Instance of level 1 Library.
+     * @return The artifact address that can be used as unique identifier in global library map.
+     */
+    fun computeAddress(library: Library): String {
+      // If the library is an android module dependency, use projectId:projectPath::variant as unique identifier.
+      // MavenCoordinates cannot be used because it doesn't contain variant information, which results
+      // in the same MavenCoordinates for different variants of the same module.
+      try {
+        if (library.project != null && library is AndroidLibrary) {
+          return ((IdeModel.copyNewProperty({ library.getBuildId() }, "")).orEmpty()
+                  + library.getProject()
+                  + "::"
+                  + library.projectVariant)
+        }
+      }
+      catch (ex: UnsupportedOperationException) {
+        // getProject() isn't available for pre-2.0 plugins. Proceed with MavenCoordinates.
+        // Anyway pre-2.0 plugins don't have variant information for module dependency.
+      }
+      val coordinate: IdeMavenCoordinates = computeResolvedCoordinate(library)
+      var artifactId = coordinate.artifactId
+      if (artifactId.startsWith(":")) {
+        artifactId = artifactId.substring(1)
+      }
+      artifactId = artifactId.replace(':', '.')
+      var address = coordinate.groupId + ":" + artifactId + ":" + coordinate.version
+      val classifier = coordinate.classifier
+      if (classifier != null) {
+        address = "$address:$classifier"
+      }
+      val packaging = coordinate.packaging
+      address = "$address@$packaging"
+      return address
+    }
+
+    /**
+     * @param projectIdentifier Instance of ProjectIdentifier.
+     * @return The artifact address that can be used as unique identifier in global library map.
+     */
+    fun computeAddress(projectIdentifier: Dependencies.ProjectIdentifier): String {
+      return projectIdentifier.buildId + "@@" + projectIdentifier.projectPath
+    }
+
+    /** Indicates whether the given library is a module wrapping an AAR file.  */
+    fun isLocalAarModule(
+      androidLibrary: AndroidLibrary,
+      buildFolderPaths: BuildFolderPaths
+    ): Boolean {
+      val projectPath = androidLibrary.project ?: return false
+      val buildFolderPath = buildFolderPaths.findBuildFolderPath(
+        projectPath,
+        IdeModel.copyNewProperty({ androidLibrary.buildId }, null)
+      )
+      // If the aar bundle is inside of build directory, then it's a regular library module dependency, otherwise it's a wrapped aar module.
+      return (buildFolderPath != null
+              && !FileUtils.isFileInDirectory(androidLibrary.bundle, buildFolderPath))
+    }
+
+    private fun computeResolvedCoordinate(library: Library): IdeMavenCoordinatesImpl {
+      // Although getResolvedCoordinates is annotated with @NonNull, it can return null for plugin 1.5,
+      // when the library dependency is from local jar.
+      return if (library.resolvedCoordinates != null) {
+        ModelCache.mavenCoordinatesFrom(library.resolvedCoordinates)
+      }
+      else {
+        val jarFile: File =
+          if (library is JavaLibrary) {
+            library.jarFile
+          }
+          else {
+            (library as AndroidLibrary).bundle
+          }
+        ModelCache.mavenCoordinatesFrom(jarFile)
       }
     }
   }
