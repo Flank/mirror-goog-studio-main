@@ -16,11 +16,6 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.dsl.DexPackagingOptions
-import com.android.build.api.dsl.JniLibsPackagingOptions
-import com.android.build.api.dsl.ResourcesPackagingOptions
-import com.android.build.gradle.internal.packaging.defaultExcludes
-import com.android.build.gradle.internal.packaging.defaultMerges
 
 /**
  * DSL object for configuring APK packaging options.
@@ -142,7 +137,54 @@ import com.android.build.gradle.internal.packaging.defaultMerges
 open class PackagingOptions : com.android.builder.model.PackagingOptions,
     com.android.build.api.dsl.PackagingOptions {
 
-    override val excludes: MutableSet<String> = defaultExcludes.toMutableSet()
+    override val excludes: MutableSet<String> = mutableSetOf(
+        // ATTENTION - keep this in sync with JavaDoc above.
+        "/META-INF/LICENSE",
+        "/META-INF/LICENSE.txt",
+        "/META-INF/MANIFEST.MF",
+        "/META-INF/NOTICE",
+        "/META-INF/NOTICE.txt",
+        "/META-INF/*.DSA",
+        "/META-INF/*.EC",
+        "/META-INF/*.SF",
+        "/META-INF/*.RSA",
+        "/META-INF/maven/**",
+        "/META-INF/proguard/*",
+        "/META-INF/com.android.tools/**",
+        "/NOTICE",
+        "/NOTICE.txt",
+        "/LICENSE.txt",
+        "/LICENSE",
+
+        // Exclude version control folders.
+        "**/.svn/**",
+        "**/CVS/**",
+        "**/SCCS/**",
+
+        // Exclude hidden and backup files.
+        "**/.*/**",
+        "**/.*",
+        "**/*~",
+
+        // Exclude index files
+        "**/thumbs.db",
+        "**/picasa.ini",
+
+        // Exclude javadoc files
+        "**/about.html",
+        "**/package.html",
+        "**/overview.html",
+
+        // Exclude protobuf metadata files
+        "**/protobuf.meta",
+
+        // Exclude stuff for unknown reasons
+        "**/_*",
+        "**/_*/**",
+
+        // Exclude kotlin metadata files
+        "**/*.kotlin_metadata"
+    )
 
     fun setExcludes(patterns: Set<String>) {
         val newExcludes = patterns.toList()
@@ -150,7 +192,7 @@ open class PackagingOptions : com.android.builder.model.PackagingOptions,
         excludes.addAll(newExcludes)
     }
 
-    fun exclude(pattern: String) {
+    override fun exclude(pattern: String) {
         excludes.add(pattern);
     }
 
@@ -162,11 +204,12 @@ open class PackagingOptions : com.android.builder.model.PackagingOptions,
         pickFirsts.addAll(newPickFirsts)
     }
 
-    fun pickFirst(pattern: String) {
+    override fun pickFirst(pattern: String) {
         pickFirsts.add(pattern);
     }
 
-    override val merges: MutableSet<String> = defaultMerges.toMutableSet()
+    // ATTENTION - keep this in sync with JavaDoc above.
+    override val merges: MutableSet<String> = mutableSetOf("/META-INF/services/**")
 
     fun setMerges(patterns: Set<String>) {
         val newMerges = patterns.toList()
@@ -174,7 +217,7 @@ open class PackagingOptions : com.android.builder.model.PackagingOptions,
         merges.addAll(newMerges)
     }
 
-    fun merge(pattern: String) {
+    override fun merge(pattern: String) {
         merges.add(pattern);
     }
 
@@ -186,25 +229,7 @@ open class PackagingOptions : com.android.builder.model.PackagingOptions,
         doNotStrip.addAll(newDoNotStrip)
     }
 
-    fun doNotStrip(pattern: String) {
+    override fun doNotStrip(pattern: String) {
         doNotStrip.add(pattern);
-    }
-
-    override val dex: DexPackagingOptions = DexPackagingOptionsImpl()
-
-    override fun dex(action: DexPackagingOptions.() -> Unit) {
-        action.invoke(dex)
-    }
-
-    override val jniLibs: JniLibsPackagingOptions = JniLibsPackagingOptionsImpl()
-
-    override fun jniLibs(action: JniLibsPackagingOptions.() -> Unit) {
-        action.invoke(jniLibs)
-    }
-
-    override val resources: ResourcesPackagingOptions = ResourcesPackagingOptionsImpl()
-
-    override fun resources(action: ResourcesPackagingOptions.() -> Unit) {
-        action.invoke(resources)
     }
 }

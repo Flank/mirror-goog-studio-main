@@ -20,21 +20,50 @@ import org.gradle.api.Incubating
 
 @Incubating
 interface PackagingOptions {
-    /** PackagingOptions for dex */
-    val dex: DexPackagingOptions
+    /** The list of excluded paths.*/
+    val excludes: MutableSet<String>
 
-    /** PackagingOptions for dex */
-    fun dex(action: DexPackagingOptions.() -> Unit)
+    /**
+     * The list of patterns where the first occurrence is packaged in the APK. First pick patterns
+     * do get packaged in the APK, but only the first occurrence found gets packaged.
+     */
+    val pickFirsts: MutableSet<String>
 
-    /** PackagingOptions for jniLibs */
-    val jniLibs: JniLibsPackagingOptions
+    /** The list of patterns where all occurrences are concatenated and packaged in the APK. */
+    val merges: MutableSet<String>
 
-    /** PackagingOptions for jniLibs */
-    fun jniLibs(action: JniLibsPackagingOptions.() -> Unit)
+    /**
+     * The list of patterns for native library that should not be stripped of debug symbols.
+     *
+     * Example: `packagingOptions.doNotStrip "*`/`armeabi-v7a/libhello-jni.so"`
+     */
+    val doNotStrip: MutableSet<String>
 
-    /** PackagingOptions for java resources */
-    val resources: ResourcesPackagingOptions
+    /**
+     * Adds an excluded pattern.
+     *
+     * @param pattern the pattern
+     */
+    fun exclude(pattern: String)
 
-    /** PackagingOptions for java resources */
-    fun resources(action: ResourcesPackagingOptions.() -> Unit)
+    /**
+     * Adds a first-pick pattern.
+     *
+     * @param pattern the path to add.
+     */
+    fun pickFirst(pattern: String)
+
+    /**
+     * Adds a merge pattern.
+     *
+     * @param pattern the pattern, as packaged in the APK
+     */
+    fun merge(pattern: String)
+
+    /**
+     * Adds a doNotStrip pattern.
+     *
+     * @param pattern the pattern, as packaged in the APK
+     */
+    fun doNotStrip(pattern: String)
 }
