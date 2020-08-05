@@ -16,23 +16,22 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.component.TestComponentProperties
-import com.android.build.api.variant.VariantProperties
+import com.android.build.api.artifact.Artifact
+import com.android.build.api.artifact.CombiningOperationRequest
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.model.ObjectFactory
+import org.gradle.api.file.FileSystemLocation
+import javax.inject.Inject
 
-open abstract class AnalyticsEnabledTestComponentProperties(
-    override val delegate: TestComponentProperties,
-    stats: GradleBuildVariant.Builder,
-    objectFactory: ObjectFactory
-) : AnalyticsEnabledComponentProperties(
-    delegate, stats, objectFactory
-), TestComponentProperties {
-    override val testedVariant: VariantProperties
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.TESTED_VARIANT_VALUE
-            return delegate.testedVariant
-        }
+open class AnalyticsEnabledCombiningOperationRequest<FileTypeT: FileSystemLocation> @Inject constructor(
+    val delegate: CombiningOperationRequest<FileTypeT>,
+    val stats: GradleBuildVariant.Builder
+): CombiningOperationRequest<FileTypeT> {
+    override fun <ArtifactTypeT> toTransform(type: ArtifactTypeT)
+            where ArtifactTypeT : Artifact.MultipleArtifact<FileTypeT>,
+                  ArtifactTypeT : Artifact.Transformable {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.TO_TRANSFORM_COMBINE_VALUE
+        delegate.toTransform(type)
+    }
 }

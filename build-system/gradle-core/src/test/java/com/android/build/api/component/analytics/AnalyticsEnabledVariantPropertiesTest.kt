@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.junit.Before
 import org.junit.Test
@@ -36,13 +37,15 @@ class AnalyticsEnabledVariantPropertiesTest {
     @Mock
     lateinit var delegate: VariantProperties
 
+    @Mock lateinit var objectFactory: ObjectFactory
+
     private val stats = GradleBuildVariant.newBuilder()
     private lateinit var proxy: AnalyticsEnabledVariantProperties
 
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
-        proxy = object: AnalyticsEnabledVariantProperties(delegate, stats) {}
+        proxy = object: AnalyticsEnabledVariantProperties(delegate, stats, objectFactory) {}
     }
 
     @Test

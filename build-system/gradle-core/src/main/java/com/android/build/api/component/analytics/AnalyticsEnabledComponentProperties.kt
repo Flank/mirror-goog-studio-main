@@ -24,16 +24,22 @@ import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.model.ObjectFactory
 
 abstract class AnalyticsEnabledComponentProperties(
     open val delegate: ComponentProperties,
-    val stats: GradleBuildVariant.Builder
+    val stats: GradleBuildVariant.Builder,
+    val objectFactory: ObjectFactory
 ) : ComponentProperties {
     override val artifacts: Artifacts
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.ARTIFACTS_VALUE
-            return delegate.artifacts
+            return objectFactory.newInstance(
+                AnalyticsEnabledArtifacts::class.java,
+                delegate.artifacts,
+                stats,
+                objectFactory)
         }
 
     override fun <ParamT : InstrumentationParameters> transformClassesWith(

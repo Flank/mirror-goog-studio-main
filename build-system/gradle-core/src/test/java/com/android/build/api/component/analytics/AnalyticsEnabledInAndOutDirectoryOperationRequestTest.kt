@@ -16,55 +16,53 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.AaptOptions
-import com.android.build.api.variant.DynamicFeatureVariantProperties
-import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.InAndOutDirectoryOperationRequest
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.Task
+
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 
-class AnalyticsEnabledDynamicFeatureVariantPropertiesTest {
+class AnalyticsEnabledInAndOutDirectoryOperationRequestTest {
     @Mock
-    lateinit var delegate: DynamicFeatureVariantProperties
+    lateinit var delegate: InAndOutDirectoryOperationRequest<Task>
 
     private val stats = GradleBuildVariant.newBuilder()
-    private lateinit var proxy: AnalyticsEnabledDynamicFeatureVariantProperties
+    private lateinit var proxy: AnalyticsEnabledInAndOutDirectoryOperationRequest<Task>
 
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
-        proxy = AnalyticsEnabledDynamicFeatureVariantProperties(delegate, stats, FakeObjectFactory.factory)
+        proxy = AnalyticsEnabledInAndOutDirectoryOperationRequest(delegate, stats)
     }
 
     @Test
-    fun getAaptOptions() {
-        val aaptOptions = Mockito.mock(AaptOptions::class.java)
-        Mockito.`when`(delegate.aaptOptions).thenReturn(aaptOptions)
-        Truth.assertThat(proxy.aaptOptions).isEqualTo(aaptOptions)
+    fun toTransform() {
+        proxy.toTransform(ArtifactType.APK)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.AAPT_OPTIONS_VALUE)
+        ).isEqualTo(VariantPropertiesMethodType.TO_TRANSFORM_DIRECTORY_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
-            .aaptOptions
+            .toTransform(ArtifactType.APK)
     }
 
     @Test
-    fun aaptOptionsAction() {
-        val function = { param : AaptOptions -> println(param) }
-        proxy.aaptOptions(function)
+    fun toTransformMany() {
+        proxy.toTransformMany(ArtifactType.APK)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.AAPT_OPTIONS_ACTION_VALUE)
+        ).isEqualTo(VariantPropertiesMethodType.TO_TRANSFORM_MANY_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
-            .aaptOptions(function)
+            .toTransformMany(ArtifactType.APK)
     }
 }

@@ -64,6 +64,7 @@ android {
 
 import javax.inject.Inject
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.BuiltArtifactsLoader
@@ -73,7 +74,6 @@ import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.build.gradle.internal.workeractions.WorkActionAdapter
 import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters
 
-import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
@@ -94,7 +94,7 @@ abstract class ProducerTask extends DefaultTask {
 
       new BuiltArtifactsImpl(
         BuiltArtifacts.METADATA_FILE_VERSION,
-        InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE,
+        ArtifactType.APK.INSTANCE,
         "com.android.test",
         getVariantName().get(),
         [
@@ -132,7 +132,7 @@ abstract class ConsumerTask extends BaseTask {
     private final WorkerExecutor workerExecutor
 
     @InputFiles
-    abstract DirectoryProperty getCompatibleManifests()
+    abstract DirectoryProperty getInputDir()
 
     @OutputDirectory
     abstract DirectoryProperty getOutputDir()
@@ -208,26 +208,24 @@ android.onVariantProperties {
 
   it.artifacts.use(outputTask)
         .wiredWith({ it.getOutputDir() })
-        .toCreate(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE)
+        .toCreate(ArtifactType.APK.INSTANCE)
 
   TaskProvider consumerTask = tasks.register(it.getName() + 'ConsumerTask', ConsumerTask)
-  ArtifactTransformationRequest replacementRequest = ((ArtifactsImpl) it.artifacts).use(consumerTask)
+  ArtifactTransformationRequest replacementRequest = it.artifacts.use(consumerTask)
     .wiredWithDirectories(
-        { it.getCompatibleManifests() },
+        { it.getInputDir() },
         { it.getOutputDir() }
     )
-    .toTransformMany(
-        InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE, 
-        InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
-        null)
+    .toTransformMany(ArtifactType.APK.INSTANCE)
 
   consumerTask.configure { task ->
     task.replacementRequest = replacementRequest
+    task.getOutputDir().set(new File(project.layout.buildDir.getAsFile().get(), "build/acme_apks"))
   }
-
+  
   tasks.register(it.getName() + 'Verifier', VerifierTask) { task ->
     task.getInputDir().set(
-      it.artifacts.get(InternalArtifactType.MERGED_MANIFESTS.INSTANCE)
+      it.artifacts.get(ArtifactType.APK.INSTANCE)
     )
     task.getArtifactsLoader().set(it.artifacts.getBuiltArtifactsLoader())
   }

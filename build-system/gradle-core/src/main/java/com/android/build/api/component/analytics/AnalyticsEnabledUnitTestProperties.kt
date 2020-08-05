@@ -18,9 +18,11 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.component.UnitTestProperties
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.model.ObjectFactory
 import javax.inject.Inject
 
 open class AnalyticsEnabledUnitTestProperties @Inject constructor(
     override val delegate: UnitTestProperties,
-    stats: GradleBuildVariant.Builder
-) : AnalyticsEnabledTestComponentProperties(delegate, stats), UnitTestProperties
+    stats: GradleBuildVariant.Builder,
+    objectFactory: ObjectFactory
+) : AnalyticsEnabledTestComponentProperties(delegate, stats, objectFactory), UnitTestProperties

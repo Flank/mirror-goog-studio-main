@@ -20,14 +20,16 @@ import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.TestVariantProperties
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class AnalyticsEnabledTestVariantProperties @Inject constructor(
     override val delegate: TestVariantProperties,
-    stats: GradleBuildVariant.Builder
-): AnalyticsEnabledVariantProperties(delegate, stats), TestVariantProperties {
+    stats: GradleBuildVariant.Builder,
+    objectFactory: ObjectFactory
+): AnalyticsEnabledVariantProperties(delegate, stats, objectFactory), TestVariantProperties {
     override val applicationId: Property<String>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =

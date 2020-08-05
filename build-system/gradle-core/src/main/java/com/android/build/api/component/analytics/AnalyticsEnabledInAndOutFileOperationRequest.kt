@@ -16,23 +16,22 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.component.TestComponentProperties
-import com.android.build.api.variant.VariantProperties
+import com.android.build.api.artifact.Artifact
+import com.android.build.api.artifact.InAndOutFileOperationRequest
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.model.ObjectFactory
+import org.gradle.api.file.RegularFile
+import javax.inject.Inject
 
-open abstract class AnalyticsEnabledTestComponentProperties(
-    override val delegate: TestComponentProperties,
-    stats: GradleBuildVariant.Builder,
-    objectFactory: ObjectFactory
-) : AnalyticsEnabledComponentProperties(
-    delegate, stats, objectFactory
-), TestComponentProperties {
-    override val testedVariant: VariantProperties
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.TESTED_VARIANT_VALUE
-            return delegate.testedVariant
-        }
+open class AnalyticsEnabledInAndOutFileOperationRequest @Inject constructor(
+    val delegate: InAndOutFileOperationRequest,
+    val stats: GradleBuildVariant.Builder
+): InAndOutFileOperationRequest {
+    override fun <ArtifactTypeT> toTransform(type: ArtifactTypeT)
+            where ArtifactTypeT : Artifact.SingleArtifact<RegularFile>,
+                  ArtifactTypeT : Artifact.Transformable {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.TO_TRANSFORM_FILE_VALUE
+        delegate.toTransform(type)
+    }
 }

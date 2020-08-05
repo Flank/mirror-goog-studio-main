@@ -23,6 +23,7 @@ import com.android.build.api.variant.PackagingOptions
 import com.android.build.api.variant.SigningConfig
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -31,9 +32,10 @@ import javax.inject.Inject
 
 open class AnalyticsEnabledAndroidTestProperties @Inject constructor(
     override val delegate: AndroidTestProperties,
-    stats: GradleBuildVariant.Builder
+    stats: GradleBuildVariant.Builder,
+    objectFactory: ObjectFactory
 ) : AnalyticsEnabledTestComponentProperties(
-    delegate, stats
+    delegate, stats, objectFactory
 ), AndroidTestProperties {
     override val applicationId: Property<String>
         get() {

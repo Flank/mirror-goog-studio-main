@@ -21,6 +21,7 @@ import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -42,7 +43,7 @@ class AnalyticsEnabledComponentPropertiesTest {
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
-        proxy = object: AnalyticsEnabledComponentProperties(delegate, stats) {}
+        proxy = object: AnalyticsEnabledComponentProperties(delegate, stats, FakeObjectFactory.factory) {}
     }
 
     abstract class MockedVisitor : AsmClassVisitorFactory<InstrumentationParameters>

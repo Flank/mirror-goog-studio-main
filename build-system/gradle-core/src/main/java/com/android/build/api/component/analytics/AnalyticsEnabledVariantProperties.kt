@@ -21,14 +21,16 @@ import com.android.build.api.variant.PackagingOptions
 import com.android.build.api.variant.VariantProperties
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 import java.io.Serializable
 
 abstract class AnalyticsEnabledVariantProperties (
     override val delegate: VariantProperties,
-    stats: GradleBuildVariant.Builder
-) : AnalyticsEnabledComponentProperties(delegate, stats), VariantProperties {
+    stats: GradleBuildVariant.Builder,
+    objectFactory: ObjectFactory
+) : AnalyticsEnabledComponentProperties(delegate, stats, objectFactory), VariantProperties {
     override val applicationId: Provider<String>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =

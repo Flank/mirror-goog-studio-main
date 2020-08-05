@@ -18,6 +18,7 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -37,7 +38,7 @@ class AnalyticsEnabledLibraryVariantPropertiesTest {
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
-        proxy = AnalyticsEnabledLibraryVariantProperties(delegate, stats)
+        proxy = AnalyticsEnabledLibraryVariantProperties(delegate, stats, FakeObjectFactory.factory)
     }
 
     @Test

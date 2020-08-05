@@ -23,14 +23,16 @@ import com.android.build.api.variant.SigningConfig
 import com.android.build.api.variant.VariantOutput
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import javax.inject.Inject
 
 open class AnalyticsEnabledApplicationVariantProperties @Inject constructor(
     override val delegate: ApplicationVariantProperties,
-    stats: GradleBuildVariant.Builder
+    stats: GradleBuildVariant.Builder,
+    objectFactory: ObjectFactory
 ) : AnalyticsEnabledVariantProperties(
-    delegate, stats
+    delegate, stats, objectFactory
 ), ApplicationVariantProperties {
     override val applicationId: Property<String>
         get() {

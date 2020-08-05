@@ -19,14 +19,16 @@ package com.android.build.api.component.analytics
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class AnalyticsEnabledLibraryVariantProperties @Inject constructor(
     override val delegate: LibraryVariantProperties,
-    stats: GradleBuildVariant.Builder
+    stats: GradleBuildVariant.Builder,
+    objectFactory: ObjectFactory
 ) : AnalyticsEnabledVariantProperties(
-    delegate, stats
+    delegate, stats, objectFactory
 ), LibraryVariantProperties {
     override val applicationId: Provider<String>
         get() {
