@@ -24,7 +24,7 @@ namespace deploy {
 
 class ThreadSuspend {
  public:
-  ThreadSuspend(jvmtiEnv* jvmti) : jvmti_(jvmti) {}
+  ThreadSuspend(jvmtiEnv* jvmti, JNIEnv* jni) : jvmti_(jvmti), jni_(jni) {}
 
   std::string SuspendUserThreads();
 
@@ -32,6 +32,7 @@ class ThreadSuspend {
 
  private:
   jvmtiEnv* jvmti_;
+  JNIEnv* jni_;
   std::vector<jthread> suspended_thread_;
 };
 

@@ -307,7 +307,7 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
     // When using SRE, we need to stop the world since many operations must be
     // run in an atomic fashion. e.g: Adding a static variable to a class
     // involves not only redefining a class but also initializing the variable"
-    ThreadSuspend suspend(jvmti_);
+    ThreadSuspend suspend(jvmti_, jni_);
     std::string suspend_error = "";
     suspend_error = suspend.SuspendUserThreads();
 
