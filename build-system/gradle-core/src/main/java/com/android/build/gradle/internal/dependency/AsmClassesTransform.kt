@@ -76,7 +76,6 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
                         parameters.classesHierarchyBuildService.set(
                             getBuildService(creationConfig.services.buildServiceRegistry)
                         )
-                        parameters.variantName.set(creationConfig.name)
                     }
 
                     spec.from.attribute(
@@ -111,18 +110,17 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
         //TODO(b/162813654) record transform execution span
         val inputFile = inputArtifact.get().asFile
 
-        val classesHierarchyData = parameters.classesHierarchyBuildService.get()
-            .getClassesHierarchyData(parameters.projectName.get(), parameters.variantName.get())
-            .apply {
-                addSources(inputArtifact.get().asFile)
-                addSources(classpath.files)
-                addSources(parameters.bootClasspath.files)
-            }
+        val classesHierarchyResolver = parameters.classesHierarchyBuildService.get()
+            .getClassesHierarchyResolverBuilder()
+            .addSources(inputArtifact.get().asFile)
+            .addSources(classpath.files)
+            .addSources(parameters.bootClasspath.files)
+            .build()
 
         AsmInstrumentationManager(
             parameters.visitorsList.get(),
             parameters.asmApiVersion.get(),
-            classesHierarchyData,
+            classesHierarchyResolver,
             parameters.framesComputationMode.get()
         ).instrumentClassesFromJarToJar(
             inputFile,
@@ -145,8 +143,5 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
 
         @get:Internal
         val classesHierarchyBuildService: Property<ClassesHierarchyBuildService>
-
-        @get:Internal
-        val variantName: Property<String>
     }
 }

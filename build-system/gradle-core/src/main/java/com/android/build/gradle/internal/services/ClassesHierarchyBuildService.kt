@@ -16,29 +16,26 @@
 
 package com.android.build.gradle.internal.services
 
-import com.android.build.gradle.internal.instrumentation.ClassesHierarchyData
+import com.android.build.gradle.internal.instrumentation.ClassesDataCache
+import com.android.build.gradle.internal.instrumentation.ClassesHierarchyResolver
 import org.gradle.api.Project
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
-import org.objectweb.asm.Opcodes.ASM7
-import java.io.File
 
 /**
- * A build service for sharing [ClassesHierarchyData] objects between workers of the same variant.
+ * A build service for creating [ClassesHierarchyResolver] objects that share the same cache.
  */
 abstract class ClassesHierarchyBuildService : BuildService<BuildServiceParameters.None>,
     AutoCloseable {
-    private val classesHierarchyDataMap = mutableMapOf<String, ClassesHierarchyData>()
 
-    @Synchronized
-    fun getClassesHierarchyData(projectName: String, variantName: String): ClassesHierarchyData {
-        return classesHierarchyDataMap.computeIfAbsent("$projectName-$variantName") {
-            ClassesHierarchyData(ASM7)
-        }
+    private val classesDataCache = ClassesDataCache()
+
+    fun getClassesHierarchyResolverBuilder(): ClassesHierarchyResolver.Builder {
+        return ClassesHierarchyResolver.Builder(classesDataCache)
     }
 
     override fun close() {
-        classesHierarchyDataMap.clear()
+        classesDataCache.close()
     }
 
     class RegistrationAction(project: Project) :
@@ -46,6 +43,7 @@ abstract class ClassesHierarchyBuildService : BuildService<BuildServiceParameter
             project,
             ClassesHierarchyBuildService::class.java
         ) {
+
         override fun configure(parameters: BuildServiceParameters.None) {
             // do nothing
         }

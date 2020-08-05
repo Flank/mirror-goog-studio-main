@@ -141,18 +141,17 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
     }
 
     private fun getInstrumentationManager(): AsmInstrumentationManager {
-        val classesHierarchyData =
-            classesHierarchyBuildService.get().getClassesHierarchyData(projectName, variantName)
-                .apply {
-                    addSources(inputClassesDir.files)
-                    addSources(inputJarsWithIdentity.inputJars.files)
-                    addSources(runtimeClasspath.files)
-                    addSources(bootClasspath.files)
-                }
+        val classesHierarchyResolver =
+            classesHierarchyBuildService.get().getClassesHierarchyResolverBuilder()
+                .addSources(inputClassesDir.files)
+                .addSources(inputJarsWithIdentity.inputJars.files)
+                .addSources(runtimeClasspath.files)
+                .addSources(bootClasspath.files)
+                .build()
         return AsmInstrumentationManager(
             visitors = visitorsList.get(),
             apiVersion = asmApiVersion.get(),
-            classesHierarchyData = classesHierarchyData,
+            classesHierarchyResolver = classesHierarchyResolver,
             framesComputationMode = framesComputationMode.get()
         )
     }

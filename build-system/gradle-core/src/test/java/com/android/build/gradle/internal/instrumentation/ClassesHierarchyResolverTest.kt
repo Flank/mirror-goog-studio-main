@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.instrumentation
 
 import com.android.testutils.TestInputsGenerator
+import com.android.testutils.TestUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
@@ -24,12 +25,12 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 import java.io.File
 
 @RunWith(Parameterized::class)
-class ClassesHierarchyDataTest(private val testMode: TestMode) {
+class ClassesHierarchyResolverTest(private val testMode: TestMode) {
+
     enum class TestMode {
         DIR,
         JAR
@@ -46,7 +47,9 @@ class ClassesHierarchyDataTest(private val testMode: TestMode) {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
-    private val classesHierarchyData = ClassesHierarchyData(Opcodes.ASM7)
+    private val androidJar = TestUtils.getPlatformFile("android.jar")
+
+    private lateinit var classesHierarchyResolver: ClassesHierarchyResolver
 
     @Before
     fun setUp() {
@@ -61,21 +64,18 @@ class ClassesHierarchyDataTest(private val testMode: TestMode) {
             ClassExtendsAClassThatExtendsAnotherClassAndImplementsTwoInterfaces::class.java
         )
 
+        val builder = ClassesHierarchyResolver.Builder(ClassesDataCache()).addSources(androidJar)
+
         if (testMode == TestMode.DIR) {
             TestInputsGenerator.pathWithClasses(inputDir.toPath(), srcClasses)
-            classesHierarchyData.addSources(inputDir)
+            builder.addSources(inputDir)
         } else {
             val inputJar = File(inputDir, "classes.jar")
             TestInputsGenerator.pathWithClasses(inputJar.toPath(), srcClasses)
-            classesHierarchyData.addSources(inputJar)
+            builder.addSources(inputJar)
         }
 
-        classesHierarchyData.addClass(
-            Type.getInternalName(Object::class.java),
-            emptyList(),
-            null,
-            emptyList()
-        )
+        classesHierarchyResolver = builder.build()
     }
 
     @Test
@@ -131,13 +131,13 @@ class ClassesHierarchyDataTest(private val testMode: TestMode) {
         expectedSuperclasses: List<Class<*>>,
         expectedInterfaces: List<Class<*>>
     ) {
-        assertThat(classesHierarchyData.getAnnotations(Type.getInternalName(clazz))).isEqualTo(
+        assertThat(classesHierarchyResolver.getAnnotations(Type.getInternalName(clazz))).isEqualTo(
             expectedAnnotations.map(Class<*>::getName)
         )
-        assertThat(classesHierarchyData.getAllSuperClasses(Type.getInternalName(clazz))).isEqualTo(
+        assertThat(classesHierarchyResolver.getAllSuperClasses(Type.getInternalName(clazz))).isEqualTo(
             expectedSuperclasses.map(Class<*>::getName)
         )
-        assertThat(classesHierarchyData.getAllInterfaces(Type.getInternalName(clazz))).isEqualTo(
+        assertThat(classesHierarchyResolver.getAllInterfaces(Type.getInternalName(clazz))).isEqualTo(
             expectedInterfaces.map(Class<*>::getName)
         )
     }
