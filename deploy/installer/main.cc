@@ -42,61 +42,50 @@
 
 using namespace deploy;
 
+static const char* kNoValue = "";
+
 struct Parameters {
-  const char* binary_name = nullptr;
-  const char* command_name = nullptr;
-  const char* cmd_path = nullptr;
-  const char* pm_path = nullptr;
-  const char* version = nullptr;
+  const char* binary_name = kNoValue;
+  const char* command_name = kNoValue;
+  const char* cmd_path = kNoValue;
+  const char* pm_path = kNoValue;
+  const char* version = kNoValue;
   int consumed = 0;
 };
 
-std::string GetStringUsage(const char* invoked_path) {
-  std::stringstream buffer;
-  buffer << "Usage:" << std::endl
-         << invoked_path << " [env parameters] command [command_parameters]"
-         << std::endl
-         << std::endl
-         << "Environment parameters available:" << std::endl
-         << "  -cmd=X: Define path to cmd executable (to mock android)."
-         << std::endl
-         << "  -pm=X : Define path to package manager executable (to mock "
-            "android)."
-         << std::endl
-         << "  -version=X : Program will fail if version != X." << std::endl
-         << "Commands available:" << std::endl
-         << "   dump : Extract CDs and Signatures for a given applicationID."
-         << std::endl
-         << "   swap : Perform a hot-swap via JVMTI." << std::endl
-         << std::endl;
-  return buffer.str();
-}
+// In oneShot mode, the installer servers only one request and exists.
+static bool one_shot_mode = false;
+static bool running = true;
 
-bool ParseParameters(int argc, char** argv, Parameters* parameters) {
-  parameters->binary_name = argv[0];
-  parameters->consumed = 1;
+void ProcessRequest(std::unique_ptr<proto::InstallerRequest>, Workspace&);
+
+Parameters ParseArgs(int argc, char** argv) {
+  Parameters parameters;
+  parameters.binary_name = argv[0];
+  parameters.consumed = 1;
 
   int index = 1;
   while (index < argc && argv[index][0] == '-') {
     strtok(argv[index], "=");
     if (!strncmp("-cmd", argv[index], 4)) {
-      parameters->cmd_path = strtok(nullptr, "=");
+      parameters.cmd_path = strtok(nullptr, "=");
     } else if (!strncmp("-pm", argv[index], 3)) {
-      parameters->pm_path = strtok(nullptr, "=");
+      parameters.pm_path = strtok(nullptr, "=");
+    } else if (!strncmp("-oneshot", argv[index], 8)) {
+      one_shot_mode = true;
     } else if (!strncmp("-version", argv[index], 8)) {
-      parameters->version = strtok(nullptr, "=");
-    } else {
-      std::cerr << "environment parameter unknown:" << argv[index] << std::endl;
-      return false;
+      parameters.version = strtok(nullptr, "=");
     }
-    parameters->consumed++;
+    parameters.consumed++;
     index++;
   }
+
   if (index < argc) {
-    parameters->command_name = argv[index];
-    parameters->consumed++;
+    parameters.command_name = argv[index];
+    parameters.consumed++;
   }
-  return true;
+
+  return parameters;
 }
 
 void SendResponse(proto::InstallerResponse* response,
@@ -110,13 +99,12 @@ void SendResponse(proto::InstallerResponse* response,
   workspace.GetOutput().Write(response_string);
 }
 
-int Fail(proto::InstallerResponse::Status status, Workspace& workspace,
+void Fail(proto::InstallerResponse::Status status, Workspace& workspace,
          const std::string& message) {
   proto::InstallerResponse response;
   response.set_status(status);
   ErrEvent(message);
   SendResponse(&response, workspace);
-  return EXIT_FAILURE;
 }
 
 std::string GetVersion() {
@@ -136,58 +124,89 @@ std::string GetVersion() {
   }
 }
 
-int main(int argc, char** argv) {
-  InitEventSystem();
-  BeginPhase("installer");
+std::unique_ptr<proto::InstallerRequest> GetRequestFromFD(int input_fd) {
+  deploy::MessagePipeWrapper wrapper(input_fd);
+  std::string data;
+  if (!wrapper.Read(&data)) {
+    return nullptr;
+  }
+  proto::InstallerRequest* request = new proto::InstallerRequest();
+  if (!request->ParseFromString(data)){
+    return nullptr;
+  }
 
-  ExecutorImpl executor;
-  Workspace workspace(GetVersion(), &executor);
+  std::unique_ptr<proto::InstallerRequest> ptr(request);
+  return ptr;
+}
 
+// Parse commandline parameters and impact workspace accordindly.
+// If a command was requested (e.g: dump packageName), it is converted
+// to a protobuffer InstallerRequest. Otherwise, returns nullptr.
+std::unique_ptr<proto::InstallerRequest> Init(int argc, char** argv,
+                                              Workspace* workspace) {
   // Check and parse parameters
-  if (argc < 2) {
-    std::string message = GetStringUsage(argv[0]);
-    return Fail(proto::InstallerResponse::ERROR_PARAMETER, workspace, message);
+  Parameters parameters = ParseArgs(argc, argv);
+
+  if (parameters.cmd_path != kNoValue) {
+    workspace->SetCmdPath(parameters.cmd_path);
   }
-  Parameters parameters;
-  bool parametersParsed = ParseParameters(argc, argv, &parameters);
-  if (!parametersParsed) {
-    std::string message = GetStringUsage(argv[0]);
-    return Fail(proto::InstallerResponse::ERROR_PARAMETER, workspace, message);
+  if (parameters.pm_path != kNoValue) {
+    workspace->SetPmPath(parameters.pm_path);
   }
-  if (parameters.cmd_path != nullptr) {
-    workspace.SetCmdPath(parameters.cmd_path);
-  }
-  if (parameters.pm_path != nullptr) {
-    workspace.SetPmPath(parameters.pm_path);
-  }
-  RedirectExecutor redirect(Env::shell(), executor);
+  static RedirectExecutor redirect(Env::shell(), workspace->GetExecutor());
   if (Env::IsValid()) {
-    workspace.SetExecutor(&redirect);
+    workspace->SetExecutor(&redirect);
   }
 
-  workspace.Init();
-  // Verify that this program is the version the called expected.
-  if (parameters.version != nullptr &&
-      strcmp(parameters.version, GetVersion().c_str())) {
+  workspace->Init();
+
+  if (parameters.command_name == kNoValue) {
+    return nullptr;
+  }
+
+  // Build a request just so we are compatible with old installer where
+  // version is passed as a command-line parameter to reply with an
+  // ERROR_WRONG_VERSION.
+  proto::InstallerRequest* p = new proto::InstallerRequest();
+  std::unique_ptr<proto::InstallerRequest> request(p);
+  request->set_version(parameters.version);
+  request->set_command_name(parameters.command_name);
+  return request;
+}
+
+void ProcessRequest(std::unique_ptr<proto::InstallerRequest> request,
+                    Workspace& workspace) {
+  ResetEvents();
+  Phase p("Installer request:" + request->command_name());
+
+  if (one_shot_mode) {
+    running = false;
+  }
+  
+  // Verify that this program is the version the caller expected.
+  if (request->version() != GetVersion()) {
     std::string message = "Version mismatch. Requested:"_s +
-                          parameters.version + " but have " + GetVersion();
-    return Fail(proto::InstallerResponse::ERROR_WRONG_VERSION, workspace,
-                message);
+                          request->version() + " but have " + GetVersion();
+    Fail(proto::InstallerResponse::ERROR_WRONG_VERSION, workspace, message);
+    return;
   }
 
   // Retrieve Command to be invoked.
-  auto task = GetCommand(parameters.command_name, workspace);
+  auto task = GetCommand(request->command_name().c_str(), workspace);
   if (task == nullptr) {
-    return Fail(proto::InstallerResponse::ERROR_CMD, workspace,
-                "Unknown command");
+    std::string msg =
+        "Command name '"_s + request->command_name() + "' is unknown";
+    Fail(proto::InstallerResponse::ERROR_CMD, workspace, msg);
+    return;
   }
 
-  // Allow command to parse its parameters and invoke it.
-  task->ParseParameters(argc - parameters.consumed, argv + parameters.consumed);
+  // Check parameters
+  task->ParseParameters(*request);
   if (!task->ReadyToRun()) {
-    std::string message =
-        "Command "_s + parameters.command_name + ": wrong parameters";
-    return Fail(proto::InstallerResponse::ERROR_PARAMETER, workspace, message);
+    std::string msg =
+        "Command '"_s + request->command_name() + "': bad parameters";
+    Fail(proto::InstallerResponse::ERROR_PARAMETER, workspace, msg);
+    return;
   }
 
   // Finally! Run !
@@ -196,5 +215,28 @@ int main(int argc, char** argv) {
   response.set_status(proto::InstallerResponse::OK);
   EndPhase();
   SendResponse(&response, workspace);
+}
+
+int main(int argc, char** argv) {
+  InitEventSystem();
+
+  ExecutorImpl executor;
+  Workspace workspace(GetVersion(), &executor);
+
+  auto request = Init(argc, argv, &workspace);
+
+  if (request != nullptr) {
+    ProcessRequest(std::move(request), workspace);
+  }
+
+  while (running) {
+    // Retrieve request from stdin.
+    auto request = GetRequestFromFD(STDIN_FILENO);
+    if (request == nullptr) {
+      break;
+    }
+    ProcessRequest(std::move(request), workspace);
+  }
+
   return EXIT_SUCCESS;
 }

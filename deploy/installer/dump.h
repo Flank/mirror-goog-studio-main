@@ -28,7 +28,7 @@ class DumpCommand : public Command {
  public:
   DumpCommand(Workspace& workspace) : Command(workspace) {}
   virtual ~DumpCommand() {}
-  virtual void ParseParameters(int argc, char** argv);
+  virtual void ParseParameters(const proto::InstallerRequest& request);
   virtual void Run(proto::InstallerResponse* response);
 
  private:

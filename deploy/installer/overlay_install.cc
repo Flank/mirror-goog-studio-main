@@ -34,16 +34,11 @@ const std::string kInstallServer = "install_server";
 
 namespace deploy {
 
-void OverlayInstallCommand::ParseParameters(int argc, char** argv) {
-  deploy::MessagePipeWrapper wrapper(STDIN_FILENO);
-  std::string data;
-  if (!wrapper.Read(&data)) {
+void OverlayInstallCommand::ParseParameters(const proto::InstallerRequest& request) {
+  if (!request.has_overlay_install()) {
     return;
   }
-
-  if (!request_.ParseFromString(data)) {
-    return;
-  }
+  request_ = request.overlay_install();
 
   ready_to_run_ = true;
 }

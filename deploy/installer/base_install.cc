@@ -29,23 +29,14 @@ namespace deploy {
 deploy::BaseInstallCommand::BaseInstallCommand(Workspace& workspace)
     : Command(workspace) {}
 
-void BaseInstallCommand::ParseParameters(int argc, char** argv) {
-  deploy::MessagePipeWrapper wrapper(STDIN_FILENO);
-  std::string data;
-
-  if (!wrapper.Read(&data)) {
-    ErrEvent("Unable to read data on stdin.");
-    EndPhase();
+void BaseInstallCommand::ParseParameters(
+    const proto::InstallerRequest& request) {
+  if (!request.has_install_info_request()) {
+    ErrEvent("Unable to get install info.");
     return;
   }
 
-  BeginPhase("Parsing input ");
-  if (!install_info_.ParseFromString(data)) {
-    ErrEvent("Unable to parse protobuffer request object.");
-    EndPhase();
-    return;
-  }
-  EndPhase();
+  install_info_ = request.install_info_request();
 
   ready_to_run_ = true;
 }

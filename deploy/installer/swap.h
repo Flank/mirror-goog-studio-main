@@ -33,11 +33,10 @@ class SwapCommand : public Command {
   SwapCommand(Workspace& workspace) : Command(workspace), response_(nullptr) {}
   ~SwapCommand() {}
 
-  void ParseParameters(int argc, char** argv) override;
+  void ParseParameters(const proto::InstallerRequest& request) override;
   void Run(proto::InstallerResponse* response) override;
 
  private:
-  std::string request_bytes_;
   proto::SwapRequest request_;
   std::string target_dir_;
   proto::SwapResponse* response_;

@@ -37,16 +37,13 @@ const int kRxFileMode =
 //   Previous OID
 //   Next OID
 //   Clear Overlays (true/false)
-void OverlayIdPushCommand::ParseParameters(int argc, char** argv) {
-  deploy::MessagePipeWrapper wrapper(STDIN_FILENO);
-  std::string data;
-  if (!wrapper.Read(&data)) {
+void OverlayIdPushCommand::ParseParameters(
+    const proto::InstallerRequest& request) {
+  if (!request.has_overlay_id_push()) {
     return;
   }
 
-  if (!request_.ParseFromString(data)) {
-    return;
-  }
+  request_ = request.overlay_id_push();
 
   ready_to_run_ = true;
 }

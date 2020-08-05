@@ -31,7 +31,7 @@ class OverlayInstallCommand : public Command {
  public:
   OverlayInstallCommand(Workspace& workspace) : Command(workspace) {}
   virtual ~OverlayInstallCommand() = default;
-  virtual void ParseParameters(int argc, char** argv) override;
+  virtual void ParseParameters(const proto::InstallerRequest& request) override;
   virtual void Run(proto::InstallerResponse* response) override;
 
  private:

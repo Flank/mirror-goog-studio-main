@@ -256,6 +256,23 @@ message SwapResponse {
   repeated AgentExceptionLog agent_logs = 4;
 }
 
+message DumpRequest {
+  repeated string package_names = 1;
+}
+
+message InstallerRequest {
+  string version = 1;
+  string command_name = 2;
+  oneof request {
+    DumpRequest dump_request = 3;
+    SwapRequest swap_request = 4;
+    InstallInfo install_info_request = 5;
+    OverlaySwapRequest overlay_swap_request = 6;
+    OverlayIdPush overlay_id_push = 7;
+    OverlayInstallRequest overlay_install = 8;
+  }
+}
+
 // Message returned by the Android native IRR installer. There are two layers :
 // - Installer layer which is unaware of commands specifics.
 // - Command layer whici is unaware of installe specifics.

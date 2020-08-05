@@ -36,7 +36,7 @@ class OverlaySwapCommand : public BaseSwapCommand {
  public:
   OverlaySwapCommand(Workspace& workspace) : BaseSwapCommand(workspace) {}
   virtual ~OverlaySwapCommand() = default;
-  virtual void ParseParameters(int argc, char** argv);
+  virtual void ParseParameters(const proto::InstallerRequest& request);
 
  protected:
   virtual proto::SwapRequest PrepareAndBuildRequest(
