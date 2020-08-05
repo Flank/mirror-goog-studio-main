@@ -33,7 +33,6 @@ package com.android.build.gradle.external.gnumake;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
-import java.io.FileNotFoundException;
 import java.util.List;
 import org.junit.Test;
 
@@ -67,63 +66,63 @@ public class CommandClassifierTest {
     }
 
     @Test
-    public void define() throws FileNotFoundException {
+    public void define() {
         assertClassifyContains("g++ test.cpp -D BOB", "[ in:test.cpp ]");
         assertClassifyContains("g++ -D BOB test.cpp", "[ in:test.cpp ]");
     }
 
     @Test
-    public void mmd() throws FileNotFoundException {
+    public void mmd() {
         assertClassifyContains("g++ -MMD test.cpp -D BOB", "[ in:test.cpp ]");
     }
 
     @Test
-    public void include1() throws FileNotFoundException {
+    public void include1() {
         assertClassifyContains("g++ -I foo bar.c", "[ in:bar.c ]");
     }
 
     @Test
-    public void include2() throws FileNotFoundException {
+    public void include2() {
         assertClassifyContains("g++ -I foo -o bar.o", "[out:bar.o ]");
     }
 
     @Test
-    public void arNoCreate() throws FileNotFoundException {
+    public void arNoCreate() {
         assertClassifyContains("gcc-ar bob a.a b.o", "");
     }
 
     @Test
-    public void arSingleCreate() throws FileNotFoundException {
+    public void arSingleCreate() {
         assertClassifyContains("gcc-ar c a.a b.o", "[ in:b.o out:a.a ]");
     }
 
     @Test
-    public void arMultiCreate() throws FileNotFoundException {
+    public void arMultiCreate() {
         assertClassifyContains("gcc-ar c a.a b.o c.o", "[ in:b.o in:c.o out:a.a ]");
     }
 
     @Test
-    public void arMultiCommand() throws FileNotFoundException {
+    public void arMultiCommand() {
         assertClassifyContains("gcc-ar crsD a.a b.o c.o", "[ in:b.o in:c.o out:a.a ]");
     }
 
     @Test
-    public void arPlugin() throws FileNotFoundException {
+    public void arPlugin() {
         assertClassifyContains("gcc-ar --plugin plug crsD a.a b.o c.o", "[ in:b.o in:c.o out:a.a ]");
     }
 
     @Test
-    public void arTarget() throws FileNotFoundException {
+    public void arTarget() {
         assertClassifyContains("gcc-ar --target targ crsD a.a b.o c.o", "[ in:b.o in:c.o out:a.a ]");
     }
 
     @Test
-    public void arX32_64() throws FileNotFoundException {
+    public void arX32_64() {
         assertClassifyContains("gcc-ar -X32_64 crsD a.a b.o c.o", "[ in:b.o in:c.o out:a.a ]");
     }
 
     @Test
-    public void ndkBuildExample() throws FileNotFoundException {
+    public void ndkBuildExample() {
         assertClassifyContains(
             "rm -f ./libs/arm64-v8a/lib*.so ./libs/armeabi/lib*.so ./libs/armeabi-v7a/lib*.so ./libs/armeabi-v7a-hard/lib*.so ./libs/mips/lib*.so ./libs/mips64/lib*.so ./libs/x86/lib*.so ./libs/x86_64/lib*.so\n" +
             "rm -f ./libs/arm64-v8a/gdbserver ./libs/armeabi/gdbserver ./libs/armeabi-v7a/gdbserver ./libs/armeabi-v7a-hard/gdbserver ./libs/mips/gdbserver ./libs/mips64/gdbserver ./libs/x86/gdbserver ./libs/x86_64/gdbserver\n" +
@@ -244,13 +243,13 @@ public class CommandClassifierTest {
     }
 
     @Test
-    public void simple() throws FileNotFoundException {
+    public void simple() {
         assertClassifyContains("g++ a.c -o a.o\n" +
                 "g++ a.o -o a.so", "[ in:a.c out:a.o ][ in:a.o out:a.so ]");
     }
 
     @Test
-    public void undefine() throws FileNotFoundException {
+    public void undefine() {
         assertClassifyContains("g++ test.cpp -D BOB", "[ in:test.cpp ]");
         assertClassifyContains("g++ -D BOB test.cpp", "[ in:test.cpp ]");
     }

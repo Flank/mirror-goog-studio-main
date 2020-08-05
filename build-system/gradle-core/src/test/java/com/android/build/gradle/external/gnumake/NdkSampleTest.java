@@ -111,7 +111,7 @@ public class NdkSampleTest {
 
         @Override
         public boolean isMatch(@NonNull CommandLine command) {
-            return command.executable.equals("Android");
+            return command.getExecutable().equals("Android");
         }
     }
 
@@ -134,7 +134,7 @@ public class NdkSampleTest {
 
         @Override
         public boolean isMatch(@NonNull CommandLine command) {
-            return command.executable.endsWith(executable);
+            return command.getExecutable().endsWith(executable);
         }
     }
 
@@ -406,7 +406,7 @@ public class NdkSampleTest {
             // Build a set of executable commands that were classified.
             Set<String> recognizedCommandLines = Sets.newHashSet();
             for (BuildStepInfo recognizedBuildStep : recognizedBuildSteps) {
-                recognizedCommandLines.add(recognizedBuildStep.getCommand().executable);
+                recognizedCommandLines.add(recognizedBuildStep.getCommand().getExecutable());
             }
 
             assertThat(recognizedCommandLines).containsAllIn(commandLines);
@@ -417,7 +417,7 @@ public class NdkSampleTest {
     private static void checkExpectedCompilerParserBehavior(@NonNull List<CommandLine> commands) {
         for (CommandLine command : commands) {
             if (new CommandClassifier.NativeCompilerBuildTool().isMatch(command)) {
-                for (String arg : command.escapedFlags) {
+                for (String arg : command.getEscapedFlags()) {
                     if (arg.startsWith("-")) {
                         String trimmed = arg;
                         while (trimmed.startsWith("-")) {

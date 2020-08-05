@@ -118,9 +118,9 @@ class CommandClassifier {
         @Nullable
         @Override
         public BuildStepInfo createCommand(@NonNull CommandLine command) {
-            String[] arr = new String[command.escapedFlags.size()];
+            String[] arr = new String[command.getEscapedFlags().size()];
             for (int i = 0; i < arr.length; ++i) {
-                arr[i] = command.escapedFlags.get(i);
+                arr[i] = command.getEscapedFlags().get(i);
             }
             @SuppressWarnings("unchecked")
             List<String> options = (List<String>) PARSER.parse(arr).nonOptionArguments();
@@ -153,9 +153,9 @@ class CommandClassifier {
 
         @Override
         public boolean isMatch(@NonNull CommandLine command) {
-            return command.executable.endsWith("gcc-ar")
-                    || command.executable.endsWith("android-ar")
-                    || command.executable.endsWith("androideabi-ar");
+            return command.getExecutable().endsWith("gcc-ar")
+                    || command.getExecutable().endsWith("android-ar")
+                    || command.getExecutable().endsWith("androideabi-ar");
         }
     }
 
@@ -177,7 +177,7 @@ class CommandClassifier {
 
         @Override
         public boolean isMatch(@NonNull CommandLine command) {
-            String executable = new File(command.executable).getName();
+            String executable = new File(command.getExecutable()).getName();
             if (executable.endsWith("ccache")) {
                 CommandLine translated = translateToCompilerCommandLine(command);
                 return sNativeCompilerBuildTool.isMatch(translated);
@@ -187,8 +187,8 @@ class CommandClassifier {
 
         @NonNull
         private static CommandLine translateToCompilerCommandLine(@NonNull CommandLine command) {
-            List<String> escaped = Lists.newArrayList(command.escapedFlags);
-            List<String> raw = Lists.newArrayList(command.rawFlags);
+            List<String> escaped = Lists.newArrayList(command.getEscapedFlags());
+            List<String> raw = Lists.newArrayList(command.getRawFlags());
             String baseCommand = escaped.get(0);
             escaped.remove(0);
             raw.remove(0);
@@ -205,9 +205,9 @@ class CommandClassifier {
         @NonNull
         @Override
         public BuildStepInfo createCommand(@NonNull CommandLine command) {
-            String[] arr = new String[command.escapedFlags.size()];
+            String[] arr = new String[command.getEscapedFlags().size()];
             for (int i = 0; i < arr.length; ++i) {
-                arr[i] = command.escapedFlags.get(i);
+                arr[i] = command.getEscapedFlags().get(i);
             }
             OptionSet options = CompilerParser.get().parse(arr);
 
@@ -238,7 +238,7 @@ class CommandClassifier {
                                             + " %s\nbut received: \n%s\nin command:\n%s\n",
                                     this,
                                     Joiner.on("\n").join(outputValues),
-                                    Joiner.on("\n").join(command.rawFlags)));
+                                    Joiner.on("\n").join(command.getRawFlags())));
                 }
                 String output = (String) options.valueOf("o");
                 outputs.add(output);
@@ -255,7 +255,7 @@ class CommandClassifier {
                                         + " %s\nbut received: \n%s\nin command:\n%s\n",
                                 this,
                                 Joiner.on("\n").join(inputs),
-                                Joiner.on("\n").join(command.rawFlags)));
+                                Joiner.on("\n").join(command.getRawFlags())));
             }
 
             return new BuildStepInfo(command, inputs, outputs, inputsAreSourceFiles);
@@ -263,7 +263,7 @@ class CommandClassifier {
 
         @Override
         public boolean isMatch(@NonNull CommandLine command) {
-            String executable = new File(command.executable).getName();
+            String executable = new File(command.getExecutable()).getName();
             return executable.endsWith("gcc")
                     || executable.endsWith("g++")
                     || executable.endsWith("clang")
