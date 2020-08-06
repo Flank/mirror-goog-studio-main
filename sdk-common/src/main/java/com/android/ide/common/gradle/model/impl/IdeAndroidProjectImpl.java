@@ -389,17 +389,6 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         }
     }
 
-    public void addVariants(@NonNull Collection<IdeVariant> variants) {
-        Set<String> variantNames =
-                myVariants.stream().map(variant -> variant.getName()).collect(Collectors.toSet());
-        for (IdeVariant variant : variants) {
-            // Add cached IdeVariant only if it is not contained in the current model.
-            if (!variantNames.contains(variant.getName())) {
-                myVariants.add(variant);
-            }
-        }
-    }
-
     @NonNull
     @Override
     public Collection<IdeVariantBuildInformation> getVariantsBuildInformation() {

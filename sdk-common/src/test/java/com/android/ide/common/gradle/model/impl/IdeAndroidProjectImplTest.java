@@ -95,7 +95,11 @@ public class IdeAndroidProjectImplTest {
                 };
         IdeAndroidProject androidProject =
                 myModelCache.androidProjectFrom(
-                        original, myDependenciesFactory, null, Collections.emptyList());
+                        original,
+                        myDependenciesFactory,
+                        original.getVariants(),
+                        Collections.emptyList(),
+                        Collections.emptyList());
         expectUnsupportedOperationException(androidProject::getBuildToolsVersion);
     }
 
@@ -104,7 +108,11 @@ public class IdeAndroidProjectImplTest {
         AndroidProject original = new AndroidProjectStub("2.4.0");
         IdeAndroidProjectImpl copy =
                 myModelCache.androidProjectFrom(
-                        original, myDependenciesFactory, null, Collections.emptyList());
+                        original,
+                        myDependenciesFactory,
+                        original.getVariants(),
+                        Collections.emptyList(),
+                        Collections.emptyList());
         verifyUsageOfImmutableCollections(copy);
     }
 
@@ -118,6 +126,7 @@ public class IdeAndroidProjectImplTest {
                         original,
                         myDependenciesFactory,
                         singletonList(variant),
+                        Collections.emptyList(),
                         Collections.emptyList());
 
         original.getVariants().add(variant);
@@ -134,10 +143,9 @@ public class IdeAndroidProjectImplTest {
                         original,
                         myDependenciesFactory,
                         singletonList(variant),
+                        singletonList(mock(IdeVariant.class)),
                         Collections.emptyList());
 
-        // Verify that new variant is added.
-        copy.addVariants(singletonList(mock(IdeVariant.class)));
         assertThat(copy.getVariants()).hasSize(2);
 
         verifyUsageOfImmutableCollections(copy);
@@ -198,7 +206,11 @@ public class IdeAndroidProjectImplTest {
                 };
         IdeAndroidProject androidProject =
                 myModelCache.androidProjectFrom(
-                        original, myDependenciesFactory, null, Collections.emptyList());
+                        original,
+                        myDependenciesFactory,
+                        original.getVariants(),
+                        Collections.emptyList(),
+                        Collections.emptyList());
         assertThat(androidProject.getDefaultVariant()).isEqualTo("betaDebug");
     }
 
@@ -213,7 +225,11 @@ public class IdeAndroidProjectImplTest {
                 };
         IdeAndroidProject androidProject =
                 myModelCache.androidProjectFrom(
-                        original, myDependenciesFactory, null, Collections.emptyList());
+                        original,
+                        myDependenciesFactory,
+                        original.getVariants(),
+                        Collections.emptyList(),
+                        Collections.emptyList());
         assertThat(androidProject.getDefaultVariant()).isEqualTo("release");
     }
 

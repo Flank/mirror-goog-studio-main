@@ -65,6 +65,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -198,7 +199,8 @@ public class ModelCache {
     public IdeAndroidProjectImpl androidProjectFrom(
             @NonNull AndroidProject project,
             @NonNull IdeDependenciesFactory dependenciesFactory,
-            @Nullable Collection<Variant> variants,
+            @NonNull Collection<Variant> variants,
+            @NonNull Collection<IdeVariant> cachedVariants,
             @NotNull Collection<SyncIssue> syncIssues) {
         // Old plugin versions do not return model version.
         GradleVersion parsedModelVersion = GradleVersion.tryParse(project.getModelVersion());
@@ -234,17 +236,23 @@ public class ModelCache {
                                                 issue.getSeverity(),
                                                 issue.getType())));
 
+        Set<String> variantNames =
+                variants.stream().map(it -> it.getName()).collect(Collectors.toSet());
         Collection<IdeVariant> variantsCopy =
-                new ArrayList<IdeVariant>(
-                        IdeModel.copy(
-                                (variants == null) ? project.getVariants() : variants,
-                                this,
-                                variant ->
-                                        IdeVariantImpl.createFrom(
-                                                variant,
-                                                this,
-                                                dependenciesFactory,
-                                                parsedModelVersion)));
+                ImmutableList.copyOf(
+                        Iterables.concat(
+                                IdeModel.copy(
+                                        variants,
+                                        this,
+                                        variant ->
+                                                IdeVariantImpl.createFrom(
+                                                        variant,
+                                                        this,
+                                                        dependenciesFactory,
+                                                        parsedModelVersion)),
+                                cachedVariants.stream()
+                                        .filter(it -> !variantNames.contains(it.getName()))
+                                        .collect(Collectors.toList())));
 
         Collection<String> variantNamesCopy =
                 Objects.requireNonNull(
