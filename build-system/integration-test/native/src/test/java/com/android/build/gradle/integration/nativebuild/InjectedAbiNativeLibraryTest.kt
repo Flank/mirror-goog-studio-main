@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject.Com
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION
 import com.android.build.gradle.options.StringOption
 import org.junit.Before
 import org.junit.Rule
@@ -36,7 +37,7 @@ class InjectedAbiNativeLibraryTest {
     val testapp = HelloWorldLibraryApp.create()
     @Rule @JvmField
     val project = GradleTestProject.builder().fromTestApp(testapp)
-        .setCmakeVersion("3.10.4819442")
+        .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .setWithCmakeDirInLocalProp(true)
         .create()

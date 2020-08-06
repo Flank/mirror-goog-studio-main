@@ -25,6 +25,7 @@ import com.android.builder.model.NativeAndroidProject
 import org.junit.Rule
 import org.junit.Test
 import com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject.assertThat
+import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION
 import com.android.build.gradle.options.BooleanOption
 import org.junit.Before
 import java.io.File
@@ -51,7 +52,7 @@ class HeaderInCmakeListsTest {
                 .useCppSource(true)
                 .build()
         )
-        .setCmakeVersion("3.10.4819442")
+        .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .setWithCmakeDirInLocalProp(true)
         // TODO(tgeng): Cover v2

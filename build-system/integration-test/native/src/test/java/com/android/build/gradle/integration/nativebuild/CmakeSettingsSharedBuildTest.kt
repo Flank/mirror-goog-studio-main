@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.buildOutputFiles
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
+import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.settings.Macro.*
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.NativeAndroidProject
@@ -63,7 +64,7 @@ class CmakeSettingsSharedBuildTest(cmakeVersionInDsl: String) {
         @JvmStatic
         fun data() = arrayOf(
             arrayOf("3.6.0"),
-            arrayOf("3.10.2"))
+            arrayOf(DEFAULT_CMAKE_VERSION))
     }
 
     @Before

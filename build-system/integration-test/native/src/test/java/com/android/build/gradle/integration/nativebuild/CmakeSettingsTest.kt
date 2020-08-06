@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
+import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfig
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
@@ -60,7 +61,7 @@ class CmakeSettingsTest(cmakeVersionInDsl: String) {
         @JvmStatic
         fun data() = arrayOf(
             arrayOf("3.6.0-x"),
-            arrayOf("3.10.2"))
+            arrayOf(DEFAULT_CMAKE_VERSION))
     }
 
     @Before

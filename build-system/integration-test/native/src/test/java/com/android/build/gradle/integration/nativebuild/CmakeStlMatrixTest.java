@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatNativeLib;
+import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -61,7 +62,7 @@ public class CmakeStlMatrixTest {
                             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
                     // TODO(159233213) Turn to ON when release configuration is cacheable
                     .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-                    .setCmakeVersion("3.10.4819442")
+                    .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .setWithCmakeDirInLocalProp(true)
                     .create();

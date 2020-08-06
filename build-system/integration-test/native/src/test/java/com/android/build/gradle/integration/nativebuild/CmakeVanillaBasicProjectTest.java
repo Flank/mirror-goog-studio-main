@@ -19,6 +19,8 @@ package com.android.build.gradle.integration.nativebuild;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION;
+import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.DEFAULT_CMAKE_VERSION;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
@@ -27,6 +29,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
+import com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.NativeBuildSystem;
 import com.android.builder.model.NativeAndroidProject;
@@ -52,7 +55,7 @@ public class CmakeVanillaBasicProjectTest {
                     .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     // Set the cmake version and set the local properties with the path to the cmake
                     // binary.
-                    .setCmakeVersion("3.10.2")
+                    .setCmakeVersion(DEFAULT_CMAKE_VERSION)
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .setWithCmakeDirInLocalProp(false)
                     .create();
@@ -60,7 +63,9 @@ public class CmakeVanillaBasicProjectTest {
     @Before
     public void setUp() throws IOException {
         File cmakeBinFolder =
-                new File(GradleTestProject.getCmakeVersionFolder("3.10.4819442"), "bin");
+                new File(
+                        GradleTestProject.getCmakeVersionFolder(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION),
+                        "bin");
 
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
@@ -90,7 +95,9 @@ public class CmakeVanillaBasicProjectTest {
                         + "        externalNativeBuild {\n"
                         + "          cmake {\n"
                         + "            path \"CMakeLists.txt\"\n"
-                        + "            version \"3.10.2\""
+                        + "            version \""
+                        + CmakeLocatorKt.DEFAULT_CMAKE_VERSION
+                        + "\""
                         + "          }\n"
                         + "        }\n"
                         + "    }\n"

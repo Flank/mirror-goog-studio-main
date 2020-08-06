@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.ZipHelper
+import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
@@ -70,7 +71,7 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
         @JvmStatic
         fun data() = arrayOf(
                 arrayOf("3.6.0"),
-                arrayOf("3.10.2"))
+                arrayOf(DEFAULT_CMAKE_VERSION))
     }
 
     @Before

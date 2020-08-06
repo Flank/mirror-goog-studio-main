@@ -24,12 +24,13 @@ import static com.android.build.gradle.integration.common.fixture.app.HelloWorld
 import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.cmakeLists;
 import static com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject.assertThat;
 import static com.android.build.gradle.integration.common.truth.NativeSettingsSubject.assertThat;
+import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION;
+import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.DEFAULT_CMAKE_VERSION;
 import static com.android.build.gradle.internal.cxx.configure.ConstantsKt.CXX_DEFAULT_CONFIGURATION_SUBFOLDER;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ParameterizedAndroidProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
@@ -551,7 +552,11 @@ public class NativeModelTest {
             {Config.CMAKELISTS_FILE_C, "", ""},
             {Config.CMAKELISTS_FILE_CPP, "", ""},
             {Config.CMAKELISTS_ARGUMENTS, "", ""},
-            {Config.CMAKELISTS_ARGUMENTS_WITH_CMAKE_VERSION, "3.10.2", "3.10.4819442"},
+            {
+                Config.CMAKELISTS_ARGUMENTS_WITH_CMAKE_VERSION,
+                DEFAULT_CMAKE_VERSION,
+                DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION
+            },
         };
     }
 
