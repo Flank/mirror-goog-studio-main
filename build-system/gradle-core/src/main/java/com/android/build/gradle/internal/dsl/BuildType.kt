@@ -70,6 +70,7 @@ abstract class BuildType @Inject constructor(
 
     override var renderscriptOptimLevel = 3
 
+    @Deprecated("This property is deprecated. Changing its value has no effect.")
     override var isZipAlignEnabled: Boolean = true
 
     /**
