@@ -83,14 +83,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class ModelCache {
     public static final String LOCAL_AARS = "__local_aars__";
-    private static final Object BAD_BAD =
-            new Object() {
-                @Override
-                public String toString() {
-                    return "<REFEREENCE-TO-SELF>";
-                }
-            };
-    @NonNull private final Map<Object, Object> myData = new HashMap<>();
     @NonNull private final Map<String, String> myStrings;
 
     public ModelCache(@NonNull Map<String, String> strings) {
@@ -107,39 +99,14 @@ public class ModelCache {
      */
     @SuppressWarnings("unchecked")
     @NonNull
-    public synchronized <K, V> V computeIfAbsent(
-            @NonNull K key, @NonNull Function<K, V> mappingFunction) {
-        if (myData.containsKey(key)) {
-            Object existing = myData.get(key);
-            if (existing == BAD_BAD) {
-                throw new IllegalStateException(
-                        "Self reference detected while constructing an instance for: "
-                                + key
-                                + "\n while constructing:\n"
-                                + myData.entrySet().stream()
-                                        .filter(it -> it.getValue() == BAD_BAD)
-                                        .map(it -> it.getKey().toString())
-                                        .collect(Collectors.joining(",\n ")));
-            }
-            return (V) existing;
-        } else {
-            myData.put(key, BAD_BAD);
-            V result = mappingFunction.apply(key);
-            myData.put(key, result);
-            return result;
-        }
+    public synchronized <K, V> V copyModel(@NonNull K key, @NonNull Function<K, V> mappingFunction) {
+        return mappingFunction.apply(key);
     }
 
     @NonNull
     public String deduplicateString(@NonNull String s) {
         String old = myStrings.putIfAbsent(s, s);
         return old != null ? old : s;
-    }
-
-    @NonNull
-    @VisibleForTesting
-    Map<Object, Object> getData() {
-        return myData;
     }
 
     @NonNull
@@ -206,9 +173,9 @@ public class ModelCache {
         GradleVersion parsedModelVersion = GradleVersion.tryParse(project.getModelVersion());
 
         IdeProductFlavorContainer defaultConfigCopy =
-                computeIfAbsent(
-                        project.getDefaultConfig(),
-                        container -> productFlavorContainerFrom(container, this));
+                copyModel(
+                  project.getDefaultConfig(),
+                  container -> productFlavorContainerFrom(container, this));
 
         Collection<IdeBuildTypeContainer> buildTypesCopy =
                 copy(project.getBuildTypes(), container -> buildTypeContainerFrom(container, this));
@@ -272,9 +239,9 @@ public class ModelCache {
                 copy(project.getSigningConfigs(), config -> signingConfigFrom(config));
 
         IdeLintOptions lintOptionsCopy =
-                computeIfAbsent(
-                        project.getLintOptions(),
-                        options -> IdeLintOptionsImpl.createFrom(options, parsedModelVersion));
+                copyModel(
+                  project.getLintOptions(),
+                  options -> IdeLintOptionsImpl.createFrom(options, parsedModelVersion));
 
         // We need to use the unresolved dependencies to support older versions of the Android
         // Gradle Plugin.
@@ -283,13 +250,13 @@ public class ModelCache {
                 ImmutableSet.copyOf(project.getUnresolvedDependencies());
 
         IdeJavaCompileOptionsImpl javaCompileOptionsCopy =
-                computeIfAbsent(
-                        project.getJavaCompileOptions(),
-                        options -> javaCompileOptionsFrom(options));
+                copyModel(
+                  project.getJavaCompileOptions(),
+                  options -> javaCompileOptionsFrom(options));
 
         IdeAaptOptionsImpl aaptOptionsCopy =
-                computeIfAbsent(
-                        project.getAaptOptions(), options -> aaptOptionsFrom(options));
+                copyModel(
+                  project.getAaptOptions(), options -> aaptOptionsFrom(options));
 
         Collection<String> dynamicFeaturesCopy =
                 ImmutableList.copyOf(
@@ -494,14 +461,14 @@ public class ModelCache {
     public static IdeBuildTypeContainerImpl buildTypeContainerFrom(
             @NonNull BuildTypeContainer container, @NonNull ModelCache modelCache) {
         return new IdeBuildTypeContainerImpl(
-                modelCache.computeIfAbsent(
-                        container.getBuildType(),
-                        buildType -> buildTypeFrom(buildType)),
-                modelCache.computeIfAbsent(
-                        container.getSourceProvider(),
-                        provider ->
-                                IdeSourceProviderImpl.createFrom(
-                                        provider, modelCache::deduplicateString)),
+                modelCache.copyModel(
+                  container.getBuildType(),
+                  buildType -> buildTypeFrom(buildType)),
+                modelCache.copyModel(
+                  container.getSourceProvider(),
+                  provider ->
+                    IdeSourceProviderImpl.createFrom(
+                      provider, modelCache::deduplicateString)),
                 copy(
                         container.getExtraSourceProviders(),
                         sourceProviderContainer ->
@@ -591,14 +558,14 @@ public class ModelCache {
     public static IdeProductFlavorContainerImpl productFlavorContainerFrom(
             @NonNull ProductFlavorContainer container, @NonNull ModelCache modelCache) {
         return new IdeProductFlavorContainerImpl(
-                modelCache.computeIfAbsent(
-                        container.getProductFlavor(),
-                        flavor -> productFlavorFrom(flavor, modelCache)),
-                modelCache.computeIfAbsent(
-                        container.getSourceProvider(),
-                        provider ->
-                                IdeSourceProviderImpl.createFrom(
-                                        provider, modelCache::deduplicateString)),
+                modelCache.copyModel(
+                  container.getProductFlavor(),
+                  flavor -> productFlavorFrom(flavor, modelCache)),
+                modelCache.copyModel(
+                  container.getSourceProvider(),
+                  provider ->
+                    IdeSourceProviderImpl.createFrom(
+                      provider, modelCache::deduplicateString)),
                 copy(
                         container.getExtraSourceProviders(),
                         sourceProviderContainer ->
@@ -614,16 +581,16 @@ public class ModelCache {
         } catch (UnsupportedOperationException e) {
             return null;
         }
-        return modelCache.computeIfAbsent(
-                vectorDrawables, options -> vectorDrawablesOptionsFrom(options));
+        return modelCache.copyModel(
+          vectorDrawables, options -> vectorDrawablesOptionsFrom(options));
     }
 
     @Nullable
     private static IdeApiVersionImpl copy(
             @NonNull ModelCache modelCache, @Nullable ApiVersion apiVersion) {
         if (apiVersion != null) {
-            return modelCache.computeIfAbsent(
-                    apiVersion, version -> apiVersionFrom(version));
+            return modelCache.copyModel(
+              apiVersion, version -> apiVersionFrom(version));
         }
         return null;
     }
@@ -632,8 +599,8 @@ public class ModelCache {
     private static IdeSigningConfig copy(
             @NonNull ModelCache modelCache, @Nullable SigningConfig signingConfig) {
         if (signingConfig != null) {
-            return modelCache.computeIfAbsent(
-                    signingConfig, config -> signingConfigFrom(config));
+            return modelCache.copyModel(
+              signingConfig, config -> signingConfigFrom(config));
         }
         return null;
     }
@@ -687,11 +654,11 @@ public class ModelCache {
             @NonNull SourceProviderContainer container, @NonNull ModelCache modelCache) {
         return new IdeSourceProviderContainerImpl(
                 container.getArtifactName(),
-                modelCache.computeIfAbsent(
-                        container.getSourceProvider(),
-                        provider ->
-                                IdeSourceProviderImpl.createFrom(
-                                        provider, modelCache::deduplicateString)));
+                modelCache.copyModel(
+                  container.getSourceProvider(),
+                  provider ->
+                    IdeSourceProviderImpl.createFrom(
+                      provider, modelCache::deduplicateString)));
     }
 
     public static IdeSyncIssueImpl syncIssueFrom(@NonNull SyncIssue issue) {

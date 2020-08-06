@@ -143,7 +143,7 @@ class IdeVariantImpl(
       IdeVariantImpl(
         name = variant.name,
         displayName = variant.displayName,
-        mainArtifact = modelCache.computeIfAbsent(variant.mainArtifact) { artifact: AndroidArtifact ->
+        mainArtifact = modelCache.copyModel(variant.mainArtifact) { artifact: AndroidArtifact ->
           ModelCache.androidArtifactFrom(artifact, modelCache,
                                          dependenciesFactory, modelVersion)
         },
@@ -156,7 +156,7 @@ class IdeVariantImpl(
         },
         buildType = variant.buildType,
         productFlavors = ImmutableList.copyOf(variant.productFlavors),
-        mergedFlavor = modelCache.computeIfAbsent(variant.mergedFlavor) { flavor: ProductFlavor ->
+        mergedFlavor = modelCache.copyModel(variant.mergedFlavor) { flavor: ProductFlavor ->
           ModelCache.productFlavorFrom(flavor, modelCache)
         },
         testedTargetVariants = getTestedTargetVariants(variant, modelCache),
