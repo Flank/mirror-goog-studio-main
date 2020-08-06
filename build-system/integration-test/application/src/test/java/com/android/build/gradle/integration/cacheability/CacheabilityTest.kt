@@ -101,7 +101,6 @@ class CacheabilityTest {
                     ":app:compileDebugAidl",
                     ":app:compileDebugRenderscript",
                     ":app:compileDebugShaders",
-                    ":app:compileDebugSources",
                     ":app:mergeDebugNativeDebugMetadata",
                     ":app:processDebugJavaRes",
                     ":app:processDebugUnitTestJavaRes",

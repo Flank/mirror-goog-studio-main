@@ -48,7 +48,6 @@ class LibraryCacheabilityTest {
                 UP_TO_DATE to setOf(
                     ":app:clean",
                     ":lib:clean",
-                    ":lib:compileReleaseSources",
                     ":lib:generateReleaseAssets",
                     ":lib:generateReleaseResources",
                     ":lib:preBuild",

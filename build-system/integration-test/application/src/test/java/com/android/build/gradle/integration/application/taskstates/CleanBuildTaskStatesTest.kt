@@ -77,7 +77,6 @@ class CleanBuildTaskStatesTest {
                 ":app:compileDebugAidl",
                 ":app:compileDebugRenderscript",
                 ":app:compileDebugShaders",
-                ":app:compileDebugSources",
                 ":app:generateDebugResources",
                 ":app:mergeDebugNativeDebugMetadata",
                 ":app:processDebugJavaRes",
