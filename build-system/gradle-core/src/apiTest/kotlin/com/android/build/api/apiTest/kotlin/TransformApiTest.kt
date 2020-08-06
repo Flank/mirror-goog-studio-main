@@ -17,7 +17,10 @@
 package com.android.build.api.apiTest.kotlin
 
 import com.android.build.api.apiTest.VariantApiBaseTest
+import com.android.build.gradle.options.BooleanOption
+import com.android.tools.build.gradle.internal.profile.VariantApiArtifactType
 import com.google.common.truth.Truth
+import com.google.wireless.android.sdk.stats.ArtifactAccess
 import kotlin.test.assertNotNull
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -89,9 +92,7 @@ class TransformApiTest(private val artifact: String, private val plugin: String)
                 versionCode = 3
             }
             onVariantProperties {
-                val updateArtifact = project.tasks.register<UpdateArtifactTask>("${'$'}{name}UpdateArtifact") {
-                    initialArtifact.set(artifacts.get(ArtifactType.$artifact))
-                }
+                val updateArtifact = project.tasks.register<UpdateArtifactTask>("${'$'}{name}UpdateArtifact")
                 val finalArtifact = project.tasks.register<ConsumeArtifactTask>("${'$'}{name}ConsumeArtifact") {
                     finalArtifact.set(artifacts.get(ArtifactType.$artifact))
                 }
@@ -106,11 +107,24 @@ class TransformApiTest(private val artifact: String, private val plugin: String)
                 testingElements.addManifest(this)
             }
         }
+        withOptions(mapOf(BooleanOption.ENABLE_PROFILE_JSON to true))
         check {
             assertNotNull(this)
             Truth.assertThat(output).contains("artifactPresent = true")
             Truth.assertThat(output).contains("artifactTransformed = true")
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")
+            super.onVariantStats {
+                Truth.assertThat(it.variantApiAccess.artifactAccessList.size).isAtLeast(1)
+                it.variantApiAccess.artifactAccessList.forEach { artifactAccess ->
+                    Truth.assertThat(artifactAccess.type).isAnyOf(
+                            ArtifactAccess.AccessType.TRANSFORM,
+                            ArtifactAccess.AccessType.GET
+                    )
+                    Truth.assertThat(artifactAccess.inputArtifactType).isEqualTo(
+                            VariantApiArtifactType.valueOf(artifact).number
+                    )
+                }
+            }
         }
     }
 }

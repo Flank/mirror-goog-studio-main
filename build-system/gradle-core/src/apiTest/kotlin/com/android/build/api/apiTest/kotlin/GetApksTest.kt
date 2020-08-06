@@ -19,6 +19,8 @@ package com.android.build.api.apiTest.kotlin
 import com.android.build.api.apiTest.VariantApiBaseTest
 import com.android.build.gradle.options.BooleanOption
 import com.google.common.truth.Truth
+import com.google.wireless.android.sdk.stats.ArtifactAccess
+import com.google.wireless.android.sdk.stats.VariantAccess
 import org.junit.Test
 import java.io.File
 import java.io.FileInputStream
@@ -29,7 +31,7 @@ class GetApksTest: VariantApiBaseTest(TestType.Script) {
     @Test
     fun getApksTest() {
         given {
-            tasksToInvoke.add(":app:debugDisplayApks")
+            tasksToInvoke.addAll(listOf("clean", ":app:debugDisplayApks"))
             addModule(":app") {
                 @Suppress("RemoveExplicitTypeArguments")
                 buildFile =
@@ -87,12 +89,14 @@ expected result : "Got an APK...." message.
             assertNotNull(this)
             Truth.assertThat(output).contains("Got an APK")
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")
-            val androidProfile = File(super.testProjectDir.root, "${testName.methodName}/build/android-profile")
-            Truth.assertThat(androidProfile.exists()).isTrue()
-            val listFiles = androidProfile.listFiles().filter { it.name.endsWith(".json.gz") }
-            Truth.assertThat(listFiles.size).isEqualTo(1)
-            FileInputStream(listFiles[0]).use {
-                Truth.assertThat(String(GZIPInputStream(it).readBytes())).contains("traceEvents")
+            super.onVariantStats {
+                if (it.isDebug) {
+                    Truth.assertThat(it.variantApiAccess.artifactAccessList).hasSize(1)
+                    val artifactAccess = it.variantApiAccess.artifactAccessList[0]
+                    Truth.assertThat(artifactAccess.type).isEqualTo(
+                            ArtifactAccess.AccessType.GET
+                    )
+                }
             }
         }
     }

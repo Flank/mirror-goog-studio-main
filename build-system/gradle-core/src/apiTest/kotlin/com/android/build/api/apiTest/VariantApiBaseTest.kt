@@ -496,6 +496,7 @@ ${repositories.joinToString(
         val gradleBuildProfile =
             GradleBuildProfile.parseFrom(Files.readAllBytes(listFiles[0].toPath()))
         Truth.assertThat(gradleBuildProfile).isNotNull()
+        Truth.assertThat(gradleBuildProfile.projectList).isNotEmpty()
         gradleBuildProfile.projectList.first {
             it.androidPluginVersion.isNotEmpty()
         }.variantList.forEach { variant ->
