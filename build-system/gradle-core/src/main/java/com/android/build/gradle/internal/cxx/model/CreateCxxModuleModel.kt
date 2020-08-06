@@ -101,7 +101,7 @@ fun createCxxModuleModel(
                     val exe = if (CURRENT_PLATFORM == PLATFORM_WINDOWS) ".exe" else ""
                     object: CxxCmakeModuleModel {
                         override val minimumCmakeVersion by lazy {
-                            CmakeDslVersionInfo(configurationModel.cmakeVersion).effectiveRequestVersion
+                            CmakeVersionRequirements(configurationModel.cmakeVersion).effectiveRequestVersion
                         }
                         private val cmakeFolder by lazy {
                             cmakeLocator.findCmakePath(

@@ -192,20 +192,11 @@ private fun getCmakeRevisionFromExecutable(cmakeFolder: File): Revision? {
  * Wraps the cmake.version property from build.gradle with useful
  * information about that version.
  */
-data class CmakeDslVersionInfo(val cmakeVersionFromDsl : String?) {
+data class CmakeVersionRequirements(val cmakeVersionFromDsl : String?) {
     /**
      * @return true if the version number has a '+' at the end.
      */
-    val dslVersionHasPlus : Boolean by lazy {
-        cmakeVersionFromDsl?.endsWith("+") ?: false
-    }
-
-    /**
-     * @return dsl version string with any '+' removed.
-     */
-    val dslVersionWithoutPlus : String? by lazy {
-        cmakeVersionFromDsl?.trimEnd('+')
-    }
+    private val dslVersionHasPlus = cmakeVersionFromDsl?.endsWith("+") ?: false
 
     /**
      * Computes the version number that is effectively being requested.
@@ -213,24 +204,22 @@ data class CmakeDslVersionInfo(val cmakeVersionFromDsl : String?) {
      * and returns the default CMake version in those cases.
      *
      */
-    val effectiveRequestVersion by lazy { computeEffectiveRequestVersion() }
+    val effectiveRequestVersion = computeEffectiveRequestVersion()
 
     /**
      * @return a human-readable representation of the version that is
      * suitable for using in an error message to the user.
      */
-    val versionLanguage by lazy {
+    val humanReadableVersionLanguage =
         when {
             dslVersionHasPlus -> "'$effectiveRequestVersion' or higher"
             else -> "'$effectiveRequestVersion'"
         }
-    }
 
     /**
      * @return true if [version] satisfies [effectiveRequestVersion].
      */
     fun isSatisfiedBy(version:Revision) : Boolean {
-
         return when {
             dslVersionHasPlus ->
                 version.compareTo(effectiveRequestVersion, Revision.PreviewComparison.IGNORE) >= 0
@@ -243,18 +232,16 @@ data class CmakeDslVersionInfo(val cmakeVersionFromDsl : String?) {
      * Get the version of CMake to be downloaded. null is returned if there
      * is no possible version to download.
      */
-    val downloadVersion by lazy {
-        when {
+    val downloadVersion = when {
             effectiveRequestVersion.compareTo(forkCmakeReportedVersion, Revision.PreviewComparison.IGNORE) == 0 ->
                 FORK_CMAKE_SDK_VERSION
             isSatisfiedBy(defaultCmakeVersion) ->
                 DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION
             else -> null
         }
-    }
 
     private fun computeEffectiveRequestVersion() : Revision {
-        val withoutPlus = dslVersionWithoutPlus
+        val withoutPlus = cmakeVersionFromDsl?.trimEnd('+')
         return if (withoutPlus == null) {
             defaultCmakeVersion
         } else {
@@ -292,7 +279,7 @@ fun findCmakePathLogic(
     cmakeVersionGetter: (File) -> Revision?,
     repositoryPackages: () -> List<LocalPackage>
 ): File? {
-    val dsl = CmakeDslVersionInfo(cmakeVersionFromDsl)
+    val dsl = CmakeVersionRequirements(cmakeVersionFromDsl)
 
     fun versionGetter(cmakePath : File) = try {
             cmakeVersionGetter(cmakePath)
@@ -374,7 +361,7 @@ fun findCmakePathLogic(
         // If there is a downloader, then try downloading and re-invoke findCmakePathLogic but with
         // no downloader this time.
         if (downloader != null && dsl.downloadVersion != null) {
-            downloader.accept(dsl.downloadVersion!!)
+            downloader.accept(dsl.downloadVersion)
             return findCmakePathLogic(
                     cmakeVersionFromDsl,
                     cmakePathFromLocalProperties,
@@ -387,7 +374,7 @@ fun findCmakePathLogic(
         }
 
         // No downloader, so issue error(s)
-        errorln("CMake ${dsl.versionLanguage} was not found in SDK, PATH, or by cmake.dir property.")
+        errorln("CMake ${dsl.humanReadableVersionLanguage} was not found in SDK, PATH, or by cmake.dir property.")
         nonsatisfiers
                 .distinct()
                 .onEach { errorln("- CMake $it did not satisfy requested version.") }

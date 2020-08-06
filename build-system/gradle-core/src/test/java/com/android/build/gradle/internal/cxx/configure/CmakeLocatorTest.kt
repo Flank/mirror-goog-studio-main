@@ -737,36 +737,36 @@ class CmakeLocatorTest {
 
     @Test
     fun `get default version`() {
-        assertThat(CmakeDslVersionInfo(null).effectiveRequestVersion).isEqualTo(defaultCmakeVersion)
+        assertThat(CmakeVersionRequirements(null).effectiveRequestVersion).isEqualTo(defaultCmakeVersion)
     }
 
     @Test
     fun `get specific version`() {
-        assertThat(CmakeDslVersionInfo("3.19.2").effectiveRequestVersion)
+        assertThat(CmakeVersionRequirements("3.19.2").effectiveRequestVersion)
             .isEqualTo(Revision.parseRevision("3.19.2"))
     }
 
     @Test
     fun `get specific version +`() {
-        assertThat(CmakeDslVersionInfo("3.19.2+").effectiveRequestVersion)
+        assertThat(CmakeVersionRequirements("3.19.2+").effectiveRequestVersion)
             .isEqualTo(Revision.parseRevision("3.19.2"))
     }
 
     @Test
     fun `get fork version`() {
-        val version = CmakeDslVersionInfo("3.6.0").effectiveRequestVersion
+        val version = CmakeVersionRequirements("3.6.0").effectiveRequestVersion
         assertThat(version.isCmakeForkVersion()).isTrue()
     }
 
     @Test
     fun `get fork version +`() {
-        val version = CmakeDslVersionInfo("3.6.0+").effectiveRequestVersion
+        val version = CmakeVersionRequirements("3.6.0+").effectiveRequestVersion
         assertThat(version.isCmakeForkVersion()).isTrue()
     }
 
     @Test
     fun `get version too low`() {
-        val version = CmakeDslVersionInfo("3.5.0+").effectiveRequestVersion
+        val version = CmakeVersionRequirements("3.5.0+").effectiveRequestVersion
         assertThat(version.isCmakeForkVersion()).isFalse()
     }
 }
