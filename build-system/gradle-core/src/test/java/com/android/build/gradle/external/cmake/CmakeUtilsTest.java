@@ -22,6 +22,8 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.external.cmake.server.CodeModel;
 import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
 import com.android.repository.Revision;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -136,12 +138,15 @@ public class CmakeUtilsTest {
         createFile(cmakeFolder, CmakeUtils.isWindows() ? "ninja.exe" : "ninja");
 
         String buildCommand =
-                CmakeUtils.getBuildCommand(cmakeExecutable, new File("/tmp"), "target");
+                Joiner.on(" ")
+                        .join(
+                                CmakeUtils.getBuildCommand(
+                                        cmakeExecutable, new File("/tmp"), "target"));
 
         if (CmakeUtils.isWindows()) {
-            assertThat(buildCommand).endsWith("ninja.exe -C \"C:\\tmp\" target");
+            assertThat(buildCommand).endsWith("ninja.exe -C C:\\tmp target");
         } else {
-            assertThat(buildCommand).endsWith("ninja -C \"/tmp\" target");
+            assertThat(buildCommand).endsWith("ninja -C /tmp target");
         }
     }
 
@@ -154,12 +159,13 @@ public class CmakeUtilsTest {
                 createFile(cmakeFolder, CmakeUtils.isWindows() ? "cmake.exe" : "cmake");
         createFile(cmakeFolder, CmakeUtils.isWindows() ? "ninja.exe" : "ninja");
 
-        String buildCommand = CmakeUtils.getCleanCommand(cmakeExecutable, new File("/tmp"));
+        String buildCommand =
+                Joiner.on(" ").join(CmakeUtils.getCleanCommand(cmakeExecutable, new File("/tmp")));
 
         if (CmakeUtils.isWindows()) {
-            assertThat(buildCommand).endsWith("ninja.exe -C \"C:\\tmp\" clean");
+            assertThat(buildCommand).endsWith("ninja.exe -C C:\\tmp clean");
         } else {
-            assertThat(buildCommand).endsWith("ninja -C \"/tmp\" clean");
+            assertThat(buildCommand).endsWith("ninja -C /tmp clean");
         }
     }
 
@@ -173,14 +179,18 @@ public class CmakeUtilsTest {
         createFile(cmakeFolder, CmakeUtils.isWindows() ? "ninja.exe" : "ninja");
 
         String buildCommand =
-                CmakeUtils.getBuildTargetsCommand(cmakeExecutable, new File("/tmp"), "-j 100");
+                Joiner.on(" ")
+                        .join(
+                                CmakeUtils.getBuildTargetsCommand(
+                                        cmakeExecutable,
+                                        new File("/tmp"),
+                                        ImmutableList.of("-j", "100")));
 
         if (CmakeUtils.isWindows()) {
             assertThat(buildCommand)
-                    .endsWith("ninja.exe -j 100 -C \"C:\\tmp\" {LIST_OF_TARGETS_TO_BUILD}");
+                    .endsWith("ninja.exe -j 100 -C C:\\tmp {LIST_OF_TARGETS_TO_BUILD}");
         } else {
-            assertThat(buildCommand)
-                    .endsWith("ninja -j 100 -C \"/tmp\" {LIST_OF_TARGETS_TO_BUILD}");
+            assertThat(buildCommand).endsWith("ninja -j 100 -C /tmp {LIST_OF_TARGETS_TO_BUILD}");
         }
     }
 

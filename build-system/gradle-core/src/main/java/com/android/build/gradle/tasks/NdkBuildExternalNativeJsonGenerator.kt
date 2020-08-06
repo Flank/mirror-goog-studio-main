@@ -80,7 +80,7 @@ internal class NdkBuildExternalNativeJsonGenerator(
             )
                 .setCommands(
                     getBuildCommand(abiConfig, removeJobsFlag = false),
-                    getBuildCommand(abiConfig, removeJobsFlag = true) + " clean",
+                    getBuildCommand(abiConfig, removeJobsFlag = true) + listOf("clean"),
                     variant.variantName,
                     buildOutput
                 )
@@ -275,8 +275,8 @@ internal class NdkBuildExternalNativeJsonGenerator(
     }
 
     /** Get the build command  */
-    private fun getBuildCommand(abi: CxxAbiModel, removeJobsFlag: Boolean): String =
-        "$ndkBuild " + getBaseArgs(abi, removeJobsFlag).joinToString(" ")
+    private fun getBuildCommand(abi: CxxAbiModel, removeJobsFlag: Boolean): List<String> =
+        listOf(ndkBuild) + getBaseArgs(abi, removeJobsFlag)
 
     init {
         variant.statsBuilder.nativeBuildSystemType = GradleNativeAndroidModule.NativeBuildSystemType.NDK_BUILD

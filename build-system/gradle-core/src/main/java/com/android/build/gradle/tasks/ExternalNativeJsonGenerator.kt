@@ -66,6 +66,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.Callable
 
+const val ANDROID_GRADLE_BUILD_VERSION = "1"
+
 /**
  * Base class for generation of native JSON.
  */
@@ -240,9 +242,10 @@ abstract class ExternalNativeJsonGenerator internal constructor(
 
                 // See whether the current build command matches a previously written build command.
                 val currentBuildCommand = """
-                ${processBuilder}Build command args:${abi.getBuildCommandArguments()}
-
-                """.trimIndent()
+                    ${processBuilder}
+                    Build command args: ${abi.getBuildCommandArguments()}
+                    Version: $ANDROID_GRADLE_BUILD_VERSION
+                    """.trimIndent()
                 val prefabState = PrefabConfigurationState(
                     abi.variant.module.project.isPrefabEnabled,
                     abi.variant.prefabClassPath,
@@ -256,7 +259,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                         abi.jsonFile,
                         abi.buildCommandFile,
                         currentBuildCommand,
-                        getPreviousBuildCommand(abi.buildCommandFile),
+                        getFileContent(abi.buildCommandFile),
                         getDependentBuildFiles(abi.jsonFile),
                         prefabState,
                         previousPrefabState
@@ -428,7 +431,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
             get() = SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
 
         @Throws(IOException::class)
-        private fun getPreviousBuildCommand(commandFile: File): String {
+        private fun getFileContent(commandFile: File): String {
             return if (!commandFile.exists()) {
                 ""
             } else String(

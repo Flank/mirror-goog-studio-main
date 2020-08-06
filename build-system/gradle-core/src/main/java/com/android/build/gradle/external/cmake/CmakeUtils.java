@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.repository.Revision;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.BufferedReader;
@@ -38,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /** Cmake utility class. */
@@ -85,15 +87,13 @@ public class CmakeUtils {
      * executable).
      */
     @NonNull
-    public static String getBuildCommand(
+    public static List<String> getBuildCommand(
             @NonNull File cmakeExecutable, @NonNull File outputFolder, @NonNull String targetName) {
-        return getNinjaExecutable(cmakeExecutable)
-                + " -C "
-                + "\""
-                + outputFolder.getAbsolutePath()
-                + "\""
-                + " "
-                + targetName;
+        return ImmutableList.of(
+                getNinjaExecutable(cmakeExecutable),
+                "-C",
+                outputFolder.getAbsolutePath(),
+                targetName);
     }
 
     /**
@@ -101,34 +101,27 @@ public class CmakeUtils {
      * executable).
      */
     @NonNull
-    public static String getCleanCommand(
+    public static List<String> getCleanCommand(
             @NonNull File cmakeExecutable, @NonNull File outputFolder) {
-        return getNinjaExecutable(cmakeExecutable)
-                + " -C "
-                + "\""
-                + outputFolder.getAbsolutePath()
-                + "\""
-                + " clean";
+        return ImmutableList.of(
+                getNinjaExecutable(cmakeExecutable), "-C", outputFolder.getAbsolutePath(), "clean");
     }
 
     /**
      * Returns the command to build multiple targets. Before executing the returned command, the
      * targets to build must be substituted using the substituteBuildTargetsCommand method.
      */
-    public static String getBuildTargetsCommand(
+    public static List<String> getBuildTargetsCommand(
             @NonNull File cmakeExecutable,
             @NonNull File outputFolder,
-            @NonNull String buildCommandArgs) {
-
-        return getNinjaExecutable(cmakeExecutable)
-                + " "
-                + buildCommandArgs
-                + " -C "
-                + "\""
-                + outputFolder.getAbsolutePath()
-                + "\""
-                + " "
-                + ExternalNativeBuildTask.BUILD_TARGETS_PLACEHOLDER;
+            @NonNull List<String> buildCommandArgs) {
+        return ImmutableList.<String>builder()
+                .add(getNinjaExecutable(cmakeExecutable))
+                .addAll(buildCommandArgs)
+                .add("-C")
+                .add(outputFolder.getAbsolutePath())
+                .add(ExternalNativeBuildTask.BUILD_TARGETS_PLACEHOLDER)
+                .build();
     }
 
     /** Returns the C++ file extensions for the given code model. */

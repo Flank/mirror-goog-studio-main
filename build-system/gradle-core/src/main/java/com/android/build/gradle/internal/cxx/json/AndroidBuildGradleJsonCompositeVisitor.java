@@ -93,11 +93,6 @@ public class AndroidBuildGradleJsonCompositeVisitor extends AndroidBuildGradleJs
     }
 
     @Override
-    protected void visitLibraryBuildCommand(@NonNull String buildCommand) {
-        visitors.forEach(parser -> parser.visitLibraryBuildCommand(buildCommand));
-    }
-
-    @Override
     protected void visitLibraryBuildType(@NonNull String buildType) {
         visitors.forEach(parser -> parser.visitLibraryBuildType(buildType));
     }
@@ -155,13 +150,15 @@ public class AndroidBuildGradleJsonCompositeVisitor extends AndroidBuildGradleJs
     }
 
     @Override
-    protected void visitBuildTargetsCommand(@NonNull String buildTargetsCommand) {
-        visitors.forEach(parser -> parser.visitBuildTargetsCommand(buildTargetsCommand));
+    protected void visitCleanCommandsComponents(@NonNull List<String> cleanCommandComponents) {
+        visitors.forEach(parser -> parser.visitCleanCommandsComponents(cleanCommandComponents));
     }
 
     @Override
-    protected void visitCleanCommands(@NonNull String cleanCommand) {
-        visitors.forEach(parser -> parser.visitCleanCommands(cleanCommand));
+    protected void visitBuildTargetsCommandComponents(
+            @NonNull List<String> buildTargetsCommandComponents) {
+        visitors.forEach(
+                parser -> parser.visitBuildTargetsCommandComponents(buildTargetsCommandComponents));
     }
 
     @Override
@@ -177,5 +174,12 @@ public class AndroidBuildGradleJsonCompositeVisitor extends AndroidBuildGradleJs
     @Override
     protected void visitLibraryRuntimeFile(@NonNull String runtimeFile) {
         visitors.forEach(parser -> parser.visitLibraryRuntimeFile(runtimeFile));
+    }
+
+    @Override
+    protected void visitLibraryBuildCommandComponents(
+            @NonNull List<String> buildCommandComponents) {
+        visitors.forEach(
+                parser -> parser.visitLibraryBuildCommandComponents(buildCommandComponents));
     }
 }

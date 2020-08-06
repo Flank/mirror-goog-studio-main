@@ -29,9 +29,10 @@ public class NativeBuildConfigValue {
     @Nullable public Map<Integer, String> stringTable;
     @Nullable
     public Collection<File> buildFiles;
-    @Nullable
-    public List<String> cleanCommands;
-    @Nullable public String buildTargetsCommand;
+    @Nullable public List<List<String>> cleanCommandsComponents;
+    @Nullable public List<String> buildTargetsCommandComponents;
+    @Deprecated @Nullable public List<String> cleanCommands;
+    @Deprecated @Nullable public String buildTargetsCommand;
     @Nullable public Map<String, NativeLibraryValue> libraries;
     @Nullable
     public Map<String, NativeToolchainValue> toolchains;

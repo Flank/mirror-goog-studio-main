@@ -872,9 +872,10 @@ public class V1NativeModelTest {
             project.model().fetch(NativeAndroidProject.class);
             NativeBuildConfigValue buildConfig =
                     getNativeBuildConfigValue(getJsonFile("debug", "x86_64"));
-            assert buildConfig.cleanCommands != null;
-            for (String cleanCommand : buildConfig.cleanCommands) {
-                assertThat(cleanCommand).doesNotContain("-j");
+            assert buildConfig.cleanCommandsComponents != null;
+            for (List<String> cleanCommandComponents : buildConfig.cleanCommandsComponents) {
+                assertThat(cleanCommandComponents).doesNotContain("-j");
+                assertThat(cleanCommandComponents).doesNotContain("--jobs");
             }
         }
     }

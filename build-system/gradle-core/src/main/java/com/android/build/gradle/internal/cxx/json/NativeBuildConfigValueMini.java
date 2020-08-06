@@ -33,7 +33,7 @@ import java.util.Map;
  */
 public class NativeBuildConfigValueMini {
     @NonNull public List<File> buildFiles = Lists.newArrayList();
-    @NonNull public List<String> cleanCommands = Lists.newArrayList();
-    @Nullable public String buildTargetsCommand;
+    @NonNull public List<List<String>> cleanCommandsComponents = Lists.newArrayList();
+    @Nullable public List<String> buildTargetsCommandComponents;
     @NonNull public Map<String, NativeLibraryValueMini> libraries = Maps.newHashMap();
 }

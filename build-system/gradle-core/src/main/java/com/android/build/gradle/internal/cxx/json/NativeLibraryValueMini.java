@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class NativeLibraryValueMini {
     @Nullable public String artifactName;
-    @Nullable public String buildCommand;
+    @Nullable public List<String> buildCommandComponents;
     @Nullable public String abi;
     @Nullable public File output;
     @NonNull public List<File> runtimeFiles = Lists.newArrayList();

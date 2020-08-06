@@ -117,7 +117,7 @@ class CmakeBasicProjectTest(
                 version "$cmakeVersionInDsl"
               }
             }
-            
+
           // -----------------------------------------------------------------------
           // See b/131857476
           // -----------------------------------------------------------------------
@@ -127,7 +127,7 @@ class CmakeBasicProjectTest(
                 println("externalNativeBuild soFolder = " + task.soFolder)
             }
           }
-          
+
           // ------------------------------------------------------------------------
         }
     """.trimIndent())

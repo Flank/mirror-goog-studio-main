@@ -87,7 +87,6 @@ class JsonGenerationInvalidationState(
                     messages += "  - ${dependentBuildFile.absolutePath}"
                 }
             }
-
             if (rebuildDueToPrefabConfigurationChange) {
                 messages += "- prefab configuration has changed"
             }

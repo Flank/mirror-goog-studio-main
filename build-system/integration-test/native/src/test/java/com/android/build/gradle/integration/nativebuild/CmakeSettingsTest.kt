@@ -163,7 +163,7 @@ class CmakeSettingsTest(cmakeVersionInDsl: String, private val useV2NativeModel:
 
         assertThat(miniConfigs.size).isEqualTo(2)
         for(miniConfig in miniConfigs){
-            val buildCommand = miniConfig.buildTargetsCommand
+            val buildCommand = miniConfig.buildTargetsCommandComponents?.joinToString(" ")
             assertThat(buildCommand).doesNotContain("-j 100")
         }
 
@@ -177,7 +177,7 @@ class CmakeSettingsTest(cmakeVersionInDsl: String, private val useV2NativeModel:
 
         assertThat(miniConfigs.size).isEqualTo(2)
         for(miniConfig in miniConfigsWithBuildCommandArgs){
-            val buildCommand = miniConfig.buildTargetsCommand
+            val buildCommand = miniConfig.buildTargetsCommandComponents?.joinToString(" ")
             assertThat(buildCommand).contains("-j 100")
         }
     }

@@ -308,12 +308,12 @@ internal class CmakeServerExternalNativeJsonGenerator(
             StringTable(nativeBuildConfigValue.stringTable!!)
         assert(nativeBuildConfigValue.buildFiles != null)
         nativeBuildConfigValue.buildFiles!!.addAll(getBuildFiles(cmakeServer))
-        assert(nativeBuildConfigValue.cleanCommands != null)
-        nativeBuildConfigValue.cleanCommands!!.add(
+        assert(nativeBuildConfigValue.cleanCommandsComponents != null)
+        nativeBuildConfigValue.cleanCommandsComponents!!.add(
             CmakeUtils.getCleanCommand(cmake.cmakeExe, abi.cxxBuildFolder)
         )
-        assert(nativeBuildConfigValue.buildTargetsCommand != null)
-        nativeBuildConfigValue.buildTargetsCommand = CmakeUtils.getBuildTargetsCommand(
+        assert(nativeBuildConfigValue.buildTargetsCommandComponents != null)
+        nativeBuildConfigValue.buildTargetsCommandComponents = CmakeUtils.getBuildTargetsCommand(
             cmake.cmakeExe,
             abi.cxxBuildFolder,
             abi.getBuildCommandArguments()
@@ -589,7 +589,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
         ): NativeLibraryValue {
             val nativeLibraryValue = NativeLibraryValue()
             nativeLibraryValue.abi = abi
-            nativeLibraryValue.buildCommand =
+            nativeLibraryValue.buildCommandComponents =
                 CmakeUtils.getBuildCommand(cmakeExecutable, outputFolder, target.name)
             nativeLibraryValue.artifactName = target.name
             nativeLibraryValue.buildType = if (isDebuggable) "debug" else "release"
@@ -734,7 +734,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
         private fun createDefaultNativeBuildConfigValue(): NativeBuildConfigValue {
             val nativeBuildConfigValue = NativeBuildConfigValue()
             nativeBuildConfigValue.buildFiles = ArrayList()
-            nativeBuildConfigValue.cleanCommands = ArrayList()
+            nativeBuildConfigValue.cleanCommandsComponents = ArrayList()
             nativeBuildConfigValue.libraries =
                 HashMap()
             nativeBuildConfigValue.toolchains =
