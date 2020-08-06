@@ -190,24 +190,25 @@ message AgentExceptionLog {
 message SwapResponse {
   enum Status {
     UNKNOWN = 0;
-    OK = 1;                       // The swap completed successfully.
-    AGENT_ERROR = 2;              // One or more of the agents reported failure
-    INSTALLATION_FAILED = 3;      // Calling install-commit failed
-    ACTIVITY_RESTART_FAILED = 4;  // Calling update-appinfo failed
-    SETUP_FAILED = 5;             // Could not copy files
-    START_SERVER_FAILED = 6;      // Could not start the server
-    AGENT_ATTACH_FAILED = 7;      // Could not attach agents
-    MISSING_AGENT_RESPONSES = 8;  // Not all agents responded
-    WRITE_TO_SERVER_FAILED = 9;   // Could not communicate with the server
-    UNPARSEABLE_AGENT_RESPONSE = 10;  // An agent responded in an unexpected way
-    NO_DEBUGGER_SESSIONS = 11;        // Could not swap with debugger
-    PROCESS_CRASHING = 12;        // One of the processes is crashing
-    PROCESS_NOT_RESPONDING = 13;  // One of the processes is not responding
-    PROCESS_TERMINATED = 14;      // One of the processes terminated during swap
-    READ_FROM_SERVER_FAILED = 15; // The install server failed to response
-    OVERLAY_ID_MISMATCH = 16;     // The expected overlay was not present
-    OVERLAY_UPDATE_FAILED = 17;   // The overlay update failed to complete
+    OK = 1;                               // The swap completed successfully.
+    AGENT_ERROR = 2;                      // One or more of the agents reported failure
+    INSTALLATION_FAILED = 3;              // Calling install-commit failed
+    ACTIVITY_RESTART_FAILED = 4;          // Calling update-appinfo failed
+    SETUP_FAILED = 5;                     // Could not copy files
+    START_SERVER_FAILED = 6;              // Could not start the server
+    AGENT_ATTACH_FAILED = 7;              // Could not attach agents
+    MISSING_AGENT_RESPONSES = 8;          // Not all agents responded
+    WRITE_TO_SERVER_FAILED = 9;           // Could not communicate with the server
+    UNPARSEABLE_AGENT_RESPONSE = 10;      // An agent responded in an unexpected way
+    NO_DEBUGGER_SESSIONS = 11;            // Could not swap with debugger
+    PROCESS_CRASHING = 12;                // One of the processes is crashing
+    PROCESS_NOT_RESPONDING = 13;          // One of the processes is not responding
+    PROCESS_TERMINATED = 14;              // One of the processes terminated during swap
+    READ_FROM_SERVER_FAILED = 15;         // The install server failed to response
+    OVERLAY_ID_MISMATCH = 16;             // The expected overlay was not present
+    OVERLAY_UPDATE_FAILED = 17;           // The overlay update failed to complete
     SWAP_FAILED_BUT_OVERLAY_UPDATED = 18; // Swap failed, but overlay was updated
+    START_SERVER_FAILED_USERDEBUG = 19;   // Could not start the server
   }
 
   Status status = 1;

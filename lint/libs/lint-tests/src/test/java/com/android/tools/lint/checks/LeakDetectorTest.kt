@@ -24,7 +24,8 @@ class LeakDetectorTest : AbstractCheckTest() {
     }
 
     fun testStaticFields() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/LeakTest.java:18: Warning: Do not place Android context classes in static fields; this is a memory leak [StaticFieldLeak]
                 private static Activity sField7; // LEAK!
                         ~~~~~~

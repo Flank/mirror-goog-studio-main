@@ -223,7 +223,6 @@ android.onVariantProperties {
 
   consumerTask.configure { task ->
     task.replacementRequest = replacementRequest
-    task.enableGradleWorkers.set(true)
   }
 
   tasks.register(it.getName() + 'Verifier', VerifierTask) { task ->

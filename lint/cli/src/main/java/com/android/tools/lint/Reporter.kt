@@ -108,7 +108,8 @@ abstract class Reporter protected constructor(
     val isWriteToConsole: Boolean get() = output == null
 
     /** the title of the report */
-    @JvmField var title = "Lint Report"
+    @JvmField
+    var title = "Lint Report"
 
     /** Whether this report should display info if no issues were found */
     var isDisplayEmpty = true

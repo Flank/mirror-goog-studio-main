@@ -35,7 +35,7 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
     }
 
     @SuppressWarnings("all")
-    public void test() throws Exception {
+    public void test() {
         String expected =
                 ""
                         + "src/test/pkg/JavaPerformanceTest.java:31: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n"
@@ -145,11 +145,11 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                                         + "        }\n"
                                         + "\n"
                                         + "        boolean b = Boolean.valueOf(true); // auto-boxing\n"
-                                        + "        dummy(1, 2);\n"
+                                        + "        sample(1, 2);\n"
                                         + "\n"
                                         + "        // Non-allocations\n"
                                         + "        super.animate();\n"
-                                        + "        dummy2(1, 2);\n"
+                                        + "        sample2(1, 2);\n"
                                         + "        int x = 4 + '5';\n"
                                         + "\n"
                                         + "        // This will involve allocations, but we don't track\n"
@@ -157,11 +157,11 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                                         + "        someOtherMethod();\n"
                                         + "    }\n"
                                         + "\n"
-                                        + "    void dummy(Integer foo, int bar) {\n"
-                                        + "        dummy2(foo, bar);\n"
+                                        + "    void sample(Integer foo, int bar) {\n"
+                                        + "        sample2(foo, bar);\n"
                                         + "    }\n"
                                         + "\n"
-                                        + "    void dummy2(int foo, int bar) {\n"
+                                        + "    void sample2(int foo, int bar) {\n"
                                         + "    }\n"
                                         + "\n"
                                         + "    void someOtherMethod() {\n"
@@ -345,9 +345,8 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                                 + "+         Double d1 = Double.valueOf(1.0);");
     }
 
-    public void testNoLongSparseArray() throws Exception {
-        //noinspection all // Sample code
-        assertEquals("No warnings.", lintProject(manifest().minSdk(1), mLongSparseArray));
+    public void testNoLongSparseArray() {
+        lint().files(manifest().minSdk(1), mLongSparseArray).run().expectClean();
     }
 
     public void testNoSparseArrayOutsideAndroid() {
@@ -475,22 +474,22 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                                         + "        }\n"
                                         + "\n"
                                         + "        val b = java.lang.Boolean.valueOf(true)!! // auto-boxing\n"
-                                        + "        dummy(1, 2)\n"
+                                        + "        sample(1, 2)\n"
                                         + "\n"
                                         + "        // Non-allocations\n"
                                         + "        super.animate()\n"
-                                        + "        dummy2(1, 2)\n"
+                                        + "        sample2(1, 2)\n"
                                         + "\n"
                                         + "        // This will involve allocations, but we don't track\n"
                                         + "        // inter-procedural stuff here\n"
                                         + "        someOtherMethod()\n"
                                         + "    }\n"
                                         + "\n"
-                                        + "    internal fun dummy(foo: Int?, bar: Int) {\n"
-                                        + "        dummy2(foo!!, bar)\n"
+                                        + "    internal fun sample(foo: Int?, bar: Int) {\n"
+                                        + "        sample2(foo!!, bar)\n"
                                         + "    }\n"
                                         + "\n"
-                                        + "    internal fun dummy2(foo: Int, bar: Int) {\n"
+                                        + "    internal fun sample2(foo: Int, bar: Int) {\n"
                                         + "    }\n"
                                         + "\n"
                                         + "    internal fun someOtherMethod() {\n"

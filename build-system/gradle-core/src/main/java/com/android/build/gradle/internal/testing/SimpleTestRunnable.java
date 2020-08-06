@@ -31,6 +31,7 @@ import com.android.ddmlib.testrunner.IRemoteAndroidTestRunner.CoverageOutput;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.TestIdentifier;
 import com.android.ddmlib.testrunner.TestRunResult;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
@@ -60,7 +61,7 @@ import javax.inject.Inject;
  *
  * <p>The boolean return value is true if success.
  */
-public class SimpleTestRunnable implements Runnable {
+public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
 
     public static final String FILE_COVERAGE_EC = "coverage.ec";
     private static final String TMP = "/data/local/tmp/";

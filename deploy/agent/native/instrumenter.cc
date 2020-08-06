@@ -29,7 +29,8 @@
 #include "tools/base/deploy/agent/native/instrumentation.jar.cc"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/native_callbacks.h"
-#include "tools/base/deploy/common/env.h"
+#include "tools/base/deploy/agent/native/transforms.h"
+#include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/utils.h"
 
@@ -45,16 +46,24 @@ const std::string kInstrumentationJarName =
     "instruments-"_s + instrumentation_jar_hash + ".jar";
 
 const std::string MethodHooks::kNoHook = "";
+const std::string kNoCache = "";
 
+namespace {
+
+// Holds the transform that will be applied by Agent_ClassFileLoadHook.
 const Transform* current_transform = nullptr;
+
+// Holds the transformed bytes of the last class transformed by
+// Agent_ClassFileLoadHook.
+std::vector<dex::u4> last_class_bytes;
+
+}  // namespace
 
 #define FILE_MODE (S_IRUSR | S_IWUSR)
 
 std::string GetInstrumentJarPath(const std::string& package_name) {
-  std::string target_jar_dir_ = Env::root() + std::string("/data/data/") +
-                                package_name + "/code_cache/.studio/";
-  std::string target_jar = target_jar_dir_ + kInstrumentationJarName;
-  return target_jar;
+  return "/data/data/" + package_name + "/code_cache/.studio/" +
+         kInstrumentationJarName;
 }
 
 // Check if the jar_path exists. If it doesn't, generate its content using the
@@ -63,13 +72,13 @@ std::string GetInstrumentJarPath(const std::string& package_name) {
 // mapped fd to agent.so.
 bool WriteJarToDiskIfNecessary(const std::string& jar_path) {
   // If file exists, there is no need to do anything.
-  if (access(jar_path.c_str(), F_OK) != -1) {
+  if (IO::access(jar_path, F_OK) != -1) {
     return true;
   }
 
   // TODO: Would be more efficient to have the offset and size and use
   // sendfile() to avoid a userland trip.
-  int fd = open(jar_path.c_str(), O_WRONLY | O_CREAT, FILE_MODE);
+  int fd = IO::open(jar_path, O_WRONLY | O_CREAT, FILE_MODE);
   if (fd == -1) {
     Log::E("WriteJarToDiskIfNecessary(). Unable to open().");
     return false;
@@ -99,7 +108,8 @@ bool LoadInstrumentationJar(jvmtiEnv* jvmti, JNIEnv* jni,
     Log::V("No existing instrumentation found. Loading instrumentation from %s",
            kInstrumentationJarName.c_str());
     jni->ExceptionClear();
-    if (jvmti->AddToBootstrapClassLoaderSearch(jar_path.c_str()) !=
+    const std::string root_aware_jar_path = IO::ResolvePath(jar_path);
+    if (jvmti->AddToBootstrapClassLoaderSearch(root_aware_jar_path.c_str()) !=
         JVMTI_ERROR_NONE) {
       return false;
     }
@@ -109,31 +119,78 @@ bool LoadInstrumentationJar(jvmtiEnv* jvmti, JNIEnv* jni,
   return true;
 }
 
-bool ApplyTransform(jvmtiEnv* jvmti, JNIEnv* jni, const Transform& transform) {
-  jclass klass = jni->FindClass(transform.GetClassName().c_str());
-  if (jni->ExceptionCheck()) {
-    ErrEvent("Could not find class for instrumentation: " +
-             transform.GetClassName());
-    jni->ExceptionClear();
-    return false;
+bool ApplyCachedTransforms(jvmtiEnv* jvmti, const TransformCache& cache,
+                           const std::vector<jclass> classes,
+                           const std::vector<const Transform*>& transforms) {
+  std::vector<std::vector<dex::u4>> cached_classes;
+  for (const auto& transform : transforms) {
+    std::vector<dex::u4> dex;
+    if (!cache.ReadClass(transform->GetClassName(), &dex)) {
+      return false;
+    }
+    cached_classes.emplace_back(std::move(dex));
   }
-  current_transform = &transform;
-  bool success =
-      CheckJvmti(jvmti->RetransformClasses(1, &klass),
-                 "Could not retransform class: " + transform.GetClassName());
-  jni->DeleteLocalRef(klass);
-  return success;
+
+  Log::V("Applying transforms with cached classes");
+
+  std::vector<jvmtiClassDefinition> defs;
+  for (int i = 0; i < classes.size(); ++i) {
+    jvmtiClassDefinition def;
+    def.klass = classes[i];
+    def.class_byte_count = cached_classes[i].size();
+    def.class_bytes =
+        reinterpret_cast<const unsigned char*>(cached_classes[i].data());
+    defs.push_back(def);
+  }
+
+  return CheckJvmti(jvmti->RedefineClasses(defs.size(), defs.data()),
+                    "Could not redefine with cached classes");
 }
 
 bool ApplyTransforms(jvmtiEnv* jvmti, JNIEnv* jni,
-                     const std::vector<const Transform*> transforms) {
-  std::vector<std::string> failed_classes;
+                     const std::string& cache_path,
+                     const std::vector<const Transform*>& transforms) {
+  std::vector<jclass> classes;
   for (const auto& transform : transforms) {
+    jclass klass = jni->FindClass(transform->GetClassName().c_str());
+    if (klass == nullptr) {
+      ErrEvent("Could not find class for instrumentation: " +
+               transform->GetClassName());
+      jni->ExceptionClear();
+      return false;
+    }
+    classes.push_back(klass);
+  }
+
+  // Instead of using slicer to instrument the dex, which is expensive, attempt
+  // to read previously instrumented classes from a cache and use
+  // RedefineClasses instead of RetransformClasses.
+  TransformCache cache = TransformCache::Create(cache_path);
+  if (cache_path != kNoCache &&
+      ApplyCachedTransforms(jvmti, cache, classes, transforms)) {
+    return true;
+  }
+
+  std::vector<std::string> failed_classes;
+  for (int i = 0; i < classes.size(); ++i) {
+    current_transform = transforms[i];
+    bool success = CheckJvmti(
+        jvmti->RetransformClasses(1, &classes[i]),
+        "Could not retransform class: " + transforms[i]->GetClassName());
+    jni->DeleteLocalRef(classes[i]);
+
     // We intentionally do not stop if one transformation fails, because it's
     // useful to collect data on every failing transform - and if one is failing
     // due to platform/OEM changes, others might as well.
-    if (!ApplyTransform(jvmti, jni, *transform)) {
-      failed_classes.push_back(transform->GetClassName());
+    if (!success) {
+      failed_classes.push_back(transforms[i]->GetClassName());
+      continue;
+    }
+
+    if (cache_path != kNoCache) {
+      // RetransformClasses causes the Agent_ClassFileLoadHook callback to
+      // populate last_class_bytes.
+      cache.WriteClass(transforms[i]->GetClassName(), last_class_bytes);
     }
   }
 
@@ -227,20 +284,17 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
                      JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, NULL),
                  "Could not enable class file load hook event");
 
-  std::vector<const Transform*> transforms;
-  transforms.push_back(&activity_thread);
-  transforms.push_back(&dex_path_list_element);
-
+  // Only bother to use transform caching with IWI, since the package manager
+  // will wipe the cache on a normal installation.
   if (overlay_swap) {
-    transforms.push_back(&dex_path_list);
-    transforms.push_back(&res_manager);
-    transforms.push_back(&loaded_apk);
-    // TODO: We probably want this exception logging on pre-R as well; for
-    // safety's sake, we'll start with it on R+ only.
-    transforms.push_back(&thread);
+    const std::string cache_path = jar + ".cache";
+    success &=
+        ApplyTransforms(jvmti, jni, cache_path,
+                        {&thread, &dex_path_list, &loaded_apk, &res_manager});
+  } else {
+    success &= ApplyTransforms(jvmti, jni, kNoCache,
+                               {&activity_thread, &dex_path_list_element});
   }
-
-  success &= ApplyTransforms(jvmti, jni, transforms);
 
   // Failing to disable this event does not actually have any bearing on
   // whether or not instrumentation was a success, so we do not modify the
@@ -288,6 +342,10 @@ extern "C" void JNICALL Agent_ClassFileLoadHook(
 
   JvmtiAllocator allocator(jvmti);
   new_image = writer.CreateImage(&allocator, &new_image_size);
+
+  last_class_bytes.clear();
+  last_class_bytes.resize(new_image_size);
+  memcpy(last_class_bytes.data(), new_image, new_image_size);
 
   *new_class_data_len = new_image_size;
   *new_class_data = new_image;

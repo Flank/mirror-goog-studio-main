@@ -55,7 +55,7 @@ class UastTest : TestCase() {
         assertNotNull(uastFile)
         check(uastFile!!)
 
-        // Sanity check: everything should be convertible
+        // Validity check: everything should be convertible
         pair.first.psiFile?.accept(object : PsiRecursiveElementVisitor() {
             override fun visitElement(element: PsiElement) {
                 try {
@@ -88,9 +88,11 @@ class UastTest : TestCase() {
             """
         ).indented()
 
-        check(source, { file ->
-            assertEquals(
-                "" +
+        check(
+            source,
+            { file ->
+                assertEquals(
+                    "" +
                         "public final class TestKt {\n" +
                         "    @org.jetbrains.annotations.NotNull private static final var variable: java.lang.Object = <init>()\n" +
                         "    public static final fun foo1() : void {\n" +
@@ -102,9 +104,11 @@ class UastTest : TestCase() {
                         "    }\n" +
                         "    public static final fun foo2(@org.jetbrains.annotations.NotNull function: kotlin.jvm.functions.Function0<java.lang.Integer>) : void {\n" +
                         "    }\n" +
-                        "}", file.asSourceString().trim()
-            )
-        })
+                        "}",
+                    file.asSourceString().trim()
+                )
+            }
+        )
     }
 
     fun testKt25298() {
@@ -135,9 +139,11 @@ class UastTest : TestCase() {
             }"""
         ).indented()
 
-        check(source, { file ->
-            assertEquals(
-                "" +
+        check(
+            source,
+            { file ->
+                assertEquals(
+                    "" +
                         "UFile (package = test.pkg) [package test.pkg...]\n" +
                         "    UImportStatement (isOnDemand = false) [import java.util.concurrent.Executors]\n" +
                         "    UImportStatement (isOnDemand = false) [import java.util.concurrent.ScheduledExecutorService]\n" +
@@ -168,9 +174,10 @@ class UastTest : TestCase() {
                         "            UBlockExpression [{...}]\n" +
                         "                UReturnExpression [return true]\n" +
                         "                    ULiteralExpression (value = true) [true] : PsiType:boolean\n",
-                file.asLogTypes()
-            )
-        })
+                    file.asLogTypes()
+                )
+            }
+        )
     }
 
     fun test123923544() {
@@ -195,9 +202,11 @@ class UastTest : TestCase() {
             """
         ).indented()
 
-        check(source, { file ->
-            assertEquals(
-                """
+        check(
+            source,
+            { file ->
+                assertEquals(
+                    """
                 public final class BaseKt {
                     public static final fun createBase(@org.jetbrains.annotations.NotNull i: int) : Base {
                         return <init>(i)
@@ -221,11 +230,12 @@ class UastTest : TestCase() {
                     public fun Derived(@org.jetbrains.annotations.NotNull b: Base) = UastEmptyExpression
                 }
 
-                """.trimIndent(), file.asSourceString()
-            )
+                    """.trimIndent(),
+                    file.asSourceString()
+                )
 
-            assertEquals(
-                """
+                assertEquals(
+                    """
                 UFile (package = ) [public final class BaseKt {...]
                     UClass (name = BaseKt) [public final class BaseKt {...}]
                         UMethod (name = createBase) [public static final fun createBase(@org.jetbrains.annotations.NotNull i: int) : Base {...}]
@@ -263,10 +273,11 @@ class UastTest : TestCase() {
                             UParameter (name = b) [@org.jetbrains.annotations.NotNull var b: Base]
                                 UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
 
-                """.trimIndent(),
-                file.asLogTypes()
-            )
-        })
+                    """.trimIndent(),
+                    file.asLogTypes()
+                )
+            }
+        )
     }
 
     fun test13Features() {
@@ -462,7 +473,8 @@ class UastTest : TestCase() {
                     """.trimIndent(),
                     file.asLogTypes()
                 )
-            })
+            }
+        )
     }
 
     fun testSuspend() {
@@ -481,9 +493,11 @@ class UastTest : TestCase() {
             """
         ).indented()
 
-        check(source, { file ->
-            assertEquals(
-                """
+        check(
+            source,
+            { file ->
+                assertEquals(
+                    """
                 package test.pkg
 
                 import android.widget.TextView
@@ -495,11 +509,12 @@ class UastTest : TestCase() {
                     }
                 }
 
-                """.trimIndent(), file.asSourceString()
-            )
+                    """.trimIndent(),
+                    file.asSourceString()
+                )
 
-            assertEquals(
-                """
+                assertEquals(
+                    """
                 UFile (package = test.pkg) [package test.pkg...]
                     UImportStatement (isOnDemand = false) [import android.widget.TextView]
                     UClass (name = Test) [public final class Test : android.app.Activity {...}]
@@ -516,10 +531,11 @@ class UastTest : TestCase() {
                                             USimpleNameReferenceExpression (identifier = x) [x] : PsiType:int
                                             USimpleNameReferenceExpression (identifier = y) [y] : PsiType:int
 
-                """.trimIndent(),
-                file.asLogTypes()
-            )
-        })
+                    """.trimIndent(),
+                    file.asLogTypes()
+                )
+            }
+        )
     }
 
     fun testReifiedTypes() {
@@ -544,9 +560,11 @@ class UastTest : TestCase() {
             """
         ).indented()
 
-        check(source, { file ->
-            assertEquals(
-                """
+        check(
+            source,
+            { file ->
+                assertEquals(
+                    """
                 package test.pkg
 
                 public final class TestKt {
@@ -583,9 +601,11 @@ class UastTest : TestCase() {
                     }
                 }
 
-                """.trimIndent(), file.asSourceString()
-            )
-        })
+                    """.trimIndent(),
+                    file.asSourceString()
+                )
+            }
+        )
     }
 
     fun testKtParameters() {
@@ -604,9 +624,11 @@ class UastTest : TestCase() {
             """
         ).indented()
 
-        check(source, { file ->
-            assertEquals(
-                """
+        check(
+            source,
+            { file ->
+                assertEquals(
+                    """
                 package test.pkg
 
                 public final class GraphVariables {
@@ -629,9 +651,11 @@ class UastTest : TestCase() {
                     public fun GraphVariable(@org.jetbrains.annotations.NotNull name: java.lang.String, @org.jetbrains.annotations.NotNull graphType: java.lang.String, @org.jetbrains.annotations.Nullable value: T) = UastEmptyExpression
                 }
 
-                """.trimIndent(), file.asSourceString()
-            )
-        })
+                    """.trimIndent(),
+                    file.asSourceString()
+                )
+            }
+        )
     }
 
     fun testCatchClausesKotlin() {
@@ -657,9 +681,11 @@ class UastTest : TestCase() {
             """
         ).indented()
 
-        check(source, { file ->
-            assertEquals(
-                """
+        check(
+            source,
+            { file ->
+                assertEquals(
+                    """
                 package test.pkg
 
                 public final class TryCatchKotlin {
@@ -675,9 +701,11 @@ class UastTest : TestCase() {
                     }
                     public fun TryCatchKotlin() = UastEmptyExpression
                 }
-                """.trimIndent().trim(), file.asSourceString().trim().replace("\n        \n", "\n")
-            )
-        })
+                    """.trimIndent().trim(),
+                    file.asSourceString().trim().replace("\n        \n", "\n")
+                )
+            }
+        )
 
         // Java is OK:
         val javaSource = java(
@@ -696,13 +724,15 @@ class UastTest : TestCase() {
             """
         ).indented()
 
-        check(javaSource, { file ->
-            assertEquals(
-                // The annotations work in Java, as checked by
-                // ApiDetectorTest#testConditionalAroundExceptionSuppress
-                // However, in pretty printing catch clause parameters are not
-                // visited, as described in https://youtrack.jetbrains.com/issue/KT-35803
-                """
+        check(
+            javaSource,
+            { file ->
+                assertEquals(
+                    // The annotations work in Java, as checked by
+                    // ApiDetectorTest#testConditionalAroundExceptionSuppress
+                    // However, in pretty printing catch clause parameters are not
+                    // visited, as described in https://youtrack.jetbrains.com/issue/KT-35803
+                    """
                 public class TryCatchJava {
                     @java.lang.SuppressWarnings(null = "Something")
                     public fun test() : void {
@@ -715,9 +745,11 @@ class UastTest : TestCase() {
                     public fun canThrow() : void {
                     }
                 }
-                """.trimIndent().trim(), file.asSourceString().trim().replace("\n        \n", "\n")
-            )
-        })
+                    """.trimIndent().trim(),
+                    file.asSourceString().trim().replace("\n        \n", "\n")
+                )
+            }
+        )
     }
 
     fun testSamAst() { // See KT-28272
@@ -737,9 +769,11 @@ class UastTest : TestCase() {
             """
         ).indented()
 
-        check(source, { file ->
-            assertEquals(
-                """
+        check(
+            source,
+            { file ->
+                assertEquals(
+                    """
                 UFile (package = test.pkg) [package test.pkg...]
                   UClass (name = TestKt) [public final class TestKt {...}]
                     UMethod (name = test1) [public static final fun test1() : void {...}]
@@ -771,28 +805,29 @@ class UastTest : TestCase() {
                                       UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
                                       USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:void
                                       ULiteralExpression (value = "hello") ["hello"] : PsiType:String
-                """.trimIndent(),
-                file.asLogTypes(indent = "  ").trim()
-            )
-
-            try {
-                file.accept(object : AbstractUastVisitor() {
-                    override fun visitCallExpression(node: UCallExpression): Boolean {
-                        val resolved = node.resolve()
-                        if (resolved == null) {
-                            throw IllegalStateException("Could not resolve this call: ${node.asSourceString()}")
-                        }
-                        return super.visitCallExpression(node)
-                    }
-                })
-                fail("Expected unresolved error: see KT-28272")
-            } catch (failure: IllegalStateException) {
-                assertEquals(
-                    "Could not resolve this call: Runnable({ \n    println(\"hello\")\n})",
-                    failure.message
+                    """.trimIndent(),
+                    file.asLogTypes(indent = "  ").trim()
                 )
+
+                try {
+                    file.accept(object : AbstractUastVisitor() {
+                        override fun visitCallExpression(node: UCallExpression): Boolean {
+                            val resolved = node.resolve()
+                            if (resolved == null) {
+                                throw IllegalStateException("Could not resolve this call: ${node.asSourceString()}")
+                            }
+                            return super.visitCallExpression(node)
+                        }
+                    })
+                    fail("Expected unresolved error: see KT-28272")
+                } catch (failure: IllegalStateException) {
+                    assertEquals(
+                        "Could not resolve this call: Runnable({ \n    println(\"hello\")\n})",
+                        failure.message
+                    )
+                }
             }
-        })
+        )
     }
 
     fun testJava11() {
@@ -824,9 +859,11 @@ class UastTest : TestCase() {
             """
         ).indented()
 
-        check(source, javaLanguageLevel = LanguageLevel.JDK_11, android = false, check = { file ->
-            assertEquals(
-                """
+        check(
+            source, javaLanguageLevel = LanguageLevel.JDK_11, android = false,
+            check = { file ->
+                assertEquals(
+                    """
                     UFile (package = test.pkg) [package test.pkg...]
                       UImportStatement (isOnDemand = false) [import java.util.function.IntFunction]
                       UClass (name = Java11Test) [public class Java11Test {...}]
@@ -870,19 +907,20 @@ class UastTest : TestCase() {
                               UReturnExpression [return getHello()]
                                 UCallExpression (kind = UastCallKind(name='method_call'), argCount = 0)) [getHello()] : PsiType:String
                                   UIdentifier (Identifier (getHello)) [UIdentifier (Identifier (getHello))]
-                """.trimIndent(),
-                file.asLogTypes(indent = "  ").trim()
-            )
+                    """.trimIndent(),
+                    file.asLogTypes(indent = "  ").trim()
+                )
 
-            // Make sure that all calls correctly resolve
-            file.accept(object : AbstractUastVisitor() {
-                override fun visitCallExpression(node: UCallExpression): Boolean {
-                    val resolved = node.resolve()
-                    assertNotNull(resolved)
-                    return super.visitCallExpression(node)
-                }
-            })
-        })
+                // Make sure that all calls correctly resolve
+                file.accept(object : AbstractUastVisitor() {
+                    override fun visitCallExpression(node: UCallExpression): Boolean {
+                        val resolved = node.resolve()
+                        assertNotNull(resolved)
+                        return super.visitCallExpression(node)
+                    }
+                })
+            }
+        )
     }
 
     fun test125138962() {
@@ -901,9 +939,11 @@ class UastTest : TestCase() {
             """
         ).indented()
 
-        check(source, check = { file ->
-            assertEquals(
-                """
+        check(
+            source,
+            check = { file ->
+                assertEquals(
+                    """
                 package test.pkg
 
                 public final class SimpleClass {
@@ -916,10 +956,11 @@ class UastTest : TestCase() {
                         }
                     }
                 }
-                """.trimIndent(),
-                file.asSourceString().trim()
-            )
-        })
+                    """.trimIndent(),
+                    file.asSourceString().trim()
+                )
+            }
+        )
     }
 
     fun testIdea234484() {
@@ -938,19 +979,22 @@ class UastTest : TestCase() {
             """
         ).indented()
 
-        check(source, check = { file ->
-            val newFile = file.sourcePsi.toUElement()
-            newFile?.accept(object : AbstractUastVisitor() {
-                override fun visitLocalVariable(node: ULocalVariable): Boolean {
-                    val initializerType = node.uastInitializer?.getExpressionType()
-                    val interfaceType = node.type
-                    @Suppress("UNUSED_VARIABLE")
-                    val equals = initializerType == interfaceType // Stack overflow!
+        check(
+            source,
+            check = { file ->
+                val newFile = file.sourcePsi.toUElement()
+                newFile?.accept(object : AbstractUastVisitor() {
+                    override fun visitLocalVariable(node: ULocalVariable): Boolean {
+                        val initializerType = node.uastInitializer?.getExpressionType()
+                        val interfaceType = node.type
+                        @Suppress("UNUSED_VARIABLE")
+                        val equals = initializerType == interfaceType // Stack overflow!
 
-                    return super.visitLocalVariable(node)
-                }
-            })
-        })
+                        return super.visitLocalVariable(node)
+                    }
+                })
+            }
+        )
     }
 
     fun testKt27935() {
@@ -984,16 +1028,19 @@ class UastTest : TestCase() {
             """
         ).indented()
 
-        check(source, check = { file ->
-            // Make sure that all calls correctly resolve
-            file.accept(object : AbstractUastVisitor() {
-                override fun visitCallExpression(node: UCallExpression): Boolean {
-                    val resolved = node.resolve()
-                    assertNotNull(resolved)
-                    return super.visitCallExpression(node)
-                }
-            })
-        })
+        check(
+            source,
+            check = { file ->
+                // Make sure that all calls correctly resolve
+                file.accept(object : AbstractUastVisitor() {
+                    override fun visitCallExpression(node: UCallExpression): Boolean {
+                        val resolved = node.resolve()
+                        assertNotNull(resolved)
+                        return super.visitCallExpression(node)
+                    }
+                })
+            }
+        )
     }
 
     fun testKt34187() {
@@ -1011,17 +1058,20 @@ class UastTest : TestCase() {
             """
         ).indented()
 
-        check(source, check = { file ->
-            // Make sure that all calls correctly resolve
-            file.accept(object : AbstractUastVisitor() {
-                override fun visitBinaryExpression(node: UBinaryExpression): Boolean {
-                    if (node.isAssignment()) {
-                        val type = node.leftOperand.getExpressionType()
-                        assertNotNull("type of ${node.leftOperand.sourcePsi?.text} is null", type)
+        check(
+            source,
+            check = { file ->
+                // Make sure that all calls correctly resolve
+                file.accept(object : AbstractUastVisitor() {
+                    override fun visitBinaryExpression(node: UBinaryExpression): Boolean {
+                        if (node.isAssignment()) {
+                            val type = node.leftOperand.getExpressionType()
+                            assertNotNull("type of ${node.leftOperand.sourcePsi?.text} is null", type)
+                        }
+                        return super.visitBinaryExpression(node)
                     }
-                    return super.visitBinaryExpression(node)
-                }
-            })
-        })
+                })
+            }
+        )
     }
 }

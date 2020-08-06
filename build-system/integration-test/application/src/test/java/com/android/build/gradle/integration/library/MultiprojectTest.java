@@ -32,10 +32,7 @@ public class MultiprojectTest {
                     .fromTestProject("multiproject")
                     // b/157470515, http://b/146208910, http://b/149978740
                     .withConfigurationCaching(
-                            BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
-                    // Use 6.6 nightly until we migrate to 6.6, this is for assembleDebug to
-                    // succeed.
-                    .setTargetGradleVersion("6.6-20200609220026+0000")
+                            BaseGradleExecutor.ConfigurationCaching.WARN)
                     .create();
 
     @Before

@@ -15,14 +15,17 @@
  */
 package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.innerclass
 
+import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassMetadata
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.CodeInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getGetterMethodInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.DefaultGetMethodInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.GroupGetMethodInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.NoMetadataGetMethodInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getDataType
 import com.android.build.gradle.internal.tasks.mlkit.codegen.getParameterType
 import com.android.tools.mlkit.MlNames
+import com.android.tools.mlkit.ModelInfo
 import com.android.tools.mlkit.TensorInfo
 import com.squareup.javapoet.FieldSpec
 import com.squareup.javapoet.MethodSpec
@@ -32,8 +35,9 @@ import com.squareup.javapoet.TypeSpec
 import javax.lang.model.element.Modifier
 
 /** Injector to inject output class. */
-class OutputsClassInjector : CodeInjector<TypeSpec.Builder, List<TensorInfo>> {
-    override fun inject(classBuilder: TypeSpec.Builder, tensorInfos: List<TensorInfo>) {
+class OutputsClassInjector(private val metadata: ClassMetadata) : CodeInjector<TypeSpec.Builder, ModelInfo> {
+    override fun inject(classBuilder: TypeSpec.Builder, modelInfo: ModelInfo) {
+        val tensorInfos = modelInfo.outputs
         val builder = TypeSpec.classBuilder(MlNames.OUTPUTS)
         builder.addModifiers(Modifier.PUBLIC)
 
@@ -78,7 +82,7 @@ class OutputsClassInjector : CodeInjector<TypeSpec.Builder, List<TensorInfo>> {
 
         // Add getter methods for each param.
         for (tensorInfo in tensorInfos) {
-            val methodInjector = getGetterMethodInjector(tensorInfo)
+            val methodInjector = getGetterMethodInjector(tensorInfo, modelInfo)
             methodInjector.inject(builder, tensorInfo)
             // Add getter method to return generic TensorBuffer type if missing.
             if (methodInjector !is DefaultGetMethodInjector && methodInjector !is NoMetadataGetMethodInjector) {
@@ -88,6 +92,11 @@ class OutputsClassInjector : CodeInjector<TypeSpec.Builder, List<TensorInfo>> {
                     NoMetadataGetMethodInjector().inject(builder, tensorInfo)
                 }
             }
+        }
+
+        // Add group getter methods if necessary.
+        if (modelInfo.outputTensorGroups.isNotEmpty()) {
+            GroupGetMethodInjector(metadata).inject(builder, modelInfo)
         }
 
         // Add getBuffer method for inner usage.

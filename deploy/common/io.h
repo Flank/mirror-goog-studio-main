@@ -34,6 +34,16 @@
 namespace deploy {
 class IO {
  public:
+  // Resolves a filesystem path against the test root, if one is currently
+  // configured.
+  //
+  // In a FakeDevice test context, the path "/some/path/here" will be resolved
+  // to "/tmp/storageXXX/some/path/here".
+  //
+  // This method is public for the rare cases where the raw root-aware path
+  // needs to be used, such as when passing paths to JVMTI.
+  static std::string ResolvePath(const std::string& path);
+
   static int access(const std::string& pathname, int mode);
   static int creat(const std::string& pathname, mode_t mode);
   static FILE* fopen(const std::string& filename, const std::string& mode);
@@ -44,9 +54,6 @@ class IO {
   static int open(const std::string& pathname, int flags, mode_t mode);
   static DIR* opendir(const std::string& name);
   static int unlink(const std::string& pathname);
-
- private:
-  static std::string ResolvePath(const std::string& path);
 };
 
 }  // namespace deploy

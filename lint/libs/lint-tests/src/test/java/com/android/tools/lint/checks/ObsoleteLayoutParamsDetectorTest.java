@@ -25,9 +25,8 @@ public class ObsoleteLayoutParamsDetectorTest extends AbstractCheckTest {
         return new ObsoleteLayoutParamsDetector();
     }
 
-    public void test() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void test() {
+        String expected =
                 ""
                         + "res/layout/wrongparams.xml:11: Warning: Invalid layout param in a FrameLayout: layout_weight [ObsoleteLayoutParam]\n"
                         + "        android:layout_weight=\"1\"\n"
@@ -50,8 +49,8 @@ public class ObsoleteLayoutParamsDetectorTest extends AbstractCheckTest {
                         + "res/layout/wrongparams.xml:43: Warning: Invalid layout param in a LinearLayout: layout_below [ObsoleteLayoutParam]\n"
                         + "            android:layout_below=\"@+id/button1\"\n"
                         + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 7 warnings\n",
-                lintProject(
+                        + "0 errors, 7 warnings\n";
+        lint().files(
                         xml(
                                 "res/layout/wrongparams.xml",
                                 ""
@@ -142,16 +141,15 @@ public class ObsoleteLayoutParamsDetectorTest extends AbstractCheckTest {
                                         + "    </GridLayout>\n"
                                         + "\n"
                                         + "</FrameLayout>\n"
-                                        + "\n")));
+                                        + "\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void test2() throws Exception {
+    public void test2() {
         // Test <merge> and custom view handling
 
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "res/layout/wrongparams2.xml",
                                 ""
@@ -169,19 +167,20 @@ public class ObsoleteLayoutParamsDetectorTest extends AbstractCheckTest {
                                         + "            android:layout_weight=\"1\" />\n"
                                         + "    </foo.bar.ActionBarHost>\n"
                                         + "\n"
-                                        + "</merge>\n")));
+                                        + "</merge>\n"))
+                .run()
+                .expectClean();
     }
 
-    public void test3() throws Exception {
+    public void test3() {
         // Test includes across files (wrong layout param on root element)
-        //noinspection all // Sample code
-        assertEquals(
+        String expected =
                 ""
                         + "res/layout/wrongparams3.xml:5: Warning: Invalid layout param 'layout_alignParentTop' (included from within a LinearLayout in layout/wrongparams4.xml) [ObsoleteLayoutParam]\n"
                         + "    android:layout_alignParentTop=\"true\" >\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         xml(
                                 "res/layout/wrongparams4.xml",
                                 ""
@@ -213,13 +212,14 @@ public class ObsoleteLayoutParamsDetectorTest extends AbstractCheckTest {
                                         + "        android:layout_height=\"wrap_content\"\n"
                                         + "        android:text=\"Button\" />\n"
                                         + "\n"
-                                        + "</LinearLayout>\n")));
+                                        + "</LinearLayout>\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void test4() throws Exception {
+    public void test4() {
         // Test includes with a <merge> (wrong layout param on child of root merge element)
-        //noinspection all // Sample code
-        assertEquals(
+        String expected =
                 ""
                         + "res/layout/wrongparams5.xml:8: Warning: Invalid layout param 'layout_alignParentTop' (included from within a LinearLayout in layout/wrongparams6.xml) [ObsoleteLayoutParam]\n"
                         + "        android:layout_alignParentTop=\"true\"\n"
@@ -233,8 +233,8 @@ public class ObsoleteLayoutParamsDetectorTest extends AbstractCheckTest {
                         + "res/layout/wrongparams6.xml:17: Warning: Invalid layout param in a LinearLayout: layout_toEndOf [ObsoleteLayoutParam]\n"
                         + "            android:layout_toEndOf=\"@+id/include1\" />\n"
                         + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 4 warnings\n",
-                lintProject(
+                        + "0 errors, 4 warnings\n";
+        lint().files(
                         xml(
                                 "res/layout/wrongparams5.xml",
                                 ""
@@ -276,18 +276,19 @@ public class ObsoleteLayoutParamsDetectorTest extends AbstractCheckTest {
                                         + "            android:layout_height=\"wrap_content\"\n"
                                         + "            android:layout_alignStart=\"@+id/include1\"\n"
                                         + "            android:layout_toEndOf=\"@+id/include1\" />\n"
-                                        + "</LinearLayout>\n")));
+                                        + "</LinearLayout>\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void testIgnore() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testIgnore() {
+        String expected =
                 ""
                         + "res/layout/wrongparams.xml:12: Warning: Invalid layout param in a FrameLayout: layout_weight [ObsoleteLayoutParam]\n"
                         + "        android:layout_weight=\"1\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         xml(
                                 "res/layout/wrongparams.xml",
                                 ""
@@ -382,6 +383,8 @@ public class ObsoleteLayoutParamsDetectorTest extends AbstractCheckTest {
                                         + "    </GridLayout>\n"
                                         + "\n"
                                         + "</FrameLayout>\n"
-                                        + "\n")));
+                                        + "\n"))
+                .run()
+                .expect(expected);
     }
 }

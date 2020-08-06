@@ -269,7 +269,7 @@ open class LintCliClient : LintClient {
                     """
                        One or more issues were fixed in the source code.
                        Aborting the build since the edits to the source files were performed **after** compilation, so the outputs do not contain the fixes. Re-run the build.
-                   """.trimIndent()
+                    """.trimIndent()
                 System.err.println(message)
                 return ERRNO_APPLIED_SUGGESTIONS
             }
@@ -382,9 +382,9 @@ open class LintCliClient : LintClient {
             if (stats.baselineFixedCount > 0) {
                 println(
                     "" +
-                            "\n${stats.baselineFixedCount} errors/warnings were listed in the " +
-                            "baseline file ($baselineFile) but not found in the project; " +
-                            "perhaps they have been fixed?"
+                        "\n${stats.baselineFixedCount} errors/warnings were listed in the " +
+                        "baseline file ($baselineFile) but not found in the project; " +
+                        "perhaps they have been fixed?"
                 )
             }
             val checkVariant = baselineVariantName
@@ -559,9 +559,11 @@ open class LintCliClient : LintClient {
             ""
         }
         val path = file.path
-        if ((path.endsWith(DOT_JAVA) ||
-                    path.endsWith(DOT_KT) ||
-                    path.endsWith(DOT_KTS)) &&
+        if ((
+            path.endsWith(DOT_JAVA) ||
+                path.endsWith(DOT_KT) ||
+                path.endsWith(DOT_KTS)
+            ) &&
             CharSequences.indexOf(contents, '\r') != -1
         ) {
             // Offsets in these files will be relative to PSI's text offsets (which may
@@ -635,9 +637,9 @@ open class LintCliClient : LintClient {
         }
 
         constructor(lintFile: File, fatalOnly: Boolean) :
-                super(this@LintCliClient, null, null, lintFile) {
-            this.fatalOnly = fatalOnly
-        }
+            super(this@LintCliClient, null, null, lintFile) {
+                this.fatalOnly = fatalOnly
+            }
 
         protected constructor(
             lintFile: File,
@@ -744,8 +746,10 @@ open class LintCliClient : LintClient {
                 }
             }
             return if (enabled.contains(id) ||
-                enabledCategories != null && (enabledCategories.contains(category) ||
-                        category.parent != null && enabledCategories.contains(category.parent))
+                enabledCategories != null && (
+                    enabledCategories.contains(category) ||
+                        category.parent != null && enabledCategories.contains(category.parent)
+                    )
             ) {
                 getVisibleSeverity(issue, severity)
             } else severity
@@ -928,8 +932,8 @@ open class LintCliClient : LintClient {
         val disabledCategories = flags.disabledCategories
         if (disabledCategories != null) {
             val category = issue.category
-            if (disabledCategories.contains(category) || category.parent != null
-                && disabledCategories.contains(category.parent)
+            if (disabledCategories.contains(category) || category.parent != null &&
+                disabledCategories.contains(category.parent)
             ) {
                 return true
             }
@@ -942,8 +946,8 @@ open class LintCliClient : LintClient {
         val enabledCategories = flags.enabledCategories
         if (enabledCategories != null) {
             val category = issue.category
-            if (enabledCategories.contains(category) || category.parent != null
-                && enabledCategories.contains(category.parent)
+            if (enabledCategories.contains(category) || category.parent != null &&
+                enabledCategories.contains(category.parent)
             ) {
                 return true
             }
@@ -1191,9 +1195,9 @@ open class LintCliClient : LintClient {
             if (targetSdkVersion != null || minSdkVersion != null) {
                 injectedXml.append(
                     "" +
-                            "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                            "    package=\"\${packageName}\">\n" +
-                            "    <uses-sdk"
+                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    package=\"\${packageName}\">\n" +
+                        "    <uses-sdk"
                 )
                 if (minSdkVersion != null) {
                     injectedXml.append(" android:minSdkVersion=\"").append(minSdkVersion.apiString)
@@ -1395,9 +1399,11 @@ open class LintCliClient : LintClient {
             if (path.startsWith(File.separator)) {
                 sb.append(File.separator)
             }
-            elementLoop@ for (element in Splitter.on(File.separatorChar).omitEmptyStrings().split(
-                path
-            )) {
+            elementLoop@ for (
+                element in Splitter.on(File.separatorChar).omitEmptyStrings().split(
+                    path
+                )
+            ) {
                 if (element == ".") {
                     continue
                 } else if (element == "..") {

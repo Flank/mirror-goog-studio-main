@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.common.fixture.model
 
-import com.android.build.gradle.integration.common.fixture.ModelContainerV2
+import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.builder.model.v2.dsl.BaseConfig
 import com.android.builder.model.v2.dsl.BuildType
 import com.android.builder.model.v2.dsl.ProductFlavor
@@ -32,7 +32,9 @@ import com.android.builder.model.v2.ide.Variant
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.VariantDependencies
-import java.io.File
+import com.android.builder.model.v2.models.ndk.NativeAbi
+import com.android.builder.model.v2.models.ndk.NativeModule
+import com.android.builder.model.v2.models.ndk.NativeVariant
 
 // --------------
 // dump fixtures specific to each model class
@@ -74,7 +76,6 @@ internal fun AndroidProject.writeToBuilder(builder: DumpBuilder) {
                 item("storePassword", config.storePassword)
                 item("keyAlias", config.keyAlias)
                 item("keyPassword", config.keyPassword)
-                item("storeType", config.storeType)
                 item("enableV1Signing", config.enableV1Signing)
                 item("enableV2Signing", config.enableV2Signing)
                 item("enableV3Signing", config.enableV3Signing)
@@ -112,6 +113,43 @@ internal fun AndroidProject.writeToBuilder(builder: DumpBuilder) {
         multiLineList("flags", flags.booleanFlagMap?.entries?.sortedBy { it.key.name }) {
             entry(it.key.name, it.value)
         }
+    }
+}
+
+fun NativeModule.writeToBuilder(builder: DumpBuilder) {
+    builder.apply {
+        item("name", name)
+        multiLineList("variants", variants.sortedBy { name }) { variant ->
+            variant.writeToBuilder(this)
+        }
+        item("nativeBuildSystem", nativeBuildSystem)
+        item(
+            "ndkVersion",
+            if (ndkVersion == ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION) "{DEFAULT_NDK_VERSION}" else ndkVersion
+        )
+        item(
+            "defaultNdkVersion",
+            if (defaultNdkVersion == ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION) "{DEFAULT_NDK_VERSION}" else defaultNdkVersion
+        )
+        item("externalNativeBuildFile", externalNativeBuildFile)
+    }
+}
+
+private fun NativeVariant.writeToBuilder(builder: DumpBuilder) {
+    builder.struct("NativeVariant", this) {
+        item("name", name)
+        multiLineList("abis", abis.sortedBy { name }) { abi ->
+            abi.writeToBuilder(this)
+        }
+    }
+}
+
+private fun NativeAbi.writeToBuilder(builder: DumpBuilder) {
+    builder.struct("NativeAbi", this) {
+        item("name", name)
+        item("sourceFlagsFile", sourceFlagsFile)
+        item("symbolFolderIndexFile", symbolFolderIndexFile)
+        item("buildFileIndexFile", buildFileIndexFile)
     }
 }
 
@@ -260,12 +298,6 @@ private fun SourceProvider.writeToBuilder(builder: DumpBuilder) {
             value(it)
         }
         multiLineList("renderscriptDirectories", renderscriptDirectories?.sorted()) {
-            value(it)
-        }
-        multiLineList("cDirectories", cDirectories.sorted()) {
-            value(it)
-        }
-        multiLineList("cppDirectories", cppDirectories.sorted()) {
             value(it)
         }
         multiLineList("resDirectories", resDirectories?.sorted()) {

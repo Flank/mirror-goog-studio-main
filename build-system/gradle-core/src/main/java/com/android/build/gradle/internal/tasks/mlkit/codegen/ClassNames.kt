@@ -154,4 +154,31 @@ object ClassNames {
 
     @JvmField
     val CATEGORY_LIST: TypeName = ParameterizedTypeName.get(LIST, CATEGORY)
+
+    @JvmField
+    val ARRAY_LIST: ClassName = ClassName.get("java.util", "ArrayList")
+
+    @JvmField
+    val LABEL_UTIL: ClassName = ClassName.get(
+        "org.tensorflow.lite.support.label",
+        "LabelUtil"
+    )
+
+    @JvmField
+    val BOUNDING_BOX_UTIL: ClassName = ClassName.get(
+        "org.tensorflow.lite.support.image",
+        "BoundingBoxUtil"
+    )
+
+    @JvmField
+    val RECT_F: ClassName = ClassName.get(
+        "android.graphics",
+        "RectF"
+    )
+
+    @JvmField
+    val STRING_LIST: TypeName = ParameterizedTypeName.get(LIST, STRING)
+
+    @JvmField
+    val RECTF_LIST: TypeName = ParameterizedTypeName.get(LIST, RECT_F)
 }

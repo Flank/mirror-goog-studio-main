@@ -66,17 +66,11 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class DesugarAppTest {
 
-    private enum GradleWorkers {
-        ENABLED,
-        DISABLED,
-    }
-
     private enum ArtifactTransform {
         WITH_DESUGARING,
         NO_DESUGARING,
     }
 
-    @NonNull private final GradleWorkers gradleWorkers;
     @NonNull private final VariantScope.Java8LangSupport java8LangSupport;
     @NonNull private final ArtifactTransform artifactTransforms;
 
@@ -86,29 +80,20 @@ public class DesugarAppTest {
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
                     .create();
 
-    @Parameterized.Parameters(name = "enableGradleWorkers={0}, tool={1}, artifactTransform = {2}")
+    @Parameterized.Parameters(name = "tool={0}, artifactTransform = {1}")
     public static Collection<Object[]> getParameters() {
 
         ImmutableSet.Builder<Object[]> builder = new ImmutableSet.Builder<>();
-        builder.add(new Object[] {GradleWorkers.ENABLED, D8, ArtifactTransform.NO_DESUGARING})
-                .add(new Object[] {GradleWorkers.ENABLED, D8, ArtifactTransform.WITH_DESUGARING})
-                .add(new Object[] {GradleWorkers.DISABLED, D8, ArtifactTransform.NO_DESUGARING})
-                .add(new Object[] {GradleWorkers.DISABLED, D8, ArtifactTransform.WITH_DESUGARING})
-                .add(new Object[] {GradleWorkers.ENABLED, DESUGAR, ArtifactTransform.NO_DESUGARING})
-                .add(
-                        new Object[] {
-                            GradleWorkers.DISABLED, DESUGAR, ArtifactTransform.NO_DESUGARING
-                        })
-                .add(new Object[] {GradleWorkers.DISABLED, R8, ArtifactTransform.NO_DESUGARING});
+        builder.add(new Object[]{D8, ArtifactTransform.NO_DESUGARING})
+                .add(new Object[]{D8, ArtifactTransform.WITH_DESUGARING})
+                .add(new Object[]{DESUGAR, ArtifactTransform.NO_DESUGARING})
+                .add(new Object[]{R8, ArtifactTransform.NO_DESUGARING});
 
         return builder.build();
     }
 
     public DesugarAppTest(
-            @NonNull GradleWorkers gradleWorkers,
-            @NonNull VariantScope.Java8LangSupport java8LangSupport,
-            @NonNull ArtifactTransform artifactTransforms) {
-        this.gradleWorkers = gradleWorkers;
+            @NonNull VariantScope.Java8LangSupport java8LangSupport, @NonNull ArtifactTransform artifactTransforms) {
         this.java8LangSupport = java8LangSupport;
         this.artifactTransforms = artifactTransforms;
     }
@@ -183,8 +168,6 @@ public class DesugarAppTest {
 
     @Test
     public void testNonDesugaredLibraryDependency() throws IOException, InterruptedException {
-        // see b/65543679 for details
-        Assume.assumeTrue(gradleWorkers == GradleWorkers.DISABLED);
         // see b/72994228
         Assume.assumeTrue(java8LangSupport != VariantScope.Java8LangSupport.R8);
         TestFileUtils.appendToFile(
@@ -358,9 +341,6 @@ public class DesugarAppTest {
         GradleTaskExecutor executor =
                 project.executor()
                         .with(BooleanOption.ENABLE_D8_DESUGARING, java8LangSupport == D8)
-                        .with(
-                                BooleanOption.ENABLE_GRADLE_WORKERS,
-                                gradleWorkers == GradleWorkers.ENABLED)
                         .with(BooleanOption.ENABLE_R8_DESUGARING, java8LangSupport == R8)
                         .with(OptionalBooleanOption.ENABLE_R8, java8LangSupport == R8)
                         .with(

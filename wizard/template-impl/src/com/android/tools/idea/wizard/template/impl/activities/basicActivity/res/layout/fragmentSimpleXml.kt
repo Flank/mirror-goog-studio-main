@@ -18,7 +18,11 @@ package com.android.tools.idea.wizard.template.impl.activities.basicActivity.res
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.renderIf
 
-fun fragmentSimpleXml(useAndroidX: Boolean): String {
+fun fragmentSimpleXml(
+  navGraphName: String,
+  navHostFragmentId: String,
+  useAndroidX: Boolean
+): String {
   val layout = getMaterialComponentName("android.support.constraint.ConstraintLayout", useAndroidX)
 
   return """
@@ -31,7 +35,7 @@ fun fragmentSimpleXml(useAndroidX: Boolean): String {
     app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
     <fragment
-        android:id="@+id/nav_host_fragment"
+        android:id="@+id/${navHostFragmentId}"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -40,7 +44,7 @@ fun fragmentSimpleXml(useAndroidX: Boolean): String {
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:defaultNavHost="true"
-        app:navGraph="@navigation/nav_graph" />
+        app:navGraph="@navigation/${navGraphName}" />
 </$layout>
 """
 }

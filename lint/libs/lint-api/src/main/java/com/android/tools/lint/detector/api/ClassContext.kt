@@ -363,7 +363,7 @@ class ClassContext(
      */
     @Deprecated(
         "Use {@link #report(Issue, FieldNode, Location, String)} instead; this method " +
-                "is here for custom rule compatibility",
+            "is here for custom rule compatibility",
         ReplaceWith("report(issue, method, instruction, location, message)")
     )
     fun report(
@@ -383,7 +383,7 @@ class ClassContext(
      */
     @Deprecated(
         "Use {@link #report(Issue, FieldNode, Location, String)} instead; this method " +
-                "is here for custom rule compatibility",
+            "is here for custom rule compatibility",
         ReplaceWith("report(issue, field, location, message)")
     )
     fun report(

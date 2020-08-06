@@ -91,8 +91,6 @@ public interface VariantScope {
     /** Returns whether we need to create a stream from the merged java resources */
     boolean getNeedsMergedJavaResStream();
 
-    boolean getNeedsMainDexListForBundle();
-
     boolean isTestOnly(VariantPropertiesImpl variantProperties);
 
     boolean isCoreLibraryDesugaringEnabled();

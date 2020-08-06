@@ -150,10 +150,9 @@ public class TestVariantFactory
         if (buildFeatures instanceof TestBuildFeatures) {
             return new BuildFeatureValuesImpl(
                     buildFeatures,
-                    true /* androidResources */,
-                    false /* dataBinding */,
-                    false /* mlModelBinding */,
-                    projectOptions);
+                    projectOptions,
+                    false /* dataBindingOverride */,
+                    false /* mlModelBindingOverride */);
         } else {
             throw new RuntimeException("buildFeatures not of type TestBuildFeatures");
         }

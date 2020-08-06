@@ -30,7 +30,7 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
         return new AppLinksAutoVerifyDetector();
     }
 
-    public void testOk() throws Exception {
+    public void testOk() {
         try {
             Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
             AppLinksAutoVerifyDetector.sMockData = data;
@@ -49,9 +49,7 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                     new AppLinksAutoVerifyDetector.HttpResult(
                             AppLinksAutoVerifyDetector.STATUS_HTTP_OK, statementList));
 
-            assertEquals(
-                    "No warnings.",
-                    lintProject(
+            lint().files(
                             xml(
                                     "AndroidManifest.xml",
                                     ""
@@ -74,13 +72,15 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                                             + "        </activity>\n"
                                             + "    </application>\n"
                                             + "\n"
-                                            + "</manifest>\n")));
+                                            + "</manifest>\n"))
+                    .run()
+                    .expectClean();
         } finally {
             AppLinksAutoVerifyDetector.sMockData = null;
         }
     }
 
-    public void testInvalidPackage() throws Exception {
+    public void testInvalidPackage() {
         try {
             Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
             AppLinksAutoVerifyDetector.sMockData = data;
@@ -99,13 +99,13 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                     new AppLinksAutoVerifyDetector.HttpResult(
                             AppLinksAutoVerifyDetector.STATUS_HTTP_OK, statementList));
 
-            assertEquals(
+            String expected =
                     ""
                             + "AndroidManifest.xml:12: Error: This host does not support app links to your app. Checks the Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json [AppLinksAutoVerifyError]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "1 errors, 0 warnings\n",
-                    lintProject(
+                            + "1 errors, 0 warnings\n";
+            lint().files(
                             xml(
                                     "AndroidManifest.xml",
                                     ""
@@ -128,13 +128,15 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                                             + "        </activity>\n"
                                             + "    </application>\n"
                                             + "\n"
-                                            + "</manifest>\n")));
+                                            + "</manifest>\n"))
+                    .run()
+                    .expect(expected);
         } finally {
             AppLinksAutoVerifyDetector.sMockData = null;
         }
     }
 
-    public void testNotAppTarget() throws Exception {
+    public void testNotAppTarget() {
         try {
             Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
             AppLinksAutoVerifyDetector.sMockData = data;
@@ -153,13 +155,13 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                     new AppLinksAutoVerifyDetector.HttpResult(
                             AppLinksAutoVerifyDetector.STATUS_HTTP_OK, statementList));
 
-            assertEquals(
+            String expected =
                     ""
                             + "AndroidManifest.xml:12: Error: This host does not support app links to your app. Checks the Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json [AppLinksAutoVerifyError]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "1 errors, 0 warnings\n",
-                    lintProject(
+                            + "1 errors, 0 warnings\n";
+            lint().files(
                             xml(
                                     "AndroidManifest.xml",
                                     ""
@@ -182,25 +184,27 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                                             + "        </activity>\n"
                                             + "    </application>\n"
                                             + "\n"
-                                            + "</manifest>\n")));
+                                            + "</manifest>\n"))
+                    .run()
+                    .expect(expected);
         } finally {
             AppLinksAutoVerifyDetector.sMockData = null;
         }
     }
 
-    public void testHttpResponseError() throws Exception {
+    public void testHttpResponseError() {
         try {
             Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
             AppLinksAutoVerifyDetector.sMockData = data;
             data.put("http://example.com", new AppLinksAutoVerifyDetector.HttpResult(404, null));
 
-            assertEquals(
+            String expected =
                     ""
                             + "AndroidManifest.xml:12: Warning: HTTP request for Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails. HTTP response code: 404 [AppLinksAutoVerifyWarning]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "0 errors, 1 warnings\n",
-                    lintProject(
+                            + "0 errors, 1 warnings\n";
+            lint().files(
                             xml(
                                     "AndroidManifest.xml",
                                     ""
@@ -223,13 +227,15 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                                             + "        </activity>\n"
                                             + "    </application>\n"
                                             + "\n"
-                                            + "</manifest>\n")));
+                                            + "</manifest>\n"))
+                    .run()
+                    .expect(expected);
         } finally {
             AppLinksAutoVerifyDetector.sMockData = null;
         }
     }
 
-    public void testFailedHttpConnection() throws Exception {
+    public void testFailedHttpConnection() {
         try {
             Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
             AppLinksAutoVerifyDetector.sMockData = data;
@@ -238,13 +244,13 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                     new AppLinksAutoVerifyDetector.HttpResult(
                             AppLinksAutoVerifyDetector.STATUS_HTTP_CONNECT_FAIL, null));
 
-            assertEquals(
+            String expected =
                     ""
                             + "AndroidManifest.xml:12: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerifyWarning]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "0 errors, 1 warnings\n",
-                    lintProject(
+                            + "0 errors, 1 warnings\n";
+            lint().files(
                             xml(
                                     "AndroidManifest.xml",
                                     ""
@@ -267,13 +273,15 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                                             + "        </activity>\n"
                                             + "    </application>\n"
                                             + "\n"
-                                            + "</manifest>\n")));
+                                            + "</manifest>\n"))
+                    .run()
+                    .expect(expected);
         } finally {
             AppLinksAutoVerifyDetector.sMockData = null;
         }
     }
 
-    public void testMalformedUrl() throws Exception {
+    public void testMalformedUrl() {
         try {
             Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
             AppLinksAutoVerifyDetector.sMockData = data;
@@ -282,13 +290,13 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                     new AppLinksAutoVerifyDetector.HttpResult(
                             AppLinksAutoVerifyDetector.STATUS_MALFORMED_URL, null));
 
-            assertEquals(
+            String expected =
                     ""
                             + "AndroidManifest.xml:12: Error: Malformed URL of Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json. An unknown protocol is specified [AppLinksAutoVerifyError]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "1 errors, 0 warnings\n",
-                    lintProject(
+                            + "1 errors, 0 warnings\n";
+            lint().files(
                             xml(
                                     "AndroidManifest.xml",
                                     ""
@@ -311,13 +319,15 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                                             + "        </activity>\n"
                                             + "    </application>\n"
                                             + "\n"
-                                            + "</manifest>\n")));
+                                            + "</manifest>\n"))
+                    .run()
+                    .expect(expected);
         } finally {
             AppLinksAutoVerifyDetector.sMockData = null;
         }
     }
 
-    public void testUnknownHost() throws Exception {
+    public void testUnknownHost() {
         try {
             Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
             AppLinksAutoVerifyDetector.sMockData = data;
@@ -326,13 +336,13 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                     new AppLinksAutoVerifyDetector.HttpResult(
                             AppLinksAutoVerifyDetector.STATUS_UNKNOWN_HOST, null));
 
-            assertEquals(
+            String expected =
                     ""
                             + "AndroidManifest.xml:12: Warning: Unknown host: http://example.com. Check if the host exists, and check your network connection [AppLinksAutoVerifyWarning]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "0 errors, 1 warnings\n",
-                    lintProject(
+                            + "0 errors, 1 warnings\n";
+            lint().files(
                             xml(
                                     "AndroidManifest.xml",
                                     ""
@@ -355,13 +365,15 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                                             + "        </activity>\n"
                                             + "    </application>\n"
                                             + "\n"
-                                            + "</manifest>\n")));
+                                            + "</manifest>\n"))
+                    .run()
+                    .expect(expected);
         } finally {
             AppLinksAutoVerifyDetector.sMockData = null;
         }
     }
 
-    public void testNotFound() throws Exception {
+    public void testNotFound() {
         try {
             Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
             AppLinksAutoVerifyDetector.sMockData = data;
@@ -370,13 +382,13 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                     new AppLinksAutoVerifyDetector.HttpResult(
                             AppLinksAutoVerifyDetector.STATUS_NOT_FOUND, null));
 
-            assertEquals(
+            String expected =
                     ""
                             + "AndroidManifest.xml:12: Error: Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json is not found on the host [AppLinksAutoVerifyError]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "1 errors, 0 warnings\n",
-                    lintProject(
+                            + "1 errors, 0 warnings\n";
+            lint().files(
                             xml(
                                     "AndroidManifest.xml",
                                     ""
@@ -399,13 +411,15 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                                             + "        </activity>\n"
                                             + "    </application>\n"
                                             + "\n"
-                                            + "</manifest>\n")));
+                                            + "</manifest>\n"))
+                    .run()
+                    .expect(expected);
         } finally {
             AppLinksAutoVerifyDetector.sMockData = null;
         }
     }
 
-    public void testWrongJsonSyntax() throws Exception {
+    public void testWrongJsonSyntax() {
         try {
             Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
             AppLinksAutoVerifyDetector.sMockData = data;
@@ -414,13 +428,13 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                     new AppLinksAutoVerifyDetector.HttpResult(
                             AppLinksAutoVerifyDetector.STATUS_WRONG_JSON_SYNTAX, null));
 
-            assertEquals(
+            String expected =
                     ""
                             + "AndroidManifest.xml:12: Error: http://example.com/.well-known/assetlinks.json has incorrect JSON syntax [AppLinksAutoVerifyError]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "1 errors, 0 warnings\n",
-                    lintProject(
+                            + "1 errors, 0 warnings\n";
+            lint().files(
                             xml(
                                     "AndroidManifest.xml",
                                     ""
@@ -443,13 +457,15 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                                             + "        </activity>\n"
                                             + "    </application>\n"
                                             + "\n"
-                                            + "</manifest>\n")));
+                                            + "</manifest>\n"))
+                    .run()
+                    .expect(expected);
         } finally {
             AppLinksAutoVerifyDetector.sMockData = null;
         }
     }
 
-    public void testFailedJsonParsing() throws Exception {
+    public void testFailedJsonParsing() {
         try {
             Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
             AppLinksAutoVerifyDetector.sMockData = data;
@@ -458,13 +474,13 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                     new AppLinksAutoVerifyDetector.HttpResult(
                             AppLinksAutoVerifyDetector.STATUS_JSON_PARSE_FAIL, null));
 
-            assertEquals(
+            String expected =
                     ""
                             + "AndroidManifest.xml:12: Error: Parsing JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerifyError]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "1 errors, 0 warnings\n",
-                    lintProject(
+                            + "1 errors, 0 warnings\n";
+            lint().files(
                             xml(
                                     "AndroidManifest.xml",
                                     ""
@@ -487,16 +503,16 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                                             + "        </activity>\n"
                                             + "    </application>\n"
                                             + "\n"
-                                            + "</manifest>\n")));
+                                            + "</manifest>\n"))
+                    .run()
+                    .expect(expected);
         } finally {
             AppLinksAutoVerifyDetector.sMockData = null;
         }
     }
 
-    public void testNoAutoVerify() throws Exception {
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testNoAutoVerify() {
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -519,13 +535,13 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                                         + "        </activity>\n"
                                         + "    </application>\n"
                                         + "\n"
-                                        + "</manifest>\n")));
+                                        + "</manifest>\n"))
+                .run()
+                .expectClean();
     }
 
-    public void testNotAppLinkInIntents() throws Exception {
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testNotAppLinkInIntents() {
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -559,10 +575,12 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                                         + "        </activity>\n"
                                         + "    </application>\n"
                                         + "\n"
-                                        + "</manifest>\n")));
+                                        + "</manifest>\n"))
+                .run()
+                .expectClean();
     }
 
-    public void testMultipleLinks() throws Exception {
+    public void testMultipleLinks() {
         try {
             Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
             AppLinksAutoVerifyDetector.sMockData = data;
@@ -583,7 +601,7 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                     new AppLinksAutoVerifyDetector.HttpResult(
                             AppLinksAutoVerifyDetector.STATUS_WRONG_JSON_SYNTAX, null));
 
-            assertEquals(
+            String expected =
                     ""
                             + "AndroidManifest.xml:12: Error: Digital Asset Links JSON file https://example.com/.well-known/assetlinks.json is not found on the host [AppLinksAutoVerifyError]\n"
                             + "                    android:host=\"example.com\"\n"
@@ -597,8 +615,8 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                             + "AndroidManifest.xml:15: Warning: Unknown host: http://www.example.com. Check if the host exists, and check your network connection [AppLinksAutoVerifyWarning]\n"
                             + "                <data android:host=\"www.example.com\" />\n"
                             + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "2 errors, 2 warnings\n",
-                    lintProject(
+                            + "2 errors, 2 warnings\n";
+            lint().files(
                             xml(
                                     "AndroidManifest.xml",
                                     ""
@@ -623,13 +641,15 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                                             + "        </activity>\n"
                                             + "    </application>\n"
                                             + "\n"
-                                            + "</manifest>\n")));
+                                            + "</manifest>\n"))
+                    .run()
+                    .expect(expected);
         } finally {
             AppLinksAutoVerifyDetector.sMockData = null;
         }
     }
 
-    public void testMultipleIntents() throws Exception {
+    public void testMultipleIntents() {
         try {
             Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
             AppLinksAutoVerifyDetector.sMockData = data;
@@ -642,7 +662,7 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                     new AppLinksAutoVerifyDetector.HttpResult(
                             AppLinksAutoVerifyDetector.STATUS_UNKNOWN_HOST, null));
 
-            assertEquals(
+            String expected =
                     ""
                             + "AndroidManifest.xml:12: Warning: Unknown host: http://www.example.com. Check if the host exists, and check your network connection [AppLinksAutoVerifyWarning]\n"
                             + "                    android:host=\"www.example.com\"\n"
@@ -650,8 +670,8 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                             + "AndroidManifest.xml:20: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerifyWarning]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "0 errors, 2 warnings\n",
-                    lintProject(
+                            + "0 errors, 2 warnings\n";
+            lint().files(
                             xml(
                                     "AndroidManifest.xml",
                                     ""
@@ -682,13 +702,15 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                                             + "        </activity>\n"
                                             + "    </application>\n"
                                             + "\n"
-                                            + "</manifest>\n")));
+                                            + "</manifest>\n"))
+                    .run()
+                    .expect(expected);
         } finally {
             AppLinksAutoVerifyDetector.sMockData = null;
         }
     }
 
-    public void testUnknownHostWithManifestPlaceholders() throws Exception {
+    public void testUnknownHostWithManifestPlaceholders() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=205990
         // Skip hosts that use manifest placeholders
         try {
@@ -699,9 +721,7 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                     new AppLinksAutoVerifyDetector.HttpResult(
                             AppLinksAutoVerifyDetector.STATUS_UNKNOWN_HOST, null));
 
-            assertEquals(
-                    "No warnings.",
-                    lintProject(
+            lint().files(
                             xml(
                                     "AndroidManifest.xml",
                                     ""
@@ -725,7 +745,9 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
                                             + "        </activity>\n"
                                             + "    </application>\n"
                                             + "\n"
-                                            + "</manifest>\n")));
+                                            + "</manifest>\n"))
+                    .run()
+                    .expectClean();
         } finally {
             AppLinksAutoVerifyDetector.sMockData = null;
         }

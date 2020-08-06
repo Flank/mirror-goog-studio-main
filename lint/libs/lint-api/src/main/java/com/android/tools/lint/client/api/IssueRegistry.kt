@@ -373,7 +373,7 @@ protected constructor() {
         private var cachedIdToIssue: Map<String, Issue>? = null
         private var cachedScopeIssues: MutableMap<EnumSet<Scope>, List<Issue>> = Maps.newHashMap()
 
-        private val DUMMY_IMPLEMENTATION = Implementation(
+        private val EMPTY_IMPLEMENTATION = Implementation(
             Detector::class.java,
             EnumSet.noneOf(Scope::class.java)
         )
@@ -386,13 +386,14 @@ protected constructor() {
         val PARSER_ERROR = Issue.create(
             id = "ParserError",
             briefDescription = "Parser Errors",
-            explanation = """
+            explanation =
+                """
                 Lint will ignore any files that contain fatal parsing errors. These may \
                 contain other errors, or contain code which affects issues in other files.""",
             category = Category.LINT,
             priority = 10,
             severity = Severity.ERROR,
-            implementation = DUMMY_IMPLEMENTATION
+            implementation = EMPTY_IMPLEMENTATION
         )
 
         /**
@@ -403,7 +404,8 @@ protected constructor() {
         val LINT_ERROR = Issue.create(
             id = "LintError",
             briefDescription = "Lint Failure",
-            explanation = """
+            explanation =
+                """
                 This issue type represents a problem running lint itself. Examples include \
                 failure to find bytecode for source files (which means certain detectors \
                 could not be run), parsing errors in lint configuration files, etc.
@@ -414,7 +416,7 @@ protected constructor() {
             category = Category.LINT,
             priority = 10,
             severity = Severity.ERROR,
-            implementation = DUMMY_IMPLEMENTATION
+            implementation = EMPTY_IMPLEMENTATION
         )
 
         /**
@@ -432,7 +434,7 @@ protected constructor() {
             category = Category.LINT,
             priority = 1,
             severity = Severity.WARNING,
-            implementation = DUMMY_IMPLEMENTATION
+            implementation = EMPTY_IMPLEMENTATION
         )
 
         /**
@@ -446,7 +448,7 @@ protected constructor() {
             category = Category.LINT,
             priority = 0,
             severity = Severity.INFORMATIONAL,
-            implementation = DUMMY_IMPLEMENTATION
+            implementation = EMPTY_IMPLEMENTATION
         )
 
         /**
@@ -457,7 +459,8 @@ protected constructor() {
         val BASELINE = Issue.create(
             id = "LintBaseline",
             briefDescription = "Baseline Issues",
-            explanation = """
+            explanation =
+                """
                 Lint can be configured with a "baseline"; a set of current issues found \
                 in a codebase, which future runs of lint will silently ignore. Only new \
                 issues not found in the baseline are reported.
@@ -478,7 +481,7 @@ protected constructor() {
             category = Category.LINT,
             priority = 10,
             severity = Severity.INFORMATIONAL,
-            implementation = DUMMY_IMPLEMENTATION
+            implementation = EMPTY_IMPLEMENTATION
         )
 
         /**
@@ -489,7 +492,8 @@ protected constructor() {
         val OBSOLETE_LINT_CHECK = Issue.create(
             id = "ObsoleteLintCustomCheck",
             briefDescription = "Obsolete custom lint check",
-            explanation = """
+            explanation =
+                """
                 Lint can be extended with "custom checks": additional checks implemented \
                 by developers and libraries to for example enforce specific API usages \
                 required by a library or a company coding style guideline.
@@ -506,7 +510,7 @@ protected constructor() {
             category = Category.LINT,
             priority = 10,
             severity = Severity.WARNING,
-            implementation = DUMMY_IMPLEMENTATION
+            implementation = EMPTY_IMPLEMENTATION
         )
 
         /**

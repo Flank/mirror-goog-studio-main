@@ -69,7 +69,8 @@ class DetectMissingPrefix : LayoutDetector() {
         val MISSING_NAMESPACE = Issue.create(
             id = "MissingPrefix",
             briefDescription = "Missing Android XML namespace",
-            explanation = """
+            explanation =
+                """
             Most Android views have attributes in the Android namespace. When referencing these attributes \
             you **must** include the namespace prefix, or your attribute will be interpreted by `aapt` as \
             just a custom attribute.
@@ -88,12 +89,12 @@ class DetectMissingPrefix : LayoutDetector() {
 
     override fun appliesTo(folderType: ResourceFolderType): Boolean =
         folderType == LAYOUT ||
-                folderType == MENU ||
-                folderType == DRAWABLE ||
-                folderType == ANIM ||
-                folderType == ANIMATOR ||
-                folderType == COLOR ||
-                folderType == INTERPOLATOR
+            folderType == MENU ||
+            folderType == DRAWABLE ||
+            folderType == ANIM ||
+            folderType == ANIMATOR ||
+            folderType == COLOR ||
+            folderType == INTERPOLATOR
 
     override fun getApplicableAttributes(): Collection<String>? = ALL
 
@@ -170,7 +171,7 @@ class DetectMissingPrefix : LayoutDetector() {
                             context.getLocation(attribute),
                             String.format(
                                 "Unused namespace declaration %1\$s; already " +
-                                        "declared on the root element",
+                                    "declared on the root element",
                                 name
                             )
                         )
@@ -245,8 +246,10 @@ class DetectMissingPrefix : LayoutDetector() {
             return false
         }
 
-        return tag.indexOf('.') != -1 && (!tag.startsWith(ANDROID_PKG_PREFIX) ||
+        return tag.indexOf('.') != -1 && (
+            !tag.startsWith(ANDROID_PKG_PREFIX) ||
                 tag.startsWith(ANDROID_SUPPORT_PKG_PREFIX) ||
-                tag.startsWith(ANDROIDX_PKG_PREFIX))
+                tag.startsWith(ANDROIDX_PKG_PREFIX)
+            )
     }
 }

@@ -35,6 +35,7 @@ import com.android.tools.apk.analyzer.ArchiveContext;
 import com.android.tools.apk.analyzer.ArchiveEntry;
 import com.android.tools.apk.analyzer.ArchiveNode;
 import com.android.tools.apk.analyzer.ArchiveTreeStructure;
+import com.android.tools.apk.analyzer.PathUtils;
 import com.google.archivepatcher.explainer.EntryExplanation;
 import com.google.archivepatcher.explainer.PatchExplainer;
 import com.google.archivepatcher.generator.bsdiff.BsDiffDeltaGenerator;
@@ -89,8 +90,8 @@ public class ApkFileByFileDiffParser {
         final ArchiveEntry data = oldFile == null ? newFile.getData() : oldFile.getData();
         final String name =
                 data.getPath().getFileName() != null
-                        ? data.getPath().getFileName().toString()
-                        : data.getArchive().getPath().getFileName().toString();
+                        ? PathUtils.fileNameWithTrailingSeparator(data.getPath())
+                        : PathUtils.fileNameWithTrailingSeparator(data.getArchive().getPath());
         if (oldFile != null) {
             if (!oldFile.getChildren().isEmpty()) {
                 for (ArchiveNode oldChild : oldFile.getChildren()) {

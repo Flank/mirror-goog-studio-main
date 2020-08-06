@@ -58,6 +58,8 @@ class JarsClasspathInputsWithIdentityTest {
         val second = inputs.toList()[1]
         assertThat(incrementalIdentity.jarsInfo.getValue(first).hasChanged).isTrue()
         assertThat(incrementalIdentity.jarsInfo.getValue(second).hasChanged).isTrue()
+
+        assertThat(incrementalIdentity.reprocessAll).isTrue()
     }
 
     @Test
@@ -73,6 +75,8 @@ class JarsClasspathInputsWithIdentityTest {
         val second = inputs.toList()[1]
         assertThat(incrementalIdentity.jarsInfo.getValue(first).hasChanged).isTrue()
         assertThat(incrementalIdentity.jarsInfo.getValue(second).hasChanged).isTrue()
+
+        assertThat(incrementalIdentity.reprocessAll).isTrue()
     }
 
     @Test
@@ -88,6 +92,26 @@ class JarsClasspathInputsWithIdentityTest {
         val second = inputs.toList()[1]
         assertThat(incrementalIdentity.jarsInfo.getValue(first).hasChanged).isTrue()
         assertThat(incrementalIdentity.jarsInfo.getValue(second).hasChanged).isFalse()
+
+        assertThat(incrementalIdentity.reprocessAll).isFalse()
+    }
+
+    @Test
+    fun testIdentityWithNonIncrementalChange() {
+        val (inputs, _) = getInitialIdentity("input1.jar", "input2.jar")
+
+        val first = inputs.toList()[0]
+        val nonIncrementalIdentity = getNewJarsIdentity(
+            listOf(),
+            inputs,
+            false
+        )
+
+        val second = inputs.toList()[1]
+        assertThat(nonIncrementalIdentity.jarsInfo.getValue(first).hasChanged).isTrue()
+        assertThat(nonIncrementalIdentity.jarsInfo.getValue(second).hasChanged).isTrue()
+
+        assertThat(nonIncrementalIdentity.reprocessAll).isTrue()
     }
 
     private fun getInitialIdentity(vararg files: String): Pair<ConfigurableFileCollection, JarsIdentityMapping> {
@@ -98,7 +122,8 @@ class JarsClasspathInputsWithIdentityTest {
         mapping.inputJars.setFrom(inputs)
 
 
-        return Pair(inputs, mapping.getMappingState(
+        return Pair(
+            inputs, mapping.getMappingState(
             FakeInputChanges(
                 true, inputs.map {
                     FakeFileChange(file = it, changeType = ChangeType.ADDED)
@@ -109,7 +134,8 @@ class JarsClasspathInputsWithIdentityTest {
 
     private fun getNewJarsIdentity(
         changed: List<FakeFileChange>,
-        inputFiles: FileCollection
+        inputFiles: FileCollection,
+        incremental: Boolean = true
     ): JarsIdentityMapping {
         val mapping =
             FakeObjectFactory.factory.newInstance(JarsClasspathInputsWithIdentity::class.java)
@@ -118,7 +144,7 @@ class JarsClasspathInputsWithIdentityTest {
         mapping.inputJars.setFrom(inputs)
 
         return mapping.getMappingState(
-            FakeInputChanges(true, changed)
+            FakeInputChanges(incremental, changed)
         )
     }
 }

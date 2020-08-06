@@ -426,7 +426,8 @@ fun CallGraph.buildContextualCallGraph(
                 }
                 .map { (nbr, _) -> nbr }
                 .toList()
-        })
+        }
+    )
     return contextualGraph
 }
 
@@ -444,7 +445,8 @@ fun ContextualCallGraph.searchForContextualPaths(
     return searchForPaths(
         sources = searchSources,
         isSink = { it.contextualNode in sinkSet },
-        getNeighbors = { outEdges(it.contextualNode) })
+        getNeighbors = { outEdges(it.contextualNode) }
+    )
 }
 
 /** A context-sensitive search for paths from [sources] to [sinks]. */

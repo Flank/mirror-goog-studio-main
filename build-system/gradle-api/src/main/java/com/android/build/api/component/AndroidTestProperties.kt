@@ -18,6 +18,7 @@ package com.android.build.api.component
 
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.SigningConfig
 import org.gradle.api.Incubating
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -101,4 +102,14 @@ interface AndroidTestProperties : TestComponentProperties {
      * @return The [MapProperty] with keys as [String].
      */
     val manifestPlaceholders: MapProperty<String, String>
+
+    /**
+     * Variant's signingConfig, initialized by the corresponding DSL element.
+     */
+    val signingConfig: SigningConfig
+
+    /**
+     * Variant's signingConfig, initialized by the corresponding DSL element.
+     */
+    fun signingConfig(action: SigningConfig.() -> Unit)
 }

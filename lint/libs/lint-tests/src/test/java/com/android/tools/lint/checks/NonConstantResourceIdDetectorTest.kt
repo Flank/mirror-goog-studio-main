@@ -46,6 +46,8 @@ class NonConstantResourceIdDetectorTest : AbstractCheckTest() {
                             case 1: someValue = 2; break;
                             // Warning: Case value is a resource and is constant.
                             case R.id.text: someValue = 3; break;
+                            // The android.R class cannot be modified by the user.
+                            case android.R.attr.fontFamily: someValue = 5; break;
                             default: someValue = 4; break;
                         }
                         return someValue;
@@ -81,6 +83,7 @@ class NonConstantResourceIdDetectorTest : AbstractCheckTest() {
                                 R.styleable.FontFamilyFont_android_fontWeight -> { someValue = 0 }
                                 1 -> {someValue = 1}
                                 R.id.text -> {someValue = 2}
+                                android.R.attr.fontFamily -> {someValue = 4}
                                 else -> {someValue = 3}
                             }
                         }

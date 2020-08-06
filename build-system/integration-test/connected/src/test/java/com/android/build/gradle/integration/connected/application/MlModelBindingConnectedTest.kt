@@ -70,6 +70,14 @@ class MlModelBindingConnectedTest {
             ),
             styleTransferModelFile
         )
+
+        val objectDetectionModelFile = project.file("src/main/ml/ssd_mobilenet_odt_metadata_v1.2.tflite")
+        FileUtils.copyFile(
+            TestUtils.getWorkspaceFile(
+                "prebuilts/tools/common/mlkit/testData/models/ssd_mobilenet_odt_metadata_v1.2.tflite"
+            ),
+            objectDetectionModelFile
+        )
     }
 
     @Test

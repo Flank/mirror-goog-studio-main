@@ -17,23 +17,23 @@
 package com.android.tools.lint.model
 
 import com.android.AndroidProjectTypes
-import com.android.builder.model.AaptOptions
 import com.android.builder.model.AndroidProject
-import com.android.builder.model.ApiVersion
-import com.android.builder.model.BuildType
-import com.android.builder.model.ClassField
 import com.android.builder.model.LintOptions
-import com.android.builder.model.ProductFlavor
-import com.android.builder.model.SourceProvider
-import com.android.builder.model.SourceProviderContainer
+import com.android.ide.common.gradle.model.IdeAaptOptions
 import com.android.ide.common.gradle.model.IdeAndroidArtifact
 import com.android.ide.common.gradle.model.IdeAndroidProject
+import com.android.ide.common.gradle.model.IdeApiVersion
 import com.android.ide.common.gradle.model.IdeBaseArtifact
+import com.android.ide.common.gradle.model.IdeBuildType
+import com.android.ide.common.gradle.model.IdeClassField
 import com.android.ide.common.gradle.model.IdeJavaArtifact
 import com.android.ide.common.gradle.model.IdeLintOptions
-import com.android.ide.common.gradle.model.IdeMavenCoordinatesImpl
+import com.android.ide.common.gradle.model.IdeProductFlavor
+import com.android.ide.common.gradle.model.IdeSourceProvider
+import com.android.ide.common.gradle.model.IdeSourceProviderContainer
 import com.android.ide.common.gradle.model.IdeVariant
-import com.android.ide.common.gradle.model.level2.IdeLibrary
+import com.android.ide.common.gradle.model.IdeLibrary
+import com.android.ide.common.gradle.model.impl.ModelCache
 import com.android.ide.common.repository.GradleVersion
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
@@ -45,7 +45,7 @@ import java.io.File
 class LintModelFactory : LintModelModuleLoader {
     init {
         // We're just copying by value so make sure our constants match
-        assert(LintModelMavenName.LOCAL_AARS == IdeMavenCoordinatesImpl.LOCAL_AARS)
+        assert(LintModelMavenName.LOCAL_AARS == ModelCache.LOCAL_AARS)
     }
 
     private val libraryResolverMap = mutableMapOf<String, LintModelLibrary>()
@@ -197,25 +197,26 @@ class LintModelFactory : LintModelModuleLoader {
 
     private fun IdeLibrary.getMavenArtifactAddress(): String {
         return when (type) {
-            IdeLibrary.LibraryType.LIBRARY_MODULE -> "artifacts:${projectPath}:unspecified" // TODO(b/158346611): Review artifact names for modules.
+            IdeLibrary.LibraryType.LIBRARY_MODULE -> "artifacts:$projectPath:unspecified" // TODO(b/158346611): Review artifact names for modules.
             else -> artifactAddress.substringBefore("@")
         }
     }
 
     private fun getGraphItem(
-        library: IdeLibrary,
-        skipProvided: Boolean
+      library: IdeLibrary,
+      skipProvided: Boolean
     ): LintModelDependency {
         val artifactAddress = library.getMavenArtifactAddress()
 
-        val lintLibrary = libraryResolverMap[artifactAddress] ?: getLibrary(library).also { libraryResolverMap[artifactAddress] = it }
+        val lintLibrary = libraryResolverMap[artifactAddress]
+            ?: getLibrary(library).also { libraryResolverMap[artifactAddress] = it }
 
         return DefaultLintModelDependency(
             artifactName = library.getArtifactName(),
             artifactAddress = artifactAddress,
-            requestedCoordinates = null,  // Always null in builder models and not present in Ide* models.
+            requestedCoordinates = null, // Always null in builder models and not present in Ide* models.
             // Deep copy
-            dependencies = emptyList(),  // Dependency hierarchy is not yet supported.
+            dependencies = emptyList(), // Dependency hierarchy is not yet supported.
             libraryResolver = libraryResolver
         )
     }
@@ -298,7 +299,7 @@ class LintModelFactory : LintModelModuleLoader {
         }
     }
 
-    private fun getBuildType(project: IdeAndroidProject, variant: IdeVariant): BuildType {
+    private fun getBuildType(project: IdeAndroidProject, variant: IdeVariant): IdeBuildType {
         val buildTypeName = variant.buildType
         return project.buildTypes.first { it.buildType.name == buildTypeName }.buildType
     }
@@ -316,6 +317,8 @@ class LintModelFactory : LintModelModuleLoader {
             mainArtifact = getArtifact(variant.mainArtifact),
             testArtifact = getTestArtifact(variant),
             androidTestArtifact = getAndroidTestArtifact(variant),
+            mergedManifest = null, // Injected elsewhere by the legacy Android Gradle Plugin lint runner
+            manifestMergeReport = null, // Injected elsewhere by the legacy Android Gradle Plugin lint runner
             oldVariant = variant,
             `package` = null, // not in the old builder model
             minSdkVersion = variant.mergedFlavor.minSdkVersion?.toAndroidVersion(),
@@ -439,15 +442,15 @@ class LintModelFactory : LintModelModuleLoader {
         return providers
     }
 
-    private fun SourceProviderContainer.isTest(): Boolean {
+    private fun IdeSourceProviderContainer.isTest(): Boolean {
         return isUnitTest() || isInstrumentationTest()
     }
 
-    private fun SourceProviderContainer.isUnitTest(): Boolean {
+    private fun IdeSourceProviderContainer.isUnitTest(): Boolean {
         return AndroidProject.ARTIFACT_UNIT_TEST == artifactName
     }
 
-    private fun SourceProviderContainer.isInstrumentationTest(): Boolean {
+    private fun IdeSourceProviderContainer.isInstrumentationTest(): Boolean {
         return AndroidProject.ARTIFACT_ANDROID_TEST == artifactName
     }
 
@@ -506,8 +509,8 @@ class LintModelFactory : LintModelModuleLoader {
 
     /** Merges place holders from the merged product flavor and the build type */
     private fun getPlaceholders(
-        mergedFlavor: ProductFlavor,
-        buildType: BuildType
+        mergedFlavor: IdeProductFlavor,
+        buildType: IdeBuildType
     ): Map<String, String> {
         return if (mergedFlavor.manifestPlaceholders.isEmpty()) {
             if (buildType.manifestPlaceholders.isEmpty()) {
@@ -526,7 +529,7 @@ class LintModelFactory : LintModelModuleLoader {
     }
 
     private fun getSourceProvider(
-        providerContainer: SourceProviderContainer,
+        providerContainer: IdeSourceProviderContainer,
         debugOnly: Boolean = false
     ): LintModelSourceProvider {
         val provider = providerContainer.sourceProvider
@@ -542,7 +545,7 @@ class LintModelFactory : LintModelModuleLoader {
     }
 
     private fun getSourceProvider(
-        provider: SourceProvider,
+        provider: IdeSourceProvider,
         unitTestOnly: Boolean = false,
         instrumentationTestOnly: Boolean = false,
         debugOnly: Boolean = false
@@ -558,7 +561,7 @@ class LintModelFactory : LintModelModuleLoader {
         )
     }
 
-    private fun ClassField.toResourceField(): LintModelResourceField {
+    private fun IdeClassField.toResourceField(): LintModelResourceField {
         return DefaultLintModelResourceField(
             type = type,
             name = name,
@@ -567,8 +570,8 @@ class LintModelFactory : LintModelModuleLoader {
     }
 
     private fun getResValues(
-        mergedFlavor: ProductFlavor,
-        buildType: BuildType
+        mergedFlavor: IdeProductFlavor,
+        buildType: IdeBuildType
     ): Map<String, LintModelResourceField> {
         return if (mergedFlavor.resValues.isEmpty()) {
             if (buildType.resValues.isEmpty()) {
@@ -603,7 +606,7 @@ class LintModelFactory : LintModelModuleLoader {
         gradleVersion: GradleVersion?
     ): Boolean {
         return if (gradleVersion != null && gradleVersion.isAtLeast(3, 6, 0)) {
-            project.viewBindingOptions?.isEnabled == true
+            project.viewBindingOptions?.enabled == true
         } else {
             false
         }
@@ -627,8 +630,8 @@ class LintModelFactory : LintModelModuleLoader {
 
     private fun getNamespacingMode(project: IdeAndroidProject): LintModelNamespacingMode {
         return when (project.aaptOptions.namespacing) {
-            AaptOptions.Namespacing.DISABLED -> LintModelNamespacingMode.DISABLED
-            AaptOptions.Namespacing.REQUIRED -> LintModelNamespacingMode.REQUIRED
+            IdeAaptOptions.Namespacing.DISABLED -> LintModelNamespacingMode.DISABLED
+            IdeAaptOptions.Namespacing.REQUIRED -> LintModelNamespacingMode.REQUIRED
         }
     }
 
@@ -700,7 +703,7 @@ class LintModelFactory : LintModelModuleLoader {
         )
     }
 
-    private fun ApiVersion.toAndroidVersion(): AndroidVersion? {
+    private fun IdeApiVersion.toAndroidVersion(): AndroidVersion? {
         return AndroidVersion(apiLevel, codename)
     }
 
@@ -796,6 +799,8 @@ class LintModelFactory : LintModelModuleLoader {
             get() = useSupportLibraryVectorDrawables(variant)
         override val oldVariant: IdeVariant?
             get() = variant
+        override val mergedManifest: File? get() = null // Injected by legacy AGP lint runner
+        override val manifestMergeReport: File? get() = null // Injected by legacy AGP lint runner
         override val `package`: String?
             get() = null // no in the old builder model
         override val minSdkVersion: AndroidVersion?
@@ -906,7 +911,7 @@ class LintModelFactory : LintModelModuleLoader {
 
         @Suppress("unused") // Used from the lint-gradle module in AGP
         @JvmStatic
-        fun getLintOptions(options: LintOptions): LintModelLintOptions {
+        fun getLintOptions(options: LintOptions): DefaultLintModelLintOptions {
             val severityOverrides = options.severityOverrides?.let { source ->
                 val map = LinkedHashMap<String, LintModelSeverity>()
                 for ((id, severityInt) in source.entries) {

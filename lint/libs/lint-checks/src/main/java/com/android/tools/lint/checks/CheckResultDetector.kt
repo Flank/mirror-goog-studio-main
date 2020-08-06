@@ -109,7 +109,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 return
             }
 
-            if (method.returnType == PsiType.VOID) {
+            if (method.returnType == PsiType.VOID || method.isConstructor) {
                 return
             }
 
@@ -142,13 +142,13 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     methodName, suggested
                 )
             } else if ("intersect" == methodName && context.evaluator.isMemberInClass(
-                    method,
-                    "android.graphics.Rect"
-                )
+                method,
+                "android.graphics.Rect"
+            )
             ) {
                 message += ". If the rectangles do not intersect, no change is made and the " +
-                        "original rectangle is not modified. These methods return false to " +
-                        "indicate that this has happened."
+                    "original rectangle is not modified. These methods return false to " +
+                    "indicate that this has happened."
             }
 
             val fix = if (suggested != null) {
@@ -237,7 +237,8 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         val CHECK_RESULT = Issue.create(
             id = "CheckResult",
             briefDescription = "Ignoring results",
-            explanation = """
+            explanation =
+                """
                 Some methods have no side effects, and calling them without doing something \
                 without the result is suspicious.""",
             category = Category.CORRECTNESS,
@@ -251,7 +252,8 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         val CHECK_PERMISSION = Issue.create(
             id = "UseCheckPermission",
             briefDescription = "Using the result of check permission calls",
-            explanation = """
+            explanation =
+                """
                 You normally want to use the result of checking a permission; these methods \
                 return whether the permission is held; they do not throw an error if the \
                 permission is not granted. Code which does not do anything with the return \

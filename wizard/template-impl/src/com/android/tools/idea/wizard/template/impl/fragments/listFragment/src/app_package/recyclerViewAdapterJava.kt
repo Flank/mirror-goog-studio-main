@@ -32,19 +32,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import ${packageName}.dummy.DummyContent.DummyItem;
+import ${packageName}.placeholder.PlaceholderContent.PlaceholderItem;
 
 import java.util.List;
 
 /**
- * {@link RecyclerView.Adapter} that can display a {@link DummyItem}.
+ * {@link RecyclerView.Adapter} that can display a {@link PlaceholderItem}.
  * TODO: Replace the implementation with code for your data type.
  */
 public class ${adapterClassName} extends RecyclerView.Adapter<${adapterClassName}.ViewHolder> {
 
-    private final List<DummyItem> mValues;
+    private final List<PlaceholderItem> mValues;
 
-    public ${adapterClassName}(List<DummyItem> items) {
+    public ${adapterClassName}(List<PlaceholderItem> items) {
         mValues = items;
     }
 
@@ -71,7 +71,7 @@ public class ${adapterClassName} extends RecyclerView.Adapter<${adapterClassName
         public final View mView;
         public final TextView mIdView;
         public final TextView mContentView;
-        public DummyItem mItem;
+        public PlaceholderItem mItem;
 
         public ViewHolder(View view) {
             super(view);

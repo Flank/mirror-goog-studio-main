@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks.infrastructure
 
+import org.junit.Assert.fail
+
 /**
  * A description of a lint test project
  */
@@ -122,6 +124,22 @@ class ProjectDescription {
     fun report(report: Boolean): ProjectDescription {
         this.report = report
         return this
+    }
+
+    /**
+     * Checks that all the files in this project are unique. This
+     * catches cases where you've accidentally specified a target
+     * more than once (where only the last will be used by lint since
+     * it will overwrite any earlier occurrences.)
+     */
+    fun ensureUnique() {
+        val targets = mutableSetOf<String>()
+        for (file in files) {
+            val added = targets.add(file.targetRelativePath)
+            if (!added) {
+                fail("${file.targetRelativePath} is specified multiple times; files must be unique (in older versions, lint tests would just clobber the earlier files of the same name)")
+            }
+        }
     }
 
     /** Describes different types of lint test projects  */

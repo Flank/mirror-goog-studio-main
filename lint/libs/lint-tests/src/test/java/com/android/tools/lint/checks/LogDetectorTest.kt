@@ -24,7 +24,8 @@ class LogDetectorTest : AbstractCheckTest() {
     }
 
     fun testBasic() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/LogTest.java:33: Error: Mismatched tags: the d() and isLoggable() calls typically should pass the same tag: TAG1 versus TAG2 [LogTagMismatch]
                         Log.d(TAG2, "message"); // warn: mismatched tags!
                               ~~~~
@@ -77,7 +78,8 @@ class LogDetectorTest : AbstractCheckTest() {
 
         lint().files(
             java(
-                "src/test/pkg/LogTest.java", """
+                "src/test/pkg/LogTest.java",
+                """
                 package test.pkg;
 
                 import android.annotation.SuppressLint;
@@ -205,7 +207,8 @@ class LogDetectorTest : AbstractCheckTest() {
         lint().files(
             manifest().minSdk(24),
             java(
-                "src/test/pkg/LogTest.java", """
+                "src/test/pkg/LogTest.java",
+                """
                     package test.pkg;
 
                     import android.annotation.SuppressLint;

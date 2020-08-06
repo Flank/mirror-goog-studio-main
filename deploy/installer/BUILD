@@ -109,6 +109,7 @@ genrule(
     name = "test-installer",
     srcs = [
         ":installer",
+        ":install-server",
         "//tools/base/deploy/agent/native:libswap.so",
         "//tools/base/deploy/agent/native:agent_server",
         ":version.raw",
@@ -123,6 +124,7 @@ genrule(
            -p agent-alt.so=$(location //tools/base/deploy/agent/native:libswap.so) \
            -p agent.so=$(location //tools/base/deploy/agent/native:libswap.so) \
            -p agent_server=$(location //tools/base/deploy/agent/native:agent_server) \
+           -p install_server=$(location :install-server) \
            -p version=$(location :version.raw);
     """,
     tags = ["no_windows"],

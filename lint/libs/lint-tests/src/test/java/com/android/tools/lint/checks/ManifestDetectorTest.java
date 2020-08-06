@@ -22,12 +22,7 @@ import static com.android.tools.lint.checks.infrastructure.ProjectDescription.Ty
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Issue;
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 @SuppressWarnings("javadoc")
 public class ManifestDetectorTest extends AbstractCheckTest {
@@ -37,13 +32,6 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
         return new ManifestDetector();
-    }
-
-    private Set<Issue> mEnabled = new HashSet<>();
-
-    @Override
-    protected boolean isEnabled(Issue issue) {
-        return super.isEnabled(issue) && mEnabled.contains(issue);
     }
 
     @Override
@@ -56,22 +44,21 @@ public class ManifestDetectorTest extends AbstractCheckTest {
         }
     }
 
-    public void testOrderOk() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.ORDER);
-        //noinspection all // Sample code
-        assertEquals("No warnings.", lintProject(manifest().minSdk(14), mStrings));
+    public void testOrderOk() {
+        lint().files(manifest().minSdk(14), mStrings)
+                .issues(ManifestDetector.ORDER)
+                .run()
+                .expectClean();
     }
 
-    public void testBrokenOrder() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.ORDER);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testBrokenOrder() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:16: Warning: <uses-sdk> tag appears after <application> tag [ManifestOrder]\n"
                         + "   <uses-sdk android:minSdkVersion=\"Froyo\" />\n"
                         + "    ~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -93,34 +80,38 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "   <uses-sdk android:minSdkVersion=\"Froyo\" />\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .issues(ManifestDetector.ORDER)
+                .run()
+                .expect(expected);
     }
 
-    public void testMissingUsesSdk() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.USES_SDK);
-        assertEquals(
+    public void testMissingUsesSdk() {
+        String expected =
                 ""
                         + "AndroidManifest.xml: Warning: Manifest should specify a minimum API level with <uses-sdk android:minSdkVersion=\"?\" />; if it really supports all versions of Android set it to 1 [UsesMinSdkAttributes]\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(mMissingusessdk, mStrings));
+                        + "0 errors, 1 warnings\n";
+        lint().files(mMissingusessdk, mStrings)
+                .issues(ManifestDetector.USES_SDK)
+                .run()
+                .expect(expected);
     }
 
-    public void testMissingUsesSdkInGradle() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.SET_VERSION);
-        assertEquals(
-                "No warnings.", lintProject(mMissingusessdk, mLibrary)); // dummy; only name counts
+    public void testMissingUsesSdkInGradle() {
+        lint().files(mMissingusessdk, mLibrary) // placeholder; only name counts
+                .issues(ManifestDetector.SET_VERSION)
+                .run()
+                .expectClean();
     }
 
-    public void testMissingMinSdk() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.USES_SDK);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testMissingMinSdk() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:7: Warning: <uses-sdk> tag should specify a minimum API level with android:minSdkVersion=\"?\" [UsesMinSdkAttributes]\n"
                         + "    <uses-sdk android:targetSdkVersion=\"10\" />\n"
                         + "     ~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -147,19 +138,20 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .issues(ManifestDetector.USES_SDK)
+                .run()
+                .expect(expected);
     }
 
-    public void testMissingTargetSdk() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.USES_SDK);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testMissingTargetSdk() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:7: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\" [UsesMinSdkAttributes]\n"
                         + "    <uses-sdk android:minSdkVersion=\"10\" />\n"
                         + "     ~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -186,7 +178,10 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .issues(ManifestDetector.USES_SDK)
+                .run()
+                .expect(expected);
     }
 
     public void testOldTargetSdk() {
@@ -241,18 +236,16 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                 + "\" />");
     }
 
-    public void testMultipleSdk() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.MULTIPLE_USES_SDK);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testMultipleSdk() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:8: Error: There should only be a single <uses-sdk> element in the manifest: merge these together [MultipleUsesSdk]\n"
                         + "    <uses-sdk android:targetSdkVersion=\"14\" />\n"
                         + "     ~~~~~~~~\n"
                         + "    AndroidManifest.xml:7: Also appears here\n"
                         + "    AndroidManifest.xml:9: Also appears here\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -281,13 +274,14 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .issues(ManifestDetector.MULTIPLE_USES_SDK)
+                .run()
+                .expect(expected);
     }
 
-    public void testWrongLocation() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.WRONG_PARENT);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testWrongLocation() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:8: Error: The <uses-sdk> element must be a direct child of the <manifest> root element [WrongManifestParent]\n"
                         + "       <uses-sdk android:minSdkVersion=\"Froyo\" />\n"
@@ -328,8 +322,8 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                         + "AndroidManifest.xml:25: Error: The <activity> element must be a direct child of the <application> element [WrongManifestParent]\n"
                         + "   <activity android:name=\".HelloWorld\"\n"
                         + "    ~~~~~~~~\n"
-                        + "13 errors, 0 warnings\n",
-                lintProject(
+                        + "13 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -360,7 +354,10 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "   <activity android:name=\".HelloWorld\"\n"
                                         + "                 android:label=\"@string/app_name\" />\n"
                                         + "\n"
-                                        + "</manifest>\n")));
+                                        + "</manifest>\n"))
+                .issues(ManifestDetector.WRONG_PARENT)
+                .run()
+                .expect(expected);
     }
 
     public void test112063828() {
@@ -390,16 +387,14 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testDuplicateActivity() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.DUPLICATE_ACTIVITY);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testDuplicateActivity() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:16: Error: Duplicate registration for activity com.example.helloworld.HelloWorld [DuplicateActivity]\n"
                         + "       <activity android:name=\"com.example.helloworld.HelloWorld\"\n"
                         + "                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -425,37 +420,38 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "   </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .issues(ManifestDetector.DUPLICATE_ACTIVITY)
+                .run()
+                .expect(expected);
     }
 
-    public void testDuplicateActivityAcrossSourceSets() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.DUPLICATE_ACTIVITY);
-        File master =
-                getProjectDir(
-                        "MasterProject",
-                        // Master project
-                        manifest().minSdk(14),
-                        projectProperties()
-                                .property("android.library.reference.1", "../LibraryProject")
-                                .property("manifestmerger.enabled", "true"),
-                        mMainCode);
-        File library =
-                getProjectDir(
-                        "LibraryProject",
-                        // Library project
-                        manifest().minSdk(14),
-                        projectProperties().library(true).compileSdk(14),
-                        mLibraryCode,
-                        mLibraryStrings);
-        assertEquals("No warnings.", checkLint(Arrays.asList(master, library)));
+    public void testDuplicateActivityAcrossSourceSets() {
+        ProjectDescription library =
+                project(
+                                manifest().minSdk(14),
+                                projectProperties().library(true).compileSdk(14),
+                                mLibraryCode,
+                                mLibraryStrings)
+                        .name("LibraryProject");
+        ProjectDescription main =
+                project(
+                                manifest().minSdk(14),
+                                projectProperties()
+                                        .property(
+                                                "android.library.reference.1", "../LibraryProject")
+                                        .property("manifestmerger.enabled", "true"),
+                                mMainCode)
+                        .name("MainProject")
+                        .dependsOn(library);
+        lint().projects(library, main)
+                .issues(ManifestDetector.DUPLICATE_ACTIVITY)
+                .run()
+                .expectClean();
     }
 
-    public void testIgnoreDuplicateActivity() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.DUPLICATE_ACTIVITY);
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testIgnoreDuplicateActivity() {
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -482,20 +478,20 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "   </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .issues(ManifestDetector.DUPLICATE_ACTIVITY)
+                .run()
+                .expectClean();
     }
 
-    public void testAllowBackup() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.ALLOW_BACKUP);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testAllowBackup() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:9: Warning: Should explicitly set android:allowBackup to true or false (it's true by default, and that can have some security implications for the application's data) [AllowBackup]\n"
                         + "    <application\n"
                         + "     ~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
-                        manifest().minSdk(14),
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -513,15 +509,14 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .issues(ManifestDetector.ALLOW_BACKUP)
+                .run()
+                .expect(expected);
     }
 
-    public void testAllowBackupOk() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.ALLOW_BACKUP);
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testAllowBackupOk() {
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -549,34 +544,33 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .issues(ManifestDetector.ALLOW_BACKUP)
+                .run()
+                .expectClean();
     }
 
-    public void testAllowBackupOk2() throws Exception {
+    public void testAllowBackupOk2() {
         // Requires build api >= 4
-        mEnabled = Collections.singleton(ManifestDetector.ALLOW_BACKUP);
-        //noinspection all // Sample code
-        assertEquals("No warnings.", lintProject(manifest().minSdk(1), mStrings));
+        lint().files(manifest().minSdk(1), mStrings)
+                .issues(ManifestDetector.ALLOW_BACKUP)
+                .run()
+                .expectClean();
     }
 
-    public void testAllowBackupOk3() throws Exception {
+    public void testAllowBackupOk3() {
         // Not flagged in library projects
-        mEnabled = Collections.singleton(ManifestDetector.ALLOW_BACKUP);
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         manifest().minSdk(14),
                         projectProperties().library(true).compileSdk(14),
-                        mStrings));
+                        mStrings)
+                .issues(ManifestDetector.ALLOW_BACKUP)
+                .run()
+                .expectClean();
     }
 
-    public void testAllowIgnore() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.ALLOW_BACKUP);
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testAllowIgnore() {
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -605,20 +599,21 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .issues(ManifestDetector.ALLOW_BACKUP)
+                .run()
+                .expectClean();
     }
 
-    public void testDuplicatePermissions() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.UNIQUE_PERMISSION);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testDuplicatePermissions() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:12: Error: Permission name SEND_SMS is not unique (appears in both foo.permission.SEND_SMS and bar.permission.SEND_SMS) [UniquePermission]\n"
                         + "    <permission android:name=\"bar.permission.SEND_SMS\"\n"
                         + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    AndroidManifest.xml:9: Previous permission here\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -643,20 +638,21 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .issues(ManifestDetector.UNIQUE_PERMISSION)
+                .run()
+                .expect(expected);
     }
 
-    public void testDuplicatePermissionGroups() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.UNIQUE_PERMISSION);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testDuplicatePermissionGroups() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:12: Error: Permission group name STORAGE is not unique (appears in both foo.permissiongroup.STORAGE and bar.permissiongroup.STORAGE) [UniquePermission]\n"
                         + "    <permission-group android:name=\"bar.permissiongroup.STORAGE\"\n"
                         + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    AndroidManifest.xml:9: Previous permission group here\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -681,7 +677,10 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .issues(ManifestDetector.UNIQUE_PERMISSION)
+                .run()
+                .expect(expected);
     }
 
     public void testDuplicatePermissionsMultiProject() {
@@ -849,15 +848,15 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                 + "  \n");
     }
 
-    public void testVersionNotMissingInGradleProjects() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.SET_VERSION);
-        assertEquals("No warnings.", lintProject(mNo_version, mLibrary)); // dummy; only name counts
+    public void testVersionNotMissingInGradleProjects() {
+        lint().files(mNo_version, mLibrary) // placeholder; only name counts
+                .issues(ManifestDetector.SET_VERSION)
+                .run()
+                .expectClean();
     }
 
-    public void testIllegalReference() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.ILLEGAL_REFERENCE);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testIllegalReference() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:4: Warning: The android:versionCode cannot be a resource url, it must be a literal integer [IllegalResourceRef]\n"
                         + "    android:versionCode=\"@dimen/versionCode\"\n"
@@ -868,8 +867,8 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                         + "AndroidManifest.xml:7: Warning: The android:targetSdkVersion cannot be a resource url, it must be a literal integer (or string if a preview codename) [IllegalResourceRef]\n"
                         + "    <uses-sdk android:minSdkVersion=\"@dimen/minSdkVersion\" android:targetSdkVersion=\"@dimen/targetSdkVersion\" />\n"
                         + "                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 3 warnings\n",
-                lintProject(
+                        + "0 errors, 3 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -895,19 +894,20 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "        </activity>\n"
                                         + "    </application>\n"
                                         + "\n"
-                                        + "</manifest>\n")));
+                                        + "</manifest>\n"))
+                .issues(ManifestDetector.ILLEGAL_REFERENCE)
+                .run()
+                .expect(expected);
     }
 
-    public void testDuplicateUsesFeature() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.DUPLICATE_USES_FEATURE);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testDuplicateUsesFeature() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:11: Warning: Duplicate declaration of uses-feature android.hardware.camera [DuplicateUsesFeature]\n"
                         + "    <uses-feature android:name=\"android.hardware.camera\"/>\n"
                         + "                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -929,15 +929,14 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .issues(ManifestDetector.DUPLICATE_USES_FEATURE)
+                .run()
+                .expect(expected);
     }
 
-    public void testDuplicateUsesFeatureOk() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.DUPLICATE_USES_FEATURE);
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testDuplicateUsesFeatureOk() {
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -958,7 +957,10 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .issues(ManifestDetector.DUPLICATE_USES_FEATURE)
+                .run()
+                .expectClean();
     }
 
     public void testMissingApplicationIcon() {
@@ -986,27 +988,25 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                 + "          <activity\n");
     }
 
-    public void testMissingApplicationIconInLibrary() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.APPLICATION_ICON);
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testMissingApplicationIconInLibrary() {
+        lint().files(
                         mMissing_application_icon,
                         projectProperties().library(true).compileSdk(14),
-                        mStrings));
+                        mStrings)
+                .issues(ManifestDetector.APPLICATION_ICON)
+                .run()
+                .expectClean();
     }
 
-    public void testMissingApplicationIconOk() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.APPLICATION_ICON);
-        //noinspection all // Sample code
-        assertEquals("No warnings.", lintProject(manifest().minSdk(14), mStrings));
+    public void testMissingApplicationIconOk() {
+        lint().files(manifest().minSdk(14), mStrings)
+                .issues(ManifestDetector.APPLICATION_ICON)
+                .run()
+                .expectClean();
     }
 
-    public void testDeviceAdmin() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.DEVICE_ADMIN);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testDeviceAdmin() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:31: Warning: You must have an intent filter for action android.app.action.DEVICE_ADMIN_ENABLED [DeviceAdmin]\n"
                         + "            <meta-data android:name=\"android.app.device_admin\"\n"
@@ -1017,8 +1017,8 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                         + "AndroidManifest.xml:56: Warning: You must have an intent filter for action android.app.action.DEVICE_ADMIN_ENABLED [DeviceAdmin]\n"
                         + "            <meta-data android:name=\"android.app.device_admin\"\n"
                         + "                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 3 warnings\n",
-                lintProject(
+                        + "0 errors, 3 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -1096,7 +1096,10 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "    </application>\n"
                                         + "\n"
-                                        + "</manifest>\n")));
+                                        + "</manifest>\n"))
+                .issues(ManifestDetector.DEVICE_ADMIN)
+                .run()
+                .expect(expected);
     }
 
     public void testMockLocations() {
@@ -1204,7 +1207,9 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                         + "                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 2 warnings";
         lint().files(
-                        xml("src/main/" + mGradle_override.targetRelativePath, mGradle_override.contents),
+                        xml(
+                                "src/main/" + mGradle_override.targetRelativePath,
+                                mGradle_override.contents),
                         gradle(
                                 ""
                                         + "android {\n"
@@ -1290,9 +1295,8 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testMipMap() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.MIPMAP);
-        assertEquals("No warnings.", lintProject(mMipmap));
+    public void testMipMap() {
+        lint().files(mMipmap).issues(ManifestDetector.MIPMAP).run().expectClean();
     }
 
     public void testMipMapWithDensityFiltering() {
@@ -1859,7 +1863,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testAppIndexingNoWarn() throws Exception {
+    public void testAppIndexingNoWarn() {
         lint().files(
                         projectProperties().compileSdk(26),
                         manifest(
@@ -1894,7 +1898,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testAppIndexingTargetSdk26() throws Exception {
+    public void testAppIndexingTargetSdk26() {
         String expected =
                 ""
                         + "src/main/AndroidManifest.xml:11: Warning: UPDATE_INDEX is configured as a service in your app, which is no longer supported for the API level you're targeting. Use a BroadcastReceiver instead. [AppIndexingService]\n"
@@ -1935,7 +1939,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testVersionCodeNotRequiredInLibraries() throws Exception {
+    public void testVersionCodeNotRequiredInLibraries() {
         // Regression test for b/144803800
         lint().files(
                         projectProperties().compileSdk(26).library(true),
@@ -1964,7 +1968,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testProviderTag() throws Exception {
+    public void testProviderTag() {
         // Regression test for b/154309642
         lint().files(
                         manifest(
@@ -2195,7 +2199,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                             + "    <string name=\"menu_wallpaper\">Wallpaper</string>\n"
                             + "    <string name=\"menu_search\">Search</string>\n"
                             + "    <string name=\"menu_settings\">Settings</string>\n"
-                            + "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n"
+                            + "    <string name=\"sample\" translatable=\"false\">Ignore Me</string>\n"
                             + "\n"
                             + "    <!-- Wallpaper -->\n"
                             + "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n"

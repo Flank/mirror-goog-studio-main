@@ -8,7 +8,10 @@
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
+    <orderEntry type="library" name="studio-plugin-java" level="project" />
+    <orderEntry type="library" name="studio-plugin-Kotlin" level="project" />
     <orderEntry type="module" module-name="android.sdktools.lint-api" exported="" />
+    <orderEntry type="library" name="Trove4j" level="project" />
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
   </component>
 </module>

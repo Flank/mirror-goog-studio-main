@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.api.transform.Format
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.PostprocessingFeatures
+import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -170,9 +172,9 @@ abstract class R8Task: ProguardConfigurableTask() {
     abstract val mainDexListOutput: RegularFileProperty
 
     class CreationAction(
-        creationConfig: VariantCreationConfig,
-        isTestApplication: Boolean = false
-    ) : ProguardConfigurableTask.CreationAction<R8Task, VariantCreationConfig>(creationConfig, isTestApplication) {
+            creationConfig: ConsumableCreationConfig,
+            isTestApplication: Boolean = false
+    ) : ProguardConfigurableTask.CreationAction<R8Task, ConsumableCreationConfig>(creationConfig, isTestApplication) {
         override val type = R8Task::class.java
         override val name =  computeTaskName("minify", "WithR8")
 
@@ -228,10 +230,10 @@ abstract class R8Task: ProguardConfigurableTask() {
                 R8Task::outputResources
             ).withName("shrunkJavaRes.jar").on(InternalArtifactType.SHRUNK_JAVA_RES)
 
-            if (creationConfig.variantScope.needsMainDexListForBundle) {
+            if (creationConfig is ApkCreationConfig && creationConfig.needsMainDexListForBundle) {
                 creationConfig.artifacts.setInitialProvider(
-                    taskProvider,
-                    R8Task::mainDexListOutput
+                        taskProvider,
+                        R8Task::mainDexListOutput
                 ).withName("mainDexList.txt").on(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE)
             }
         }
@@ -268,7 +270,7 @@ abstract class R8Task: ProguardConfigurableTask() {
                 task.mainDexRulesFiles.from(multiDexKeepProguard)
             }
 
-            if (creationConfig.needsMainDexList
+            if (creationConfig.dexingType.needsMainDexList
                 && !creationConfig.globalScope.extension.aaptOptions.namespaced) {
                 task.mainDexRulesFiles.from(
                     artifacts.get(

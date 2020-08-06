@@ -73,18 +73,33 @@ Java_com_android_tools_agent_layoutinspector_ComponentTree_addString(
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_ComponentTree_addView(
     JNIEnv *env, jclass clazz, jlong jevent, bool isSubView, jlong drawId,
-    jint x, jint y, jint width, jint height, jint className, jint packageName,
-    jint textValue, jint layoutFlags) {
+    jintArray untransformed_bounds, jintArray transformed_corners,
+    jint className, jint packageName, jint textValue, jint layoutFlags) {
   View *view = selectView(env, jevent, isSubView);
   view->set_draw_id(drawId);
-  view->set_x(x);
-  view->set_y(y);
-  view->set_width(width);
-  view->set_height(height);
+  jint *untransformed = env->GetIntArrayElements(untransformed_bounds, 0);
+  view->set_x(*untransformed);
+  view->set_y(*(untransformed + 1));
+  view->set_width(*(untransformed + 2));
+  view->set_height(*(untransformed + 3));
+  env->ReleaseIntArrayElements(untransformed_bounds, untransformed, 0);
   view->set_class_name(className);
   view->set_package_name(packageName);
   view->set_text_value(textValue);
   view->set_layout_flags(layoutFlags);
+  if (transformed_corners != nullptr) {
+    auto *corners = view->mutable_transformed_bounds();
+    jint *transformed = env->GetIntArrayElements(transformed_corners, 0);
+    corners->set_top_left_x(*transformed);
+    corners->set_top_left_y(*(transformed + 1));
+    corners->set_top_right_x(*(transformed + 2));
+    corners->set_top_right_y(*(transformed + 3));
+    corners->set_bottom_left_x(*(transformed + 4));
+    corners->set_bottom_left_y(*(transformed + 5));
+    corners->set_bottom_right_x(*(transformed + 6));
+    corners->set_bottom_right_y(*(transformed + 7));
+    env->ReleaseIntArrayElements(transformed_corners, transformed, 0);
+  }
   return (long)view;
 }
 

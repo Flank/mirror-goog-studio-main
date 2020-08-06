@@ -67,6 +67,15 @@ public class ViewBuilder<V extends View, L extends ViewGroup.LayoutParams> {
         when(myView.getHeight()).thenReturn(height);
         when(myView.getRight()).thenReturn(x + width);
         when(myView.getBottom()).thenReturn(y + height);
+        doAnswer(
+                        invocation -> {
+                            int[] arg = invocation.getArgument(0);
+                            arg[0] = x;
+                            arg[1] = y;
+                            return null;
+                        })
+                .when(myView)
+                .getLocationOnScreen(any());
         return this;
     }
 

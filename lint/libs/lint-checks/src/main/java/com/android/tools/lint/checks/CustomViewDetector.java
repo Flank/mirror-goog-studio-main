@@ -93,7 +93,8 @@ public class CustomViewDetector extends Detector implements SourceCodeScanner {
         } else {
             // obtainStyledAttributes(int resid, int[] attrs)
             // obtainStyledAttributes(AttributeSet set, int[] attrs)
-            // obtainStyledAttributes(AttributeSet set, int[] attrs, int defStyleAttr, int defStyleRes)
+            // obtainStyledAttributes(AttributeSet set, int[] attrs, int defStyleAttr, int
+            // defStyleRes)
             parameterIndex = 1;
         }
         UExpression expression = arguments.get(parameterIndex);

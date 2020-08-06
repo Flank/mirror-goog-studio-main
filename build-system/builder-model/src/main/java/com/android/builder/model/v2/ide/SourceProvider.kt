@@ -69,20 +69,6 @@ interface SourceProvider: AndroidModel {
     val renderscriptDirectories: Collection<File>?
 
     /**
-     * Returns the C source folders
-     *
-     * @return a list of folders. They may not all exist.
-     */
-    val cDirectories: Collection<File>
-
-    /**
-     * Returns the C++ source folders.
-     *
-     * @return a list of folders. They may not all exist.
-     */
-    val cppDirectories: Collection<File>
-
-    /**
      * Returns the android resources folders, or null if resource processing is disabled
      *
      * @return a list of folders. They may not all exist.

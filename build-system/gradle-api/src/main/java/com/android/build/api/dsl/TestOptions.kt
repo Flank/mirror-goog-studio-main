@@ -17,6 +17,7 @@
 package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
+import org.gradle.api.NamedDomainObjectContainer
 
 /** Options for running tests. */
 @Incubating
@@ -45,6 +46,24 @@ interface TestOptions {
      * [Test from the Command Line](https://d.android.com/studio/test/command-line.html).
      */
     var animationsDisabled: Boolean
+
+    /**
+     * List of test devices for this project for use with the Unified Test Platform
+     *
+     * These APIs are experimental and may change without notice.
+     */
+    val devices: org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<Device>
+
+    /**
+     * List of DeviceGroups that can be run through connected check, using the Unified Test
+     * Platform.
+     *
+     * DeviceGroups with individual devices are added automatically, with the same name of the
+     * individual device.
+     *
+     * These APIs are experimental and may change without notice.
+     */
+    val deviceGroups: NamedDomainObjectContainer<DeviceGroup>
 
     /**
      * Specifies whether to use on-device test orchestration.

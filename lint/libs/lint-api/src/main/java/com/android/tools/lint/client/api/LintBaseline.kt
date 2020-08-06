@@ -179,16 +179,17 @@ class LintBaseline(
             // Keep in sync with isFixedMessage() below
             var message = String.format(
                 "%1\$d errors/warnings were listed in the " +
-                        "baseline file (%2\$s) but not found in the project; perhaps they have " +
-                        "been fixed?", fixedCount, getDisplayPath(client, project, baselineFile)
+                    "baseline file (%2\$s) but not found in the project; perhaps they have " +
+                    "been fixed?",
+                fixedCount, getDisplayPath(client, project, baselineFile)
             )
             if (LintClient.isGradle && project.buildModule != null &&
                 project.buildModule?.lintOptions?.checkDependencies == false
             ) {
                 message += " Another possible explanation is that lint recently stopped " +
-                        "analyzing (and including results from) dependent projects by default. " +
-                        "You can turn this back on with " +
-                        "`android.lintOptions.checkDependencies=true`."
+                    "analyzing (and including results from) dependent projects by default. " +
+                    "You can turn this back on with " +
+                    "`android.lintOptions.checkDependencies=true`."
             }
             message += " Unmatched issue types: $issueTypes"
 
@@ -755,7 +756,12 @@ class LintBaseline(
         ): Boolean {
             val i1 = new.indexOf(target)
             val i2 = old.indexOf(target)
-            return i1 != -1 && i2 != -1 && stringsEquivalent(new, old, i1 + target.length, i2 + target.length)
+            return i1 != -1 && i2 != -1 && stringsEquivalent(
+                new,
+                old,
+                i1 + target.length,
+                i2 + target.length
+            )
         }
 
         /**

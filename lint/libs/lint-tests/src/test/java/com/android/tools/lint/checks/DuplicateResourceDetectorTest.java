@@ -421,7 +421,7 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                             + "    <string name=\"menu_wallpaper\">Wallpaper</string>\n"
                             + "    <string name=\"menu_search\">Search</string>\n"
                             + "    <string name=\"menu_settings\">Settings</string>\n"
-                            + "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n"
+                            + "    <string name=\"sample\" translatable=\"false\">Ignore Me</string>\n"
                             + "\n"
                             + "    <!-- Wallpaper -->\n"
                             + "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n"

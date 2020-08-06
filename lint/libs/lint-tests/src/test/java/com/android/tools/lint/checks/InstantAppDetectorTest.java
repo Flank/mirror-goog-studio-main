@@ -36,9 +36,9 @@ public class InstantAppDetectorTest extends AbstractCheckTest {
                                         + "        context.registerReceiver(receiver, filter);\n"
                                         + "    }\n"
                                         + "}\n"),
-                        gradle(
-                                ""
-                                        + "apply plugin: 'com.android.application'\n")) // not atom or instant-app
+                        gradle("" + "apply plugin: 'com.android.application'\n")) // not atom
+                // or
+                // instant-app
                 .run()
                 .expectClean();
     }
@@ -331,7 +331,7 @@ public class InstantAppDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "import android.content.ContentResolver;\n"
                                         + "\n"
-                                        + "// Dummy stub\n"
+                                        + "// Stub\n"
                                         + "public class Gservices {\n"
                                         + "    public static long getLong(ContentResolver cr, String key, long defValue) {\n"
                                         + "        return 0L;\n"

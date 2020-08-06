@@ -70,7 +70,8 @@ class SliceDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "Slices",
             briefDescription = "Slices",
-            explanation = """
+            explanation =
+                """
             This check analyzes usages of the Slices API and offers suggestions based
             on best practices.
             """,
@@ -184,7 +185,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
                     context.report(
                         ISSUE, location,
                         "All `SliceProvider` filters require category slice to be set: " +
-                                " <category android:name=\"android.app.slice.category.SLICE\" />",
+                            " <category android:name=\"android.app.slice.category.SLICE\" />",
                         null
                     )
                 }
@@ -204,8 +205,8 @@ class SliceDetector : Detector(), SourceCodeScanner {
             context.report(
                 ISSUE, declaration, context.getNameLocation(onMapMethod),
                 "Define intent filters in your manifest on your " +
-                        "`<provider android:name=\"$sliceProvider\">`; otherwise " +
-                        "`onMapIntentToUri` will not be called"
+                    "`<provider android:name=\"$sliceProvider\">`; otherwise " +
+                    "`onMapIntentToUri` will not be called"
             )
         } else if (firstCategory != null && onMapMethod == null) {
             val location = context.getNameLocation(declaration)
@@ -214,7 +215,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
             context.report(
                 ISSUE, declaration, location,
                 "Implement `SliceProvider#onMapIntentToUri` to handle the intents " +
-                        "defined on your slice `<provider>` in your manifest"
+                    "defined on your slice `<provider>` in your manifest"
             )
         }
     }
@@ -321,10 +322,10 @@ class SliceDetector : Detector(), SourceCodeScanner {
                         context.report(
                             ISSUE, listBuilder, context.getLocation(call),
                             "Consider setting a see more action if more than 4 rows " +
-                                    "added to `ListBuilder`. Depending on where the slice is " +
-                                    "being displayed, all rows of content may not be visible, " +
-                                    "consider adding an intent to an activity with the rest " +
-                                    "of the content."
+                                "added to `ListBuilder`. Depending on where the slice is " +
+                                "being displayed, all rows of content may not be visible, " +
+                                "consider adding an intent to an activity with the rest " +
+                                "of the content."
                         )
                     }
                 }
@@ -334,15 +335,15 @@ class SliceDetector : Detector(), SourceCodeScanner {
         ensureSingleToggleType(
             endActionItems, context,
             "A mixture of slice actions and icons are not supported on a list, " +
-                    "add either actions or icons but not both"
+                "add either actions or icons but not both"
         )
     }
 
     private fun isAddRowMethod(methodName: String?): Boolean {
         return methodName == "addRow" ||
-                methodName == "addInputRange" ||
-                methodName == "addRange" ||
-                methodName == "addGridRow"
+            methodName == "addInputRange" ||
+            methodName == "addRange" ||
+            methodName == "addGridRow"
     }
 
     private fun ensureSingleToggleType(
@@ -531,7 +532,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
                             context.report(
                                 ISSUE, call, location,
                                 "`RowBuilder` can only have one timestamp added to it, " +
-                                        "remove one of your timestamps"
+                                    "remove one of your timestamps"
                             )
                         } else {
                             timestamp = call
@@ -545,7 +546,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
                             context.report(
                                 ISSUE, call, location,
                                 "`RowBuilder` cannot have a mixture of icons and slice " +
-                                        "actions added to the end items"
+                                    "actions added to the end items"
                             )
                         }
                         endActionItem = call
@@ -559,7 +560,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
                             context.report(
                                 ISSUE, call, location,
                                 "`RowBuilder` cannot have a mixture of icons and slice " +
-                                        "actions added to the end items"
+                                    "actions added to the end items"
                             )
                         }
                         endIconItem = call

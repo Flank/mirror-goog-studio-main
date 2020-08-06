@@ -122,7 +122,8 @@ public class AutofillDetector extends LayoutDetector {
         if (!element.hasAttributeNS(ANDROID_URI, ATTR_AUTOFILL_HINTS)) {
             LintFix fix =
                     fix().alternatives(
-                                    // TODO: set hints based on id of view. Example, @+id/username suggests 'username' as hint value.
+                                    // TODO: set hints based on id of view. Example, @+id/username
+                                    // suggests 'username' as hint value.
                                     fix().set(ANDROID_URI, ATTR_AUTOFILL_HINTS, "")
                                             .caretBegin()
                                             .build(),

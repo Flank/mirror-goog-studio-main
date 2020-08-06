@@ -167,7 +167,7 @@ abstract class SymbolTable protected constructor() {
                 var childName = canonicalName.substring(index + 1, canonicalName.length)
                 val parent = symbols.get(ResourceType.STYLEABLE, parentName)
                 found =
-                        if (parent.children.any { it == childName })
+                        if (parent!!.children.any { it == childName })
                             parent as Symbol.StyleableSymbol
                         else
                             null // I still haven't found what I'm looking for~
@@ -270,7 +270,7 @@ abstract class SymbolTable protected constructor() {
                     // - if the new one is PRIVATE_XML_ONLY, leave the existing one (overridden
                     //   resource was defined as PRIVATE or PUBLIC)
                     // - if neither of them is PRIVATE_XML_ONLY and they differ, that's an error
-                    if (existing.resourceVisibility != it.resourceVisibility
+                    if (existing!!.resourceVisibility != it.resourceVisibility
                             && existing.resourceVisibility != ResourceVisibility.PRIVATE_XML_ONLY
                             && it.resourceVisibility != ResourceVisibility.PRIVATE_XML_ONLY) {
                         // Conflicting visibilities.

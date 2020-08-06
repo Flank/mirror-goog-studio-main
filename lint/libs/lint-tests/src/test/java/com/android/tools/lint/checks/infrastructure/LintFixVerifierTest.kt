@@ -164,9 +164,9 @@ class LintFixVerifierTest {
                 briefDescription = "Flags Java 6 incompatible imports.",
                 // Not great grammar but just a unit test, not an issue shown to users:
                 explanation = "Importing org.assertj.core.api.Assertions is not ideal. " +
-                        "Since it can require Java 8. It's simple as " +
-                        "instead org.assertj.core.api.Java6Assertions can be imported " +
-                        "and provides guarantee to run on Java 6 as well.",
+                    "Since it can require Java 8. It's simple as " +
+                    "instead org.assertj.core.api.Java6Assertions can be imported " +
+                    "and provides guarantee to run on Java 6 as well.",
                 category = Category.CORRECTNESS, priority = 10, severity = Severity.WARNING,
                 implementation = Implementation(
                     AssertjDetector::class.java,

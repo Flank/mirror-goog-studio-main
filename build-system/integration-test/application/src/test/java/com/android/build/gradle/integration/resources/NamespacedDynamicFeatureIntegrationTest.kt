@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.FileSubject
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.objectweb.asm.Opcodes
@@ -269,8 +268,7 @@ class NamespacedDynamicFeatureIntegrationTest {
             .build()
     @get:Rule
     val project = GradleTestProject.builder().fromTestApp(testApp)
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
-        .setTargetGradleVersion("6.6-20200609220026+0000")
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         // b/157470515
         .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
         .create()

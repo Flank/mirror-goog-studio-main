@@ -216,6 +216,9 @@ public class VmTraceParser {
             if (tokens[3].startsWith("(")) {
                 methodName = tokens[2];
                 signature = tokens[3];
+                if (tokens.length >= 5) {
+                    pathname = tokens[4];
+                }
             } else {
                 pathname = tokens[2];
                 lineNumber = Integer.decode(tokens[3]);

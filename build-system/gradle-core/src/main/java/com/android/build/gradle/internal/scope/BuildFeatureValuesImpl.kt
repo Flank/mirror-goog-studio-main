@@ -16,17 +16,18 @@
 
 package com.android.build.gradle.internal.scope
 
+import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.BuildFeatures
+import com.android.build.api.dsl.DynamicFeatureBuildFeatures
 import com.android.build.api.dsl.LibraryBuildFeatures
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 
 class BuildFeatureValuesImpl constructor(
     buildFeatures: BuildFeatures,
-    override val androidResources: Boolean = true,
-    override val dataBinding: Boolean = false,
-    override val mlModelBinding: Boolean = false,
-    projectOptions: ProjectOptions
+    projectOptions: ProjectOptions,
+    dataBindingOverride: Boolean? = null,
+    mlModelBindingOverride: Boolean? = null
 ) : BuildFeatureValues {
 
     // add new flags here with computation:
@@ -60,6 +61,11 @@ class BuildFeatureValuesImpl constructor(
     // ------------------
     // Library flags
 
+    override val androidResources: Boolean =  when (buildFeatures) {
+        is LibraryBuildFeatures -> buildFeatures.androidResources ?: projectOptions[BooleanOption.BUILD_FEATURE_ANDROID_RESOURCES]
+        else -> true
+    }
+
     override val buildType: Boolean = true
 
     override val prefabPublishing: Boolean = when (buildFeatures) {
@@ -72,4 +78,34 @@ class BuildFeatureValuesImpl constructor(
 
     // ------------------
     // Application / dynamic-feature / library flags
+
+    override val mlModelBinding: Boolean = mlModelBindingOverride
+        ?: when (buildFeatures) {
+            is ApplicationBuildFeatures -> {
+                buildFeatures.mlModelBinding
+            }
+            is LibraryBuildFeatures -> {
+                buildFeatures.mlModelBinding
+            }
+            is DynamicFeatureBuildFeatures -> {
+                buildFeatures.mlModelBinding
+            }
+            else -> null
+        }
+        ?: projectOptions[BooleanOption.BUILD_FEATURE_MLMODELBINDING]
+
+    override val dataBinding: Boolean = androidResources && (dataBindingOverride
+        ?: when (buildFeatures) {
+            is ApplicationBuildFeatures -> {
+                buildFeatures.dataBinding
+            }
+            is LibraryBuildFeatures -> {
+                buildFeatures.dataBinding
+            }
+            is DynamicFeatureBuildFeatures -> {
+                buildFeatures.dataBinding
+            }
+            else -> null
+        }
+        ?: projectOptions[BooleanOption.BUILD_FEATURE_DATABINDING])
 }

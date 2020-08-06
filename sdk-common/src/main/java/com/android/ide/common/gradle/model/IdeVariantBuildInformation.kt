@@ -15,27 +15,12 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.VariantBuildInformation
-import java.io.Serializable
-
-data class IdeVariantBuildInformation(
-  val variantName: String,
-  val assembleTaskName: String,
-  val assembleTaskOutputListingFile: String?,
-  val bundleTaskName: String?,
-  val bundleTaskOutputListingFile: String?,
-  val apkFromBundleTaskName: String?,
+interface IdeVariantBuildInformation {
+  val variantName: String
+  val assembleTaskName: String
+  val assembleTaskOutputListingFile: String?
+  val bundleTaskName: String?
+  val bundleTaskOutputListingFile: String?
+  val apkFromBundleTaskName: String?
   val apkFromBundleTaskOutputListingFile: String?
-) : Serializable {
-  constructor(model: VariantBuildInformation) : this(model.variantName,
-                                                     model.assembleTaskName,
-                                                     model.assembleTaskOutputListingFile,
-                                                     model.bundleTaskName,
-                                                     model.bundleTaskOutputListingFile,
-                                                     model.apkFromBundleTaskName,
-                                                     model.apkFromBundleTaskOutputListingFile)
-
-  companion object {
-    private const val serialVersionUID: Long = 1L
-  }
 }

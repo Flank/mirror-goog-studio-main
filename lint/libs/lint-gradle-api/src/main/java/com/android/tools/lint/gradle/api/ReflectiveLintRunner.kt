@@ -23,7 +23,11 @@ import java.lang.reflect.InvocationTargetException
 
 /** Runs lint via reflection in its own class loader */
 class ReflectiveLintRunner {
-    fun runLint(classLoaderProvider: LintClassLoaderProvider, request: LintExecutionRequest, lintClassPath: Set<File>) {
+    fun runLint(
+        classLoaderProvider: LintClassLoaderProvider,
+        request: LintExecutionRequest,
+        lintClassPath: Set<File>
+    ) {
         try {
             val loader = classLoaderProvider.getClassLoader(lintClassPath)
             val cls = loader.loadClass("com.android.tools.lint.gradle.LintGradleExecution")

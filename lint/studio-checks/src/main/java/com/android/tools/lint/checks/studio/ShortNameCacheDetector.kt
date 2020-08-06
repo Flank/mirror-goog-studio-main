@@ -39,12 +39,13 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor
 class ShortNameCacheDetector : Detector(), SourceCodeScanner {
 
     companion object Issues {
+        @Suppress("LintImplUnexpectedDomain")
         @JvmField
         val ISSUE = Issue.create(
             id = "ShortNamesCache",
             briefDescription = "PsiShortNamesCaches which abort processing",
-            //noinspection LintImplUnexpectedDomain,LintImplBadUrl
-            explanation = """
+            explanation =
+                """
                 The various `process` methods in PsiShortNamesCache take a boolean
                 return value. If you return "false" from this method, you're saying
                 that cache processing should not continue. This will break other name caches,
@@ -68,8 +69,9 @@ class ShortNameCacheDetector : Detector(), SourceCodeScanner {
     override fun visitClass(context: JavaContext, declaration: UClass) {
         for (method in declaration.methods) {
             if (method.name.startsWith("process") && method.findSuperMethods().any {
-                    it.containingClass?.qualifiedName == "com.intellij.psi.search.PsiShortNamesCache"
-                }) {
+                it.containingClass?.qualifiedName == "com.intellij.psi.search.PsiShortNamesCache"
+            }
+            ) {
                 checkMethod(context, method)
             }
         }
@@ -91,8 +93,8 @@ class ShortNameCacheDetector : Detector(), SourceCodeScanner {
                     context.report(
                         ISSUE, node, context.getLocation(node),
                         "Do **not** return `false`; this will mark processing as " +
-                                "consumed for this element and other cache processors will not " +
-                                "run. This can lead to bugs like b/152432842."
+                            "consumed for this element and other cache processors will not " +
+                            "run. This can lead to bugs like b/152432842."
                     )
                 }
                 return true

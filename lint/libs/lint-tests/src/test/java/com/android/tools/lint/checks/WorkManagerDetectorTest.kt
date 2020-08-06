@@ -387,16 +387,6 @@ class WorkManagerDetectorTest : AbstractCheckTest() {
             public interface SynchronousWorkContinuation {
                 void enqueueSync();
             }
-
-            """
-        ).indented(),
-        java(
-            """
-            package androidx.work;
-            @SuppressWarnings("ClassNameDiffersFromFileName")
-            public interface SynchronousWorkContinuation {
-                void enqueueSync();
-            }
             """
         )
     )

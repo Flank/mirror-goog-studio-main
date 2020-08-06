@@ -185,7 +185,8 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
                 // so we don't want to do
                 //    case ATTR_LAYOUT_COLUMN: return TABLE_ROW;
                 // here since it would wipe out the above GridLayout registration.
-                // Since this is the only case where there is a conflict (in addition to layout_gravity
+                // Since this is the only case where there is a conflict (in addition to
+                // layout_gravity
                 // which is defined in many places), rather than making the map point to lists
                 // this specific case is just special cased below, look for ATTR_LAYOUT_COLUMN.
 
@@ -332,7 +333,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
                 // We could warn about unknown layout params but this might be brittle if
                 // new params are added or if people write custom ones; this is just a log
                 // for us to track these and update the check as necessary:
-                //context.client.log(null,
+                // context.client.log(null,
                 //    String.format("Unrecognized layout param '%1$s'", name));
             }
         }

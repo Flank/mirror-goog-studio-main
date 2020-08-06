@@ -238,7 +238,9 @@ public class LintFixVerifier {
                 }
 
                 if (diffs != null) {
-                    if (reformat != null && reformat && incident.getDisplayPath().endsWith(DOT_XML)) {
+                    if (reformat != null
+                            && reformat
+                            && incident.getDisplayPath().endsWith(DOT_XML)) {
                         try {
                             before =
                                     XmlPrettyPrinter.prettyPrint(
@@ -403,7 +405,9 @@ public class LintFixVerifier {
     }
 
     private static String checkReplaceString(
-            @NonNull ReplaceString replaceFix, @NonNull Incident incident, @NonNull String contents) {
+            @NonNull ReplaceString replaceFix,
+            @NonNull Incident incident,
+            @NonNull String contents) {
         String oldPattern = replaceFix.oldPattern;
         String oldString = replaceFix.oldString;
         Location location = replaceFix.range != null ? replaceFix.range : incident.getLocation();

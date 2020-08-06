@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.Device
+import com.android.build.api.dsl.DeviceGroup
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.model.TestOptions.Execution
 import com.android.utils.HelpfulEnumConverter
@@ -23,6 +25,8 @@ import com.google.common.base.Preconditions
 import com.google.common.base.Verify
 import groovy.lang.Closure
 import org.gradle.api.Action
+import org.gradle.api.ExtensiblePolymorphicDomainObjectContainer
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.tasks.testing.Test
 import org.gradle.util.ConfigureUtil
 import javax.inject.Inject
@@ -40,6 +44,12 @@ open class TestOptions @Inject constructor(dslServices: DslServices) :
     override var reportDir: String? = null
     override var animationsDisabled: Boolean = false
 
+    override var devices: ExtensiblePolymorphicDomainObjectContainer<Device> =
+        dslServices.polymorphicDomainObjectContainer(Device::class.java)
+
+    override val deviceGroups: NamedDomainObjectContainer<DeviceGroup> =
+        dslServices.domainObjectContainer(DeviceGroup::class.java, DeviceGroupFactory(dslServices))
+
     override var execution: String
         get() = Verify.verifyNotNull(
             executionConverter.reverse().convert(_execution),
@@ -52,6 +62,18 @@ open class TestOptions @Inject constructor(dslServices: DslServices) :
                 "The value of `execution` cannot be null."
             )!!
         }
+
+    init {
+        devices.registerBinding(
+            com.android.build.api.dsl.ManagedVirtualDevice::class.java,
+            ManagedVirtualDevice::class.java
+        )
+        devices.configureEach { device ->
+            deviceGroups.register(device.name) {
+                it.targetDevices.add(device)
+            }
+        }
+    }
 
     override fun unitTests(action: com.android.build.api.dsl.UnitTestOptions.() -> Unit) {
         action.invoke(unitTests)

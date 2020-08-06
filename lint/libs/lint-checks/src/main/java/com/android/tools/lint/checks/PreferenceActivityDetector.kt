@@ -56,10 +56,10 @@ class PreferenceActivityDetector : Detector(), XmlScanner, SourceCodeScanner {
         if (SecurityDetector.getExported(element)) {
             val fqcn = resolveManifestName(element)
             if (fqcn == PREFERENCE_ACTIVITY && !context.driver.isSuppressed(
-                    context,
-                    ISSUE,
-                    element
-                )
+                context,
+                ISSUE,
+                element
+            )
             ) {
                 val message = "`PreferenceActivity` should not be exported"
                 context.report(ISSUE, element, context.getLocation(element), message)
@@ -90,9 +90,9 @@ class PreferenceActivityDetector : Detector(), XmlScanner, SourceCodeScanner {
             // question specifically overrides isValidFragment() and thus knowingly allows
             // valid fragments.
             if (context.mainProject.targetSdk >= 19 && overridesIsValidFragment(
-                    evaluator,
-                    declaration
-                )
+                evaluator,
+                declaration
+            )
             ) {
                 return
             }
@@ -170,7 +170,8 @@ class PreferenceActivityDetector : Detector(), XmlScanner, SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "ExportedPreferenceActivity",
             briefDescription = "PreferenceActivity should not be exported",
-            explanation = """
+            explanation =
+                """
                 Fragment injection gives anyone who can send your `PreferenceActivity` an intent \
                 the ability to load any fragment, with any arguments, in your process.""",
             //noinspection LintImplUnexpectedDomain

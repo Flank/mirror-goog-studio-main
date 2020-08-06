@@ -102,7 +102,10 @@ public class DeployerRunnerTest {
     public static void prepare() throws Exception {
         dexDbFile = File.createTempFile("cached_db", ".bin");
         dexDbFile.delete();
-        new SqlApkFileDatabase(dexDbFile, null);
+        // Fill in the database file by calling dump() at least once.
+        // From then on, we will just keep copying this file and reusing it
+        // for every test.
+        new SqlApkFileDatabase(dexDbFile, null).dump();
         dexDbFile.deleteOnExit();
     }
 
@@ -238,6 +241,7 @@ public class DeployerRunnerTest {
     }
 
     @Test
+    @ApiLevel.InRange(max = 29)
     public void testSkipInstall() throws Exception {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
@@ -1390,6 +1394,7 @@ public class DeployerRunnerTest {
     }
 
     @Test
+    @ApiLevel.InRange(max = 29)
     public void testBasicSwap() throws Exception {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
@@ -1469,10 +1474,10 @@ public class DeployerRunnerTest {
                     "VERIFY:Success",
                     "COMPARE:Success",
                     "SWAP:Success");
-            assertInstrumented(
+            assertRetransformed(
                     logcat, "android.app.ActivityThread", "dalvik.system.DexPathList$Element");
         } else {
-            assertInstrumented(
+            assertRetransformed(
                     logcat,
                     "android.app.ActivityThread",
                     "dalvik.system.DexPathList$Element",
@@ -1482,13 +1487,92 @@ public class DeployerRunnerTest {
 
         TestUtils.eventually(
                 () -> {
-                    if (dexDB.dump().size() == 0) {
+                    try {
+                        if (dexDB.dump().isEmpty()) {
+                            Assert.fail();
+                        }
+                    } catch (DeployerException e) {
                         Assert.fail();
                     }
                 },
                 Duration.ofSeconds(5));
 
         assertFalse(dexDB.hasDuplicates());
+    }
+
+    @Test
+    @ApiLevel.InRange(min = 30)
+    public void testAgentTransformCache() throws Exception {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        final File oldApk = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
+        final File newApk = TestUtils.getWorkspaceFile(BASE + "apks/simple+code.apk");
+
+        assertTrue(device.getApps().isEmpty());
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
+
+        File installersPath = DeployerTestUtils.prepareInstaller();
+
+        String[] args = {
+            "install", "com.example.simpleapp", oldApk.getAbsolutePath(), "--force-full-install"
+        };
+
+        assertEquals(0, runner.run(args, logger));
+        assertInstalled("com.example.simpleapp", oldApk);
+
+        String cmd =
+                "am start -n com.example.simpleapp/.MainActivity -a android.intent.action.MAIN";
+        assertEquals(0, device.executeScript(cmd, new byte[] {}).value);
+
+        device.getShell().clearHistory();
+
+        // This swap is just to put the agent in place.
+        args =
+                new String[] {
+                    "codeswap",
+                    "com.example.simpleapp",
+                    newApk.getAbsolutePath(),
+                    "--installers-path=" + installersPath.getAbsolutePath()
+                };
+
+        assertEquals(0, runner.run(args, logger));
+
+        // Stop the app so we can restart it and attach a startup agent.
+        device.stopApp("com.example.simpleapp");
+        assertEquals(0, device.executeScript(cmd, new byte[] {}).value);
+
+        // The second time we restart it, it should use cached instrumentation.
+        device.stopApp("com.example.simpleapp");
+        assertEquals(0, device.executeScript(cmd, new byte[] {}).value);
+
+        // The third time we restart it, it should use cached instrumentation.
+        device.stopApp("com.example.simpleapp");
+        assertEquals(0, device.executeScript(cmd, new byte[] {}).value);
+
+        String logcat = getLogcatContent(device);
+
+        // We currently determine if the agent is using transform caching by inspecting JVMTI
+        // invocations. The agent uses RetransformClasses when cached classes are not available, and
+        // uses RedefineClasses when cached classes are present.
+
+        // Should only have one retransform of each of these classes.
+        assertRetransformed(
+                logcat,
+                "java.lang.Thread",
+                "dalvik.system.DexPathList",
+                "android.app.LoadedApk",
+                "android.app.ResourcesManager");
+        // Should have redefined each of these classes twice, once per restart.
+        assertRedefined(
+                logcat,
+                "java.lang.Thread",
+                "dalvik.system.DexPathList",
+                "android.app.LoadedApk",
+                "android.app.ResourcesManager",
+                "java.lang.Thread",
+                "dalvik.system.DexPathList",
+                "android.app.LoadedApk",
+                "android.app.ResourcesManager");
     }
 
     @Test
@@ -1568,6 +1652,7 @@ public class DeployerRunnerTest {
     }
 
     @Test
+    @ApiLevel.InRange(max = 29)
     public void testResourceAndCodeSwap() throws Exception {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
@@ -1647,10 +1732,10 @@ public class DeployerRunnerTest {
                     "VERIFY:Success",
                     "COMPARE:Success",
                     "SWAP:Success");
-            assertInstrumented(
+            assertRetransformed(
                     logcat, "android.app.ActivityThread", "dalvik.system.DexPathList$Element");
         } else {
-            assertInstrumented(
+            assertRetransformed(
                     logcat,
                     "android.app.ActivityThread",
                     "dalvik.system.DexPathList$Element",
@@ -1752,11 +1837,15 @@ public class DeployerRunnerTest {
         }
     }
 
-    private static void assertInstrumented(String logcat, String... classes) {
-        assertInLogcat(logcat, "JVMTI::RetransformClasses:", classes);
+    private static void assertRedefined(String logcat, String... classes) {
+        assertPrefixedInLogcat(logcat, "JVMTI::RedefineClasses:", classes);
     }
 
-    private static void assertInLogcat(String logcat, String prefix, String... expected) {
+    private static void assertRetransformed(String logcat, String... classes) {
+        assertPrefixedInLogcat(logcat, "JVMTI::RetransformClasses:", classes);
+    }
+
+    private static void assertPrefixedInLogcat(String logcat, String prefix, String... expected) {
         String[] actual = logcat.split("\n");
         int expectedIndex = 0;
         for (int i = 0; i < actual.length; ++i) {

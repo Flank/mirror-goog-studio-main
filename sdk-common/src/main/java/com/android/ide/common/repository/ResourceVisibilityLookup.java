@@ -20,15 +20,14 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
+import com.android.ide.common.gradle.model.IdeLibrary;
 import com.android.ide.common.gradle.model.IdeVariant;
-import com.android.ide.common.gradle.model.level2.IdeLibrary;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -359,18 +358,10 @@ public abstract class ResourceVisibilityLookup {
             String key = getMapKey(artifact);
             ResourceVisibilityLookup visibility = mInstances.get(key);
             if (visibility == null) {
-                Iterable<IdeLibrary> dependsOn =
-                        Iterables.concat(
-                                artifact.getLevel2Dependencies().getModuleDependencies(),
-                                artifact.getLevel2Dependencies().getAndroidLibraries());
                 List<ResourceVisibilityLookup> list =
                         Lists.newArrayListWithExpectedSize(
-                                artifact.getLevel2Dependencies().getModuleDependencies().size()
-                                        + artifact.getLevel2Dependencies()
-                                                .getAndroidLibraries()
-                                                .size()
-                                        + 1);
-                for (IdeLibrary d : dependsOn) {
+                                artifact.getLevel2Dependencies().getAndroidLibraries().size() + 1);
+                for (IdeLibrary d : artifact.getLevel2Dependencies().getAndroidLibraries()) {
                     ResourceVisibilityLookup v = get(d);
                     if (!v.isEmpty()) {
                         list.add(v);

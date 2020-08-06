@@ -22,6 +22,7 @@ import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 fun mainActivityKt(
   activityClass: String,
   layoutName: String,
+  navHostFragmentId: String,
   packageName: String,
   useAndroidX: Boolean
 ) = """
@@ -42,7 +43,7 @@ class ${activityClass} : AppCompatActivity() {
         setContentView(R.layout.${layoutName})
         val navView: BottomNavigationView = findViewById(R.id.nav_view)
 
-        val navController = findNavController(R.id.nav_host_fragment)
+        val navController = findNavController(R.id.${navHostFragmentId})
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         val appBarConfiguration = AppBarConfiguration(setOf(

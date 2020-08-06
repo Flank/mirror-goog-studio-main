@@ -54,5 +54,6 @@ fun createCxxProjectModel(
         }
         override val chromeTraceJsonFolder = configurationModel.chromeTraceJsonFolder
         override val isPrefabEnabled = configurationModel.isPrefabEnabled
+        override val isV2NativeModelEnabled: Boolean = configurationModel.isV2NativeModelEnabled
     }
 }

@@ -127,14 +127,10 @@ class ApplicationVariantFactory(
         buildFeatures: BuildFeatures,
         projectOptions: ProjectOptions
     ): BuildFeatureValues {
-        val features = buildFeatures as? ApplicationBuildFeatures
+        buildFeatures as? ApplicationBuildFeatures
             ?: throw RuntimeException("buildFeatures not of type ApplicationBuildFeatures")
 
-        return BuildFeatureValuesImpl(
-            buildFeatures,
-            dataBinding = features.dataBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_DATABINDING],
-            mlModelBinding = features.mlModelBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_MLMODELBINDING],
-            projectOptions = projectOptions)
+        return BuildFeatureValuesImpl(buildFeatures, projectOptions)
     }
 
     override fun createTestBuildFeatureValues(
@@ -142,15 +138,19 @@ class ApplicationVariantFactory(
         dataBindingOptions: DataBindingOptions,
         projectOptions: ProjectOptions
     ): BuildFeatureValues {
-        val features = buildFeatures as? ApplicationBuildFeatures
+        buildFeatures as? ApplicationBuildFeatures
             ?: throw RuntimeException("buildFeatures not of type ApplicationBuildFeatures")
 
-        val dataBinding =
-            features.dataBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_DATABINDING]
         return BuildFeatureValuesImpl(
             buildFeatures,
-            dataBinding = dataBinding && dataBindingOptions.isEnabledForTests,
-            projectOptions = projectOptions)
+            projectOptions,
+            dataBindingOverride = if (!dataBindingOptions.isEnabledForTests) {
+                false
+            } else {
+                null // means whatever is default.
+            },
+            mlModelBindingOverride = false
+        )
     }
 
     override fun getVariantType(): VariantType {

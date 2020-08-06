@@ -56,7 +56,6 @@ class BooleanOptionTest {
     fun `check experimental features do not have default value 'true'`() {
         // Ignore known violating or working-as-intended features
         val ignoreList = setOf(
-            BooleanOption.ENABLE_GRADLE_WORKERS,
             BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING,
             BooleanOption.ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT,
             BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES,

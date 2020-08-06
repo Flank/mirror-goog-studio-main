@@ -16,8 +16,8 @@
 
 package com.android.builder.model.v2.models.ndk
 
+import com.android.builder.model.v2.AndroidModel
 import java.io.File
-import java.io.Serializable
 
 enum class NativeBuildSystem {
     NDK_BUILD, CMAKE
@@ -27,7 +27,7 @@ enum class NativeBuildSystem {
  * Response returned by Gradle to Android Studio containing information about an Android module that
  * contains native code.
  */
-interface NativeModule : Serializable {
+interface NativeModule : AndroidModel {
 
     /** The name of the module. For example "HelloWorld.app". */
     val name: String

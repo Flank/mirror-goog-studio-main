@@ -17,6 +17,7 @@ iml_module(
     test_srcs = ["manifest-merger/src/test/java"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/sdklib:studio.android.sdktools.sdklib"],
+    runtime_deps = ["//tools/idea/.idea/libraries:javax.activation"],
     # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:JUnit4[test]",
@@ -108,7 +109,7 @@ maven_pom(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "6.5"
+GRADLE_VERSION = "6.6-rc-4"
 
 filegroup(
     name = "gradle-distrib",
@@ -125,12 +126,6 @@ filegroup(
 filegroup(
     name = "gradle-distrib-5.3.1",
     srcs = ["//tools/external/gradle:gradle-distrib-5.3.1"],
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "gradle-distrib-6.6-20200609220026+0000",
-    srcs = ["//tools/external/gradle:gradle-distrib-6.6-20200609220026+0000"],
     visibility = ["//visibility:public"],
 )
 

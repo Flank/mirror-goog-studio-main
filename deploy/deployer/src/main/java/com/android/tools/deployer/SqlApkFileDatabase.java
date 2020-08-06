@@ -24,6 +24,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -57,6 +59,10 @@ public class SqlApkFileDatabase {
     private static final String CURRENT_DATABASE_VERSION_STRING =
             CURRENT_SCHEMA_VERSION_NUMBER + "|" + CURRENT_CHECKSUM_TOOL_VERSION;
     private final String databaseVersion;
+    private final File dbFile;
+    private final String nativeLibraryTmpDir;
+
+    private boolean initialized;
     private int maxDexFilesEntries;
     private Connection connection;
 
@@ -78,6 +84,20 @@ public class SqlApkFileDatabase {
             File file, String nativeLibraryTmpDir, String databaseVersion, int maxDexFileEntries) {
         this.databaseVersion = databaseVersion;
         this.maxDexFilesEntries = maxDexFileEntries;
+        this.dbFile = file;
+        this.nativeLibraryTmpDir = nativeLibraryTmpDir;
+        this.initialized = false;
+    }
+
+    /**
+     * Delay database initialization for two reasons: 1. Performance: We want to avoid paying the
+     * penalty of database init when user never use apply changes. 2. Error Reporting: We should
+     * only report error when user actually use it.
+     */
+    private void initializeIfNeeded() throws DeployerException {
+        if (initialized) {
+            return;
+        }
 
         // Save the property incase someone needs to do something else with it.
         String previousSqliteTmpdir = System.getProperty(SQLITE_JDBC_TEMP_DIR_PROPERTY);
@@ -93,9 +113,9 @@ public class SqlApkFileDatabase {
             // For older versions of the JDBC we need to force load the sqlite.JDBC driver to trigger static initializer's and register
             // the JDBC driver with the Java DriverManager.
             Class.forName("org.sqlite.JDBC");
-            boolean newFile = !file.exists();
+            boolean newFile = !dbFile.exists();
             connection =
-                    DriverManager.getConnection(String.format("jdbc:sqlite:%s", file.getPath()));
+                    DriverManager.getConnection(String.format("jdbc:sqlite:%s", dbFile.getPath()));
             if (newFile) {
                 fillTables();
             } else {
@@ -104,6 +124,14 @@ public class SqlApkFileDatabase {
             executeStatements("PRAGMA foreign_keys=ON;");
         } catch (ClassNotFoundException | SQLException e) {
             throw new RuntimeException(e);
+        } catch (UnsatisfiedLinkError e) {
+            // If it looks like we are not able to load the DB because the native JDBC Driver can't
+            // be loaded. Ask the user
+            // to check the directory's permission.
+            if (e.getMessage().contains("NativeDB") && nativeLibraryTmpDir != null) {
+                Path dir = Paths.get(nativeLibraryTmpDir);
+                throw DeployerException.jdbcNativeLibError(dir.toAbsolutePath().toString());
+            }
         } finally {
             if (nativeLibraryTmpDir != null) {
                 if (previousSqliteTmpdir == null) {
@@ -113,11 +141,14 @@ public class SqlApkFileDatabase {
                 }
             }
         }
+        initialized = true;
     }
 
     public void close() {
         try {
-            connection.close();
+            if (connection != null) {
+                connection.close();
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -199,7 +230,8 @@ public class SqlApkFileDatabase {
         }
     }
 
-    public List<DexClass> getClasses(ApkEntry dex) {
+    public List<DexClass> getClasses(ApkEntry dex) throws DeployerException {
+        initializeIfNeeded();
         try (Trace ignored = Trace.begin("SqlApkFileDatabase.getClasses");
                 Statement s = connection.createStatement();
                 ResultSet result =
@@ -225,7 +257,8 @@ public class SqlApkFileDatabase {
         }
     }
 
-    public void addClasses(Collection<DexClass> allClasses) {
+    public void addClasses(Collection<DexClass> allClasses) throws DeployerException {
+        initializeIfNeeded();
         int numDex = 0;
         try {
             Map<Apk, Multimap<ApkEntry, DexClass>> map = new HashMap<>();
@@ -299,7 +332,8 @@ public class SqlApkFileDatabase {
     }
 
     @VisibleForTesting
-    public List<DexClass> dump() {
+    public List<DexClass> dump() throws DeployerException {
+        initializeIfNeeded();
         List<DexClass> classes = new ArrayList<>();
         for (Apk apk : getApks()) {
             for (ApkEntry file : getFiles(apk)) {
@@ -322,7 +356,8 @@ public class SqlApkFileDatabase {
      * <p>This method performs a duplicates check which should only be used for testing only.
      */
     @VisibleForTesting
-    public boolean hasDuplicates() {
+    public boolean hasDuplicates() throws DeployerException {
+        initializeIfNeeded();
         for (Apk apk : getApks()) {
             List<DexClass> classes = new ArrayList<>();
             for (ApkEntry file : getFiles(apk)) {

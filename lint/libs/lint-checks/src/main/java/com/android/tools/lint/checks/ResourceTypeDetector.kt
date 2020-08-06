@@ -206,9 +206,9 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                                 context.getLocation(expression),
                                 String.format(
                                     "Comparing resource types (`@%1\$s`) other " +
-                                            "than equality is dangerous and usually " +
-                                            "wrong;  some resource types set top bit " +
-                                            "which turns the value negative",
+                                        "than equality is dangerous and usually " +
+                                        "wrong;  some resource types set top bit " +
+                                        "which turns the value negative",
                                     SUPPORT_ANNOTATIONS_PREFIX.removeFrom(qualifiedName)
                                 )
                             )
@@ -245,7 +245,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     private fun isResourceAnnotation(signature: String): Boolean {
         return ResourceEvaluator.getTypeFromAnnotationSignature(signature) != null ||
-                ANY_RES_ANNOTATION.isEquals(signature)
+            ANY_RES_ANNOTATION.isEquals(signature)
     }
 
     private fun checkColor(context: JavaContext, argument: UElement) {
@@ -267,7 +267,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         if (types != null && types.contains(COLOR)) {
             val message = String.format(
                 "Should pass resolved color instead of resource id here: " +
-                        "`getResources().getColor(%1\$s)`",
+                    "`getResources().getColor(%1\$s)`",
                 argument.asSourceString()
             )
             report(context, COLOR_USAGE, argument, context.getLocation(argument), message)
@@ -378,7 +378,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         if (types != null && types.contains(ResourceType.DIMEN)) {
             val message = String.format(
                 "Should pass resolved pixel dimension instead of resource id here: " +
-                        "`getResources().getDimension*(%1\$s)`",
+                    "`getResources().getDimension*(%1\$s)`",
                 argument.asSourceString()
             )
             report(
@@ -396,17 +396,23 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     ) {
         val actual = ResourceEvaluator.getResourceTypes(context.evaluator, argument)
 
-        if (actual == null && (!UastLintUtils.isNumber(argument) || UastLintUtils.isZero(argument) || UastLintUtils.isMinusOne(
+        if (actual == null && (
+            !UastLintUtils.isNumber(argument) || UastLintUtils.isZero(argument) || UastLintUtils.isMinusOne(
                 argument
-            ))
+            )
+            )
         ) {
             return
-        } else if (actual != null && (!Sets.intersection(
+        } else if (actual != null && (
+            !Sets.intersection(
                 actual,
                 expectedTypes
-            ).isEmpty() || expectedTypes.contains(DRAWABLE) && (actual.contains(COLOR) || actual.contains(
-                MIPMAP
-            )))
+            ).isEmpty() || expectedTypes.contains(DRAWABLE) && (
+                actual.contains(COLOR) || actual.contains(
+                    MIPMAP
+                )
+                )
+            )
         ) {
             return
         }
@@ -559,7 +565,8 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         val RESOURCE_TYPE = Issue.create(
             id = "ResourceType",
             briefDescription = "Wrong Resource Type",
-            explanation = """
+            explanation =
+                """
                 Ensures that resource id's passed to APIs are of the right type; for \
                 example, calling `Resources.getColor(R.string.name)` is wrong.""",
             category = Category.CORRECTNESS,
@@ -574,7 +581,8 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         val COLOR_USAGE = Issue.create(
             id = "ResourceAsColor",
             briefDescription = "Should pass resolved color instead of resource id",
-            explanation = """
+            explanation =
+                """
                 Methods that take a color in the form of an integer should be passed an \
                 RGB triple, not the actual color resource id. You must call \
                 `getResources().getColor(resource)` to resolve the actual color value first.
@@ -593,7 +601,8 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         val HALF_FLOAT = Issue.create(
             id = "HalfFloat",
             briefDescription = "Incorrect Half Float",
-            explanation = """
+            explanation =
+                """
                 Half-precision floating point are stored in a short data type, and should be \
                 manipulated using the `android.util.Half` class. This check flags usages \
                 where it appears that these values are used incorrectly.""",

@@ -85,8 +85,10 @@ class DiffUtilDetector : Detector(), SourceCodeScanner {
                 val left = node.leftOperand.getExpressionType() as? PsiClassType
                 val cls = left?.resolve() ?: return false
 
-                if (isKotlin(cls) && (context.evaluator.isSealed(cls) ||
-                            context.evaluator.isData(cls))
+                if (isKotlin(cls) && (
+                    context.evaluator.isSealed(cls) ||
+                        context.evaluator.isData(cls)
+                    )
                 ) {
                     // Sealed class doesn't guarantee that it defines equals/hashCode
                     // but it's likely (we'd need to go look at each inner class)
@@ -163,7 +165,8 @@ class DiffUtilDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "DiffUtilEquals",
             briefDescription = "Suspicious DiffUtil Equality",
-            explanation = """
+            explanation =
+                """
                 `areContentsTheSame` is used by `DiffUtil` to produce diffs. If the \
                 method is implemented incorrectly, such as using identity equals \
                 instead of equals, or calling equals on a class that has not implemented \

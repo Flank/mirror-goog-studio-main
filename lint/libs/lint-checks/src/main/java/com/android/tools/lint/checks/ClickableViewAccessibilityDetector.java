@@ -146,7 +146,7 @@ public class ClickableViewAccessibilityDetector extends Detector implements Sour
     @Nullable
     @Override
     public List<String> applicableSuperClasses() {
-        //return Collections.singletonList("android.view.View.OnTouchListener");
+        // return Collections.singletonList("android.view.View.OnTouchListener");
         return Arrays.asList(CLASS_VIEW, CLASS_ON_TOUCH_LISTENER);
     }
 

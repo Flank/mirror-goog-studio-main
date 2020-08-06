@@ -46,7 +46,7 @@ class MotionLayoutDetector : ResourceXmlDetector() {
 
     @Suppress("RemoveExplicitTypeArguments") // Compiler was unable to infer the type of the expr
     private val references: MutableMap<Resource, Location>
-            by lazy<MutableMap<Resource, Location>>(LazyThreadSafetyMode.NONE) { mutableMapOf() }
+    by lazy<MutableMap<Resource, Location>>(LazyThreadSafetyMode.NONE) { mutableMapOf() }
 
     override fun appliesTo(folderType: ResourceFolderType) =
         folderType == ResourceFolderType.LAYOUT || folderType == ResourceFolderType.XML
@@ -133,7 +133,8 @@ class MotionLayoutDetector : ResourceXmlDetector() {
         val INVALID_SCENE_FILE_REFERENCE = Issue.create(
             id = "MotionLayoutInvalidSceneFileReference",
             briefDescription = "$ATTR_CONSTRAINT_LAYOUT_DESCRIPTION must specify a scene file",
-            explanation = """
+            explanation =
+                """
                 A motion scene file specifies the animations used in a `MotionLayout`. \
                 The `$ATTR_CONSTRAINT_LAYOUT_DESCRIPTION` is required to specify a valid motion \
                 scene file.

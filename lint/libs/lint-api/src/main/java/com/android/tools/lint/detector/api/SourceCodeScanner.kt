@@ -476,7 +476,7 @@ interface SourceCodeScanner : FileScanner {
      * void enqueue(Runnable runnable) { ... }
      * ...
      * enqueue({ something(); })
-    </pre> *
+     </pre> *
      * then the lambda being passed to the call can be thought of as a class
      * implementing the Runnable interface.
      *
@@ -551,8 +551,10 @@ interface SourceCodeScanner : FileScanner {
      * @param allPackageAnnotations all annotations in the target surrounding package
      * @deprecated This method is missing the resolved parameter; use the other method instead
      */
-    @Deprecated("There is a new version of this method which also takes a resolved " +
-            "parameter; use that one instead")
+    @Deprecated(
+        "There is a new version of this method which also takes a resolved " +
+            "parameter; use that one instead"
+    )
     fun visitAnnotationUsage(
         context: JavaContext,
         usage: UElement,

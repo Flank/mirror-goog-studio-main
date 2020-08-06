@@ -48,7 +48,8 @@ class TestConfiguration(
 
     override fun isEnabled(issue: Issue): Boolean {
         when {
-            issue == IssueRegistry.LINT_ERROR -> return task.allowSystemErrors ||
+            issue == IssueRegistry.LINT_ERROR ->
+                return task.allowSystemErrors ||
                     !task.allowCompilationErrors
             issue == IssueRegistry.PARSER_ERROR -> return !task.allowSystemErrors
             issue == IssueRegistry.OBSOLETE_LINT_CHECK -> return !task.allowObsoleteLintChecks

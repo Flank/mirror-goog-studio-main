@@ -50,8 +50,6 @@ abstract class AssetPackManifestGenerationTask : NonIncrementalTask() {
     @get:Optional
     abstract val instantDeliveryType: Property<String>
 
-    override val enableGradleWorkers: Property<Boolean> = project.objects.property(Boolean::class.java).value(true)
-
     public override fun doTaskAction() {
         workerExecutor.noIsolation().submit(AssetPackManifestGenerationRunnable::class.java) {
             it.initializeFromAndroidVariantTask(this)

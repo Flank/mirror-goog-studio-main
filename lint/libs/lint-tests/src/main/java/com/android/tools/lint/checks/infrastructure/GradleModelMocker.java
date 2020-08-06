@@ -36,45 +36,44 @@ import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
-import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ApiVersion;
-import com.android.builder.model.BuildType;
-import com.android.builder.model.BuildTypeContainer;
-import com.android.builder.model.ClassField;
 import com.android.builder.model.Dependencies;
-import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Library;
 import com.android.builder.model.LintOptions;
 import com.android.builder.model.MavenCoordinates;
-import com.android.builder.model.ProductFlavor;
-import com.android.builder.model.ProductFlavorContainer;
-import com.android.builder.model.SigningConfig;
-import com.android.builder.model.SourceProvider;
-import com.android.builder.model.SourceProviderContainer;
-import com.android.builder.model.VectorDrawablesOptions;
-import com.android.builder.model.ViewBindingOptions;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
+import com.android.ide.common.gradle.model.IdeAaptOptions;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
+import com.android.ide.common.gradle.model.IdeApiVersion;
+import com.android.ide.common.gradle.model.IdeBuildType;
+import com.android.ide.common.gradle.model.IdeBuildTypeContainer;
+import com.android.ide.common.gradle.model.IdeClassField;
+import com.android.ide.common.gradle.model.IdeDependencies;
 import com.android.ide.common.gradle.model.IdeJavaArtifact;
+import com.android.ide.common.gradle.model.IdeJavaCompileOptions;
+import com.android.ide.common.gradle.model.IdeLibrary;
 import com.android.ide.common.gradle.model.IdeLintOptions;
 import com.android.ide.common.gradle.model.IdeProductFlavor;
+import com.android.ide.common.gradle.model.IdeProductFlavorContainer;
+import com.android.ide.common.gradle.model.IdeSourceProvider;
+import com.android.ide.common.gradle.model.IdeSourceProviderContainer;
 import com.android.ide.common.gradle.model.IdeVariant;
-import com.android.ide.common.gradle.model.level2.IdeAndroidLibrary;
-import com.android.ide.common.gradle.model.level2.IdeAndroidLibraryCore;
-import com.android.ide.common.gradle.model.level2.IdeDependencies;
-import com.android.ide.common.gradle.model.level2.IdeDependenciesImpl;
-import com.android.ide.common.gradle.model.level2.IdeJavaLibrary;
-import com.android.ide.common.gradle.model.level2.IdeJavaLibraryCore;
-import com.android.ide.common.gradle.model.level2.IdeLibrary;
-import com.android.ide.common.gradle.model.level2.IdeLibraryDelegate;
-import com.android.ide.common.gradle.model.level2.IdeModuleLibrary;
-import com.android.ide.common.gradle.model.level2.IdeModuleLibraryCore;
+import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions;
+import com.android.ide.common.gradle.model.IdeViewBindingOptions;
+import com.android.ide.common.gradle.model.impl.IdeAndroidLibrary;
+import com.android.ide.common.gradle.model.impl.IdeAndroidLibraryCore;
+import com.android.ide.common.gradle.model.impl.IdeDependenciesImpl;
+import com.android.ide.common.gradle.model.impl.IdeJavaLibrary;
+import com.android.ide.common.gradle.model.impl.IdeJavaLibraryCore;
+import com.android.ide.common.gradle.model.impl.IdeLibraryDelegate;
+import com.android.ide.common.gradle.model.impl.IdeLintOptionsImpl;
+import com.android.ide.common.gradle.model.impl.IdeModuleLibrary;
+import com.android.ide.common.gradle.model.impl.IdeModuleLibraryCore;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
@@ -148,7 +147,7 @@ public class GradleModelMocker {
     private IdeVariant variant;
     private GlobalLibraryMap globalLibraryMap;
     private final Map<IdeLibrary, IdeLibrary> libraryMocks = new HashMap<>();
-    private final List<BuildType> buildTypes = Lists.newArrayList();
+    private final List<IdeBuildType> buildTypes = Lists.newArrayList();
     private final List<IdeLibrary> androidLibraries = Lists.newArrayList();
     private final List<IdeLibrary> javaLibraries = Lists.newArrayList();
     private final List<IdeLibrary> moduleLibraries = Lists.newArrayList();
@@ -160,7 +159,7 @@ public class GradleModelMocker {
     private final List<IdeLibrary> androidTestModuleLibraries = Lists.newArrayList();
     private final List<IdeLibrary> allJavaLibraries = Lists.newArrayList();
     private IdeProductFlavor mergedFlavor;
-    private ProductFlavor defaultFlavor;
+    private IdeProductFlavor defaultFlavor;
     private IdeLintOptions lintOptions;
     private final HashMap<String, Integer> severityOverrides = new HashMap();
     private final LintCliFlags flags = new LintCliFlags();
@@ -178,11 +177,11 @@ public class GradleModelMocker {
     private GradleVersion modelVersion = GradleVersion.parse("2.2.2");
     private final Map<String, Dep> graphs = Maps.newHashMap();
     private boolean useBuildCache;
-    private VectorDrawablesOptions vectorDrawablesOptions;
-    private AaptOptions aaptOptions;
+    private IdeVectorDrawablesOptions vectorDrawablesOptions;
+    private IdeAaptOptions aaptOptions;
     private boolean allowUnrecognizedConstructs;
     private boolean fullDependencies;
-    private JavaCompileOptions compileOptions;
+    private IdeJavaCompileOptions compileOptions;
     private boolean javaPlugin;
     private boolean javaLibraryPlugin;
 
@@ -354,10 +353,10 @@ public class GradleModelMocker {
         variant = mock(IdeVariant.class);
         when(project.getVariants()).thenReturn(Collections.singletonList(variant));
 
-        lintOptions = new IdeLintOptions();
+        lintOptions = new IdeLintOptionsImpl();
         when(project.getLintOptions()).thenAnswer(invocation -> lintOptions);
 
-        compileOptions = mock(JavaCompileOptions.class);
+        compileOptions = mock(IdeJavaCompileOptions.class);
         when(compileOptions.getSourceCompatibility()).thenReturn("1.7");
         when(compileOptions.getTargetCompatibility()).thenReturn("1.7");
         when(compileOptions.getEncoding()).thenReturn("UTF-8");
@@ -399,47 +398,47 @@ public class GradleModelMocker {
 
         scan(gradle, "");
 
-        List<BuildTypeContainer> containers = Lists.newArrayList();
-        for (BuildType buildType : buildTypes) {
-            BuildTypeContainer container = mock(BuildTypeContainer.class);
+        List<IdeBuildTypeContainer> containers = Lists.newArrayList();
+        for (IdeBuildType buildType : buildTypes) {
+            IdeBuildTypeContainer container = mock(IdeBuildTypeContainer.class);
             when(container.getBuildType()).thenReturn(buildType);
             containers.add(container);
 
-            SourceProvider provider = createSourceProvider(projectDir, buildType.getName());
+            IdeSourceProvider provider = createSourceProvider(projectDir, buildType.getName());
             when(container.getSourceProvider()).thenReturn(provider);
         }
 
         when(project.getBuildTypes()).thenReturn(containers);
-        ProductFlavorContainer defaultContainer = mock(ProductFlavorContainer.class);
+        IdeProductFlavorContainer defaultContainer = mock(IdeProductFlavorContainer.class);
         when(defaultContainer.getProductFlavor()).thenReturn(defaultFlavor);
         when(defaultContainer.toString()).thenReturn("defaultConfig");
         when(project.getDefaultConfig()).thenReturn(defaultContainer);
-        SourceProvider mainProvider = createSourceProvider(projectDir, "main");
+        IdeSourceProvider mainProvider = createSourceProvider(projectDir, "main");
         when(defaultContainer.getSourceProvider()).thenReturn(mainProvider);
 
-        SourceProviderContainer androidTestProvider = mock(SourceProviderContainer.class);
+        IdeSourceProviderContainer androidTestProvider = mock(IdeSourceProviderContainer.class);
         when(androidTestProvider.getArtifactName())
                 .thenReturn(AndroidProject.ARTIFACT_ANDROID_TEST);
-        SourceProvider androidSourceProvider = createSourceProvider(projectDir, "androidTest");
+        IdeSourceProvider androidSourceProvider = createSourceProvider(projectDir, "androidTest");
         when(androidTestProvider.getSourceProvider()).thenReturn(androidSourceProvider);
-        SourceProviderContainer unitTestProvider = mock(SourceProviderContainer.class);
+        IdeSourceProviderContainer unitTestProvider = mock(IdeSourceProviderContainer.class);
         when(unitTestProvider.getArtifactName()).thenReturn(AndroidProject.ARTIFACT_UNIT_TEST);
-        SourceProvider unitSourceProvider = createSourceProvider(projectDir, "test");
+        IdeSourceProvider unitSourceProvider = createSourceProvider(projectDir, "test");
         when(unitTestProvider.getSourceProvider()).thenReturn(unitSourceProvider);
 
-        List<SourceProviderContainer> extraProviders =
+        List<IdeSourceProviderContainer> extraProviders =
                 Lists.newArrayList(androidTestProvider, unitTestProvider);
         when(defaultContainer.getExtraSourceProviders()).thenReturn(extraProviders);
 
-        List<ProductFlavorContainer> flavorContainers = Lists.newArrayList();
+        List<IdeProductFlavorContainer> flavorContainers = Lists.newArrayList();
         flavorContainers.add(defaultContainer);
-        for (ProductFlavor flavor : productFlavors) {
+        for (IdeProductFlavor flavor : productFlavors) {
             if (flavor == defaultFlavor) {
                 continue;
             }
-            ProductFlavorContainer container = mock(ProductFlavorContainer.class);
+            IdeProductFlavorContainer container = mock(IdeProductFlavorContainer.class);
             String flavorName = flavor.getName();
-            SourceProvider flavorSourceProvider = createSourceProvider(projectDir, flavorName);
+            IdeSourceProvider flavorSourceProvider = createSourceProvider(projectDir, flavorName);
             when(container.getSourceProvider()).thenReturn(flavorSourceProvider);
             when(container.getProductFlavor()).thenReturn(flavor);
             when(container.toString()).thenReturn(flavorName);
@@ -489,17 +488,17 @@ public class GradleModelMocker {
         for (Map.Entry<String, String> entry : splits.entries()) {
             outputs.add(createAndroidArtifactOutput(entry.getKey(), entry.getValue()));
         }
-        //outputs.add(createAndroidArtifactOutput("DENSITY", "mdpi"));
-        //outputs.add(createAndroidArtifactOutput("DENSITY", "hdpi"));
+        // outputs.add(createAndroidArtifactOutput("DENSITY", "mdpi"));
+        // outputs.add(createAndroidArtifactOutput("DENSITY", "hdpi"));
         when(artifact.getOutputs()).thenReturn(outputs);
 
         Set<String> seenDimensions = Sets.newHashSet();
-        BuildType defaultBuildType = buildTypes.get(0);
+        IdeBuildType defaultBuildType = buildTypes.get(0);
         String defaultBuildTypeName = defaultBuildType.getName();
         StringBuilder variantNameSb = new StringBuilder();
         Collection<String> flavorDimensions = project.getFlavorDimensions();
         for (String dimension : flavorDimensions) {
-            for (ProductFlavor flavor : productFlavors) {
+            for (IdeProductFlavor flavor : productFlavors) {
                 if (flavor != defaultFlavor && dimension.equals(flavor.getDimension())) {
                     if (seenDimensions.contains(dimension)) {
                         continue;
@@ -514,7 +513,7 @@ public class GradleModelMocker {
                 }
             }
         }
-        for (ProductFlavor flavor : productFlavors) {
+        for (IdeProductFlavor flavor : productFlavors) {
             if (flavor != defaultFlavor && flavor.getDimension() == null) {
                 String name = flavor.getName();
                 if (variantNameSb.length() == 0) {
@@ -527,7 +526,7 @@ public class GradleModelMocker {
         }
 
         if (flavorContainers.size() >= 2) {
-            SourceProvider multiVariantSourceSet =
+            IdeSourceProvider multiVariantSourceSet =
                     createSourceProvider(projectDir, variantNameSb.toString());
             when(artifact.getMultiFlavorSourceProvider()).thenReturn(multiVariantSourceSet);
         }
@@ -538,7 +537,8 @@ public class GradleModelMocker {
         }
         String defaultVariantName = variantNameSb.toString();
         if (productFlavors.isEmpty()) {
-            SourceProvider variantSourceSet = createSourceProvider(projectDir, defaultVariantName);
+            IdeSourceProvider variantSourceSet =
+                    createSourceProvider(projectDir, defaultVariantName);
             when(artifact.getVariantSourceProvider()).thenReturn(variantSourceSet);
         }
         setVariantName(defaultVariantName);
@@ -579,17 +579,17 @@ public class GradleModelMocker {
         }
 
         // Merge values into mergedFlavor
-        ApiVersion minSdkVersion = defaultFlavor.getMinSdkVersion();
-        ApiVersion targetSdkVersion = defaultFlavor.getTargetSdkVersion();
+        IdeApiVersion minSdkVersion = defaultFlavor.getMinSdkVersion();
+        IdeApiVersion targetSdkVersion = defaultFlavor.getTargetSdkVersion();
         Integer versionCode = defaultFlavor.getVersionCode();
         String versionName = defaultFlavor.getVersionName();
         Map<String, Object> manifestPlaceholders =
                 new HashMap<>(defaultFlavor.getManifestPlaceholders());
-        Map<String, ClassField> resValues = new HashMap<>(defaultFlavor.getResValues());
+        Map<String, IdeClassField> resValues = new HashMap<>(defaultFlavor.getResValues());
         Collection<String> resourceConfigurations =
                 new HashSet<>(defaultFlavor.getResourceConfigurations());
-        for (ProductFlavorContainer container : flavorContainers) {
-            ProductFlavor flavor = container.getProductFlavor();
+        for (IdeProductFlavorContainer container : flavorContainers) {
+            IdeProductFlavor flavor = container.getProductFlavor();
             manifestPlaceholders.putAll(flavor.getManifestPlaceholders());
             resValues.putAll(flavor.getResValues());
             resourceConfigurations.addAll(flavor.getResourceConfigurations());
@@ -609,10 +609,10 @@ public class GradleModelMocker {
         // Attempt to make additional variants?
         List<IdeVariant> variants = new ArrayList<>();
         variants.add(variant);
-        for (BuildType buildType : buildTypes) {
+        for (IdeBuildType buildType : buildTypes) {
             String buildTypeName = buildType.getName();
 
-            for (ProductFlavor flavor : productFlavors) {
+            for (IdeProductFlavor flavor : productFlavors) {
                 if (flavor == defaultFlavor) {
                     continue;
                 }
@@ -629,8 +629,7 @@ public class GradleModelMocker {
                     minSdkVersion = mergedFlavor.getMinSdkVersion();
                     targetSdkVersion = mergedFlavor.getTargetSdkVersion();
                     String flavorName = mergedFlavor.getName();
-                    VectorDrawablesOptions vectorDrawables = mergedFlavor.getVectorDrawables();
-                    SigningConfig signingConfig = mergedFlavor.getSigningConfig();
+                    IdeVectorDrawablesOptions vectorDrawables = mergedFlavor.getVectorDrawables();
 
                     IdeProductFlavor variantFlavor = mock(IdeProductFlavor.class);
                     when(variantFlavor.getMinSdkVersion()).thenReturn(minSdkVersion);
@@ -642,7 +641,6 @@ public class GradleModelMocker {
                     when(variantFlavor.getResValues()).thenReturn(Collections.emptyMap());
                     when(variantFlavor.getManifestPlaceholders())
                             .thenReturn(Collections.emptyMap());
-                    when(variantFlavor.getSigningConfig()).thenReturn(signingConfig);
 
                     when(newVariant.getMergedFlavor()).thenReturn(variantFlavor);
 
@@ -832,7 +830,7 @@ public class GradleModelMocker {
             if (!jar.exists()) {
                 createEmptyJar(jar);
             }
-            //when(l2.isProvided).thenReturn(androidLibrary.isProvided());
+            // when(l2.isProvided).thenReturn(androidLibrary.isProvided());
         } else if (library instanceof JavaLibrary) {
             JavaLibrary javaLibrary = (JavaLibrary) library;
             when(lib.getType()).thenReturn(com.android.builder.model.level2.Library.LIBRARY_JAVA);
@@ -859,9 +857,9 @@ public class GradleModelMocker {
             try (JarOutputStream jarOutputStream =
                     new JarOutputStream(
                             new BufferedOutputStream(new FileOutputStream(jar)), manifest)) {
-                jarOutputStream.putNextEntry(new ZipEntry("dummy.txt"));
+                jarOutputStream.putNextEntry(new ZipEntry("sample.txt"));
                 ByteStreams.copy(
-                        new ByteArrayInputStream("Dummy".getBytes(Charsets.UTF_8)),
+                        new ByteArrayInputStream("Sample".getBytes(Charsets.UTF_8)),
                         jarOutputStream);
                 jarOutputStream.closeEntry();
             } catch (IOException e) {
@@ -1093,23 +1091,23 @@ public class GradleModelMocker {
             addDependency(declaration, null, true);
         } else if (line.startsWith("applicationId ") || line.startsWith("packageName ")) {
             String id = getUnquotedValue(key);
-            ProductFlavor flavor = getFlavorFromContext(context);
+            IdeProductFlavor flavor = getFlavorFromContext(context);
             if (flavor != null) {
                 when(flavor.getApplicationId()).thenReturn(id);
             } else {
                 error("Unexpected flavor context " + context);
             }
         } else if (line.startsWith("minSdkVersion ")) {
-            ApiVersion apiVersion = createApiVersion(key);
-            ProductFlavor flavor = getFlavorFromContext(context);
+            IdeApiVersion apiVersion = createApiVersion(key);
+            IdeProductFlavor flavor = getFlavorFromContext(context);
             if (flavor != null) {
                 when(flavor.getMinSdkVersion()).thenReturn(apiVersion);
             } else {
                 error("Unexpected flavor context " + context);
             }
         } else if (line.startsWith("targetSdkVersion ")) {
-            ApiVersion version = createApiVersion(key);
-            ProductFlavor flavor = getFlavorFromContext(context);
+            IdeApiVersion version = createApiVersion(key);
+            IdeProductFlavor flavor = getFlavorFromContext(context);
             if (flavor != null) {
                 when(flavor.getTargetSdkVersion()).thenReturn(version);
             } else {
@@ -1119,7 +1117,7 @@ public class GradleModelMocker {
             String value = key.substring(key.indexOf(' ') + 1).trim();
             if (Character.isDigit(value.charAt(0))) {
                 int number = Integer.decode(value);
-                ProductFlavor flavor = getFlavorFromContext(context);
+                IdeProductFlavor flavor = getFlavorFromContext(context);
                 if (flavor != null) {
                     when(flavor.getVersionCode()).thenReturn(number);
                 } else {
@@ -1130,7 +1128,7 @@ public class GradleModelMocker {
             }
         } else if (line.startsWith("versionName ")) {
             String name = getUnquotedValue(key);
-            ProductFlavor flavor = getFlavorFromContext(context);
+            IdeProductFlavor flavor = getFlavorFromContext(context);
             if (flavor != null) {
                 when(flavor.getVersionName()).thenReturn(name);
             } else {
@@ -1138,7 +1136,7 @@ public class GradleModelMocker {
             }
         } else if (line.startsWith("versionNameSuffix ")) {
             String name = getUnquotedValue(key);
-            ProductFlavor flavor = getFlavorFromContext(context);
+            IdeProductFlavor flavor = getFlavorFromContext(context);
             if (flavor != null) {
                 when(flavor.getVersionNameSuffix()).thenReturn(name);
             } else {
@@ -1146,7 +1144,7 @@ public class GradleModelMocker {
             }
         } else if (line.startsWith("applicationIdSuffix ")) {
             String name = getUnquotedValue(key);
-            ProductFlavor flavor = getFlavorFromContext(context);
+            IdeProductFlavor flavor = getFlavorFromContext(context);
             if (flavor != null) {
                 when(flavor.getApplicationIdSuffix()).thenReturn(name);
             } else {
@@ -1164,7 +1162,7 @@ public class GradleModelMocker {
         } else if (line.startsWith("minifyEnabled ") && key.startsWith("android.buildTypes.")) {
             String name =
                     key.substring("android.buildTypes.".length(), key.indexOf(".minifyEnabled"));
-            BuildType buildType = getBuildType(name, true);
+            IdeBuildType buildType = getBuildType(name, true);
             String value = getUnquotedValue(line);
             when(buildType.isMinifyEnabled()).thenReturn(VALUE_TRUE.equals(value));
         } else if (key.startsWith("android.compileSdkVersion ")) {
@@ -1172,7 +1170,7 @@ public class GradleModelMocker {
             when(project.getCompileTarget())
                     .thenReturn(Character.isDigit(value.charAt(0)) ? "android-" + value : value);
         } else if (line.startsWith("resConfig")) { // and resConfigs
-            ProductFlavor flavor;
+            IdeProductFlavor flavor;
             if (context.startsWith("android.productFlavors.")) {
                 String flavorName = context.substring("android.productFlavors.".length());
                 flavor = getProductFlavor(flavorName, true);
@@ -1192,7 +1190,7 @@ public class GradleModelMocker {
         } else if (key.startsWith("android.defaultConfig.vectorDrawables.useSupportLibrary ")) {
             String value = getUnquotedValue(key);
             if (VALUE_TRUE.equals(value)) {
-                VectorDrawablesOptions options = getVectorDrawableOptions();
+                IdeVectorDrawablesOptions options = getVectorDrawableOptions();
                 when(options.getUseSupportLibrary()).thenReturn(true);
             }
         } else if (key.startsWith(
@@ -1223,11 +1221,12 @@ public class GradleModelMocker {
                 && key.startsWith("android.")
                 && line.endsWith("]")) {
             // Example:
-            // android.defaultConfig.manifestPlaceholders [ localApplicationId:'com.example.manifest_merger_example']
+            // android.defaultConfig.manifestPlaceholders [
+            // localApplicationId:'com.example.manifest_merger_example']
             Map<String, Object> manifestPlaceholders;
             if (context.startsWith("android.buildTypes.")) {
                 String name = context.substring("android.buildTypes.".length());
-                BuildType buildType = getBuildType(name, false);
+                IdeBuildType buildType = getBuildType(name, false);
                 if (buildType != null) {
                     manifestPlaceholders = buildType.getManifestPlaceholders();
                 } else {
@@ -1236,7 +1235,7 @@ public class GradleModelMocker {
                 }
             } else if (context.startsWith("android.productFlavors.")) {
                 String name = context.substring("android.productFlavors.".length());
-                ProductFlavor flavor = getProductFlavor(name, false);
+                IdeProductFlavor flavor = getProductFlavor(name, false);
                 if (flavor != null) {
                     manifestPlaceholders = flavor.getManifestPlaceholders();
                 } else {
@@ -1269,19 +1268,20 @@ public class GradleModelMocker {
         } else if (line.startsWith("dimension ") && key.startsWith("android.productFlavors.")) {
             String name =
                     key.substring("android.productFlavors.".length(), key.indexOf(".dimension"));
-            ProductFlavor productFlavor = getProductFlavor(name, true);
+            IdeProductFlavor productFlavor = getProductFlavor(name, true);
             String dimension = getUnquotedValue(line);
             when(productFlavor.getDimension()).thenReturn(dimension);
         } else if (key.startsWith("android.") && line.startsWith("resValue ")) {
             // Example:
-            // android.defaultConfig.resValue 'string', 'defaultConfigName', 'Some DefaultConfig Data'
+            // android.defaultConfig.resValue 'string', 'defaultConfigName', 'Some DefaultConfig
+            // Data'
             int index = key.indexOf(".resValue ");
             String name = key.substring("android.".length(), index);
 
-            Map<String, ClassField> resValues;
+            Map<String, IdeClassField> resValues;
             if (name.startsWith("buildTypes.")) {
                 name = name.substring("buildTypes.".length());
-                BuildType buildType = getBuildType(name, false);
+                IdeBuildType buildType = getBuildType(name, false);
                 if (buildType != null) {
                     resValues = buildType.getResValues();
                 } else {
@@ -1290,7 +1290,7 @@ public class GradleModelMocker {
                 }
             } else if (name.startsWith("productFlavors.")) {
                 name = name.substring("productFlavors.".length());
-                ProductFlavor flavor = getProductFlavor(name, false);
+                IdeProductFlavor flavor = getProductFlavor(name, false);
                 if (flavor != null) {
                     resValues = flavor.getResValues();
                 } else {
@@ -1325,7 +1325,7 @@ public class GradleModelMocker {
                 resIndex++;
             }
 
-            ClassField field = mock(ClassField.class);
+            IdeClassField field = mock(IdeClassField.class);
             when(field.getName()).thenReturn(fieldName);
             when(field.getType()).thenReturn(type);
             when(field.getValue()).thenReturn(value);
@@ -1350,8 +1350,8 @@ public class GradleModelMocker {
         } else if (key.startsWith("android.aaptOptions.namespaced ")) {
             String value = getUnquotedValue(key);
             if (VALUE_TRUE.equals(value)) {
-                AaptOptions options = getAaptOptions();
-                when(options.getNamespacing()).thenReturn(AaptOptions.Namespacing.REQUIRED);
+                IdeAaptOptions options = getAaptOptions();
+                when(options.getNamespacing()).thenReturn(IdeAaptOptions.Namespacing.REQUIRED);
             }
         } else if (key.startsWith("groupId ")) {
             String groupId = getUnquotedValue(key);
@@ -1491,8 +1491,8 @@ public class GradleModelMocker {
 
             switch (key) {
                 case "viewBinding":
-                    ViewBindingOptions viewBindingOptions = mock(ViewBindingOptions.class);
-                    when(viewBindingOptions.isEnabled()).thenReturn(toBoolean(arg));
+                    IdeViewBindingOptions viewBindingOptions = mock(IdeViewBindingOptions.class);
+                    when(viewBindingOptions.getEnabled()).thenReturn(toBoolean(arg));
                     when(project.getViewBindingOptions()).thenReturn(viewBindingOptions);
                     break;
             }
@@ -1561,7 +1561,7 @@ public class GradleModelMocker {
             Boolean dependencies) {
         // No mocking IdeLintOptions; it's final
         lintOptions =
-                new IdeLintOptions(
+                new IdeLintOptionsImpl(
                         baseline != null ? baseline : lintOptions.getBaselineFile(),
                         lintConfig != null ? lintConfig : lintOptions.getLintConfig(),
                         severities != null ? severities : severityOverrides,
@@ -1632,7 +1632,7 @@ public class GradleModelMocker {
     }
 
     @Nullable
-    private ProductFlavor getFlavorFromContext(@NonNull String context) {
+    private IdeProductFlavor getFlavorFromContext(@NonNull String context) {
         if (context.equals("android.defaultConfig")) {
             return defaultFlavor;
         } else if (context.startsWith("android.productFlavors.")) {
@@ -1643,27 +1643,27 @@ public class GradleModelMocker {
         }
     }
 
-    private VectorDrawablesOptions getVectorDrawableOptions() {
+    private IdeVectorDrawablesOptions getVectorDrawableOptions() {
         if (vectorDrawablesOptions == null) {
-            vectorDrawablesOptions = mock(VectorDrawablesOptions.class);
+            vectorDrawablesOptions = mock(IdeVectorDrawablesOptions.class);
             when(mergedFlavor.getVectorDrawables()).thenReturn(vectorDrawablesOptions);
         }
         return vectorDrawablesOptions;
     }
 
-    private AaptOptions getAaptOptions() {
+    private IdeAaptOptions getAaptOptions() {
         if (aaptOptions == null) {
-            aaptOptions = mock(AaptOptions.class);
+            aaptOptions = mock(IdeAaptOptions.class);
             when(project.getAaptOptions()).thenReturn(aaptOptions);
-            when(aaptOptions.getNamespacing()).thenReturn(AaptOptions.Namespacing.DISABLED);
+            when(aaptOptions.getNamespacing()).thenReturn(IdeAaptOptions.Namespacing.DISABLED);
         }
         return aaptOptions;
     }
 
     @Contract("_,true -> !null")
     @Nullable
-    private BuildType getBuildType(@NonNull String name, boolean create) {
-        for (BuildType type : buildTypes) {
+    private IdeBuildType getBuildType(@NonNull String name, boolean create) {
+        for (IdeBuildType type : buildTypes) {
             if (type.getName().equals(name)) {
                 return type;
             }
@@ -1677,8 +1677,8 @@ public class GradleModelMocker {
     }
 
     @NonNull
-    private BuildType createBuildType(@NonNull String name) {
-        BuildType buildType = mock(BuildType.class);
+    private IdeBuildType createBuildType(@NonNull String name) {
+        IdeBuildType buildType = mock(IdeBuildType.class);
         when(buildType.getName()).thenReturn(name);
         when(buildType.toString()).thenReturn(name);
         when(buildType.isDebuggable()).thenReturn(name.startsWith("debug"));
@@ -1760,8 +1760,9 @@ public class GradleModelMocker {
     }
 
     @NonNull
-    private static SourceProvider createSourceProvider(@NonNull File root, @NonNull String name) {
-        SourceProvider provider = mock(SourceProvider.class);
+    private static IdeSourceProvider createSourceProvider(
+            @NonNull File root, @NonNull String name) {
+        IdeSourceProvider provider = mock(IdeSourceProvider.class);
         when(provider.getName()).thenReturn(name);
         when(provider.getManifestFile())
                 .thenReturn(new File(root, "src/" + name + "/" + ANDROID_MANIFEST_XML));
@@ -1782,8 +1783,8 @@ public class GradleModelMocker {
     }
 
     @NonNull
-    private ApiVersion createApiVersion(@NonNull String value) {
-        ApiVersion version = mock(ApiVersion.class);
+    private IdeApiVersion createApiVersion(@NonNull String value) {
+        IdeApiVersion version = mock(IdeApiVersion.class);
         String s = value.substring(value.indexOf(' ') + 1);
         if (s.startsWith("'")) {
             String codeName = getUnquotedValue(s);
@@ -2126,8 +2127,7 @@ public class GradleModelMocker {
                                 FN_ANNOTATIONS_ZIP,
                                 "public.txt",
                                 "../lib.aar",
-                                "R.txt"
-                        ),
+                                "R.txt"),
                         isProvided));
     }
 
@@ -2216,12 +2216,12 @@ public class GradleModelMocker {
         Splitter splitter = Splitter.on('_');
         List<String> flavors = Lists.newArrayList();
         for (String s : splitter.split(SdkVersionInfo.camelCaseToUnderlines(variantName))) {
-            BuildType buildType = getBuildType(s, false);
+            IdeBuildType buildType = getBuildType(s, false);
             //noinspection VariableNotUsedInsideIf
             if (buildType != null) {
                 when(variant.getBuildType()).thenReturn(s);
             } else {
-                ProductFlavor flavor = getProductFlavor(s, false);
+                IdeProductFlavor flavor = getProductFlavor(s, false);
                 //noinspection VariableNotUsedInsideIf
                 if (flavor != null) {
                     flavors.add(s);

@@ -47,6 +47,12 @@ public class TestExecutorsInspector extends TestInspector {
                     case FAIL_ON_HANDLER:
                         environment.executors().handler().post(new CrashRunnable());
                         break;
+                    case COMPLETE_ON_IO:
+                        environment.executors().io().execute(new CompleteRunnable());
+                        break;
+                    case FAIL_ON_IO:
+                        environment.executors().io().execute(new CrashRunnable());
+                        break;
                 }
                 break;
             }

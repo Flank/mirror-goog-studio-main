@@ -25,9 +25,9 @@ import static org.mockito.Mockito.when;
 
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
+import com.android.ide.common.gradle.model.IdeDependencies;
+import com.android.ide.common.gradle.model.IdeLibrary;
 import com.android.ide.common.gradle.model.IdeVariant;
-import com.android.ide.common.gradle.model.level2.IdeDependencies;
-import com.android.ide.common.gradle.model.level2.IdeLibrary;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.android.testutils.TestUtils;

@@ -78,8 +78,7 @@ class DynamicAppTest {
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("dynamicApp")
         // b/157470515, http://b/146208910, http://b/149978740
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
-        .setTargetGradleVersion("6.6-20200609220026+0000")
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         .create()
 
     private val bundleContent: Array<String> = arrayOf(

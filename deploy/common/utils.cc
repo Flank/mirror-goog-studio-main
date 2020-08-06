@@ -16,15 +16,6 @@
 
 #include "tools/base/deploy/common/utils.h"
 
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include "tools/base/deploy/common/env.h"
-#include "tools/base/deploy/common/io.h"
-#include "tools/base/deploy/common/log.h"
-
 namespace deploy {
 
 deploy::Event ConvertProtoEventToEvent(
@@ -81,65 +72,6 @@ void ConvertEventToProtoEvent(deploy::Event& event,
   proto_event->set_pid(event.pid);
   proto_event->set_tid(event.tid);
   proto_event->set_timestamp_ns(event.timestamp_ns);
-}
-
-bool ReadFile(const std::string& file_path, std::string* content) {
-  int fd = IO::open(file_path, O_RDONLY);
-  if (fd == -1) {
-    ErrEvent("Could not open file at '" + file_path + "': " + strerror(errno));
-    return false;
-  }
-
-  struct stat st;
-  if (fstat(fd, &st) != 0) {
-    ErrEvent("Could not stat file at '" + file_path + "': " + strerror(errno));
-    return false;
-  }
-
-  content->resize(st.st_size);
-
-  ssize_t len;
-  size_t bytes_read = 0;
-  while ((len = read(fd, &(*content)[0] + bytes_read,
-                     st.st_size - bytes_read)) > 0) {
-    bytes_read += len;
-  }
-  close(fd);
-
-  if (bytes_read < st.st_size) {
-    ErrEvent("Could not read file at '" + file_path + "'");
-    return false;
-  }
-
-  return true;
-}
-
-bool WriteFile(const std::string& file_path, const std::string& content) {
-  int fd = IO::creat(file_path, S_IRWXU);
-  if (fd == -1) {
-    ErrEvent("Could not create file at '" + file_path +
-             "': " + strerror(errno));
-    return false;
-  }
-
-  size_t count = 0;
-  while (count < content.size()) {
-    ssize_t len = write(fd, content.data() + count, content.size() - count);
-    if (len < 0) {
-      ErrEvent("Could not write to file at '" + file_path +
-               "': " + strerror(errno));
-      break;
-    }
-    count += len;
-  }
-
-  close(fd);
-  if (count < content.size()) {
-    ErrEvent("Failed to write all bytes of file '" + file_path + "'");
-    return false;
-  }
-
-  return true;
 }
 
 std::string GetAgentExceptionLogDir(const std::string& package_name) {

@@ -23,15 +23,16 @@ import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
+import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig
 import com.android.build.gradle.internal.cxx.configure.createNativeBuildSystemVariantConfig
 import com.android.build.gradle.internal.cxx.configure.isCmakeForkVersion
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
+import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
-import com.android.build.gradle.internal.cxx.model.findCxxFolder
 import com.android.build.gradle.internal.cxx.model.statsBuilder
 import com.android.build.gradle.internal.cxx.settings.rewriteCxxAbiModelWithCMakeSettings
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
@@ -43,6 +44,7 @@ import com.android.build.gradle.options.BooleanOption.BUILD_ONLY_TARGET_ABI
 import com.android.build.gradle.options.BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION
 import com.android.build.gradle.options.BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE
 import com.android.build.gradle.options.BooleanOption.ENABLE_PROFILE_JSON
+import com.android.build.gradle.options.BooleanOption.ENABLE_V2_NATIVE_MODEL
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.StringOption.IDE_BUILD_TARGET_ABI
 import com.android.build.gradle.options.StringOption.PROFILE_OUTPUT_DIR
@@ -53,9 +55,22 @@ import com.android.build.gradle.tasks.NdkBuildExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.getPrefabFromMaven
 import com.android.builder.profile.ChromeTracingProfileConverter
 import com.android.sdklib.AndroidVersion
+import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.*
 import java.io.File
 import java.util.Objects
+
+/**
+ * The createCxxMetadataGenerator(...) function is meant to be use at
+ * task action time and specifically not during config-time. Any config-
+ * time data needed for C/C++ build should come from [CxxConfigurationModel].
+ *
+ * Change to 'true' to check that createCxxMetadataGenerator(...) is not
+ * called at configuration time. But don't check it in set to 'true'.
+ * There's a unittest to enforce this.
+ */
+val ENABLE_CHECK_CONFIG_TIME_CONSTRUCTION by lazy { System.getenv().containsKey("TEST_WORKSPACE") }
 
 /**
  * This is the task data model that gets serialized with the task in configuration caching.
@@ -87,8 +102,111 @@ data class CxxConfigurationModel(
     val prefabPackageDirectoryList: FileCollection?,
     val implicitBuildTargetSet: Set<String>,
     val variantName: String,
-    val nativeVariantConfig: NativeBuildSystemVariantConfig
+    val nativeVariantConfig: NativeBuildSystemVariantConfig,
+    val isV2NativeModelEnabled: Boolean
 )
+
+/**
+ * Finds the location of the build-system output folder. For example, .cxx/cmake/debug/x86/
+ *
+ * If user specific externalNativeBuild.cmake.buildStagingFolder = 'xyz' then that folder
+ * will be used instead of the default of moduleRoot/.cxx.
+ *
+ * If the resulting build output folder would be inside of moduleRoot/build then issue an error
+ * because moduleRoot/build will be deleted when the user does clean and that will lead to
+ * undefined behavior.
+ */
+ private fun findCxxFolder(
+        moduleRootFolder : File,
+        buildStagingDirectory: File?,
+        buildFolder: File): File {
+    val defaultCxxFolder =
+            FileUtils.join(
+                    moduleRootFolder,
+                    CXX_DEFAULT_CONFIGURATION_SUBFOLDER
+            )
+    return when {
+        buildStagingDirectory == null -> defaultCxxFolder
+        FileUtils.isFileInDirectory(buildStagingDirectory, buildFolder) -> {
+            warnln("""
+            The build staging directory you specified ('${buildStagingDirectory.absolutePath}')
+            is a subdirectory of your project's temporary build directory (
+            '${buildFolder.absolutePath}'). Files in this directory do not persist through clean
+            builds. It is recommended to either use the default build staging directory 
+            ('$defaultCxxFolder'), or specify a path outside the temporary build directory.
+            """.trimIndent())
+            buildStagingDirectory
+        }
+        else -> buildStagingDirectory
+    }
+}
+
+/**
+ * Module-level folder for android_gradle_build.json files
+ *   ex, $moduleRootFolder/.cxx
+ */
+val CxxConfigurationModel.cxxFolder : File get() {
+    return findCxxFolder(
+            moduleRootFolder,
+            buildStagingFolder,
+            buildDir)
+}
+
+/**
+ * Base folder for android_gradle_build.json files
+ *   ex, $moduleRootFolder/.cxx/cmake/debug
+ */
+val CxxConfigurationModel.variantJsonFolder : File get() {
+    return FileUtils.join(cxxFolder, buildSystem.tag, variantName)
+}
+
+/**
+ * Base intermediates folder for all build output files
+ *   ex, $moduleRootFolder/build/intermediates/cmake/debug
+ */
+private val CxxConfigurationModel.variantIntermediatesFolder : File get() {
+    return FileUtils.join(
+            intermediatesFolder,
+            buildSystem.tag,
+            variantName)
+}
+
+/**
+ * Base folder for .o files
+ *   ex, $moduleRootFolder/build/intermediates/cmake/debug/obj
+ */
+val CxxConfigurationModel.variantObjFolder : File get() {
+    return if (buildSystem == NativeBuildSystem.NDK_BUILD) {
+        // ndkPlatform-build create libraries in a "local" subfolder.
+        FileUtils.join(variantIntermediatesFolder, "obj", "local")
+    } else {
+        FileUtils.join(variantIntermediatesFolder, "obj")
+    }
+}
+
+/**
+ * Base folder for .so files
+ *   ex, $moduleRootFolder/build/intermediates/cmake/debug/lib
+ */
+val CxxConfigurationModel.variantSoFolder: File get() {
+    return FileUtils.join(variantIntermediatesFolder, "lib")
+}
+
+/**
+ * The .cxx build folder
+ *   ex, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a
+ */
+fun CxxConfigurationModel.abiCxxBuildFolder(abi : Abi): File {
+    return variantJsonFolder.resolve(abi.tag)
+}
+
+/**
+ * The .cxx build folder
+ *   ex, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a
+ */
+fun CxxConfigurationModel.abiJsonFile(abi : Abi): File {
+    return abiCxxBuildFolder(abi).resolve("android_gradle_build.json")
+}
 
 /**
  * This creates the [CxxConfigurationModel]. After deserialization it is used to construct
@@ -201,7 +319,8 @@ fun tryCreateCxxConfigurationModel(
         variantName = componentProperties.name,
         nativeVariantConfig = createNativeBuildSystemVariantConfig(
             buildSystem, componentProperties.variantDslInfo
-        )
+        ),
+        isV2NativeModelEnabled = option(ENABLE_V2_NATIVE_MODEL)
     )
 }
 
@@ -242,6 +361,11 @@ fun createCxxMetadataGenerator(
     sdkComponents: SdkComponentsBuildService,
     configurationModel: CxxConfigurationModel
 ): CxxMetadataGenerator {
+    if(ENABLE_CHECK_CONFIG_TIME_CONSTRUCTION) {
+        check(!isGradleConfiguration()) {
+            "Should not call createCxxMetadataGenerator(...) at configuration time"
+        }
+    }
     val module =
         createCxxModuleModel(
             sdkComponents,
@@ -263,10 +387,7 @@ fun createCxxMetadataGenerator(
         ).rewriteCxxAbiModelWithCMakeSettings()
     }
     return when (module.buildSystem) {
-        NativeBuildSystem.NDK_BUILD -> NdkBuildExternalNativeJsonGenerator(
-            variant,
-            abis
-        )
+        NativeBuildSystem.NDK_BUILD -> NdkBuildExternalNativeJsonGenerator(variant, abis)
         NativeBuildSystem.CMAKE -> {
             val cmake =
                 Objects.requireNonNull(variant.module.cmake)!!
@@ -287,4 +408,9 @@ fun createCxxMetadataGenerator(
             CmakeServerExternalNativeJsonGenerator(variant, abis)
         }
     }
+}
+
+private fun isGradleConfiguration() : Boolean {
+    return Thread.currentThread().stackTrace
+            .any { it.toString().contains("BasePlugin.createAndroidTasks" ) }
 }

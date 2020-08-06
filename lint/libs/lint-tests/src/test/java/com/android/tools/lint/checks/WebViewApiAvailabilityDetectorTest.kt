@@ -26,7 +26,8 @@ class WebViewApiAvailabilityDetectorTest : AbstractCheckTest() {
 
     fun testUnguardedMethods() {
         lint().files(
-            LintDetectorTest.java("""
+            LintDetectorTest.java(
+                """
                 package test.pkg;
 
                 import android.app.Activity;
@@ -42,8 +43,10 @@ class WebViewApiAvailabilityDetectorTest : AbstractCheckTest() {
                         webView.loadUrl("https://www.example.com");
                     }
                 }
-            """.trimIndent()),
-            LintDetectorTest.kotlin("""
+                """.trimIndent()
+            ),
+            LintDetectorTest.kotlin(
+                """
                 package test.pkg
 
                 import android.app.Activity
@@ -58,7 +61,8 @@ class WebViewApiAvailabilityDetectorTest : AbstractCheckTest() {
                         webView.loadUrl("https://www.example.com")
                     }
                 }
-            """.trimIndent())
+                """.trimIndent()
+            )
         )
             .issues(WebViewApiAvailabilityDetector.ISSUE)
             .run()
@@ -67,7 +71,8 @@ class WebViewApiAvailabilityDetectorTest : AbstractCheckTest() {
 
     fun testGuardedFrameworkOnlyMethods() {
         lint().files(
-            LintDetectorTest.java("""
+            LintDetectorTest.java(
+                """
                 package test.pkg;
 
                 import android.app.Activity;
@@ -99,8 +104,10 @@ class WebViewApiAvailabilityDetectorTest : AbstractCheckTest() {
                         }
                     }
                 }
-            """.trimIndent()),
-            LintDetectorTest.kotlin("""
+                """.trimIndent()
+            ),
+            LintDetectorTest.kotlin(
+                """
                 package test.pkg
 
                 import android.app.Activity
@@ -130,7 +137,8 @@ class WebViewApiAvailabilityDetectorTest : AbstractCheckTest() {
                         }
                     }
                 }
-            """.trimIndent())
+                """.trimIndent()
+            )
         )
             .issues(WebViewApiAvailabilityDetector.ISSUE)
             .run()
@@ -138,7 +146,8 @@ class WebViewApiAvailabilityDetectorTest : AbstractCheckTest() {
     }
 
     fun testGuardedAndroidXAvailableMethods() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/WebViewActivity.java:14: Warning: Consider using WebViewCompat.createWebMessageChannel instead which will support more devices. [WebViewApiAvailability]
                         webView.createWebMessageChannel();
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -167,10 +176,11 @@ class WebViewApiAvailabilityDetectorTest : AbstractCheckTest() {
                         WebView.startSafeBrowsing(this, null);
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 9 warnings
-        """.trimIndent()
+            """.trimIndent()
 
         lint().files(
-            LintDetectorTest.java("""
+            LintDetectorTest.java(
+                """
                 package test.pkg;
 
                 import android.app.Activity;
@@ -196,7 +206,8 @@ class WebViewApiAvailabilityDetectorTest : AbstractCheckTest() {
                         }
                     }
                 }
-            """.trimIndent())
+                """.trimIndent()
+            )
         )
             .issues(WebViewApiAvailabilityDetector.ISSUE)
             .run()
@@ -204,7 +215,8 @@ class WebViewApiAvailabilityDetectorTest : AbstractCheckTest() {
     }
 
     fun testGuardedAndroidXAvailableMethodsKotlin() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/MainActivity.kt:13: Warning: Consider using WebViewCompat.createWebMessageChannel instead which will support more devices. [WebViewApiAvailability]
                         webView.createWebMessageChannel()
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -233,10 +245,11 @@ class WebViewApiAvailabilityDetectorTest : AbstractCheckTest() {
                         WebView.startSafeBrowsing(this, null)
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 9 warnings
-        """.trimIndent()
+            """.trimIndent()
 
         lint().files(
-            LintDetectorTest.kotlin("""
+            LintDetectorTest.kotlin(
+                """
                 package test.pkg
 
                 import android.app.Activity
@@ -261,7 +274,8 @@ class WebViewApiAvailabilityDetectorTest : AbstractCheckTest() {
                         }
                     }
                 }
-            """.trimIndent())
+                """.trimIndent()
+            )
         )
             .issues(WebViewApiAvailabilityDetector.ISSUE)
             .run()

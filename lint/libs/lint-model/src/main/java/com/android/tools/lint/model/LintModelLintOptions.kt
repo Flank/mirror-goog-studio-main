@@ -17,6 +17,7 @@
 package com.android.tools.lint.model
 
 import java.io.File
+import java.io.Serializable
 
 /**
  * Options for lint. Example:
@@ -280,4 +281,4 @@ class DefaultLintModelLintOptions(
     override val checkDependencies: Boolean,
     override val baselineFile: File?,
     override val severityOverrides: Map<String, LintModelSeverity>?
-) : LintModelLintOptions
+) : LintModelLintOptions, Serializable

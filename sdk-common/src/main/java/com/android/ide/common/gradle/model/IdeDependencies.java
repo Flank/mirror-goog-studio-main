@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,44 @@ package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.Dependencies;
-import java.io.Serializable;
-import java.util.function.Consumer;
+import com.android.builder.model.level2.DependencyGraphs;
+import java.io.File;
+import java.util.Collection;
 
-public interface IdeDependencies extends Serializable, Dependencies {
-    void forEachLibrary(@NonNull Consumer<IdeAndroidLibrary> action);
+/**
+ * Unified API for L1 ( {@link Dependencies} in pre-3.0 models) and L4 ({@link DependencyGraphs} in
+ * 3.0+ models) dependencies.
+ */
+public interface IdeDependencies {
+    /**
+     * Returns the Android library dependencies, both direct and transitive.
+     *
+     * @return the list of libraries of type LIBRARY_ANDROID.
+     */
+    @NonNull
+    Collection<IdeLibrary> getAndroidLibraries();
 
-    void forEachJavaLibrary(@NonNull Consumer<IdeJavaLibrary> action);
+    /**
+     * Returns the Java library dependencies, both direct and transitive dependencies.
+     *
+     * @return the list of libraries of type LIBRARY_JAVA.
+     */
+    @NonNull
+    Collection<IdeLibrary> getJavaLibraries();
+
+    /**
+     * Returns the Module dependencies.
+     *
+     * @return the list of libraries of type LIBRARY_MODULE.
+     */
+    @NonNull
+    Collection<IdeLibrary> getModuleDependencies();
+
+    /**
+     * Returns the list of runtime only classes.
+     *
+     * @return the list of runtime only classes.
+     */
+    @NonNull
+    Collection<File> getRuntimeOnlyClasses();
 }

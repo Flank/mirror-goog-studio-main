@@ -959,7 +959,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
         }
 
         for (String name : names) {
-            //List<File> files = nameToFiles.get(name);
+            // List<File> files = nameToFiles.get(name);
             Map<String, List<File>> configurations = configMap.get(name);
             if (configurations == null) {
                 // Nothing in this configuration: probably only found in drawable/ or
@@ -1940,7 +1940,8 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
         }
     }
 
-    // Like SdkUtils.fileNameToResourceName, but for files like .svn it returns "" rather than ".svn"
+    // Like SdkUtils.fileNameToResourceName, but for files like .svn it returns "" rather than
+    // ".svn"
     private static String getBaseName(String name) {
         String baseName = name;
         int index = baseName.indexOf('.');
@@ -2044,7 +2045,8 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
 
             // TODO: Look up exact app icon from the manifest rather than simply relying on
             // the naming conventions described here:
-            //  http://developer.android.com/guide/practices/ui_guidelines/icon_design.html#design-tips
+            //
+            // http://developer.android.com/guide/practices/ui_guidelines/icon_design.html#design-tips
             // See if we can figure out other types of icons from usage too.
 
             String baseName = getBaseName(name);

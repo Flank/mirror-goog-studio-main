@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.common.fixture.model
 
 import com.android.builder.model.v2.AndroidModel
 import com.google.common.truth.Truth
+import com.google.gson.JsonElement
 import java.io.File
 
 // Sets of classes and functions to provide a little DSL facilitating
@@ -25,6 +26,15 @@ import java.io.File
 
 interface FileNormalizer {
     fun normalize(file: File): String
+
+    /**
+     * Normalizes any strings that match the build environment in the given [JsonElement] so that
+     * the returned result is invariant across build.
+     *
+     * Note that this method replace all matched strings and it could return non-sense result if
+     * some well-known paths are too common.
+     */
+    fun normalize(value: JsonElement): JsonElement
 }
 
 /**

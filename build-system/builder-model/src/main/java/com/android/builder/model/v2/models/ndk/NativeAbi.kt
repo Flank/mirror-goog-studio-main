@@ -16,14 +16,14 @@
 
 package com.android.builder.model.v2.models.ndk
 
+import com.android.builder.model.v2.AndroidModel
 import java.io.File
-import java.io.Serializable
 
-/** 
+/**
  * Response returned by Gradle to Android Studio containing information about a native ABI under a
- * module and variant. 
+ * module and variant.
  */
-interface NativeAbi : Serializable {
+interface NativeAbi: AndroidModel {
     /**
      * The ABI name. This value aligns with [com.android.build.gradle.internal.core.Abi.tag]. For
      * example, "x86_64", "arm64-v8a".
@@ -31,13 +31,14 @@ interface NativeAbi : Serializable {
     val name: String
 
     /**
-     * Standard compile command file in JSON format that contains the compiler commands.
+     * File containing compiler flags.
      *
-     * See https://clang.llvm.org/docs/JSONCompilationDatabase.html for details of the format.
+     * As for now this file is always a compile_commands.json. See
+     * https://clang.llvm.org/docs/JSONCompilationDatabase.html for details of the format.
      *
      * This file is generated if requested in [NativeModelBuilderParameter].
      */
-    val compileCommandsJsonFile: File
+    val sourceFlagsFile: File
 
     /**
      * Text file containing a list of folders that contains shared libraries used by the APK.

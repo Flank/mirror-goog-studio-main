@@ -40,11 +40,11 @@ public class ProjectTest extends AbstractCheckTest {
         // Ensure that a cycle in library project dependencies doesn't cause
         // infinite directory traversal
         //noinspection all // Sample code
-        File master =
+        File main =
                 getProjectDir(
-                        "MasterProject",
-                        // Master project
-                        manifest().pkg("foo.master").minSdk(14),
+                        "MainProject",
+                        // Main project
+                        manifest().pkg("foo.main").minSdk(14),
                         projectProperties()
                                 .property("android.library.reference.1", "../LibraryProject"),
                         java(
@@ -89,9 +89,9 @@ public class ProjectTest extends AbstractCheckTest {
 
         assertEquals(
                 ""
-                        + "MasterProject/project.properties: Error: Circular library dependencies; check your project.properties files carefully [LintError]\n"
+                        + "MainProject/project.properties: Error: Circular library dependencies; check your project.properties files carefully [LintError]\n"
                         + "1 errors, 0 warnings\n",
-                checkLint(Arrays.asList(master, library)));
+                checkLint(Arrays.asList(main, library)));
     }
 
     public void testInvalidLibraryReferences1() {

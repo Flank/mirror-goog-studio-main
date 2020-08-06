@@ -18,39 +18,22 @@ package com.android.build.gradle.internal.profile
 
 import com.android.tools.analytics.Environment
 import org.gradle.api.provider.ProviderFactory
-import java.util.concurrent.ConcurrentHashMap
 
 /** Gradle-specific implementation of the [Environment] for the analytics library. */
-class GradleAnalyticsEnvironment(private var providerFactory: ProviderFactory?) : Environment() {
+class GradleAnalyticsEnvironment(providerFactory: ProviderFactory) : Environment() {
 
-    private val systemProperties = ConcurrentHashMap<String, NullableString>()
-    private val envVariables = ConcurrentHashMap<String, NullableString>()
-
-    override fun getVariable(name: String): String? {
-        return envVariables.computeIfAbsent(name) {
-            NullableString(
-                providerFactory?.environmentVariable(name)?.forUseAtConfigurationTime()?.orNull
-            )
-        }.value
+    private val systemProperties = SystemProperty.values().associate {
+        it to providerFactory.systemProperty(it.key).forUseAtConfigurationTime().orNull
+    }
+    private val envVariables = EnvironmentVariable.values().associate {
+        it to providerFactory.environmentVariable(it.key).forUseAtConfigurationTime().orNull
     }
 
-    override fun getSystemProperty(name: String): String? {
-        return systemProperties.computeIfAbsent(name) {
-            NullableString(
-                providerFactory?.systemProperty(name)?.forUseAtConfigurationTime()?.orNull
-            )
-        }.value
+    override fun getVariable(name: EnvironmentVariable): String? {
+        return envVariables[name]
     }
 
-    /**
-     * Release the provider factory to avoid leaks in http://b/160330055. Configuration cached runs
-     * will use cached system properties and env variables, and http://b/157470515 will fix this
-     * properly.
-     */
-    fun releaseProviderFactory() {
-        providerFactory = null
+    override fun getSystemProperty(name: SystemProperty): String? {
+        return systemProperties[name]
     }
-
-    // ConcurrentHashMap does not allow null values, so wrap in in a data class
-    data class NullableString(val value: String?)
 }

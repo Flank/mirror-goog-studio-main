@@ -155,8 +155,8 @@ class PermissionDataGenerator {
     fun getDangerousPermissions(skipHidden: Boolean = true, minApiLevel: Int): List<Permission> {
         return permissions?.filter { permission ->
             permission.dangerousIn > 0 &&
-                    permission.dangerousOut >= minApiLevel &&
-                    (!skipHidden || permission.field != null)
+                permission.dangerousOut >= minApiLevel &&
+                (!skipHidden || permission.field != null)
         }?.toList() ?: emptyList()
     }
 
@@ -287,12 +287,12 @@ class PermissionDataGenerator {
             }
             fail(
                 "List of revocable permissions has changed:\n" +
-                        // Make the diff show what it take to bring the actual results into the
-                        // expected results
-                        TestUtils.getDiff(
-                            Joiner.on('\n').join(expected),
-                            Joiner.on('\n').join(actual)
-                        )
+                    // Make the diff show what it take to bring the actual results into the
+                    // expected results
+                    TestUtils.getDiff(
+                        Joiner.on('\n').join(expected),
+                        Joiner.on('\n').join(actual)
+                    )
             )
         }
     }
@@ -346,8 +346,8 @@ class PermissionDataGenerator {
 
     private fun isSignaturePermission(protectionLevels: List<String>): Boolean =
         protectionLevels.contains("signature") ||
-                protectionLevels.contains("privileged") ||
-                protectionLevels.contains("signatureOrSystem")
+            protectionLevels.contains("privileged") ||
+            protectionLevels.contains("signatureOrSystem")
 
     private fun processPermissionTag(
         element: Element,

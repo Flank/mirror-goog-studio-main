@@ -26,7 +26,4 @@ interface VariantAwareTask {
 
     /** the name of the variant */
     var variantName: String
-
-    @get:Input
-    val enableGradleWorkers: Property<Boolean>
 }

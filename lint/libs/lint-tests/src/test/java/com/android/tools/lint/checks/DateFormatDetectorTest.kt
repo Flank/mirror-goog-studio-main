@@ -23,7 +23,8 @@ class DateFormatDetectorTest : AbstractCheckTest() {
     }
 
     fun testSpecifyingLocale() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/LocaleTest.java:32: Warning: To get local formatting use getDateInstance(), getDateTimeInstance(), or getTimeInstance(), or use new SimpleDateFormat(String template, Locale locale) with for example Locale.US for ASCII dates. [SimpleDateFormat]
                     new SimpleDateFormat(); // WRONG
                     ~~~~~~~~~~~~~~~~~~~~~~

@@ -102,7 +102,7 @@ class RecyclerViewDetector : Detector(), SourceCodeScanner {
         }
         val message =
             "Do not treat position as fixed; only use immediately " +
-                    "and call `$variablePrefix.getAdapterPosition()` to look it up later"
+                "and call `$variablePrefix.getAdapterPosition()` to look it up later"
         context.report(FIXED_POSITION, parameter, context.getLocation(parameter), message)
     }
 
@@ -162,10 +162,10 @@ class RecyclerViewDetector : Detector(), SourceCodeScanner {
                     val lhs = sourceBinderReference.asSourceString()
                     val message =
                         "You must call `$lhs.executePendingBindings()` " +
-                                "before the `onBind` method exits, otherwise, the DataBinding " +
-                                "library will update the UI in the next animation frame " +
-                                "causing a delayed update & potential jumps if the item " +
-                                "resizes."
+                            "before the `onBind` method exits, otherwise, the DataBinding " +
+                            "library will update the UI in the next animation frame " +
+                            "causing a delayed update & potential jumps if the item " +
+                            "resizes."
                     val location = context.getLocation(source)
                     context.report(DATA_BINDER, source, location, message)
                 }
@@ -297,7 +297,8 @@ class RecyclerViewDetector : Detector(), SourceCodeScanner {
         val FIXED_POSITION = Issue.create(
             id = "RecyclerView",
             briefDescription = "RecyclerView Problems",
-            explanation = """
+            explanation =
+                """
                 `RecyclerView` will **not** call `onBindViewHolder` again when the position \
                 of the item changes in the data set unless the item itself is invalidated or \
                 the new position cannot be determined.
@@ -320,7 +321,8 @@ class RecyclerViewDetector : Detector(), SourceCodeScanner {
         val DATA_BINDER = Issue.create(
             id = "PendingBindings",
             briefDescription = "Missing Pending Bindings",
-            explanation = """
+            explanation =
+                """
                 When using a `ViewDataBinding` in a `onBindViewHolder` method, you **must** \
                 call `executePendingBindings()` before the method exits; otherwise the data \
                 binding runtime will update the UI in the next animation frame causing a \

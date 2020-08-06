@@ -327,6 +327,7 @@ public class AvdManagerCliTest {
                         "P 4.7in WXGA\n",
                         "P 5.1in WVGA\n",
                         "P 5.4in FWVGA\n",
+                        "P 6.7in Foldable\n",
                         "P 7in WSVGA (Tablet)\n",
                         "P 7.3in Foldable\n",
                         "P 8in Foldable\n",

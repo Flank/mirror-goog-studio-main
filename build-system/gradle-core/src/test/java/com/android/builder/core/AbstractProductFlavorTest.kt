@@ -29,7 +29,6 @@ class AbstractProductFlavorTest : TestCase() {
         custom.renderscriptTargetApi = 17
         custom.setVersionCode(44)
         custom.setVersionName("42.0")
-        custom.setApplicationId("com.forty.two")
         custom.setTestApplicationId("com.forty.two.test")
         custom.setTestInstrumentationRunner("com.forty.two.test.Runner")
         custom.setTestHandleProfiling(true)

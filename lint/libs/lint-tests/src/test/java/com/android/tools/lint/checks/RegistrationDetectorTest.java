@@ -120,8 +120,8 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         ProjectDescription main =
                 project(
-                        // Master project
-                        manifest().pkg("foo.master").minSdk(14),
+                        // Main project
+                        manifest().pkg("foo.main").minSdk(14),
                         java(
                                 ""
                                         + "package foo.main;\n"
@@ -261,7 +261,7 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
                             + "    }\n"
                             + "\n"
                             + "    // Anonymous classes should NOT be counted as a must-register\n"
-                            + "    private BroadcastReceiver dummy() {\n"
+                            + "    private BroadcastReceiver sample() {\n"
                             + "        return new BroadcastReceiver() {\n"
                             + "            @Override\n"
                             + "            public void onReceive(Context context, Intent intent) {\n"

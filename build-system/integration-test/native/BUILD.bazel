@@ -379,6 +379,15 @@ single_gradle_integration_test(
     deps = DEPS,
 )
 
+single_gradle_integration_test(
+    name = "NativeModelBuilderTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
+    data = DATA + CMAKE + NDK,
+    maven_repos = MAVEN_REPOS,
+    resources = glob(["src/test/resources/**"]),
+    deps = DEPS,
+)
+
 maven_repo(
     name = "prebuilts",
     # keep sorted

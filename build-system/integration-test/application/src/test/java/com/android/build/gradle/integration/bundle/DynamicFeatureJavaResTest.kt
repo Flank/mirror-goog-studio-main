@@ -20,12 +20,9 @@ import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /**
  * Tests in which java resources are merged from feature and dynamic-feature modules.
@@ -104,8 +101,7 @@ class DynamicFeatureJavaResTest {
     val project =
         GradleTestProject.builder()
             .fromTestApp(testApp)
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
-            .setTargetGradleVersion("6.6-20200609220026+0000")
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
             // b/157470515
             .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
             .create()

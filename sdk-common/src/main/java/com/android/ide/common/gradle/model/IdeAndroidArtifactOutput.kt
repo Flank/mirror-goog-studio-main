@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.AndroidArtifactOutput
+import com.android.build.OutputFile
+import com.android.build.VariantOutput
 
-interface IdeAndroidArtifactOutput : IdeVariantOutput, AndroidArtifactOutput
+interface IdeAndroidArtifactOutput : VariantOutput, OutputFile

@@ -117,28 +117,26 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
     private var isNamespaced = false
 
     override fun doFullTaskAction() {
-        getWorkerFacadeWithWorkers().use { workers ->
-            workerExecutor.noIsolation().submit(ProcessLibWorkAction::class.java) {
-                it.initializeFromAndroidVariantTask(this)
-                it.variantName.set(variantName)
-                it.aaptFriendlyManifestOutputFile.set(aaptFriendlyManifestOutputFile)
-                it.namespaced.set(isNamespaced)
-                it.mainManifest.set(mainManifest.get())
-                it.manifestOverlays.set(manifestOverlays)
-                it.packageOverride.set(packageOverride)
-                it.versionCode.set(versionCode)
-                it.versionName.set(versionName)
-                it.minSdkVersion.set(minSdkVersion)
-                it.targetSdkVersion.set(targetSdkVersion)
-                it.maxSdkVersion.set(maxSdkVersion)
-                it.manifestOutputFile.set(manifestOutputFile)
-                it.manifestPlaceholders.set(manifestPlaceholders)
-                it.reportFile.set(reportFile)
-                it.mergeBlameFile.set(mergeBlameFile)
-                it.manifestOutputDirectory.set(packagedManifestOutputDirectory)
-                it.aaptFriendlyManifestOutputDirectory.set(aaptFriendlyManifestOutputDirectory)
-                it.mainSplit.set(mainSplit.get().toSerializedForm())
-            }
+        workerExecutor.noIsolation().submit(ProcessLibWorkAction::class.java) {
+            it.initializeFromAndroidVariantTask(this)
+            it.variantName.set(variantName)
+            it.aaptFriendlyManifestOutputFile.set(aaptFriendlyManifestOutputFile)
+            it.namespaced.set(isNamespaced)
+            it.mainManifest.set(mainManifest.get())
+            it.manifestOverlays.set(manifestOverlays)
+            it.packageOverride.set(packageOverride)
+            it.versionCode.set(versionCode)
+            it.versionName.set(versionName)
+            it.minSdkVersion.set(minSdkVersion)
+            it.targetSdkVersion.set(targetSdkVersion)
+            it.maxSdkVersion.set(maxSdkVersion)
+            it.manifestOutputFile.set(manifestOutputFile)
+            it.manifestPlaceholders.set(manifestPlaceholders)
+            it.reportFile.set(reportFile)
+            it.mergeBlameFile.set(mergeBlameFile)
+            it.manifestOutputDirectory.set(packagedManifestOutputDirectory)
+            it.aaptFriendlyManifestOutputDirectory.set(aaptFriendlyManifestOutputDirectory)
+            it.mainSplit.set(mainSplit.get().toSerializedForm())
         }
     }
 

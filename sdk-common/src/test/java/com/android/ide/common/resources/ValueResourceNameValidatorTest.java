@@ -27,23 +27,23 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class ValueResourceNameValidatorTest {
 
-    public static File DUMMY_FILE = new File("DUMMY_FILE");
+    public static File SAMPLE_FILE = new File("SAMPLE_FILE");
 
     @Parameterized.Parameters(name="name=\"{0}\", resourceType={1}, file={2} gives  error {3}")
     public static Collection<Object[]> expected() {
         return Arrays.asList(new Object[][] {
                 //{ resourceName, resourceType, sourceFile, expectedException }
-                { "foo.png", ResourceType.DRAWABLE, DUMMY_FILE, null},
-                { "foo.xml", ResourceType.DRAWABLE, DUMMY_FILE, null},
-                { "foo.9.xml", ResourceType.DRAWABLE, DUMMY_FILE, null},
-                { "foo", ResourceType.DRAWABLE, DUMMY_FILE, null},
-                { "foo.png", ResourceType.DRAWABLE, DUMMY_FILE, null},
-                { "foo.txt", ResourceType.RAW, DUMMY_FILE, null},
-                { "foo.txt", ResourceType.DRAWABLE, DUMMY_FILE, null},
-                { "foo.other.png", ResourceType.DRAWABLE, DUMMY_FILE, null},
-                { "android:q", ResourceType.STRING, DUMMY_FILE, "':' is not a valid resource name character"},
+                { "foo.png", ResourceType.DRAWABLE, SAMPLE_FILE, null},
+                { "foo.xml", ResourceType.DRAWABLE, SAMPLE_FILE, null},
+                { "foo.9.xml", ResourceType.DRAWABLE, SAMPLE_FILE, null},
+                { "foo", ResourceType.DRAWABLE, SAMPLE_FILE, null},
+                { "foo.png", ResourceType.DRAWABLE, SAMPLE_FILE, null},
+                { "foo.txt", ResourceType.RAW, SAMPLE_FILE, null},
+                { "foo.txt", ResourceType.DRAWABLE, SAMPLE_FILE, null},
+                { "foo.other.png", ResourceType.DRAWABLE, SAMPLE_FILE, null},
+                { "android:q", ResourceType.STRING, SAMPLE_FILE, "':' is not a valid resource name character"},
                 { "android:q", ResourceType.STRING, null, "':' is not a valid resource name character"},
-                { "android:q", ResourceType.ATTR, DUMMY_FILE, null},
+                { "android:q", ResourceType.ATTR, SAMPLE_FILE, null},
                 { "foo.s_3", ResourceType.STRING, null, null},
                 { "FOO$", ResourceType.STRING, null, null},
                 { "1st", ResourceType.STRING, null, "The resource name must start with a letter"},

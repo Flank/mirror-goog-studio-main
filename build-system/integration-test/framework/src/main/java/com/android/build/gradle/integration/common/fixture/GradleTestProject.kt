@@ -103,7 +103,7 @@ class GradleTestProject @JvmOverloads internal constructor(
     private val cmakeVersion: String?,
     // Indicates if CMake's directory information needs to be saved in local.properties
     private val withCmakeDirInLocalProp: Boolean,
-    private val ndkSymlinkPath: String?,
+    private val relativeNdkSymlinkPath: String?,
     private val withDeviceProvider: Boolean,
     private val withSdk: Boolean,
     private val withAndroidGradlePlugin: Boolean,
@@ -145,8 +145,9 @@ class GradleTestProject @JvmOverloads internal constructor(
         var ANDROID_GRADLE_PLUGIN_VERSION: String? = null
         const val DEVICE_TEST_TASK = "deviceCheck"
         private const val MAX_TEST_NAME_DIR_WINDOWS = 50
+
         @JvmField
-        var BUILD_DIR: File? = null
+        val BUILD_DIR: File
         var OUT_DIR: File? = null
         private var GRADLE_USER_HOME: Path? = null
         @JvmField
@@ -440,6 +441,10 @@ apply from: "../commonLocalRepo.gradle"
         }
     }
 
+    private val ndkSymlinkPath = relativeNdkSymlinkPath?.let { BUILD_DIR.resolve(it).canonicalFile }
+
+    val androidNdkSxSRootSymlink: File? = ndkSymlinkPath?.resolve(SdkConstants.FD_NDK_SIDE_BY_SIDE)
+
     private var _buildFile: File
 
     val buildFile: File
@@ -517,7 +522,7 @@ apply from: "../commonLocalRepo.gradle"
             profileDirectory = rootProject.profileDirectory,
             cmakeVersion = rootProject.cmakeVersion,
             withCmakeDirInLocalProp = rootProject.withCmakeDirInLocalProp,
-            ndkSymlinkPath = rootProject.ndkSymlinkPath,
+            relativeNdkSymlinkPath = rootProject.relativeNdkSymlinkPath,
             withDeviceProvider = rootProject.withDeviceProvider,
             withSdk = rootProject.withSdk,
             withAndroidGradlePlugin = rootProject.withAndroidGradlePlugin,
@@ -1254,7 +1259,7 @@ allprojects { proj ->
 
     /** Fluent method to get the model.  */
     fun modelV2(): ModelBuilderV2 {
-        return applyOptions(ModelBuilderV2(this, projectConnection))
+        return applyOptions(ModelBuilderV2(this, projectConnection)).withLocalAndroidSdkHome()
     }
 
     private fun <T : BaseGradleExecutor<T>> applyOptions(executor: T): T {
@@ -1437,7 +1442,8 @@ allprojects { proj ->
             destDir.absolutePath, ProjectProperties.PropertyType.LOCAL
         )
         if (withSdk) {
-            val androidHome = this.androidHome ?: throw RuntimeException("androidHome is null while withSdk is true")
+            val androidHome = this.androidHome
+                ?: throw RuntimeException("androidHome is null while withSdk is true")
             localProp.setProperty(ProjectProperties.PROPERTY_SDK, androidHome.absolutePath)
         }
 
@@ -1448,7 +1454,10 @@ allprojects { proj ->
             )
         }
         if (ndkSymlinkPath != null) {
-            localProp.setProperty(ProjectProperties.PROPERTY_NDK_SYMLINKDIR, ndkSymlinkPath)
+            localProp.setProperty(
+                ProjectProperties.PROPERTY_NDK_SYMLINKDIR,
+                ndkSymlinkPath.absolutePath
+            )
         }
         localProp.save()
         return localProp.file as File

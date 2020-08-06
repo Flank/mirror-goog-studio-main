@@ -50,7 +50,8 @@ fun RecipeExecutor.generateNavigationDrawer(
   appBarLayoutName: String,
   navHeaderLayoutName: String,
   drawerMenu: String,
-  contentLayoutName: String
+  contentLayoutName: String,
+  navGraphName: String
 ) {
   val excludeMenu = false
   val menuName = classToResource(activityClass)
@@ -92,7 +93,14 @@ fun RecipeExecutor.generateNavigationDrawer(
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
 
-  save(navigationContentMain(useAndroidX), resOut.resolve("layout/${contentLayoutName}.xml"))
+  // navHostFragmentId needs to be unique, thus appending contentLayoutName since it's
+  // guaranteed to be unique
+  val navHostFragmentId = "nav_host_fragment_${contentLayoutName}"
+
+  save(
+    navigationContentMain(appBarLayoutName, navGraphName, navHostFragmentId, useAndroidX),
+    resOut.resolve("layout/${contentLayoutName}.xml")
+  )
 
   if (isNewModule && !excludeMenu) {
     generateSimpleMenu(packageName, activityClass, resOut, menuName)
@@ -107,8 +115,11 @@ fun RecipeExecutor.generateNavigationDrawer(
   val generateKotlin = language == Language.Kotlin
   navigationDependencies(generateKotlin, useAndroidX, appCompatVersion)
 
-  save(mobileNavigation(packageName), resOut.resolve("navigation/mobile_navigation.xml"))
-  open(resOut.resolve("navigation/mobile_navigation.xml"))
+  save(
+    mobileNavigation(navGraphName, packageName),
+    resOut.resolve("navigation/${navGraphName}.xml")
+  )
+  open(resOut.resolve("navigation/${navGraphName}.xml"))
 
   generateAppBar(
     data,
@@ -131,9 +142,23 @@ fun RecipeExecutor.generateNavigationDrawer(
   )
   save(
     if (generateKotlin)
-      drawerActivityKt(packageName, activityClass, layoutName, menuName, useAndroidX)
+      drawerActivityKt(
+        packageName = packageName,
+        activityClass = activityClass,
+        layoutName = layoutName,
+        menuName = menuName,
+        navHostFragmentId = navHostFragmentId,
+        useAndroidX = useAndroidX
+      )
     else
-      drawerActivityJava(packageName, activityClass, layoutName, menuName, useAndroidX),
+      drawerActivityJava(
+        packageName = packageName,
+        activityClass = activityClass,
+        layoutName = layoutName,
+        menuName = menuName,
+        navHostFragmentId = navHostFragmentId,
+        useAndroidX = useAndroidX
+      ),
     srcOut.resolve("${activityClass}.${language.extension}")
   )
 

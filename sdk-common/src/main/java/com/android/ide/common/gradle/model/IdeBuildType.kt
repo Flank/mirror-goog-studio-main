@@ -15,6 +15,39 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.BuildType
+interface IdeBuildType : IdeBaseConfig {
+    /** Whether the build type is configured to generate a debuggable apk. */
+    val isDebuggable: Boolean
 
-interface IdeBuildType : IdeBaseConfig, BuildType
+    /** Whether the build type is configured to be build with support for code coverage. */
+    val isTestCoverageEnabled: Boolean
+
+    /** Whether the build type is configured to be build with support for pseudolocales. */
+    val isPseudoLocalesEnabled: Boolean
+
+    /** Whether the build type is configured to generate an apk with debuggable native code. */
+    val isJniDebuggable: Boolean
+
+    /** Whether the build type is configured to generate an apk with debuggable renderscript code. */
+    val isRenderscriptDebuggable: Boolean
+
+    /** The optimization level of the renderscript compilation. */
+    val renderscriptOptimLevel: Int
+
+    /**
+     * Specifies whether to enable code shrinking for this build type.
+     *
+     * By default, when you enable code shrinking by setting this property to `true`,
+     * the Android plugin uses ProGuard.
+     *
+     * To learn more, read
+     * [Shrink Your Code and Resources](https://developer.android.com/studio/build/shrink-code.html).
+     */
+    val isMinifyEnabled: Boolean
+
+    /** Whether zipalign is enabled for this build type. */
+    val isZipAlignEnabled: Boolean
+
+    /**Whether the variant embeds the micro app. */
+    val isEmbedMicroApp: Boolean
+}

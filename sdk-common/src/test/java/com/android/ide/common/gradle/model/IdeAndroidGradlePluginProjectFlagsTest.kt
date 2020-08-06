@@ -17,6 +17,7 @@
 package com.android.ide.common.gradle.model
 
 import com.android.builder.model.AndroidGradlePluginProjectFlags
+import com.android.ide.common.gradle.model.impl.IdeAndroidGradlePluginProjectFlagsImpl
 import com.android.ide.common.gradle.model.stubs.AndroidGradlePluginProjectFlagsStub
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
@@ -33,7 +34,7 @@ class IdeAndroidGradlePluginProjectFlagsTest {
 
     @Test
     fun testLegacyDefaults() {
-        val flags = IdeAndroidGradlePluginProjectFlags()
+        val flags = IdeAndroidGradlePluginProjectFlagsImpl()
         assertThat(flags.applicationRClassConstantIds).isTrue()
         assertThat(flags.testRClassConstantIds).isTrue()
         assertThat(flags.transitiveRClasses).isTrue()
@@ -76,6 +77,6 @@ class IdeAndroidGradlePluginProjectFlagsTest {
     }
 
     private fun parse(vararg flags: Pair<AndroidGradlePluginProjectFlags.BooleanFlag, Boolean>): IdeAndroidGradlePluginProjectFlags {
-        return IdeAndroidGradlePluginProjectFlags(AndroidGradlePluginProjectFlagsStub(mapOf(*flags)))
+        return IdeAndroidGradlePluginProjectFlagsImpl.createFrom(AndroidGradlePluginProjectFlagsStub(mapOf(*flags)))
     }
 }

@@ -28,14 +28,12 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.w3c.dom.Attr
 import org.w3c.dom.Element
-import java.io.IOException
 
 class BlameFileTest {
     @get:Rule
     val folder = TemporaryFolder()
 
     @Test
-    @Throws(IOException::class)
     fun test() {
         val root = folder.root
 
@@ -95,7 +93,8 @@ class BlameFileTest {
 </manifest>"""
         )
             .createFile(root)
-        var blameLog = ("" +
+        var blameLog = (
+            "" +
                 "-- Merging decision tree log ---\n" +
                 "manifest\n" +
                 "ADDED from \${ROOT}/app/src/main/AndroidManifest.xml:2:1-21:12\n" +
@@ -168,7 +167,8 @@ class BlameFileTest {
                 "\t\tINJECTED from \${ROOT}/app/src/main/AndroidManifest.xml\n" +
                 "\tandroid:minSdkVersion\n" +
                 "\t\tINJECTED from \${ROOT}/app/src/main/AndroidManifest.xml\n" +
-                "\t\tINJECTED from \${ROOT}/app/src/main/AndroidManifest.xml\n")
+                "\t\tINJECTED from \${ROOT}/app/src/main/AndroidManifest.xml\n"
+            )
         blameLog = blameLog.replace("\${ROOT}", root.path)
 
         val blameFile = TestFile()
@@ -184,38 +184,41 @@ class BlameFileTest {
         assertThat(document).isNotNull()
 
         val client = TestLintClient()
-        BlameFile.XmlVisitor.accept(document!!, object : BlameFile.XmlVisitor() {
-            override fun visitAttribute(attribute: Attr): Boolean {
-                val source = file.findSourceAttribute(client, attribute)
-                if (source == null) {
-                    val name = attribute.name
-                    // Injected
-                    if (name == "android:versionCode" ||
-                        name == "android:versionName" ||
-                        name == "android:minSdkVersion" ||
-                        name == "android:targetSdkVersion"
-                    ) {
-                        return false
+        BlameFile.XmlVisitor.accept(
+            document!!,
+            object : BlameFile.XmlVisitor() {
+                override fun visitAttribute(attribute: Attr): Boolean {
+                    val source = file.findSourceAttribute(client, attribute)
+                    if (source == null) {
+                        val name = attribute.name
+                        // Injected
+                        if (name == "android:versionCode" ||
+                            name == "android:versionName" ||
+                            name == "android:minSdkVersion" ||
+                            name == "android:targetSdkVersion"
+                        ) {
+                            return false
+                        }
+                    } else {
+                        assertThat(source.first).isEqualTo(sourceManifest)
                     }
-                } else {
-                    assertThat(source.first).isEqualTo(sourceManifest)
-                }
-                assertThat(source).named(attribute.name).isNotNull()
-                return false
-            }
-
-            override fun visitTag(element: Element, tag: String): Boolean {
-                val source = file.findSourceElement(client, element)
-
-                // Injected
-                if (tag == "uses-sdk") {
+                    assertThat(source).named(attribute.name).isNotNull()
                     return false
                 }
 
-                assertThat(source).named(tag).isNotNull()
-                assertThat(source!!.first).isEqualTo(sourceManifest)
-                return false
+                override fun visitTag(element: Element, tag: String): Boolean {
+                    val source = file.findSourceElement(client, element)
+
+                    // Injected
+                    if (tag == "uses-sdk") {
+                        return false
+                    }
+
+                    assertThat(source).named(tag).isNotNull()
+                    assertThat(source!!.first).isEqualTo(sourceManifest)
+                    return false
+                }
             }
-        })
+        )
     }
 }

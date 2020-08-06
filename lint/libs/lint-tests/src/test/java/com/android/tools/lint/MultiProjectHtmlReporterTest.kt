@@ -73,9 +73,9 @@ class MultiProjectHtmlReporterTest : AbstractCheckTest() {
                 )
             val incident1 = Incident(
                 ManifestDetector.USES_SDK,
-                "<uses-sdk> tag should specify a target API level (the highest verified "
-                        + "version; when running on later versions, compatibility behaviors may "
-                        + "be enabled) with android:targetSdkVersion=\"?\"",
+                "<uses-sdk> tag should specify a target API level (the highest verified " +
+                    "version; when running on later versions, compatibility behaviors may " +
+                    "be enabled) with android:targetSdkVersion=\"?\"",
                 location1,
                 null
             ).apply {

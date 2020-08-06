@@ -17,15 +17,25 @@ package com.android.build.gradle.integration.common.fixture
 
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor.runBuild
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.FetchResult
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2.ModelInfo
 import com.android.build.gradle.integration.common.fixture.model.FileNormalizer
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.Option
 import com.android.builder.model.v2.ide.SyncIssue
 import com.android.builder.model.v2.models.AndroidProject
+import com.android.builder.model.v2.models.ModelBuilderParameter
 import com.android.builder.model.v2.models.VariantDependencies
+import com.android.builder.model.v2.models.ndk.NativeModelBuilderParameter
+import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.utils.FileUtils
 import com.google.common.collect.Sets
+import com.google.gson.JsonArray
+import com.google.gson.JsonElement
+import com.google.gson.JsonNull
+import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import org.gradle.tooling.BuildAction
 import org.gradle.tooling.BuildActionExecuter
 import org.gradle.tooling.GradleConnectionException
@@ -38,6 +48,7 @@ import org.junit.Assert
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.nio.file.Path
 import java.util.function.Consumer
 
 /**
@@ -90,16 +101,17 @@ class ModelBuilderV2 : BaseGradleExecutor<ModelBuilderV2> {
      */
     fun fetchAndroidProjects(): FetchResult<ModelContainerV2<AndroidProject>> {
         val container =
-            assertNoSyncIssues(buildModelV2(GetAndroidModelV2Action(AndroidProject::class.java)))
+            assertNoSyncIssues(
+                buildModelV2(
+                    GetAndroidModelV2Action<AndroidProject, Unit>(
+                        AndroidProject::class.java
+                    )
+                )
+            )
 
         return FetchResult(
             container,
-            normalizer = FileNormalizerImpl(
-                container.rootBuildId,
-                GradleTestProject.getGradleUserHome(GradleTestProject.BUILD_DIR).toFile(),
-                project?.androidHome,
-                androidSdkHome
-            )
+            normalizer = getFileNormalizer(container.rootBuildId)
         )
     }
 
@@ -111,18 +123,54 @@ class ModelBuilderV2 : BaseGradleExecutor<ModelBuilderV2> {
         val container = buildModelV2(
             GetAndroidModelV2Action(
                 VariantDependencies::class.java,
-                variantName
-            )
+                ModelBuilderParameter::class.java
+            ) { param -> param.variantName = variantName }
         )
 
         return FetchResult(
             container,
-            normalizer = FileNormalizerImpl(
-                container.rootBuildId,
-                GradleTestProject.getGradleUserHome(GradleTestProject.BUILD_DIR).toFile(),
-                project?.androidHome,
-                androidSdkHome
-            )
+            normalizer = getFileNormalizer(container.rootBuildId)
+        )
+    }
+
+    /**
+     * Fetches the [NativeModule] for each project and return them as a [ModuleContainer]
+     *
+     * @param variantsToGen names of the variants to sync for the given modules. Use null to sync
+     * all variants
+     * @param abisToGen names of the ABIs to sync for the given modules and variants. Use null to
+     * sync all ABIs.
+     * @return modules whose build information are generated
+     */
+    fun fetchNativeModules(
+        variantsToGen: List<String>?,
+        abisToGen: List<String>?
+    ): FetchResult<ModelContainerV2<NativeModule>> {
+        val container = buildModelV2(
+            GetAndroidModelV2Action(
+                NativeModule::class.java,
+                NativeModelBuilderParameter::class.java
+            ) { param ->
+                param.variantsToGenerateBuildInformation = variantsToGen
+                param.abisToGenerateBuildInformation = abisToGen
+            }
+        )
+
+        return FetchResult(
+            container,
+            normalizer = getFileNormalizer(container.rootBuildId)
+        )
+    }
+
+    private fun getFileNormalizer(buildIdentifier: BuildIdentifier): FileNormalizerImpl {
+        return FileNormalizerImpl(
+            buildIdentifier,
+            GradleTestProject.getGradleUserHome(GradleTestProject.BUILD_DIR).toFile(),
+            project?.androidHome,
+            androidSdkHome,
+            project?.androidNdkSxSRootSymlink,
+            GradleTestProject.localRepositories,
+            DEFAULT_NDK_SIDE_BY_SIDE_VERSION
         )
     }
 
@@ -131,7 +179,6 @@ class ModelBuilderV2 : BaseGradleExecutor<ModelBuilderV2> {
 
     private fun fetchGradleProject(): GradleProject =
         projectConnection.model(GradleProject::class.java).withArguments(arguments).get()
-
 
     /**
      * Returns a project model for each sub-project;
@@ -244,8 +291,11 @@ class FileNormalizerImpl(
     buildId: BuildIdentifier,
     gradleUserHome: File,
     androidSdk: File?,
-    androidHome: File?
-): FileNormalizer {
+    androidHome: File?,
+    androidNdkSxSRoot: File?,
+    localRepos: List<Path>,
+    private val defaultNdkSideBySideVersion: String
+) : FileNormalizer {
 
     private data class RootData(
         val root: File,
@@ -282,7 +332,11 @@ class FileNormalizerImpl(
             mutableList.add(RootData(it, "ANDROID_HOME"))
         }
 
-        GradleTestProject.localRepositories.asSequence().map { it.toFile()}.forEach {
+        androidNdkSxSRoot?.resolve(defaultNdkSideBySideVersion)?.let {
+            mutableList.add(RootData(it, "NDK_ROOT"))
+        }
+
+        localRepos.asSequence().map { it.toFile() }.forEach {
             mutableList.add(RootData(it, "LOCAL_REPO"))
         }
 
@@ -290,18 +344,32 @@ class FileNormalizerImpl(
     }
 
     override fun normalize(file: File): String  {
+        val suffix = if (file.isFile) {
+            "{F}"
+        } else if (file.isDirectory) {
+            "{D}"
+        } else {
+            "{!}"
+        }
+
         for (rootData in rootDataList) {
             val result = file.relativeToOrNull(
                 rootData.root,
                 rootData.varName,
-                rootData.stringModifier)
+                rootData.stringModifier
+            )
 
             if (result != null) {
-                return result
+                return result + suffix
             }
         }
 
-        return file.toString()
+        return if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+            // Normalize path separator for files that don't contain any special roots.
+            file.toString().replace("\\", "/")
+        } else {
+            file.toString()
+        } + suffix
     }
 
     override fun toString(): String {
@@ -348,5 +416,37 @@ class FileNormalizerImpl(
         }
 
         return null
+    }
+
+    override fun normalize(value: JsonElement): JsonElement = when (value) {
+        is JsonNull -> value
+        is JsonPrimitive -> when {
+            value.isString -> JsonPrimitive(normalize(value.asString))
+            else -> value
+        }
+        is JsonArray -> JsonArray().apply {
+            value.map(::normalize).forEach(::add)
+        }
+        is JsonObject -> JsonObject().apply {
+            value.entrySet().forEach { (key, value) ->
+                add(key, normalize(value))
+            }
+        }
+        else -> throw IllegalArgumentException("Unrecognized JsonElement")
+    }
+
+    private fun normalize(string: String): String {
+        // On windows, various native tools use '\' and '/' interchangeably. Hence we unscrupulously
+        // normalize them.
+        var s = string.replace('\\', '/')
+        for ((root, varName, modifier) in rootDataList) {
+            val newS = s.replace(root.absolutePath.replace('\\', '/'), "{$varName}")
+            if (newS != s) {
+                // Only run the modifier is the current entry has some effects on the string being processed.
+                modifier?.let { s = it(s) }
+            }
+            s = newS
+        }
+        return s
     }
 }

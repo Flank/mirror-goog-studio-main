@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.fixtures
 import org.gradle.api.Transformer
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import java.util.function.BiFunction
 
 class FakeGradleProperty<T>(private var value: T? = null): Property<T> {
 
@@ -94,6 +95,10 @@ class FakeGradleProperty<T>(private var value: T? = null): Property<T> {
     }
 
     override fun forUseAtConfigurationTime(): Provider<T> {
+        TODO("Not yet implemented")
+    }
+
+    override fun <B : Any?, R : Any?> zip(p0: Provider<B>, p1: BiFunction<T, B, R>): Provider<R> {
         TODO("Not yet implemented")
     }
 }

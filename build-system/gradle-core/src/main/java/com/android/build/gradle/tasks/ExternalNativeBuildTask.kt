@@ -21,15 +21,13 @@ import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.attribution.generateChromeTrace
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
+import com.android.build.gradle.internal.cxx.gradle.generator.*
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfigs
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
-import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.ninjaLogFile
 import com.android.build.gradle.internal.cxx.model.soFolder
@@ -79,14 +77,14 @@ import kotlin.streams.toList
  * It declares no inputs or outputs, as it's supposed to always run when invoked. Incrementality
  * is left to the underlying build system.
  */
-abstract class ExternalNativeBuildTask @Inject constructor(private val ops: ExecOperations) :
+abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops: ExecOperations) :
     UnsafeOutputsTask("External Native Build task is always run as incrementality is left to the external build system.") {
     @get:Internal
     abstract val sdkComponents: Property<SdkComponentsBuildService>
     private lateinit var configurationModel: CxxConfigurationModel
 
     @Transient
-    private var generator : CxxMetadataGenerator? = null
+    private var generator: CxxMetadataGenerator? = null
     private val variant get() = generator().variant
     private val abis get() = generator().abis
 
@@ -116,12 +114,12 @@ abstract class ExternalNativeBuildTask @Inject constructor(private val ops: Exec
     // Exposed in Variants API
     @get:Internal("Temporary to suppress warnings (bug 135900510), may need more investigation")
     val objFolder: File
-        get() = variant.objFolder
+        get() = configurationModel.variantObjFolder
 
     // Exposed in Variants API
     @get:Internal("Temporary to suppress warnings (bug 135900510), may need more investigation")
     val soFolder: File
-        get() = variant.soFolder
+        get() = configurationModel.variantSoFolder
 
     /** Represents a single build step that, when executed, builds one or more libraries.  */
     private class BuildStep(

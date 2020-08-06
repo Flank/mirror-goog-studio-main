@@ -16,77 +16,28 @@
 
 package com.android.ide.common.workers
 
-import java.io.Serializable
-import java.lang.IllegalArgumentException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Implementation of [WorkerExecutorFacade] using a plain JDK [ExecutorService]
  */
 open class ExecutorServiceAdapter(
     /**
-     * Project name owning this adapter.
-     */
-    val projectName: String,
-
-    /**
-     * Task name owning this adapter.
-     */
-    val owner: String,
-    /**
      * Instantiate an adapter using the passed [ExecutorService]
      */
-    val executor: ExecutorService,
-    /**
-     * [WorkerExecutorFacade] to delegate submissions that cannot be handled by this adapter or
-     * null if no delegation expected.
-     */
-    private val delegate: WorkerExecutorFacade?= null
+    val executor: ExecutorService
 ) : WorkerExecutorFacade {
 
-    constructor(projectName: String, owner: String, executor: ExecutorService):
-            this(projectName, owner, executor, null)
+    protected val futures = mutableListOf<Future<*>>()
 
-    private val futures = mutableListOf<Future<*>>()
-    private val delegateUsed= AtomicBoolean(false)
-
-    override fun submit(
-        actionClass: Class<out Runnable>,
-        parameter: Serializable
-    ) {
-        val key= "$owner${actionClass.name}${parameter.hashCode()}"
-        workerSubmission(key)
-
+    override fun submit(action: WorkerExecutorFacade.WorkAction) {
         val submission = executor.submit {
-            val constructor = actionClass.getDeclaredConstructor(parameter.javaClass)
-            constructor.isAccessible = true
-            val action = constructor.newInstance(parameter)
-            GradlePluginMBeans.getProfileMBean(projectName)?.workerStarted(owner, key)
             action.run()
-            GradlePluginMBeans.getProfileMBean(projectName)?.workerFinished(owner, key)
         }
         synchronized(this) {
             futures.add(submission)
-        }
-    }
-
-    override fun submit(
-        actionClass: Class<out Runnable>,
-        configuration: WorkerExecutorFacade.Configuration
-    ) {
-        if (configuration.isolationMode != WorkerExecutorFacade.IsolationMode.NONE) {
-            if (delegate == null) {
-                throw IllegalArgumentException(
-                    "Adapter does not support ${configuration.isolationMode} " +
-                            "and no delegate provided")
-            }
-            delegateUsed.set(true)
-            delegate.submit(actionClass, configuration)
-        } else {
-            submit(actionClass, configuration.parameter)
         }
     }
 
@@ -106,9 +57,6 @@ open class ExecutorServiceAdapter(
         }
         if (!exceptions.isEmpty()) {
             throw WorkerExecutorException(exceptions)
-        }
-        if (delegateUsed.get()) {
-            delegate?.await()
         }
     }
 

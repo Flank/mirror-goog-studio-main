@@ -60,8 +60,8 @@ class DefaultJavaEvaluatorTest {
         companion object Issues {
             val ISSUE = Issue.create(
                 "Order",
-                "Dummy test detector summary",
-                "Dummy test detector explanation",
+                "Sample test detector summary",
+                "Sample test detector explanation",
 
                 Category.CORRECTNESS, 6, Severity.WARNING,
                 Implementation(

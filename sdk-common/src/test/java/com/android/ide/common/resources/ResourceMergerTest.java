@@ -900,7 +900,7 @@ public class ResourceMergerTest extends BaseTestCase {
         assertFalse(
                 new File(resFolder, "drawable-ldpi-v4" + File.separator + "removed.png").isFile());
 
-        // Blame log sanity check
+        // Blame log validity check
         MergingLog mergingLog = new MergingLog(mergeLogFolder);
 
         SourceFile original = mergingLog.find(
@@ -1037,7 +1037,7 @@ public class ResourceMergerTest extends BaseTestCase {
         // deleted values-en/values-en.xml
         assertFalse(new File(resFolder, "values-en" + File.separator + "values-en.xml").isFile());
 
-        // Blame log sanity check.
+        // Blame log validity check.
         MergingLog mergingLog = new MergingLog(mergeLogFolder);
 
         SourceFile destFile =

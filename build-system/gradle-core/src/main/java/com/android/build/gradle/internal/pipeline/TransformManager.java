@@ -247,12 +247,6 @@ public class TransformManager extends FilterableStreamCollection {
         transforms.add(transform);
         TaskConfigAction<TransformTask> wrappedConfigAction =
                 t -> {
-                    t.getEnableGradleWorkers()
-                            .set(
-                                    creationConfig
-                                            .getGlobalScope()
-                                            .getProjectOptions()
-                                            .get(BooleanOption.ENABLE_GRADLE_WORKERS));
                     if (configAction != null) {
                         configAction.configure(t);
                     }

@@ -48,9 +48,7 @@ interface IdeAndroidArtifact : Serializable, IdeBaseArtifact {
    * always return an empty map
    */
   @Deprecated("Returns empty map")
-  val resValues: Map<String, ClassField>
-
-  val instantRun: IdeInstantRun
+  val resValues: Map<String, IdeClassField>
 
   /**
    * Returns a list of additional APKs that need to installed on the device for this artifact to
@@ -65,7 +63,7 @@ interface IdeAndroidArtifact : Serializable, IdeBaseArtifact {
   /**
    * Returns the test options only if the variant type is testing.
    */
-  val testOptions: TestOptions?
+  val testOptions: IdeTestOptions?
 
   val abiFilters: Set<String>
 

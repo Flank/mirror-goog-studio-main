@@ -23,19 +23,14 @@ import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_DIR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR
-import com.android.build.gradle.tasks.toSerializable
 import com.android.builder.files.SerializableChange
 import com.android.builder.files.SerializableFileChanges
 import com.android.ide.common.resources.FileStatus
-import com.android.ide.common.workers.ExecutorServiceAdapter
-import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject
 import com.android.utils.FileUtils
-import com.google.common.util.concurrent.MoreExecutors
-import org.gradle.work.FileChange
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -65,13 +60,11 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
     @JvmField
     @Rule
     val tmp = TemporaryFolder()
-    lateinit var workers: WorkerExecutorFacade
 
     private lateinit var outputFile: File
 
     @Before
     fun setUp() {
-        workers = ExecutorServiceAdapter("test", ":test", MoreExecutors.newDirectExecutorService())
         outputFile = if (outputType == CLASSES_JAR) {
             tmp.newFile("output.jar")
         } else {

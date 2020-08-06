@@ -17,6 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.impl.ConsumableCreationConfigImpl
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.DynamicFeatureVariantProperties
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
@@ -36,6 +37,7 @@ import com.android.build.gradle.internal.tasks.ModuleMetadata
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.android.builder.dexing.DexingType
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
@@ -69,6 +71,8 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     taskCreationServices,
     globalScope
 ), DynamicFeatureVariantProperties, DynamicFeatureCreationConfig {
+
+    private val delegate= ConsumableCreationConfigImpl(variantDslInfo)
 
     /*
      * Providers of data coming from the base modules. These are loaded just once and finalized.
@@ -203,4 +207,10 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
             it.disallowChanges()
             it.finalizeValueOnRead()
         }
+
+    override val dexingType: DexingType
+        get() = delegate.dexingType
+
+    override val needsMainDexListForBundle: Boolean
+        get() = false
 }

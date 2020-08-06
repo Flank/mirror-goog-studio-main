@@ -864,7 +864,7 @@ public class VariantManager<
                                 .setUseMultidex(variantDslInfo.isMultiDexEnabled())
                                 .setUseLegacyMultidex(
                                         DexingTypeKt.isLegacyMultiDexMode(
-                                                variantDslInfo.getDexingType()))
+                                                variantProperties.getDexingType()))
                                 .setVariantType(
                                         variantProperties
                                                 .getVariantType()

@@ -184,9 +184,10 @@ class ApplicableVariants(
     private var _variants: MutableSet<String>? = null
 
     /** The set of variants where this incident has been reported */
-    val variants: Set<String> get() {
-        return _variants ?: emptySet()
-    }
+    val variants: Set<String>
+        get() {
+            return _variants ?: emptySet()
+        }
 
     /** Records that this incident has been reported in the named variant */
     fun addVariant(variantName: String) {

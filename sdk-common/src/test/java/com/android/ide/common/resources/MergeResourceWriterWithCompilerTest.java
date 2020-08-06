@@ -20,14 +20,13 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
-import com.android.ide.common.workers.WorkerExecutorFacade;
+import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.resources.ResourceType;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -129,98 +128,63 @@ public class MergeResourceWriterWithCompilerTest {
         addAndDeleteFile("f2.xml");
     }
 
-    private WorkerExecutorFacade facade =
-            new WorkerExecutorFacade() {
-
-                @Override
-                public void submit(Class<? extends Runnable> actionClass, Serializable parameter) {
-                    submit(
-                            actionClass,
-                            new Configuration(
-                                    parameter,
-                                    IsolationMode.NONE,
-                                    ImmutableList.of(),
-                                    ImmutableList.of()));
-                }
-
-                @Override
-                public void submit(
-                        @NonNull Class<? extends Runnable> actionClass,
-                        @NonNull Configuration configuration) {
-                    Runnable action;
-                    try {
-                        action =
-                                actionClass
-                                        .getConstructor(configuration.getParameter().getClass())
-                                        .newInstance(configuration.getParameter());
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                    action.run();
-                }
-
-                @Override
-                public void await() {}
-
-                @Override
-                public void close() {}
-            };
-
     public void addAndDeleteFile(@NonNull String name) throws Exception {
         File root = mTemporaryFolder.newFolder();
         File tmpFolder = mTemporaryFolder.newFolder();
 
-        MergedResourceWriter writer =
-                new MergedResourceWriter(
-                        facade,
-                        root,
-                        null,
-                        null,
-                        mEmptyPreprocessor,
-                        mSimpleCompiler,
-                        tmpFolder,
-                        null,
-                        null,
-                        false,
-                        false);
+        try (ExecutorServiceAdapter facade =
+                new ExecutorServiceAdapter(MoreExecutors.newDirectExecutorService())) {
+            MergedResourceWriter writer =
+                    new MergedResourceWriter(
+                            facade,
+                            root,
+                            null,
+                            null,
+                            mEmptyPreprocessor,
+                            mSimpleCompiler,
+                            tmpFolder,
+                            null,
+                            null,
+                            false,
+                            false);
 
-        /*
-         * Add the file.
-         */
+            /*
+             * Add the file.
+             */
 
-        writer.start(DocumentBuilderFactory.newInstance());
-        mResourceItems.get(name).setTouched();
-        writer.addItem(mResourceItems.get(name));
-        writer.postWriteAction();
-        writer.end();
+            writer.start(DocumentBuilderFactory.newInstance());
+            mResourceItems.get(name).setTouched();
+            writer.addItem(mResourceItems.get(name));
+            writer.postWriteAction();
+            writer.end();
 
-        File f1Compiled = new File(root, name + "-c");
-        assertTrue(f1Compiled.exists());
+            File f1Compiled = new File(root, name + "-c");
+            assertTrue(f1Compiled.exists());
 
+            /*
+             * Remove the file.
+             */
+            writer =
+                    new MergedResourceWriter(
+                            facade,
+                            root,
+                            null,
+                            null,
+                            mEmptyPreprocessor,
+                            mSimpleCompiler,
+                            tmpFolder,
+                            null,
+                            null,
+                            false,
+                            false);
 
-        /*
-         * Remove the file.
-         */
-        writer =
-                new MergedResourceWriter(
-                        facade,
-                        root,
-                        null,
-                        null,
-                        mEmptyPreprocessor,
-                        mSimpleCompiler,
-                        tmpFolder,
-                        null,
-                        null,
-                        false,
-                        false);
+            mResourceItems.get(name).setRemoved();
+            writer.start(DocumentBuilderFactory.newInstance());
+            writer.removeItem(mResourceItems.get(name), null);
+            writer.postWriteAction();
+            writer.end();
 
-        mResourceItems.get(name).setRemoved();
-        writer.start(DocumentBuilderFactory.newInstance());
-        writer.removeItem(mResourceItems.get(name), null);
-        writer.postWriteAction();
-        writer.end();
-
-        assertFalse(f1Compiled.exists());
+            assertFalse(f1Compiled.exists());
+        }
     }
 }

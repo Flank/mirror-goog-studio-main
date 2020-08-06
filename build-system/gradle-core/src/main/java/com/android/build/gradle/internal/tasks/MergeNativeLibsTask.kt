@@ -21,7 +21,7 @@ import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
 import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
+import com.android.build.gradle.internal.cxx.gradle.generator.variantObjFolder
 import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -226,19 +226,14 @@ fun getProjectNativeLibs(creationConfig: VariantCreationConfig): FileCollection 
     val sdkComponents =
         getBuildService<SdkComponentsBuildService>(creationConfig.services.buildServiceRegistry).get()
 
-    // add content of the local external native build
-    if (taskContainer.cxxConfigurationModel != null) {
-        val generator =
-            createCxxMetadataGenerator(
-                sdkComponents,
-                taskContainer.cxxConfigurationModel!!
-            )
+    // add content of the local external native build if there is one
+    taskContainer.cxxConfigurationModel?.variantObjFolder?.let { objFolder ->
         nativeLibs.from(
-            creationConfig.services.fileCollection(
-                generator.variant.objFolder
-            ).builtBy(taskContainer.externalNativeBuildTask?.name)
+            creationConfig.services.fileCollection(objFolder)
+                    .builtBy(taskContainer.externalNativeBuildTask?.name)
         )
     }
+
     // add renderscript compilation output if support mode is enabled.
     if (creationConfig.variantDslInfo.renderscriptSupportModeEnabled) {
         val rsFileCollection: ConfigurableFileCollection =

@@ -229,7 +229,8 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     PermissionHolder.SetPermissionLookup(
                         mutableSetOf(), mutableSetOf(),
                         permissions.minSdkVersion, permissions.targetSdkVersion
-                    ), node
+                    ),
+                    node
                 )
                 if (requirement.isSatisfied(localRequirements)) {
                     return
@@ -246,8 +247,8 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             if (!handlesMissingPermission) {
                 val message =
                     "Call requires permission which may be rejected by user: code should explicitly " +
-                            "check to see if permission is available (with `checkPermission`) or explicitly " +
-                            "handle a potential `SecurityException`"
+                        "check to see if permission is available (with `checkPermission`) or explicitly " +
+                        "handle a potential `SecurityException`"
                 val location = context.getLocation(node)
                 report(
                     context, MISSING_PERMISSION, node, location, message,
@@ -493,7 +494,8 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         val MISSING_PERMISSION = Issue.create(
             id = "MissingPermission",
             briefDescription = "Missing Permissions",
-            explanation = """
+            explanation =
+                """
                 This check scans through your code and libraries and looks at the APIs being \
                 used, and checks this against the set of permissions required to access \
                 those APIs. If the code using those APIs is called at runtime, then the \

@@ -116,12 +116,27 @@ val navigationDrawerActivityTemplate = template {
     suggest = { activityToLayout(activityClass.value, "content") }
   }
 
+  val navGraphName = stringParameter {
+    name = "Navigation graph name"
+    default = "mobile_navigation"
+    help = "The name of the navigation graph"
+    visible = { false }
+    constraints = listOf(Constraint.NAVIGATION, Constraint.UNIQUE)
+    suggest = { "mobile_navigation" }
+  }
+
   widgets(
     TextFieldWidget(activityClass),
     TextFieldWidget(layoutName),
     TextFieldWidget(activityTitle),
     CheckBoxWidget(isLauncher),
     TextFieldWidget(packageName),
+    // Below are invisible widgets. Defining as widgets to impose constraints
+    TextFieldWidget(appBarLayoutName),
+    TextFieldWidget(drawerMenu),
+    TextFieldWidget(navHeaderLayoutName),
+    TextFieldWidget(contentLayoutName),
+    TextFieldWidget(navGraphName),
     LanguageWidget()
   )
 
@@ -129,9 +144,17 @@ val navigationDrawerActivityTemplate = template {
 
   recipe = { data: TemplateData ->
     generateNavigationDrawer(
-      data as ModuleTemplateData,
-      activityClass.value, layoutName.value, activityTitle.value, isLauncher.value, packageName.value, appBarLayoutName.value,
-      navHeaderLayoutName.value, drawerMenu.value, contentLayoutName.value
+      data = data as ModuleTemplateData,
+      activityClass = activityClass.value,
+      layoutName = layoutName.value,
+      activityTitle = activityTitle.value,
+      isLauncher = isLauncher.value,
+      packageName = packageName.value,
+      appBarLayoutName = appBarLayoutName.value,
+      navHeaderLayoutName = navHeaderLayoutName.value,
+      drawerMenu = drawerMenu.value,
+      contentLayoutName = contentLayoutName.value,
+      navGraphName = navGraphName.value
     )
   }
 }

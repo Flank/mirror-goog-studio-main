@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.fixture;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.utils.JacocoAgent;
@@ -25,12 +26,14 @@ import com.android.build.gradle.options.Option;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.StringOption;
 import com.android.testutils.TestUtils;
+import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +43,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
@@ -236,12 +238,20 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             arguments.add("--warning-mode=fail");
         }
 
-        if (configurationCaching == ConfigurationCaching.WARN_GRADLE_6_6) {
-            arguments.add("--configuration-cache");
-            arguments.add("--configuration-cache-problems=warn");
-        } else if (configurationCaching != ConfigurationCaching.NONE) {
-            arguments.add(
-                    "--configuration-cache=" + configurationCaching.name().toLowerCase(Locale.US));
+        switch (configurationCaching) {
+            case NONE:
+                break;
+            case ON:
+                arguments.add("--configuration-cache");
+                arguments.add("--configuration-cache-problems=fail");
+                break;
+            case OFF:
+                arguments.add("--no-configuration-cache");
+                break;
+            case WARN:
+                arguments.add("--configuration-cache");
+                arguments.add("--configuration-cache-problems=warn");
+                break;
         }
 
         if (!sdkInLocalProperties) {
@@ -387,10 +397,8 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     public enum ConfigurationCaching {
         ON,
         OFF,
-        WARN,
         NONE,
-        // Make a default once we migrate to Gradle 6.6
-        WARN_GRADLE_6_6,
+        WARN,
     }
 
     @NonNull
@@ -421,10 +429,43 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
         } catch (TimeoutException e) {
+            try {
+                printThreadDumps();
+            } catch (Throwable t) {
+                e.addSuppressed(t);
+            }
             cancellationTokenSource.cancel();
             // TODO(b/78568459) Gather more debugging info from Gradle daemon.
             throw new RuntimeException(e);
         }
     }
 
+    private static void printThreadDumps() throws IOException, InterruptedException {
+        if (SdkConstants.currentPlatform() != SdkConstants.PLATFORM_LINUX
+                && SdkConstants.currentPlatform() != SdkConstants.PLATFORM_DARWIN) {
+            // handle only Linux&Darwin for now
+            return;
+        }
+        String javaHome = System.getProperty("java.home");
+        String processes = runProcess(javaHome + "/../bin/jps");
+
+        String[] lines = processes.split(System.lineSeparator());
+        for (String line : lines) {
+            String pid = line.split(" ")[0];
+            String threadDump = runProcess(javaHome + "/../bin/jstack", "-l", pid);
+
+            System.out.println("Fetching thread dump for: " + line);
+            System.out.println("Thread dump is:");
+            System.out.println(threadDump);
+        }
+    }
+
+    private static String runProcess(String... commands) throws InterruptedException, IOException {
+        ProcessBuilder processBuilder = new ProcessBuilder().command(commands);
+        Process process = processBuilder.start();
+        process.waitFor(5, TimeUnit.SECONDS);
+
+        byte[] bytes = ByteStreams.toByteArray(process.getInputStream());
+        return new String(bytes, Charsets.UTF_8);
+    }
 }

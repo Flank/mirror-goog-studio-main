@@ -75,7 +75,7 @@ public class MavenInstallListenerTest extends TestCase {
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
         mgr.setLocalPath(ROOT);
         FakeDownloader downloader = new FakeDownloader(fop);
-        URL repoUrl = new URL("http://example.com/dummy.xml");
+        URL repoUrl = new URL("http://example.com/sample.xml");
 
         // The repo we're going to download
         downloader.registerUrl(repoUrl,
@@ -96,7 +96,7 @@ public class MavenInstallListenerTest extends TestCase {
         downloader.registerUrl(archiveUrl, is);
 
         // Register a source provider to get the repo
-        mgr.registerSourceProvider(new ConstantSourceProvider(repoUrl.toString(), "dummy",
+        mgr.registerSourceProvider(new ConstantSourceProvider(repoUrl.toString(), "sample",
                 ImmutableList.of(AndroidSdkHandler.getAddonModule())));
         FakeProgressRunner runner = new FakeProgressRunner();
 
@@ -182,7 +182,7 @@ public class MavenInstallListenerTest extends TestCase {
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
         mgr.setLocalPath(ROOT);
         FakeDownloader downloader = new FakeDownloader(fop);
-        URL repoUrl = new URL("http://example.com/dummy.xml");
+        URL repoUrl = new URL("http://example.com/sample.xml");
 
         // The repo we're going to download
         downloader.registerUrl(repoUrl,
@@ -203,7 +203,7 @@ public class MavenInstallListenerTest extends TestCase {
         downloader.registerUrl(archiveUrl, is);
 
         // Register a source provider to get the repo
-        mgr.registerSourceProvider(new ConstantSourceProvider(repoUrl.toString(), "dummy",
+        mgr.registerSourceProvider(new ConstantSourceProvider(repoUrl.toString(), "sample",
                 ImmutableList.of(AndroidSdkHandler.getAddonModule())));
         FakeProgressRunner runner = new FakeProgressRunner();
 

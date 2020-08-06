@@ -25,6 +25,8 @@ cc_binary(
         "swapper.h",
         "thread_suspend.cc",
         "thread_suspend.h",
+        "transforms.cc",
+        "transforms.h",
         "variable_reinit.cc",
         "variable_reinit.h",
     ],

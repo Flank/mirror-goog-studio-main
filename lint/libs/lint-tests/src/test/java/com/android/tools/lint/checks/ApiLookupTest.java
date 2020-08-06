@@ -132,7 +132,7 @@ public class ApiLookupTest extends AbstractCheckTest {
 
     public void testDeprecatedMethods() {
         // Not deprecated:
-        //assertEquals(12, mDb.getMethodVersion("android/app/Fragment", "onInflate",
+        // assertEquals(12, mDb.getMethodVersion("android/app/Fragment", "onInflate",
         //        "(Landroid/app/Activity;Landroid/util/AttributeSet;Landroid/os/Bundle;)V"));
         assertEquals(
                 24,
@@ -215,8 +215,7 @@ public class ApiLookupTest extends AbstractCheckTest {
                         new ApiMember("native_bind_string(ILjava/lang/String;)", 1, 0, 16)));
         // Method moved to a super class
         assertTrue(
-                removedMethods
-                        .stream()
+                removedMethods.stream()
                         .noneMatch(member -> member.getSignature().equals("close()")));
     }
 

@@ -46,9 +46,9 @@ import kotlin.text.Charsets;
  * source tree. It's similar to the gradle ExtractAnnotations task, but usable from the command line
  * and outside Gradle, for example to extract annotations from the Android framework itself (which
  * is not built with Gradle). It also allows other options only interesting for extracting platform
- * annotations, such as filtering all APIs and constants through an API white-list (such that we for
- * example can pull annotations from the master branch which has the latest metadata, but only
- * expose APIs that are actually in a released platform), as well as translating android.annotation
+ * annotations, such as filtering all APIs and constants through an API allow list (such that we for
+ * example can pull annotations from the main branch which has the latest metadata, but only expose
+ * APIs that are actually in a released platform), as well as translating android.annotation
  * annotations into android.support.annotations.
  */
 public class ExtractAnnotationsDriver {

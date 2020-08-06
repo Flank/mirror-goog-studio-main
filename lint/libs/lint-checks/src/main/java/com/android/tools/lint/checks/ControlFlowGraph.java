@@ -153,7 +153,7 @@ public class ControlFlowGraph {
     protected void exception(@NonNull AbstractInsnNode from, @NonNull AbstractInsnNode to) {
         // For now, these edges appear useless; we also get more specific
         // information via the TryCatchBlockNode which we use instead.
-        //getNode(from).addExceptionPath(getNode(to));
+        // getNode(from).addExceptionPath(getNode(to));
     }
 
     /** Adds an exception try block node to this graph */

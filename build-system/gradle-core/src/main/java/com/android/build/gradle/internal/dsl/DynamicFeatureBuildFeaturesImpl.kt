@@ -20,5 +20,5 @@ import com.android.build.api.dsl.DynamicFeatureBuildFeatures
 
 abstract class DynamicFeatureBuildFeaturesImpl: BuildFeaturesImpl(), DynamicFeatureBuildFeatures {
     override var dataBinding: Boolean? = null
-    override var mlModelBinding: Boolean? = false
+    override var mlModelBinding: Boolean? = null
 }

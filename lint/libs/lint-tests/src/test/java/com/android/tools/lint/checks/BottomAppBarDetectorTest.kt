@@ -26,7 +26,8 @@ class BottomAppBarDetectorTest : AbstractCheckTest() {
     fun testBasic() {
         lint().files(
             xml(
-                "res/layout/ok.xml", """
+                "res/layout/ok.xml",
+                """
                 <android.support.design.widget.CoordinatorLayout
                     xmlns:android="http://schemas.android.com/apk/res/android"
                     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -55,7 +56,8 @@ class BottomAppBarDetectorTest : AbstractCheckTest() {
             """
             ).indented(),
             xml(
-                "res/layout/wrong1.xml", """
+                "res/layout/wrong1.xml",
+                """
                 <LinearLayout
                     xmlns:android="http://schemas.android.com/apk/res/android"
                     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -76,7 +78,8 @@ class BottomAppBarDetectorTest : AbstractCheckTest() {
             """
             ).indented(),
             xml(
-                "res/layout/wrong2.xml", """
+                "res/layout/wrong2.xml",
+                """
                 <com.google.android.material.bottomappbar.BottomAppBar
                     xmlns:android="http://schemas.android.com/apk/res/android"
                     xmlns:app="http://schemas.android.com/apk/res-auto"

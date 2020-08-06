@@ -62,9 +62,10 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
 
         assertEquals(
             "Custom lint rule jar " + file2.path + " does not contain a valid " +
-                    "registry manifest key (Lint-Registry-v2).\n" +
-                    "Either the custom jar is invalid, or it uses an outdated API not " +
-                    "supported this lint client", loggedWarnings.toString()
+                "registry manifest key (Lint-Registry-v2).\n" +
+                "Either the custom jar is invalid, or it uses an outdated API not " +
+                "supported this lint client",
+            loggedWarnings.toString()
         )
 
         // Make sure we handle up to date checks properly too

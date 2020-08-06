@@ -41,7 +41,8 @@ class SwingUtilitiesDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "WrongInvokeLater",
             briefDescription = "Using SwingUtilities.invokeLater",
-            explanation = """
+            explanation =
+                """
                 Do not use `SwingUtilities#invokeLater`; use `Application#invokeLater` \
                 instead to properly handle modality.
 

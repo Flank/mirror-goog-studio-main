@@ -77,4 +77,24 @@ public final class DataInputOutputUtils {
             tensorInfo.save(out);
         }
     }
+
+    @NonNull
+    public static List<TensorGroupInfo> readTensorGroupInfoList(@NonNull DataInput in)
+            throws IOException {
+        List<TensorGroupInfo> tensorGroupInfoList = new ArrayList<>();
+        int len = in.readInt();
+        for (int i = 0; i < len; i++) {
+            tensorGroupInfoList.add(new TensorGroupInfo(in));
+        }
+        return tensorGroupInfoList;
+    }
+
+    public static void writeTensorGroupInfoList(
+            @NonNull DataOutput out, @NonNull List<TensorGroupInfo> tensorInfoList)
+            throws IOException {
+        out.writeInt(tensorInfoList.size());
+        for (TensorGroupInfo tensorGroupInfo : tensorInfoList) {
+            tensorGroupInfo.save(out);
+        }
+    }
 }

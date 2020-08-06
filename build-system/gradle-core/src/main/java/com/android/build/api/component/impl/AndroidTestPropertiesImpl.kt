@@ -18,15 +18,15 @@ package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.AndroidTestProperties
-import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.SigningConfig
 import com.android.build.api.variant.impl.ResValue
+import com.android.build.api.variant.impl.SigningConfigImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.api.variant.impl.initializeAaptOptionsFromDsl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
-import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -38,11 +38,12 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.android.builder.dexing.DexingType
+import com.android.build.gradle.options.IntegerOption
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.Serializable
-import java.lang.RuntimeException
 import javax.inject.Inject
 
 open class AndroidTestPropertiesImpl @Inject constructor(
@@ -77,6 +78,8 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     globalScope
 ), AndroidTestProperties, AndroidTestCreationConfig {
 
+    private val delegate = ConsumableCreationConfigImpl(variantDslInfo)
+
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
@@ -102,8 +105,8 @@ open class AndroidTestPropertiesImpl @Inject constructor(
 
     override val aaptOptions: AaptOptions by lazy {
         initializeAaptOptionsFromDsl(
-            globalScope.extension.aaptOptions,
-            variantPropertiesApiServices
+                globalScope.extension.aaptOptions,
+                variantPropertiesApiServices
         )
     }
 
@@ -157,6 +160,19 @@ open class AndroidTestPropertiesImpl @Inject constructor(
         resValues.put(ResValue.Key(type, name), value.map { ResValue(it, comment) })
     }
 
+    override val signingConfig: SigningConfig by lazy {
+        SigningConfigImpl(
+            variantDslInfo.signingConfig,
+            variantPropertiesApiServices,
+            minSdkVersion.apiLevel,
+            globalScope.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
+        )
+    }
+
+    override fun signingConfig(action: SigningConfig.() -> Unit) {
+        action.invoke(signingConfig)
+    }
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
@@ -208,5 +224,11 @@ open class AndroidTestPropertiesImpl @Inject constructor(
             testedConfig.variantType.isAar -> true
             else -> testedConfig.variantType.isBaseModule && testedConfig.variantScope.needsShrinkDesugarLibrary
         }
+
+    override val dexingType: DexingType
+        get() = delegate.dexingType
+
+    override val needsMainDexListForBundle: Boolean
+        get() = false
 }
 

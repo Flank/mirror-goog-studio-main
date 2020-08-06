@@ -42,7 +42,8 @@ class LintStats constructor(
     companion object {
         fun create(mergedIncidents: List<Incident>, baseline: LintBaseline?): LintStats {
             return create(
-                mergedIncidents, if (baseline != null)
+                mergedIncidents,
+                if (baseline != null)
                     listOf(baseline)
                 else
                     emptyList()
@@ -91,11 +92,11 @@ class LintStats constructor(
             if (baselines.isNotEmpty()) {
                 // Figure out the actual overlap; later I could stash these into temporary
                 // objects to compare
-                // For now just combine them in a dumb way
+                // For now just combine them in a simplistic way
                 for (baseline in baselines) {
                     baselineErrorCount = max(baselineErrorCount, baseline.foundErrorCount)
                     baselineWarningCount =
-                            max(baselineWarningCount, baseline.foundWarningCount)
+                        max(baselineWarningCount, baseline.foundWarningCount)
                     baselineFixedCount = max(baselineFixedCount, baseline.fixedCount)
                 }
             }

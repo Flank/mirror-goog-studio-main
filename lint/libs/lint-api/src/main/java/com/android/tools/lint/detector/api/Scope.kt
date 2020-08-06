@@ -160,14 +160,16 @@ enum class Scope {
 
             // Filter out non-file-type scopes
             return size == expected &&
-                    (scopes.contains(JAVA_FILE) ||
-                            scopes.contains(RESOURCE_FILE) ||
-                            scopes.contains(BINARY_RESOURCE_FILE) ||
-                            scopes.contains(GRADLE_FILE) ||
-                            scopes.contains(CLASS_FILE) ||
-                            scopes.contains(PROGUARD_FILE) ||
-                            scopes.contains(PROPERTY_FILE) ||
-                            scopes.contains(MANIFEST))
+                (
+                    scopes.contains(JAVA_FILE) ||
+                        scopes.contains(RESOURCE_FILE) ||
+                        scopes.contains(BINARY_RESOURCE_FILE) ||
+                        scopes.contains(GRADLE_FILE) ||
+                        scopes.contains(CLASS_FILE) ||
+                        scopes.contains(PROGUARD_FILE) ||
+                        scopes.contains(PROPERTY_FILE) ||
+                        scopes.contains(MANIFEST)
+                    )
         }
 
         /**

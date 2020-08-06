@@ -644,7 +644,7 @@ fun getCommonParent(file1: File, file2: File): File? {
         file1.path.startsWith(file2.path) -> return file2
         file2.path.startsWith(file1.path) -> return file1
         else -> {
-            // Dumb and simple implementation
+            // Simple implementation
             var first: File? = file1.parentFile
             while (first != null) {
                 var second: File? = file2.parentFile
@@ -1679,7 +1679,7 @@ fun resolvePlaceHolders(
         )
         val replacement = resolvePlaceHolder(project, name) ?: fallbacks?.get(name) ?: ""
         s = s.substring(0, start) + replacement +
-                s.substring(end + MANIFEST_PLACEHOLDER_PREFIX.length)
+            s.substring(end + MANIFEST_PLACEHOLDER_PREFIX.length)
     }
 }
 
@@ -1915,68 +1915,68 @@ fun isNumberString(s: String?): Boolean {
  * (Kotlin 0 or 1 args), or if there's some kind of error.
  */
 fun computeKotlinArgumentMapping(call: UCallExpression, method: PsiMethod):
-        Map<UExpression, PsiParameter>? {
-    if (method.parameterList.parametersCount <= 1) {
-        // When there is at most one parameter the mapping is easy to figure out!
-        return null
-    }
-
-    // Kotlin? If not, mapping is trivial
-    val receiver = call.psi as? KtElement ?: return null
-
-    val service = ServiceManager.getService(
-        receiver.project,
-        KotlinUastResolveProviderService::class.java
-    ) ?: return null
-    val bindingContext = service.getBindingContext(receiver)
-    val parameters = method.parameterList.parameters
-    val resolvedCall = receiver.getResolvedCall(bindingContext) ?: return null
-    val valueArguments = resolvedCall.valueArguments
-    val elementMap = mutableMapOf<PsiElement, UExpression>()
-    for (parameter in call.valueArguments) {
-        elementMap[parameter.psi ?: continue] = parameter
-    }
-    if (valueArguments.isNotEmpty()) {
-        var firstParameterIndex = 0
-        // Kotlin extension method? Not included in valueArguments indices.
-        // check if "$self" for UltraLightParameter
-        val first = parameters.firstOrNull()?.name
-        if (first?.startsWith("\$this") == true || first?.startsWith("\$self") == true) {
-            firstParameterIndex++
+    Map<UExpression, PsiParameter>? {
+        if (method.parameterList.parametersCount <= 1) {
+            // When there is at most one parameter the mapping is easy to figure out!
+            return null
         }
 
-        val mapping = mutableMapOf<UExpression, PsiParameter>()
-        for ((parameterDescriptor, valueArgument) in valueArguments) {
-            for (argument in valueArgument.arguments) {
-                val expression = argument.getArgumentExpression() ?: continue
-                // cast only needed to avoid Kotlin compiler frontend bug KT-24309.
-                @Suppress("USELESS_CAST")
-                val arg = elementMap[expression as PsiElement]
-                val index = firstParameterIndex + parameterDescriptor.index
-                if (index < parameters.size) {
-                    if (arg != null) {
-                        mapping[arg] = parameters[index]
-                    } else {
-                        // Somehow the argument we received as the argument child isn't present;
-                        // try to find it in some other way
-                        for ((a, b) in elementMap) {
-                            if (mapping[b] == null && a.parent === expression) {
-                                mapping[b] = parameters[index]
-                                break
+        // Kotlin? If not, mapping is trivial
+        val receiver = call.psi as? KtElement ?: return null
+
+        val service = ServiceManager.getService(
+            receiver.project,
+            KotlinUastResolveProviderService::class.java
+        ) ?: return null
+        val bindingContext = service.getBindingContext(receiver)
+        val parameters = method.parameterList.parameters
+        val resolvedCall = receiver.getResolvedCall(bindingContext) ?: return null
+        val valueArguments = resolvedCall.valueArguments
+        val elementMap = mutableMapOf<PsiElement, UExpression>()
+        for (parameter in call.valueArguments) {
+            elementMap[parameter.psi ?: continue] = parameter
+        }
+        if (valueArguments.isNotEmpty()) {
+            var firstParameterIndex = 0
+            // Kotlin extension method? Not included in valueArguments indices.
+            // check if "$self" for UltraLightParameter
+            val first = parameters.firstOrNull()?.name
+            if (first?.startsWith("\$this") == true || first?.startsWith("\$self") == true) {
+                firstParameterIndex++
+            }
+
+            val mapping = mutableMapOf<UExpression, PsiParameter>()
+            for ((parameterDescriptor, valueArgument) in valueArguments) {
+                for (argument in valueArgument.arguments) {
+                    val expression = argument.getArgumentExpression() ?: continue
+                    // cast only needed to avoid Kotlin compiler frontend bug KT-24309.
+                    @Suppress("USELESS_CAST")
+                    val arg = elementMap[expression as PsiElement]
+                    val index = firstParameterIndex + parameterDescriptor.index
+                    if (index < parameters.size) {
+                        if (arg != null) {
+                            mapping[arg] = parameters[index]
+                        } else {
+                            // Somehow the argument we received as the argument child isn't present;
+                            // try to find it in some other way
+                            for ((a, b) in elementMap) {
+                                if (mapping[b] == null && a.parent === expression) {
+                                    mapping[b] = parameters[index]
+                                    break
+                                }
                             }
                         }
                     }
                 }
             }
+
+            if (mapping.isNotEmpty()) {
+                return mapping
+            }
         }
 
-        if (mapping.isNotEmpty()) {
-            return mapping
-        }
+        return null
     }
-
-    return null
-}
 
 fun PsiMethod.getUMethod(): UMethod? {
     return UastFacade.convertElementWithParent(this, UMethod::class.java) as? UMethod

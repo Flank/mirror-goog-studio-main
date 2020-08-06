@@ -20,7 +20,8 @@ import com.android.tools.lint.detector.api.Detector
 
 class WrongThreadInterproceduralDetectorTest : AbstractCheckTest() {
     fun testThreadingFromJava() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/Runnable.java:14: Error: Interprocedural thread annotation violation (UiThread to WorkerThread):
             Test#uiThreadStatic -> Test#unannotatedStatic -> Test#workerThreadStatic [WrongThreadInterprocedural]
               @UiThread static void uiThreadStatic() { unannotatedStatic(); }
@@ -150,7 +151,8 @@ class WrongThreadInterproceduralDetectorTest : AbstractCheckTest() {
     }
 
     fun testThreadingFromKotlin() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/Test.kt:9: Error: Interprocedural thread annotation violation (UiThread to WorkerThread):
             Test#uiThread -> Test#unannotated -> Test#workerThread [WrongThreadInterprocedural]
               @UiThread fun uiThread() { unannotated() }

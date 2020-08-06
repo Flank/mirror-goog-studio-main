@@ -24,6 +24,7 @@ iml_module(
         "//tools/idea/.idea/libraries:gson",
         "//tools/base/repository:studio.android.sdktools.repository",
     ],
+    runtime_deps = ["//tools/idea/.idea/libraries:javax.activation"],
     # do not sort: must match IML order
     deps = [
         "//tools/base/common:studio.android.sdktools.common[module]",

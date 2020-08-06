@@ -172,8 +172,14 @@ public class DeployerException extends Exception {
                 "Reinstall and restart app",
                 ResolutionAction.RUN_APP),
 
-        CANNOT_MODIFY_FIELDS(
+        CANNOT_AND_OR_REMOVE_FIELDS(
                 "Adding or removing a field requires an app restart.",
+                "",
+                "Reinstall and restart app",
+                ResolutionAction.RUN_APP),
+
+        CANNOT_REMOVE_FIELDS(
+                "Removing a field requires an app restart.",
                 "",
                 "Reinstall and restart app",
                 ResolutionAction.RUN_APP),
@@ -248,9 +254,9 @@ public class DeployerException extends Exception {
 
         APP_OVERLAY_IN_UNKNOWN_STATE(
                 "The target app on the device is in a state unknown to Studio",
-                "",
-                "Retry",
-                ResolutionAction.RETRY),
+                "Android Studio is unable to recognize the version of the application currently installed on the target device.",
+                "Reinstall and restart app",
+                ResolutionAction.RUN_APP),
 
         UNKNOWN_JVMTI_ERROR("Invalid error code %s", "", "Retry", ResolutionAction.RETRY),
 
@@ -289,6 +295,12 @@ public class DeployerException extends Exception {
                 "%s",
                 "Reinstall and restart app",
                 ResolutionAction.RUN_APP),
+
+        JDBC_NATIVE_LIB(
+                "Unable to establish JDBC connection to DEX file database",
+                "Verify Android Studio is able to extract executable file to %s",
+                "Retry",
+                ResolutionAction.RETRY),
 
         OPERATION_NOT_SUPPORTED("Operation not supported.", "%s", "", ResolutionAction.NONE),
 
@@ -443,7 +455,7 @@ public class DeployerException extends Exception {
                             Error.CANNOT_ADD_METHOD)
                     .put(
                             JvmtiErrorCode.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_SCHEMA_CHANGED,
-                            Error.CANNOT_MODIFY_FIELDS)
+                            Error.CANNOT_AND_OR_REMOVE_FIELDS)
                     .put(
                             JvmtiErrorCode.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_HIERARCHY_CHANGED,
                             Error.CANNOT_CHANGE_INHERITANCE)
@@ -461,8 +473,12 @@ public class DeployerException extends Exception {
                     .put(JvmtiErrorCode.JVMTI_ERROR_FAILS_VERIFICATION, Error.VERIFICATION_ERROR)
                     .build();
 
-    public static DeployerException jvmtiError(JvmtiErrorCode code) {
+    public static DeployerException jvmtiError(JvmtiErrorCode code, boolean androidRAndUp) {
         if (ERROR_CODE_TO_ERROR.containsKey(code)) {
+            Error error = ERROR_CODE_TO_ERROR.get(code);
+            if (error == Error.CANNOT_AND_OR_REMOVE_FIELDS && androidRAndUp) {
+                return new DeployerException(Error.CANNOT_REMOVE_FIELDS);
+            }
             return new DeployerException(ERROR_CODE_TO_ERROR.get(code));
         }
         return new DeployerException(Error.JVMTI_ERROR, code, new String[] {code.name()});
@@ -550,6 +566,10 @@ public class DeployerException extends Exception {
 
     public static DeployerException interrupted(String reason) {
         return new DeployerException(Error.INTERRUPTED, NO_ARGS, reason);
+    }
+
+    public static DeployerException jdbcNativeLibError(String nativeLibLoc) {
+        return new DeployerException(Error.JDBC_NATIVE_LIB, NO_ARGS, nativeLibLoc);
     }
 
     public static DeployerException operationNotSupported(String reason) {

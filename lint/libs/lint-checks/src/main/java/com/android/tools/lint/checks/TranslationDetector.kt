@@ -103,8 +103,8 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
 
     private fun ignoreFile(context: Context) =
         context.file.name.startsWith("donottranslate") ||
-                ResourceUsageModel.isAnalyticsFile(context.file) ||
-                !context.project.reportIssues
+            ResourceUsageModel.isAnalyticsFile(context.file) ||
+            !context.project.reportIssues
 
     override fun afterCheckRootProject(context: Context) {
         if (context.phase == 2) {
@@ -293,9 +293,9 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
     ) {
         when (type) {
             MIPMAP,
-                // Extra translation checks don't apply to some of the resource types
-                // (It generally does apply to styleables, but we're avoiding reporting those
-                // for now since these often extend library styles
+            // Extra translation checks don't apply to some of the resource types
+            // (It generally does apply to styleables, but we're avoiding reporting those
+            // for now since these often extend library styles
             STYLE, STYLEABLE -> return
             else -> {
                 val folderName = context.file.parentFile.name
@@ -548,11 +548,13 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             }
             recordTranslatable(context, name)
             return true
-        } else if ((isServiceKey(name) ||
-                    // Older versions of the templates shipped with these not marked as
-                    // non-translatable; don't flag them
-                    name == "google_maps_key" ||
-                    name == "google_maps_key_instructions")
+        } else if ((
+            isServiceKey(name) ||
+                // Older versions of the templates shipped with these not marked as
+                // non-translatable; don't flag them
+                name == "google_maps_key" ||
+                name == "google_maps_key_instructions"
+            )
         ) {
             // Mark translatable, but don't flag it as an error do have these translatable
             //  in other folders
@@ -597,10 +599,10 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         // Check to make sure it's not suppressed with the older flag, EXTRA,
         // which this issue used to be reported under.
         if (context.driver.isSuppressed(
-                context,
-                EXTRA,
-                locationNode
-            )
+            context,
+            EXTRA,
+            locationNode
+        )
         ) {
             return
         }
@@ -633,7 +635,8 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         val parentFolder = context.file.parentFile.name
         val message = when (type) {
             STRING -> "\"$name\" is translated here but not found in default locale"
-            DRAWABLE -> "The drawable \"$name\" in $parentFolder has no declaration in " +
+            DRAWABLE ->
+                "The drawable \"$name\" in $parentFolder has no declaration in " +
                     "the base `drawable` folder or in a `drawable-`*density*`dpi` " +
                     "folder; this can lead to crashes when the drawable is queried in " +
                     "a configuration that does not match this qualifier"
@@ -641,9 +644,9 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
                 val typeName = type.getName()
                 val baseFolder = context.resourceFolderType?.getName()
                 "The $typeName \"$name\" in $parentFolder has no declaration in " +
-                        "the base `$baseFolder` folder; this can lead to crashes " +
-                        "when the resource is queried in a configuration that " +
-                        "does not match this qualifier"
+                    "the base `$baseFolder` folder; this can lead to crashes " +
+                    "when the resource is queried in a configuration that " +
+                    "does not match this qualifier"
             }
         }
 
@@ -793,7 +796,8 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         val MISSING = Issue.create(
             id = "MissingTranslation",
             briefDescription = "Incomplete translation",
-            explanation = """
+            explanation =
+                """
                 If an application has more than one locale, then all the strings declared \
                 in one language should also be translated in all other languages.
 
@@ -819,7 +823,8 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         val EXTRA = Issue.create(
             id = "ExtraTranslation",
             briefDescription = "Extra translation",
-            explanation = """
+            explanation =
+                """
                 If a string appears in a specific language translation file, but there is \
                 no corresponding string in the default locale, then this string is probably \
                 unused. (It's technically possible that your application is only intended \
@@ -838,7 +843,8 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         val MISSING_BASE = Issue.create(
             id = "MissingDefaultResource",
             briefDescription = "Missing Default",
-            explanation = """
+            explanation =
+                """
                 If a resource is only defined in folders with qualifiers like `-land` or \
                 `-en`, and there is no default declaration in the base folder (`layout` or \
                 `values` etc), then the app will crash if that resource is accessed on a \
@@ -853,7 +859,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
                 which is only referenced from some other resource with the same qualifiers \
                 (such as a `-fr` style), which itself has safe fallbacks. However, this still \
                 makes it possible for somebody to accidentally reference the drawable and \
-                crash, so it is safer to create a default dummy fallback in the base folder. \
+                crash, so it is safer to create a default fallback in the base folder. \
                 Alternatively, you can suppress the issue by adding \
                 `tools:ignore="MissingDefaultResource"` on the element.
 
@@ -872,7 +878,8 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         val TRANSLATED_UNTRANSLATABLE = Issue.create(
             id = "Untranslatable",
             briefDescription = "Translated Untranslatable",
-            explanation = """
+            explanation =
+                """
                 Strings can be marked with `translatable=false` to indicate that they are not \
                 intended to be translated, but are present in the resource file for other \
                 purposes (for example for non-display strings that should vary by some other \

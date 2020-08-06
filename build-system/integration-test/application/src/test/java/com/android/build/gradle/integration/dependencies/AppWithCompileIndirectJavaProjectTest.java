@@ -62,8 +62,7 @@ public class AppWithCompileIndirectJavaProjectTest {
                     .fromTestProject("projectWithModules")
                     // b/157470515, http://b/146208910, http://b/149978740
                     .withConfigurationCaching(
-                            BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
-                    .setTargetGradleVersion("6.6-20200609220026+0000")
+                            BaseGradleExecutor.ConfigurationCaching.WARN)
                     .create();
 
     @BeforeClass

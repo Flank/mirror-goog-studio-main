@@ -86,6 +86,7 @@ abstract class ProfileCleanupBuildService : BuildService<ProfileCleanupBuildServ
                     plugin
                 )
             )
+            analyticsProject.addPluginNames(plugin.javaClass.name)
         }
     }
 

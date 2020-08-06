@@ -57,6 +57,12 @@ interface CxxVariantModel {
     val objFolder: File
 
     /**
+     * Base folder for .so files
+     *   ex, $moduleRootFolder/build/intermediates/cmake/debug/lib
+     */
+    val soFolder: File
+
+    /**
      * Whether this variant build is debuggable
      */
     val isDebuggableEnabled: Boolean
@@ -112,13 +118,6 @@ interface CxxVariantModel {
      */
     val prefabDirectory: File
 }
-
-/**
- * Base folder for .so files
- *   ex, $moduleRootFolder/build/intermediates/cmake/debug/lib
- */
-val CxxVariantModel.soFolder: File
-    get() = FileUtils.join(module.intermediatesFolder, module.buildSystem.tag, variantName, "lib")
 
 sealed class DetermineUsedStlResult {
     data class Success(val stl: Stl) : DetermineUsedStlResult()

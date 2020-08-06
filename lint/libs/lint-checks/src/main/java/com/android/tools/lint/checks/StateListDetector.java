@@ -68,7 +68,8 @@ public class StateListDetector extends ResourceXmlDetector {
     public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
         // TODO: Look for views that don't specify
         // Display the error token somewhere so it can be suppressed
-        // Emit warning at the end "run with --help to learn how to suppress types of errors/checks";
+        // Emit warning at the end "run with --help to learn how to suppress types of
+        // errors/checks";
         // ("...and this message.")
 
         Element root = document.getDocumentElement();

@@ -92,8 +92,8 @@ enum class Severity constructor(
          */
         @JvmStatic
         fun min(severity1: Severity, severity2: Severity): Severity =
-        // Using ">" instead of "<" here because compareTo is inherited from
-        // enum and the severity constants are in descending order of severity
+            // Using ">" instead of "<" here because compareTo is inherited from
+            // enum and the severity constants are in descending order of severity
             if (severity1 > severity2) severity1 else severity2
 
         /**
@@ -105,8 +105,8 @@ enum class Severity constructor(
          */
         @JvmStatic
         fun max(severity1: Severity, severity2: Severity): Severity =
-        // Using "<" instead of ">" here because compareTo is inherited from
-        // enum and the severity constants are in descending order of severity
+            // Using "<" instead of ">" here because compareTo is inherited from
+            // enum and the severity constants are in descending order of severity
             if (severity1 < severity2) severity1 else severity2
     }
 }

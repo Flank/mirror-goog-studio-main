@@ -49,6 +49,7 @@ public class FakeDeviceLibrary {
             case API_27:
             case API_28:
             case API_29:
+            case API_30:
                 device.getShell().addCommand(new Cmd());
                 break;
         }

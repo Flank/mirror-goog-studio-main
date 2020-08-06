@@ -293,7 +293,7 @@ protected constructor(
      *
      * @param endOffset the end offset within the file
      */
-        (context: Context, private val startOffset: Int, private val endOffset: Int) : Handle {
+    (context: Context, private val startOffset: Int, private val endOffset: Int) : Handle {
         private val file: File = context.file
         private val contents: CharSequence = context.getContents() ?: ""
         override var clientData: Any? = null
@@ -666,7 +666,7 @@ protected constructor(
                     } else {
                         assert(
                             direction == SearchDirection.NEAREST ||
-                                    direction == SearchDirection.EOL_NEAREST
+                                direction == SearchDirection.EOL_NEAREST
                         )
 
                         var lineEnd = indexOf(contents, '\n', offset)
@@ -827,17 +827,19 @@ protected constructor(
                 val nextChar: Char =
                     if (lastIndex < contents.length - 1) contents[lastIndex + 1] else '\n'
 
-                if (hints.isWholeWord && (Character.isLetter(prevChar) || Character.isLetter(
+                if (hints.isWholeWord && (
+                    Character.isLetter(prevChar) || Character.isLetter(
                         nextChar
-                    ))
+                    )
+                    )
                 ) {
                     return false
                 }
 
                 if (hints.isJavaSymbol) {
                     if (Character.isJavaIdentifierPart(prevChar) || Character.isJavaIdentifierPart(
-                            nextChar
-                        )
+                        nextChar
+                    )
                     ) {
                         return false
                     }

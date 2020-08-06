@@ -19,8 +19,8 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
-import com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.dummy.dummyContentJava
-import com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.dummy.dummyContentKt
+import com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.placeholder.placeholderContentJava
+import com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.placeholder.placeholderContentKt
 import com.android.tools.idea.wizard.template.impl.fragments.listFragment.ColumnCount
 import com.android.tools.idea.wizard.template.impl.fragments.listFragment.res.layout.fragmentListXml
 import com.android.tools.idea.wizard.template.impl.fragments.listFragment.res.layout.itemListContentXml
@@ -70,11 +70,11 @@ fun RecipeExecutor.recyclerViewAdapterRecipe(
   }
   save(recyclerViewAdapter, srcOut.resolve("${adapterClassName}.${ktOrJavaExt}"))
 
-  val dummyContent = when (projectData.language) {
-    Language.Java -> dummyContentJava(packageName)
-    Language.Kotlin -> dummyContentKt(packageName)
+  val placeholderContent = when (projectData.language) {
+    Language.Java -> placeholderContentJava(packageName)
+    Language.Kotlin -> placeholderContentKt(packageName)
   }
-  save(dummyContent, srcOut.resolve("dummy/DummyContent.${ktOrJavaExt}"))
+  save(placeholderContent, srcOut.resolve("placeholder/PlaceholderContent.${ktOrJavaExt}"))
 
   if (fragmentClass != null) {
     open(srcOut.resolve("${fragmentClass}.${ktOrJavaExt}"))

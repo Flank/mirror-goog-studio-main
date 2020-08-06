@@ -95,7 +95,7 @@ class PropertyFileDetector : Detector() {
                 PROXY_PASSWORD,
                 location,
                 "Storing passwords in clear text is risky; " +
-                        "make sure this file is not shared or checked in via version control"
+                    "make sure this file is not shared or checked in via version control"
             )
         } else if (line.indexOf('\\') != -1 || line.indexOf(':') != -1) {
             checkEscapes(context, contents, line, offset, valueStart)
@@ -165,12 +165,14 @@ class PropertyFileDetector : Detector() {
         if (hadNonPathEscape && key.endsWith(".dir=") || File(pathString).exists()) {
             val escapedPath = suggestEscapes(line.substring(valueStart, line.length))
 
-            val message = ("Windows file separators (`\\`) and drive letter " +
+            val message = (
+                "Windows file separators (`\\`) and drive letter " +
                     "separators (':') must be escaped (`\\\\`) in property files; use " +
                     escapedPath
                         // String is already escaped for Java; must double escape for the raw text
                         // format
-                        .replace("\\", "\\\\"))
+                        .replace("\\", "\\\\")
+                )
             val startOffset = offset + errorStart
             val endOffset = offset + errorEnd + 1
 
@@ -193,7 +195,8 @@ class PropertyFileDetector : Detector() {
         val ESCAPE = Issue.create(
             id = "PropertyEscape",
             briefDescription = "Incorrect property escapes",
-            explanation = """
+            explanation =
+                """
                 All backslashes and colons in .property files must be escaped with a \
                 backslash (\). This means that when writing a Windows path, you must \
                 escape the file separators, so the path \My\Files should be written as \
@@ -209,7 +212,8 @@ class PropertyFileDetector : Detector() {
         val HTTP = Issue.create(
             id = "UsingHttp",
             briefDescription = "Using HTTP instead of HTTPS",
-            explanation = """
+            explanation =
+                """
                 The Gradle Wrapper is available both via HTTP and HTTPS. HTTPS is more \
                 secure since it protects against man-in-the-middle attacks etc. Older \
                 projects created in Android Studio used HTTP but we now default to HTTPS \
@@ -225,7 +229,8 @@ class PropertyFileDetector : Detector() {
         val PROXY_PASSWORD = Issue.create(
             id = "ProxyPassword",
             briefDescription = "Proxy Password in Cleartext",
-            explanation = """
+            explanation =
+                """
                 Storing proxy server passwords in clear text is dangerous if this file is \
                 shared via version control. If this is deliberate or this is a truly private \
                 project, suppress this warning.""",

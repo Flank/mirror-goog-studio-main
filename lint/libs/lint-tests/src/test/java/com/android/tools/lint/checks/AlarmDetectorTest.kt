@@ -24,7 +24,8 @@ class AlarmDetectorTest : AbstractCheckTest() {
     }
 
     fun testBasic() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/AlarmTest.java:9: Warning: Value will be forced up to 5000 as of Android 5.1; don't rely on this to be exact [ShortAlarm]
                     alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME, 50, 10, null); // ERROR
                                                                              ~~
@@ -68,6 +69,22 @@ class AlarmDetectorTest : AbstractCheckTest() {
                     }
                     """
             ).indented()
-        ).run().expect(expected)
+        ).run().expect(
+            """
+            src/test/pkg/AlarmTest.java:9: Warning: Value will be forced up to 5000 as of Android 5.1; don't rely on this to be exact [ShortAlarm]
+                    alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME, 50, 10, null); // ERROR
+                                                                             ~~
+            src/test/pkg/AlarmTest.java:9: Warning: Value will be forced up to 60000 as of Android 5.1; don't rely on this to be exact [ShortAlarm]
+                    alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME, 50, 10, null); // ERROR
+                                                                                 ~~
+            src/test/pkg/AlarmTest.java:11: Warning: Value will be forced up to 60000 as of Android 5.1; don't rely on this to be exact [ShortAlarm]
+                            OtherClass.MY_INTERVAL, null);                          // ERROR
+                            ~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/AlarmTest.java:16: Warning: Value will be forced up to 60000 as of Android 5.1; don't rely on this to be exact [ShortAlarm]
+                    alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME, 5000, interval2, null); // ERROR
+                                                                                   ~~~~~~~~~
+            0 errors, 4 warnings
+            """
+        )
     }
 }

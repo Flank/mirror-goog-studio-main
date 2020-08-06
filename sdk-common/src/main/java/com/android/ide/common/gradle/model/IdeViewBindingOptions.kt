@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,38 +15,9 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.ViewBindingOptions
-import java.io.Serializable
-import java.util.Objects
+/** Options for view binding */
+interface IdeViewBindingOptions {
 
-class IdeViewBindingOptions : ViewBindingOptions, Serializable {
-  val enabled : Boolean
-  val hashCode : Int
-
-  constructor(model: ViewBindingOptions) {
-    enabled = model.isEnabled
-    hashCode = calculateHashCode()
-  }
-
-  // Used for serialization by the IDE.
-  constructor() {
-    enabled = false
-    hashCode = 0
-  }
-
-  override fun isEnabled(): Boolean = enabled
-
-  override fun equals(other: Any?): Boolean {
-    if (this === other) return true
-
-    if (other !is IdeViewBindingOptions) return false
-
-    return Objects.equals(enabled, other.enabled)
-  }
-
-  override fun hashCode(): Int = hashCode
-
-  override fun toString(): String = "IdeViewBindingOptions{enabled=$enabled}"
-
-  private fun calculateHashCode() : Int = Objects.hash(enabled)
+  /** Whether to enable view binding. */
+  val enabled: Boolean
 }

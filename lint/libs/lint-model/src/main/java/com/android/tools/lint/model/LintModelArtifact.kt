@@ -52,7 +52,8 @@ class DefaultLintModelJavaArtifact(
 ) : DefaultLintModelArtifact(
     dependencies = dependencies,
     classOutputs = classFolders
-), LintModelJavaArtifact
+),
+    LintModelJavaArtifact
 
 class DefaultLintModelAndroidArtifact(
     override val applicationId: String,
@@ -63,4 +64,5 @@ class DefaultLintModelAndroidArtifact(
 ) : DefaultLintModelArtifact(
     dependencies = dependencies,
     classOutputs = classOutputs
-), LintModelAndroidArtifact
+),
+    LintModelAndroidArtifact

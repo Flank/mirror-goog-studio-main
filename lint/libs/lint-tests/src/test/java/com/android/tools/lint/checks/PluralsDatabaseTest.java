@@ -653,7 +653,7 @@ public class PluralsDatabaseTest extends TestCase {
             if (quantityEnd == -1) {
                 return null;
             }
-            //String s = data.substring(quantityStart + quantityDeclaration.length(), quantityEnd);
+            // String s = data.substring(quantityStart + quantityDeclaration.length(), quantityEnd);
             StringBuilder sb = new StringBuilder();
             boolean inString = false;
             for (int i = quantityStart + quantityDeclaration.length(); i < quantityEnd; i++) {

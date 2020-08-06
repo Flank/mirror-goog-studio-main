@@ -254,4 +254,12 @@ public class RenderSession {
     public Object getValidationData() {
         return null;
     }
+
+    /**
+     * Executes the {@link Runnable} within the session context, ensuring that the session is valid
+     * and the environment is set up.
+     *
+     * @param r {@link Runnable} to execute
+     */
+    public void execute(Runnable r) {}
 }

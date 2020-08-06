@@ -26,7 +26,8 @@ fun basicActivityKt(
   useAndroidX: Boolean,
   activityClass: String,
   layoutName: String,
-  menuName: String
+  menuName: String,
+  navHostFragmentId: String
 ): String {
   val applicationPackageBlock = renderIf(applicationPackage != null) { "import $applicationPackage.R" }
   val newProjectImportBlock = renderIf(isNewProject) {
@@ -79,7 +80,7 @@ class $activityClass : AppCompatActivity() {
         setContentView(R.layout.$layoutName)
         setSupportActionBar(findViewById(R.id.toolbar))
 
-        val navController = findNavController(R.id.nav_host_fragment)
+        val navController = findNavController(R.id.${navHostFragmentId})
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
 
@@ -91,7 +92,7 @@ class $activityClass : AppCompatActivity() {
 $newProjectBlock2
 
     override fun onSupportNavigateUp(): Boolean {
-    val navController = findNavController(R.id.nav_host_fragment)
+    val navController = findNavController(R.id.${navHostFragmentId})
     return navController.navigateUp(appBarConfiguration)
             || super.onSupportNavigateUp()
     }

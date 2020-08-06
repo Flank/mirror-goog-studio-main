@@ -40,7 +40,7 @@ class PrefabPublishingTest(
     @JvmField
     val project = GradleTestProject.builder().fromTestProject(projectName)
         .setSideBySideNdkVersion(GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).create()
+        .create()
 
     private val ndkMajor = GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION.split(".").first()
 

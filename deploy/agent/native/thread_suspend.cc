@@ -59,7 +59,12 @@ std::string ThreadSuspend::SuspendUserThreads() {
 
     // The only thing we skip is the main thread of the main
     // thread group which is currently handling the agent.
-    if (!strcmp(threadInfo.name, "main")) {
+    jclass thread_class = jni_->FindClass("java/lang/Thread");
+    jmethodID current_thread_mid = jni_->GetStaticMethodID(
+        thread_class, "currentThread", "()Ljava/lang/Thread;");
+    jobject cur_thread_obj =
+        jni_->CallStaticObjectMethod(thread_class, current_thread_mid);
+    if (jni_->IsSameObject(cur_thread_obj, threads[t])) {
       continue;
     }
 

@@ -39,7 +39,7 @@ class AppModelTest: ModelComparator() {
 
         with(result).compare(
             model = result.container.singleModel,
-            goldenFile = if (JavaVersion.current().isJava11Compatible) "Default_AndroidProject_Model_jdk11" else "Default_AndroidProject_Model"
+            goldenFile = "Default_AndroidProject_Model"
         )
     }
 

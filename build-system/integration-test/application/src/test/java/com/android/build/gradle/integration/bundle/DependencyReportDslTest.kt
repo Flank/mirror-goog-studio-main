@@ -34,7 +34,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import java.io.File
 import java.util.zip.ZipFile
 import kotlin.test.fail
 
@@ -70,8 +69,7 @@ class DependenciesReportDslTest {
 
     @get:Rule
     val project = GradleTestProject.builder().fromTestApp(testApp)
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
-        .setTargetGradleVersion("6.6-20200609220026+0000")
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         // b/157470515, http://b/149978740
         .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=3")
         .create()

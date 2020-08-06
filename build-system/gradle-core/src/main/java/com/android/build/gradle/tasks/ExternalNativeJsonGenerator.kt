@@ -16,28 +16,23 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationInvalidationState
-import com.android.build.gradle.internal.cxx.configure.isCmakeForkVersion
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.gradle.generator.NativeAndroidProjectBuilder
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
-import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.PassThroughPrefixingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment.Companion.requireExplicitLogger
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.toJsonString
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxModuleModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState
 import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState.Companion.fromJson
 import com.android.build.gradle.internal.cxx.model.buildCommandFile
+import com.android.build.gradle.internal.cxx.model.buildFileIndexFile
 import com.android.build.gradle.internal.cxx.model.buildOutputFile
-import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
-import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
 import com.android.build.gradle.internal.cxx.model.modelOutputFile
@@ -45,9 +40,9 @@ import com.android.build.gradle.internal.cxx.model.prefabConfigFile
 import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
 import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.build.gradle.internal.cxx.model.statsBuilder
+import com.android.build.gradle.internal.cxx.model.symbolFolderIndexFile
 import com.android.build.gradle.internal.cxx.model.writeJsonToFile
 import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
-import com.android.build.gradle.internal.cxx.settings.rewriteCxxAbiModelWithCMakeSettings
 import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.builder.profile.ProcessProfileWriter
 import com.android.ide.common.process.ProcessException
@@ -66,9 +61,9 @@ import java.io.File
 import java.io.FileReader
 import java.io.IOException
 import java.io.StringReader
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.Objects
 import java.util.concurrent.Callable
 
 /**
@@ -220,11 +215,13 @@ abstract class ExternalNativeJsonGenerator internal constructor(
     private fun buildForOneConfiguration(
         ops: ExecOperations,
         forceJsonGeneration: Boolean,
-        abi: CxxAbiModel) {
+        abi: CxxAbiModel
+    ) {
         PassThroughPrefixingLoggingEnvironment(
             abi.variant.module.makeFile,
             abi.variant.variantName + "|" + abi.abi.tag
         ).use { recorder ->
+
             val variantStats =
                 NativeBuildConfigInfo.newBuilder()
             variantStats.abi = AnalyticsUtil.getAbi(abi.abi.tag)
@@ -355,6 +352,8 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     infoln("JSON '%s' was up-to-date", abi.jsonFile)
                     variantStats.outcome = GenerationOutcome.SUCCESS_UP_TO_DATE
                 }
+                abi.generateSymbolFolderIndexFile()
+                abi.generateBuildFilesIndex()
                 infoln("JSON generation completed without problems")
             } catch (e: GradleException) {
                 variantStats.outcome = GenerationOutcome.FAILED
@@ -383,6 +382,25 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                 abi.writeJsonToFile()
             }
         }
+    }
+
+    private fun CxxAbiModel.generateSymbolFolderIndexFile() {
+        symbolFolderIndexFile.parentFile.mkdirs()
+        symbolFolderIndexFile.writeText(
+            soFolder.absolutePath,
+            StandardCharsets.UTF_8
+        )
+    }
+
+    private fun CxxAbiModel.generateBuildFilesIndex() {
+        buildFileIndexFile.parentFile.mkdirs()
+        buildFileIndexFile.writeText(
+            AndroidBuildGradleJsons.getNativeBuildMiniConfig(
+                jsonFile,
+                variant.statsBuilder
+            ).buildFiles.joinToString(System.lineSeparator()),
+            StandardCharsets.UTF_8
+        )
     }
 
     /**

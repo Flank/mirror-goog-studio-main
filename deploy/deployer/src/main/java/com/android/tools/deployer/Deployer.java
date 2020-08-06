@@ -45,13 +45,7 @@ public class Deployer {
     private final UIService service;
     private final MetricsRecorder metrics;
     private final ILogger logger;
-
-    // Temp flag.
-    private final boolean useOptimisticSwap;
-    private final boolean useOptimisticResourceSwap;
-    private final boolean useStructuralRedefinition;
-    private final boolean useVariableReinitialization;
-    private final boolean fastRestartOnSwapFail;
+    private final DeployerOption options;
 
     public Deployer(
             AdbClient adb,
@@ -62,11 +56,7 @@ public class Deployer {
             UIService service,
             MetricsRecorder metrics,
             ILogger logger,
-            boolean useOptimisticSwap,
-            boolean useOptimisticResourceSwap,
-            boolean useStructuralRedefinition,
-            boolean useVariableReinitialization,
-            boolean fastRestartOnSwapFail) {
+            DeployerOption options) {
         this.adb = adb;
         this.deployCache = deployCache;
         this.dexDb = dexDb;
@@ -75,11 +65,7 @@ public class Deployer {
         this.service = service;
         this.metrics = metrics;
         this.logger = logger;
-        this.useOptimisticSwap = useOptimisticSwap;
-        this.useOptimisticResourceSwap = useOptimisticResourceSwap;
-        this.useStructuralRedefinition = useStructuralRedefinition;
-        this.useVariableReinitialization = useVariableReinitialization;
-        this.fastRestartOnSwapFail = fastRestartOnSwapFail;
+        this.options = options;
     }
 
     enum Tasks {
@@ -194,7 +180,7 @@ public class Deployer {
 
     public Result fullSwap(List<String> apks) throws DeployerException {
         try (Trace ignored = Trace.begin("fullSwap")) {
-            if (supportsNewPipeline() && useOptimisticResourceSwap) {
+            if (supportsNewPipeline() && options.useOptimisticResourceSwap) {
                 return optimisticSwap(apks, /* Restart Activity */ true, ImmutableMap.of());
             } else {
                 return swap(apks, true /* Restart Activity */, ImmutableMap.of());
@@ -330,14 +316,7 @@ public class Deployer {
 
         // Perform the swap.
         OptimisticApkSwapper swapper =
-                new OptimisticApkSwapper(
-                        installer,
-                        redefiners,
-                        argRestart,
-                        useStructuralRedefinition,
-                        useVariableReinitialization,
-                        fastRestartOnSwapFail,
-                        metrics);
+                new OptimisticApkSwapper(installer, redefiners, argRestart, options, metrics);
         Task<OptimisticApkSwapper.OverlayUpdate> overlayUpdate =
                 runner.create(
                         Tasks.COLLECT_SWAP_DATA,
@@ -381,7 +360,7 @@ public class Deployer {
         Result deployResult = new Result();
         // TODO: May be notify user we IWI'ed.
         // deployResult.didIwi = true;
-        if (fastRestartOnSwapFail && !swapResultTask.get().hotswapSucceeded) {
+        if (options.fastRestartOnSwapFail && !swapResultTask.get().hotswapSucceeded) {
             deployResult.needsRestart = true;
         }
         return deployResult;
@@ -410,6 +389,6 @@ public class Deployer {
 
         // This check works on real device only.
         String codeName = adb.getVersion().getCodename();
-        return useOptimisticSwap && codeName != null && codeName.equals("R");
+        return options.useOptimisticSwap && codeName != null && codeName.equals("R");
     }
 }

@@ -141,8 +141,10 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Sour
                     ISSUE_APP_INDEXING,
                     application,
                     context.getLocation(application),
-                    // This error message is more verbose than the other app indexing lint warnings, because it
-                    // shows up on a blank project, and we want to make it obvious by just looking at the error
+                    // This error message is more verbose than the other app indexing lint warnings,
+                    // because it
+                    // shows up on a blank project, and we want to make it obvious by just looking
+                    // at the error
                     // message what this is
                     "App is not indexable by Google Search; consider adding at least one Activity with an ACTION-VIEW "
                             + "intent filter. See issue explanation for more details.");

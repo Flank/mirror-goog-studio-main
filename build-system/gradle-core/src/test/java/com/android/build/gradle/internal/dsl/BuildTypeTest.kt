@@ -68,10 +68,13 @@ class BuildTypeTest {
     fun testInitWith() {
         CopyOfTester.assertAllGettersCalled(
             BuildType::class.java,
-            BuildType("original", dslServices),
+            dslServices.newInstance(BuildType::class.java, "original", dslServices),
+            listOf(
+                // Extensions are not copied as AGP doesn't manage them
+                "getExtensions"
+            ),
             { original: BuildType ->
-                val copy =
-                    BuildType(original.name, dslServices)
+                val copy = dslServices.newInstance(BuildType::class.java, original.name, dslServices)
                 copy.initWith(original)
                 // Ndk and ndkConfig refer to the same object
                 original.ndk

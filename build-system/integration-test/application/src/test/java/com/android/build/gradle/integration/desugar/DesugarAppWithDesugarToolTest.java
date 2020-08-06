@@ -52,7 +52,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 /** Desugar tool specific tests. */
-@RunWith(Parameterized.class)
 public class DesugarAppWithDesugarToolTest {
     static final ImmutableList<String> TRY_WITH_RESOURCES_RUNTIME =
             ImmutableList.of(
@@ -62,23 +61,12 @@ public class DesugarAppWithDesugarToolTest {
                     "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension$NullDesugaringStrategy;",
                     "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension$ReuseDesugaringStrategy;");
 
-    @NonNull private final Boolean enableGradleWorkers;
-
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
                     .withGradleBuildCacheDirectory(new File("local-build-cache"))
                     .create();
-
-    @Parameterized.Parameters(name = "enableGradleWorkers={0}")
-    public static Boolean[] getParameters() {
-        return new Boolean[] {Boolean.TRUE, Boolean.FALSE};
-    }
-
-    public DesugarAppWithDesugarToolTest(@NonNull Boolean enableGradleWorkers) {
-        this.enableGradleWorkers = enableGradleWorkers;
-    }
 
     @Test
     public void noTaskIfNoJava8Set() throws IOException, InterruptedException {
@@ -176,8 +164,6 @@ public class DesugarAppWithDesugarToolTest {
 
     @Test
     public void testWithLegacyJacoco() throws IOException, InterruptedException {
-        // java command is not logged when using workers
-        Assume.assumeFalse(enableGradleWorkers);
         enableJava8();
         GradleTaskExecutor projectExecutor = getProjectExecutor();
         // https://github.com/gradle/gradle/issues/13200
@@ -279,7 +265,6 @@ public class DesugarAppWithDesugarToolTest {
     private GradleTaskExecutor getProjectExecutor() {
         return project.executor()
                 .with(BooleanOption.ENABLE_D8_DESUGARING, false)
-                .with(BooleanOption.ENABLE_R8_DESUGARING, false)
-                .with(BooleanOption.ENABLE_GRADLE_WORKERS, enableGradleWorkers);
+                .with(BooleanOption.ENABLE_R8_DESUGARING, false);
     }
 }

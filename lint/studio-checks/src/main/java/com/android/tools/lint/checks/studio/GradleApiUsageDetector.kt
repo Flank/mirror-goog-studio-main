@@ -48,7 +48,8 @@ class GradleApiUsageDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "ProjectExecOperations",
             briefDescription = "Using org.gradle.api.Project.exec",
-            explanation = """
+            explanation =
+                """
                 Using `org.gradle.api.Project.exec` is not compatible with Gradle instant execution.
 
                 Please inject `org.gradle.process.ExecOperations` into task that needs it. This will
@@ -83,10 +84,10 @@ class GradleApiUsageDetector : Detector(), SourceCodeScanner {
     private fun check(context: JavaContext, node: UExpression, psiMethod: PsiMethod) {
         val containingClass = psiMethod.containingClass ?: return
         if (context.evaluator.implementsInterface(
-                containingClass,
-                "org.gradle.api.Project",
-                false
-            )
+            containingClass,
+            "org.gradle.api.Project",
+            false
+        )
         ) {
             context.report(
                 ISSUE, node, context.getNameLocation(node),

@@ -43,9 +43,9 @@ import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.LintExternalAnnotationsManager;
 import com.android.tools.lint.LintStats;
-import com.android.tools.lint.UastEnvironment;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
+import com.android.tools.lint.UastEnvironment;
 import com.android.tools.lint.checks.ApiLookup;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestFile.BinaryTestFile;
@@ -210,25 +210,18 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         }
     }
 
+    /**
+     * See {@link #lintProject(TestFile...)} for instructions on how to migrate.
+     *
+     * @deprecated Use the new lint testing infrastructure instead; the entry point is {@link
+     *     #lint()}
+     */
+    @Deprecated
     protected String lintFiles(TestFile... relativePaths) throws Exception {
         List<File> files = new ArrayList<>();
         File targetDir = getTargetDir();
         for (TestFile testFile : relativePaths) {
             File file = testFile.createFile(targetDir);
-            assertNotNull(file);
-            files.add(file);
-        }
-
-        return lintFiles(targetDir, files);
-    }
-
-    /** @deprecated Use {@link #lintFiles(TestFile...)} instead */
-    @Deprecated
-    protected String lintFiles(String... relativePaths) throws Exception {
-        List<File> files = new ArrayList<>();
-        File targetDir = getTargetDir();
-        for (String relativePath : relativePaths) {
-            File file = getTestfile(targetDir, relativePath);
             assertNotNull(file);
             files.add(file);
         }
@@ -254,6 +247,10 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return checkLint(files);
     }
 
+    /**
+     * @deprecated Use the new lint testing infrastructure instead; the entry point is {@link
+     *     #lint()}
+     */
     protected String checkLint(List<File> files) throws Exception {
         TestLintClient lintClient = createClient();
         return checkLint(lintClient, files);
@@ -321,30 +318,13 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     protected void configureDriver(LintDriver driver) {}
 
     /**
-     * Run lint on the given files when constructed as a separate project
+     * See {@link #lintProject(TestFile...)} for instructions on how to migrate; in additional, for
+     * incremental tests you want to add .incremental(currentFile) on the lint() object.
      *
-     * @return The output of the lint check. On Windows, this transforms all directory separators to
-     *     the unix-style forward slash.
-     * @deprecated Use {@link #lintProject(TestFile...)} instead
+     * @deprecated Use the new lint testing infrastructure instead; the entry point is {@link
+     *     #lint()}.
      */
     @Deprecated
-    protected String lintProject(String... relativePaths) throws Exception {
-        File projectDir = getProjectDir(null, relativePaths);
-        return checkLint(Collections.singletonList(projectDir));
-    }
-
-    /** @deprecated Use {@link #lintProjectIncrementally(String, TestFile...)} instead */
-    @Deprecated
-    protected String lintProjectIncrementally(String currentFile, String... relativePaths)
-            throws Exception {
-        File projectDir = getProjectDir(null, relativePaths);
-        File current = new File(projectDir, currentFile.replace('/', File.separatorChar));
-        assertTrue(current.exists());
-        TestLintClient client = createClient();
-        client.setIncremental(current);
-        return checkLint(client, Collections.singletonList(projectDir));
-    }
-
     protected String lintProjectIncrementally(String currentFile, TestFile... files)
             throws Exception {
         File projectDir = getProjectDir(null, files);
@@ -368,14 +348,39 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
     // TODO: Configure whether to show text summary or HTML;
     // make a result object so you can assert which output format to use,
-    // which isssues to include
+    // which issues to include
 
     /**
-     * Run lint on the given files when constructed as a separate project
-     *
-     * @return The output of the lint check. On Windows, this transforms all directory separators to
-     *     the unix-style forward slash.
+     * @deprecated Use the new lint testing infrastructure instead; the entry point is {@link
+     *     #lint()}.
+     *     <p>To migrate an existing test which perhaps looks like this:
+     *     <pre>
+     *     assertEquals(
+     *         expectedOutput,
+     *         lintProject(
+     *             testFile1,
+     *             testFile2,
+     *             testFile3));
+     * </pre>
+     *     replace the above with:
+     *     <pre>
+     *     lint()
+     *         .files(testFile1, testFile2, testFile3)
+     *         .run()
+     *         .expect(expectedOutput)
+     * </pre>
+     *     In practice this means selecting the range starting with "assertEquals" and ending with
+     *     "lintProject(" and replacing that with "lint().files(", and then going to the end and
+     *     replacing the final ");" with ".run().expect(expectedOutput);". When the expected output
+     *     is "No Warnings.", just use "expectClean()" instead.
+     *     <p>There are additional configuration methods on the lint() object, such as configuring a
+     *     specific set of issues to analyze (if your detector implements multiple issues and you
+     *     want the test to limit itself), whether to allow compilation errors in the test case,
+     *     etc. This was previously done by overriding methods like getIssues() and
+     *     allowCompilationErrors() on the test class; now you can instead configure it on a per
+     *     test basis.
      */
+    @Deprecated
     protected String lintProject(TestFile... files) throws Exception {
         File projectDir = getProjectDir(null, files);
         return checkLint(Collections.singletonList(projectDir));
@@ -565,24 +570,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         }
     }
 
-    /**
-     * Creates a project directory structure from the given files
-     *
-     * @deprecated Use {@link #getProjectDir(String, TestFile...)} instead
-     */
-    @Deprecated
-    protected File getProjectDir(String name, String... relativePaths) throws Exception {
-        assertFalse(
-                "getTargetDir must be overridden to make a unique directory",
-                getTargetDir().equals(getTempDir()));
-
-        List<TestFile> testFiles = Lists.newArrayList();
-        for (String relativePath : relativePaths) {
-            testFiles.add(file().copy(relativePath, this));
-        }
-        return getProjectDir(name, testFiles.toArray(new TestFile[0]));
-    }
-
     /** Creates a project directory structure from the given files */
     protected File getProjectDir(String name, TestFile... testFiles) throws Exception {
         assertFalse(
@@ -613,8 +600,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         for (TestFile fp : testFiles) {
             if (haveGradle) {
                 if (ANDROID_MANIFEST_XML.equals(fp.targetRelativePath)) {
-                    // The default should be src/main/AndroidManifest.xml, not just AndroidManifest.xml
-                    //fp.to("src/main/AndroidManifest.xml");
+                    // The default should be src/main/AndroidManifest.xml, not just
+                    // AndroidManifest.xml
+                    // fp.to("src/main/AndroidManifest.xml");
                     fp.within("src/main");
                 } else if (fp instanceof JavaTestFile
                         && fp.targetRootFolder != null
@@ -936,7 +924,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
             if (exception != null) {
                 // Ensure that we get the full cause
-                //fail(exception.toString());
+                // fail(exception.toString());
                 throw new RuntimeException(exception);
             }
         }

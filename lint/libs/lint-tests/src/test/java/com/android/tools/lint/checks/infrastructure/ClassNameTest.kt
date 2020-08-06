@@ -41,13 +41,14 @@ class ClassNameTest {
         assertEquals("Foo", getClassName("object Foo : Bar() { }"))
         assertEquals("Foo", getClassName("class Foo(val foo: String) : Bar() { }"))
         assertEquals(
-            "ApiCallTest3", getClassName(
+            "ApiCallTest3",
+            getClassName(
                 "" +
-                        "/**\n" +
-                        " * Call test where the parent class is some other project class which in turn\n" +
-                        " * extends the public API\n" +
-                        " */\n" +
-                        "public class ApiCallTest3 extends Intermediate {}"
+                    "/**\n" +
+                    " * Call test where the parent class is some other project class which in turn\n" +
+                    " * extends the public API\n" +
+                    " */\n" +
+                    "public class ApiCallTest3 extends Intermediate {}"
             )
         )
     }
@@ -63,11 +64,12 @@ class ClassNameTest {
     @Test
     fun testAnnotations() {
         assertEquals(
-            "Asdf", getClassName(
+            "Asdf",
+            getClassName(
                 "" +
-                        "package foo;\n" +
-                        "@Anno(SomeClass.cass)\n" +
-                        "public class Asdf { }"
+                    "package foo;\n" +
+                    "@Anno(SomeClass.cass)\n" +
+                    "public class Asdf { }"
             )
         )
     }
@@ -75,23 +77,24 @@ class ClassNameTest {
     @Test
     fun testGetClassName() {
         assertEquals(
-            "ClickableViewAccessibilityTest", getClassName(
+            "ClickableViewAccessibilityTest",
+            getClassName(
                 "" +
-                        "package test.pkg;\n" +
-                        "\n" +
-                        "import android.content.Context;\n" +
-                        "import android.view.MotionEvent;\n" +
-                        "import android.view.View;\n" +
-                        "\n" +
-                        "public class ClickableViewAccessibilityTest {\n" +
-                        "    // Fails because onTouch does not call view.performClick().\n" +
-                        "    private static class InvalidOnTouchListener implements View.OnTouchListener {\n" +
-                        "        public boolean onTouch(View v, MotionEvent event) {\n" +
-                        "            return false;\n" +
-                        "        }\n" +
-                        "    }\n" +
-                        "\n" +
-                        "}\n"
+                    "package test.pkg;\n" +
+                    "\n" +
+                    "import android.content.Context;\n" +
+                    "import android.view.MotionEvent;\n" +
+                    "import android.view.View;\n" +
+                    "\n" +
+                    "public class ClickableViewAccessibilityTest {\n" +
+                    "    // Fails because onTouch does not call view.performClick().\n" +
+                    "    private static class InvalidOnTouchListener implements View.OnTouchListener {\n" +
+                    "        public boolean onTouch(View v, MotionEvent event) {\n" +
+                    "            return false;\n" +
+                    "        }\n" +
+                    "    }\n" +
+                    "\n" +
+                    "}\n"
             )
         )
     }

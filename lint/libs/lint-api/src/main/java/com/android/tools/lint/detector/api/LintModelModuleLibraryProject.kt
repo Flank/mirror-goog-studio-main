@@ -212,21 +212,21 @@ open class LintModelModuleAndroidLibraryProject(
             ANDROIDX_SUPPORT_LIB_ARTIFACT -> {
                 if (supportLib == null) {
                     supportLib = dependency.hasDependency(ANDROIDX_SUPPORT_LIB_ARTIFACT) ||
-                            dependency.hasDependency("com.android.support:support-v4")
+                        dependency.hasDependency("com.android.support:support-v4")
                 }
                 supportLib
             }
             ANDROIDX_APPCOMPAT_LIB_ARTIFACT -> {
                 if (appCompat == null) {
                     appCompat = dependency.hasDependency(ANDROIDX_APPCOMPAT_LIB_ARTIFACT) ||
-                            dependency.hasDependency(SdkConstants.APPCOMPAT_LIB_ARTIFACT)
+                        dependency.hasDependency(SdkConstants.APPCOMPAT_LIB_ARTIFACT)
                 }
                 appCompat
             }
             ANDROIDX_LEANBACK_ARTIFACT -> {
                 if (leanback == null) {
                     leanback = dependency.hasDependency(ANDROIDX_LEANBACK_ARTIFACT) ||
-                            dependency.hasDependency(SdkConstants.LEANBACK_V17_ARTIFACT)
+                        dependency.hasDependency(SdkConstants.LEANBACK_V17_ARTIFACT)
                 }
                 leanback
             }

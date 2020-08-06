@@ -90,7 +90,7 @@ public class TestResourceRepositoryTest2 extends TestCase {
                                 + "    <string name=\"menu_wallpaper\">Wallpaper</string>\n"
                                 + "    <string name=\"menu_search\">Search</string>\n"
                                 + "    <string name=\"menu_settings\">Settings</string>\n"
-                                + "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n"
+                                + "    <string name=\"placeholder\" translatable=\"false\">Ignore Me</string>\n"
                                 + "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n"
                                 + "</resources>\n");
         Files.asCharSink(new File(valuesEs, "strings.xml"), Charsets.UTF_8)
@@ -289,9 +289,9 @@ public class TestResourceRepositoryTest2 extends TestCase {
         assertEquals(1, itemList.size());
 
         // change strings
-        assertTrue(mRepository.hasResources(RES_AUTO, ResourceType.STRING, "dummy"));
-        assertFalse(mRepository.hasResources(RES_AUTO, ResourceType.STRING, "myDummy"));
-        itemList = mRepository.getResources(RES_AUTO, ResourceType.STRING, "dummy");
+        assertTrue(mRepository.hasResources(RES_AUTO, ResourceType.STRING, "placeholder"));
+        assertFalse(mRepository.hasResources(RES_AUTO, ResourceType.STRING, "myPlaceholder"));
+        itemList = mRepository.getResources(RES_AUTO, ResourceType.STRING, "placeholder");
         assertNotNull(itemList);
         assertNotNull(itemList.get(0));
         ResourceFile stringResFile = ((ResourceMergerItem) itemList.get(0)).getSourceFile();
@@ -299,14 +299,14 @@ public class TestResourceRepositoryTest2 extends TestCase {
         assertTrue(stringFile.exists());
         String strings = Files.toString(stringFile, Charsets.UTF_8);
         assertNotNull(strings);
-        strings = strings.replace("name=\"dummy\"", "name=\"myDummy\"");
+        strings = strings.replace("name=\"placeholder\"", "name=\"myPlaceholder\"");
         Files.asCharSink(stringFile, Charsets.UTF_8).write(strings);
 
         resourceSet.updateWith(mRes, stringFile, FileStatus.CHANGED, mLogger);
         mRepository.update(mResourceMerger);
 
-        assertTrue(mRepository.hasResources(RES_AUTO, ResourceType.STRING, "myDummy"));
-        assertFalse(mRepository.hasResources(RES_AUTO, ResourceType.STRING, "dummy"));
+        assertTrue(mRepository.hasResources(RES_AUTO, ResourceType.STRING, "myPlaceholder"));
+        assertFalse(mRepository.hasResources(RES_AUTO, ResourceType.STRING, "placeholder"));
 
         // add files
         assertFalse(mRepository.hasResources(RES_AUTO, ResourceType.LAYOUT, "layout5"));

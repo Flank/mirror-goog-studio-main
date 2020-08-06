@@ -303,6 +303,20 @@ public class AvdManager {
     /** AVD/config.ini key name representing the Android display settings file */
     public static final String AVD_INI_DISPLAY_SETTINGS_FILE = "display.settings.xml";
 
+    /** AVD/config.ini key name representing the hinge settings */
+    public static final String AVD_INI_HINGE = "hw.sensor.hinge";
+
+    public static final String AVD_INI_HINGE_COUNT = "hw.sensor.hinge.count";
+    public static final String AVD_INI_HINGE_TYPE = "hw.sensor.hinge.type";
+    public static final String AVD_INI_HINGE_SUB_TYPE = "hw.sensor.hinge.sub_type";
+    public static final String AVD_INI_HINGE_RANGES = "hw.sensor.hinge.ranges";
+    public static final String AVD_INI_HINGE_DEFAULTS = "hw.sensor.hinge.defaults";
+    public static final String AVD_INI_HINGE_AREAS = "hw.sensor.hinge.areas";
+    public static final String AVD_INI_POSTURE_LISTS = "hw.sensor.posture_list";
+    public static final String AVD_INI_FOLD_AT_POSTURE = "hw.sensor.hinge.fold_to_displayRegion.0.1_at_posture";
+    public static final String AVD_INI_HINGE_ANGLES_POSTURE_DEFINITIONS =
+            "hw.sensor.hinge_angles_posture_definitions";
+
     /**
      * The API level of this AVD. Derived from the target hash.
      */
@@ -1406,15 +1420,19 @@ public class AvdManager {
             name = matcher.group(1);
         }
 
-        // check the image.sysdir are valid
+        // Check if the value of image.sysdir.1 is valid.
         boolean validImageSysdir = true;
         String imageSysDir = null;
         ISystemImage sysImage = null;
         if (properties != null) {
             imageSysDir = properties.get(AVD_INI_IMAGES_1);
             if (imageSysDir != null) {
-                sysImage = mSdkHandler.getSystemImageManager(progress)
-                  .getImageAt(new File(mSdkHandler.getLocation(), imageSysDir));
+                File sdkLocation = mSdkHandler.getLocation();
+                File imageDir =
+                        sdkLocation == null
+                                ? new File(imageSysDir)
+                                : sdkLocation.toPath().resolve(imageSysDir).toFile();
+                sysImage = mSdkHandler.getSystemImageManager(progress).getImageAt(imageDir);
             }
         }
 

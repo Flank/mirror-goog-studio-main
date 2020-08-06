@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dexing
 
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.tasks.DexArchiveBuilderTaskDelegate
 import com.android.builder.dexing.ClassBucket
 import com.android.builder.dexing.DependencyGraphUpdater
@@ -31,6 +32,7 @@ import com.android.ide.common.blame.MessageReceiver
 import com.android.utils.FileUtils
 import com.google.common.io.Closer
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.Property
 import org.gradle.tooling.BuildException
 import java.io.File
 import java.io.FileInputStream
@@ -38,20 +40,18 @@ import java.io.FileOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.io.OutputStream
-import java.io.Serializable
-import javax.inject.Inject
 
 /** Work action to process a bucket of class files. */
-class DexWorkAction @Inject constructor(private val params: DexWorkActionParams) : Runnable {
+abstract class DexWorkAction : ProfileAwareWorkAction<DexWorkActionParams>() {
 
     override fun run() {
         try {
             launchProcessing(
-                params,
+                parameters,
                 System.out,
                 System.err,
                 MessageReceiverImpl(
-                    params.dexSpec.dexParams.errorFormatMode,
+                    parameters.dexSpec.get().dexParams.errorFormatMode,
                     Logging.getLogger(DexArchiveBuilderTaskDelegate::class.java)
                 )
             )
@@ -62,15 +62,10 @@ class DexWorkAction @Inject constructor(private val params: DexWorkActionParams)
 }
 
 /** Parameters for running [DexWorkAction]. */
-class DexWorkActionParams(
-    val dexer: DexerTool,
-    val dexSpec: IncrementalDexSpec,
-    val dxDexParams: DxDexParameters
-) : Serializable {
-
-    companion object {
-        private const val serialVersionUID: Long = 1L
-    }
+abstract class DexWorkActionParams: ProfileAwareWorkAction.Parameters() {
+    abstract val dexer: Property<DexerTool>
+    abstract val dexSpec: Property<IncrementalDexSpec>
+    abstract val dxDexParams: Property<DxDexParameters>
 }
 
 fun launchProcessing(
@@ -85,7 +80,7 @@ fun launchProcessing(
         errStream,
         receiver
     )
-    if (dexWorkActionParams.dexSpec.isIncremental) {
+    if (dexWorkActionParams.dexSpec.get().isIncremental) {
         processIncrementally(dexArchiveBuilder, dexWorkActionParams)
     } else {
         processNonIncrementally(dexArchiveBuilder, dexWorkActionParams)
@@ -96,7 +91,7 @@ private fun processIncrementally(
     dexArchiveBuilder: DexArchiveBuilder,
     dexWorkActionParams: DexWorkActionParams
 ) {
-    with(dexWorkActionParams.dexSpec) {
+    with(dexWorkActionParams.dexSpec.get()) {
         val desugarGraph = desugarGraphFile?.let {
             try {
                 readDesugarGraph(desugarGraphFile)
@@ -135,9 +130,9 @@ private fun processIncrementally(
         }
         process(
             dexArchiveBuilder = dexArchiveBuilder,
-            inputClassFiles = dexWorkActionParams.dexSpec.inputClassFiles,
+            inputClassFiles = inputClassFiles,
             inputFilter = filter,
-            outputPath = dexWorkActionParams.dexSpec.outputPath,
+            outputPath = outputPath,
             desugarGraphUpdater = desugarGraph
         )
 
@@ -156,16 +151,16 @@ private fun processNonIncrementally(
 ) {
     // Dex outputs have been removed earlier before the workers are launched)
 
-    with(dexWorkActionParams.dexSpec) {
+    with(dexWorkActionParams.dexSpec.get()) {
         val desugarGraph = desugarGraphFile?.let {
             MutableDependencyGraph<File>()
         }
 
         process(
             dexArchiveBuilder = dexArchiveBuilder,
-            inputClassFiles = dexWorkActionParams.dexSpec.inputClassFiles,
+            inputClassFiles = inputClassFiles,
             inputFilter = { _, _ -> true },
-            outputPath = dexWorkActionParams.dexSpec.outputPath,
+            outputPath = outputPath,
             desugarGraphUpdater = desugarGraph
         )
 
@@ -210,8 +205,10 @@ private fun getDexArchiveBuilder(
 ): DexArchiveBuilder {
     val dexArchiveBuilder: DexArchiveBuilder
     with(dexWorkActionParams) {
-        when (dexer) {
+        val dexSpec = dexSpec.get()
+        when (dexer.get()) {
             DexerTool.DX -> {
+                val dxDexParams = dxDexParams.get()
                 val config = DexArchiveBuilderConfig(
                     DxContext(outStream, errStream),
                     !dxDexParams.dxNoOptimizeFlagPresent, // optimizedDex
@@ -240,7 +237,7 @@ private fun getDexArchiveBuilder(
                     messageReceiver = messageReceiver
                 )
             )
-            else -> throw AssertionError("Unknown dexer type: " + dexer.name)
+            else -> throw AssertionError("Unknown dexer type: " + dexer.get().name)
         }
     }
     return dexArchiveBuilder

@@ -23,13 +23,12 @@ import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.builder.errors.EvalIssueException
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
-import com.google.common.collect.Iterables
-import com.google.common.collect.Sets
 import com.google.common.truth.StringSubject
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import kotlin.test.assertFailsWith
 import org.gradle.api.Project
+import org.gradle.api.plugins.ExtensionAware
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -264,6 +263,48 @@ class KotlinDslTest {
             setMatchingFallbacks(matchingFallbacks)
             assertThat(matchingFallbacks).containsExactly("f")
         }
+    }
+
+    interface CustomExtension {
+        var customSetting: Boolean
+    }
+
+    val ExtensionAware.customExtension: CustomExtension
+        get() = extensions.getByType(CustomExtension::class.java)
+
+    fun ExtensionAware.customExtension(action: CustomExtension.() -> Unit) {
+        extensions.configure(CustomExtension::class.java, action)
+    }
+
+    @Test
+    fun `extension aware build types`() {
+        android.buildTypes.all {
+            it.extensions.add("custom", CustomExtension::class.java)
+        }
+        android.buildTypes.getByName("release").apply {
+            customExtension {
+                customSetting = true
+            }
+        }
+
+        assertThat(android.buildTypes.getByName("debug").customExtension.customSetting).isFalse()
+        assertThat(android.buildTypes.getByName("release").customExtension.customSetting).isTrue()
+    }
+
+    @Test
+    fun `extension aware product flavors`() {
+        android.productFlavors.all {
+            it.extensions.add("custom", CustomExtension::class.java)
+        }
+        android.productFlavors.create("one")
+        android.productFlavors.create("two").apply {
+            customExtension {
+                customSetting = true
+            }
+        }
+
+        assertThat(android.productFlavors.getByName("one").customExtension.customSetting).isFalse()
+        assertThat(android.productFlavors.getByName("two").customExtension.customSetting).isTrue()
     }
 
 

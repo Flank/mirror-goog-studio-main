@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.dexing.DexParameters
 import com.android.build.gradle.internal.dexing.DxDexParameters
 import com.android.build.gradle.internal.fixtures.FakeFileChange
+import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
@@ -33,6 +34,7 @@ import com.android.testutils.truth.DexSubject.assertThatDex
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
+import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.work.ChangeType
 import org.gradle.work.FileChange
 import org.gradle.workers.WorkerExecutor
@@ -42,7 +44,6 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import org.mockito.Mockito
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -64,11 +65,16 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
 
     private lateinit var out: Path
     private var desugarGraphDir: Path? = null
+    private lateinit var workerExecutor: WorkerExecutor
 
     @Before
     fun setUp() {
         out = tmpDir.root.toPath().resolve("out")
         Files.createDirectories(out)
+
+        with(ProjectBuilder.builder().withProjectDir(tmpDir.newFolder()).build()) {
+            workerExecutor = FakeGradleWorkExecutor(objects, tmpDir.newFolder())
+        }
 
         desugarGraphDir = if (withIncrementalDexingTaskV2) {
             tmpDir.root.toPath().resolve("desugarGraphDir")
@@ -77,7 +83,6 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
         }
     }
 
-    private val workerExecutor: WorkerExecutor = Mockito.mock(WorkerExecutor::class.java)
 
     @Test
     fun testLambdas() {
@@ -477,9 +482,9 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             inputJarHashesFile = inputJarHashes,
             dexer = DexerTool.D8,
             numberOfBuckets = 2,
-            useGradleWorkers = false,
             workerExecutor = workerExecutor,
-            messageReceiver = NoOpMessageReceiver()
+            projectName = "",
+            taskPath = ""
         )
     }
 

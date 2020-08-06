@@ -78,6 +78,8 @@ class ProfileContentTest {
             assertThat(gbv.hasMaxSdkVersion()).named("has max sdk version").isFalse()
             assertThat(HashSet(profile.rawProjectIdList))
                 .containsExactly("com.example.helloworld")
+            assertThat(gbp.pluginNamesList).contains("com.android.build.gradle.AppPlugin")
+            assertThat(gbp.pluginNamesList).contains("org.jetbrains.kotlin.gradle.plugin.KotlinAndroidPluginWrapper")
         }
     }
 }

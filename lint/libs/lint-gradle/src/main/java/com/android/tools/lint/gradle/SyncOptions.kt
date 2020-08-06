@@ -228,8 +228,8 @@ private fun isStdErr(output: File): Boolean = Reporter.STDERR == output.path
 fun validateOutputFile(outputFile: File): File {
     var output = outputFile
     if (isStdOut(output) || isStdErr(
-            output
-        )
+        output
+    )
     ) {
         return output
     }

@@ -250,7 +250,7 @@ public class InvalidPackageDetector extends Detector implements ClassScanner {
                 String name = jarFile.getName();
                 //noinspection SpellCheckingInspection
                 if (name.startsWith("dagger-") || name.startsWith("guice-")) {
-                    // White listed
+                    // Allowed
                     continue;
                 }
             }

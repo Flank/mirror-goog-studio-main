@@ -121,7 +121,7 @@ class JpsGraph {
                                     && scopes.contains(extension.getScope())) {
                                 JpsModuleDependency moduleDep = (JpsModuleDependency) dep;
                                 if (moduleDep.getModule() == null) {
-                                    if (!ImlToIr.ignoreWarnings(jpsModule)) {
+                                    if (!ImlToIr.ignoreWarnings(jpsModule.getName())) {
                                         logger.warning(
                                                 "Invalid module reference from %s to %s",
                                                 jpsModule.getName(),

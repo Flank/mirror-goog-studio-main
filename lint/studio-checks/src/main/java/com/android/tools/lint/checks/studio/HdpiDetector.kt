@@ -51,7 +51,8 @@ class HdpiDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "JbUiStored",
             briefDescription = "Storing scaled pixel sizes",
-            explanation = """
+            explanation =
+                """
                 `JBUI.scale()` can return different values at different points in time during the \
                 same Studio session (for example when the user changes themes, or changes the \
                 default font size). This means that storing the result of `JBUI.scale()` in \
@@ -73,8 +74,10 @@ class HdpiDetector : Detector(), SourceCodeScanner {
         method: PsiMethod
     ) {
         val evaluator = context.evaluator
-        if ((evaluator.isMemberInClass(method, "com.intellij.util.ui.JBUI") ||
-                    evaluator.isMemberInClass(method, "com.intellij.ui.scale.JBUIScale")) &&
+        if ((
+            evaluator.isMemberInClass(method, "com.intellij.util.ui.JBUI") ||
+                evaluator.isMemberInClass(method, "com.intellij.ui.scale.JBUIScale")
+            ) &&
             evaluator.getParameterCount(method) == 1
         ) {
             // Make sure it's not stored in a field

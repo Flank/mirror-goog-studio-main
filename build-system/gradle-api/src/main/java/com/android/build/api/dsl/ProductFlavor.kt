@@ -18,6 +18,7 @@ package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
 import org.gradle.api.Named
+import org.gradle.api.plugins.ExtensionAware
 
 /**
  * Encapsulates all product flavors properties for this project.
@@ -50,7 +51,7 @@ import org.gradle.api.Named
  * [filter variants using `android.variantFilter`](https://developer.android.com/studio/build/build-variants.html#filter-variants).
  */
 @Incubating
-interface ProductFlavor : Named, BaseFlavor {
+interface ProductFlavor : Named, BaseFlavor, ExtensionAware {
     /**
      * Specifies the flavor dimension that this product flavor belongs to.
      *

@@ -43,12 +43,13 @@ fun RecipeExecutor.composeActivityRecipe(
   addDependency("com.android.support:appcompat-v7:${moduleData.apis.appCompatVersion}.+")
   addMaterialDependency(true) // useAndroidX should be always true for Compose
 
-  val composeVersionVarName = getDependencyVarName("androidx.ui:ui-framework", "compose_version")
-  setExtVar(composeVersionVarName, "0.1.0-dev13")
+  val composeVersionVarName = getDependencyVarName("androidx.compose.ui:ui", "compose_version")
+  setExtVar(composeVersionVarName, "0.1.0-dev16")
 
-  addDependency(mavenCoordinate = "androidx.ui:ui-layout:\${$composeVersionVarName}")
-  addDependency(mavenCoordinate = "androidx.ui:ui-material:\${$composeVersionVarName}")
+  addDependency(mavenCoordinate = "androidx.compose.ui:ui:\${$composeVersionVarName}")
+  addDependency(mavenCoordinate = "androidx.compose.material:material:\${$composeVersionVarName}")
   addDependency(mavenCoordinate = "androidx.ui:ui-tooling:\${$composeVersionVarName}")
+  addDependency(mavenCoordinate = "androidx.lifecycle:lifecycle-runtime-ktx:+", minRev = "2.3.0-alpha06")
   generateManifest(
     moduleData, activityClass, activityTitle, packageName, isLauncher, true,
     generateActivityTitle = true
@@ -64,7 +65,7 @@ fun RecipeExecutor.composeActivityRecipe(
   requireJavaVersion("1.8", true)
   setBuildFeature("compose", true)
   // Note: kotlinCompilerVersion default is declared in TaskManager.COMPOSE_KOTLIN_COMPILER_VERSION
-  setComposeOptions(kotlinCompilerExtensionVersion = "\${$composeVersionVarName}", kotlinCompilerVersion = "1.3.70-dev-withExperimentalGoogleExtensions-20200424")
+  setComposeOptions(kotlinCompilerExtensionVersion = "\$$composeVersionVarName", kotlinCompilerVersion = "1.4.0-rc")
 
   open(srcOut.resolve("${activityClass}.kt"))
 }

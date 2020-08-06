@@ -8,27 +8,41 @@ service SkiaParserService {
   rpc GetViewTree(GetViewTreeRequest) returns (GetViewTreeResponse) {}
 }
 
+message RequestedNodeInfo {
+  int64 id = 1;
+  // Since we don't know how big what we're drawing is right away while processing the
+  // SKP, send that over from studio so we can create a canvas with the right size.
+  // These are in absolute device coordinates.
+  sint32 x = 2;
+  sint32 y = 3;
+  int32 width = 4;
+  int32 height = 5;
+}
+
 // Version of GetViewTreeRequest:
 // - : skp field only, from: AS 4.0
-// 1 : known_ids added, from: AS 4.1
+// 1 : requested_nodes added, from: AS 4.2
 
 message GetViewTreeRequest {
   bytes skp = 1;
   int32 version = 2;             // See above for description
-  repeated int64 known_ids = 3;  // Sorted list of known ids
+  repeated RequestedNodeInfo requested_nodes = 3;
 }
 
 message InspectorView {
-  string id = 1;
-  int64 timestamp = 2;
-  string type = 3;
-  int32 x = 4;
-  int32 y = 5;
-  int32 width = 6;
-  int32 height = 7;
+  string id_for_v0_only = 1 [deprecated = true];
+  int64 timestamp_for_v0_only = 2 [deprecated = true];
+  string type_for_v0_only = 3 [deprecated = true];
+  int32 x_for_v0_only = 4 [deprecated = true];
+  int32 y_for_v0_only = 5 [deprecated = true];
+  int32 width_for_v0_only = 6 [deprecated = true];
+  int32 height_for_v0_only = 7 [deprecated = true];
+
   bytes image = 8;
 
   repeated InspectorView children = 9;
+
+  int64 id = 10;
 }
 
 // Version of GetViewTreeResponse:
@@ -37,5 +51,4 @@ message InspectorView {
 
 message GetViewTreeResponse {
   InspectorView root = 1;
-  int32 version = 2;
 }

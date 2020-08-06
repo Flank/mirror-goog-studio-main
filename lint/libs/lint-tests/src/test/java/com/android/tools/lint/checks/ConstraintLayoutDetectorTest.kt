@@ -26,9 +26,9 @@ import junit.framework.TestCase
 class ConstraintLayoutDetectorTest : AbstractCheckTest() {
     fun testMissingConstraints() {
         lint().files(
-                xml(
-                    "res/layout/layout1.xml",
-                    """
+            xml(
+                "res/layout/layout1.xml",
+                """
                     <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
                         xmlns:app="http://schemas.android.com/apk/res-auto"
                         xmlns:tools="http://schemas.android.com/tools"
@@ -95,8 +95,8 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
                         <requestFocus/>
                     </android.support.constraint.ConstraintLayout>
                 """
-                ).indented()
-            )
+            ).indented()
+        )
             .checkMessage { context, issue, severity, location, message, fixData ->
                 this.checkReportedError(context, issue, severity, location, message, fixData)
             }
@@ -122,9 +122,9 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
 
     fun testBarrierMissingConstraint() {
         lint().files(
-                xml(
-                    "res/layout/layout1.xml",
-                    """
+            xml(
+                "res/layout/layout1.xml",
+                """
                     <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
                         xmlns:app="http://schemas.android.com/apk/res-auto"
                         xmlns:tools="http://schemas.android.com/tools"
@@ -178,8 +178,8 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
                             tools:layout_editor_absoluteX="99dp" />
                     </android.support.constraint.ConstraintLayout>
                     """
-                ).indented()
-            )
+            ).indented()
+        )
             .checkMessage { context, issue, severity, location, message, fixData ->
                 this.checkReportedError(context, issue, severity, location, message, fixData)
             }
@@ -196,9 +196,9 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
 
     fun testBarrierHasConstraint() {
         lint().files(
-                xml(
-                    "res/layout/layout1.xml",
-                    """
+            xml(
+                "res/layout/layout1.xml",
+                """
                     <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
                         xmlns:app="http://schemas.android.com/apk/res-auto"
                         xmlns:tools="http://schemas.android.com/tools"
@@ -253,8 +253,8 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
                             tools:layout_editor_absoluteX="99dp" />
                     </android.support.constraint.ConstraintLayout>
                     """
-                ).indented()
-            )
+            ).indented()
+        )
             .checkMessage { context, issue, severity, location, message, fixData ->
                 this.checkReportedError(context, issue, severity, location, message, fixData)
             }
@@ -264,9 +264,9 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
 
     fun testWidthHeightMatchParent() {
         lint().files(
-                xml(
-                    "res/layout/layout1.xml",
-                    """
+            xml(
+                "res/layout/layout1.xml",
+                """
                     <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"   xmlns:app="http://schemas.android.com/apk/res-auto"   xmlns:tools="http://schemas.android.com/tools"   android:layout_width="match_parent"   android:layout_height="match_parent">
                         <Button
                             android:id="@+id/button"
@@ -275,8 +275,8 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
                      />
                     </android.support.constraint.ConstraintLayout>
                     """
-                ).indented()
-            )
+            ).indented()
+        )
             .checkMessage { context, issue, severity, location, message, fixData ->
                 this.checkReportedError(context, issue, severity, location, message, fixData)
             }
@@ -286,9 +286,9 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
 
     fun testWidthMatchParentOnlyError() {
         lint().files(
-                xml(
-                    "res/layout/layout1.xml",
-                    """
+            xml(
+                "res/layout/layout1.xml",
+                """
                     <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"   xmlns:app="http://schemas.android.com/apk/res-auto"   xmlns:tools="http://schemas.android.com/tools"   android:layout_width="match_parent"   android:layout_height="match_parent">
                         <Button
                             android:id="@+id/button"
@@ -297,8 +297,8 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
                      />
                     </android.support.constraint.ConstraintLayout>
                     """
-                ).indented()
-            )
+            ).indented()
+        )
             .checkMessage { context, issue, severity, location, message, fixData ->
                 this.checkReportedError(context, issue, severity, location, message, fixData)
             }
@@ -315,9 +315,9 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
 
     fun testHeightMatchParentOnlyError() {
         lint().files(
-                xml(
-                    "res/layout/layout1.xml",
-                    """
+            xml(
+                "res/layout/layout1.xml",
+                """
                     <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"   xmlns:app="http://schemas.android.com/apk/res-auto"   xmlns:tools="http://schemas.android.com/tools"   android:layout_width="match_parent"   android:layout_height="match_parent">
                         <Button
                             android:id="@+id/button"
@@ -326,8 +326,8 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
                      />
                     </android.support.constraint.ConstraintLayout>
                     """
-                ).indented()
-            )
+            ).indented()
+        )
             .checkMessage { context, issue, severity, location, message, fixData ->
                 this.checkReportedError(context, issue, severity, location, message, fixData)
             }
@@ -344,9 +344,9 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
 
     fun testWidthMatchParentHeightConstraint() {
         lint().files(
-                xml(
-                    "res/layout/layout1.xml",
-                    """
+            xml(
+                "res/layout/layout1.xml",
+                """
                     <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"   xmlns:app="http://schemas.android.com/apk/res-auto"   xmlns:tools="http://schemas.android.com/tools"   android:layout_width="match_parent"   android:layout_height="match_parent">
                         <Button
                             android:id="@+id/button"
@@ -355,8 +355,8 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
                              app:layout_constraintTop_toTopOf="parent" />
                     </android.support.constraint.ConstraintLayout>
                     """
-                ).indented()
-            )
+            ).indented()
+        )
             .checkMessage { context, issue, severity, location, message, fixData ->
                 this.checkReportedError(context, issue, severity, location, message, fixData)
             }
@@ -366,9 +366,9 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
 
     fun testHeightMatchParentWidthConstraint() {
         lint().files(
-                xml(
-                    "res/layout/layout1.xml",
-                    """
+            xml(
+                "res/layout/layout1.xml",
+                """
                     <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"   xmlns:app="http://schemas.android.com/apk/res-auto"   xmlns:tools="http://schemas.android.com/tools"   android:layout_width="match_parent"   android:layout_height="match_parent">
                         <Button
                             android:id="@+id/button"
@@ -377,8 +377,8 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
                              app:layout_constraintEnd_toEndOf="parent" />
                     </android.support.constraint.ConstraintLayout>
                     """
-                ).indented()
-            )
+            ).indented()
+        )
             .checkMessage { context, issue, severity, location, message, fixData ->
                 this.checkReportedError(context, issue, severity, location, message, fixData)
             }
@@ -389,9 +389,9 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
     fun testIncludesOkay() {
         // No regression test for https://issuetracker.google.com/117204543
         lint().files(
-                xml(
-                    "res/layout/layout1.xml",
-                    """
+            xml(
+                "res/layout/layout1.xml",
+                """
                     <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"   xmlns:app="http://schemas.android.com/apk/res-auto"   xmlns:tools="http://schemas.android.com/tools"   android:layout_width="match_parent"   android:layout_height="match_parent">
                      <android.support.constraint.Group
                                     android:id="@+id/first_run_page_quickrestore"
@@ -408,8 +408,8 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
                     <include layout="@layout/include_remote_control" />
                     </android.support.constraint.ConstraintLayout>
                     """
-                ).indented()
-            )
+            ).indented()
+        )
             .checkMessage { context, issue, severity, location, message, fixData ->
                 this.checkReportedError(context, issue, severity, location, message, fixData)
             }
@@ -421,9 +421,9 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
         // Regression test for
         // 118709915: ConstraintLayout Group highlighted as MissingConstraints
         lint().files(
-                xml(
-                    "res/layout/layotu1.xml",
-                    """
+            xml(
+                "res/layout/layotu1.xml",
+                """
                     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
                         xmlns:app="http://schemas.android.com/apk/res-auto"
                         xmlns:tools="http://schemas.android.com/tools"
@@ -465,8 +465,8 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
                             app:layout_constraintTop_toBottomOf="@+id/textView1" />
                     </androidx.constraintlayout.widget.ConstraintLayout>
                     """
-                )
             )
+        )
             .checkMessage { context, issue, severity, location, message, fixData ->
                 this.checkReportedError(context, issue, severity, location, message, fixData)
             }
@@ -479,9 +479,9 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
         // https://issuetracker.google.com/151409564
         // In MotionLayout, constraints can be specified externally
         lint().files(
-                xml(
-                    "res/layout/supplier_search_fragment.xml",
-                    """
+            xml(
+                "res/layout/supplier_search_fragment.xml",
+                """
                     <layout xmlns:android="http://schemas.android.com/apk/res/android"
                         xmlns:app="http://schemas.android.com/apk/res-auto"
                         xmlns:tools="http://schemas.android.com/tools">
@@ -547,8 +547,8 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
                         </androidx.constraintlayout.motion.widget.MotionLayout>
                     </layout>
                     """
-                )
             )
+        )
             .checkMessage { context, issue, severity, location, message, fixData ->
                 this.checkReportedError(context, issue, severity, location, message, fixData)
             }

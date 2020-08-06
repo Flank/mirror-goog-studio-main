@@ -35,7 +35,8 @@ class WrongLocationDetector : LayoutDetector() {
             id = "WrongFolder",
             briefDescription = "Resource file in the wrong `res` folder",
 
-            explanation = """
+            explanation =
+                """
             Resource files are sometimes placed in the wrong folder, and it can lead to subtle bugs that are \
             hard to understand. This check looks for problems in this area, such as attempting to place a \
             layout "alias" file in a `layout/` folder rather than the `values/` folder where it belongs.""",

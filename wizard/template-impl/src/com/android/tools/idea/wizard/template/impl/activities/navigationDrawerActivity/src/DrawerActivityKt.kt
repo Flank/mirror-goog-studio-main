@@ -23,6 +23,7 @@ fun drawerActivityKt(
   activityClass: String,
   layoutName: String,
   menuName: String,
+  navHostFragmentId: String,
   useAndroidX: Boolean
 ) = """
 package ${escapeKotlinIdentifier(packageName)}
@@ -57,7 +58,7 @@ class ${activityClass} : AppCompatActivity() {
         }
         val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
         val navView: NavigationView = findViewById(R.id.nav_view)
-        val navController = findNavController(R.id.nav_host_fragment)
+        val navController = findNavController(R.id.${navHostFragmentId})
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         appBarConfiguration = AppBarConfiguration(setOf(
@@ -73,7 +74,7 @@ class ${activityClass} : AppCompatActivity() {
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        val navController = findNavController(R.id.nav_host_fragment)
+        val navController = findNavController(R.id.${navHostFragmentId})
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 }

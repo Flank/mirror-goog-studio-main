@@ -239,30 +239,32 @@ class RestrictionsDetectorTest : AbstractCheckTest() {
     }
 
     fun testMissingRequiredAttributesForHidden() {
-        assertEquals(
-            "" +
-                    "res/xml/app_restrictions.xml:2: Error: Missing required attribute android:defaultValue [ValidRestrictions]\n" +
-                    "    <restriction\n" +
-                    "     ~~~~~~~~~~~\n" +
-                    "1 errors, 0 warnings\n",
-            lintProject(
-                xml(
-                    "res/xml/app_restrictions.xml",
-                    """
-                        <restrictions xmlns:android="http://schemas.android.com/apk/res/android">
-                            <restriction
-                                android:description="@string/description_number"
-                                android:key="number"
-                                android:restrictionType="hidden"
-                                android:title="@string/title_number"/>
-                        </restrictions>"""
-                ).indented()
-            )
+        lint().files(
+            xml(
+                "res/xml/app_restrictions.xml",
+                """
+                <restrictions xmlns:android="http://schemas.android.com/apk/res/android">
+                    <restriction
+                        android:description="@string/description_number"
+                        android:key="number"
+                        android:restrictionType="hidden"
+                        android:title="@string/title_number"/>
+                </restrictions>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/xml/app_restrictions.xml:2: Error: Missing required attribute android:defaultValue [ValidRestrictions]
+                <restriction
+                 ~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
         )
     }
 
     fun testValidNumber() {
-        val expected = """
+        val expected =
+            """
             res/xml/app_restrictions.xml:3: Error: Invalid number [ValidRestrictions]
                     android:defaultValue="abc"
                                           ~~~
@@ -383,7 +385,8 @@ class RestrictionsDetectorTest : AbstractCheckTest() {
     }
 
     fun testNoDefaultValueForBundles() {
-        val expected = """
+        val expected =
+            """
             res/xml/app_restrictions.xml:3: Error: Restriction type bundle_array should not have a default value [ValidRestrictions]
                     android:defaultValue="@string/default_message"
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

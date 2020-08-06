@@ -1124,6 +1124,7 @@ pre.errorlines {
                 "    background-color: #f6ebbc;\n" +
                 "}\n"
             )
+
         @Suppress("ConstantConditionIf")
         private val CSS_SYNTAX_COLORS_DARCULA = (
             """pre.errorlines {

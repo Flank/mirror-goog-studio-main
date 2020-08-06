@@ -103,7 +103,7 @@ public class ShardedTestRunner extends BaseTestRunner {
                             shardProvider,
                             progressListener,
                             result);
-            executor.submit(ShardedTestRunnable.class, shardedTestParams);
+            executor.submit(new ShardedTestRunnable(shardedTestParams));
         }
         return results;
     }

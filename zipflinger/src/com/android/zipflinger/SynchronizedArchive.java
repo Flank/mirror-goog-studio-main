@@ -28,7 +28,7 @@ public class SynchronizedArchive implements Archive {
     }
 
     @Override
-    public void add(@NonNull BytesSource source) throws IOException {
+    public void add(@NonNull Source source) throws IOException {
         synchronized (archive) {
             archive.add(source);
         }

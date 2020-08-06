@@ -16,13 +16,13 @@
 
 package com.android.builder.model.v2.models.ndk
 
-import java.io.Serializable
+import com.android.builder.model.v2.AndroidModel
 
 /**
  * Response returned by Gradle to Android Studio containing information about a variant in a native
  * module.
  */
-interface NativeVariant : Serializable {
+interface NativeVariant: AndroidModel {
     /** Name of the variant. For example "debug", "release". */
     val name: String
 

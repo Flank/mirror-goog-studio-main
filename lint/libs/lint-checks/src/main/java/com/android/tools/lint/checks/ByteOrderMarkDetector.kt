@@ -44,7 +44,8 @@ class ByteOrderMarkDetector : ResourceXmlDetector(), SourceCodeScanner, GradleSc
         val BOM = Issue.create(
             id = "ByteOrderMark",
             briefDescription = "Byte order mark inside files",
-            explanation = """
+            explanation =
+                """
             Lint will flag any byte-order-mark (BOM) characters it finds in the middle of a file. Since we \
             expect files to be encoded with UTF-8 (see the EnforceUTF8 issue), the BOM characters are not \
             necessary, and they are not handled correctly by all tools. For example, if you have a BOM as \

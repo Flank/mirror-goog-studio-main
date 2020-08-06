@@ -25,9 +25,8 @@ public class FieldGetterDetectorTest extends AbstractCheckTest {
         return new FieldGetterDetector();
     }
 
-    public void test() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void test() {
+        String expected =
                 ""
                         + "src/test/bytecode/GetterTest.java:47: Warning: Calling getter method getFoo1() on self is slower than field access (mFoo1) [FieldGetter]\n"
                         + "  getFoo1();\n"
@@ -44,30 +43,29 @@ public class FieldGetterDetectorTest extends AbstractCheckTest {
                         + "src/test/bytecode/GetterTest.java:55: Warning: Calling getter method getFoo2() on self is slower than field access (mFoo2) [FieldGetter]\n"
                         + "  this.getFoo2();\n"
                         + "       ~~~~~~~\n"
-                        + "0 errors, 5 warnings\n",
-                lintProject(classpath(), manifest().minSdk(1), mGetterTest, mGetterTest2));
+                        + "0 errors, 5 warnings\n";
+        lint().files(classpath(), manifest().minSdk(1), mGetterTest, mGetterTest2)
+                .run()
+                .expect(expected);
     }
 
-    public void testPostFroyo() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(classpath(), manifest().minSdk(10), mGetterTest, mGetterTest2));
+    public void testPostFroyo() {
+        lint().files(classpath(), manifest().minSdk(10), mGetterTest, mGetterTest2)
+                .run()
+                .expectClean();
     }
 
-    public void testLibraries() throws Exception {
+    public void testLibraries() {
         // This tests the infrastructure: it makes sure that we *don't* run this
         // check in jars that are on the jar library dependency path (testJar() checks
         // that it *does* work for local jar classes)
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(classpath(), manifest().minSdk(1), mGetterTest, mGetterTest3));
+        lint().files(classpath(), manifest().minSdk(1), mGetterTest, mGetterTest3)
+                .run()
+                .expectClean();
     }
 
-    public void testJar() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testJar() {
+        String expected =
                 ""
                         + "src/test/bytecode/GetterTest.java:47: Warning: Calling getter method getFoo1() on self is slower than field access (mFoo1) [FieldGetter]\n"
                         + "  getFoo1();\n"
@@ -84,23 +82,24 @@ public class FieldGetterDetectorTest extends AbstractCheckTest {
                         + "src/test/bytecode/GetterTest.java:55: Warning: Calling getter method getFoo2() on self is slower than field access (mFoo2) [FieldGetter]\n"
                         + "  this.getFoo2();\n"
                         + "       ~~~~~~~\n"
-                        + "0 errors, 5 warnings\n",
-                lintProject(mClasspath_jar, manifest().minSdk(1), mGetterTest, mGetterTest4));
+                        + "0 errors, 5 warnings\n";
+        lint().files(mClasspath_jar, manifest().minSdk(1), mGetterTest, mGetterTest4)
+                .run()
+                .expect(expected);
     }
 
-    public void testTruncatedData() throws Exception {
-        assertEquals("No warnings.", lintProject(mClasspath_jar, mGetterTest5));
+    public void testTruncatedData() {
+        lint().files(mClasspath_jar, mGetterTest5).run().expectClean();
     }
 
-    public void testCornerCases() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testCornerCases() {
+        String expected =
                 ""
                         + "src/test/pkg/TestFieldGetter.java:21: Warning: Calling getter method getPath() on self is slower than field access (path) [FieldGetter]\n"
                         + "        getPath(); // Should be flagged\n"
                         + "        ~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         mClasspath_jar,
                         manifest().minSdk(1),
                         java(
@@ -127,7 +126,7 @@ public class FieldGetterDetectorTest extends AbstractCheckTest {
                                         + "    public void test(TestFieldGetter other) {\n"
                                         + "        getPath(); // Should be flagged\n"
                                         + "        other.getPath(); // Ignore\n"
-                                        + "        File file = new File(\"/dummy\");\n"
+                                        + "        File file = new File(\"/sample\");\n"
                                         + "        file.getPath(); // Ignore\n"
                                         + "    }\n"
                                         + "\n"
@@ -155,7 +154,9 @@ public class FieldGetterDetectorTest extends AbstractCheckTest {
                                         + "Hb4ytjavPPakso1r3PuuyxbZmjpZwBJb56YAy1hhT+oY7zT/wP1vU82LM5vX"
                                         + "ZjavTzevzmzexNa4ecDilLxK4wqVs31lfqH6qbR9jZ13B1d4fDbRss4I4MEG"
                                         + "RzY2UNY4W3rCzg3KeIKKnnLE98E8nsFlhCLq/6e+HFM29dTJBJs9+GUYqN3i"
-                                        + "bWosVdPQdh8HupbwnH+W/w/CJRCdpQMAAA==")));
+                                        + "bWosVdPQdh8HupbwnH+W/w/CJRCdpQMAAA=="))
+                .run()
+                .expect(expected);
     }
 
     @SuppressWarnings("all") // Sample code

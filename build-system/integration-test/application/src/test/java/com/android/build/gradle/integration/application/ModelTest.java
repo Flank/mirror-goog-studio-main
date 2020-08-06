@@ -34,6 +34,7 @@ import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.ide.common.gradle.model.IdeAndroidGradlePluginProjectFlags;
+import com.android.ide.common.gradle.model.impl.IdeAndroidGradlePluginProjectFlagsImpl;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.truth.Truth;
@@ -123,9 +124,10 @@ public class ModelTest {
         assertThat(debugArtifact.getGeneratedSourceFolders())
                 .containsExactlyElementsIn(expectedGeneratedSourceFolders.build());
 
-        // Res values are not included as Studio models them directly
         assertThat(debugArtifact.getGeneratedResourceFolders())
-                .containsExactly(project.file("build/generated/res/rs/debug"));
+                .containsExactly(
+                        project.file("build/generated/res/resValues/debug"),
+                        project.file("build/generated/res/rs/debug"));
 
         AndroidArtifact androidTestArtifact = VariantUtils.getAndroidTestArtifact(debugVariant);
 
@@ -148,6 +150,7 @@ public class ModelTest {
 
         assertThat(androidTestArtifact.getGeneratedResourceFolders())
                 .containsExactly(
+                        project.file("build/generated/res/resValues/androidTest/debug"),
                         project.file("build/generated/res/rs/androidTest/debug"));
 
         JavaArtifact unitTestArtifact = VariantUtils.getUnitTestArtifact(debugVariant);
@@ -177,7 +180,7 @@ public class ModelTest {
                         .fetchAndroidProjects()
                         .getOnlyModel();
         IdeAndroidGradlePluginProjectFlags flags =
-                new IdeAndroidGradlePluginProjectFlags(model.getFlags());
+                IdeAndroidGradlePluginProjectFlagsImpl.createFrom(model.getFlags());
         assertThat(flags.getApplicationRClassConstantIds()).isTrue();
         assertThat(flags.getTestRClassConstantIds()).isTrue();
         assertThat(flags.getTransitiveRClasses()).isTrue();
@@ -192,7 +195,7 @@ public class ModelTest {
                         .fetchAndroidProjects()
                         .getOnlyModel();
         IdeAndroidGradlePluginProjectFlags flags =
-                new IdeAndroidGradlePluginProjectFlags(model.getFlags());
+                IdeAndroidGradlePluginProjectFlagsImpl.createFrom(model.getFlags());
         assertThat(flags.getApplicationRClassConstantIds()).isFalse();
         assertThat(flags.getTestRClassConstantIds()).isFalse();
         assertThat(flags.getTransitiveRClasses()).isFalse();

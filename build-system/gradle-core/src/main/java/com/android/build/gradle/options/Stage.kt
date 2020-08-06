@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.errors.DeprecationReporter
  *     only be a [BooleanOption] (or [OptionalBooleanOption]). One value of the [BooleanOption] may
  *     be experimental at first to enable the new behavior, but eventually the option will be
  *     removed, either because the feature is fully supported and now enforced, or because the
- *     feature was not / is no longer useful.
+ *     feature was not / is no longer useful and now removed.
  */
 open class Stage(
 
@@ -116,8 +116,8 @@ sealed class FeatureStage(status: Option.Status) : Stage(status) {
         FeatureStage(Option.Status.Deprecated(enforcementTarget))
 
     /**
-     * Indicates that the feature is enforced: The feature is enabled by default and the
-     * corresponding [Option] has been removed.
+     * Indicates that the feature is enforced (always enabled), and the corresponding [Option] has
+     * been removed.
      *
      * @param enforcedVersion the version when the feature is enforced and the corresponding
      *     [Option] was removed
@@ -136,8 +136,8 @@ sealed class FeatureStage(status: Option.Status) : Stage(status) {
         FeatureStage(Option.Status.Deprecated(removalTarget))
 
     /**
-     * Indicates that the feature has been removed: The feature is disabled by default and the
-     * corresponding [Option] has been removed.
+     * Indicates that the feature has been removed (always disabled), and the corresponding [Option]
+     * has been removed.
      *
      * @param removedVersion the version when the feature and the corresponding [Option] were
      *     removed
@@ -145,53 +145,4 @@ sealed class FeatureStage(status: Option.Status) : Stage(status) {
      */
     class Removed(removedVersion: Version, additionalMessage: String? = null) :
         FeatureStage(Option.Status.Removed(removedVersion, additionalMessage))
-}
-
-/** An Android Gradle plugin version. */
-enum class Version(
-
-    // Mark these properties as private to prevent external usages from constructing
-    // inconsistent messages from these values. They should use methods like
-    // getDeprecationTargetMessage() or getRemovedVersionMessage() instead.
-
-    /**
-     * String value of the version.
-     *
-     * Note that since this value will be used in error/warning messages, it should be defined such
-     * that it fits well in the overall message:
-     *
-     *     "This feature will be / was removed in $stringValue of the Android Gradle plugin."
-     *
-     * For example, avoid assigning string values such as "AGP 4.0", as it will not go along well
-     * with the pre-formatted message.
-     */
-    private val stringValue: String
-) {
-
-    /**
-     * A version before version 4.0, used when the exact version is not known, except that it's
-     * guaranteed to be before 4.0.
-     */
-    VERSION_BEFORE_4_0("a version before 4.0"),
-
-    VERSION_3_5("version 3.5"),
-    VERSION_3_6("version 3.6"),
-    VERSION_4_0("version 4.0"),
-    VERSION_4_1("version 4.1"),
-    VERSION_4_2("version 4.2"),
-    VERSION_5_0("version 5.0"),
-
-    ; // end of enums
-
-    fun getDeprecationTargetMessage(): String {
-        return "It will be removed in $stringValue of the Android Gradle plugin."
-    }
-
-    fun getRemovedVersionMessage(): String {
-        return if (this == VERSION_BEFORE_4_0) {
-            "It has been removed from the current version of the Android Gradle plugin."
-        } else {
-            "It was removed in $stringValue of the Android Gradle plugin."
-        }
-    }
 }

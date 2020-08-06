@@ -110,11 +110,11 @@ class BuiltinIssueRegistryTest : TestCase() {
         if (requiredSize > capacity) {
             fail(
                 "For Scope set " +
-                        scopeSet +
-                        ": capacity " +
-                        capacity +
-                        " < actual " +
-                        requiredSize
+                    scopeSet +
+                    ": capacity " +
+                    capacity +
+                    " < actual " +
+                    requiredSize
             )
         }
     }

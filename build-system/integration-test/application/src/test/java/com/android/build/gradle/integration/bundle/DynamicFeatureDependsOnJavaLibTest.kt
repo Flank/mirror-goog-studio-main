@@ -46,8 +46,7 @@ class DynamicFeatureDependsOnJavaLibTest {
                 .dependency(feature, javaLib)
                 .build()
         )
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN_GRADLE_6_6)
-        .setTargetGradleVersion("6.6-20200609220026+0000")
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         // b/157470515, https://github.com/gradle/gradle/issues/13317
         .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=4")
         .create()

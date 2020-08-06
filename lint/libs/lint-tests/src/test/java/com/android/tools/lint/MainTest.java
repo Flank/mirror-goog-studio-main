@@ -245,7 +245,7 @@ public class MainTest extends AbstractCheckTest {
     }
 
     public void testMultipleProjects() throws Exception {
-        File project = getProjectDir(null, jar("libs/classes.jar")); // dummy file
+        File project = getProjectDir(null, jar("libs/classes.jar"));
 
         checkDriver(
                 "",
@@ -621,8 +621,8 @@ public class MainTest extends AbstractCheckTest {
                 getProjectDir(
                         null,
                         manifest().minSdk(1),
-                        source("build.gradle", ""), // dummy; only name counts
-                        // dummy to ensure we have .class files
+                        source("build.gradle", ""), // placeholder; only name counts
+                        // placeholder to ensure we have .class files
                         source("bin/classes/foo/bar/ApiCallTest.class", ""));
         checkDriver(
                 ""
@@ -658,7 +658,7 @@ public class MainTest extends AbstractCheckTest {
                                         + "        <ignore path=\"src/main/res/drawable/ic_launcher_background.xml\" />\n"
                                         + "    </issue>"
                                         + "</lint>"),
-                        // dummy to ensure we have .class files
+                        // placeholder to ensure we have .class files
                         source("bin/classes/foo/bar/ApiCallTest.class", ""));
         checkDriver(
                 ""

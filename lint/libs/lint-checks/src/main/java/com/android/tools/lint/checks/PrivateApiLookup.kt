@@ -212,7 +212,7 @@ class PrivateApiLookup private constructor(
             if (DEBUG_FORCE_REGENERATE_BINARY) {
                 System.err.println(
                     "\nTemporarily regenerating binary data unconditionally \n" +
-                            "from $stream\nto $binaryData"
+                        "from $stream\nto $binaryData"
                 )
                 if (!cache.create(client, binaryData)) {
                     return null

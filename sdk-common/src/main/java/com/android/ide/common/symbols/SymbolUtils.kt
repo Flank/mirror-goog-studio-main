@@ -68,7 +68,7 @@ fun mergeAndRenumberSymbols(
      For most symbol types, we are simply going to loop on all the symbols, and merge them in
      the final table while renumbering them.
      For Styleable arrays we will handle things differently. We cannot rely on the array values,
-     as some R.txt were published with dummy values. We are instead simply going to merge
+     as some R.txt were published with placeholder values. We are instead simply going to merge
      the children list from all the styleable, and create the symbol from this list.
     */
 

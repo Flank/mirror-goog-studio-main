@@ -43,7 +43,8 @@ class ForbiddenStudioCallDetector : Detector(), SourceCodeScanner {
         val INTERN = Issue.create(
             id = "NoInterning",
             briefDescription = "Do not intern strings",
-            explanation = """
+            explanation =
+                """
                 Strings should not be interned; you are better off managing \
                 your own string cache.
                 """,
@@ -65,11 +66,17 @@ class ForbiddenStudioCallDetector : Detector(), SourceCodeScanner {
     ) {
         // String#intern
         if (method.name == "intern" &&
-            context.evaluator.isMemberInClass(method, JAVA_LANG_STRING)) {
-            context.report(INTERN, node, context.getCallLocation(node,
-                includeReceiver = false,
-                includeArguments = true
-            ), "Do not intern strings; if reusing strings is truly necessary build a local cache")
+            context.evaluator.isMemberInClass(method, JAVA_LANG_STRING)
+        ) {
+            context.report(
+                INTERN, node,
+                context.getCallLocation(
+                    node,
+                    includeReceiver = false,
+                    includeArguments = true
+                ),
+                "Do not intern strings; if reusing strings is truly necessary build a local cache"
+            )
         }
     }
 }

@@ -24,10 +24,8 @@ public class FullBackupContentDetectorTest extends AbstractCheckTest {
         return new FullBackupContentDetector();
     }
 
-    public void testOk() throws Exception {
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testOk() {
+        lint().files(
                         xml(
                                 "res/xml/backup.xml",
                                 ""
@@ -36,17 +34,19 @@ public class FullBackupContentDetectorTest extends AbstractCheckTest {
                                         + "     <include domain=\"file\" path=\"dd\"/>\n"
                                         + "     <exclude domain=\"file\" path=\"dd/fo3o.txt\"/>\n"
                                         + "     <exclude domain=\"file\" path=\"dd/ss/foo.txt\"/>\n"
-                                        + "</full-backup-content>")));
+                                        + "</full-backup-content>"))
+                .run()
+                .expectClean();
     }
 
-    public void test20890435() throws Exception {
-        assertEquals(
+    public void test20890435() {
+        String expected =
                 ""
                         + "res/xml/backup.xml:6: Error: foo.xml is not in an included path [FullBackupContent]\n"
                         + "     <exclude domain=\"sharedpref\" path=\"foo.xml\"/>\n"
                         + "                                        ~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "res/xml/backup.xml",
                                 ""
@@ -56,29 +56,29 @@ public class FullBackupContentDetectorTest extends AbstractCheckTest {
                                         + "     <exclude domain=\"file\" path=\"dd/fo3o.txt\"/>\n"
                                         + "     <exclude domain=\"file\" path=\"dd/ss/foo.txt\"/>\n"
                                         + "     <exclude domain=\"sharedpref\" path=\"foo.xml\"/>\n"
-                                        + "</full-backup-content>")));
+                                        + "</full-backup-content>"))
+                .run()
+                .expect(expected);
     }
 
-    public void testImplicitInclude() throws Exception {
+    public void testImplicitInclude() {
         // If there is no include, then everything is considered included
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "res/xml/backup.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<full-backup-content>\n"
                                         + "     <exclude domain=\"file\" path=\"dd/fo3o.txt\"/>\n"
-                                        + "</full-backup-content>")));
+                                        + "</full-backup-content>"))
+                .run()
+                .expectClean();
     }
 
-    public void testImplicitPath() throws Exception {
+    public void testImplicitPath() {
         // If you specify an include, but no path attribute, that's defined to mean include
         // everything
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "res/xml/backup.xml",
                                 ""
@@ -87,13 +87,13 @@ public class FullBackupContentDetectorTest extends AbstractCheckTest {
                                         + "     <include domain=\"file\"/>\n"
                                         + "     <exclude domain=\"file\" path=\"dd/fo3o.txt\"/>\n"
                                         + "     <include domain=\"sharedpref\" path=\"something\"/>\n"
-                                        + "</full-backup-content>")));
+                                        + "</full-backup-content>"))
+                .run()
+                .expectClean();
     }
 
-    public void testSuppressed() throws Exception {
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testSuppressed() {
+        lint().files(
                         xml(
                                 "res/xml/backup.xml",
                                 ""
@@ -103,12 +103,14 @@ public class FullBackupContentDetectorTest extends AbstractCheckTest {
                                         + "     <exclude domain=\"file\" path=\"dd/fo3o.txt\"/>\n"
                                         + "     <exclude domain=\"file\" path=\"dd/ss/foo.txt\"/>\n"
                                         + "     <exclude domain=\"sharedpref\" path=\"foo.xml\" tools:ignore=\"FullBackupContent\"/>\n"
-                                        + "</full-backup-content>")));
+                                        + "</full-backup-content>"))
+                .run()
+                .expectClean();
     }
 
-    public void testIncludeWrongDomain() throws Exception {
+    public void testIncludeWrongDomain() {
         // Ensure that the path prefix check is done independently for each domain
-        assertEquals(
+        String expected =
                 ""
                         + "res/xml/backup.xml:4: Error: abc/def.txt is not in an included path [FullBackupContent]\n"
                         + "     <exclude domain=\"external\" path=\"abc/def.txt\"/>\n"
@@ -116,8 +118,8 @@ public class FullBackupContentDetectorTest extends AbstractCheckTest {
                         + "res/xml/backup.xml:6: Error: def/ghi.txt is not in an included path [FullBackupContent]\n"
                         + "     <exclude domain=\"external\" path=\"def/ghi.txt\"/>\n"
                         + "                                      ~~~~~~~~~~~\n"
-                        + "2 errors, 0 warnings\n",
-                lintProject(
+                        + "2 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "res/xml/backup.xml",
                                 ""
@@ -127,11 +129,13 @@ public class FullBackupContentDetectorTest extends AbstractCheckTest {
                                         + "     <exclude domain=\"external\" path=\"abc/def.txt\"/>\n"
                                         + "     <include domain=\"file\" path=\"def\"/>\n"
                                         + "     <exclude domain=\"external\" path=\"def/ghi.txt\"/>\n"
-                                        + "</full-backup-content>")));
+                                        + "</full-backup-content>"))
+                .run()
+                .expect(expected);
     }
 
-    public void testValidation() throws Exception {
-        assertEquals(
+    public void testValidation() {
+        String expected =
                 ""
                         + "res/xml/backup.xml:7: Error: Subdirectories are not allowed for domain sharedpref [FullBackupContent]\n"
                         + "     <include domain=\"sharedpref\" path=\"dd/subdir\"/>\n"
@@ -158,8 +162,8 @@ public class FullBackupContentDetectorTest extends AbstractCheckTest {
                         + "res/xml/backup.xml:15: Error: Unexpected element <wrongtag> [FullBackupContent]\n"
                         + "     <wrongtag />\n"
                         + "      ~~~~~~~~\n"
-                        + "8 errors, 0 warnings\n",
-                lintProject(
+                        + "8 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "res/xml/backup.xml",
                                 ""
@@ -177,8 +181,11 @@ public class FullBackupContentDetectorTest extends AbstractCheckTest {
                                         + "     <exclude domain=\"external\" path=\"dd\"/>\n" // same as included
                                         + "     <exclude domain=\"unknown-domain\" path=\"dd\"/>\n"
                                         + "     <include path=\"dd\"/>\n" // No domain
-                                        + "     <include domain=\"root\" />\n" // OK (means include everything
+                                        + "     <include domain=\"root\" />\n" // OK (means include
+                                        // everything
                                         + "     <wrongtag />\n"
-                                        + "</full-backup-content>")));
+                                        + "</full-backup-content>"))
+                .run()
+                .expect(expected);
     }
 }

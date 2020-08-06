@@ -88,12 +88,12 @@ class UastLintUtils {
             val containingFile = element as? PsiFile ?: element.containingFile
 
             // In Kotlin files identifiers are sometimes using LightElements that are hosted in
-            // a dummy file, these do not have the right PsiFile as containing elements
+            // a placeholder file, these do not have the right PsiFile as containing elements
             val cls = containingFile.javaClass
             val name = cls.name
             if (name.startsWith(
-                    "org.jetbrains.kotlin.asJava.classes.KtLightClassForSourceDeclaration"
-                )
+                "org.jetbrains.kotlin.asJava.classes.KtLightClassForSourceDeclaration"
+            )
             ) {
                 try {
                     val declaredField = cls.superclass.getDeclaredField("ktFile")
@@ -121,14 +121,19 @@ class UastLintUtils {
         @JvmStatic
         fun getQualifiedName(element: PsiElement): String? = when (element) {
             is PsiClass -> element.qualifiedName
-            is PsiMethod -> element.containingClass?.let { getQualifiedName(it) }?.let { "$it.${element.name}" }
-            is PsiField -> element.containingClass?.let { getQualifiedName(it) }?.let { "$it.${element.name}" }
+            is PsiMethod ->
+                element.containingClass?.let { getQualifiedName(it) }
+                    ?.let { "$it.${element.name}" }
+            is PsiField ->
+                element.containingClass?.let { getQualifiedName(it) }
+                    ?.let { "$it.${element.name}" }
             else -> null
         }
 
         @JvmStatic
         fun resolve(expression: ExternalReferenceExpression, context: UElement): PsiElement? {
-            val declaration = context.getParentOfType<UDeclaration>(UDeclaration::class.java) ?: return null
+            val declaration =
+                context.getParentOfType<UDeclaration>(UDeclaration::class.java) ?: return null
 
             return expression.resolve(declaration.psi)
         }
@@ -241,9 +246,11 @@ class UastLintUtils {
         fun areIdentifiersEqual(first: UExpression, second: UExpression): Boolean {
             val firstIdentifier = getIdentifier(first)
             val secondIdentifier = getIdentifier(second)
-            return (firstIdentifier != null &&
+            return (
+                firstIdentifier != null &&
                     secondIdentifier != null &&
-                    firstIdentifier == secondIdentifier)
+                    firstIdentifier == secondIdentifier
+                )
         }
 
         @JvmStatic
@@ -333,8 +340,8 @@ class UastLintUtils {
             name: String
         ): Boolean? {
             return AnnotationValuesExtractor
-                    .getAnnotationValuesExtractor(annotation)
-                    .getAnnotationBooleanValue(annotation, name)
+                .getAnnotationValuesExtractor(annotation)
+                .getAnnotationBooleanValue(annotation, name)
         }
 
         @JvmStatic
@@ -353,8 +360,8 @@ class UastLintUtils {
             name: String
         ): Long? {
             return AnnotationValuesExtractor
-                    .getAnnotationValuesExtractor(annotation)
-                    .getAnnotationLongValue(annotation, name)
+                .getAnnotationValuesExtractor(annotation)
+                .getAnnotationLongValue(annotation, name)
         }
 
         @JvmStatic
@@ -373,8 +380,8 @@ class UastLintUtils {
             name: String
         ): Double? {
             return AnnotationValuesExtractor
-                    .getAnnotationValuesExtractor(annotation)
-                    .getAnnotationDoubleValue(annotation, name)
+                .getAnnotationValuesExtractor(annotation)
+                .getAnnotationDoubleValue(annotation, name)
         }
 
         @JvmStatic
@@ -393,8 +400,8 @@ class UastLintUtils {
             name: String
         ): String? {
             return AnnotationValuesExtractor
-                    .getAnnotationValuesExtractor(annotation)
-                    .getAnnotationStringValue(annotation, name)
+                .getAnnotationValuesExtractor(annotation)
+                .getAnnotationStringValue(annotation, name)
         }
 
         @JvmStatic
@@ -403,8 +410,8 @@ class UastLintUtils {
             name: String
         ): Array<String>? {
             return AnnotationValuesExtractor
-                    .getAnnotationValuesExtractor(annotation)
-                    .getAnnotationStringValues(annotation, name)
+                .getAnnotationValuesExtractor(annotation)
+                .getAnnotationStringValues(annotation, name)
         }
 
         @JvmStatic

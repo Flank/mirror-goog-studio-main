@@ -191,9 +191,11 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     private fun PsiAnnotation.isThreadingAnnotation(): Boolean {
         val signature = this.qualifiedName
-        return (signature != null &&
+        return (
+            signature != null &&
                 signature.endsWith(THREAD_SUFFIX) &&
-                SUPPORT_ANNOTATIONS_PREFIX.isPrefix(signature))
+                SUPPORT_ANNOTATIONS_PREFIX.isPrefix(signature)
+            )
     }
 
     private fun describeThreads(annotations: List<String>, any: Boolean): String {
@@ -325,7 +327,10 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     /** Attempts to infer the current thread context at the site of the given method call  */
-    private fun getThreadsFromMethod(context: JavaContext, originalMethod: PsiMethod?): List<String>? {
+    private fun getThreadsFromMethod(
+        context: JavaContext,
+        originalMethod: PsiMethod?
+    ): List<String>? {
         var method = originalMethod
         if (method != null) {
             val evaluator = context.evaluator
@@ -393,7 +398,7 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
             if (name.startsWith(SUPPORT_ANNOTATIONS_PREFIX.newName())) {
                 val oldName = SUPPORT_ANNOTATIONS_PREFIX.oldName() +
-                        name.substring(SUPPORT_ANNOTATIONS_PREFIX.newName().length)
+                    name.substring(SUPPORT_ANNOTATIONS_PREFIX.newName().length)
                 resultList.add(oldName)
             } else {
                 resultList.add(name)
@@ -416,7 +421,8 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             id = "WrongThread",
             briefDescription = "Wrong Thread",
 
-            explanation = """
+            explanation =
+                """
                 Ensures that a method which expects to be called on a specific thread, is \
                 actually called from that thread. For example, calls on methods in widgets \
                 should always be made on the UI thread.

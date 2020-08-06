@@ -50,7 +50,8 @@ class FileComparisonDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "FileComparisons",
             briefDescription = "Invalid File Comparisons",
-            explanation = """
+            explanation =
+                """
                 Never call `equals` (or worse, `==`) on a `java.io.File`:
                 this will not do the right thing on case insensitive file systems.
 
@@ -82,7 +83,7 @@ class FileComparisonDetector : Detector(), SourceCodeScanner {
                         }
                         check(context, node, node.valueArguments[0], node.valueArguments[1])
                     }
-                }
+            }
 
             override fun visitBinaryExpression(node: UBinaryExpression) {
                 val operator = node.operator

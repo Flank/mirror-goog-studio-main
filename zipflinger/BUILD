@@ -30,7 +30,7 @@ maven_pom(
 java_library(
     name = "test_utils",
     srcs = [
-        "test/src/java/com/android/zipflinger/TestBase.java",
+        "test/src/java/com/android/zipflinger/AbstractZipflingerTest.java",
     ],
     deps = [
         ":zipflinger",
@@ -43,7 +43,7 @@ java_test(
     name = "testParsing",
     size = "small",
     srcs = [
-        "test/src/java/com/android/zipflinger/TestParsing.java",
+        "test/src/java/com/android/zipflinger/ParsingTest.java",
     ],
     data = [
         "test/resource/stripped.ap_",
@@ -64,7 +64,7 @@ java_test(
     name = "testsFreeStore",
     size = "small",
     srcs = [
-        "test/src/java/com/android/zipflinger/TestFreeStore.java",
+        "test/src/java/com/android/zipflinger/FreeStoreTest.java",
     ],
     data = [
         "test/resource/zip_no_fd.zip",
@@ -84,7 +84,7 @@ java_test(
     name = "testsZipFlinger",
     size = "medium",
     srcs = [
-        "test/src/java/com/android/zipflinger/TestZipFlinger.java",
+        "test/src/java/com/android/zipflinger/ZipFlingerTest.java",
     ],
     data = [
         "test/resource/1-2-3files.zip",
@@ -112,7 +112,7 @@ java_test(
     name = "testZip64",
     size = "medium",
     srcs = [
-        "test/src/java/com/android/zipflinger/TestZip64.java",
+        "test/src/java/com/android/zipflinger/Zip64Test.java",
     ],
     data = [
         "test/resource/5GiBFile.zip",
@@ -131,7 +131,7 @@ java_test(
     name = "testsCompressor",
     size = "small",
     srcs = [
-        "test/src/java/com/android/zipflinger/TestCompressor.java",
+        "test/src/java/com/android/zipflinger/CompressorTest.java",
     ],
     data = [
         "test/resource/file4.txt",
@@ -150,7 +150,7 @@ java_test(
     name = "testsMerge",
     size = "small",
     srcs = [
-        "test/src/java/com/android/zipflinger/TestZipMerge.java",
+        "test/src/java/com/android/zipflinger/ZipMergeTest.java",
     ],
     data = [
         "test/resource/1-2-3files.zip",
@@ -170,7 +170,7 @@ java_test(
     name = "testInts",
     size = "small",
     srcs = [
-        "test/src/java/com/android/zipflinger/TestInts.java",
+        "test/src/java/com/android/zipflinger/IntsTest.java",
     ],
     jvm_flags = ["-Dtest.suite.jar=testInts.jar"],
     test_class = "com.android.testutils.JarTestSuite",

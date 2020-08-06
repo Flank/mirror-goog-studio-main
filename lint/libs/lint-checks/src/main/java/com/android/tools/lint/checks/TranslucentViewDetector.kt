@@ -60,7 +60,8 @@ class TranslucentViewDetector : Detector(), XmlScanner, SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "TranslucentOrientation",
             briefDescription = "Mixing screenOrientation and translucency",
-            explanation = """
+            explanation =
+                """
             Specifying a fixed screen orientation with a translucent theme isn't supported \
             on apps with `targetSdkVersion` O or greater since there can be an another activity \
             visible behind your activity with a conflicting request.
@@ -210,7 +211,7 @@ class TranslucentViewDetector : Detector(), XmlScanner, SourceCodeScanner {
                     }
 
                     val message = "Should not specify screen orientation with translucent or " +
-                            "floating theme"
+                        "floating theme"
                     context.report(ISSUE, curr, location, message)
                     break
                 }

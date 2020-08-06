@@ -74,7 +74,6 @@ class ComposeTree {
     /** Write the node as a view node and its children to the protobuf. */
     private long writeToProtoBuf(@NonNull InspectorNodeWrapper node, long parentBuffer)
             throws ReflectiveOperationException {
-        String[] pair = extractPackageName(node.getFunctionName());
         return addComposeView(
                 parentBuffer,
                 node.getId(),
@@ -84,31 +83,13 @@ class ComposeTree {
                 node.getHeight(),
                 toInt(node.getName()),
                 toInt(node.getFileName()),
-                toInt(pair[1]), // function name
-                toInt(pair[0]), // function package name
+                node.getPackageHash(),
+                node.getOffset(),
                 node.getLineNumber());
     }
 
     private int toInt(@Nullable String value) {
         return mStringTable.generateStringId(value);
-    }
-
-    /**
-     * Split a method name in package name and method name without the package
-     *
-     * <p>Example of method names to map: androidx.ui.material.MaterialThemeKt.MaterialTheme ->
-     * (androidx.ui.material, MaterialThemeKt.MaterialTheme)
-     * com.example.mycompose.MainActivityKt$Greeting$1.invoke -> (com.example.mycompose,
-     * MaterialThemeKt.$Greeting$1.invoke)
-     */
-    @NonNull
-    private static String[] extractPackageName(@NonNull String method) {
-        int innerClassStart = method.indexOf('$');
-        if (innerClassStart < 0) {
-            innerClassStart = method.length();
-        }
-        int dot = method.lastIndexOf('.', innerClassStart - 1);
-        return new String[] {method.substring(0, dot), method.substring(dot + 1)};
     }
 
     /** Adds a compose view to a View protobuf */
@@ -121,7 +102,7 @@ class ComposeTree {
             int height,
             int composeClassName,
             int fileName,
-            int invocationName,
-            int invocationPackageName,
+            int packageHash,
+            int offset,
             int lineNumber);
 }

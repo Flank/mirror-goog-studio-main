@@ -228,9 +228,9 @@ abstract class Detector {
      */
     @Deprecated(
         "If you want to override the event that each root project is about " +
-                "to be analyzed, override beforeCheckRootProject; if you want to override the event " +
-                "that each project (both root projects and their dependencies, override " +
-                "beforeCheckEachProject",
+            "to be analyzed, override beforeCheckRootProject; if you want to override the event " +
+            "that each project (both root projects and their dependencies, override " +
+            "beforeCheckEachProject",
         replaceWith = ReplaceWith("beforeCheckRootProject(context)")
     )
     open fun beforeCheckProject(context: Context) {
@@ -254,9 +254,10 @@ abstract class Detector {
      */
     @Deprecated(
         "If you want to override the event that each root project is about " +
-                "to be analyzed, override afterCheckRootProject; if you want to override the event " +
-                "that each project (both root projects and their dependencies, override " +
-                "afterCheckEachProject", replaceWith = ReplaceWith("afterCheckRootProject(context)")
+            "to be analyzed, override afterCheckRootProject; if you want to override the event " +
+            "that each project (both root projects and their dependencies, override " +
+            "afterCheckEachProject",
+        replaceWith = ReplaceWith("afterCheckRootProject(context)")
     )
     open fun afterCheckProject(context: Context) {
     }
@@ -349,7 +350,7 @@ abstract class Detector {
     @Deprecated("Slated for removal") // Slated for removal in Lint 2.0
     open fun getSpeed(issue: Issue): Speed = Speed.NORMAL
 
-    // ---- Dummy implementations to make implementing XmlScanner easier: ----
+    // ---- Empty implementations to make implementing XmlScanner easier: ----
 
     open fun visitDocument(context: XmlContext, document: Document) {}
 
@@ -367,7 +368,7 @@ abstract class Detector {
         assert(false)
     }
 
-    // ---- Dummy implementations to make implementing a ClassScanner easier: ----
+    // ---- Empty implementations to make implementing a ClassScanner easier: ----
 
     open fun checkClass(context: ClassContext, classNode: ClassNode) {}
 
@@ -387,7 +388,7 @@ abstract class Detector {
     ) {
     }
 
-    // ---- Dummy implementations to make implementing an GradleScanner easier: ----
+    // ---- Empty implementations to make implementing an GradleScanner easier: ----
 
     open val customVisitor: Boolean = false
 
@@ -449,11 +450,11 @@ abstract class Detector {
         checkMethodCall(context, statement, parent, namedArguments, unnamedArguments, cookie)
     }
 
-    // ---- Dummy implementations to make implementing a resource folder scanner easier: ----
+    // ---- Empty implementations to make implementing a resource folder scanner easier: ----
 
     open fun checkFolder(context: ResourceContext, folderName: String) {}
 
-    // ---- Dummy implementations to make implementing a binary resource scanner easier: ----
+    // ---- Empty implementations to make implementing a binary resource scanner easier: ----
 
     open fun checkBinaryResource(context: ResourceContext) {}
 
@@ -501,7 +502,7 @@ abstract class Detector {
     ) {
     }
 
-    // ---- Dummy implementation to make implementing UastScanner easier: ----
+    // ---- Empty implementations to make implementing UastScanner easier: ----
 
     open fun visitClass(context: JavaContext, declaration: UClass) {}
 

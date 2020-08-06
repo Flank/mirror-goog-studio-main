@@ -191,7 +191,7 @@ open class XmlContext(
 
     @Deprecated(
         "Here for temporary compatibility; the new typed quickfix data parameter " +
-                "should be used instead",
+            "should be used instead",
         ReplaceWith("report(issue, scope, location, message)")
     )
     fun report(
@@ -249,6 +249,6 @@ open class XmlContext(
         parser.createLocationHandle(this, node)
 
     override val resourceFolder: File?
-    // Like super, but for the parent folder instead of the context file
+        // Like super, but for the parent folder instead of the context file
         get() = if (resourceFolderType != null) file.parentFile else null
 }

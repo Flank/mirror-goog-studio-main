@@ -116,8 +116,8 @@ fun isApiDesugared(context: JavaContext, cls: String, name: String?): Boolean {
                 // --retarget_core_library_member "java/util/concurrent/atomic/AtomicReference#getAndAccumulate->java/util/concurrent/atomic/DesugarAtomicReference"
                 // --retarget_core_library_member "java/util/concurrent/atomic/AtomicReference#accumulateAndGet->java/util/concurrent/atomic/DesugarAtomicReference"
                 return name == null || name == "getAndUpdate" ||
-                        name == "updateAndGet" || name == "getAndAccumulate" ||
-                        name == "accumulateAndGet"
+                    name == "updateAndGet" || name == "getAndAccumulate" ||
+                    name == "accumulateAndGet"
             }
 
             // --rewrite_core_library_prefix java/util/DoubleSummaryStatistics

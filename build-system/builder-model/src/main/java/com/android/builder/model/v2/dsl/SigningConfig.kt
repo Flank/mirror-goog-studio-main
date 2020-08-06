@@ -42,9 +42,6 @@ interface SigningConfig: AndroidModel {
     /** The key password. */
     val keyPassword: String?
 
-    /** The store type. */
-    val storeType: String?
-
     /** Signing using JAR Signature Scheme (aka v1 scheme) is enabled. */
     val enableV1Signing: Boolean?
 

@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.IncrementalTask
+import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
@@ -116,7 +117,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
         val logger = LoggerWrapper(logger)
         try {
-            getWorkerFacadeWithWorkers().use { workerExecutor ->
+            Workers.withGradleWorkers(projectName, path, workerExecutor).use { workerExecutor ->
                 for (assetSet in assetSets) {
                     // set needs to be loaded.
                     assetSet.loadFromFiles(logger)
@@ -150,7 +151,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         // create a merger and load the known state.
         val merger = AssetMerger()
         try {
-            getWorkerFacadeWithWorkers().use { workerExecutor ->
+            Workers.withGradleWorkers(projectName, path, workerExecutor).use { workerExecutor ->
                 if (!/*incrementalState*/merger.loadFromBlob(incrementalFolder!!, true, aaptEnv)) {
                     doFullTaskAction()
                     return

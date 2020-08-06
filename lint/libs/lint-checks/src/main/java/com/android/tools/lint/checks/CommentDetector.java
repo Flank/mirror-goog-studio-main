@@ -178,7 +178,7 @@ public class CommentDetector extends ResourceXmlDetector
                                             context.file,
                                             source,
                                             i - 1,
-                                            i -1 + ESCAPE_STRING.length());
+                                            i - 1 + ESCAPE_STRING.length());
                             context.report(STOP_SHIP, location, message);
                         }
                     }

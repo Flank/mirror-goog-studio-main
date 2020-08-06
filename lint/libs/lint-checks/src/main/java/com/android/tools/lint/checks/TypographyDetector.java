@@ -66,7 +66,7 @@ public class TypographyDetector extends ResourceXmlDetector {
                             IMPLEMENTATION)
                     .addMoreInfo("https://en.wikipedia.org/wiki/Dash");
 
-    /** Replace dumb quotes with smart quotes? */
+    /** Replace plain quotes with smart quotes? */
     public static final Issue QUOTES =
             Issue.create(
                             "TypographyQuotes",

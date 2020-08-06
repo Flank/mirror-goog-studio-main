@@ -52,7 +52,8 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "BatteryLife",
             briefDescription = "Battery Life Issues",
-            explanation = """
+            explanation =
+                """
             This issue flags code that either
             * negatively affects battery life, or
             * uses APIs that have recently changed behavior to prevent background tasks from \
@@ -84,9 +85,9 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
             context.mainProject.targetSdkVersion.featureLevel >= 24
         ) {
             val message = "Declaring a broadcastreceiver for " +
-                    "`android.net.conn.CONNECTIVITY_CHANGE` is deprecated for apps targeting " +
-                    "N and higher. In general, apps should not rely on this broadcast and " +
-                    "instead use `WorkManager`."
+                "`android.net.conn.CONNECTIVITY_CHANGE` is deprecated for apps targeting " +
+                "N and higher. In general, apps should not rely on this broadcast and " +
+                "instead use `WorkManager`."
             context.report(ISSUE, element, context.getValueLocation(attr), message)
         }
 
@@ -96,8 +97,8 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
             context.report(
                 ISSUE, element, context.getValueLocation(attr),
                 "Use of `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` violates the " +
-                        "Play Store Content Policy regarding acceptable use cases, as described in " +
-                        "https://developer.android.com/training/monitoring-device-state/doze-standby.html"
+                    "Play Store Content Policy regarding acceptable use cases, as described in " +
+                    "https://developer.android.com/training/monitoring-device-state/doze-standby.html"
             )
         }
 
@@ -106,8 +107,8 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
             "com.android.camera.NEW_PICTURE" == name
         ) {
             val message = "Use of `$name` is deprecated for all apps starting " +
-                    "with the N release independent of the target SDK. Apps should not " +
-                    "rely on these broadcasts and instead use `WorkManager`"
+                "with the N release independent of the target SDK. Apps should not " +
+                "rely on these broadcasts and instead use `WorkManager`"
             context.report(ISSUE, element, context.getValueLocation(attr), message)
         }
     }
@@ -130,8 +131,8 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
             context.report(
                 ISSUE, reference, context.getNameLocation(reference),
                 "Use of `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` violates the " +
-                        "Play Store Content Policy regarding acceptable use cases, as described in " +
-                        "https://developer.android.com/training/monitoring-device-state/doze-standby.html"
+                    "Play Store Content Policy regarding acceptable use cases, as described in " +
+                    "https://developer.android.com/training/monitoring-device-state/doze-standby.html"
             )
         }
     }

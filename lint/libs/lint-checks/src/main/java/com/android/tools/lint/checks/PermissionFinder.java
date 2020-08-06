@@ -174,10 +174,11 @@ public class PermissionFinder {
             PsiElement resolved = ((UReferenceExpression) node).resolve();
             if (resolved instanceof PsiField) {
                 // This returns null for unknown reasons:
-                //UField field = (UField) mContext.getUastContext().convertElementWithParent(resolved, UField.class);
-                //if (field == null) {
+                // UField field = (UField)
+                // mContext.getUastContext().convertElementWithParent(resolved, UField.class);
+                // if (field == null) {
                 //    return null;
-                //}
+                // }
                 PsiField field = (PsiField) resolved;
                 if (mOperation == Operation.ACTION) {
                     PsiAnnotation annotation =
@@ -191,7 +192,7 @@ public class PermissionFinder {
                     }
 
                     if (annotation != null) {
-                        //return getPermissionRequirement(field, annotation);
+                        // return getPermissionRequirement(field, annotation);
                         return getPermissionRequirement(field, JavaUAnnotation.wrap(annotation));
                     }
                 } else if (mOperation == Operation.READ || mOperation == Operation.WRITE) {
@@ -212,12 +213,13 @@ public class PermissionFinder {
                         if (o != null && o.getValue() instanceof PsiAnnotation) {
                             annotation = (PsiAnnotation) o.getValue();
 
-                            //List<UNamedExpression> attributes = annotation.getAttributeValues();
-                            //UNamedExpression o = attributes.size() == 1 ? attributes.get(0) : null;
-                            //if (o != null && o.getExpression() instanceof UAnnotation) {
+                            // List<UNamedExpression> attributes = annotation.getAttributeValues();
+                            // UNamedExpression o = attributes.size() == 1 ? attributes.get(0) :
+                            // null;
+                            // if (o != null && o.getExpression() instanceof UAnnotation) {
                             //    annotation = (UAnnotation) o.getExpression();
                             if (PERMISSION_ANNOTATION.isEquals(annotation.getQualifiedName())) {
-                                //return getPermissionRequirement(field, annotation);
+                                // return getPermissionRequirement(field, annotation);
                                 return getPermissionRequirement(
                                         field, JavaUAnnotation.wrap(annotation));
                             }
@@ -228,7 +230,7 @@ public class PermissionFinder {
                             //
                             // Instead we've inlined the fields of the annotation on the
                             // outer one:
-                            //return getPermissionRequirement(field, annotation);
+                            // return getPermissionRequirement(field, annotation);
                             return getPermissionRequirement(
                                     field, JavaUAnnotation.wrap(annotation));
                         }

@@ -20,8 +20,8 @@ import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.renderIf
 
 fun contentDetailFragmentJava(
+  collection: String,
   collectionName: String,
-  detailName: String,
   applicationPackage: String?,
   detailNameLayout: String,
   objectKind: String,
@@ -30,24 +30,26 @@ fun contentDetailFragmentJava(
 ) = """
 package ${packageName};
 
-import android.app.Activity;
 import android.os.Bundle;
-import ${getMaterialComponentName("android.support.design.widget.CollapsingToolbarLayout", useAndroidX)};
+
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)};
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import ${getMaterialComponentName("android.support.design.widget.CollapsingToolbarLayout", useAndroidX)};
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
-import ${packageName}.dummy.DummyContent;
+import ${packageName}.placeholder.PlaceholderContent;
 
 /**
  * A fragment representing a single ${objectKind} detail screen.
- * This fragment is either contained in a {@link ${collectionName}Activity}
- * in two-pane mode (on tablets) or a {@link ${detailName}Activity}
+ * This fragment is either contained in a {@link ${collectionName}Fragment}
+ * in two-pane mode (on larger screen devices) or self-contained
  * on handsets.
  */
-public class ${detailName}Fragment extends Fragment {
+public class ${collection}DetailFragment extends Fragment {
+
     /**
      * The fragment argument representing the item ID that this fragment
      * represents.
@@ -55,15 +57,15 @@ public class ${detailName}Fragment extends Fragment {
     public static final String ARG_ITEM_ID = "item_id";
 
     /**
-     * The dummy content this fragment is presenting.
+     * The placeholder content this fragment is presenting.
      */
-    private DummyContent.DummyItem mItem;
+    private PlaceholderContent.PlaceholderItem mItem;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public ${detailName}Fragment() {
+    public ${collection}DetailFragment() {
     }
 
     @Override
@@ -71,27 +73,25 @@ public class ${detailName}Fragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         if (getArguments().containsKey(ARG_ITEM_ID)) {
-            // Load the dummy content specified by the fragment
+            // Load the placeholder content specified by the fragment
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
-            mItem = DummyContent.ITEM_MAP.get(getArguments().getString(ARG_ITEM_ID));
-
-            Activity activity = this.getActivity();
-            CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
-            if (appBarLayout != null) {
-                appBarLayout.setTitle(mItem.content);
-            }
+            mItem = PlaceholderContent.ITEM_MAP.get(getArguments().getString(ARG_ITEM_ID));
         }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-            Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.${detailNameLayout}, container, false);
+                             Bundle savedInstanceState) {
+        View rootView = inflater.inflate(R.layout.fragment_${detailNameLayout}, container, false);
+        CollapsingToolbarLayout toolbarLayout = rootView.findViewById(R.id.toolbar_layout);
 
-        // Show the dummy content as text in a TextView.
+        // Show the placeholder content as text in a TextView & in the toolbar if available.
         if (mItem != null) {
             ((TextView) rootView.findViewById(R.id.${detailNameLayout})).setText(mItem.details);
+            if (toolbarLayout != null) {
+                toolbarLayout.setTitle(mItem.content);
+            }
         }
 
         return rootView;

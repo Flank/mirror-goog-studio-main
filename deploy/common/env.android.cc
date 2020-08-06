@@ -21,6 +21,12 @@ int Env::api_level() {
   return atoi(sdk_ver_str);
 }
 
+std::string Env::build_type() {
+  char type[PROP_VALUE_MAX] = "";
+  __system_property_get("ro.build.type", type);
+  return type;
+}
+
 int Env::uid() { return 0; }
 
 void Env::set_uid(int uid) {}

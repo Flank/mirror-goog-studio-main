@@ -517,8 +517,7 @@ public class WrongIdDetector extends LayoutDetector {
 
     private Set<String> createSpellingDictionary() {
         Set<String> dictionary = new HashSet<>();
-        mGlobalIds
-                .stream()
+        mGlobalIds.stream()
                 .filter(id -> id.startsWith(NEW_ID_PREFIX))
                 .forEach(id -> dictionary.add(stripIdPrefix(id)));
         if (mDeclaredIds != null) {

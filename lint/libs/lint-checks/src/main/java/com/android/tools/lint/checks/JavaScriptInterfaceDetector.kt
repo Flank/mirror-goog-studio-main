@@ -75,8 +75,8 @@ class JavaScriptInterfaceDetector : Detector(), SourceCodeScanner {
 
             val location = context.getNameLocation(node)
             val message = "None of the methods in the added interface (${cls.name}) have " +
-                    "been annotated with `@android.webkit.JavascriptInterface`; they will not " +
-                    "be visible in API 17"
+                "been annotated with `@android.webkit.JavascriptInterface`; they will not " +
+                "be visible in API 17"
             context.report(ISSUE, node, location, message)
         }
     }
@@ -113,7 +113,8 @@ class JavaScriptInterfaceDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "JavascriptInterface",
             briefDescription = "Missing @JavascriptInterface on methods",
-            explanation = """
+            explanation =
+                """
                 As of API 17, you must annotate methods in objects registered with the \
                 `addJavascriptInterface` method with a `@JavascriptInterface` annotation.
                 """,

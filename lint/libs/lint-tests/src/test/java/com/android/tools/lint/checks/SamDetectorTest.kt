@@ -60,7 +60,7 @@ class SamDetectorTest : AbstractCheckTest() {
                     view.postDelayed({ println ("Hello") }, 50)
                 }
                 """
-            ),
+            ).indented(),
             java(
                 """
                 package test.pkg;
@@ -74,7 +74,7 @@ class SamDetectorTest : AbstractCheckTest() {
                     }
                 }
                 """
-            ),
+            ).indented(),
             java(
                 """
                 package test.pkg;
@@ -136,45 +136,45 @@ class SamDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             """
+            src/test/pkg/test.kt:17: Warning: Implicit new MyInterface instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
+                handler.stash(lambda, list) // WARN
+                              ~~~~~~
             src/test/pkg/test.kt:18: Warning: Implicit new MyInterface instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
-                                handler.stash(lambda, list) // WARN
-                                              ~~~~~~
+                handler.store(lambda) // WARN
+                              ~~~~~~
             src/test/pkg/test.kt:19: Warning: Implicit new MyInterface instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
-                                handler.store(lambda) // WARN
-                                              ~~~~~~
+                handler.compareIdentity1(lambda) // WARN
+                                         ~~~~~~
             src/test/pkg/test.kt:20: Warning: Implicit new MyInterface instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
-                                handler.compareIdentity1(lambda) // WARN
-                                                         ~~~~~~
-            src/test/pkg/test.kt:21: Warning: Implicit new MyInterface instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
-                                handler.compareIdentity2(lambda) // WARN
-                                                         ~~~~~~
-            src/test/pkg/test.kt:28: Warning: Implicit new MyInterface instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
-                                handler.stash(lambda2, list) // WARN
-                                              ~~~~~~~
+                handler.compareIdentity2(lambda) // WARN
+                                         ~~~~~~
+            src/test/pkg/test.kt:27: Warning: Implicit new MyInterface instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
+                handler.stash(lambda2, list) // WARN
+                              ~~~~~~~
             0 errors, 5 warnings
             """
         ).expectFixDiffs(
             """
+            Fix for src/test/pkg/test.kt line 17: Explicitly create MyInterface instance:
+            @@ -16 +16
+            -     val lambda = { println("hello") }
+            +     val lambda = MyInterface { println("hello") }
             Fix for src/test/pkg/test.kt line 18: Explicitly create MyInterface instance:
-            @@ -17 +17
-            -                     val lambda = { println("hello") }
-            +                     val lambda = MyInterface { println("hello") }
+            @@ -16 +16
+            -     val lambda = { println("hello") }
+            +     val lambda = MyInterface { println("hello") }
             Fix for src/test/pkg/test.kt line 19: Explicitly create MyInterface instance:
-            @@ -17 +17
-            -                     val lambda = { println("hello") }
-            +                     val lambda = MyInterface { println("hello") }
+            @@ -16 +16
+            -     val lambda = { println("hello") }
+            +     val lambda = MyInterface { println("hello") }
             Fix for src/test/pkg/test.kt line 20: Explicitly create MyInterface instance:
-            @@ -17 +17
-            -                     val lambda = { println("hello") }
-            +                     val lambda = MyInterface { println("hello") }
-            Fix for src/test/pkg/test.kt line 21: Explicitly create MyInterface instance:
-            @@ -17 +17
-            -                     val lambda = { println("hello") }
-            +                     val lambda = MyInterface { println("hello") }
-            Fix for src/test/pkg/test.kt line 28: Explicitly create MyInterface instance:
-            @@ -27 +27
-            -                     lambda2 = { println("hello") }
-            +                     lambda2 = MyInterface { println("hello") }
+            @@ -16 +16
+            -     val lambda = { println("hello") }
+            +     val lambda = MyInterface { println("hello") }
+            Fix for src/test/pkg/test.kt line 27: Explicitly create MyInterface instance:
+            @@ -26 +26
+            -     lambda2 = { println("hello") }
+            +     lambda2 = MyInterface { println("hello") }
             """
         )
     }

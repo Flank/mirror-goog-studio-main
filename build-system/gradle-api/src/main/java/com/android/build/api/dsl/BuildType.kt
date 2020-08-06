@@ -18,11 +18,11 @@ package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
 import org.gradle.api.Named
+import org.gradle.api.plugins.ExtensionAware
 
 /** DSL object to configure build types. */
 @Incubating
-interface BuildType : Named,
-    VariantDimension {
+interface BuildType : Named, VariantDimension, ExtensionAware {
     /**
      * Whether test coverage is enabled for this build type.
      *

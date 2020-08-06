@@ -25,7 +25,8 @@ fun basicActivityJava(
   useAndroidX: Boolean,
   activityClass: String,
   layoutName: String,
-  menuName: String
+  menuName: String,
+  navHostFragmentId: String
 ): String {
   val applicationPackageBlock = renderIf(applicationPackage != null) { "import $applicationPackage.R;" }
   val newProjectImportBlock = renderIf(isNewProject) {
@@ -89,7 +90,7 @@ public class ${activityClass} extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
+        NavController navController = Navigation.findNavController(this, R.id.${navHostFragmentId});
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
@@ -106,7 +107,7 @@ $newProjectBlock2
 
     @Override
     public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
+        NavController navController = Navigation.findNavController(this, R.id.${navHostFragmentId});
         return NavigationUI.navigateUp(navController, appBarConfiguration)
                 || super.onSupportNavigateUp();
     }

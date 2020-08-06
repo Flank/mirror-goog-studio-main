@@ -167,7 +167,7 @@ Lint tries two different ways to compute the class path:
     case and from the lint class path maven repo in the other case),
     so we compare library names.
 
-* At the end, we perform a sanity check (making sure we **did** find
+* At the end, we perform a validity check (making sure we **did** find
     the lint jars and that we **didn't** include a jar we know should
     be excluded (builder-model)), and if all is well we use the URLs
     in this delta list.

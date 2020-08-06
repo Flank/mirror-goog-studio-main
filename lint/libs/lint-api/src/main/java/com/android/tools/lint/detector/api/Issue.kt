@@ -400,9 +400,9 @@ class Issue private constructor(
 
         private fun scopeImpliesAndroid(scope: EnumSet<Scope>): Boolean {
             return scope.contains(Scope.MANIFEST) ||
-                    scope.contains(Scope.RESOURCE_FILE) ||
-                    scope.contains(Scope.BINARY_RESOURCE_FILE) ||
-                    scope.contains(Scope.ALL_RESOURCE_FILES)
+                scope.contains(Scope.RESOURCE_FILE) ||
+                scope.contains(Scope.BINARY_RESOURCE_FILE) ||
+                scope.contains(Scope.ALL_RESOURCE_FILES)
         }
     }
 }

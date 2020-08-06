@@ -86,7 +86,7 @@ open class UElementHandler {
         require(name.startsWith("U")) { name }
         throw RuntimeException(
             "You must override visit${name.substring(1)} " +
-                    "(and don't call super.visit${name.substring(1)}!)"
+                "(and don't call super.visit${name.substring(1)}!)"
         )
     }
 

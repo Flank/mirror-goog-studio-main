@@ -54,7 +54,6 @@ import com.android.tools.lint.detector.api.guessGradleLocation
 import com.android.tools.lint.detector.api.isNumberString
 import com.android.tools.lint.detector.api.readUrlData
 import com.android.tools.lint.detector.api.readUrlDataAsString
-import com.android.tools.lint.model.LintModelAndroidLibrary
 import com.android.tools.lint.model.LintModelDependency
 import com.android.tools.lint.model.LintModelExternalLibrary
 import com.android.tools.lint.model.LintModelLibrary
@@ -220,10 +219,10 @@ open class GradleDetector : Detector(), GradleScanner {
                             // Don't report if already suppressed with EXPIRING
 
                             val alreadySuppressed = context.containsCommentSuppress() &&
-                                    context.isSuppressedWithComment(
-                                        valueCookie,
-                                        EXPIRING_TARGET_SDK_VERSION
-                                    )
+                                context.isSuppressedWithComment(
+                                    valueCookie,
+                                    EXPIRING_TARGET_SDK_VERSION
+                                )
 
                             if (!alreadySuppressed) {
                                 report(
@@ -240,10 +239,10 @@ open class GradleDetector : Detector(), GradleScanner {
                             // (Check for 2018 here: no, we don't have a time machine, but let's
                             // allow developers to go back in time.)
                             val message = "" +
-                                    "Google Play will soon require that apps target API " +
-                                    "level 26 or higher. This will be required for new apps " +
-                                    "in August 2018, and for updates to existing apps in " +
-                                    "November 2018."
+                                "Google Play will soon require that apps target API " +
+                                "level 26 or higher. This will be required for new apps " +
+                                "in August 2018, and for updates to existing apps in " +
+                                "November 2018."
                             val highest = context.client.highestKnownApiLevel
                             val label = "Update targetSdkVersion to $highest"
                             val fix = fix().name(label)
@@ -259,9 +258,9 @@ open class GradleDetector : Detector(), GradleScanner {
                     if (!warned) {
                         val message =
                             "Not targeting the latest versions of Android; compatibility " +
-                                    "modes apply. Consider testing and updating this version. " +
-                                    "Consult the android.os.Build.VERSION_CODES javadoc for " +
-                                    "details."
+                                "modes apply. Consider testing and updating this version. " +
+                                "Consult the android.os.Build.VERSION_CODES javadoc for " +
+                                "details."
 
                         val highest = context.client.highestKnownApiLevel
                         val label = "Update targetSdkVersion to $highest"
@@ -301,9 +300,9 @@ open class GradleDetector : Detector(), GradleScanner {
                 // configuration!
                 if (value == "getVersionCode" || value == "getVersionName") {
                     val message = "Bad method name: pick a unique method name which does not " +
-                            "conflict with the implicit getters for the defaultConfig " +
-                            "properties. For example, try using the prefix compute- " +
-                            "instead of get-."
+                        "conflict with the implicit getters for the defaultConfig " +
+                        "properties. For example, try using the prefix compute- " +
+                        "instead of get-."
                     report(context, valueCookie, GRADLE_GETTER, message)
                 }
             } else if (property == "packageName") {
@@ -353,10 +352,10 @@ open class GradleDetector : Detector(), GradleScanner {
                     var recommended = getLatestBuildTools(context.client, version.major)
                     if (recommended != null && version < recommended) {
                         val message = "Old buildToolsVersion " +
-                                version +
-                                "; recommended version is " +
-                                recommended +
-                                " or later"
+                            version +
+                            "; recommended version is " +
+                            recommended +
+                            " or later"
                         val fix = getUpdateDependencyFix(version.toString(), recommended.toString())
                         report(context, valueCookie, DEPENDENCY, message, fix)
                     }
@@ -377,8 +376,8 @@ open class GradleDetector : Detector(), GradleScanner {
                         }
                         val message =
                             "Build Tools `23.0.0` should not be used; " +
-                                    "it has some known serious bugs. Use version `$recommended` " +
-                                    "instead."
+                                "it has some known serious bugs. Use version `$recommended` " +
+                                "instead."
                         reportFatalCompatibilityIssue(context, valueCookie, message)
                     }
                 }
@@ -413,11 +412,11 @@ open class GradleDetector : Detector(), GradleScanner {
                         "Do not use Windows file separators in .gradle files; use / instead"
                     report(context, valueCookie, PATH, message, fix)
                 } else if (path.startsWith("/") || File(
-                        path.replace(
-                            '/',
-                            File.separatorChar
-                        )
-                    ).isAbsolute
+                    path.replace(
+                        '/',
+                        File.separatorChar
+                    )
+                ).isAbsolute
                 ) {
                     val message = "Avoid using absolute paths in .gradle files"
                     report(context, valueCookie, PATH, message)
@@ -438,15 +437,15 @@ open class GradleDetector : Detector(), GradleScanner {
                             context.isEnabled(NOT_INTERPOLATED)
                         ) {
                             val message = "It looks like you are trying to substitute a " +
-                                    "version variable, but using single quotes ('). For Groovy " +
-                                    "string interpolation you must use double quotes (\")."
+                                "version variable, but using single quotes ('). For Groovy " +
+                                "string interpolation you must use double quotes (\")."
                             val fix = fix().name("Replace single quotes with double quotes")
                                 .replace()
                                 .text(value)
                                 .with(
                                     "\"" +
-                                            value.substring(1, value.length - 1) +
-                                            "\""
+                                        value.substring(1, value.length - 1) +
+                                        "\""
                                 )
                                 .build()
                             report(context, statementCookie, NOT_INTERPOLATED, message, fix)
@@ -458,18 +457,26 @@ open class GradleDetector : Detector(), GradleScanner {
                     if (gc != null) {
                         if (gc.acceptsGreaterRevisions()) {
                             val message = "Avoid using + in version numbers; can lead " +
-                                    "to unpredictable and unrepeatable builds (" +
-                                    dependency +
-                                    ")"
+                                "to unpredictable and unrepeatable builds (" +
+                                dependency +
+                                ")"
                             val fix = fix().data(gc)
                             report(context, valueCookie, PLUS, message, fix)
                         }
 
                         // Check dependencies without the PSI read lock, because we
                         // may need to make network requests to retrieve version info.
-                        context.driver.runLaterOutsideReadAction(Runnable {
-                            checkDependency(context, gc, isResolved, valueCookie, statementCookie)
-                        })
+                        context.driver.runLaterOutsideReadAction(
+                            Runnable {
+                                checkDependency(
+                                    context,
+                                    gc,
+                                    isResolved,
+                                    valueCookie,
+                                    statementCookie
+                                )
+                            }
+                        )
                     }
                     if (hasLifecycleAnnotationProcessor(dependency) &&
                         targetJava8Plus(context.project)
@@ -477,8 +484,9 @@ open class GradleDetector : Detector(), GradleScanner {
                         report(
                             context, valueCookie, LIFECYCLE_ANNOTATION_PROCESSOR_WITH_JAVA8,
                             "Use the Lifecycle Java 8 API provided by the " +
-                                    "`lifecycle-common-java8` library instead of Lifecycle annotations " +
-                                    "for faster incremental build.", null
+                                "`lifecycle-common-java8` library instead of Lifecycle annotations " +
+                                "for faster incremental build.",
+                            null
                         )
                     }
                     checkAnnotationProcessorOnCompilePath(
@@ -585,9 +593,9 @@ open class GradleDetector : Detector(), GradleScanner {
 
                     val message =
                         "`$configuration` is deprecated; " +
-                                "replace with either `$api` to maintain current behavior, " +
-                                "or `$implementation` to improve build performance " +
-                                "by not sharing this dependency transitively."
+                            "replace with either `$api` to maintain current behavior, " +
+                            "or `$implementation` to improve build performance " +
+                            "by not sharing this dependency transitively."
                     val apiFix = fix()
                         .name("Replace '$configuration' with '$api'")
                         .family("Replace compile with api")
@@ -657,7 +665,7 @@ open class GradleDetector : Detector(), GradleScanner {
                     .independent(true)
                     .build()
                 val message = "Add annotation processor to processor path using `$replacement`" +
-                        " instead of `$configuration`"
+                    " instead of `$configuration`"
                 report(context, propertyCookie, ANNOTATION_PROCESSOR_ON_COMPILE_PATH, message, fix)
             }
         }
@@ -667,7 +675,7 @@ open class GradleDetector : Detector(), GradleScanner {
         if (version in 1 until LOWEST_ACTIVE_API) {
             val message =
                 "The value of minSdkVersion is too low. It can be incremented " +
-                        "without noticeably reducing the number of supported devices."
+                    "without noticeably reducing the number of supported devices."
 
             val label = "Update minSdkVersion to $LOWEST_ACTIVE_API"
             val fix = fix().name(label)
@@ -733,10 +741,10 @@ open class GradleDetector : Detector(), GradleScanner {
     private fun checkTargetCompatibility(context: GradleContext) {
         if (compileSdkVersion > 0 && targetSdkVersion > 0 && targetSdkVersion > compileSdkVersion) {
             val message = "The compileSdkVersion (" +
-                    compileSdkVersion +
-                    ") should not be lower than the targetSdkVersion (" +
-                    targetSdkVersion +
-                    ")"
+                compileSdkVersion +
+                ") should not be lower than the targetSdkVersion (" +
+                targetSdkVersion +
+                ")"
             val fix = fix().name("Set compileSdkVersion to $targetSdkVersion")
                 .replace()
                 .text(compileSdkVersion.toString())
@@ -787,7 +795,8 @@ open class GradleDetector : Detector(), GradleScanner {
                     )
 
                     // Compare with what's in the Gradle cache.
-                    newerVersion = GradleVersion.max(newerVersion, findCachedNewerVersion(dependency, filter))
+                    newerVersion =
+                        GradleVersion.max(newerVersion, findCachedNewerVersion(dependency, filter))
 
                     // Compare with IDE's repository cache, if available.
                     newerVersion = GradleVersion.max(
@@ -803,20 +812,22 @@ open class GradleDetector : Detector(), GradleScanner {
                         version.minorSegment?.acceptsGreaterValue() == false &&
                         (version.major != newerVersion.major || version.minor != newerVersion.minor)
                     ) {
-                        safeReplacement = getGoogleMavenRepoVersion(context, dependency,
+                        safeReplacement = getGoogleMavenRepoVersion(
+                            context, dependency,
                             Predicate { filterVersion ->
                                 filterVersion.major == version.major &&
-                                        filterVersion.minor == version.minor &&
-                                        filterVersion.micro > version.micro &&
-                                        !filterVersion.isPreview &&
-                                        filterVersion < newerVersion!!
-                            })
+                                    filterVersion.minor == version.minor &&
+                                    filterVersion.micro > version.micro &&
+                                    !filterVersion.isPreview &&
+                                    filterVersion < newerVersion!!
+                            }
+                        )
                     }
                     if (newerVersion != null && newerVersion > version) {
                         agpVersionCheckInfo = AgpVersionCheckInfo(
                             newerVersion,
                             newerVersion.major == version.major &&
-                                    newerVersion.minor == version.minor,
+                                newerVersion.minor == version.minor,
                             safeReplacement, dependency, isResolved, cookie
                         )
                         maybeReportAgpVersionIssue(context)
@@ -862,7 +873,7 @@ open class GradleDetector : Detector(), GradleScanner {
                             cookie,
                             DEPENDENCY,
                             "Use Fabric Gradle plugin version 1.21.6 or later to " +
-                                    "improve Instant Run performance (was $revision)",
+                                "improve Instant Run performance (was $revision)",
                             fix
                         )
                     } else {
@@ -880,7 +891,7 @@ open class GradleDetector : Detector(), GradleScanner {
                             cookie,
                             DEPENDENCY,
                             "Use BugSnag Gradle plugin version 2.1.2 or later to " +
-                                    "improve Instant Run performance (was $revision)",
+                                "improve Instant Run performance (was $revision)",
                             fix
                         )
                     } else {
@@ -903,7 +914,7 @@ open class GradleDetector : Detector(), GradleScanner {
                             cookie,
                             DEPENDENCY,
                             "Use robolectric version 4.2.1 or later to " +
-                                    "fix issues with parsing of Windows paths",
+                                "fix issues with parsing of Windows paths",
                             fix
                         )
                     }
@@ -1030,11 +1041,15 @@ open class GradleDetector : Detector(), GradleScanner {
             return Predicate { v ->
                 // Any higher IDE version that matches major and minor
                 // (e.g. from 3.3.0 offer 3.3.2 but not 3.4.0)
-                (v.major == ideVersion.major &&
-                        v.minor == ideVersion.minor) ||
-                        // Also allow matching latest current existing major/minor version
-                        (v.major == version.major &&
-                                v.minor == version.minor)
+                (
+                    v.major == ideVersion.major &&
+                        v.minor == ideVersion.minor
+                    ) ||
+                    // Also allow matching latest current existing major/minor version
+                    (
+                        v.major == version.major &&
+                            v.minor == version.minor
+                        )
             }
         }
         return null
@@ -1107,10 +1122,10 @@ open class GradleDetector : Detector(), GradleScanner {
                 GradleVersion.tryParse(GRADLE_PLUGIN_RECOMMENDED_VERSION)
             )
             val message = "You must use a newer version of the Android Gradle plugin. The " +
-                    "minimum supported version is " +
-                    GRADLE_PLUGIN_MINIMUM_VERSION +
-                    " and the recommended version is " +
-                    recommended
+                "minimum supported version is " +
+                GRADLE_PLUGIN_MINIMUM_VERSION +
+                " and the recommended version is " +
+                recommended
             report(context, cookie, GRADLE_PLUGIN_COMPATIBILITY, message)
             return true
         }
@@ -1139,10 +1154,10 @@ open class GradleDetector : Detector(), GradleScanner {
                     reportNonFatalCompatibilityIssue(
                         context, cookie,
                         "Version 28 (intended for Android Pie and below) is the last " +
-                                "version of the legacy support library, so we recommend that " +
-                                "you migrate to AndroidX libraries when using Android Q and " +
-                                "moving forward. The IDE can help with this: " +
-                                "Refactor > Migrate to AndroidX..."
+                            "version of the legacy support library, so we recommend that " +
+                            "you migrate to AndroidX libraries when using Android Q and " +
+                            "moving forward. The IDE can help with this: " +
+                            "Refactor > Migrate to AndroidX..."
                     )
                     return
                 }
@@ -1156,10 +1171,10 @@ open class GradleDetector : Detector(), GradleScanner {
                         .build()
                 }
                 val message = "This support library should not use a different version (" +
-                        dependency.majorVersion +
-                        ") than the `compileSdkVersion` (" +
-                        compileSdkVersion +
-                        ")"
+                    dependency.majorVersion +
+                    ") than the `compileSdkVersion` (" +
+                    compileSdkVersion +
+                    ")"
                 reportNonFatalCompatibilityIssue(context, cookie, message, fix)
             }
         }
@@ -1196,16 +1211,16 @@ open class GradleDetector : Detector(), GradleScanner {
                     context,
                     cookie,
                     "When using a `compileSdkVersion` older than android-O revision 2, " +
-                            "the support library version must be 26.0.0-alpha1 or lower " +
-                            "(was $version)"
+                        "the support library version must be 26.0.0-alpha1 or lower " +
+                        "(was $version)"
                 )
             } else if (!supportLib26Beta && compile26Beta) {
                 reportNonFatalCompatibilityIssue(
                     context,
                     cookie,
                     "When using a `compileSdkVersion` android-O revision 2 " +
-                            "or higher, the support library version should be 26.0.0-beta1 " +
-                            "or higher (was $version)"
+                        "or higher, the support library version should be 26.0.0-beta1 " +
+                        "or higher (was $version)"
                 )
             }
 
@@ -1242,8 +1257,8 @@ open class GradleDetector : Detector(), GradleScanner {
             val fix = getUpdateDependencyFix(revision, maxVersion.toString())
             val message =
                 "Version `5.2.08` should not be used; the app " +
-                        "can not be published with this version. Use version `$maxVersion` " +
-                        "instead."
+                    "can not be published with this version. Use version `$maxVersion` " +
+                    "instead."
             reportFatalCompatibilityIssue(context, cookie, message, fix)
         }
 
@@ -1259,11 +1274,11 @@ open class GradleDetector : Detector(), GradleScanner {
 
         if (GMS_GROUP_ID == groupId && "play-services-appindexing" == artifactId) {
             val message = "Deprecated: Replace '" +
-                    GMS_GROUP_ID +
-                    ":play-services-appindexing:" +
-                    revision +
-                    "' with 'com.google.firebase:firebase-appindexing:10.0.0' or above. " +
-                    "More info: http://firebase.google.com/docs/app-indexing/android/migrate"
+                GMS_GROUP_ID +
+                ":play-services-appindexing:" +
+                revision +
+                "' with 'com.google.firebase:firebase-appindexing:10.0.0' or above. " +
+                "More info: http://firebase.google.com/docs/app-indexing/android/migrate"
             val fix = fix().name("Replace with Firebase")
                 .replace()
                 .text("$GMS_GROUP_ID:play-services-appindexing:$revision")
@@ -1328,7 +1343,8 @@ open class GradleDetector : Detector(), GradleScanner {
     ) {
         checkConsistentLibraries(context, cookie, SUPPORT_LIB_GROUP_ID, null)
 
-        val androidLibraries = getAllLibraries(context.project).filterIsInstance<LintModelExternalLibrary>()
+        val androidLibraries =
+            getAllLibraries(context.project).filterIsInstance<LintModelExternalLibrary>()
         var usesOldSupportLib: LintModelMavenName? = null
         var usesAndroidX: LintModelMavenName? = null
         for (library in androidLibraries) {
@@ -1347,9 +1363,9 @@ open class GradleDetector : Detector(), GradleScanner {
 
         if (usesOldSupportLib != null && usesAndroidX != null) {
             val message = "Dependencies using groupId " +
-                    "`$SUPPORT_LIB_GROUP_ID` and `$ANDROIDX_PKG_PREFIX*` " +
-                    "can not be combined but " +
-                    "found `$usesOldSupportLib` and `$usesAndroidX` incompatible dependencies"
+                "`$SUPPORT_LIB_GROUP_ID` and `$ANDROIDX_PKG_PREFIX*` " +
+                "can not be combined but " +
+                "found `$usesOldSupportLib` and `$usesAndroidX` incompatible dependencies"
             if (cookie != null) {
                 reportNonFatalCompatibilityIssue(context, cookie, message)
             } else {
@@ -1415,8 +1431,8 @@ open class GradleDetector : Detector(), GradleScanner {
                 val first = Collections.min(list)
                 val message =
                     "Project depends on $GOOGLE_SUPPORT_GROUP_ID:$WEARABLE_ARTIFACT_ID:$first, " +
-                            "so it must also depend (as a provided dependency) on " +
-                            "$ANDROID_WEAR_GROUP_ID:$WEARABLE_ARTIFACT_ID:$first"
+                        "so it must also depend (as a provided dependency) on " +
+                        "$ANDROID_WEAR_GROUP_ID:$WEARABLE_ARTIFACT_ID:$first"
                 if (cookie != null) {
                     reportFatalCompatibilityIssue(context, cookie, message)
                 } else {
@@ -1433,8 +1449,8 @@ open class GradleDetector : Detector(), GradleScanner {
                     supportedWearableVersions.sort()
                     val message = String.format(
                         "The wearable libraries for %1\$s and %2\$s " +
-                                "must use **exactly** the same versions; found %3\$s " +
-                                "and %4\$s",
+                            "must use **exactly** the same versions; found %3\$s " +
+                            "and %4\$s",
                         GOOGLE_SUPPORT_GROUP_ID,
                         ANDROID_WEAR_GROUP_ID,
                         if (sortedSupportVersions.size == 1)
@@ -1516,17 +1532,17 @@ open class GradleDetector : Detector(), GradleScanner {
             val example2 = c2.groupId + ":" + c2.artifactId + ":" + c2.version
             val groupDesc = if (GMS_GROUP_ID == groupId) "gms/firebase" else groupId
             var message = "All " +
-                    groupDesc +
-                    " libraries must use the exact same " +
-                    "version specification (mixing versions can lead to runtime crashes). " +
-                    "Found versions " +
-                    Joiner.on(", ").join(sortedVersions) +
-                    ". " +
-                    "Examples include `" +
-                    example1 +
-                    "` and `" +
-                    example2 +
-                    "`"
+                groupDesc +
+                " libraries must use the exact same " +
+                "version specification (mixing versions can lead to runtime crashes). " +
+                "Found versions " +
+                Joiner.on(", ").join(sortedVersions) +
+                ". " +
+                "Examples include `" +
+                example1 +
+                "` and `" +
+                example2 +
+                "`"
 
             // Create an improved error message for a confusing scenario where you use
             // data binding and end up with conflicting versions:
@@ -1540,14 +1556,14 @@ open class GradleDetector : Detector(), GradleScanner {
                             sortedVersions[0] != (dep.findLibrary() as? LintModelExternalLibrary)?.resolvedCoordinates?.version
                         ) {
                             message += ". Note that this project is using data binding " +
-                                    "(com.android.databinding:library:" +
-                                    (library.findLibrary() as? LintModelExternalLibrary)?.resolvedCoordinates?.version +
-                                    ") which pulls in com.android.support:support-v4:" +
-                                    (dep.findLibrary() as? LintModelExternalLibrary)?.resolvedCoordinates?.version +
-                                    ". You can try to work around this " +
-                                    "by adding an explicit dependency on " +
-                                    "com.android.support:support-v4:" +
-                                    sortedVersions[0]
+                                "(com.android.databinding:library:" +
+                                (library.findLibrary() as? LintModelExternalLibrary)?.resolvedCoordinates?.version +
+                                ") which pulls in com.android.support:support-v4:" +
+                                (dep.findLibrary() as? LintModelExternalLibrary)?.resolvedCoordinates?.version +
+                                ". You can try to work around this " +
+                                "by adding an explicit dependency on " +
+                                "com.android.support:support-v4:" +
+                                sortedVersions[0]
                             break
                         }
                     }
@@ -1615,11 +1631,17 @@ open class GradleDetector : Detector(), GradleScanner {
         if (mDeclaredGoogleMavenRepository) {
             agpVersionCheckInfo?.let {
                 val versionString = it.newerVersion.toString()
-                val message = getNewerVersionAvailableMessage(it.dependency, versionString, it.safeReplacement)
+                val message = getNewerVersionAvailableMessage(
+                    it.dependency,
+                    versionString,
+                    it.safeReplacement
+                )
                 val fix = when {
                     it.isResolved -> null
-                    else -> getUpdateDependencyFix(it.dependency.revision, versionString,
-                        it.newerVersionIsSafe, it.safeReplacement)
+                    else -> getUpdateDependencyFix(
+                        it.dependency.revision, versionString,
+                        it.newerVersionIsSafe, it.safeReplacement
+                    )
                 }
                 report(context, it.cookie, AGP_DEPENDENCY, message, fix)
             }
@@ -1712,21 +1734,23 @@ open class GradleDetector : Detector(), GradleScanner {
     ) {
         // Some methods in GradleDetector are run without the PSI read lock in order
         // to accommodate network requests, so we grab the read lock here.
-        context.client.runReadAction(Runnable {
-            if (context.isEnabled(issue) && context is GradleContext) {
-                // Suppressed?
-                // Temporarily unconditionally checking for suppress comments in Gradle files
-                // since Studio insists on an AndroidLint id prefix
-                val checkComments = /*context.getClient().checkForSuppressComments() &&*/
-                    context.containsCommentSuppress()
-                if (checkComments && context.isSuppressedWithComment(cookie, issue)) {
-                    return@Runnable
-                }
+        context.client.runReadAction(
+            Runnable {
+                if (context.isEnabled(issue) && context is GradleContext) {
+                    // Suppressed?
+                    // Temporarily unconditionally checking for suppress comments in Gradle files
+                    // since Studio insists on an AndroidLint id prefix
+                    val checkComments = /*context.getClient().checkForSuppressComments() &&*/
+                        context.containsCommentSuppress()
+                    if (checkComments && context.isSuppressedWithComment(cookie, issue)) {
+                        return@Runnable
+                    }
 
-                val location = context.getLocation(cookie)
-                context.report(issue, location, message, fix)
+                    val location = context.getLocation(cookie)
+                    context.report(issue, location, message, fix)
+                }
             }
-        })
+        )
     }
 
     /**
@@ -1784,9 +1808,11 @@ open class GradleDetector : Detector(), GradleScanner {
     ) {
         // Some methods in GradleDetector are run without the PSI read lock in order
         // to accommodate network requests, so we grab the read lock here.
-        context.client.runReadAction(Runnable {
-            context.report(COMPATIBILITY, location, message)
-        })
+        context.client.runReadAction(
+            Runnable {
+                context.report(COMPATIBILITY, location, message)
+            }
+        )
     }
 
     /** See [.reportFatalCompatibilityIssue] for an explanation. */
@@ -1801,9 +1827,11 @@ open class GradleDetector : Detector(), GradleScanner {
 
         // Some methods in GradleDetector are run without the PSI read lock in order
         // to accommodate network requests, so we grab the read lock here.
-        context.client.runReadAction(Runnable {
-            context.report(COMPATIBILITY, location, message)
-        })
+        context.client.runReadAction(
+            Runnable {
+                context.report(COMPATIBILITY, location, message)
+            }
+        )
     }
 
     private fun getSdkVersion(value: String): Int {
@@ -1943,11 +1971,13 @@ open class GradleDetector : Detector(), GradleScanner {
         groupId: String,
         artifactId: String
     ): Boolean {
-        return (SUPPORT_LIB_GROUP_ID == groupId &&
+        return (
+            SUPPORT_LIB_GROUP_ID == groupId &&
                 !artifactId.startsWith("multidex") &&
                 !artifactId.startsWith("renderscript") &&
                 // Support annotation libraries work with any compileSdkVersion
-                artifactId != "support-annotations")
+                artifactId != "support-annotations"
+            )
     }
 
     private fun findFirst(coordinates: Collection<LintModelMavenName>): LintModelMavenName {
@@ -1965,10 +1995,10 @@ open class GradleDetector : Detector(), GradleScanner {
         val direct = path.size == 1
         val message: String
         val resolution = "Solutions include " +
-                "finding newer versions or alternative libraries that don't have the " +
-                "same problem (for example, for `httpclient` use `HttpUrlConnection` or " +
-                "`okhttp` instead), or repackaging the library using something like " +
-                "`jarjar`."
+            "finding newer versions or alternative libraries that don't have the " +
+            "same problem (for example, for `httpclient` use `HttpUrlConnection` or " +
+            "`okhttp` instead), or repackaging the library using something like " +
+            "`jarjar`."
         if (direct) {
             message =
                 "`${path[0].getArtifactId()}` defines classes that conflict with classes now provided by Android. $resolution"
@@ -1987,9 +2017,9 @@ open class GradleDetector : Detector(), GradleScanner {
             sb.append(") ")
             val chain = sb.toString()
             message = "`${path[0].getArtifactId()}` depends on a library " +
-                    "(${path[path.size - 1].artifactName}) which defines " +
-                    "classes that conflict with classes now provided by Android. $resolution " +
-                    "Dependency chain: $chain"
+                "(${path[path.size - 1].artifactName}) which defines " +
+                "classes that conflict with classes now provided by Android. $resolution " +
+                "Dependency chain: $chain"
         }
         return message
     }
@@ -2081,7 +2111,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val DEPENDENCY = Issue.create(
             id = "GradleDependency",
             briefDescription = "Obsolete Gradle Dependency",
-            explanation = """
+            explanation =
+                """
                 This detector looks for usages of libraries where the version you are using \
                 is not the current stable release. Using older versions is fine, and there \
                 are cases where you deliberately want to stick with an older version. \
@@ -2098,7 +2129,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val AGP_DEPENDENCY = Issue.create(
             id = "AndroidGradlePluginVersion",
             briefDescription = "Obsolete Android Gradle Plugin Version",
-            explanation = """
+            explanation =
+                """
                 This detector looks for usage of the Android Gradle Plugin where the version \
                 you are using is not the current stable release. Using older versions is fine, \
                 and there are cases where you deliberately want to stick with an older version. \
@@ -2116,7 +2148,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val DEPRECATED = Issue.create(
             id = "GradleDeprecated",
             briefDescription = "Deprecated Gradle Construct",
-            explanation = """
+            explanation =
+                """
                 This detector looks for deprecated Gradle constructs which currently work \
                 but will likely stop working in a future update.""",
             category = Category.CORRECTNESS,
@@ -2131,7 +2164,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val DEPRECATED_CONFIGURATION = Issue.create(
             id = "GradleDeprecatedConfiguration",
             briefDescription = "Deprecated Gradle Configuration",
-            explanation = """
+            explanation =
+                """
                 Some Gradle configurations have been deprecated since Android Gradle Plugin 3.0.0 \
                 and will be removed in a future version of the Android Gradle Plugin.
              """,
@@ -2147,7 +2181,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val GRADLE_PLUGIN_COMPATIBILITY = Issue.create(
             id = "GradlePluginVersion",
             briefDescription = "Incompatible Android Gradle Plugin",
-            explanation = """
+            explanation =
+                """
                 Not all versions of the Android Gradle plugin are compatible with all \
                 versions of the SDK. If you update your tools, or if you are trying to \
                 open a project that was built with an old version of the tools, you may \
@@ -2164,7 +2199,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val PATH = Issue.create(
             id = "GradlePath",
             briefDescription = "Gradle Path Issues",
-            explanation = """
+            explanation =
+                """
                 Gradle build scripts are meant to be cross platform, so file paths use \
                 Unix-style path separators (a forward slash) rather than Windows path \
                 separators (a backslash). Similarly, to keep projects portable and \
@@ -2182,7 +2218,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val IDE_SUPPORT = Issue.create(
             id = "GradleIdeError",
             briefDescription = "Gradle IDE Support Issues",
-            explanation = """
+            explanation =
+                """
                 Gradle is highly flexible, and there are things you can do in Gradle \
                 files which can make it hard or impossible for IDEs to properly handle \
                 the project. This lint check looks for constructs that potentially \
@@ -2198,7 +2235,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val PLUS = Issue.create(
             id = "GradleDynamicVersion",
             briefDescription = "Gradle Dynamic Version",
-            explanation = """
+            explanation =
+                """
                 Using `+` in dependencies lets you automatically pick up the latest \
                 available version rather than a specific, named version. However, \
                 this is not recommended; your builds are not repeatable; you may have \
@@ -2216,7 +2254,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val GRADLE_GETTER = Issue.create(
             id = "GradleGetter",
             briefDescription = "Gradle Implicit Getter Call",
-            explanation = """
+            explanation =
+                """
                 Gradle will let you replace specific constants in your build scripts \
                 with method calls, so you can for example dynamically compute a version \
                 string based on your current version control revision number, rather \
@@ -2241,7 +2280,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val COMPATIBILITY = Issue.create(
             id = "GradleCompatible",
             briefDescription = "Incompatible Gradle Versions",
-            explanation = """
+            explanation =
+                """
                 There are some combinations of libraries, or tools and libraries, that \
                 are incompatible, or can lead to bugs. One such incompatibility is \
                 compiling with a version of the Android support libraries that is not \
@@ -2259,7 +2299,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val STRING_INTEGER = Issue.create(
             id = "StringShouldBeInt",
             briefDescription = "String should be int",
-            explanation = """
+            explanation =
+                """
                 The properties `compileSdkVersion`, `minSdkVersion` and `targetSdkVersion` \
                 are usually numbers, but can be strings when you are using an add-on (in \
                 the case of `compileSdkVersion`) or a preview platform (for the other two \
@@ -2280,7 +2321,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val NOT_INTERPOLATED = Issue.create(
             id = "NotInterpolated",
             briefDescription = "Incorrect Interpolation",
-            explanation = """
+            explanation =
+                """
                 To insert the value of a variable, you can use `${"$"}{variable}` inside a \
                 string literal, but **only** if you are using double quotes!""",
             moreInfo = "https://www.groovy-lang.org/syntax.html#_string_interpolation",
@@ -2295,7 +2337,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val REMOTE_VERSION = Issue.create(
             id = "NewerVersionAvailable",
             briefDescription = "Newer Library Versions Available",
-            explanation = """
+            explanation =
+                """
                 This detector checks with a central repository to see if there are newer \
                 versions available for the dependencies used by this project. This is \
                 similar to the `GradleDependency` check, which checks for newer versions \
@@ -2314,7 +2357,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val MIN_SDK_TOO_LOW = Issue.create(
             id = "MinSdkTooLow",
             briefDescription = "API Version Too Low",
-            explanation = """
+            explanation =
+                """
                 The value of the `minSdkVersion` property is too low and can be \
                 incremented without noticeably reducing the number of supported \
                 devices.""",
@@ -2331,7 +2375,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val ACCIDENTAL_OCTAL = Issue.create(
             id = "AccidentalOctal",
             briefDescription = "Accidental Octal",
-            explanation = """
+            explanation =
+                """
                 In Groovy, an integer literal that starts with a leading 0 will be \
                 interpreted as an octal number. That is usually (always?) an accident \
                 and can lead to subtle bugs, for example when used in the `versionCode` \
@@ -2346,7 +2391,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val BUNDLED_GMS = Issue.create(
             id = "UseOfBundledGooglePlayServices",
             briefDescription = "Use of bundled version of Google Play services",
-            explanation = """
+            explanation =
+                """
                 Google Play services SDK's can be selectively included, which enables a \
                 smaller APK size. Consider declaring dependencies on individual Google \
                 Play services SDK's. If you are using Firebase API's \
@@ -2366,7 +2412,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val HIGH_APP_VERSION_CODE = Issue.create(
             id = "HighAppVersionCode",
             briefDescription = "VersionCode too high",
-            explanation = """
+            explanation =
+                """
                 The declared `versionCode` is an Integer. Ensure that the version number is \
                 not close to the limit. It is recommended to monotonically increase this \
                 number each minor or major release of the app. Note that updating an app \
@@ -2384,7 +2431,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val DEV_MODE_OBSOLETE = Issue.create(
             id = "DevModeObsolete",
             briefDescription = "Dev Mode Obsolete",
-            explanation = """
+            explanation =
+                """
                 In the past, our documentation recommended creating a `dev` product flavor \
                 with has a minSdkVersion of 21, in order to enable multidexing to speed up \
                 builds significantly during development.
@@ -2410,7 +2458,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val DUPLICATE_CLASSES = Issue.create(
             id = "DuplicatePlatformClasses",
             briefDescription = "Duplicate Platform Classes",
-            explanation = """
+            explanation =
+                """
                 There are a number of libraries that duplicate not just functionality \
                 of the Android platform but using the exact same class names as the ones \
                 provided in Android -- for example the apache http classes. This can \
@@ -2433,7 +2482,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val EXPIRING_TARGET_SDK_VERSION = Issue.create(
             id = "ExpiringTargetSdkVersion",
             briefDescription = "TargetSdkVersion Soon Expiring",
-            explanation = """
+            explanation =
+                """
                 In the second half of 2018, Google Play will require that new apps and app \
                 updates target API level 26 or higher. This will be required for new apps in \
                 August 2018, and for updates to existing apps in November 2018.
@@ -2466,7 +2516,8 @@ open class GradleDetector : Detector(), GradleScanner {
             id = "ExpiredTargetSdkVersion",
             briefDescription = "TargetSdkVersion No Longer Supported",
             moreInfo = "https://support.google.com/googleplay/android-developer/answer/113469#targetsdk",
-            explanation = """
+            explanation =
+                """
                 As of the second half of 2018, Google Play requires that new apps and app \
                 updates target API level 26 or higher.
 
@@ -2492,7 +2543,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val DEPRECATED_LIBRARY = Issue.create(
             id = "OutdatedLibrary",
             briefDescription = "Outdated Library",
-            explanation = """
+            explanation =
+                """
                 Your app is using an outdated version of a library. This may cause violations \
                 of Google Play policies (see https://play.google.com/about/monetization-ads/ads/) \
                 and/or may affect your app’s visibility on the Play Store.
@@ -2513,7 +2565,8 @@ open class GradleDetector : Detector(), GradleScanner {
             id = "DataBindingWithoutKapt",
             briefDescription = "Data Binding without Annotation Processing",
             moreInfo = "https://kotlinlang.org/docs/reference/kapt.html",
-            explanation = """
+            explanation =
+                """
                 Apps that use Kotlin and data binding should also apply the kotlin-kapt plugin. \
                 """,
             category = Category.CORRECTNESS,
@@ -2529,7 +2582,8 @@ open class GradleDetector : Detector(), GradleScanner {
             id = "LifecycleAnnotationProcessorWithJava8",
             briefDescription = "Lifecycle Annotation Processor with Java 8 Compile Option",
             moreInfo = "https://d.android.com/r/studio-ui/lifecycle-release-notes",
-            explanation = """
+            explanation =
+                """
                 For faster incremental build, switch to the Lifecycle Java 8 API with these steps:
 
                 First replace
@@ -2556,7 +2610,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val RISKY_LIBRARY = Issue.create(
             id = "RiskyLibrary",
             briefDescription = "Libraries with Privacy or Security Risks",
-            explanation = """
+            explanation =
+                """
                 Your app is using a version of a library that has been identified by \
                 the library developer as a potential source of privacy and/or security risks. \
                 This may be a violation of Google Play policies (see \
@@ -2580,7 +2635,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val ANNOTATION_PROCESSOR_ON_COMPILE_PATH = Issue.create(
             id = "AnnotationProcessorOnCompilePath",
             briefDescription = "Annotation Processor on Compile Classpath",
-            explanation = """
+            explanation =
+                """
                This dependency is identified as an annotation processor. Consider adding it to the \
                processor path using `annotationProcessor` instead of including it to the
                compile path.
@@ -2596,7 +2652,8 @@ open class GradleDetector : Detector(), GradleScanner {
         val KTX_EXTENSION_AVAILABLE = Issue.create(
             id = "KtxExtensionAvailable",
             briefDescription = "KTX Extension Available",
-            explanation = """
+            explanation =
+                """
                 Android KTX extensions augment some libraries with support for modern Kotlin \
                 language features like extension functions, extension properties, lambdas, named \
                 parameters, coroutines, and more.
@@ -2733,9 +2790,11 @@ open class GradleDetector : Detector(), GradleScanner {
                             // instead of using a different artifact name; this turns off maven
                             // semantic versioning. Special case this.
                             val preview = revision.isPreview && !substring.endsWith("-android")
-                            if ((allowPreview || !preview) && (filter == null || filter.test(
+                            if ((allowPreview || !preview) && (
+                                filter == null || filter.test(
                                     revision
-                                ))
+                                )
+                                )
                             ) {
                                 return revision
                             }
@@ -2876,7 +2935,7 @@ open class GradleDetector : Detector(), GradleScanner {
 
         private fun hasLifecycleAnnotationProcessor(dependency: String) =
             dependency.contains("android.arch.lifecycle:compiler") ||
-                    dependency.contains("androidx.lifecycle:lifecycle-compiler")
+                dependency.contains("androidx.lifecycle:lifecycle-compiler")
 
         private fun isCommonAnnotationProcessor(dependency: String): Boolean =
             dependency.substring(0, dependency.lastIndexOf(":")) in commonAnnotationProcessors
@@ -2895,7 +2954,7 @@ open class GradleDetector : Detector(), GradleScanner {
 
             fun matches(configurationName: String): Boolean {
                 return configurationName == compileConfigName ||
-                        configurationName.endsWith(compileConfigSuffix)
+                    configurationName.endsWith(compileConfigSuffix)
             }
 
             fun replacement(configurationName: String): String {

@@ -30,6 +30,20 @@ fun getParameterType(tensorInfo: TensorInfo): TypeName {
     }
 }
 
+fun getGroupClassParameterType(tensorInfo: TensorInfo): TypeName {
+    return if (tensorInfo.fileType == TensorInfo.FileType.TENSOR_VALUE_LABELS) {
+        ClassNames.STRING
+    } else if (tensorInfo.contentType == TensorInfo.ContentType.BOUNDING_BOX) {
+        ClassNames.RECT_F
+    } else if (tensorInfo.dataType == TensorInfo.DataType.FLOAT32) {
+        TypeName.FLOAT
+    } else if (tensorInfo.dataType == TensorInfo.DataType.UINT8) {
+        TypeName.INT
+    } else {
+        ClassNames.TENSOR_BUFFER
+    }
+}
+
 fun getIdentifierFromFileName(name: String): String {
     return MlNames.computeIdentifierName(name.replace("\\..*".toRegex(), ""))
 }
@@ -52,6 +66,10 @@ fun getProcessorBuilderName(tensorInfo: TensorInfo): String {
 
 fun getFloatArrayString(array: FloatArray): String {
     return getArrayString("float", array.map { it.toString() + "f" }.toTypedArray())
+}
+
+fun getIntArrayString(array: IntArray): String {
+    return getArrayString("int", array.map { it.toString() }.toTypedArray())
 }
 
 fun getObjectArrayString(array: Array<String>): String {
@@ -80,6 +98,8 @@ fun getOutputParameterType(tensorInfo: TensorInfo): TypeName {
     return when {
         tensorInfo.isRGBImage -> ClassNames.TENSOR_IMAGE
         tensorInfo.fileType == TensorInfo.FileType.TENSOR_AXIS_LABELS -> ClassNames.CATEGORY_LIST
+        tensorInfo.fileType == TensorInfo.FileType.TENSOR_VALUE_LABELS -> ClassNames.STRING_LIST
+        tensorInfo.contentType == TensorInfo.ContentType.BOUNDING_BOX -> ClassNames.RECTF_LIST
         else -> ClassNames.TENSOR_BUFFER
     }
 }
@@ -88,6 +108,16 @@ fun getOutputParameterTypeName(tensorInfo: TensorInfo): String {
     return when {
         tensorInfo.isRGBImage -> ClassNames.TENSOR_IMAGE.simpleName()
         tensorInfo.fileType == TensorInfo.FileType.TENSOR_AXIS_LABELS -> "CategoryList"
+        tensorInfo.fileType == TensorInfo.FileType.TENSOR_VALUE_LABELS -> "StringList"
+        tensorInfo.contentType == TensorInfo.ContentType.BOUNDING_BOX -> "RectFList"
         else -> ClassNames.TENSOR_BUFFER.simpleName()
     }
+}
+
+fun getImageHeightFieldName(tensorInfo: TensorInfo): String {
+    return tensorInfo.identifierName + "Height"
+}
+
+fun getImageWidthFieldName(tensorInfo: TensorInfo): String {
+    return tensorInfo.identifierName + "Width"
 }

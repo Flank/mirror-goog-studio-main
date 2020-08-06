@@ -17,11 +17,6 @@
 package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Issue;
-import com.google.common.collect.Sets;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 @SuppressWarnings("javadoc")
 public class PluralsDetectorTest extends AbstractCheckTest {
@@ -30,21 +25,21 @@ public class PluralsDetectorTest extends AbstractCheckTest {
         return new PluralsDetector();
     }
 
-    public void test1() throws Exception {
-        mEnabled = Sets.newHashSet(PluralsDetector.MISSING, PluralsDetector.EXTRA);
-        assertEquals(
+    public void test1() {
+        String expected =
                 ""
                         + "res/values-pl/plurals2.xml:3: Error: For locale \"pl\" (Polish) the following quantities should also be defined: many [MissingQuantity]\n"
                         + "    <plurals name=\"numberOfSongsAvailable\">\n"
                         + "    ^\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(mPlurals, mPlurals2, mPlurals2_class));
+                        + "1 errors, 0 warnings\n";
+        lint().files(mPlurals, mPlurals2, mPlurals2_class)
+                .issues(PluralsDetector.MISSING, PluralsDetector.EXTRA)
+                .run()
+                .expect(expected);
     }
 
-    public void test2() throws Exception {
-        mEnabled = Sets.newHashSet(PluralsDetector.MISSING, PluralsDetector.EXTRA);
-        //noinspection all // Sample code
-        assertEquals(
+    public void test2() {
+        String expected =
                 ""
                         + "res/values-cs/plurals3.xml:3: Error: For locale \"cs\" (Czech) the following quantities should also be defined: few [MissingQuantity]\n"
                         + "  <plurals name=\"draft\">\n"
@@ -55,8 +50,8 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                         + "res/values-zh-rCN/plurals3.xml:7: Warning: For language \"zh\" (Chinese) the following quantities are not relevant: one [UnusedQuantity]\n"
                         + "  <plurals name=\"title_day_dialog_content\">\n"
                         + "  ^\n"
-                        + "1 errors, 2 warnings\n",
-                lintProject(
+                        + "1 errors, 2 warnings\n";
+        lint().files(
                         xml(
                                 "res/values-zh-rCN/plurals3.xml",
                                 ""
@@ -80,19 +75,20 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                                         + "    <item quantity=\"one\">\"Koncept\"</item>\n"
                                         + "    <item quantity=\"other\">\"Koncepty\"</item>\n"
                                         + "  </plurals>\n"
-                                        + "</resources>\n")));
+                                        + "</resources>\n"))
+                .issues(PluralsDetector.MISSING, PluralsDetector.EXTRA)
+                .run()
+                .expect(expected);
     }
 
-    public void testEmptyPlural() throws Exception {
-        mEnabled = Sets.newHashSet(PluralsDetector.MISSING, PluralsDetector.EXTRA);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testEmptyPlural() {
+        String expected =
                 ""
                         + "res/values/plurals4.xml:3: Error: There should be at least one quantity string in this <plural> definition [MissingQuantity]\n"
                         + "   <plurals name=\"minutes_until_num\">\n"
                         + "   ^\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "res/values/plurals4.xml",
                                 ""
@@ -100,14 +96,15 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                                         + "<resources>\n"
                                         + "   <plurals name=\"minutes_until_num\">\n"
                                         + "   </plurals>\n"
-                                        + "</resources>\n")));
+                                        + "</resources>\n"))
+                .issues(PluralsDetector.MISSING, PluralsDetector.EXTRA)
+                .run()
+                .expect(expected);
     }
 
-    public void testPolish() throws Exception {
+    public void testPolish() {
         // Test for https://code.google.com/p/android/issues/detail?id=67803
-        mEnabled = Sets.newHashSet(PluralsDetector.MISSING, PluralsDetector.EXTRA);
-        //noinspection all // Sample code
-        assertEquals(
+        String expected =
                 ""
                         + "res/values-pl/plurals5.xml:3: Error: For locale \"pl\" (Polish) the following quantities should also be defined: many [MissingQuantity]\n"
                         + "    <plurals name=\"my_plural\">\n"
@@ -115,8 +112,8 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                         + "res/values-pl/plurals5.xml:3: Warning: For language \"pl\" (Polish) the following quantities are not relevant: zero [UnusedQuantity]\n"
                         + "    <plurals name=\"my_plural\">\n"
                         + "    ^\n"
-                        + "1 errors, 1 warnings\n",
-                lintProject(
+                        + "1 errors, 1 warnings\n";
+        lint().files(
                         xml(
                                 "res/values-pl/plurals5.xml",
                                 ""
@@ -128,16 +125,15 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                                         + "        <item quantity=\"few\">@string/hello</item>\n"
                                         + "        <item quantity=\"other\">@string/hello</item>\n"
                                         + "    </plurals>\n"
-                                        + "</resources>\n")));
+                                        + "</resources>\n"))
+                .issues(PluralsDetector.MISSING, PluralsDetector.EXTRA)
+                .run()
+                .expect(expected);
     }
 
-    public void testRussian() throws Exception {
+    public void testRussian() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=75799
-        mEnabled = Sets.newHashSet(PluralsDetector.MISSING, PluralsDetector.EXTRA);
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "res/values-ru/plurals6.xml",
                                 ""
@@ -145,23 +141,28 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                                         + "    <item quantity=\"one\">\u0447\u0435\u0440\u0435\u0437 %d \u043c\u0438\u043d\u0443\u0442\u0443</item>\n"
                                         + "    <item quantity=\"few\">\u0447\u0435\u0440\u0435\u0437 %d \u043c\u0438\u043d\u0443\u0442\u044b</item>\n"
                                         + "    <item quantity=\"many\">\u0447\u0435\u0440\u0435\u0437 %d \u043c\u0438\u043d\u0443\u0442</item>\n"
-                                        + "</plurals>\n")));
+                                        + "</plurals>\n"))
+                .issues(PluralsDetector.MISSING, PluralsDetector.EXTRA)
+                .run()
+                .expectClean();
     }
 
-    public void testImpliedQuantity() throws Exception {
-        mEnabled = Collections.singleton(PluralsDetector.IMPLIED_QUANTITY);
-        assertEquals(
+    public void testImpliedQuantity() {
+        String expected =
                 ""
                         + "res/values-sl/plurals2.xml:4: Error: The quantity 'one' matches more than one specific number in this locale (1, 101, 201, 301, 401, 501, 601, 701, 1001, \u2026), but the message did not include a formatting argument (such as %d). This is usually an internationalization error. See full issue explanation for more. [ImpliedQuantity]\n"
                         + "        <item quantity=\"one\">Znaleziono jedn\u0105 piosenk\u0119.</item>\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         mPlurals,
                         mPlurals2,
                         mPlurals2_class,
                         // Simulate locale message for locale which has multiple values for one
-                        mPlurals2_class2));
+                        mPlurals2_class2)
+                .issues(PluralsDetector.IMPLIED_QUANTITY)
+                .run()
+                .expect(expected);
     }
 
     public void testExpandTemplates() {
@@ -234,13 +235,6 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                                 + "    <plurals name=\"plural_test\">\n"
                                 + "    ^\n"
                                 + "0 errors, 1 warnings\n");
-    }
-
-    private Set<Issue> mEnabled = new HashSet<>();
-
-    @Override
-    protected boolean isEnabled(Issue issue) {
-        return super.isEnabled(issue) && mEnabled.contains(issue);
     }
 
     @SuppressWarnings("all") // Sample code

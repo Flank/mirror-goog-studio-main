@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.cxx.json.StringTable
 import com.google.common.collect.Maps
 import com.google.common.truth.Truth.assertThat
 import com.google.gson.GsonBuilder
-import com.google.gson.stream.JsonReader
 import org.junit.Test
 import java.io.File
 import java.io.StringReader
@@ -82,11 +81,12 @@ class CmakeServerExternalNativeJsonGeneratorTranslationTest {
             File("cmake.exe"),
             File("./output-folder/x86"),
             true,
-            JsonReader(StringReader(compilationDatabase)),
+            { StringReader(compilationDatabase) },
             "x86",
             File("C:/Users/jomof/AndroidStudioProjects/MyApplication10/app/.externalNativeBuild/cmake/debug/x86"),
             getTestTarget(target),
-            StringTable(table)
+            StringTable(table),
+            false
         )
         val flagsOrdinal = library.files!!.first().flagsOrdinal!!
         assertThat(table[flagsOrdinal]).contains("--target")

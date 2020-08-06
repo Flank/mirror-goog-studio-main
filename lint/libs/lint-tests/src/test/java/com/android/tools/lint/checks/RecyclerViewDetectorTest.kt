@@ -51,7 +51,8 @@ class RecyclerViewDetectorTest : AbstractCheckTest() {
     ).indented()
 
     fun testFixedPosition() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/RecyclerViewTest.java:69: Error: Do not treat position as fixed; only use immediately and call holder.getAdapterPosition() to look it up later [RecyclerView]
                     public void onBindViewHolder(ViewHolder holder, int position) {
                                                                     ~~~~~~~~~~~~
@@ -195,7 +196,8 @@ class RecyclerViewDetectorTest : AbstractCheckTest() {
     }
 
     fun testExecuteBindings() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/RecyclerViewTest2.java:32: Error: You must call holder.dataBinder.executePendingBindings() before the onBind method exits, otherwise, the DataBinding library will update the UI in the next animation frame causing a delayed update & potential jumps if the item resizes. [PendingBindings]
                         holder.dataBinder.someMethod(); // ERROR - no pending call
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

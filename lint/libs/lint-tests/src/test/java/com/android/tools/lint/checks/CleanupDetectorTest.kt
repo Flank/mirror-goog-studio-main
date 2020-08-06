@@ -25,7 +25,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
 
     fun testRecycle() {
 
-        val expected = """
+        val expected =
+            """
             src/test/pkg/RecycleTest.java:56: Warning: This TypedArray should be recycled after use with #recycle() [Recycle]
                     final TypedArray a = getContext().obtainStyledAttributes(attrs,
                                                       ~~~~~~~~~~~~~~~~~~~~~~
@@ -264,7 +265,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
 
     fun testCommit() {
 
-        val expected = """
+        val expected =
+            """
             src/test/pkg/CommitTest.java:25: Warning: This transaction should be completed with a commit() call [CommitTransaction]
                     getFragmentManager().beginTransaction(); // Missing commit
                                          ~~~~~~~~~~~~~~~~
@@ -511,7 +513,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
     }
 
     fun testCommit4() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/CommitTest3.java:35: Warning: This transaction should be completed with a commit() call [CommitTransaction]
                             getCompatFragmentManager().beginTransaction();
                                                        ~~~~~~~~~~~~~~~~
@@ -602,7 +605,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
 
     fun testCommitChainedCalls() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=135204
-        val expected = """
+        val expected =
+            """
             src/test/pkg/TransactionTest.java:8: Warning: This transaction should be completed with a commit() call [CommitTransaction]
                     android.app.FragmentTransaction transaction2 = getFragmentManager().beginTransaction();
                                                                                         ~~~~~~~~~~~~~~~~
@@ -636,7 +640,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
     }
 
     fun testSurfaceTexture() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/SurfaceTextureTest.java:18: Warning: This SurfaceTexture should be freed up after use with #release() [Recycle]
                     SurfaceTexture texture = new SurfaceTexture(1); // Warn: texture not released
                                              ~~~~~~~~~~~~~~~~~~~~~
@@ -697,7 +702,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
 
     fun testContentProviderClient() {
 
-        val expected = """
+        val expected =
+            """
             src/test/pkg/ContentProviderClientTest.java:8: Warning: This ContentProviderClient should be freed up after use with #release() [Recycle]
                     ContentProviderClient client = resolver.acquireContentProviderClient("test"); // Warn
                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -744,7 +750,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
 
     fun testDatabaseCursor() {
 
-        val expected = """
+        val expected =
+            """
             src/test/pkg/CursorTest.java:14: Warning: This Cursor should be freed up after use with #close() [Recycle]
                     Cursor cursor = db.query("TABLE_TRIPS",
                                        ~~~~~
@@ -918,7 +925,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
     fun testDatabaseCursorReassignment() {
         lint().files(
             java(
-                "src/test/pkg/CursorTest.java", """
+                "src/test/pkg/CursorTest.java",
+                """
                     package test.pkg;
 
                     import android.app.Activity;
@@ -949,7 +957,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
     // Shared preference tests
 
     fun test() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/SharedPrefsTest.java:54: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]
                     SharedPreferences.Editor editor = preferences.edit();
                                                       ~~~~~~~~~~~~~~~~~~
@@ -1047,7 +1056,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
     fun test2() {
         // Regression test 1 for http://code.google.com/p/android/issues/detail?id=34322
 
-        val expected = """
+        val expected =
+            """
             src/test/pkg/SharedPrefsTest2.java:13: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]
                     SharedPreferences.Editor editor = preferences.edit();
                                                       ~~~~~~~~~~~~~~~~~~
@@ -1085,7 +1095,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
 
     fun test3() {
         // Regression test 2 for http://code.google.com/p/android/issues/detail?id=34322
-        val expected = """
+        val expected =
+            """
             src/test/pkg/SharedPrefsTest3.java:13: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]
                     Editor editor = preferences.edit();
                                     ~~~~~~~~~~~~~~~~~~
@@ -1117,7 +1128,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
     fun test4() {
         // Regression test 3 for http://code.google.com/p/android/issues/detail?id=34322
 
-        val expected = """
+        val expected =
+            """
             src/test/pkg/SharedPrefsTest4.java:13: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]
                     Editor editor = preferences.edit();
                                     ~~~~~~~~~~~~~~~~~~
@@ -1147,7 +1159,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
 
     fun test5() {
         // Check fields too: http://code.google.com/p/android/issues/detail?id=39134
-        val expected = """
+        val expected =
+            """
             src/test/pkg/SharedPrefsTest5.java:16: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]
                     mPreferences.edit().putString(PREF_FOO, "bar");
                     ~~~~~~~~~~~~~~~~~~~
@@ -1236,7 +1249,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
 
     fun test6() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=68692
-        val expected = """
+        val expected =
+            """
             src/test/pkg/SharedPrefsTest7.java:13: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]
                     settings.edit().putString(MY_PREF_KEY, myPrefValue);
                     ~~~~~~~~~~~~~~~
@@ -1271,7 +1285,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
     }
 
     fun test8() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/SharedPrefsTest8.java:11: Warning: Consider using apply() instead; commit writes its data to persistent storage immediately, whereas apply will handle it in the background [ApplySharedPref]
                     editor.commit();
                     ~~~~~~~~~~~~~~~
@@ -1280,15 +1295,16 @@ class CleanupDetectorTest : AbstractCheckTest() {
         lint().files(manifest().minSdk(11), sharedPrefsTest8).run().expect(expected)
             .expectFixDiffs(
                 "" +
-                        "Fix for src/test/pkg/SharedPrefsTest8.java line 10: Replace commit() with apply():\n" +
-                        "@@ -11 +11\n" +
-                        "-         editor.commit();\n" +
-                        "+         editor.apply();\n"
+                    "Fix for src/test/pkg/SharedPrefsTest8.java line 10: Replace commit() with apply():\n" +
+                    "@@ -11 +11\n" +
+                    "-         editor.commit();\n" +
+                    "+         editor.apply();\n"
             )
     }
 
     fun testChainedCalls() {
-        val expected = """
+        val expected =
+            """
             src/test/pkg/Chained.java:24: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]
                     PreferenceManager
                     ^
@@ -1296,7 +1312,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
             """
         lint().files(
             java(
-                "src/test/pkg/Chained.java", """
+                "src/test/pkg/Chained.java",
+                """
                     package test.pkg;
 
                     import android.content.Context;
@@ -1335,7 +1352,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
     fun testCommitDetector() {
         lint().files(
             java(
-                "src/test/pkg/CommitTest.java", """
+                "src/test/pkg/CommitTest.java",
+                """
                     package test.pkg;
 
                     import android.app.Activity;
@@ -1370,7 +1388,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
         // Handle transactions assigned to parameters (this used to not work)
         lint().files(
             java(
-                "src/test/pkg/CommitTest2.java", """
+                "src/test/pkg/CommitTest2.java",
+                """
                     package test.pkg;
 
                     import android.app.FragmentManager;
@@ -1397,7 +1416,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
         // may do that)
         lint().files(
             java(
-                "src/test/pkg/SharedPrefsTest.java", """
+                "src/test/pkg/SharedPrefsTest.java",
+                """
                     package test.pkg;
 
                     import android.content.Context;
@@ -1426,7 +1446,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
     fun testCommitNow() {
         lint().files(
             java(
-                "src/test/pkg/CommitTest.java", """
+                "src/test/pkg/CommitTest.java",
+                """
                     package test.pkg;
 
                     import android.app.FragmentManager;
@@ -1449,7 +1470,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
         // closed.
         lint().files(
             java(
-                "src/test/pkg/TryWithResources.java", """
+                "src/test/pkg/TryWithResources.java",
+                """
                     package test.pkg;
 
                     import android.content.ContentResolver;
@@ -1483,7 +1505,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
         // we correctly consider the editor operation finished.
         lint().files(
             java(
-                "src/test/pkg/CommitPrefTest.java", """
+                "src/test/pkg/CommitPrefTest.java",
+                """
                     package test.pkg;
 
                     import android.content.Context;
@@ -1507,7 +1530,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
         // Handle transactions assigned to parameters (this used to not work)
         lint().files(
             java(
-                "src/test/pkg/CommitTest2.java", """
+                "src/test/pkg/CommitTest2.java",
+                """
                     package test.pkg;
 
                     import android.app.FragmentManager;

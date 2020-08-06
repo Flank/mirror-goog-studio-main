@@ -311,7 +311,8 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
 
     public void testIssue42798() {
         // http://code.google.com/p/android/issues/detail?id=42798
-        // String playsCount = String.format(Locale.FRANCE, this.context.getString(R.string.gridview_views_count), article.playsCount);
+        // String playsCount = String.format(Locale.FRANCE,
+        // this.context.getString(R.string.gridview_views_count), article.playsCount);
         String expected =
                 ""
                         + "src/test/pkg/StringFormat3.java:12: Error: Wrong argument type for formatting argument '#1' in gridview_views_count: conversion is 'd', received String (argument #3 in method call) [StringFormatMatches]\n"
@@ -615,7 +616,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
     public void testNotStringFormat() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=67597
         lint().files(
-                        mFormatstrings3, //"res/values/formatstrings.xml",
+                        mFormatstrings3, // "res/values/formatstrings.xml",
                         mShared_prefs_keys,
                         mSharedPrefsTest6)
                 .run()
@@ -625,7 +626,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
     public void testNotStringFormatIncrementally() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=67597
         lint().files(
-                        mFormatstrings3, //"res/values/formatstrings.xml",
+                        mFormatstrings3, // "res/values/formatstrings.xml",
                         mShared_prefs_keys,
                         mSharedPrefsTest6)
                 .incremental("src/test/pkg/SharedPrefsFormat.java")
@@ -638,7 +639,8 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
         // a string format check with
         //   java.lang.IllegalStateException: No match found
         //       at java.util.regex.Matcher.group(Matcher.java:468)
-        //       at com.android.tools.lint.checks.StringFormatDetector.checkStringFormatCall(StringFormatDetector.java:1028)
+        //       at
+        // com.android.tools.lint.checks.StringFormatDetector.checkStringFormatCall(StringFormatDetector.java:1028)
         // ...
         //noinspection all // Sample code
         lint().files(

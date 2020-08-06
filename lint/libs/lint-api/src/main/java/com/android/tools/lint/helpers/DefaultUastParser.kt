@@ -134,9 +134,10 @@ open class DefaultUastParser(
         if (psiFile.language == Language.ANY && file.path.endsWith(DOT_KT)) {
             // Expected to get Kotlin language back here!
             context.client.log(
-                Severity.ERROR, null, "Could not process " +
-                        context.project.getRelativePath(file) +
-                        ": Kotlin not configured correctly"
+                Severity.ERROR, null,
+                "Could not process " +
+                    context.project.getRelativePath(file) +
+                    ": Kotlin not configured correctly"
             )
             return null
         }
@@ -151,15 +152,16 @@ open class DefaultUastParser(
                     issue = IssueRegistry.LINT_ERROR,
                     location = Location.create(file),
                     message = "Source file too large for lint to process (${size}KB); the " +
-                            "current max size is ${max}KB. You can increase the limit by " +
-                            "setting this system property: " +
-                            "`idea.max.intellisense.filesize=$sizeRoundedUp` (or even higher)"
+                        "current max size is ${max}KB. You can increase the limit by " +
+                        "setting this system property: " +
+                        "`idea.max.intellisense.filesize=$sizeRoundedUp` (or even higher)"
                 )
             }
             return null
         }
 
-        return UastFacade.convertElementWithParent(psiFile, UFile::class.java) as? UFile ?: return null
+        return UastFacade.convertElementWithParent(psiFile, UFile::class.java) as? UFile
+            ?: return null
     }
 
     /**

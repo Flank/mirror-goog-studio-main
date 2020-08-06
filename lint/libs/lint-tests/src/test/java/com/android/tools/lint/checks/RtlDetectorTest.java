@@ -30,10 +30,6 @@ import static com.android.tools.lint.checks.RtlDetector.convertToOppositeDirecti
 import static com.android.tools.lint.checks.RtlDetector.isRtlAttributeName;
 
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Issue;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 @SuppressWarnings("javadoc")
 public class RtlDetectorTest extends AbstractCheckTest {
@@ -49,16 +45,6 @@ public class RtlDetectorTest extends AbstractCheckTest {
         return true;
     }
 
-    private Set<Issue> mEnabled = new HashSet<>();
-    private static final Set<Issue> ALL = new HashSet<>();
-
-    static {
-        ALL.add(RtlDetector.USE_START);
-        ALL.add(RtlDetector.ENABLED);
-        ALL.add(RtlDetector.COMPAT);
-        ALL.add(RtlDetector.SYMMETRY);
-    }
-
     public void testIsRtlAttributeName() {
         assertTrue(isRtlAttributeName(ATTR_LAYOUT_ALIGN_PARENT_START));
         assertTrue(isRtlAttributeName(ATTR_LAYOUT_MARGIN_END));
@@ -69,23 +55,14 @@ public class RtlDetectorTest extends AbstractCheckTest {
         assertFalse(isRtlAttributeName(ATTR_NAME));
     }
 
-    @Override
-    protected boolean isEnabled(Issue issue) {
-        return super.isEnabled(issue) && mEnabled.contains(issue);
+    public void testTarget14WithRtl() {
+        lint().files(projectProperties().compileSdk(17), mMinsdk5targetsdk14, mRtl)
+                .run()
+                .expectClean();
     }
 
-    public void testTarget14WithRtl() throws Exception {
-        mEnabled = ALL;
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(projectProperties().compileSdk(17), mMinsdk5targetsdk14, mRtl));
-    }
-
-    public void testTarget17WithRtl() throws Exception {
-        mEnabled = ALL;
-        //noinspection all // Sample code
-        assertEquals(
+    public void testTarget17WithRtl() {
+        String expected =
                 ""
                         + "res/layout/rtl.xml:14: Warning: Use \"start\" instead of \"left\" to ensure correct behavior in right-to-left locales [RtlHardcoded]\n"
                         + "        android:layout_gravity=\"left\"\n"
@@ -97,40 +74,31 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "        android:gravity=\"right\"\n"
                         + "                         ~~~~~\n"
                         + "AndroidManifest.xml: Warning: The project references RTL attributes, but does not explicitly enable or disable RTL support with android:supportsRtl in the manifest [RtlEnabled]\n"
-                        + "0 errors, 4 warnings\n",
-                lintProject(
-                        projectProperties().compileSdk(17),
-                        manifest().minSdk(5).targetSdk(17),
-                        mRtl));
+                        + "0 errors, 4 warnings\n";
+        lint().files(projectProperties().compileSdk(17), manifest().minSdk(5).targetSdk(17), mRtl)
+                .run()
+                .expect(expected);
     }
 
-    public void testTarget14() throws Exception {
-        mEnabled = ALL;
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(projectProperties().compileSdk(17), mMinsdk5targetsdk14));
+    public void testTarget14() {
+        lint().files(projectProperties().compileSdk(17), mMinsdk5targetsdk14).run().expectClean();
     }
 
-    public void testOlderCompilationTarget() throws Exception {
-        mEnabled = ALL;
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testOlderCompilationTarget() {
+        lint().files(
                         source(
                                 "project.properties",
                                 ""
                                         + "target=android-14\n"
                                         + "proguard.config=${sdk.dir}/foo.cfg:${user.home}/bar.pro;myfile.txt\n"),
                         manifest().minSdk(5).targetSdk(17),
-                        mRtl));
+                        mRtl)
+                .run()
+                .expectClean();
     }
 
-    public void testUseStart() throws Exception {
-        mEnabled = Collections.singleton(RtlDetector.USE_START);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testUseStart() {
+        String expected =
                 ""
                         + "res/layout/rtl.xml:14: Warning: Use \"start\" instead of \"left\" to ensure correct behavior in right-to-left locales [RtlHardcoded]\n"
                         + "        android:layout_gravity=\"left\"\n"
@@ -141,17 +109,15 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "res/layout/rtl.xml:30: Warning: Use \"end\" instead of \"right\" to ensure correct behavior in right-to-left locales [RtlHardcoded]\n"
                         + "        android:gravity=\"right\"\n"
                         + "                         ~~~~~\n"
-                        + "0 errors, 3 warnings\n",
-                lintProject(
-                        projectProperties().compileSdk(17),
-                        manifest().minSdk(5).targetSdk(17),
-                        mRtl));
+                        + "0 errors, 3 warnings\n";
+        lint().files(projectProperties().compileSdk(17), manifest().minSdk(5).targetSdk(17), mRtl)
+                .issues(RtlDetector.USE_START)
+                .run()
+                .expect(expected);
     }
 
-    public void testTarget17Rtl() throws Exception {
-        mEnabled = Collections.singleton(RtlDetector.USE_START);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testTarget17Rtl() {
+        String expected =
                 ""
                         + "res/layout/rtl.xml:14: Warning: Use \"start\" instead of \"left\" to ensure correct behavior in right-to-left locales [RtlHardcoded]\n"
                         + "        android:layout_gravity=\"left\"\n"
@@ -162,14 +128,15 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "res/layout/rtl.xml:30: Warning: Use \"end\" instead of \"right\" to ensure correct behavior in right-to-left locales [RtlHardcoded]\n"
                         + "        android:gravity=\"right\"\n"
                         + "                         ~~~~~\n"
-                        + "0 errors, 3 warnings\n",
-                lintProject(projectProperties().compileSdk(17), mMin17rtl, mRtl));
+                        + "0 errors, 3 warnings\n";
+        lint().files(projectProperties().compileSdk(17), mMin17rtl, mRtl)
+                .issues(RtlDetector.USE_START)
+                .run()
+                .expect(expected);
     }
 
-    public void testRelativeLayoutInOld() throws Exception {
-        mEnabled = Collections.singleton(RtlDetector.USE_START);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testRelativeLayoutInOld() {
+        String expected =
                 ""
                         + "res/layout/relative.xml:10: Warning: Consider adding android:layout_alignParentStart=\"true\" to better support right-to-left layouts [RtlHardcoded]\n"
                         + "        android:layout_alignParentLeft=\"true\"\n"
@@ -198,17 +165,18 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "res/layout/relative.xml:48: Warning: Consider adding android:layout_alignEnd=\"@id/cancel\" to better support right-to-left layouts [RtlHardcoded]\n"
                         + "        android:layout_alignRight=\"@id/cancel\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 9 warnings\n",
-                lintProject(
+                        + "0 errors, 9 warnings\n";
+        lint().files(
                         projectProperties().compileSdk(17),
                         manifest().minSdk(5).targetSdk(17),
-                        mRelative));
+                        mRelative)
+                .issues(RtlDetector.USE_START)
+                .run()
+                .expect(expected);
     }
 
-    public void testRelativeLayoutInNew() throws Exception {
-        mEnabled = Collections.singleton(RtlDetector.USE_START);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testRelativeLayoutInNew() {
+        String expected =
                 ""
                         + "res/layout/relative.xml:10: Warning: Consider replacing android:layout_alignParentLeft with android:layout_alignParentStart=\"true\" to better support right-to-left layouts [RtlHardcoded]\n"
                         + "        android:layout_alignParentLeft=\"true\"\n"
@@ -237,12 +205,14 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "res/layout/relative.xml:48: Warning: Consider replacing android:layout_alignRight with android:layout_alignEnd=\"@id/cancel\" to better support right-to-left layouts [RtlHardcoded]\n"
                         + "        android:layout_alignRight=\"@id/cancel\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 9 warnings\n",
-                lintProject(projectProperties().compileSdk(17), mMin17rtl, mRelative));
+                        + "0 errors, 9 warnings\n";
+        lint().files(projectProperties().compileSdk(17), mMin17rtl, mRelative)
+                .issues(RtlDetector.USE_START)
+                .run()
+                .expect(expected);
     }
 
     public void testRelativeLayoutCompat() {
-        //noinspection all // Sample code
         String expected =
                 ""
                         + "res/layout/relative.xml:10: Error: To support older versions than API 17 (project specifies 5) you should also add android:layout_alignParentLeft=\"true\" [RtlCompat]\n"
@@ -384,12 +354,8 @@ public class RtlDetectorTest extends AbstractCheckTest {
                                 + "          android:layout_alignStart=\"@id/cancel\"\n");
     }
 
-    public void testRelativeCompatOk() throws Exception {
-        mEnabled = ALL;
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testRelativeCompatOk() {
+        lint().files(
                         projectProperties().compileSdk(17),
                         manifest().minSdk(5).targetSdk(17),
                         xml(
@@ -457,15 +423,13 @@ public class RtlDetectorTest extends AbstractCheckTest {
                                         + "        android:scaleType=\"fitXY\"\n"
                                         + "        android:src=\"@drawable/menu_list_divider\" />\n"
                                         + "\n"
-                                        + "</RelativeLayout>\n")));
+                                        + "</RelativeLayout>\n"))
+                .run()
+                .expectClean();
     }
 
-    public void testTarget17NoRtl() throws Exception {
-        mEnabled = ALL;
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testTarget17NoRtl() {
+        lint().files(
                         projectProperties().compileSdk(17),
                         xml(
                                 "AndroidManifest.xml",
@@ -485,11 +449,12 @@ public class RtlDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mRtl));
+                        mRtl)
+                .run()
+                .expectClean();
     }
 
     public void testRtlQuickFixBelow17() {
-        //noinspection all // Sample code
         lint().files(
                         projectProperties().compileSdk(17),
                         manifest().minSdk(16).targetSdk(17),
@@ -522,7 +487,6 @@ public class RtlDetectorTest extends AbstractCheckTest {
     }
 
     public void testRtlQuickFix17() {
-        //noinspection all // Sample code
         lint().files(
                         projectProperties().compileSdk(17),
                         manifest().minSdk(17).targetSdk(17),
@@ -593,10 +557,8 @@ public class RtlDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testJava() throws Exception {
-        mEnabled = ALL;
-        //noinspection all // Sample code
-        assertEquals(
+    public void testJava() {
+        String expected =
                 ""
                         + "src/test/pkg/GravityTest.java:24: Warning: Use \"Gravity.START\" instead of \"Gravity.LEFT\" to ensure correct behavior in right-to-left locales [RtlHardcoded]\n"
                         + "        t1.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);\n"
@@ -604,8 +566,8 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "src/test/pkg/GravityTest.java:30: Warning: Use \"Gravity.START\" instead of \"Gravity.LEFT\" to ensure correct behavior in right-to-left locales [RtlHardcoded]\n"
                         + "        t1.setGravity(LEFT | RIGHT); // static imports\n"
                         + "                      ~~~~\n"
-                        + "0 errors, 2 warnings\n",
-                lintProject(
+                        + "0 errors, 2 warnings\n";
+        lint().files(
                         projectProperties().compileSdk(17),
                         manifest().minSdk(5).targetSdk(17),
                         java(
@@ -641,34 +603,26 @@ public class RtlDetectorTest extends AbstractCheckTest {
                                         + "        int notAnError = Other.LEFT;\n"
                                         + "        t1.setGravity(LEFT | RIGHT); // static imports\n"
                                         + "    }\n"
-                                        + "}\n")));
+                                        + "}\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void testOk1() throws Exception {
-        mEnabled = ALL;
+    public void testOk1() {
         // targetSdkVersion < 17
-        assertEquals("No warnings.", lintProject(mRtl));
+        lint().files(mRtl).run().expectClean();
     }
 
-    public void testOk2() throws Exception {
-        mEnabled = ALL;
+    public void testOk2() {
         // build target < 14
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
-                        projectProperties().compileSdk(10),
-                        manifest().minSdk(5).targetSdk(17),
-                        mRtl));
+        lint().files(projectProperties().compileSdk(10), manifest().minSdk(5).targetSdk(17), mRtl)
+                .run()
+                .expectClean();
     }
 
-    public void testNullLocalName() throws Exception {
+    public void testNullLocalName() {
         // Regression test for attribute with null local name
-        mEnabled = ALL;
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         projectProperties().compileSdk(10),
                         manifest().minSdk(5).targetSdk(17),
                         xml(
@@ -685,22 +639,25 @@ public class RtlDetectorTest extends AbstractCheckTest {
                                         + "        editable=\"false\"\n"
                                         + "        android:text=\"Button\" />\n"
                                         + "\n"
-                                        + "</LinearLayout>\n")));
+                                        + "</LinearLayout>\n"))
+                .run()
+                .expectClean();
     }
 
-    public void testSymmetry() throws Exception {
-        mEnabled = Collections.singleton(RtlDetector.SYMMETRY);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testSymmetry() {
+        String expected =
                 ""
                         + "res/layout/relative.xml:29: Warning: When you define paddingRight you should probably also define paddingLeft for right-to-left symmetry [RtlSymmetry]\n"
                         + "        android:paddingRight=\"120dip\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         projectProperties().compileSdk(17),
                         manifest().minSdk(5).targetSdk(17),
-                        mRelative));
+                        mRelative)
+                .issues(RtlDetector.SYMMETRY)
+                .run()
+                .expect(expected);
     }
 
     public void testCompatAttributeValueConversion() {
@@ -714,7 +671,6 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "        android:paddingEnd=\"?android:listPreferredItemPaddingEnd\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
-        //noinspection all // Sample code
         lint().files(
                         projectProperties().compileSdk(17),
                         manifest().minSdk(5).targetSdk(17),
@@ -747,10 +703,8 @@ public class RtlDetectorTest extends AbstractCheckTest {
                                 + "          android:text=\"@string/hello_world\" />\n");
     }
 
-    public void testTextAlignment() throws Exception {
-        mEnabled = Collections.singleton(RtlDetector.COMPAT);
-        //noinspection all // Sample code
-        assertEquals(
+    public void testTextAlignment() {
+        String expected =
                 ""
                         + "res/layout/spinner.xml:49: Error: Inconsistent alignment specification between textAlignment and gravity attributes: was end, expected start [RtlCompat]\n"
                         + "            android:textAlignment=\"textStart\"/> <!-- ERROR -->\n"
@@ -759,8 +713,8 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "res/layout/spinner.xml:58: Error: To support older versions than API 17 (project specifies 5) you must also specify gravity or layout_gravity=\"center_horizontal\" [RtlCompat]\n"
                         + "            android:textAlignment=\"center\"/> <!-- ERROR -->\n"
                         + "            ~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "2 errors, 0 warnings\n",
-                lintProject(
+                        + "2 errors, 0 warnings\n";
+        lint().files(
                         projectProperties().compileSdk(17),
                         manifest().minSdk(5).targetSdk(17),
                         xml(
@@ -845,7 +799,10 @@ public class RtlDetectorTest extends AbstractCheckTest {
                                         + "            android:gravity=\"center\"\n"
                                         + "            android:textAlignment=\"center\"/> <!-- OK -->\n"
                                         + "\n"
-                                        + "</merge>\n")));
+                                        + "</merge>\n"))
+                .issues(RtlDetector.COMPAT)
+                .run()
+                .expect(expected);
     }
 
     public void testConvertBetweenAttributes() {
@@ -878,19 +835,17 @@ public class RtlDetectorTest extends AbstractCheckTest {
         assertEquals("paddingEnd", convertToOppositeDirection("paddingStart"));
     }
 
-    public void testEnumConstants() throws Exception {
+    public void testEnumConstants() {
         // Regression test for
         //   https://code.google.com/p/android/issues/detail?id=75480
         // Also checks that static imports work correctly
-        mEnabled = ALL;
-        //noinspection all // Sample code
-        assertEquals(
+        String expected =
                 ""
                         + "src/test/pkg/GravityTest2.java:19: Warning: Use \"Gravity.START\" instead of \"Gravity.LEFT\" to ensure correct behavior in right-to-left locales [RtlHardcoded]\n"
                         + "        if (gravity == LEFT) { // ERROR\n"
                         + "                       ~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         projectProperties().compileSdk(17),
                         manifest().minSdk(5).targetSdk(17),
                         java(
@@ -923,7 +878,9 @@ public class RtlDetectorTest extends AbstractCheckTest {
                                         + "        if (gravity == RIGHT) { // OK\n"
                                         + "        }\n"
                                         + "    }\n"
-                                        + "}\n")));
+                                        + "}\n"))
+                .run()
+                .expect(expected);
     }
 
     @SuppressWarnings("all") // Sample code

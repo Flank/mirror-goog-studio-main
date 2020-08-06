@@ -156,12 +156,6 @@ abstract class ComponentPropertiesImpl(
     override val description: String
         get() = variantData.description
 
-    override val dexingType: DexingType
-        get() = variantDslInfo.dexingType
-
-    override val needsMainDexList: Boolean
-        get() = dexingType.needsMainDexList
-
     // Resource shrinker expects MergeResources task to have all the resources merged and with
     // overlay rules applied, so we have to go through the MergeResources pipeline in case it's
     // enabled, see b/134766811.
@@ -617,5 +611,10 @@ abstract class ComponentPropertiesImpl(
 
     fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory) {
         asmClassVisitorsRegistry.configureAndLock(objectFactory, asmApiVersion)
+    }
+
+    companion object {
+        // String to
+        final val ENABLE_LEGACY_API: String = "Turn on with by putting '${BooleanOption.ENABLE_LEGACY_API.propertyName}=true in gradle.properties'"
     }
 }

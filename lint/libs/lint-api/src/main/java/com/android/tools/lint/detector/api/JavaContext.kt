@@ -350,7 +350,7 @@ open class JavaContext(
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated(
         "Here for temporary compatibility; the new typed quickfix data parameter " +
-                "should be used instead"
+            "should be used instead"
     )
     fun report(
         issue: Issue,
@@ -398,7 +398,7 @@ open class JavaContext(
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated(
         "Here for temporary compatibility; the new typed quickfix data parameter " +
-                "should be used instead"
+            "should be used instead"
     )
     fun report(
         issue: Issue,

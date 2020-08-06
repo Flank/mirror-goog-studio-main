@@ -104,9 +104,10 @@ public class DeviceManagerTest {
                         "4.7\" WXGA",
                         "5.1\" WVGA",
                         "5.4\" FWVGA",
+                        "6.7\" Horizontal Fold-in",
                         "7\" WSVGA (Tablet)",
-                        "7.3\" Foldable",
-                        "8\" Foldable",
+                        "7.3\" Fold-in with outer display",
+                        "8\" Fold-out",
                         "13.5\" Freeform");
 
         assertThat(dm.getDevice("2.7in QVGA", "Generic").getDisplayName()).isEqualTo("2.7\" QVGA");
@@ -164,9 +165,10 @@ public class DeviceManagerTest {
                         "4.7\" WXGA",
                         "5.1\" WVGA",
                         "5.4\" FWVGA",
+                        "6.7\" Horizontal Fold-in",
                         "7\" WSVGA (Tablet)",
-                        "7.3\" Foldable",
-                        "8\" Foldable",
+                        "7.3\" Fold-in with outer display",
+                        "8\" Fold-out",
                         "13.5\" Freeform",
                         "Android TV (1080p)",
                         "Android TV (720p)",
@@ -260,9 +262,10 @@ public class DeviceManagerTest {
                         "4.7\" WXGA",
                         "5.1\" WVGA",
                         "5.4\" FWVGA",
+                        "6.7\" Horizontal Fold-in",
                         "7\" WSVGA (Tablet)",
-                        "7.3\" Foldable",
-                        "8\" Foldable",
+                        "7.3\" Fold-in with outer display",
+                        "8\" Fold-out",
                         "13.5\" Freeform");
 
         // this list comes from the nexus.xml bundled in the JAR
@@ -316,9 +319,10 @@ public class DeviceManagerTest {
                         "4.7\" WXGA",
                         "5.1\" WVGA",
                         "5.4\" FWVGA",
+                        "6.7\" Horizontal Fold-in",
                         "7\" WSVGA (Tablet)",
-                        "7.3\" Foldable",
-                        "8\" Foldable",
+                        "7.3\" Fold-in with outer display",
+                        "8\" Fold-out",
                         "13.5\" Freeform",
                         "Android TV (1080p)",
                         "Android TV (720p)",
@@ -357,7 +361,7 @@ public class DeviceManagerTest {
     public final void testGetDevices_SysImgDevice() throws Exception {
 
         File location = sdkManager.getSdkHandler().getLocation();
-        FakePackage.FakeLocalPackage p = new FakePackage.FakeLocalPackage("dummy");
+        FakePackage.FakeLocalPackage p = new FakePackage.FakeLocalPackage("sample");
 
         // Create a system image directory with one device
         DetailsTypes.AddonDetailsType details = AndroidSdkHandler.getAddonModule()
@@ -402,9 +406,10 @@ public class DeviceManagerTest {
                         "4.7\" WXGA",
                         "5.1\" WVGA",
                         "5.4\" FWVGA",
+                        "6.7\" Horizontal Fold-in",
                         "7\" WSVGA (Tablet)",
-                        "7.3\" Foldable",
-                        "8\" Foldable",
+                        "7.3\" Fold-in with outer display",
+                        "8\" Fold-out",
                         "13.5\" Freeform");
 
         // this list comes from the nexus.xml bundled in the JAR
@@ -458,9 +463,10 @@ public class DeviceManagerTest {
                         "4.7\" WXGA",
                         "5.1\" WVGA",
                         "5.4\" FWVGA",
+                        "6.7\" Horizontal Fold-in",
                         "7\" WSVGA (Tablet)",
-                        "7.3\" Foldable",
-                        "8\" Foldable",
+                        "7.3\" Fold-in with outer display",
+                        "8\" Fold-out",
                         "13.5\" Freeform",
                         "Android TV (1080p)",
                         "Android TV (720p)",
@@ -573,7 +579,7 @@ public class DeviceManagerTest {
     @Test
     public final void testDeviceOverrides() throws Exception {
         File location = sdkManager.getSdkHandler().getLocation();
-        FakePackage.FakeLocalPackage p = new FakePackage.FakeLocalPackage("dummy");
+        FakePackage.FakeLocalPackage p = new FakePackage.FakeLocalPackage("sample");
 
         // Create a local DeviceManager, get the number of devices, and verify one device
         DeviceManager localDeviceManager = createDeviceManager();

@@ -60,9 +60,12 @@ class LintDriverCrashTest : AbstractCheckTest() {
             // since the stacktrace contains a number of specific line numbers from
             // the lint implementation, including this test, which keeps shifting every
             // time there is an edit
-            .check(TestResultChecker {
-                assertThat(it).contains("Foo.java: Error: Unexpected failure during lint analysis of Foo.java (this is a bug in lint or one of the libraries it depends on)")
-                assertThat(it.contains("""
+            .check(
+                TestResultChecker {
+                    assertThat(it).contains("Foo.java: Error: Unexpected failure during lint analysis of Foo.java (this is a bug in lint or one of the libraries it depends on)")
+                    assertThat(
+                        it.contains(
+                            """
                     The crash seems to involve the detector com.android.tools.lint.client.api.LintDriverCrashTest＄CrashingDetector.
                     You can try disabling it with something like this:
                         android {
@@ -70,11 +73,14 @@ class LintDriverCrashTest : AbstractCheckTest() {
                                 disable "_TestCrash"
                             }
                         }
-                """.trimIndent()))
-                assertThat(it).contains("You can set environment variable LINT_PRINT_STACKTRACE=true to dump a full stacktrace to stdout. [LintError]")
-                assertThat(it).contains("ArithmeticException:LintDriverCrashTest＄CrashingDetector＄createUastHandler＄1.visitFile(LintDriverCrashTest.kt:")
-                assertThat(it).contains("1 errors, 0 warnings")
-            })
+                            """.trimIndent()
+                        )
+                    )
+                    assertThat(it).contains("You can set environment variable LINT_PRINT_STACKTRACE=true to dump a full stacktrace to stdout. [LintError]")
+                    assertThat(it).contains("ArithmeticException:LintDriverCrashTest＄CrashingDetector＄createUastHandler＄1.visitFile(LintDriverCrashTest.kt:")
+                    assertThat(it).contains("1 errors, 0 warnings")
+                }
+            )
         LintDriver.clearCrashCount()
     }
 
@@ -173,7 +179,10 @@ class LintDriverCrashTest : AbstractCheckTest() {
 
     fun testHalfUppercaseColor2() {
         lint()
-            .files(xml("res/drawable/drawable.xml", """
+            .files(
+                xml(
+                    "res/drawable/drawable.xml",
+                    """
           <vector xmlns:android="http://schemas.android.com/apk/res/android"
               android:height="800dp"
               android:viewportHeight="800"
@@ -199,7 +208,9 @@ class LintDriverCrashTest : AbstractCheckTest() {
           L25.807,516.129 L632.258,516.129
           C639.384,516.129,645.161,521.906,645.161,529.032 L670.968,529.032
           C670.968,521.906,676.745,516.129,683.871,516.129 Z"/>
-          </vector>""").indented())
+          </vector>"""
+                ).indented()
+            )
             .issues(ColorCasingDetector.ISSUE_COLOR_CASING)
             .run()
             .expect(
@@ -251,18 +262,22 @@ class LintDriverCrashTest : AbstractCheckTest() {
                         .autoFix()
                         .build()
 
-                    context.report(ISSUE_COLOR_CASING, it, context.getValueLocation(it as Attr),
-                        "Should be using uppercase letters", fix)
+                    context.report(
+                        ISSUE_COLOR_CASING, it, context.getValueLocation(it as Attr),
+                        "Should be using uppercase letters", fix
+                    )
                 }
         }
 
         companion object {
             val COLOR_REGEX = Regex("#[a-fA-F\\d]{3,8}")
-            val ISSUE_COLOR_CASING = Issue.create("ColorCasing",
+            val ISSUE_COLOR_CASING = Issue.create(
+                "ColorCasing",
                 "Raw colors should be defined with uppercase letters.",
                 "Colors should have uppercase letters. #FF0099 is valid while #ff0099 isn't since the ff should be written in uppercase.",
                 Category.CORRECTNESS, 5, Severity.WARNING,
-                Implementation(ColorCasingDetector::class.java, Scope.RESOURCE_FILE_SCOPE))
+                Implementation(ColorCasingDetector::class.java, Scope.RESOURCE_FILE_SCOPE)
+            )
             internal fun Node.attributes() = (0 until attributes.length).map { attributes.item(it) }
         }
     }
@@ -299,14 +314,14 @@ class LintDriverCrashTest : AbstractCheckTest() {
                 override fun visitFile(node: UFile) {
                     throw LinkageError(
                         "loader constraint violation: when resolving field " +
-                                "\"QUALIFIER_SPLITTER\" the class loader (instance of " +
-                                "com/android/tools/lint/gradle/api/DelegatingClassLoader) of the " +
-                                "referring class, " +
-                                "com/android/ide/common/resources/configuration/FolderConfiguration, " +
-                                "and the class loader (instance of " +
-                                "org/gradle/internal/classloader/VisitableURLClassLoader) for the " +
-                                "field's resolved type, com/google/common/base/Splitter, have " +
-                                "different Class objects for that type"
+                            "\"QUALIFIER_SPLITTER\" the class loader (instance of " +
+                            "com/android/tools/lint/gradle/api/DelegatingClassLoader) of the " +
+                            "referring class, " +
+                            "com/android/ide/common/resources/configuration/FolderConfiguration, " +
+                            "and the class loader (instance of " +
+                            "org/gradle/internal/classloader/VisitableURLClassLoader) for the " +
+                            "field's resolved type, com/google/common/base/Splitter, have " +
+                            "different Class objects for that type"
                     )
                 }
             }

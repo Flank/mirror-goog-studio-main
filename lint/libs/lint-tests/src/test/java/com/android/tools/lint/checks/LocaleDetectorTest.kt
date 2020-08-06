@@ -60,7 +60,8 @@ class LocaleDetectorTest : AbstractCheckTest() {
 
         lint().files(
             java(
-                "src/test/pkg/LocaleTest.java", """
+                "src/test/pkg/LocaleTest.java",
+                """
                     package test.pkg;
 
                     import java.text.*;
@@ -114,7 +115,8 @@ class LocaleDetectorTest : AbstractCheckTest() {
 
         lint().files(
             java(
-                "src/test/pkg/LocaleTest.java", """
+                "src/test/pkg/LocaleTest.java",
+                """
                     package test.pkg;
 
                     @SuppressWarnings({"ResultOfMethodCallIgnored", "MalformedFormatString", "MethodMayBeStatic", "ResultOfObjectAllocationIgnored", "SimpleDateFormatWithoutLocale", "StringToUpperCaseOrToLowerCaseWithoutLocale", "ClassNameDiffersFromFileName"})
@@ -148,7 +150,8 @@ class LocaleDetectorTest : AbstractCheckTest() {
             0 errors, 4 warnings
             """
 
-        val expectedFixDiffs = """
+        val expectedFixDiffs =
+            """
             Fix for src/test/pkg/LocaleTest.kt line 2: Replace with `capitalize(Locale.ROOT)`:
             @@ -2 +2
             -     "wrong".capitalize()
@@ -185,7 +188,8 @@ class LocaleDetectorTest : AbstractCheckTest() {
 
         lint().files(
             kotlin(
-                "src/test/pkg/LocaleTest.kt", """
+                "src/test/pkg/LocaleTest.kt",
+                """
                     fun useMethods() {
                         "wrong".capitalize()
                         "ok".capitalize(Locale.US)
@@ -233,7 +237,8 @@ class LocaleDetectorTest : AbstractCheckTest() {
 
         lint().files(
             java(
-                "src/test/pkg/LogTest.java", """
+                "src/test/pkg/LogTest.java",
+                """
                 package test.pkg;
 
                 import android.util.Log;

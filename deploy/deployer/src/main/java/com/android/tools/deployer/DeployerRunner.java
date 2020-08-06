@@ -116,6 +116,15 @@ public class DeployerRunner {
                         parameters.getInstallersPath(), adb, metrics.getDeployMetrics(), logger);
         ExecutorService service = Executors.newFixedThreadPool(5);
         TaskRunner runner = new TaskRunner(service);
+        DeployerOption deployerOption =
+                new DeployerOption.Builder()
+                        .setUseOptimisticSwap(true)
+                        .setUseOptimisticResourceSwap(true)
+                        .setUseStructuralRedefinition(true)
+                        .setUseVariableReinitialization(true)
+                        .setFastRestartOnSwapFail(false)
+                        .build();
+
         Deployer deployer =
                 new Deployer(
                         adb,
@@ -126,11 +135,7 @@ public class DeployerRunner {
                         this.service,
                         metrics,
                         logger,
-                        true,
-                        true,
-                        true,
-                        true,
-                        false);
+                        deployerOption);
         try {
             if (parameters.getCommand() == DeployRunnerParameters.Command.INSTALL) {
                 InstallOptions.Builder options = InstallOptions.builder().setAllowDebuggable();

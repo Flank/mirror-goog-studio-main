@@ -229,6 +229,8 @@ public class ApkSwapper {
     private static void sendSwapRequest(Deploy.SwapRequest request, ClassRedefiner redefiner)
             throws DeployerException {
         Deploy.SwapResponse swapResponse = redefiner.redefine(request);
-        new InstallerResponseHandler().handle(swapResponse);
+        new InstallerResponseHandler(
+                        InstallerResponseHandler.RedefinitionCapability.MOFIFY_CODE_ONLY)
+                .handle(swapResponse);
     }
 }

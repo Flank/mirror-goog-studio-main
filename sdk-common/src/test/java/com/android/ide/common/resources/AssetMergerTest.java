@@ -42,7 +42,6 @@ import org.junit.AfterClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.Mockito;
 
 public class AssetMergerTest extends BaseTestCase {
 
@@ -52,11 +51,7 @@ public class AssetMergerTest extends BaseTestCase {
     private static AssetMerger sAssetMerger = null;
 
     private static WorkerExecutorFacade facade =
-            new ExecutorServiceAdapter(
-                    "test",
-                    ":test",
-                    Executors.newSingleThreadExecutor(),
-                    Mockito.mock(WorkerExecutorFacade.class));
+            new ExecutorServiceAdapter(Executors.newSingleThreadExecutor());
 
     @AfterClass
     public static void shutdown() {

@@ -56,7 +56,7 @@ class ManifestReplacementTest: VariantApiBaseTest(TestType.Script, ScriptingLang
                     }
                     it.artifacts.use(manifestProducer)
                         .wiredWith({ it.outputManifest })
-                        .toCreate(ArtifactType.APPLICATION_MANIFEST.INSTANCE)
+                        .toCreate(ArtifactType.MERGED_MANIFEST.INSTANCE)
                 }
             }
             """.trimIndent()

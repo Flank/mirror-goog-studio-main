@@ -22,8 +22,9 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getAss
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getFieldInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getInputProcessorInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getOutputProcessorInjector
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getOutputsClassInjector
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.getProcessInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.innerclass.GroupClassInjector
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.innerclass.OutputsClassInjector
 import com.android.tools.mlkit.MlNames
 import com.android.tools.mlkit.ModelInfo
 import com.squareup.javapoet.ClassName
@@ -108,7 +109,10 @@ class TfliteModelGenerator(
     }
 
     private fun buildInnerClass(classBuilder: TypeSpec.Builder) {
-        getOutputsClassInjector().inject(classBuilder, modelInfo.outputs)
+        OutputsClassInjector(ClassMetadata(packageName, className)).inject(classBuilder, modelInfo)
+        if (modelInfo.outputTensorGroups.isNotEmpty()) {
+            GroupClassInjector().inject(classBuilder, modelInfo)
+        }
     }
 
     private fun buildConstructor(classBuilder: TypeSpec.Builder) {

@@ -248,14 +248,16 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                                 // if it's not annotated on the element
                                 if (annotated is UAnnotated) {
                                     var found = false
-                                    for (uAnnotation in uAnnotations ?: run {
-                                        val list = context.evaluator.getAllAnnotations(
-                                            annotated,
-                                            inHierarchy = false
-                                        )
-                                        uAnnotations = list
-                                        list
-                                    }) {
+                                    for (
+                                        uAnnotation in uAnnotations ?: run {
+                                            val list = context.evaluator.getAllAnnotations(
+                                                annotated,
+                                                inHierarchy = false
+                                            )
+                                            uAnnotations = list
+                                            list
+                                        }
+                                    ) {
                                         val qualifiedName = uAnnotation.qualifiedName
                                         if (qualifiedName == signature) {
                                             found = true
@@ -269,12 +271,14 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                                 if (annotated is PsiModifierListOwner) {
                                     var found = false
 
-                                    for (psiAnnotation in psiAnnotations ?: run {
-                                        val array =
-                                            context.evaluator.getAllAnnotations(annotated, false)
-                                        psiAnnotations = array
-                                        array
-                                    }) {
+                                    for (
+                                        psiAnnotation in psiAnnotations ?: run {
+                                            val array =
+                                                context.evaluator.getAllAnnotations(annotated, false)
+                                            psiAnnotations = array
+                                            array
+                                        }
+                                    ) {
                                         val qualifiedName = psiAnnotation.qualifiedName
                                         if (qualifiedName == signature) {
                                             found = true
@@ -705,8 +709,10 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         for (annotation in annotations) {
             val signature = annotation.qualifiedName
             if (signature == null ||
-                (signature.startsWith("kotlin.") ||
-                        signature.startsWith("java.")) && !relevantAnnotations.contains(signature)
+                (
+                    signature.startsWith("kotlin.") ||
+                        signature.startsWith("java.")
+                    ) && !relevantAnnotations.contains(signature)
             ) {
                 // @Override, @SuppressWarnings etc. Ignore
                 continue

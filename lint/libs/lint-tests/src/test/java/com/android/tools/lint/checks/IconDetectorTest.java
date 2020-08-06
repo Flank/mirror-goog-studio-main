@@ -84,7 +84,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                                 .fill(10, 10, 20, 20, 0xFF00FFFF),
                         image("res/drawable-mdpi/sample_icon.gif", 48, 48)
                                 .fill(10, 10, 20, 20, 0xFF00FFFF),
-                        // Make a dummy file named .svn to make sure it doesn't get seen as
+                        // Make a placeholder file named .svn to make sure it doesn't get seen as
                         // an icon name
                         source("res/drawable-hdpi/.svn", ""),
                         image("res/drawable-hdpi/ic_launcher.png", 72, 72)
@@ -279,8 +279,10 @@ public class IconDetectorTest extends AbstractCheckTest {
     public void testMixedFormat() {
         // Test having a mixture of .xml and .png resources for the same name
         // Make sure we don't get:
-        // drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: f.png (found in drawable-mdpi)
-        // drawable-xhdpi: Warning: Missing the following drawables in drawable-xhdpi: f.png (found in drawable-mdpi)
+        // drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: f.png (found in
+        // drawable-mdpi)
+        // drawable-xhdpi: Warning: Missing the following drawables in drawable-xhdpi: f.png (found
+        // in drawable-mdpi)
         String expected =
                 ""
                         + "res/drawable-xxxhdpi/f.xml: Warning: The following images appear both as density independent .xml files and as bitmap files: res/drawable-hdpi/f.xml, res/drawable-mdpi/f.png [IconXmlAndPng]\n"
@@ -666,7 +668,6 @@ public class IconDetectorTest extends AbstractCheckTest {
         lint().files(
                         image("res/drawable-hdpi/ic_launcher1.png", 48, 48).fill(0xFF00FF16),
                         image("res/drawable-mdpi/ic_launcher2.png", 48, 48).fill(0xFF00FF16),
-                        image("res/drawable-xhdpi/ic_launcher1.png", 48, 48).fill(0xFF00FF17),
                         image("res/drawable-xxhdpi/ic_launcher1.png", 48, 48).fill(0xFF00FF18),
                         image("res/drawable-xhdpi/ic_launcher1.png", 48, 48).fill(0xFF00FF18))
                 .issues(ICON_DENSITIES)
@@ -708,7 +709,8 @@ public class IconDetectorTest extends AbstractCheckTest {
         lint().files(
                         // Use minSDK4 to ensure that we get warnings about missing drawables
                         manifest().minSdk(4),
-                        // source() instead of xml() because IDE validation shows error on <ignore...>
+                        // source() instead of xml() because IDE validation shows error on
+                        // <ignore...>
                         source(
                                 "lint.xml",
                                 ""
@@ -1017,7 +1019,8 @@ public class IconDetectorTest extends AbstractCheckTest {
                                 .fill(10, 10, 20, 20, 0xFF00FFFF),
                         image("src/main/res/drawable-mdpi/ic_launcher.png", 48, 48)
                                 .fill(10, 10, 20, 20, 0xFF00FFFF),
-                        image("src/main/res/drawable-xhdpi/ic_launcher.png", 48, 48).fill(0xFF00FF30),
+                        image("src/main/res/drawable-xhdpi/ic_launcher.png", 48, 48)
+                                .fill(0xFF00FF30),
                         image("src/main/res/drawable-mdpi/sample_icon.gif", 48, 48)
                                 .fill(10, 10, 20, 20, 0xFF00FFFF),
                         image("src/main/res/drawable-hdpi/ic_launcher.png", 72, 72)

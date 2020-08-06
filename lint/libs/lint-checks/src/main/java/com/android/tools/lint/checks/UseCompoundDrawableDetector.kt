@@ -51,12 +51,16 @@ class UseCompoundDrawableDetector : LayoutDetector() {
             return
         }
 
-        if ((first.tagName == IMAGE_VIEW &&
-                    second.tagName == TEXT_VIEW &&
-                    canCombineImage(first)) ||
-            (second.tagName == IMAGE_VIEW &&
+        if ((
+            first.tagName == IMAGE_VIEW &&
+                second.tagName == TEXT_VIEW &&
+                canCombineImage(first)
+            ) ||
+            (
+                second.tagName == IMAGE_VIEW &&
                     first.tagName == TEXT_VIEW &&
-                    canCombineImage(second))
+                    canCombineImage(second)
+                )
         ) {
             // If the layout has a background, ignore since it would disappear from
             // the TextView
@@ -79,7 +83,8 @@ class UseCompoundDrawableDetector : LayoutDetector() {
         val ISSUE = Issue.create(
             id = "UseCompoundDrawables",
             briefDescription = "Node can be replaced by a `TextView` with compound drawables",
-            explanation = """
+            explanation =
+                """
                 A `LinearLayout` which contains an `ImageView` and a `TextView` can be more \
                 efficiently handled as a compound drawable (a single TextView, using the \
                 `drawableTop`, `drawableLeft`, `drawableRight` and/or `drawableBottom` \

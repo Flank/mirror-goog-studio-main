@@ -24,9 +24,12 @@ import java.util.concurrent.Executor;
 
 class InspectorExecutorsImpl implements InspectorExecutors {
     private final HandlerThreadExecutor mPrimaryExecutor;
+    private final Executor mIOExecutor;
 
-    InspectorExecutorsImpl(@NonNull HandlerThreadExecutor primaryExecutor) {
+    InspectorExecutorsImpl(
+            @NonNull HandlerThreadExecutor primaryExecutor, @NonNull Executor ioExecutor) {
         this.mPrimaryExecutor = primaryExecutor;
+        mIOExecutor = ioExecutor;
     }
 
     @NonNull
@@ -44,6 +47,6 @@ class InspectorExecutorsImpl implements InspectorExecutors {
     @NonNull
     @Override
     public Executor io() {
-        throw new UnsupportedOperationException("To be Implemented");
+        return mIOExecutor;
     }
 }

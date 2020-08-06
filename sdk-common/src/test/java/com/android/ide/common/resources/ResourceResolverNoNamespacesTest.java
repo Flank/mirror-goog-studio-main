@@ -187,7 +187,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                     + "    <string name=\"menu_wallpaper\">Wallpaper</string>\n"
                                     + "    <string name=\"menu_search\">Search</string>\n"
                                     + "    <string name=\"menu_settings\">Settings</string>\n"
-                                    + "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n"
+                                    + "    <string name=\"placeholder\" translatable=\"false\">Ignore Me</string>\n"
                                     + "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n"
                                     + "</resources>\n",
                             "values-es/strings.xml",
@@ -362,7 +362,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         assertEquals("@color/bright_foreground_light",
                 resolver.findResValue("?colorForeground", true).getValue());
         ResourceValue target =
-                new ResourceValueImpl(RES_AUTO, ResourceType.STRING, "dummy", "?foo");
+                new ResourceValueImpl(RES_AUTO, ResourceType.STRING, "placeholder", "?foo");
         assertEquals("#ff000000", resolver.resolveResValue(target).getValue());
 
         // getFrameworkResource

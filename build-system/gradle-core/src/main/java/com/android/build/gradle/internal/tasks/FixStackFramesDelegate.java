@@ -265,7 +265,6 @@ public class FixStackFramesDelegate {
         }
     }
 
-    // TODO: convert to Kotlin data class
     public abstract static class Params extends ProfileAwareWorkAction.Parameters {
         abstract Property<File> getInput();
 

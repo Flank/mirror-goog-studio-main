@@ -10,6 +10,14 @@
     </issue>
 
     <issue
+            id="ProjectExecOperations"
+            message="Avoid using `org.gradle.api.Project.exec` as it is incompatible with Gradle instant execution.">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/ide/v2/NativeModelBuilder.kt"
+            line="50"/>
+    </issue>
+
+    <issue
         id="VisibleForTests"
         message="This method should only be accessed from tests or within private scope">
         <location

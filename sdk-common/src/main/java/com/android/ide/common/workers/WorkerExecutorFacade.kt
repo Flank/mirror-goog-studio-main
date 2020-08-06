@@ -17,7 +17,6 @@
 package com.android.ide.common.workers
 
 import java.io.Closeable
-import java.io.File
 import java.io.Serializable
 
 /**
@@ -32,10 +31,7 @@ import java.io.Serializable
  * High level interaction is as follow :
  *  * Task creates a WorkerExecutorFacade object that encapsulates an Executor style facility.
  * This facade instance is passed to the classes with no access to the Gradle APIs.
- *  * Classes create a new Runnable subclass that use an instance of {@param T} as a work
- * action configuration. Such [Runnable] cannot be passed to the Gradle WorkerExecutor
- * directly as it relies on @Inject to set the parameter value.
- *  * Classes create an serializable instance of parameters for each work actions and submit it
+ *  * Classes create an serializable instance of runnable for each work actions and submit it
  *  with the [submit] API.
  *  * Task should call [await] for synchronous wait on the action completion or [close] for
  *  submission completion. [close] has an implementation dependent behaviour where some will
@@ -44,41 +40,10 @@ import java.io.Serializable
  */
 interface WorkerExecutorFacade : AutoCloseable, Closeable {
 
-    /**
-     * Supported isolation modes.
-     */
-    enum class IsolationMode {
-        NONE,
-        CLASSLOADER,
-        PROCESS,
-    }
+    interface WorkAction: Runnable, Serializable
 
-    /**
-     * Configuration for action submission.
-     */
-    data class Configuration(
-        val parameter: Serializable,
-        val isolationMode: IsolationMode = IsolationMode.NONE,
-        val classPath: Iterable<File> = listOf(),
-        val jvmArgs: List<String> = listOf()
-    )
-
-    /**
-     * Submit a new work action to be performed.
-     *
-     * @param actionClass the [Runnable] implementing  the action and taking the passed parameter
-     * as input parameters.
-     * @param parameter the parameter instance to pass to the action.
-     */
-    fun submit(actionClass: Class<out Runnable>, parameter: Serializable)
-
-    /**
-     * Submit a new work action with submission parameters.
-     *
-     */
-    fun submit(actionClass: Class<out Runnable>, configuration: Configuration) {
-        submit(actionClass, configuration.parameter)
-    }
+    /** Submit action that must be serializable. */
+    fun submit(action: WorkAction)
 
     /**
      * Wait for all submitted work actions completion.

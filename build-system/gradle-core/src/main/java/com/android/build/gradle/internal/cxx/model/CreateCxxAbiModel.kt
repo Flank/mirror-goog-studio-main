@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.cxx.model
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
+import com.android.build.gradle.internal.cxx.gradle.generator.abiCxxBuildFolder
+import com.android.build.gradle.internal.cxx.gradle.generator.variantJsonFolder
 import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.createBuildSettingsFromFile
 import com.android.build.gradle.tasks.NativeBuildSystem
@@ -41,10 +43,10 @@ fun createCxxAbiModel(
             variant.module.ndkMetaAbiList.single { it.abi == abi }
         }
         override val originalCxxBuildFolder by lazy {
-            join(variant.jsonFolder, abi.tag)
+            configurationModel.abiCxxBuildFolder(abi)
         }
         override val cxxBuildFolder by lazy {
-            join(variant.jsonFolder, abi.tag)
+            configurationModel.abiCxxBuildFolder(abi)
         }
         override val abiPlatformVersion by lazy {
             val minSdkVersion = configurationModel.minSdkVersion
@@ -66,7 +68,7 @@ fun createCxxAbiModel(
                        join(variant.gradleBuildOutputFolder, abi.tag)
                     }
                     override val cmakeArtifactsBaseFolder by lazy {
-                        join(variant.jsonFolder, abi.tag)
+                        join(configurationModel.variantJsonFolder, abi.tag)
                     }
                 }
             } else {

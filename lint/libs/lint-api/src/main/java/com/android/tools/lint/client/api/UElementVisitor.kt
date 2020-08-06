@@ -252,18 +252,22 @@ internal class UElementVisitor constructor(
                 context.setJavaFile(uFile.psi) // needed for getLocation
                 context.uastFile = uFile
 
-                client.runReadAction(Runnable {
-                    for (v in allDetectors) {
-                        v.setContext(context)
-                        v.detector.beforeCheckFile(context)
+                client.runReadAction(
+                    Runnable {
+                        for (v in allDetectors) {
+                            v.setContext(context)
+                            v.detector.beforeCheckFile(context)
+                        }
                     }
-                })
+                )
 
                 if (!superClassDetectors.isEmpty()) {
-                    client.runReadAction(Runnable {
-                        val visitor = SuperclassPsiVisitor(context)
-                        uFile.accept(visitor)
-                    })
+                    client.runReadAction(
+                        Runnable {
+                            val visitor = SuperclassPsiVisitor(context)
+                            uFile.accept(visitor)
+                        }
+                    )
                 }
 
                 if (!methodDetectors.isEmpty() ||
@@ -272,29 +276,35 @@ internal class UElementVisitor constructor(
                     !referenceDetectors.isEmpty() ||
                     annotationHandler != null
                 ) {
-                    client.runReadAction(Runnable {
-                        // TODO: Do we need to break this one up into finer grain locking units
-                        val visitor = DelegatingPsiVisitor(context)
-                        uFile.accept(visitor)
-                    })
+                    client.runReadAction(
+                        Runnable {
+                            // TODO: Do we need to break this one up into finer grain locking units
+                            val visitor = DelegatingPsiVisitor(context)
+                            uFile.accept(visitor)
+                        }
+                    )
                 } else {
                     // Note that the DelegatingPsiVisitor is a subclass of DispatchPsiVisitor
                     // so the above includes the below as well (through super classes)
                     if (!nodePsiTypeDetectors.isEmpty()) {
-                        client.runReadAction(Runnable {
-                            // TODO: Do we need to break this one up into finer grain locking units
-                            val visitor = DispatchPsiVisitor()
-                            uFile.accept(visitor)
-                        })
+                        client.runReadAction(
+                            Runnable {
+                                // TODO: Do we need to break this one up into finer grain locking units
+                                val visitor = DispatchPsiVisitor()
+                                uFile.accept(visitor)
+                            }
+                        )
                     }
                 }
 
-                client.runReadAction(Runnable {
-                    for (v in allDetectors) {
-                        ProgressManager.checkCanceled()
-                        v.detector.afterCheckFile(context)
+                client.runReadAction(
+                    Runnable {
+                        for (v in allDetectors) {
+                            ProgressManager.checkCanceled()
+                            v.detector.afterCheckFile(context)
+                        }
                     }
-                })
+                )
             } finally {
                 context.setJavaFile(null)
                 context.uastFile = null
@@ -314,17 +324,21 @@ internal class UElementVisitor constructor(
         allContexts: List<JavaContext>
     ) {
         if (!allContexts.isEmpty() && allDetectors.stream()
-                .anyMatch { it.uastScanner.isCallGraphRequired() }
+            .anyMatch { it.uastScanner.isCallGraphRequired() }
         ) {
-            val callGraph = projectContext.client.runReadAction(Computable {
-                generateCallGraph(projectContext, parser, allContexts)
-            })
+            val callGraph = projectContext.client.runReadAction(
+                Computable {
+                    generateCallGraph(projectContext, parser, allContexts)
+                }
+            )
             if (callGraph != null && !callGraphDetectors.isEmpty()) {
                 for (scanner in callGraphDetectors) {
-                    projectContext.client.runReadAction(Runnable {
-                        ProgressManager.checkCanceled()
-                        scanner.analyzeCallGraph(projectContext, callGraph)
-                    })
+                    projectContext.client.runReadAction(
+                        Runnable {
+                            ProgressManager.checkCanceled()
+                            scanner.analyzeCallGraph(projectContext, callGraph)
+                        }
+                    )
                 }
             }
         }
@@ -371,11 +385,11 @@ internal class UElementVisitor constructor(
             }
             val detectorNames = "[" + Joiner.on(", ").join(detectors) + "]"
             var message = "Lint ran out of memory while building a callgraph (requested by " +
-                    "these detectors: " + detectorNames + "). You can either disable these " +
-                    "checks, or give lint more heap space."
+                "these detectors: " + detectorNames + "). You can either disable these " +
+                "checks, or give lint more heap space."
             if (LintClient.isGradle) {
                 message += " For example, to set the Gradle daemon to use 4 GB, edit " +
-                        "`gradle.properties` to contains `org.gradle.jvmargs=-Xmx4g`"
+                    "`gradle.properties` to contains `org.gradle.jvmargs=-Xmx4g`"
             }
             projectContext.report(
                 IssueRegistry.LINT_ERROR,

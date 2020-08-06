@@ -186,7 +186,8 @@ class LayoutInflationDetector : LayoutDetector(), SourceCodeScanner {
             Issue.create(
                 id = "InflateParams",
                 briefDescription = "Layout Inflation without a Parent",
-                explanation = """
+                explanation =
+                    """
                     When inflating a layout, avoid passing in null as the parent view, since \
                     otherwise any layout parameters on the root of the inflated layout will be \
                     ignored.""",
@@ -281,8 +282,8 @@ class LayoutInflationDetector : LayoutDetector(), SourceCodeScanner {
             return if (!evaluator.inheritsFrom(cls, "android.app.Dialog", true)) {
                 false
             } else evaluator.inheritsFrom(cls, "android.app.AlertDialog", false) ||
-                    evaluator.inheritsFrom(cls, "android.support.v7.app.AlertDialog", false) ||
-                    evaluator.inheritsFrom(cls, "androidx.appcompat.app.AlertDialog", false)
+                evaluator.inheritsFrom(cls, "android.support.v7.app.AlertDialog", false) ||
+                evaluator.inheritsFrom(cls, "androidx.appcompat.app.AlertDialog", false)
         }
 
         @JvmStatic
@@ -293,7 +294,9 @@ class LayoutInflationDetector : LayoutDetector(), SourceCodeScanner {
                 val event = parser.next()
                 if (event == XmlPullParser.START_TAG) {
                     for (i in 0 until parser.attributeCount) {
-                        if (parser.getAttributeName(i).startsWith(SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX)) {
+                        if (parser.getAttributeName(i)
+                            .startsWith(SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX)
+                        ) {
                             val prefix = parser.getAttributePrefix(i)
                             if (prefix != null && !prefix.isEmpty() &&
                                 SdkConstants.ANDROID_URI == parser.getNamespace(

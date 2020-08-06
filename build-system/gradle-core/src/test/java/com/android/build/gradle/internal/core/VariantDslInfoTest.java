@@ -353,8 +353,9 @@ public class VariantDslInfoTest {
                 FakeServices.createVariantPropertiesApiServices(projectServices);
 
         defaultConfig = new DefaultConfig("main", dslServices);
-        flavorConfig = new ProductFlavor("flavor", dslServices);
+        defaultConfig.applicationId("com.foo");
+        flavorConfig = dslServices.newInstance(ProductFlavor.class, "flavor", dslServices);
         flavorConfig.dimension("dimension1");
-        buildType = new BuildType("debug", dslServices);
+        buildType = dslServices.newInstance(BuildType.class, "debug", dslServices);
     }
 }

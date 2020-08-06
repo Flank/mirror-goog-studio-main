@@ -78,8 +78,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     val maxSdkVersion: Int?
     val targetSdkVersion: ApiVersion
     val outputs: VariantOutputList
-    val dexingType: DexingType
-    val needsMainDexList: Boolean
     val manifestArtifactType: InternalArtifactType<Directory>
 
     // ---------------------------------------------------------------------------------------------

@@ -38,7 +38,8 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   activityClass: String,
   activityTitle: String,
   layoutName: String,
-  packageName: String
+  packageName: String,
+  navGraphName: String
 ) {
   val (projectData, srcOut, resOut) = moduleData
   val appCompatVersion = moduleData.apis.appCompatVersion
@@ -75,19 +76,42 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
     requireJavaVersion("1.8", true)
   }
 
-  save(mobileNavigationXml(packageName), resOut.resolve("navigation/mobile_navigation.xml"))
-  open(resOut.resolve("navigation/mobile_navigation.xml"))
+  save(mobileNavigationXml(
+    navGraphName = navGraphName,
+    packageName = packageName),
+       resOut.resolve("navigation/${navGraphName}.xml"))
+  open(resOut.resolve("navigation/${navGraphName}.xml"))
 
   copy(File("ic_dashboard_black_24dp.xml"), resOut.resolve("drawable/ic_dashboard_black_24dp.xml"))
   copy(File("ic_home_black_24dp.xml"), resOut.resolve("drawable/ic_home_black_24dp.xml"))
   copy(File("ic_notifications_black_24dp.xml"), resOut.resolve("drawable/ic_notifications_black_24dp.xml"))
 
+  // navHostFragmentId needs to be unique, thus appending layoutName since it's
+  // guaranteed to be unique
+  val navHostFragmentId = "nav_host_fragment_${layoutName}"
   val mainActivity = when (projectData.language) {
-    Language.Java -> mainActivityJava(activityClass, layoutName, packageName, useAndroidX)
-    Language.Kotlin -> mainActivityKt(activityClass, layoutName, packageName, useAndroidX)
+    Language.Java -> mainActivityJava(
+      activityClass = activityClass,
+      layoutName = layoutName,
+      navHostFragmentId = navHostFragmentId,
+      packageName = packageName,
+      useAndroidX = useAndroidX
+    )
+    Language.Kotlin -> mainActivityKt(
+      activityClass = activityClass,
+      layoutName = layoutName,
+      navHostFragmentId = navHostFragmentId,
+      packageName = packageName,
+      useAndroidX = useAndroidX
+    )
   }
+
   save(mainActivity, srcOut.resolve("${activityClass}.${ktOrJavaExt}"))
-  save(navigationActivityMainXml(useAndroidX), resOut.resolve("layout/${layoutName}.xml"))
+  save(navigationActivityMainXml(
+    navGraphName = navGraphName,
+    navHostFragmentId = navHostFragmentId,
+    useAndroidX = useAndroidX
+  ), resOut.resolve("layout/${layoutName}.xml"))
 
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
   mergeXml(stringsXml(), resOut.resolve("values/strings.xml"))

@@ -54,29 +54,22 @@ class CentralDirectoryRecord {
     private final Location payloadLocation;
     private final boolean isZip64;
 
-    CentralDirectoryRecord(
-            @NonNull byte[] nameBytes,
-            int crc,
-            long compressedSize,
-            long uncompressedSize,
+    CentralDirectoryRecord(@NonNull Source source,
             Location location,
-            short compressionFlag,
-            Location payloadLocation,
-            short versionMadeBy,
-            int externalAttribute) {
-        this.nameBytes = nameBytes;
-        this.crc = crc;
-        this.compressedSize = compressedSize;
-        this.uncompressedSize = uncompressedSize;
+            Location payloadLocation) {
+        this.nameBytes = source.getNameBytes();
+        this.crc = source.getCrc();
+        this.compressedSize = source.getCompressedSize();
+        this.uncompressedSize = source.getUncompressedSize();
         this.location = location;
-        this.compressionFlag = compressionFlag;
+        this.compressionFlag = source.getCompressionFlag();
         this.payloadLocation = payloadLocation;
         this.isZip64 =
                 compressedSize > Zip64.LONG_MAGIC
                         || uncompressedSize > Zip64.LONG_MAGIC
                         || location.first > Zip64.LONG_MAGIC;
-        this.versionMadeBy = versionMadeBy;
-        this.externalAttribute = externalAttribute;
+        this.versionMadeBy = source.getVersionMadeBy();
+        this.externalAttribute = source.getExternalAttributes();
     }
 
     void write(@NonNull ByteBuffer buf) {

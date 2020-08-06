@@ -124,7 +124,8 @@ class PackageVisibilityDetectorTest : AbstractCheckTest() {
     }
 
     @Language("kotlin")
-    private val ACTIVITY_WITH_APP_QUERIES = """
+    private val ACTIVITY_WITH_APP_QUERIES =
+        """
         package test.pkg
 
         import android.app.Activity

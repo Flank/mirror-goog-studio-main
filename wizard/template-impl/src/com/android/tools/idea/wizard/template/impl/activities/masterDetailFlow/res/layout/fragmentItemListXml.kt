@@ -20,7 +20,8 @@ import com.android.tools.idea.wizard.template.getMaterialComponentName
 
 fun fragmentItemListXml(
   collectionName: String,
-  collection_name: String,
+  detailName: String,
+  itemListLayout: String,
   itemListContentLayout: String,
   packageName: String,
   useAndroidX: Boolean
@@ -30,13 +31,13 @@ fun fragmentItemListXml(
                             useAndroidX)} xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/${collection_name}"
+    android:id="@+id/${itemListLayout}"
     android:name="${packageName}.${collectionName}Fragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginLeft="16dp"
     android:layout_marginRight="16dp"
     app:layoutManager="LinearLayoutManager"
-    tools:context="${packageName}.${collectionName}Activity"
+    tools:context="${packageName}.${detailName}HostActivity"
     tools:listitem="@layout/${itemListContentLayout}" />
 """

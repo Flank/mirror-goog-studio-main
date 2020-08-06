@@ -104,10 +104,10 @@ class TestLintResult internal constructor(
             if (actual == expected.replace(File.separatorChar, '/')) {
                 assertEquals(
                     "The expected lint output does not match, but it *does* " +
-                            "match when Windows file separators (\\) are replaced by Unix ones.\n" +
-                            "Make sure your lint detector calls LintClient.getDisplayPath(File) " +
-                            "instead of displaying paths directly (in unit tests they will then " +
-                            "be converted to forward slashes for test output stability.)\n",
+                        "match when Windows file separators (\\) are replaced by Unix ones.\n" +
+                        "Make sure your lint detector calls LintClient.getDisplayPath(File) " +
+                        "instead of displaying paths directly (in unit tests they will then " +
+                        "be converted to forward slashes for test output stability.)\n",
                     expected,
                     actual
                 )
@@ -133,7 +133,7 @@ class TestLintResult internal constructor(
                 val truncated =
                     if (line.length > maxLineLength) {
                         line.substring(0, maxLineLength - TRUNCATION_MARKER.length) +
-                                TRUNCATION_MARKER
+                            TRUNCATION_MARKER
                     } else {
                         line
                     }
@@ -327,12 +327,12 @@ class TestLintResult internal constructor(
             val reached = computeSubstringMatch(pattern, output)
             fail(
                 "Did not find pattern\n  " +
-                        regexp +
-                        "\n in \n" +
-                        output +
-                        "; " +
-                        "the incomplete match was " +
-                        output.substring(0, reached)
+                    regexp +
+                    "\n in \n" +
+                    output +
+                    "; " +
+                    "the incomplete match was " +
+                    output.substring(0, reached)
             )
         }
 
@@ -397,11 +397,11 @@ class TestLintResult internal constructor(
         if (count != expectedCount) {
             assertEquals(
                 "Expected " +
-                        expectedCount +
-                        " problems with severity " +
-                        Joiner.on(" or ").join(severities) +
-                        " but was " +
-                        count,
+                    expectedCount +
+                    " problems with severity " +
+                    Joiner.on(" or ").join(severities) +
+                    " but was " +
+                    count,
                 expectedCount.toLong(),
                 count.toLong()
             )
@@ -469,12 +469,15 @@ class TestLintResult internal constructor(
         @Language("HTML") expected: String,
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
-        return checkHtmlReport(TestResultChecker { s ->
-            assertEquals(
-                expected,
-                s
-            )
-        }, transformer = transformer)
+        return checkHtmlReport(
+            TestResultChecker { s ->
+                assertEquals(
+                    expected,
+                    s
+                )
+            },
+            transformer = transformer
+        )
     }
 
     /**
@@ -555,16 +558,18 @@ class TestLintResult internal constructor(
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
         return checkXmlReport(
-            checkers = *arrayOf(TestResultChecker { s ->
-                if (s != expected && s.replace('\\', '/') == expected) {
-                    // Allow Windows file separators to differ
-                } else {
-                    assertEquals(
-                        expected,
-                        s
-                    )
+            checkers = *arrayOf(
+                TestResultChecker { s ->
+                    if (s != expected && s.replace('\\', '/') == expected) {
+                        // Allow Windows file separators to differ
+                    } else {
+                        assertEquals(
+                            expected,
+                            s
+                        )
+                    }
                 }
-            }),
+            ),
             includeFixes = includeFixes,
             fullPaths = fullPaths,
             intendedForBaseline = intendedForBaseline,

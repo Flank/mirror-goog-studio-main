@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.integration.dexing
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
@@ -359,7 +357,6 @@ class IncrementalDexingWithDesugaringTest(
                 )
             })
         ).useCustomExecutor {
-            disableConfigurationCachingIfNeeded(it)
             it.with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM, withIncrementalDexingTransform)
         }
     }
@@ -375,9 +372,8 @@ class IncrementalDexingWithDesugaringTest(
     private fun findDexTransformOutputDir(buildDir: File): File {
         // Run a full build so that dex outputs are generated, then we will try to locate them.
         project.executor()
-            .with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM, withIncrementalDexingTransform).also {
-                disableConfigurationCachingIfNeeded(it)
-            }.run("clean", ":app:mergeProjectDexDebug", ":app:mergeLibDexDebug")
+            .with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM, withIncrementalDexingTransform)
+            .run("clean", ":app:mergeProjectDexDebug", ":app:mergeLibDexDebug")
 
         val dexOutputDirs = buildDir.resolve(".transforms").listFiles()!!.filter {
             it.isDirectory && it.walk().any { file ->
@@ -391,14 +387,6 @@ class IncrementalDexingWithDesugaringTest(
                     dexOutputDirs.joinToString(", ", transform = { it.path })
         }
         return dexOutputDirs[0]
-    }
-
-    private fun disableConfigurationCachingIfNeeded(executor: GradleTaskExecutor): GradleTaskExecutor {
-        if ((scenario == ANDROID_LIB || scenario == JAVA_LIB)
-                && withIncrementalDexingTransform && withMinSdk24Plus) {
-            executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-        }
-        return executor
     }
 
     @Test

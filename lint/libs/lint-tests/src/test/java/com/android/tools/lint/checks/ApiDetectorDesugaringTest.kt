@@ -23,7 +23,8 @@ import com.android.tools.lint.detector.api.Detector
 class ApiDetectorDesugaringTest : AbstractCheckTest() {
     fun testTryWithResources() {
         // No desugaring
-        val expected = """
+        val expected =
+            """
             src/main/java/test/pkg/MultiCatch.java:10: Error: Multi-catch with these reflection exceptions requires API level 19 (current min is 1) because they get compiled to the common but new super type ReflectiveOperationException. As a workaround either create individual catch statements, or catch Exception. [NewApi]
                     } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -68,7 +69,8 @@ class ApiDetectorDesugaringTest : AbstractCheckTest() {
     }
 
     fun testTryWithResourcesOldGradlePlugin() {
-        val expected = """
+        val expected =
+            """
             src/main/java/test/pkg/TryWithResources.java:9: Error: Try-with-resources requires API level 19 (current min is 1) [NewApi]
                     try (BufferedReader br = new BufferedReader(new FileReader(path))) {
                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -82,7 +84,8 @@ class ApiDetectorDesugaringTest : AbstractCheckTest() {
     }
 
     fun testTryWithResourcesNewPluginLanguage17() {
-        val expected = """
+        val expected =
+            """
             src/main/java/test/pkg/TryWithResources.java:9: Error: Try-with-resources requires API level 19 (current min is 1) [NewApi]
                     try (BufferedReader br = new BufferedReader(new FileReader(path))) {
                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

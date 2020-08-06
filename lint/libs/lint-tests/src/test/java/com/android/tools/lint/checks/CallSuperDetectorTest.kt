@@ -15,7 +15,7 @@
  */
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP
+import com.android.tools.lint.checks.AnnotationDetectorTest.Companion.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP
 import com.android.tools.lint.detector.api.Detector
 
 class CallSuperDetectorTest : AbstractCheckTest() {

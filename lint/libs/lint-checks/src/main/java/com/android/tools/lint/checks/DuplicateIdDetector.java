@@ -167,7 +167,7 @@ public class DuplicateIdDetector extends LayoutDetector {
 
             if (mErrors != null) {
                 for (Occurrence occurrence : mErrors) {
-                    //assert location != null : occurrence;
+                    // assert location != null : occurrence;
                     Location location = occurrence.location;
                     if (location == null) {
                         location = Location.create(occurrence.file);
@@ -281,7 +281,8 @@ public class DuplicateIdDetector extends LayoutDetector {
             }
 
             if (MOTION_SCENE_CONSTRAINT.equals(ownerName)) {
-                // We bypass id check for Constraint as the id here is a reference to the id in layout. Id that is not found in layout
+                // We bypass id check for Constraint as the id here is a reference to the id in
+                // layout. Id that is not found in layout
                 // is also a valid use case.
                 return;
             }

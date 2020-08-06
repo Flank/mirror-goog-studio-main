@@ -394,8 +394,8 @@ class LintUtilsTest : TestCase() {
         xml = TestFiles.xml(
             "res/values/strings.xml",
             "" +
-                    "<resources tools:locale=\"nb\" xmlns:tools=\"http://schemas.android.com/tools\">\n" +
-                    "</resources>\n"
+                "<resources tools:locale=\"nb\" xmlns:tools=\"http://schemas.android.com/tools\">\n" +
+                "</resources>\n"
         )
         context = createXmlContext(xml.getContents(), File(xml.targetPath))
         assertEquals("nb", getLocale(context)!!.language)
@@ -405,8 +405,8 @@ class LintUtilsTest : TestCase() {
         xml = TestFiles.xml(
             "res/values-fr/strings.xml",
             "" +
-                    "<resources tools:locale=\"nb\" xmlns:tools=\"http://schemas.android.com/tools\">\n" +
-                    "</resources>\n"
+                "<resources tools:locale=\"nb\" xmlns:tools=\"http://schemas.android.com/tools\">\n" +
+                "</resources>\n"
         )
         context = createXmlContext(xml.getContents(), File(xml.targetPath))
         assertEquals("nb", getLocale(context)!!.language)
@@ -574,13 +574,13 @@ class LintUtilsTest : TestCase() {
             resolveManifestName(
                 getElementWithNameValue(
                     "" +
-                            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                            "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                            "    package=\"test.pkg\">\n" +
-                            "    <application>\n" +
-                            "        <activity android:name=\".TestActivity\" />\n" +
-                            "    </application>\n" +
-                            "</manifest>\n",
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    package=\"test.pkg\">\n" +
+                        "    <application>\n" +
+                        "        <activity android:name=\".TestActivity\" />\n" +
+                        "    </application>\n" +
+                        "</manifest>\n",
                     ".TestActivity"
                 )
             )
@@ -591,13 +591,13 @@ class LintUtilsTest : TestCase() {
             resolveManifestName(
                 getElementWithNameValue(
                     "" +
-                            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                            "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                            "    package=\"test.pkg\">\n" +
-                            "    <application>\n" +
-                            "        <activity android:name=\"TestActivity\" />\n" +
-                            "    </application>\n" +
-                            "</manifest>\n",
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    package=\"test.pkg\">\n" +
+                        "    <application>\n" +
+                        "        <activity android:name=\"TestActivity\" />\n" +
+                        "    </application>\n" +
+                        "</manifest>\n",
                     "TestActivity"
                 )
             )
@@ -608,13 +608,13 @@ class LintUtilsTest : TestCase() {
             resolveManifestName(
                 getElementWithNameValue(
                     "" +
-                            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                            "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                            "    package=\"test.pkg\">\n" +
-                            "    <application>\n" +
-                            "        <activity android:name=\"test.pkg.TestActivity\" />\n" +
-                            "    </application>\n" +
-                            "</manifest>\n",
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    package=\"test.pkg\">\n" +
+                        "    <application>\n" +
+                        "        <activity android:name=\"test.pkg.TestActivity\" />\n" +
+                        "    </application>\n" +
+                        "</manifest>\n",
                     "test.pkg.TestActivity"
                 )
             )
@@ -625,13 +625,13 @@ class LintUtilsTest : TestCase() {
             resolveManifestName(
                 getElementWithNameValue(
                     "" +
-                            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                            "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                            "    package=\"test.pkg\">\n" +
-                            "    <application>\n" +
-                            "        <activity android:name=\"test.pkg.TestActivity\$Bar\" />\n" +
-                            "    </application>\n" +
-                            "</manifest>\n",
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    package=\"test.pkg\">\n" +
+                        "    <application>\n" +
+                        "        <activity android:name=\"test.pkg.TestActivity\$Bar\" />\n" +
+                        "    </application>\n" +
+                        "</manifest>\n",
                     "test.pkg.TestActivity\$Bar"
                 )
             )
@@ -644,10 +644,10 @@ class LintUtilsTest : TestCase() {
                 TestLintClient(),
                 File(
                     "tmp" +
-                            File.separator +
-                            "foo" +
-                            File.separator +
-                            "bar.baz"
+                        File.separator +
+                        "foo" +
+                        File.separator +
+                        "bar.baz"
                 )
             )
         )
@@ -657,10 +657,10 @@ class LintUtilsTest : TestCase() {
                 LintCliClient(CLIENT_UNIT_TESTS),
                 File(
                     "tmp" +
-                            File.separator +
-                            "foo" +
-                            File.separator +
-                            "bar.baz"
+                        File.separator +
+                        "foo" +
+                        File.separator +
+                        "bar.baz"
                 )
             )
         )
@@ -708,14 +708,16 @@ class LintUtilsTest : TestCase() {
 
             // Norwegian extra vowel characters such as "latin small letter a with ring above"
             val value = "\u00e6\u00d8\u00e5"
-            val expected = ("First line." +
+            val expected = (
+                "First line." +
                     lineEnding +
                     "Second line." +
                     lineEnding +
                     "Third line." +
                     lineEnding +
                     value +
-                    lineEnding)
+                    lineEnding
+                )
             sb.append(expected)
             val file = File.createTempFile("getEncodingTest$encoding$writeBom", ".txt")
             file.deleteOnExit()
@@ -939,11 +941,11 @@ class LintUtilsTest : TestCase() {
                 assert(name != null)
                 path = File(
                     "src" +
-                            File.separatorChar +
-                            pkg!!.replace('.', File.separatorChar) +
-                            File.separatorChar +
-                            name +
-                            DOT_JAVA
+                        File.separatorChar +
+                        pkg!!.replace('.', File.separatorChar) +
+                        File.separatorChar +
+                        name +
+                        DOT_JAVA
                 )
             }
 
@@ -964,11 +966,11 @@ class LintUtilsTest : TestCase() {
                 assert(name != null)
                 path = File(
                     "src" +
-                            File.separatorChar +
-                            pkg!!.replace('.', File.separatorChar) +
-                            File.separatorChar +
-                            name +
-                            DOT_KT
+                        File.separatorChar +
+                        pkg!!.replace('.', File.separatorChar) +
+                        File.separatorChar +
+                        name +
+                        DOT_KT
                 )
             }
 
@@ -1005,8 +1007,10 @@ class LintUtilsTest : TestCase() {
             val source = primary.getContents()!!
 
             val fullPath = File(dir, relativePath.path)
-            val project = createTestProjectForFile(dir, relativePath, source, libs,
-                library, android, javaLanguageLevel, kotlinLanguageLevel)
+            val project = createTestProjectForFile(
+                dir, relativePath, source, libs,
+                library, android, javaLanguageLevel, kotlinLanguageLevel
+            )
             val client = project.getClient() as LintCliClient
             val request = LintRequest(client, listOf(fullPath))
 

@@ -42,7 +42,8 @@ class AllCapsDetector : LayoutDetector() {
         val ISSUE = Issue.create(
             id = "AllCaps",
             briefDescription = "Combining textAllCaps and markup",
-            explanation = """
+            explanation =
+                """
             The textAllCaps text transform will end up calling `toString` on the `CharSequence`, which has \
             the net effect of removing any markup such as `<b>`. This check looks for usages of strings \
             containing markup that also specify `textAllCaps=true`.""",
@@ -90,8 +91,8 @@ class AllCapsDetector : LayoutDetector() {
         val rawXmlValue = resourceValue.rawXmlValue ?: return
         if (rawXmlValue.contains("<")) {
             val message = "Using `textAllCaps` with a string (`${url.name}`) that " +
-                    "contains markup; the markup will be dropped by the caps " +
-                    "conversion"
+                "contains markup; the markup will be dropped by the caps " +
+                "conversion"
             context.report(ISSUE, attribute, context.getLocation(attribute), message)
         }
     }

@@ -123,7 +123,7 @@ cc_toolchain_config(
     target_system_name = "local",
     tool_paths = {
         "ar": clang_latest_linux + "/bin/llvm-ar",
-        "ld": clang_latest_linux + "/bin/ld.lld)",
+        "ld": clang_latest_linux + "/bin/ld.lld",
         "cpp": clang_latest_linux + "/bin/clang++",
         "gcc": clang_latest_linux + "/bin/clang",
         "dwp": "None",
@@ -290,12 +290,12 @@ toolchain(
 toolchain(
     name = "cc-toolchain-x64_linux",
     exec_compatible_with = [
-        "@bazel_tools//platforms:x86_64",
-        "@bazel_tools//platforms:linux",
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
     ],
     target_compatible_with = [
-        "@bazel_tools//platforms:x86_64",
-        "@bazel_tools//platforms:linux",
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
     ],
     toolchain = ":cc-compiler-k8",
     toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",

@@ -74,7 +74,6 @@ import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService;
 import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService;
-import com.android.build.gradle.internal.services.Aapt2WorkersBuildService;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.DslServicesImpl;
 import com.android.build.gradle.internal.services.LintClassLoaderBuildService;
@@ -327,7 +326,6 @@ public abstract class BasePlugin<
         IssueReporter issueReporter = projectServices.getIssueReporter();
 
         new Aapt2ThreadPoolBuildService.RegistrationAction(project, projectOptions).execute();
-        new Aapt2WorkersBuildService.RegistrationAction(project, projectOptions).execute();
         new Aapt2DaemonBuildService.RegistrationAction(project, projectOptions).execute();
         new SyncIssueReporterImpl.GlobalSyncIssueService.RegistrationAction(
                         project, SyncOptions.getModelQueryMode(projectOptions))
@@ -488,6 +486,14 @@ public abstract class BasePlugin<
                         getProjectTypeV2()));
 
         // Register a builder for the native tooling model
+
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_V2_NATIVE_MODEL)) {
+            com.android.build.gradle.internal.ide.v2.NativeModelBuilder nativeModelBuilderV2 =
+                    new com.android.build.gradle.internal.ide.v2.NativeModelBuilder(
+                            projectServices.getIssueReporter(), globalScope, variantModel);
+            registry.register(nativeModelBuilderV2);
+        }
+        // TODO(b/161169301): registering V1 in an `else` branch when ndk-build is properly supported by V2.
         NativeModelBuilder nativeModelBuilder =
                 new NativeModelBuilder(
                         projectServices.getIssueReporter(), globalScope, variantModel);

@@ -17,6 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.impl.ConsumableCreationConfigImpl
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.TestVariantProperties
 import com.android.build.gradle.internal.component.TestVariantCreationConfig
@@ -32,6 +33,7 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.android.builder.dexing.DexingType
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
@@ -65,6 +67,8 @@ open class TestVariantPropertiesImpl @Inject constructor(
     taskCreationServices,
     globalScope
 ), TestVariantProperties, TestVariantCreationConfig {
+
+    private val delegate = ConsumableCreationConfigImpl(variantDslInfo)
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -141,6 +145,11 @@ open class TestVariantPropertiesImpl @Inject constructor(
                 BuiltArtifactsLoaderImpl.loadFromDirectory(manifestDirectory)?.applicationId
                     ?: throw RuntimeException("Cannot find merged manifest at '$manifestDirectory', please file a bug.\"")
             }
-
     }
+
+    override val dexingType: DexingType
+        get() = delegate.dexingType
+
+    override val needsMainDexListForBundle: Boolean
+        get() = false
 }

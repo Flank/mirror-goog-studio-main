@@ -49,7 +49,8 @@ class IgnoreWithoutReasonDetectorTest {
     fun testNoAnnotations() {
         lint()
             .files(
-                stubJUnitTest, java(
+                stubJUnitTest,
+                java(
                     """
                 package foo;
 
@@ -71,7 +72,8 @@ class IgnoreWithoutReasonDetectorTest {
     fun testAnnotationWithReasonOnFunction() {
         lint()
             .files(
-                stubJUnitTest, stubJUnitIgnore, java(
+                stubJUnitTest, stubJUnitIgnore,
+                java(
                     """
                 package foo;
 
@@ -94,7 +96,8 @@ class IgnoreWithoutReasonDetectorTest {
     fun testAnnotationWithReasonOnClass() {
         lint()
             .files(
-                stubJUnitTest, stubJUnitIgnore, java(
+                stubJUnitTest, stubJUnitIgnore,
+                java(
                     """
                 package foo;
 
@@ -117,7 +120,8 @@ class IgnoreWithoutReasonDetectorTest {
     fun testAnnotationWithoutReasonOnClass() {
         lint()
             .files(
-                stubJUnitTest, stubJUnitIgnore, java(
+                stubJUnitTest, stubJUnitIgnore,
+                java(
                     """
                 package foo;
 
@@ -147,7 +151,8 @@ class IgnoreWithoutReasonDetectorTest {
     fun testAnnotationWithoutReasonOnFunction() {
         lint()
             .files(
-                stubJUnitTest, stubJUnitIgnore, java(
+                stubJUnitTest, stubJUnitIgnore,
+                java(
                     """
                 package foo;
 

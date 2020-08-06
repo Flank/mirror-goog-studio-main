@@ -27,6 +27,9 @@ class Env {
   // The API level of the current device.
   static int api_level();
 
+  // The build type of the current device (user, userdebug, eng)
+  static std::string build_type();
+
   // The uid of the android system. (Not the same as the actual running uid)
   static int uid();
 

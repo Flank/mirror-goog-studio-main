@@ -66,9 +66,11 @@ class HardcodedValuesDetector : LayoutDetector() {
     }
 
     override fun appliesTo(folderType: ResourceFolderType): Boolean {
-        return (folderType == ResourceFolderType.LAYOUT ||
+        return (
+            folderType == ResourceFolderType.LAYOUT ||
                 folderType == ResourceFolderType.MENU ||
-                folderType == ResourceFolderType.XML)
+                folderType == ResourceFolderType.XML
+            )
     }
 
     override fun visitAttribute(context: XmlContext, attribute: Attr) {
@@ -127,7 +129,8 @@ class HardcodedValuesDetector : LayoutDetector() {
         val ISSUE = Issue.create(
             id = "HardcodedText",
             briefDescription = "Hardcoded text",
-            explanation = """
+            explanation =
+                """
                 Hardcoding text attributes directly in layout files is bad for several reasons:
 
                 * When creating configuration variations (for example for landscape or \

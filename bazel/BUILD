@@ -40,7 +40,7 @@ java_library(
     deps = [
         ":utils",
         "//tools/idea/.idea/libraries:Ant",
-        "//tools/idea/.idea/libraries:Groovy",
+        "//tools/idea/.idea/libraries:org.codehaus.groovy_groovy",
     ],
 )
 
@@ -145,6 +145,18 @@ java_binary(
     main_class = "com.android.tools.binaries.ZipMerger",
     visibility = ["//visibility:public"],
     deps = [
+        "//tools/base/zipflinger",
+    ],
+)
+
+coverage_java_test(
+    name = "zip_merger_tests",
+    srcs = ["testSrc/com/android/tools/binaries/ZipMergerTest.java"],
+    test_class = "com.android.tools.binaries.ZipMergerTest",
+    deps = [
+        ":zip_merger",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:junit_junit",
         "//tools/base/zipflinger",
     ],
 )

@@ -182,13 +182,15 @@ class IntellijThreadDetector : Detector(), SourceCodeScanner {
         when (calleeThread) {
             SLOW, WORKER_THREAD -> {
                 when (callerThread) {
-                    UI_THREAD, ANY_THREAD -> { /* (1) */ }
+                    UI_THREAD, ANY_THREAD -> { /* (1) */
+                    }
                     else -> return null
                 }
             }
             UI_THREAD -> {
                 when (callerThread) {
-                    WORKER_THREAD, ANY_THREAD, SLOW -> { /* (2) */ }
+                    WORKER_THREAD, ANY_THREAD, SLOW -> { /* (2) */
+                    }
                     else -> return null
                 }
             }
@@ -360,7 +362,8 @@ class IntellijThreadDetector : Detector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
-        private val CHECKED: Key<Boolean> = Key.create("${::CHECKED.javaClass.name}.${::CHECKED.name}")
+        private val CHECKED: Key<Boolean> =
+            Key.create("${::CHECKED.javaClass.name}.${::CHECKED.name}")
 
         /** Calling methods on the wrong thread  */
         @JvmField
@@ -368,7 +371,8 @@ class IntellijThreadDetector : Detector(), SourceCodeScanner {
             id = "WrongThread",
             briefDescription = "Wrong Thread",
 
-            explanation = """
+            explanation =
+                """
                 Ensures that a method which expects to be called on a specific thread, is \
                 actually called from that thread. For example, calls on methods in widgets \
                 should always be made on the UI thread.

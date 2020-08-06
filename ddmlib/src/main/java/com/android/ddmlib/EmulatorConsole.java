@@ -214,7 +214,7 @@ public final class EmulatorConsole {
 
     private SocketChannel mSocketChannel;
 
-    private byte[] mBuffer = new byte[1024];
+    private final byte[] mBuffer = new byte[8192];
 
     /**
      * Returns an {@link EmulatorConsole} object for the given {@link IDevice}. This can be an
@@ -427,7 +427,12 @@ public final class EmulatorConsole {
             return lines[lines.length - 2];
         }
 
-        throw new IllegalArgumentException(String.join(System.lineSeparator(), lines));
+        CharSequence separator = System.lineSeparator();
+
+        throw new IllegalArgumentException(
+                "The last line doesn't equal \"OK\" nor start with \"KO:  \". lines = "
+                        + separator
+                        + String.join(separator, lines));
     }
 
     /**

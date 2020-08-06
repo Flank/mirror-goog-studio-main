@@ -15,8 +15,8 @@
  */
 package com.android.ide.common.gradle.model.stubs.level2
 
-import com.android.ide.common.gradle.model.level2.IdeDependencies
-import com.android.ide.common.gradle.model.level2.IdeLibrary
+import com.android.ide.common.gradle.model.IdeDependencies
+import com.android.ide.common.gradle.model.IdeLibrary
 import java.io.File
 
 class IdeDependenciesStub(

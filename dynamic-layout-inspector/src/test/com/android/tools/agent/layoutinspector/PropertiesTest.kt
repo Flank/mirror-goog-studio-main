@@ -51,15 +51,16 @@ class PropertiesTest {
     @get:Rule
     val agentRule = AgentRule()
 
-    private val fontId = 17;
+    private val fontId = 17
 
     private val node =
         InspectorNode(
             id = 77,
             name = "Column",
             fileName = "MainActivity.kt",
+            packageHash = 1777,
+            offset = 400,
             lineNumber = 26,
-            functionName = "com.example.mycompose.MainActivity\$onCreate$1$1.invoke",
             left = 55,
             top = 121,
             width = 421,

@@ -212,12 +212,12 @@ class RestrictionsDetector : ResourceXmlDetector() {
                 element,
                 VALUE_ENTRIES
             ) != null ||
-                    // deliberate short circuit evaluation
-                    checkRequiredAttribute(
-                        context,
-                        element,
-                        VALUE_ENTRY_VALUES
-                    ) != null
+                // deliberate short circuit evaluation
+                checkRequiredAttribute(
+                context,
+                element,
+                VALUE_ENTRY_VALUES
+            ) != null
         } else if (restrictionType == VALUE_HIDDEN) {
             // hidden type must have a defaultValue
             checkRequiredAttribute(context, element, VALUE_DEFAULT_VALUE)

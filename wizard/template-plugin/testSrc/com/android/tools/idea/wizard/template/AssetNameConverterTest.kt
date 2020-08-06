@@ -169,18 +169,24 @@ class AssetNameConverterTest {
       "x" to "activity_x",
       "X" to "activity_x",
       "Ac" to "activity_",
-      "ac" to "activity_ac",
+      "ac" to "activity_",
       "FooActivity2" to "activity_foo2",
       "FooActivity200" to "activity_foo200",
-      "Activity200" to "activity_200"
-      // TODO(qumeric):
-      //check("MainActivity", "simple", "simple_main");
-      //check("BaseNameActivityActiv", "activity", "activity_base_name_activity");
-      //check("FullScreenActivity", "content", "content_full_screen");
+      "Activity200" to "activity_200",
+      "BaseNameActivityActiv" to "activity_base_name_activity",
+      "MY_LOGIN_ACTIVITY" to "activity_my_login",
+      "MY_login_ACTIVITY" to "activity_my_login",
+      "MY_L_OGIN_ACTIVITY" to "activity_my_login",
+      "My___lOGIN___ACTIVITY" to "activity_my_login",
+      "MyCLASsName" to "activity_my_class_name",
+      "my_class_name" to "activity_my_class_name"
     )
     for ((activity, layout) in data) {
-      assertThat(activityToLayout(activity)).isEqualTo(layout)
+      assertThat(activityToLayout(activity)).named(activity).isEqualTo(layout)
     }
+
+    assertThat(activityToLayout("MainActivity", "simple")).isEqualTo("simple_main")
+    assertThat(activityToLayout("FullScreenActivity", "content")).isEqualTo("content_full_screen")
   }
 
   @Test

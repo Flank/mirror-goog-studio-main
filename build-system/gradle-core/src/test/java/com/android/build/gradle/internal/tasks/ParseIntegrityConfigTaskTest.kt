@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.BundleOptions
@@ -28,7 +27,6 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.build.gradle.internal.services.createProjectServices
 import com.android.build.gradle.internal.services.createTaskCreationServices
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantType
 import com.android.bundle.AppIntegrityConfigOuterClass.AppIntegrityConfig
@@ -60,10 +58,7 @@ class ParseIntegrityConfigTaskTest {
     // Under test
     lateinit var task: ParseIntegrityConfigTask
 
-    private val gradleProperties = ImmutableMap.of<String, Any>(
-        BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
-        false
-    )
+    private val gradleProperties = ImmutableMap.of<String, Any>()
 
     private val projectServices = createProjectServices(
         projectOptions = ProjectOptions(

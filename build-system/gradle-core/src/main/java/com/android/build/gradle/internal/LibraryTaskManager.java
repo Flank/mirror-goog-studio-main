@@ -18,7 +18,6 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
-import static com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModelKt.createCxxMetadataGenerator;
 import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_API_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_RUNTIME_PUBLICATION;
@@ -42,8 +41,6 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel;
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator;
-import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment;
 import com.android.build.gradle.internal.dependency.ConfigurationVariantMapping;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -544,16 +541,6 @@ public class LibraryTaskManager
             return;
         }
 
-        CxxMetadataGenerator generator;
-        try (IssueReporterLoggingEnvironment ignore =
-                new IssueReporterLoggingEnvironment(
-                        variantProperties.getServices().getIssueReporter())) {
-            generator =
-                    createCxxMetadataGenerator(
-                            variantProperties.getGlobalScope().getSdkComponents().get(),
-                            variantProperties.getTaskContainer().getCxxConfigurationModel());
-        }
-
         LibraryExtension extension = (LibraryExtension) globalScope.getExtension();
         List<PrefabModuleTaskData> modules = Lists.newArrayList();
         for (PrefabPackagingOptions options : extension.getPrefab()) {
@@ -573,8 +560,8 @@ public class LibraryTaskManager
                     taskFactory.register(
                             new PrefabPackageTask.CreationAction(
                                     modules,
-                                    generator.getVariant(),
-                                    generator.getAbis(),
+                                    variantProperties.getGlobalScope().getSdkComponents().get(),
+                                    variantProperties.getTaskContainer().getCxxConfigurationModel(),
                                     variantProperties));
             packageTask
                     .get()

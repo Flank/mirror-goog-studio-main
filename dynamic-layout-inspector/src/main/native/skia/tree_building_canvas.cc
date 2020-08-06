@@ -15,13 +15,14 @@
  */
 #include "tree_building_canvas.h"
 
+#include <SkImageInfo.h>
 #include <memory>
 #include <stack>
 
 #include "SkImage.h"
-#include "SkNoDrawCanvas.h"
 #include "SkRRect.h"
 
+namespace v1 {
 TreeBuildingCanvas::~TreeBuildingCanvas() {
   if (!views.empty()) {
     std::cerr << "Found unclosed view!" << std::endl;
@@ -33,46 +34,33 @@ TreeBuildingCanvas::~TreeBuildingCanvas() {
 
 void TreeBuildingCanvas::onClipRect(const SkRect& rect, SkClipOp op,
                                     ClipEdgeStyle edgeStyle) {
-  views.back().canvas->clipRect(rect, op, edgeStyle);
-  inHeader = false;
+  real_canvas->clipRect(rect, op, edgeStyle);
 }
 
 void TreeBuildingCanvas::onClipRRect(const SkRRect& rrect, SkClipOp op,
                                      ClipEdgeStyle edgeStyle) {
 #ifdef TREEBUILDINGCANVAS_DEBUG
-  std::cerr << "cliprrect" << std::endl << "input: ";
-  rrect.dump();
-  std::cerr << "total: ";
-  views.back().canvas->getTotalMatrix().dump();
-  std::cerr << std::flush;
+  printDebug("cliprrect: %f %f %f %f\n", rrect.getBounds().x(),
+             rrect.getBounds().y(), rrect.getBounds().width(),
+             rrect.getBounds().height());
 #endif
-  views.back().canvas->clipRRect(rrect, op, edgeStyle);
-  inHeader = false;
+  real_canvas->clipRRect(rrect, op, edgeStyle);
+}
+
+void TreeBuildingCanvas::onClipPath(const SkPath& path, SkClipOp op,
+                                    ClipEdgeStyle edgeStyle) {
+  real_canvas->clipPath(path, op, edgeStyle == kSoft_ClipEdgeStyle);
+}
+
+void TreeBuildingCanvas::onClipRegion(const SkRegion& deviceRgn, SkClipOp op) {
+  real_canvas->clipRegion(deviceRgn, op);
 }
 
 void TreeBuildingCanvas::didConcat(const SkMatrix& matrix) {
-  View& topView = views.back();
-  topView.canvas->concat(matrix);
-  if (inHeader) {
-    if (topView.didConcat) {
-      inHeader = false;
-    } else {
-      fixTranslation(matrix, topView);
-    }
-  }
-  View& secondFromTop = *(views.rbegin() + 1);
-  secondFromTop.canvas->concat(matrix);
-  if (inHeader) {
-    fixTranslation(matrix, secondFromTop);
-  }
-  topView.didConcat = true;
+  real_canvas->concat(matrix);
 #ifdef TREEBUILDINGCANVAS_DEBUG
-  std::cerr << "didConcat:" << std::endl;
-  std::cerr << "input: ";
+  printDebug("didConcat\n");
   matrix.dump();
-  std::cerr << "total: ";
-  views.back().canvas->getTotalMatrix().dump();
-  std::cerr << std::flush;
 #endif
 }
 
@@ -80,87 +68,59 @@ void TreeBuildingCanvas::didTranslate(SkScalar dx, SkScalar dy) {
   this->didConcat(SkMatrix::MakeTrans(dx, dy));
 }
 
-void TreeBuildingCanvas::fixTranslation(const SkMatrix& matrix,
-                                        View& view) const {
-  SkScalar xTranslation = matrix.getTranslateX();
-  SkScalar yTranslation = matrix.getTranslateY();
-  view.canvas->translate(-xTranslation, -yTranslation);
-  view.offsetX += xTranslation;
-  view.offsetY += yTranslation;
-}
-
 void TreeBuildingCanvas::didSetMatrix(const SkMatrix& matrix) {
-  SkMatrix newMatrix{};
-  SkScalar buf[9];
-  matrix.get9(buf);
-  newMatrix.set9(buf);
-  View& topView = views.back();
-  newMatrix.preTranslate(-topView.offsetX, -topView.offsetY);
-  topView.canvas->setMatrix(newMatrix);
+  real_canvas->setMatrix(matrix);
 #ifdef TREEBUILDINGCANVAS_DEBUG
-  std::cerr << "didSetMatrix " << std::endl << "input: " << std::flush;
-  matrix.dump();
-  std::cerr << std::endl << "total: ";
-  topView.canvas->getTotalMatrix().dump();
-  std::cerr << std::flush;
+  printDebug("didSetMatrix\n");
+  matrix.dump(); /*
+std::cerr << std::endl << "total: ";
+real_canvas->getTotalMatrix().dump();
+std::cerr << std::flush;*/
 #endif
-  View& secondFromTop = *(views.rbegin() + 1);
-  secondFromTop.canvas->setMatrix(newMatrix);
 }
 
 void TreeBuildingCanvas::willSave() {
-  views.back().canvas->save();
+  real_canvas->save();
 #ifdef TREEBUILDINGCANVAS_DEBUG
-  std::cerr << "willSave:";
-  views.back().canvas->getTotalMatrix().dump();
-  std::cerr << std::flush;
+  printDebug("willSave %i id: %i\n", real_canvas->getSaveCount(),
+             views.back().id);
+  real_canvas->getTotalMatrix().dump();
 #endif
-  View& secondFromTop = *(views.rbegin() + 1);
-  secondFromTop.canvas->save();
 }
 
 void TreeBuildingCanvas::willRestore() {
-  views.back().canvas->restore();
 #ifdef TREEBUILDINGCANVAS_DEBUG
-  std::cerr << "willRestore:";
-  views.back().canvas->getTotalMatrix().dump();
-  std::cerr << std::flush;
+  printDebug("willRestore %i id: %i\n", real_canvas->getSaveCount(),
+             views.back().id);
+  real_canvas->getTotalMatrix().dump();
 #endif
-  View& secondFromTop = *(views.rbegin() + 1);
-  secondFromTop.canvas->restore();
-}
-
-void TreeBuildingCanvas::nonHeaderCommand() {
-  inHeader = false;
-  if (!views.empty() && !views.back().didDraw) {
-    views.back().didDraw = true;
-    createRealCanvas();
-  }
+  real_canvas->restore();
+#ifdef TREEBUILDINGCANVAS_DEBUG
+  real_canvas->getTotalMatrix().dump();
+#endif
 }
 
 bool TreeBuildingCanvas::onPeekPixels(SkPixmap* pixmap) {
-  return views.back().canvas->peekPixels(pixmap);
+  return real_canvas->peekPixels(pixmap);
 }
 
 SkImageInfo TreeBuildingCanvas::onImageInfo() const {
-  return views.back().canvas->imageInfo();
+  return real_canvas->imageInfo();
 }
 
 bool TreeBuildingCanvas::onGetProps(SkSurfaceProps* props) const {
-  return views.back().canvas->getProps(props);
+  return real_canvas->getProps(props);
 }
 
-void TreeBuildingCanvas::onFlush() { views.back().canvas->flush(); }
+void TreeBuildingCanvas::onFlush() { real_canvas->flush(); }
 
 void TreeBuildingCanvas::onDrawShadowRec(const SkPath& path,
                                          const SkDrawShadowRec& rec) {
   nonHeaderCommand();
 #ifdef TREEBUILDINGCANVAS_DEBUG
-  std::cerr << "drawShadow:";
-  views.back().canvas->getTotalMatrix().dump();
-  std::cerr << std::flush;
+  printDebug("drawShadow:\n");
 #endif
-  views.back().canvas->private_draw_shadow_rec(path, rec);
+  real_canvas->private_draw_shadow_rec(path, rec);
 }
 
 void TreeBuildingCanvas::onDrawVerticesObject(const SkVertices* vertices,
@@ -168,7 +128,7 @@ void TreeBuildingCanvas::onDrawVerticesObject(const SkVertices* vertices,
                                               int boneCount, SkBlendMode mode,
                                               const SkPaint& paint) {
   nonHeaderCommand();
-  views.back().canvas->drawVertices(vertices, bones, boneCount, mode, paint);
+  real_canvas->drawVertices(vertices, bones, boneCount, mode, paint);
 }
 
 void TreeBuildingCanvas::onDrawImageRect(const SkImage* image,
@@ -177,13 +137,12 @@ void TreeBuildingCanvas::onDrawImageRect(const SkImage* image,
                                          SrcRectConstraint constraint) {
   nonHeaderCommand();
 #ifdef TREEBUILDINGCANVAS_DEBUG
-  std::cerr << "drawImageRect";
-  std::cerr.flush();
-  views.back().canvas->getTotalMatrix().dump();
-  std::cerr.flush();
+  printDebug("drawImageRect\n");
+  real_canvas->getTotalMatrix().dump();
+  real_canvas->getTotalMatrix().mapRect(dst).dump();
 #endif
 
-  views.back().canvas->drawImageRect(image, *src, dst, paint, constraint);
+  real_canvas->drawImageRect(image, *src, dst, paint, constraint);
 }
 
 void TreeBuildingCanvas::onDrawBitmapRect(const SkBitmap& bitmap,
@@ -191,14 +150,15 @@ void TreeBuildingCanvas::onDrawBitmapRect(const SkBitmap& bitmap,
                                           const SkPaint* paint,
                                           SrcRectConstraint constraint) {
   nonHeaderCommand();
-  views.back().canvas->drawBitmapRect(bitmap, *src, dst, paint, constraint);
+  real_canvas->drawBitmapRect(bitmap, *src, dst, paint, constraint);
 }
 
 void TreeBuildingCanvas::onDrawPaint(const SkPaint& paint) {
   // can be empty if this is a dialog
+  // TODO: still relevant?
   if (!views.empty()) {
     nonHeaderCommand();
-    views.back().canvas->drawPaint(paint);
+    real_canvas->drawPaint(paint);
   }
 }
 
@@ -206,60 +166,60 @@ void TreeBuildingCanvas::onDrawPoints(PointMode mode, size_t count,
                                       const SkPoint* pts,
                                       const SkPaint& paint) {
   nonHeaderCommand();
-  views.back().canvas->drawPoints(mode, count, pts, paint);
+  real_canvas->drawPoints(mode, count, pts, paint);
 }
 
 void TreeBuildingCanvas::onDrawRect(const SkRect& rect, const SkPaint& paint) {
   nonHeaderCommand();
-  views.back().canvas->drawRect(rect, paint);
+  real_canvas->drawRect(rect, paint);
 }
 
 void TreeBuildingCanvas::onDrawRegion(const SkRegion& region,
                                       const SkPaint& paint) {
   nonHeaderCommand();
-  views.back().canvas->drawRegion(region, paint);
+  real_canvas->drawRegion(region, paint);
 }
 
 void TreeBuildingCanvas::onDrawOval(const SkRect& oval, const SkPaint& paint) {
   nonHeaderCommand();
-  views.back().canvas->drawOval(oval, paint);
+  real_canvas->drawOval(oval, paint);
 }
 
 void TreeBuildingCanvas::onDrawRRect(const SkRRect& rrect,
                                      const SkPaint& paint) {
   nonHeaderCommand();
-  views.back().canvas->drawRRect(rrect, paint);
+  real_canvas->drawRRect(rrect, paint);
 }
 
 void TreeBuildingCanvas::onDrawDRRect(const SkRRect& outer,
                                       const SkRRect& inner,
                                       const SkPaint& paint) {
   nonHeaderCommand();
-  views.back().canvas->drawDRRect(outer, inner, paint);
+  real_canvas->drawDRRect(outer, inner, paint);
 }
 
 void TreeBuildingCanvas::onDrawArc(const SkRect& oval, SkScalar startAngle,
                                    SkScalar sweepAngle, bool useCenter,
                                    const SkPaint& paint) {
   nonHeaderCommand();
-  views.back().canvas->drawArc(oval, startAngle, sweepAngle, useCenter, paint);
+  real_canvas->drawArc(oval, startAngle, sweepAngle, useCenter, paint);
 }
 
 void TreeBuildingCanvas::onDrawPath(const SkPath& path, const SkPaint& paint) {
   nonHeaderCommand();
-  views.back().canvas->drawPath(path, paint);
+  real_canvas->drawPath(path, paint);
 }
 
 void TreeBuildingCanvas::onDrawImage(const SkImage* image, SkScalar left,
                                      SkScalar top, const SkPaint* paint) {
   nonHeaderCommand();
-  views.back().canvas->drawImage(image, left, top, paint);
+  real_canvas->drawImage(image, left, top, paint);
 }
 
 void TreeBuildingCanvas::onDrawTextBlob(const SkTextBlob* blob, SkScalar x,
                                         SkScalar y, const SkPaint& paint) {
   nonHeaderCommand();
-  views.back().canvas->drawTextBlob(blob, x, y, paint);
+  real_canvas->drawTextBlob(blob, x, y, paint);
 }
 
 void TreeBuildingCanvas::onDrawPatch(const SkPoint* cubics,
@@ -267,7 +227,7 @@ void TreeBuildingCanvas::onDrawPatch(const SkPoint* cubics,
                                      const SkPoint* texCoords, SkBlendMode mode,
                                      const SkPaint& paint) {
   nonHeaderCommand();
-  views.back().canvas->drawPatch(cubics, colors, texCoords, mode, paint);
+  real_canvas->drawPatch(cubics, colors, texCoords, mode, paint);
 }
 
 void TreeBuildingCanvas::onDrawImageNine(const SkImage* image,
@@ -275,7 +235,7 @@ void TreeBuildingCanvas::onDrawImageNine(const SkImage* image,
                                          const SkRect& dst,
                                          const SkPaint* paint) {
   nonHeaderCommand();
-  views.back().canvas->drawImageNine(image, center, dst, paint);
+  real_canvas->drawImageNine(image, center, dst, paint);
 }
 
 void TreeBuildingCanvas::onDrawImageLattice(const SkImage* image,
@@ -283,13 +243,13 @@ void TreeBuildingCanvas::onDrawImageLattice(const SkImage* image,
                                             const SkRect& dst,
                                             const SkPaint* paint) {
   nonHeaderCommand();
-  views.back().canvas->drawImageLattice(image, lattice, dst, paint);
+  real_canvas->drawImageLattice(image, lattice, dst, paint);
 }
 
 void TreeBuildingCanvas::onDrawBitmap(const SkBitmap& bitmap, SkScalar dx,
                                       SkScalar dy, const SkPaint* paint) {
   nonHeaderCommand();
-  views.back().canvas->drawBitmap(bitmap, dx, dy, paint);
+  real_canvas->drawBitmap(bitmap, dx, dy, paint);
 }
 
 void TreeBuildingCanvas::onDrawBitmapNine(const SkBitmap& bitmap,
@@ -297,7 +257,7 @@ void TreeBuildingCanvas::onDrawBitmapNine(const SkBitmap& bitmap,
                                           const SkRect& dst,
                                           const SkPaint* paint) {
   nonHeaderCommand();
-  views.back().canvas->drawBitmapNine(bitmap, center, dst, paint);
+  real_canvas->drawBitmapNine(bitmap, center, dst, paint);
 }
 
 void TreeBuildingCanvas::onDrawBitmapLattice(const SkBitmap& bitmap,
@@ -305,7 +265,7 @@ void TreeBuildingCanvas::onDrawBitmapLattice(const SkBitmap& bitmap,
                                              const SkRect& dst,
                                              const SkPaint* paint) {
   nonHeaderCommand();
-  views.back().canvas->drawBitmapLattice(bitmap, lattice, dst, paint);
+  real_canvas->drawBitmapLattice(bitmap, lattice, dst, paint);
 }
 
 void TreeBuildingCanvas::onDrawAtlas(const SkImage* atlas,
@@ -314,238 +274,202 @@ void TreeBuildingCanvas::onDrawAtlas(const SkImage* atlas,
                                      SkBlendMode mode, const SkRect* cull,
                                      const SkPaint* paint) {
   nonHeaderCommand();
-  views.back().canvas->drawAtlas(atlas, xform, rect, colors, count, mode, cull,
-                                 paint);
+  real_canvas->drawAtlas(atlas, xform, rect, colors, count, mode, cull, paint);
 }
 
 void TreeBuildingCanvas::onDrawDrawable(SkDrawable* drawable,
                                         const SkMatrix* matrix) {
   nonHeaderCommand();
-  views.back().canvas->drawDrawable(drawable, matrix);
+  real_canvas->drawDrawable(drawable, matrix);
 }
 
 void TreeBuildingCanvas::onDrawPicture(const SkPicture* picture,
                                        const SkMatrix* matrix,
                                        const SkPaint* paint) {
   nonHeaderCommand();
-  views.back().canvas->drawPicture(picture, matrix, paint);
+  real_canvas->drawPicture(picture, matrix, paint);
 }
 
-void TreeBuildingCanvas::onDrawAnnotation(const SkRect& rect, const char* key,
-                                          SkData* value) {
+void TreeBuildingCanvas::onDrawEdgeAAQuad(const SkRect& rect,
+                                          const SkPoint clip[4],
+                                          SkCanvas::QuadAAFlags aaFlags,
+                                          const SkColor4f& color,
+                                          SkBlendMode mode) {
+  real_canvas->experimental_DrawEdgeAAQuad(rect, clip, aaFlags, color, mode);
+}
+
+void TreeBuildingCanvas::onDrawEdgeAAImageSet(
+    const SkCanvas::ImageSetEntry imageSet[], int count,
+    const SkPoint dstClips[], const SkMatrix preViewMatrices[],
+    const SkPaint* paint, SkCanvas::SrcRectConstraint constraint) {
+  real_canvas->experimental_DrawEdgeAAImageSet(
+      imageSet, count, dstClips, preViewMatrices, paint, constraint);
+}
+
+void TreeBuildingCanvas::nonHeaderCommand() {
+  if (!views.empty() && !views.back().didDraw) {
+    views.back().didDraw = true;
+  }
+}
+
+void TreeBuildingCanvas::onDrawAnnotation(const SkRect&, const char* key,
+                                          SkData*) {
 #ifdef TREEBUILDINGCANVAS_DEBUG
-  std::cerr << "annotation: " << key << std::endl;
+  printDebug("annotation: %s\n", key);
 #endif
 
   if (!strstr(key, "RenderNode")) {
     return;
   }
-  auto id = parseIdFromLabel(key);
-  if (request_version >= 1 && !isKnownId(id)) {
-    // The id is not found in the views or compose nodes in the component tree.
-    // Paint this part on the parent canvas.
+  long id = parseIdFromLabel(key);
+  auto requested_node = requested_nodes.find(id);
+
+  if (requested_node == requested_nodes.end()) {
+    // The id is not found in the views or compose nodes in the component
+    // tree. Paint this part on the parent canvas.
+#ifdef TREEBUILDINGCANVAS_DEBUG
+    printDebug("skip\n");
+#endif
     return;
   }
-  if (key[0] != '/') {
+
+  if (key[0] != '/') {  // Enter a node
+#ifdef TREEBUILDINGCANVAS_DEBUG
+    debug_indent++;
+#endif
+
     if (!views.empty()) {
       exitView(true);
     }
-    addView(rect);
-    views.back().label = key;
-    addView(rect);
-    views.back().label = key;
-    inHeader = true;
-  } else {
-    inHeader = false;
+
+    if (!surface) {
+      SkIRect rect = requested_nodes.find(id)->second;
+      SkImageInfo imageInfo =
+          SkImageInfo::Make(rect.width(), rect.height(), kBGRA_8888_SkColorType,
+                            kUnpremul_SkAlphaType, SkColorSpace::MakeSRGB());
+#ifdef TREEBUILDINGCANVAS_DEBUG
+      printDebug("Create surface: %i x %i\n", rect.width(), rect.height());
+#endif
+      surface = SkSurface::MakeRaster(
+          imageInfo, rect.width() * rect.height() * sizeof(int32_t), nullptr);
+      real_canvas = surface->getCanvas();
+    }
+
+    addView(id);
+    addView(id);
+
+  } else {  // Exit a node
+#ifdef TREEBUILDINGCANVAS_DEBUG
+    debug_indent--;
+#endif
     exitView(true);
     exitView(false);
     if (!views.empty()) {
-      // TODO: Need to copy save/restore here
-      const char* label = views.back().label;
-      addView(SkRect::MakeWH(views.back().width, views.back().height));
-      views.back().label = label;
+      addView(views.back().id);
     }
   }
 }
 
-bool TreeBuildingCanvas::isKnownId(std::string& idStr) {
-  auto ptr = known_ids->begin();
-  auto id = std::stol(idStr);
-  return std::binary_search(known_ids->begin(), known_ids->end(), id);
-}
-
 ::layoutinspector::proto::InspectorView* TreeBuildingCanvas::createNode(
-    std::string& id, std::string& type, int offsetX, int offsetY, int width,
-    int height, std::unique_ptr<std::string> image,
-    std::reverse_iterator<std::deque<View>::iterator>& parent) {
+    long id, std::reverse_iterator<std::deque<View>::iterator>& parent,
+    bool hasData) {
   ::layoutinspector::proto::InspectorView* node;
-
   if (parent < views.rend()) {
-    View& existing = *parent;
+    View& parentView = *parent;
 
-    if (existing.node == nullptr) {
-      std::string existingType;
-      if (existing.label) {
-        existingType = existing.label;
-      } else {
-        existingType = "null";
-      }
-      std::string existingId = parseIdFromLabel(existing.label);
+    // Create parent nodes up to the root if need be.
+    if (parentView.node == nullptr) {
       std::unique_ptr<std::string> empty;
-      existing.node = createNode(
-          existingId, existingType, SkScalarRoundToInt(existing.offsetX),
-          SkScalarRoundToInt(existing.offsetY),
-          SkScalarRoundToInt(existing.width),
-          SkScalarRoundToInt(existing.height), std::move(empty), ++parent);
+      parentView.node = createNode(parentView.id, ++parent, false);
     }
-    node = existing.node->add_children();
+    node = parentView.node->add_children();
   } else {
     node = root;
   }
 
   node->set_id(id);
-  node->set_type(type);
-  node->set_x(offsetX);
-  node->set_y(offsetY);
-  node->set_width(width);
-  node->set_height(height);
 
-  node->set_allocated_image(image.release());
+  if (hasData) {
+    SkImageInfo imageInfo = real_canvas->imageInfo();
+    SkIRect rect = requested_nodes.find(id)->second;
+    int nBytes = imageInfo.bytesPerPixel() * rect.width() * rect.height();
+    std::string bytes;
+    bytes.resize(nBytes);
+
+    SkImageInfo newImageInfo =
+        SkImageInfo::Make(rect.size(), imageInfo.colorInfo());
+    real_canvas->readPixels(
+        newImageInfo,
+        const_cast<void*>(reinterpret_cast<const void*>(bytes.data())),
+        imageInfo.bytesPerPixel() * newImageInfo.width(), rect.x(), rect.y());
+    // TODO: _allocated_ or move?
+    node->set_image(std::move(bytes));
+    // TODO: redundant?
+#ifdef TREEBUILDINGCANVAS_DEBUG
+    printDebug("createNode width: %i height: %i\n", rect.width(),
+               rect.height());
+#endif
+  }
+#ifdef TREEBUILDINGCANVAS_DEBUG
+  else {
+    printDebug("createNode no data\n");
+  }
+#endif
+
   return node;
 }
 
 void TreeBuildingCanvas::exitView(bool hasData) {
   View& topView = views.back();
 #ifdef TREEBUILDINGCANVAS_DEBUG
-  std::cerr << "exitView" << std::endl;
+  printDebug("exitView\n");
 #endif
   if (hasData && topView.didDraw) {
-    std::string type;
-    if (topView.label) {
-      type = topView.label;
-    } else {
-      type = "null";
-    }
-    std::string id = parseIdFromLabel(topView.label);
     auto last = views.rbegin() + 1;
-    createNode(id, type, SkScalarRoundToInt(topView.offsetX),
-               SkScalarRoundToInt(topView.offsetY), topView.width,
-               topView.height, std::move(topView.image), last);
-  }
-  views.pop_back();
+    createNode(topView.id, last, true);
+    }
+    views.pop_back();
 }
 
-void TreeBuildingCanvas::addView(const SkRect& rect) {
-  int prevLeft = 0;
-  int prevTop = 0;
-  if (!views.empty()) {
-    View& existing = views.back();
-    prevLeft =
-        SkScalarRoundToInt(existing.canvas->getTotalMatrix().getTranslateX()) +
-        existing.offsetX;
-    prevTop =
-        SkScalarRoundToInt(existing.canvas->getTotalMatrix().getTranslateY()) +
-        existing.offsetY;
-  }
-
+void TreeBuildingCanvas::addView(long id) {
 #ifdef TREEBUILDINGCANVAS_DEBUG
-  std::cerr << "addView" << std::endl;
-#endif
-  views.emplace_back(rect.width(), rect.height(), prevLeft, prevTop);
-
-  if (views.size() > 1) {
-    View& existing = *(views.rbegin() + 1);
-    std::stack<SkMatrix> intermediate;
-    while (true) {
-      intermediate.emplace(existing.canvas->getTotalMatrix());
-      if (existing.canvas->getSaveCount() == 1) {
-        break;
-      }
-      existing.canvas->restore();
-    }
-    while (true) {
-      views.back().canvas->setMatrix(intermediate.top());
-      existing.canvas->setMatrix(intermediate.top());
-      intermediate.pop();
-      if (intermediate.empty()) {
-        break;
-      }
-      views.back().canvas->save();
-      existing.canvas->save();
-    }
-
-    views.back().canvas->translate(
-        views.back().canvas->getTotalMatrix().getTranslateX() * -1,
-        views.back().canvas->getTotalMatrix().getTranslateY() * -1);
-  }
-}
-
-void TreeBuildingCanvas::createRealCanvas() {
-  SkCanvas& currentCanvas = *(views.back().canvas);
-  int height = SkScalarRoundToInt(views.back().height);
-  int width = SkScalarRoundToInt(views.back().width);
-  SkImageInfo imageInfo =
-      SkImageInfo::Make(width, height, kBGRA_8888_SkColorType,
-                        kUnpremul_SkAlphaType, SkColorSpace::MakeSRGB());
-
-  views.back().image.reset(new std::string());
-  views.back().image->resize(width * height * sizeof(int32_t));
-
-  SkBitmap bitmap;
-  const auto* data =
-      reinterpret_cast<const int32_t*>(views.back().image->data());
-  bitmap.installPixels(imageInfo, const_cast<int32_t*>(data),
-                       width * sizeof(int32_t));
-  auto newCanvas = new SkCanvas(bitmap);
-
-  std::stack<SkMatrix> intermediate;
-#ifdef TREEBUILDINGCANVAS_DEBUG
-  std::cerr << "creating new canvas: ";
-  currentCanvas.getTotalMatrix().dump();
-  std::cerr << std::flush;
-#endif
-  while (true) {
-    const SkMatrix& matrix = currentCanvas.getTotalMatrix();
-    intermediate.emplace(matrix);
-
-    if (currentCanvas.getSaveCount() == 1) {
-      break;
-    }
-    currentCanvas.restore();
-  }
-  while (true) {
-    newCanvas->setMatrix(intermediate.top());
-    intermediate.pop();
-    if (intermediate.empty()) {
-      break;
-    }
-    newCanvas->save();
-  }
-#ifdef TREEBUILDINGCANVAS_DEBUG
-  std::cerr << "new is: ";
-  newCanvas->getTotalMatrix().dump();
-  std::cerr << std::flush;
+  printDebug("addView %li\n", id);
 #endif
 
-  views.back().canvas.reset(newCanvas);
+  real_canvas->clear(SK_ColorTRANSPARENT);
+  views.emplace_back(id);
 }
 
 /**
  * Extract the id of a render node label.
  *
- * Use this old fashioned code to avoid using a regex which may or may not be
- * implemented on the machine used to build this code.
+ * Use this old fashioned code to avoid using a regex which may or may not
+ * be implemented on the machine used to build this code.
  *
  * @param label example: "RenderNode(id=1, name='LinearLayout')"
  * @param id output to receive the id as a string, example "1"
  */
-std::string TreeBuildingCanvas::parseIdFromLabel(const char* label) {
+long TreeBuildingCanvas::parseIdFromLabel(const char* label) {
   const char* start = strstr(label, "(id=");
   if (start == nullptr) {
-    return "";
+    return 0;
   }
   start += 4;
   const char* end = strchr(start, ',');
   std::string id(start, (end - start));
-  return id;
+  return std::stol(id);
 }
+
+#ifdef TREEBUILDINGCANVAS_DEBUG
+void TreeBuildingCanvas::printDebug(const char* format, ...) {
+  va_list args;
+  va_start(args, format);
+
+  for (int i = 0; i < debug_indent; i++) {
+    vfprintf(stderr, "  ", args);
+  }
+  vfprintf(stderr, format, args);
+}
+#endif
+
+}  // namespace v1

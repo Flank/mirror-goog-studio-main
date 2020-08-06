@@ -62,11 +62,12 @@ abstract class JarsClasspathInputsWithIdentity {
             FileInfo((i++).toString(), hasChanged(it))
         }
 
-        return JarsIdentityMapping(mapping)
+        return JarsIdentityMapping(mapping, reprocessAll)
     }
 }
 
-class JarsIdentityMapping(val jarsInfo: Map<File, FileInfo>) : Serializable
+class JarsIdentityMapping(val jarsInfo: Map<File, FileInfo>, val reprocessAll: Boolean) :
+    Serializable
 
 /**
  * Contains file identity for this run, and info if the file changed in the current run.

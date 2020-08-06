@@ -277,7 +277,8 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
      */
     private static boolean isWearableListenerServiceAction(@NonNull Element element) {
         // Checks whether a service has an action for a WearableListenerService
-        // see developers.google.com/android/reference/com/google/android/gms/wearable/WearableListenerService
+        // see
+        // developers.google.com/android/reference/com/google/android/gms/wearable/WearableListenerService
         // for details on the applicable actions.
         for (Element child : XmlUtils.getSubTags(element)) {
             if (child.getTagName().equals(TAG_INTENT_FILTER)) {
@@ -384,7 +385,7 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
         }
 
         if (exported) {
-            // Just check for some use of permissions. Other Lint checks can check the saneness
+            // Just check for some use of permissions. Other Lint checks can check the validity
             // of the permissions. We'll accept the permission, readPermission, or writePermission
             // attributes on the provider element, or a path-permission element.
             String permission = element.getAttributeNS(ANDROID_URI, ATTR_READ_PERMISSION);
@@ -434,7 +435,8 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
     @Override
     public List<String> getApplicableMethodNames() {
         return Arrays.asList(
-                // These are the API calls that can accept a MODE_WORLD_READABLE/MODE_WORLD_WRITEABLE
+                // These are the API calls that can accept a
+                // MODE_WORLD_READABLE/MODE_WORLD_WRITEABLE
                 // argument.
                 "openFileOutput",
                 "getSharedPreferences",

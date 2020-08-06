@@ -49,7 +49,8 @@ class ChildCountDetector : LayoutDetector() {
         val SCROLLVIEW_ISSUE = Issue.create(
             id = "ScrollViewCount",
             briefDescription = "`ScrollView` can have only one child",
-            explanation = """
+            explanation =
+                """
             A `ScrollView` can only have one child widget. If you want more children, wrap them \
             in a container layout.""",
             category = Category.CORRECTNESS,
@@ -63,7 +64,8 @@ class ChildCountDetector : LayoutDetector() {
         val ADAPTER_VIEW_ISSUE = Issue.create(
             id = "AdapterViewChildren",
             briefDescription = "`AdapterView` cannot have children in XML",
-            explanation = """
+            explanation =
+                """
             An `AdapterView` such as a `ListView`s must be configured with data from Java code, such as a \
             `ListAdapter`.""",
             moreInfo = "https://developer.android.com/reference/android/widget/AdapterView.html",

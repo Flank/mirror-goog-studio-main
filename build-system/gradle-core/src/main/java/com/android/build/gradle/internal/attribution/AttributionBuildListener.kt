@@ -70,13 +70,7 @@ class AttributionBuildListener internal constructor(private val outputDirPath: S
     }
 
     override fun beforeExecute(task: Task) {
-        taskNameToClassNameMap[task.name] = getTaskClassName(task.javaClass.name)
-
-        task.outputs.files.forEach { outputFile ->
-            outputFileToTasksMap.computeIfAbsent(outputFile.absolutePath) {
-                ArrayList()
-            }.add(task.path)
-        }
+        // nothing to do
     }
 
     private fun getTaskClassName(className: String): String {
@@ -87,6 +81,12 @@ class AttributionBuildListener internal constructor(private val outputDirPath: S
     }
 
     override fun afterExecute(task: Task, taskState: TaskState) {
-        // nothing to do
+        taskNameToClassNameMap[task.name] = getTaskClassName(task.javaClass.name)
+
+        task.outputs.files.forEach { outputFile ->
+            outputFileToTasksMap.computeIfAbsent(outputFile.absolutePath) {
+                ArrayList()
+            }.add(task.path)
+        }
     }
 }

@@ -25,19 +25,19 @@ import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidLibrary;
-import com.android.builder.model.BuildType;
-import com.android.builder.model.BuildTypeContainer;
-import com.android.builder.model.ClassField;
-import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.MavenCoordinates;
-import com.android.builder.model.ProductFlavor;
-import com.android.builder.model.ProductFlavorContainer;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
+import com.android.ide.common.gradle.model.IdeBuildType;
+import com.android.ide.common.gradle.model.IdeBuildTypeContainer;
+import com.android.ide.common.gradle.model.IdeClassField;
+import com.android.ide.common.gradle.model.IdeDependencies;
+import com.android.ide.common.gradle.model.IdeJavaCompileOptions;
+import com.android.ide.common.gradle.model.IdeLibrary;
+import com.android.ide.common.gradle.model.IdeProductFlavor;
+import com.android.ide.common.gradle.model.IdeProductFlavorContainer;
 import com.android.ide.common.gradle.model.IdeVariant;
-import com.android.ide.common.gradle.model.level2.IdeDependencies;
-import com.android.ide.common.gradle.model.level2.IdeLibrary;
 import com.android.tools.lint.LintCliFlags;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
@@ -98,11 +98,11 @@ public class GradleModelMockerTest {
     }
 
     @Nullable
-    private static BuildType findBuildType(
+    private static IdeBuildType findBuildType(
             @NonNull GradleModelMocker mocker, @NonNull String name) {
         IdeAndroidProject project = mocker.getProject();
-        for (BuildTypeContainer container : project.getBuildTypes()) {
-            BuildType buildType = container.getBuildType();
+        for (IdeBuildTypeContainer container : project.getBuildTypes()) {
+            IdeBuildType buildType = container.getBuildType();
             if (name.equals(buildType.getName())) {
                 return buildType;
             }
@@ -111,11 +111,11 @@ public class GradleModelMockerTest {
     }
 
     @Nullable
-    private static ProductFlavor findProductFlavor(
+    private static IdeProductFlavor findProductFlavor(
             @NonNull GradleModelMocker mocker, @NonNull String name) {
         IdeAndroidProject project = mocker.getProject();
-        for (ProductFlavorContainer container : project.getProductFlavors()) {
-            ProductFlavor productFlavor = container.getProductFlavor();
+        for (IdeProductFlavorContainer container : project.getProductFlavors()) {
+            IdeProductFlavor productFlavor = container.getProductFlavor();
             if (name.equals(productFlavor.getName())) {
                 return productFlavor;
             }
@@ -270,7 +270,7 @@ public class GradleModelMockerTest {
         assertThat(project.getCompileTarget()).isEqualTo("android-25");
         assertThat(project.getBuildToolsVersion()).isEqualTo("25.0.0");
 
-        ProductFlavor mergedFlavor = variant.getMergedFlavor();
+        IdeProductFlavor mergedFlavor = variant.getMergedFlavor();
         assertThat(mergedFlavor.getMinSdkVersion()).isNotNull();
         assertThat(mergedFlavor.getMinSdkVersion().getApiLevel()).isEqualTo(5);
         assertThat(mergedFlavor.getTargetSdkVersion().getApiLevel()).isEqualTo(16);
@@ -307,7 +307,7 @@ public class GradleModelMockerTest {
                                 + "}");
         IdeAndroidProject project = mocker.getProject();
         IdeVariant variant = mocker.getVariant();
-        BuildType buildType = findBuildType(mocker, "debug");
+        IdeBuildType buildType = findBuildType(mocker, "debug");
         assertThat(buildType).isNotNull();
         assertThat(buildType.getName()).isEqualTo("debug");
         assertThat(buildType.isDebuggable()).isTrue();
@@ -323,9 +323,9 @@ public class GradleModelMockerTest {
         assertThat(variant.getName()).isEqualTo("freeBetaDebug");
 
         // ResConfigs
-        ProductFlavor beta = findProductFlavor(mocker, "beta");
+        IdeProductFlavor beta = findProductFlavor(mocker, "beta");
         assertThat(beta.getResourceConfigurations()).containsExactly("en", "nodpi", "hdpi");
-        ProductFlavor defaultConfig = findProductFlavor(mocker, "defaultConfig");
+        IdeProductFlavor defaultConfig = findProductFlavor(mocker, "defaultConfig");
         assertThat(defaultConfig.getResourceConfigurations()).containsExactly("mdpi");
 
         // Suffix handling
@@ -476,18 +476,18 @@ public class GradleModelMockerTest {
         IdeAndroidProject project = mocker.getProject();
 
         // Check default config
-        Map<String, ClassField> resValues =
+        Map<String, IdeClassField> resValues =
                 project.getDefaultConfig().getProductFlavor().getResValues();
         assertThat(resValues).isNotEmpty();
         String name = resValues.keySet().iterator().next();
         assertThat(name).isEqualTo("defaultConfigName");
-        ClassField field = resValues.get(name);
+        IdeClassField field = resValues.get(name);
         assertThat(field.getType()).isEqualTo("string");
         assertThat(field.getName()).isEqualTo("defaultConfigName");
         assertThat(field.getValue()).isEqualTo("Some DefaultConfig Data");
 
         // Check debug build type
-        BuildType buildType = findBuildType(mocker, "debug");
+        IdeBuildType buildType = findBuildType(mocker, "debug");
         assertThat(buildType).isNotNull();
         resValues = buildType.getResValues();
         assertThat(resValues).isNotEmpty();
@@ -499,7 +499,7 @@ public class GradleModelMockerTest {
         assertThat(field.getValue()).isEqualTo("Some Debug Data");
 
         // Check product flavor
-        ProductFlavor flavor = findProductFlavor(mocker, "flavor1");
+        IdeProductFlavor flavor = findProductFlavor(mocker, "flavor1");
         assertThat(flavor).isNotNull();
         resValues = flavor.getResValues();
         assertThat(resValues).isNotEmpty();
@@ -596,11 +596,11 @@ public class GradleModelMockerTest {
                                 + "    }\n"
                                 + "}");
 
-        ProductFlavor defaultConfig = findProductFlavor(mocker, "defaultConfig");
+        IdeProductFlavor defaultConfig = findProductFlavor(mocker, "defaultConfig");
         Map<String, Object> manifestPlaceholders = defaultConfig.getManifestPlaceholders();
         assertThat(manifestPlaceholders)
                 .containsEntry("localApplicationId", "com.example.manifest_merger_example");
-        ProductFlavor flavor = findProductFlavor(mocker, "flavor");
+        IdeProductFlavor flavor = findProductFlavor(mocker, "flavor");
         assertThat(flavor.getManifestPlaceholders())
                 .containsEntry("localApplicationId", "com.example.manifest_merger_example.flavor");
         flavor = findProductFlavor(mocker, "free");
@@ -692,7 +692,7 @@ public class GradleModelMockerTest {
                                 + "    }\n"
                                 + "}");
 
-        ProductFlavor flavor = findProductFlavor(mocker, "defaultConfig");
+        IdeProductFlavor flavor = findProductFlavor(mocker, "defaultConfig");
         assertThat(flavor.getApplicationId()).isEqualTo("com.example.manifest_merger_example");
         assertThat(flavor.getMinSdkVersion().getApiLevel()).isEqualTo(15);
         assertThat(flavor.getTargetSdkVersion().getApiLevel()).isEqualTo(21);
@@ -1003,7 +1003,8 @@ public class GradleModelMockerTest {
                                 ""
                                         + "buildscript {\n"
                                         + "    dependencies {\n"
-                                        // Need at least 2.5.0-alpha1 for this dependency graph behavior
+                                        // Need at least 2.5.0-alpha1 for this dependency graph
+                                        // behavior
                                         + "        classpath 'com.android.tools.build:gradle:2.5.0-alpha1'\n"
                                         + "    }\n"
                                         + "}\n"
@@ -1138,7 +1139,7 @@ public class GradleModelMockerTest {
         assertThat(mocker).isNotNull();
         IdeAndroidProject project = mocker.getProject();
         assertThat(project).isNotNull();
-        JavaCompileOptions compileOptions = project.getJavaCompileOptions();
+        IdeJavaCompileOptions compileOptions = project.getJavaCompileOptions();
         assertThat(compileOptions.getSourceCompatibility()).isEqualTo("1.8");
         assertThat(compileOptions.getTargetCompatibility()).isEqualTo("1.8");
     }
@@ -1157,7 +1158,7 @@ public class GradleModelMockerTest {
         assertThat(mocker).isNotNull();
         IdeAndroidProject project = mocker.getProject();
         assertThat(project).isNotNull();
-        JavaCompileOptions compileOptions = project.getJavaCompileOptions();
+        IdeJavaCompileOptions compileOptions = project.getJavaCompileOptions();
         assertThat(compileOptions.getSourceCompatibility()).isEqualTo("1.7");
         assertThat(compileOptions.getTargetCompatibility()).isEqualTo("1.7");
     }

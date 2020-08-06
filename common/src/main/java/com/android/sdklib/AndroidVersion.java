@@ -114,6 +114,9 @@ public final class AndroidVersion implements Comparable<AndroidVersion>, Seriali
     /** First version to support freeform display */
     public static final int MIN_FREEFORM_DEVICE_API = 30;
 
+    /** First version to support hinge foldable settings */
+    public static final int MIN_HINGE_FOLDABLE_DEVICE_API = 30;
+
     /**
      * Thrown when an {@link AndroidVersion} object could not be created.
      */

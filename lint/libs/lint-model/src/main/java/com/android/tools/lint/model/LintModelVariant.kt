@@ -29,6 +29,8 @@ interface LintModelVariant {
     val mainArtifact: LintModelAndroidArtifact
     val testArtifact: LintModelJavaArtifact?
     val androidTestArtifact: LintModelAndroidArtifact?
+    val mergedManifest: File?
+    val manifestMergeReport: File?
 
     // For temporary backwards compatibility
     val oldVariant: IdeVariant?
@@ -68,6 +70,8 @@ class DefaultLintModelVariant(
     override val mainArtifact: LintModelAndroidArtifact,
     override val testArtifact: LintModelJavaArtifact?,
     override val androidTestArtifact: LintModelAndroidArtifact?,
+    override val mergedManifest: File?,
+    override val manifestMergeReport: File?,
     override val `package`: String?,
     override val minSdkVersion: AndroidVersion?,
     override val targetSdkVersion: AndroidVersion?,

@@ -66,9 +66,10 @@ import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule.NativeBui
 import org.gradle.process.ExecOperations
 import java.io.File
 import java.io.FileNotFoundException
-import java.io.FileReader
 import java.io.IOException
 import java.io.PrintWriter
+import java.io.Reader
+import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.util.ArrayList
 import java.util.HashMap
@@ -382,11 +383,12 @@ internal class CmakeServerExternalNativeJsonGenerator(
             cmake.cmakeExe,
             abi.cxxBuildFolder,
             variant.isDebuggableEnabled,
-            JsonReader(FileReader(abi.cmake!!.compileCommandsJsonFile)),
+            { abi.cmake!!.compileCommandsJsonFile.reader(StandardCharsets.UTF_8) },
             abi.abi.tag,
             workingDirectory,
             target,
-            strings
+            strings,
+            abi.variant.module.project.isV2NativeModelEnabled
         )
     }
 
@@ -576,11 +578,12 @@ internal class CmakeServerExternalNativeJsonGenerator(
             cmakeExecutable: File,
             outputFolder: File,
             isDebuggable: Boolean,
-            compileCommandsJson: JsonReader,
+            compileCommandsJsonReader: () -> Reader,
             abi: String,
             workingDirectory: File,
             target: Target,
-            strings: StringTable
+            strings: StringTable,
+            isV2NativeModelEnabled: Boolean
         ): NativeLibraryValue {
             val nativeLibraryValue = NativeLibraryValue()
             nativeLibraryValue.abi = abi
@@ -597,6 +600,10 @@ internal class CmakeServerExternalNativeJsonGenerator(
             }
             nativeLibraryValue.runtimeFiles = findRuntimeFiles(target)
 
+            if (isV2NativeModelEnabled) {
+                return nativeLibraryValue
+            }
+
             // Maps each source file to the index of the corresponding strings table entry, which
             // contains the build flags for that source file.
             // It is important to not use a File or Path as the key to the dictionary, but instead
@@ -609,68 +616,71 @@ internal class CmakeServerExternalNativeJsonGenerator(
             )
             val files = mutableListOf<NativeSourceFileValue>()
             val headers = mutableListOf<NativeHeaderFileValue>()
-            for (fileGroup in target.fileGroups) {
-                for (source in fileGroup.sources) {
-                    // Skip object files in sources
-                    if (source.endsWith(".o")) continue
-                    // CMake returns an absolute path or a path relative to the source directory,
-                    // whichever one is shorter.
-                    var sourceFilePath = Paths.get(source)
-                    if (!sourceFilePath.isAbsolute) {
-                        sourceFilePath = Paths.get(target.sourceDirectory, source)
-                    }
-
-                    // Even if CMake returns an absolute path, we still call normalize() to be symmetric
-                    // with indexCompilationDatabase() which always uses normalized paths.
-                    val normalizedSourceFilePath = sourceFilePath.normalize()
-                    if (normalizedSourceFilePath.toString().isNotEmpty()) {
-                        sourceFilePath = normalizedSourceFilePath
-                    }
-                    // else {
-                    // Normalized path should not be empty, unless CMake sends us really bogus data
-                    // such as such as sourceDirectory="a/b", source="../../". This is not supposed
-                    // to happen because (1) sourceDirectory should not be relative, and (2) source
-                    // should contain at least a file name.
-                    //
-                    // Although it is very unlikely, this branch protects against that case by using
-                    // the non-normalized path, which also makes the case more debuggable.
-                    //
-                    // Fall through intended.
-                    // }
-                    val sourceFile = sourceFilePath.toFile()
-                    if (hasCmakeHeaderFileExtensions(sourceFile)) {
-                        headers.add(
-                            NativeHeaderFileValue(sourceFile, workingDirectoryOrdinal)
-                        )
-                    } else {
-                        val nativeSourceFileValue = NativeSourceFileValue()
-                        nativeSourceFileValue.workingDirectoryOrdinal = workingDirectoryOrdinal
-                        nativeSourceFileValue.src = sourceFile
-
-                        // We use flags from compile_commands.json if present. Otherwise, fall back
-                        // to server model compile flags (which is known to not always return a
-                        // complete set).
-                        // Reference b/116237485
-                        if (compilationDatabaseFlags.isEmpty()) {
-                            compilationDatabaseFlags =
-                                indexCompilationDatabase(compileCommandsJson, strings)
+            JsonReader(compileCommandsJsonReader()).use { compileCommandsJson ->
+                for (fileGroup in target.fileGroups) {
+                    for (source in fileGroup.sources) {
+                        // Skip object files in sources
+                        if (source.endsWith(".o")) continue
+                        // CMake returns an absolute path or a path relative to the source directory,
+                        // whichever one is shorter.
+                        var sourceFilePath = Paths.get(source)
+                        if (!sourceFilePath.isAbsolute) {
+                            sourceFilePath = Paths.get(target.sourceDirectory, source)
                         }
-                        if (compilationDatabaseFlags.containsKey(sourceFilePath.toString())) {
-                            nativeSourceFileValue.flagsOrdinal =
-                                compilationDatabaseFlags[sourceFilePath.toString()]
+
+                        // Even if CMake returns an absolute path, we still call normalize() to be symmetric
+                        // with indexCompilationDatabase() which always uses normalized paths.
+                        val normalizedSourceFilePath = sourceFilePath.normalize()
+                        if (normalizedSourceFilePath.toString().isNotEmpty()) {
+                            sourceFilePath = normalizedSourceFilePath
+                        }
+                        // else {
+                        // Normalized path should not be empty, unless CMake sends us really bogus data
+                        // such as such as sourceDirectory="a/b", source="../../". This is not supposed
+                        // to happen because (1) sourceDirectory should not be relative, and (2) source
+                        // should contain at least a file name.
+                        //
+                        // Although it is very unlikely, this branch protects against that case by using
+                        // the non-normalized path, which also makes the case more debuggable.
+                        //
+                        // Fall through intended.
+                        // }
+                        val sourceFile = sourceFilePath.toFile()
+                        if (hasCmakeHeaderFileExtensions(sourceFile)) {
+                            headers.add(
+                                NativeHeaderFileValue(sourceFile, workingDirectoryOrdinal)
+                            )
                         } else {
-                            // TODO I think this path is always wrong because it won't have --targets
-                            // I don't want to make it an exception this late in 3.3 cycle so I'm
-                            // leaving it as-is for now.
-                            val compileFlags =
-                                compileFlagsFromFileGroup(
-                                    fileGroup
-                                )
-                            if (!Strings.isNullOrEmpty(compileFlags)) {
-                                nativeSourceFileValue.flagsOrdinal = strings.intern(compileFlags)
+                            val nativeSourceFileValue = NativeSourceFileValue()
+                            nativeSourceFileValue.workingDirectoryOrdinal = workingDirectoryOrdinal
+                            nativeSourceFileValue.src = sourceFile
+
+                            // We use flags from compile_commands.json if present. Otherwise, fall back
+                            // to server model compile flags (which is known to not always return a
+                            // complete set).
+                            // Reference b/116237485
+                            if (compilationDatabaseFlags.isEmpty()) {
+                                compilationDatabaseFlags =
+                                    indexCompilationDatabase(compileCommandsJson, strings)
                             }
+                            if (compilationDatabaseFlags.containsKey(sourceFilePath.toString())) {
+                                nativeSourceFileValue.flagsOrdinal =
+                                    compilationDatabaseFlags[sourceFilePath.toString()]
+                            } else {
+                                // TODO(jomof): I think this path is always wrong because it won't
+                                //  have --targets I don't want to make it an exception this late in
+                                //  3.3 cycle so I'm leaving it as-is for now.
+                                val compileFlags =
+                                    compileFlagsFromFileGroup(
+                                        fileGroup
+                                    )
+                                if (!Strings.isNullOrEmpty(compileFlags)) {
+                                    nativeSourceFileValue.flagsOrdinal =
+                                        strings.intern(compileFlags)
+                                }
+                            }
+                            files.add(nativeSourceFileValue)
                         }
-                        files.add(nativeSourceFileValue)
                     }
                 }
             }

@@ -40,8 +40,7 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
         return new FirebaseAnalyticsDetector();
     }
 
-    public void testInvalidCharacters() throws Exception {
-        //noinspection all // Sample code
+    public void testInvalidCharacters() {
         TestFile mainActivity =
                 java(
                         "src/test/pkg/MainActivity.java",
@@ -61,12 +60,10 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
 
-        String result = lintProject(mFirebaseAnalytics, mainActivity);
-        assertEquals(expected, result);
+        lint().files(mFirebaseAnalytics, mainActivity).run().expect(expected);
     }
 
-    public void testInvalidLength() throws Exception {
-        //noinspection all // Sample code
+    public void testInvalidLength() {
         TestFile mainActivity =
                 java(
                         "src/test/pkg/MainActivity.java",
@@ -86,12 +83,10 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
 
-        String result = lintProject(mFirebaseAnalytics, mainActivity);
-        assertEquals(expected, result);
+        lint().files(mFirebaseAnalytics, mainActivity).run().expect(expected);
     }
 
-    public void testInvalidConstant() throws Exception {
-        //noinspection all // Sample code
+    public void testInvalidConstant() {
         TestFile mainActivity =
                 java(
                         "src/test/pkg/MainActivity.java",
@@ -112,12 +107,10 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
 
-        String result = lintProject(mFirebaseAnalytics, mainActivity);
-        assertEquals(expected, result);
+        lint().files(mFirebaseAnalytics, mainActivity).run().expect(expected);
     }
 
-    public void testValidFirebaseAnalyticsEventName() throws Exception {
-        //noinspection all // Sample code
+    public void testValidFirebaseAnalyticsEventName() {
         TestFile mainActivity =
                 java(
                         "src/test/pkg/MainActivity.java",
@@ -130,14 +123,10 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                                 + "        FirebaseAnalytics.getInstance(this).logEvent(\"a\", new Bundle());\n"
                                 + "    }\n"
                                 + "}");
-        String expected = "No warnings.";
-
-        String result = lintProject(mFirebaseAnalytics, mainActivity);
-        assertEquals(expected, result);
+        lint().files(mFirebaseAnalytics, mainActivity).run().expectClean();
     }
 
-    public void testLogEvent() throws Exception {
-        //noinspection all // Sample code
+    public void testLogEvent() {
         TestFile mainActivity =
                 java(
                         "src/test/pkg/MainActivity.java",
@@ -151,14 +140,10 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                                 + "    }\n"
                                 + "    void logEvent(String s, Bundle b) { }\n"
                                 + "}");
-        String expected = "No warnings.";
-
-        String result = lintProject(mFirebaseAnalytics, mainActivity);
-        assertEquals(expected, result);
+        lint().files(mFirebaseAnalytics, mainActivity).run().expectClean();
     }
 
-    public void testInvalidParameterName() throws Exception {
-        //noinspection all // Sample code
+    public void testInvalidParameterName() {
         TestFile mainActivity =
                 java(
                         "src/test/pkg/MainActivity.java",
@@ -181,12 +166,10 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                         + "    src/test/pkg/MainActivity.java:7: Analytics event parameter name must be 40 characters or less (found 41)\n"
                         + "1 errors, 0 warnings\n";
 
-        String result = lintProject(mFirebaseAnalytics, mainActivity);
-        assertEquals(expected, result);
+        lint().files(mFirebaseAnalytics, mainActivity).run().expect(expected);
     }
 
-    public void testInvalidParameterNameInClassField() throws Exception {
-        //noinspection all // Sample code
+    public void testInvalidParameterNameInClassField() {
         TestFile mainActivity =
                 java(
                         "src/test/pkg/MainActivity.java",
@@ -210,12 +193,10 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                         + "    src/test/pkg/MainActivity.java:8: Analytics event parameter name must be 40 characters or less (found 41)\n"
                         + "1 errors, 0 warnings\n";
 
-        String result = lintProject(mFirebaseAnalytics, mainActivity);
-        assertEquals(expected, result);
+        lint().files(mFirebaseAnalytics, mainActivity).run().expect(expected);
     }
 
-    public void testInvalidParameterNameInSeparateMethod() throws Exception {
-        //noinspection all // Sample code
+    public void testInvalidParameterNameInSeparateMethod() {
         TestFile util =
                 java(
                         "src/test/pkg/Util.java",
@@ -229,7 +210,6 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                                 + "      return bundle;\n"
                                 + "    }\n"
                                 + "}");
-        //noinspection all // Sample code
         TestFile mainActivity =
                 java(
                         "src/test/pkg/MainActivity.java",
@@ -251,7 +231,6 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                         + "    src/test/pkg/Util.java:6: Analytics event parameter name must be 40 characters or less (found 41)\n"
                         + "1 errors, 0 warnings\n";
 
-        String result = lintProject(util, mFirebaseAnalytics, mainActivity);
-        assertEquals(expected, result);
+        lint().files(util, mFirebaseAnalytics, mainActivity).run().expect(expected);
     }
 }

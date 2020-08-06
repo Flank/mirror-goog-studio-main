@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants
 import com.android.tools.lint.client.api.ResourceReference
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
@@ -72,7 +73,7 @@ class NonConstantResourceIdDetector : Detector(), SourceCodeScanner {
                             switchCase,
                             location,
                             "Resource IDs will be non-final in Android Gradle Plugin version 5.0, " +
-                                    "avoid using them in switch case statements"
+                                "avoid using them in switch case statements"
                         )
                     }
                 }
@@ -89,14 +90,16 @@ class NonConstantResourceIdDetector : Detector(), SourceCodeScanner {
                         attributeExpression,
                         location,
                         "Resource IDs will be non-final in Android Gradle Plugin version 5.0, " +
-                                "avoid using them as annotation attributes"
+                            "avoid using them as annotation attributes"
                     )
                 }
             }
         }
 
         private fun checkExpressionReceiverIsRClass(expression: UExpression): Boolean {
-            return ResourceReference.get(expression) != null
+            val evaluatedExpression = ResourceReference.get(expression)
+            return evaluatedExpression != null &&
+                evaluatedExpression.`package` != SdkConstants.ANDROID_PKG
         }
     }
 
@@ -105,7 +108,8 @@ class NonConstantResourceIdDetector : Detector(), SourceCodeScanner {
         val NON_CONSTANT_RESOURCE_ID = Issue.create(
             id = "NonConstantResourceId",
             briefDescription = "Checks use of resource IDs in places requiring constants.",
-            explanation = """
+            explanation =
+                """
                 Avoid the usage of resource IDs where constant expressions are required.
 
                 A future version of the Android Gradle Plugin will generate R classes with \

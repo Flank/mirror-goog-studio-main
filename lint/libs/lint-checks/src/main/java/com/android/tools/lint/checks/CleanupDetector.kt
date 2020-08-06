@@ -133,30 +133,34 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         val containingClass = method.containingClass ?: return
         val evaluator = context.evaluator
         if ((OBTAIN == name || OBTAIN_NO_HISTORY == name) && evaluator.extendsClass(
-                containingClass,
-                MOTION_EVENT_CLS,
-                false
-            )
+            containingClass,
+            MOTION_EVENT_CLS,
+            false
+        )
         ) {
             checkRecycled(context, node, MOTION_EVENT_CLS, RECYCLE)
         } else if (OBTAIN == name && evaluator.extendsClass(containingClass, PARCEL_CLS, false)) {
             checkRecycled(context, node, PARCEL_CLS, RECYCLE)
         } else if (OBTAIN == name && evaluator.extendsClass(
-                containingClass,
-                VELOCITY_TRACKER_CLS,
-                false
-            )
+            containingClass,
+            VELOCITY_TRACKER_CLS,
+            false
+        )
         ) {
             checkRecycled(context, node, VELOCITY_TRACKER_CLS, RECYCLE)
-        } else if ((OBTAIN_STYLED_ATTRIBUTES == name ||
-                    OBTAIN_ATTRIBUTES == name ||
-                    OBTAIN_TYPED_ARRAY == name) && (evaluator.extendsClass(
-                containingClass,
-                CLASS_CONTEXT,
-                false
-            ) || evaluator.extendsClass(
-                containingClass, SdkConstants.CLASS_RESOURCES, false
-            ))
+        } else if ((
+            OBTAIN_STYLED_ATTRIBUTES == name ||
+                OBTAIN_ATTRIBUTES == name ||
+                OBTAIN_TYPED_ARRAY == name
+            ) && (
+                evaluator.extendsClass(
+                    containingClass,
+                    CLASS_CONTEXT,
+                    false
+                ) || evaluator.extendsClass(
+                    containingClass, SdkConstants.CLASS_RESOURCES, false
+                )
+                )
         ) {
             val returnType = method.returnType
             if (returnType is PsiClassType) {
@@ -166,25 +170,29 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                 }
             }
         } else if (ACQUIRE_CPC == name && evaluator.extendsClass(
-                containingClass,
-                CONTENT_RESOLVER_CLS,
-                false
-            )
+            containingClass,
+            CONTENT_RESOLVER_CLS,
+            false
+        )
         ) {
             checkRecycled(context, node, CONTENT_PROVIDER_CLIENT_CLS, RELEASE)
-        } else if ((QUERY == name ||
-                    RAW_QUERY == name ||
-                    QUERY_WITH_FACTORY == name ||
-                    RAW_QUERY_WITH_FACTORY == name) && (evaluator.extendsClass(
-                containingClass,
-                SQLITE_DATABASE_CLS,
-                false
-            ) ||
+        } else if ((
+            QUERY == name ||
+                RAW_QUERY == name ||
+                QUERY_WITH_FACTORY == name ||
+                RAW_QUERY_WITH_FACTORY == name
+            ) && (
+                evaluator.extendsClass(
+                    containingClass,
+                    SQLITE_DATABASE_CLS,
+                    false
+                ) ||
                     evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false) ||
                     evaluator.extendsClass(containingClass, CLASS_CONTENTPROVIDER, false) ||
                     evaluator.extendsClass(
                         containingClass, CONTENT_PROVIDER_CLIENT_CLS, false
-                    ))
+                    )
+                )
         ) {
             // Other potential cursors-returning methods that should be tracked:
             //    android.app.DownloadManager#query
@@ -280,7 +288,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                 if (recycleType == SURFACE_TEXTURE_CLS && call.isConstructorCall()) {
                     val resolved = call.resolve()
                     if (resolved != null && context.evaluator
-                            .isMemberInClass(resolved, SURFACE_CLS)
+                        .isMemberInClass(resolved, SURFACE_CLS)
                     ) {
                         return
                     }
@@ -424,10 +432,12 @@ class CleanupDetector : Detector(), SourceCodeScanner {
     ): Boolean {
 
         val methodName = getMethodName(call)
-        return (COMMIT == methodName ||
+        return (
+            COMMIT == methodName ||
                 COMMIT_ALLOWING_LOSS == methodName ||
                 COMMIT_NOW_ALLOWING_LOSS == methodName ||
-                COMMIT_NOW == methodName) && isMethodOnFragmentClass(
+                COMMIT_NOW == methodName
+            ) && isMethodOnFragmentClass(
             context, call, FRAGMENT_TRANSACTION_CLS, FRAGMENT_TRANSACTION_V4_CLS, true
         )
     }
@@ -490,9 +500,9 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                 val commitVisitor = object : FinishVisitor(context, boundVariable) {
                     override fun isCleanupCall(call: UCallExpression): Boolean {
                         if (isEditorApplyMethodCall(this.context, call) || isEditorCommitMethodCall(
-                                this.context,
-                                call
-                            )
+                            this.context,
+                            call
+                        )
                         ) {
                             val chain = call.getOutermostQualified().getQualifiedChain()
                             if (chain.isEmpty()) {
@@ -553,9 +563,11 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             val containingClass = method.containingClass ?: return false
             val type = method.returnType ?: return false
             val evaluator = context.evaluator
-            return (evaluator.implementsInterface(
-                containingClass, ANDROID_CONTENT_SHARED_PREFERENCES, false
-            ) && evaluator.typeMatches(type, ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR))
+            return (
+                evaluator.implementsInterface(
+                    containingClass, ANDROID_CONTENT_SHARED_PREFERENCES, false
+                ) && evaluator.typeMatches(type, ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR)
+                )
         }
 
         return false
@@ -629,8 +641,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                 val containingClass = method.containingClass
                 val evaluator = context.evaluator
                 if (evaluator.extendsClass(
-                        containingClass, ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR, false
-                    )
+                    containingClass, ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR, false
+                )
                 ) {
                     suggestApplyIfApplicable(context, call)
                     return true
@@ -701,9 +713,11 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             }
 
             if (returnValueIgnored) {
-                val message = ("Consider using `apply()` instead; `commit` writes " +
+                val message = (
+                    "Consider using `apply()` instead; `commit` writes " +
                         "its data to persistent storage immediately, whereas " +
-                        "`apply` will handle it in the background")
+                        "`apply` will handle it in the background"
+                    )
                 val location = context.getLocation(node)
                 val fix = LintFix.create()
                     .name("Replace commit() with apply()")
@@ -725,10 +739,10 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             val containingClass = method.containingClass
             val evaluator = context.evaluator
             if (evaluator.extendsClass(
-                    containingClass,
-                    FRAGMENT_MANAGER_CLS,
-                    false
-                ) || evaluator.extendsClass(containingClass, FRAGMENT_MANAGER_V4_CLS, false)
+                containingClass,
+                FRAGMENT_MANAGER_CLS,
+                false
+            ) || evaluator.extendsClass(containingClass, FRAGMENT_MANAGER_V4_CLS, false)
             ) {
                 return true
             }
@@ -794,7 +808,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                             if (OBTAIN == getMethodName(call)) {
                                 val method = call.resolve()
                                 if (context.evaluator
-                                        .isMemberInClass(method, MOTION_EVENT_CLS)
+                                    .isMemberInClass(method, MOTION_EVENT_CLS)
                                 ) {
                                     escapes = wasEscaped
                                 }
@@ -923,7 +937,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         val RECYCLE_RESOURCE = Issue.create(
             id = "Recycle",
             briefDescription = "Missing `recycle()` calls",
-            explanation = """
+            explanation =
+                """
                 Many resources, such as TypedArrays, VelocityTrackers, etc., should be recycled \
                 (with a `recycle()` call) after use. This lint check looks for missing \
                 `recycle()` calls.""",
@@ -939,7 +954,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         val COMMIT_FRAGMENT = Issue.create(
             id = "CommitTransaction",
             briefDescription = "Missing `commit()` calls",
-            explanation = """
+            explanation =
+                """
                 After creating a `FragmentTransaction`, you typically need to commit it as well
                 """,
             category = Category.CORRECTNESS,
@@ -954,7 +970,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         val SHARED_PREF = Issue.create(
             id = "CommitPrefEdits",
             briefDescription = "Missing `commit()` on `SharedPreference` editor",
-            explanation = """
+            explanation =
+                """
                 After calling `edit()` on a `SharedPreference`, you must call `commit()` or \
                 `apply()` on the editor to save the results.""",
             category = Category.CORRECTNESS,
@@ -969,7 +986,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         val APPLY_SHARED_PREF = Issue.create(
             id = "ApplySharedPref",
             briefDescription = "Use `apply()` on `SharedPreferences`",
-            explanation = """
+            explanation =
+                """
                 Consider using `apply()` instead of `commit` on shared preferences. Whereas \
                 `commit` blocks and writes its data to persistent storage immediately, `apply` \
                 will handle it in the background.""",

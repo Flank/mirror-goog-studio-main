@@ -44,7 +44,7 @@ public class AppCompatResourceDetectorTest extends AbstractCheckTest {
     }
 
     public void testNoAppCompat() {
-        lint().files(mShowAction1, mLibrary) // dummy; only name counts
+        lint().files(mShowAction1, mLibrary) // placeholder; only name counts
                 .run()
                 .expect(
                         ""
@@ -59,7 +59,7 @@ public class AppCompatResourceDetectorTest extends AbstractCheckTest {
     }
 
     public void testWrongAppCompat() {
-        lint().files(mShowAction2, mAppCompatJar, mLibrary) // dummy; only name counts
+        lint().files(mShowAction2, mAppCompatJar, mLibrary) // placeholder; only name counts
                 .run()
                 .expect(
                         ""
@@ -70,7 +70,7 @@ public class AppCompatResourceDetectorTest extends AbstractCheckTest {
     }
 
     public void testAppCompatV14() {
-        lint().files(mShowAction2_class, mAppCompatJar, mLibrary) // dummy; only name counts
+        lint().files(mShowAction2_class, mAppCompatJar, mLibrary) // placeholder; only name counts
                 .run()
                 .expectClean();
     }
@@ -199,7 +199,6 @@ public class AppCompatResourceDetectorTest extends AbstractCheckTest {
         return new AppCompatResourceDetector();
     }
 
-    // Dummy file
     private final JarTestFile mAppCompatJar = jar("libs/appcompat-v7-18.0.0.jar");
 
     @SuppressWarnings("all") // Sample code

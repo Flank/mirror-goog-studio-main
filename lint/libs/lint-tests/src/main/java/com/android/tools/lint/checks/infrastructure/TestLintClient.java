@@ -918,7 +918,7 @@ public class TestLintClient extends LintCliClient {
 
         if (exception != null) {
             // Ensure that we get the full cause
-            //fail(exception.toString());
+            // fail(exception.toString());
             throw new RuntimeException(exception);
         }
     }
@@ -935,7 +935,7 @@ public class TestLintClient extends LintCliClient {
         boolean ok = super.addBootClassPath(knownProjects, files);
 
         // Also add in the kotlin standard libraries if applicable
-        if (ok && hasKotlin(knownProjects)) {
+        if (hasKotlin(knownProjects)) {
             for (String path : findKotlinStdlibPath()) {
                 files.add(new File(path));
             }

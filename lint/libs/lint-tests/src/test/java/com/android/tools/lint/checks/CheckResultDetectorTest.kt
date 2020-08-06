@@ -149,9 +149,9 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
             .run()
             .expect(
                 "src/test/pkg/IgnoreTest.java:21: Warning: The result of method1 is not used [CheckResult]\n" +
-                        "        method1(); // ERROR: should check\n" +
-                        "        ~~~~~~~~~\n" +
-                        "0 errors, 1 warnings"
+                    "        method1(); // ERROR: should check\n" +
+                    "        ~~~~~~~~~\n" +
+                    "0 errors, 1 warnings"
             )
     }
 
@@ -177,24 +177,25 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
             ).indented(),
             java(
                 "" +
-                        "@CheckReturnValue\n" +
-                        "package test.pkg;\n" +
-                        "import javax.annotation.CheckReturnValue;\n"
+                    "@CheckReturnValue\n" +
+                    "package test.pkg;\n" +
+                    "import javax.annotation.CheckReturnValue;\n"
             ),
             // Also register the compiled version of the above package-info jar file;
             // without this we don't resolve package annotations
             base64gzip(
-                "libs/packageinfoclass.jar", "" +
-                        "H4sIAAAAAAAAAAvwZmYRYeDg4GDInpfvzYAEOBlYGHxdQxx1Pf3c9P+dYmBg" +
-                        "ZgjwZucASTFBlQTg1CwCxHDNvo5+nm6uwSF6vm6ffc+c9vHW1bvI662rde7M" +
-                        "+c1BBleMHzwt0vPy1fH0vVi6ioUz4oXkEelZUi/Flj5boia2XCujYuk0C1HV" +
-                        "tGei2iKvRV8+zf5U9LGIEeyWtpXBql5Am7xQ3GKK5hZpIC5JLS7RL8hO1y9I" +
-                        "TM5OTE/VzcxLy9dLzkksLvb12ct1yEBiT0juVU921vT0sw9eqDRNVgh5Ma/t" +
-                        "/CwztaW+R9KLPzDWaGwMFcjf0fy7et87fgZtHiUXwV88hxd/nbpk7qUjBnqt" +
-                        "Oi5u3Kl+ZTO7VyfMOHrPonShy1Wtq1sMj1k9nGJqerjmfllezB+ffbaTdZKK" +
-                        "9hl1Xph3jUfYfevj1Ikf/1e3BVo/i5rRI39pzpLZTDyM+zgu/CwQ3+t2WI2z" +
-                        "0Rzky33aDlPmAv1wAOxLRiYRBtQwh8UGKMJQAUr0oWtFDjwRFG22OCIP2QRQ" +
-                        "ICM7TBrFhJP4gzzAm5UNpIwZCI8B6fWMIB4A/Y4BiosCAAA="
+                "libs/packageinfoclass.jar",
+                "" +
+                    "H4sIAAAAAAAAAAvwZmYRYeDg4GDInpfvzYAEOBlYGHxdQxx1Pf3c9P+dYmBg" +
+                    "ZgjwZucASTFBlQTg1CwCxHDNvo5+nm6uwSF6vm6ffc+c9vHW1bvI662rde7M" +
+                    "+c1BBleMHzwt0vPy1fH0vVi6ioUz4oXkEelZUi/Flj5boia2XCujYuk0C1HV" +
+                    "tGei2iKvRV8+zf5U9LGIEeyWtpXBql5Am7xQ3GKK5hZpIC5JLS7RL8hO1y9I" +
+                    "TM5OTE/VzcxLy9dLzkksLvb12ct1yEBiT0juVU921vT0sw9eqDRNVgh5Ma/t" +
+                    "/CwztaW+R9KLPzDWaGwMFcjf0fy7et87fgZtHiUXwV88hxd/nbpk7qUjBnqt" +
+                    "Oi5u3Kl+ZTO7VyfMOHrPonShy1Wtq1sMj1k9nGJqerjmfllezB+ffbaTdZKK" +
+                    "9hl1Xph3jUfYfevj1Ikf/1e3BVo/i5rRI39pzpLZTDyM+zgu/CwQ3+t2WI2z" +
+                    "0Rzky33aDlPmAv1wAOxLRiYRBtQwh8UGKMJQAUr0oWtFDjwRFG22OCIP2QRQ" +
+                    "ICM7TBrFhJP4gzzAm5UNpIwZCI8B6fWMIB4A/Y4BiosCAAA="
             ),
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
@@ -208,9 +209,9 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
         // Make sure tests work with checkTestSources true
         // Regression test for b/148841320
         lint().files(
-                kotlin(
-                    "src/test/java/test/pkg/UnitTest.kt",
-                    """
+            kotlin(
+                "src/test/java/test/pkg/UnitTest.kt",
+                """
                     package test.pkg
                     import android.support.annotation.CheckResult
                     fun something(list: List<String>) {
@@ -219,18 +220,18 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                     @CheckResult
                     fun fromNullable(a: Any?): Any? = a
                     """
-                ).indented(),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR,
-                gradle(
-                        """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR,
+            gradle(
+                """
                     android {
                         lintOptions {
                             checkTestSources true
                         }
                     }"""
-                ).indented()
-            )
+            ).indented()
+        )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
             .run()
             .expect(
@@ -672,12 +673,58 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
             ),
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expect("""
+        ).run().expect(
+            """
             src/test/pkg/Test.java:7: Warning: The result of clear is not used [CheckResult]
                                         keyValueStore.clear();
                                         ~~~~~~~~~~~~~~~~~~~~~
             0 errors, 1 warnings
-        """)
+        """
+        )
+    }
+
+    fun testIgnoreThisAndSuper() {
+        // Regression test for b/140616532: Lint was flagging this() and super() constructor
+        // calls
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import com.google.errorprone.annotations.CheckReturnValue;
+
+                @CheckReturnValue
+                public class CheckResultTest1 {
+                    CheckResultTest1() {
+                        this(null);
+                    }
+
+                    CheckResultTest1(String foo) {
+                    }
+
+                    public class SubClass extends CheckResultTest1 {
+                        SubClass(String foo) {
+                            super(null);
+                        }
+                    }
+                }
+                """
+            ),
+            kotlin(
+                """
+                package test.pkg
+
+                import com.google.errorprone.annotations.CheckReturnValue
+
+                @CheckReturnValue
+                open class CheckResultTest2 @JvmOverloads internal constructor(foo: String? = null) {
+                    constructor(s: String, s2: String) : this(s)
+                    inner class SubClass internal constructor(foo: String?) : CheckResultTest2(null)
+                }
+                """
+            ),
+            errorProneCheckReturnValueSource
+        ).run().expectClean()
     }
 
     private val javaxCheckReturnValueSource = java(

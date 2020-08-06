@@ -1327,7 +1327,6 @@ class SliceDetectorTest : AbstractCheckTest() {
         gridRowBuilder,
         sliceAction,
         sliceHints,
-        iconCompat,
         sliceProvider,
         defaultSliceProvider,
         consumer,

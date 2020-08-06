@@ -441,7 +441,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "    <!--\n"
                                         + "    This layout is a two-pane layout for the Items\n"
-                                        + "    master/detail flow. See res/values-large/refs.xml and\n"
+                                        + "    flow. See res/values-large/refs.xml and\n"
                                         + "    res/values-sw600dp/refs.xml for an example of layout aliases\n"
                                         + "    that replace the single-pane version of the layout with\n"
                                         + "    this two-pane version.\n"
@@ -452,7 +452,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "    <fragment\n"
                                         + "        android:id=\"@+id/item_list\"\n"
-                                        + "        android:name=\"com.example.master.ItemListFragment\"\n"
+                                        + "        android:name=\"com.example.main.ItemListFragment\"\n"
                                         + "        android:layout_width=\"0dp\"\n"
                                         + "        android:layout_height=\"match_parent\"\n"
                                         + "        android:layout_weight=\"1\"\n"
@@ -550,7 +550,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "    android:layout_height=\"wrap_content\"/>\n"
                                         + "\n"
 
-                                        // Regression tests for https://issuetracker.google.com/116404240:
+                                        // Regression tests for
+                                        // https://issuetracker.google.com/116404240:
 
                                         + "  <FrameLayout android:foreground=\"?selectableItemBackground\"\n"
                                         + "    android:layout_width=\"wrap_content\"\n"
@@ -695,8 +696,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "    <application\n"
                                         + "        android:supportsRtl='true'\n"
 
-                                        // Ditto for the fullBackupContent attribute. If you're targeting
-                                        // 23, you'll want to use it, but it's not an error that older
+                                        // Ditto for the fullBackupContent attribute. If you're
+                                        // targeting
+                                        // 23, you'll want to use it, but it's not an error that
+                                        // older
                                         // platforms aren't looking at it.
 
                                         + "        android:fullBackupContent='false'\n"
@@ -1560,7 +1563,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "class FieldWithinCall {\n"
                                         + "  public void test() {\n"
-                                        //+ "    Object o = PorterDuff.Mode.OVERLAY;\n"
+                                        // + "    Object o = PorterDuff.Mode.OVERLAY;\n"
                                         + "    int hash = PorterDuff.Mode.OVERLAY.hashCode();\n"
                                         + "  }\n"
                                         + "}\n"))
@@ -2900,6 +2903,37 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testMovedField() {
+        // Constant moved up to super interface in API 29; see b/154635330
+        String expected =
+                ""
+                        + "src/test/pkg/Test.java:7: Warning: Field requires API level 29 (current min is 1): android.provider.MediaStore.MediaColumns#BUCKET_DISPLAY_NAME [InlinedApi]\n"
+                        + "        System.out.println(media.BUCKET_DISPLAY_NAME); // ERROR - req 29\n"
+                        + "                           ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/Test.java:9: Warning: Field requires API level 3 (current min is 1): android.provider.MediaStore.Video.VideoColumns#BUCKET_DISPLAY_NAME [InlinedApi]\n"
+                        + "        System.out.println(video.BUCKET_DISPLAY_NAME); // ERROR - req 3\n"
+                        + "                           ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 2 warnings";
+        lint().files(
+                        manifest().minSdk(1),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "import android.provider.MediaStore.Images.ImageColumns;\n"
+                                        + "import android.provider.MediaStore.MediaColumns;\n"
+                                        + "import android.provider.MediaStore.Video.VideoColumns;\n"
+                                        + "public class Test {\n"
+                                        + "    public void test(MediaColumns media, ImageColumns image, VideoColumns video) {\n"
+                                        + "        System.out.println(media.BUCKET_DISPLAY_NAME); // ERROR - req 29\n"
+                                        + "        System.out.println(image.BUCKET_DISPLAY_NAME); // OK\n"
+                                        + "        System.out.println(video.BUCKET_DISPLAY_NAME); // ERROR - req 3\n"
+                                        + "    }\n"
+                                        + "}"))
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect(expected);
+    }
+
+    public void testMovedField2() {
         // Regression test for https://issuetracker.google.com/139695984
         // The baseIntent field moved up from ActivityManager.RecentTaskInfo
         // into new super class TaskInfo; resolve will point to the new
@@ -3555,7 +3589,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "1 errors, 0 warnings\n";
         //noinspection all // Sample code
         lint().files(
-                        manifest().pkg("foo.master").minSdk(14),
+                        manifest().pkg("foo.main").minSdk(14),
                         projectProperties()
                                 .property("android.library.reference.1", "../LibraryProject"),
                         java(
@@ -3593,7 +3627,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        getActivity().getDrawable(R.color.my_color);\n"
                                         + "    }\n"
                                         + "}\n"),
-                        manifest().pkg("foo.library").minSdk(14),
+                        manifest()
+                                .pkg("foo.library")
+                                .minSdk(14)
+                                .to("../LibraryProject/AndroidManifest.xml"),
                         source(
                                 "../LibraryProject/project.properties",
                                 ""
@@ -4569,8 +4606,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     @SuppressWarnings("all") // sample code
     public void testSdkSuppress() {
-        // Regression test for b/31799926
-        //noinspection all // Sample code
+        // Regression test for b/31799926 and 35968791
         lint().files(
                         java(
                                 "src/test/pkg/MainActivity.java",
@@ -4594,6 +4630,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        UserManager userManager = (UserManager) getSystemService(Context.USER_SERVICE);\n"
                                         + "    }\n"
                                         + "\n"
+                                        + "    @androidx.test.filters.SdkSuppress(minSdkVersion = 17)\n"
+                                        + "    public void test() {\n"
+                                        + "        UserManager userManager = (UserManager) getSystemService(Context.USER_SERVICE);\n"
+                                        + "    }\n"
                                         + "}"))
                 .checkMessage(this::checkReportedError)
                 .run()
@@ -5534,10 +5574,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
         // Regression test for 65549795: NewApi violations not detected on android.view.View
         String expected =
                 ""
-                        + "src/com/google/android/apps/common/testing/sanity/lint/BrokenNewApi.java:11: Error: Call requires API level 25 (current min is 4): android.view.View#setRevealOnFocusHint [NewApi]\n"
+                        + "src/com/google/android/apps/common/testing/lint/BrokenNewApi.java:11: Error: Call requires API level 25 (current min is 4): android.view.View#setRevealOnFocusHint [NewApi]\n"
                         + "    setRevealOnFocusHint(true); // API 25\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/com/google/android/apps/common/testing/sanity/lint/BrokenNewApi.java:12: Error: Call requires API level 11 (current min is 4): android.view.View#setPivotY [NewApi]\n"
+                        + "src/com/google/android/apps/common/testing/lint/BrokenNewApi.java:12: Error: Call requires API level 11 (current min is 4): android.view.View#setPivotY [NewApi]\n"
                         + "    setPivotY(1.0f); // api 11\n"
                         + "    ~~~~~~~~~\n"
                         + "2 errors, 0 warnings\n";
@@ -5547,7 +5587,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         manifest().minSdk(4),
                         java(
                                 ""
-                                        + "package com.google.android.apps.common.testing.sanity.lint;\n"
+                                        + "package com.google.android.apps.common.testing.lint;\n"
                                         + "\n"
                                         + "import android.content.Context;\n"
                                         + "import android.view.View;\n"
@@ -5567,7 +5607,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testCheckThroughAnonymousClass() {
-        // Regression test for 76458979: NewApi false positive: anonymous class contents inside an SDK_INT check
+        // Regression test for 76458979: NewApi false positive: anonymous class contents inside an
+        // SDK_INT check
 
         //noinspection all // Sample code
         lint().files(
@@ -5629,7 +5670,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void test70784223() {
-        // Regression test for 70784223: Linter doesn't detect API level check correctly using Kotlin
+        // Regression test for 70784223: Linter doesn't detect API level check correctly using
+        // Kotlin
         //noinspection all // Sample code
         lint().files(
                         kotlin(
@@ -6703,49 +6745,52 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testVersionCheckWithExit() {
         lint().files(
-                manifest().minSdk(21),
-                kotlin(""
-                        + "package test.pkg\n"
-                        + "\n"
-                        + "import android.os.Build\n"
-                        + "import android.telephony.SmsManager\n"
-                        + "import android.util.Log\n"
-                        + "\n"
-                        + "fun test() {\n"
-                        + "    val defaultSmsManager = SmsManager.getDefault()\n"
-                        + "    if (Build.VERSION.SDK_INT < 22) {\n"
-                        + "        val subscriptionId = defaultSmsManager.subscriptionId // ERROR: requires 22\n"
-                        + "        Log.d(\"AppLog\", \"subscriptionId:$subscriptionId\")\n"
-                        + "        return\n"
-                        + "    }\n"
-                        + "}\n"))
+                        manifest().minSdk(21),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.os.Build\n"
+                                        + "import android.telephony.SmsManager\n"
+                                        + "import android.util.Log\n"
+                                        + "\n"
+                                        + "fun test() {\n"
+                                        + "    val defaultSmsManager = SmsManager.getDefault()\n"
+                                        + "    if (Build.VERSION.SDK_INT < 22) {\n"
+                                        + "        val subscriptionId = defaultSmsManager.subscriptionId // ERROR: requires 22\n"
+                                        + "        Log.d(\"AppLog\", \"subscriptionId:$subscriptionId\")\n"
+                                        + "        return\n"
+                                        + "    }\n"
+                                        + "}\n"))
                 .run()
-                .expect(""
-                        + "src/test/pkg/test.kt:10: Error: Call requires API level 22 (current min is 21): android.telephony.SmsManager#getSubscriptionId [NewApi]\n"
-                        + "        val subscriptionId = defaultSmsManager.subscriptionId // ERROR: requires 22\n"
-                        + "                                               ~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings");
+                .expect(
+                        ""
+                                + "src/test/pkg/test.kt:10: Error: Call requires API level 22 (current min is 21): android.telephony.SmsManager#getSubscriptionId [NewApi]\n"
+                                + "        val subscriptionId = defaultSmsManager.subscriptionId // ERROR: requires 22\n"
+                                + "                                               ~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
     }
 
     public void test150198810() {
         // Regression test for https://issuetracker.google.com/150198810
         lint().files(
-                manifest().minSdk(21),
-                kotlin(""
-                        + "package test.pkg\n"
-                        + "\n"
-                        + "import android.os.Build\n"
-                        + "import android.telephony.SmsManager\n"
-                        + "import android.util.Log\n"
-                        + "\n"
-                        + "fun test() {\n"
-                        + "    val defaultSmsManager = SmsManager.getDefault()\n"
-                        + "    if (Build.VERSION.SDK_INT < 22) {\n"
-                        + "        return\n"
-                        + "    }\n"
-                        + "    val subscriptionId = defaultSmsManager.subscriptionId\n"
-                        + "    Log.d(\"AppLog\", \"subscriptionId:$subscriptionId\")\n"
-                        + "}"))
+                        manifest().minSdk(21),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.os.Build\n"
+                                        + "import android.telephony.SmsManager\n"
+                                        + "import android.util.Log\n"
+                                        + "\n"
+                                        + "fun test() {\n"
+                                        + "    val defaultSmsManager = SmsManager.getDefault()\n"
+                                        + "    if (Build.VERSION.SDK_INT < 22) {\n"
+                                        + "        return\n"
+                                        + "    }\n"
+                                        + "    val subscriptionId = defaultSmsManager.subscriptionId\n"
+                                        + "    Log.d(\"AppLog\", \"subscriptionId:$subscriptionId\")\n"
+                                        + "}"))
                 .run()
                 .expectClean();
     }

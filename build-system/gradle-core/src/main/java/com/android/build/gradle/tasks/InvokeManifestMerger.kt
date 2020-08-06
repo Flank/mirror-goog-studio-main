@@ -50,9 +50,6 @@ abstract class InvokeManifestMerger : NonIncrementalTask(), Supplier<File> {
     @get:OutputFile
     var outputFile: File? = null
 
-    @get:Internal
-    override val enableGradleWorkers: Property<Boolean> = project.objects.property(Boolean::class.java).value(false)
-
     override fun doTaskAction() {
         Preconditions.checkNotNull(mainManifestFile, "mainManifestFile must not be null")
         Preconditions.checkNotNull(secondaryManifestFiles, "secondaryManifestFiles must not be null")

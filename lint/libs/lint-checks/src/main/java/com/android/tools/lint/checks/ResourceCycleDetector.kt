@@ -105,11 +105,13 @@ class ResourceCycleDetector : ResourceXmlDetector() {
     }
 
     override fun appliesTo(folderType: ResourceFolderType): Boolean {
-        return (folderType == ResourceFolderType.VALUES ||
+        return (
+            folderType == ResourceFolderType.VALUES ||
                 folderType == ResourceFolderType.FONT ||
                 folderType == ResourceFolderType.COLOR ||
                 folderType == ResourceFolderType.DRAWABLE ||
-                folderType == ResourceFolderType.LAYOUT)
+                folderType == ResourceFolderType.LAYOUT
+            )
     }
 
     override fun getApplicableElements(): Collection<String>? {
@@ -284,7 +286,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                             CYCLE, parentNode, context.getLocation(parentNode),
                             "Potential cycle: `$name` is the implied parent of `${
                             parent.substring(STYLE_RESOURCE_PREFIX.length)}` and " +
-                                    "this defines the opposite"
+                                "this defines the opposite"
                         )
                     }
                     // Don't record this reference; we don't want to double report this
@@ -408,8 +410,10 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                         if (!itemLocations.isEmpty()) {
                             val itemLocation = itemLocations.iterator().next()
                             val next = chain[(i + 1) % chain.size]
-                            val label = ("Reference from @" + type.getName() + "/" + item +
-                                    " to " + type.getName() + "/" + next + " here")
+                            val label = (
+                                "Reference from @" + type.getName() + "/" + item +
+                                    " to " + type.getName() + "/" + next + " here"
+                                )
                             itemLocation.message = label
                             itemLocation.secondary = location
                             location = itemLocation
@@ -544,7 +548,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                 val chains: MutableMap<ResourceType, MutableList<MutableList<String>>> =
                     mChains ?: run {
                         val newMap = Maps.newEnumMap<ResourceType,
-                                MutableList<MutableList<String>>>(ResourceType::class.java)
+                            MutableList<MutableList<String>>>(ResourceType::class.java)
                         mChains = newMap
                         mLocations = Maps.newEnumMap(ResourceType::class.java)
                         context.driver.requestRepeat(this, Scope.RESOURCE_FILE_SCOPE)
@@ -578,10 +582,12 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                         Character.isWhitespace(c) -> return
                         text.startsWith(NEW_ID_PREFIX, k) -> {
                             val name = text.trim { it <= ' ' }.substring(NEW_ID_PREFIX.length)
-                            val message = ("This construct can potentially crash `aapt` during a " +
+                            val message = (
+                                "This construct can potentially crash `aapt` during a " +
                                     "build. Change `@+id/" + name + "` to `@id/" + name + "` and define " +
                                     "the id explicitly using " +
-                                    "`<item type=\"id\" name=\"" + name + "\"/>` instead.")
+                                    "`<item type=\"id\" name=\"" + name + "\"/>` instead."
+                                )
                             context.report(
                                 CRASH, item, context.getLocation(item),
                                 message
@@ -642,7 +648,8 @@ class ResourceCycleDetector : ResourceXmlDetector() {
         val CYCLE = Issue.create(
             id = "ResourceCycle",
             briefDescription = "Cycle in resource definitions",
-            explanation = """
+            explanation =
+                """
                 There should be no cycles in resource definitions as this can lead to \
                 runtime exceptions.""",
             category = Category.CORRECTNESS,
@@ -656,7 +663,8 @@ class ResourceCycleDetector : ResourceXmlDetector() {
         val CRASH = Issue.create(
             id = "AaptCrash",
             briefDescription = "Potential AAPT crash",
-            explanation = """
+            explanation =
+                """
                 Defining a style which sets `android:id` to a dynamically generated id can \
                 cause many versions of `aapt`, the resource packaging tool, to crash. \
                 To work around this, declare the id explicitly with \

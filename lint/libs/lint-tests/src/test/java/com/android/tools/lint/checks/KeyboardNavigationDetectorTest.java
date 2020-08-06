@@ -21,7 +21,7 @@ import com.android.tools.lint.detector.api.Detector;
 @SuppressWarnings("javadoc")
 public class KeyboardNavigationDetectorTest extends AbstractCheckTest {
 
-    private static final String DUMMY_FILE_NAME = "res/layout/mywidget.xml";
+    private static final String PLACEHOLDER_FILE_NAME = "res/layout/mywidget.xml";
     private static final String EXPECTED_WARNING_PREFIX =
             "res/layout/mywidget.xml:2: Warning: "
                     + KeyboardNavigationDetector.MESSAGE
@@ -35,7 +35,7 @@ public class KeyboardNavigationDetectorTest extends AbstractCheckTest {
     public void testFocusableElement_noIssue() {
         lint().files(
                         xml(
-                                DUMMY_FILE_NAME,
+                                PLACEHOLDER_FILE_NAME,
                                 ""
                                         + "<Button xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                         + "    android:clickable=\"true\"\n"
@@ -47,7 +47,7 @@ public class KeyboardNavigationDetectorTest extends AbstractCheckTest {
     public void testNonClickableElement_noIssue() {
         lint().files(
                         xml(
-                                DUMMY_FILE_NAME,
+                                PLACEHOLDER_FILE_NAME,
                                 ""
                                         + "<Button xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                         + "    android:clickable=\"false\"\n"
@@ -59,7 +59,7 @@ public class KeyboardNavigationDetectorTest extends AbstractCheckTest {
     public void testUnspecifiedFocusableElement_triggersIssue() {
         lint().files(
                         xml(
-                                DUMMY_FILE_NAME,
+                                PLACEHOLDER_FILE_NAME,
                                 ""
                                         + "<Button xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                         + "    android:clickable=\"true\" />"))
@@ -82,7 +82,7 @@ public class KeyboardNavigationDetectorTest extends AbstractCheckTest {
     public void testUnfocusableElement_triggersIssue() {
         lint().files(
                         xml(
-                                DUMMY_FILE_NAME,
+                                PLACEHOLDER_FILE_NAME,
                                 ""
                                         + "<Button xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                         + "    android:clickable=\"true\"\n"

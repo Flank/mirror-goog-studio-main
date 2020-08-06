@@ -226,7 +226,8 @@ class DiffUtilDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
             diffUtilStub
-        ).run().expect("""
+        ).run().expect(
+            """
             src/test/pkg/MyCallback.java:13: Error: Suspicious equality check: Did you mean .equals() instead of == ? [DiffUtilEquals]
                     return oldItem == newItem;
                                    ~~
@@ -284,7 +285,8 @@ class DiffUtilDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
             diffUtilStub
-        ).run().expect("""
+        ).run().expect(
+            """
             src/test/pkg/MyCallback.java:13: Error: Suspicious equality check: equals() is not implemented in test.pkg.Cheese [DiffUtilEquals]
                     return oldItem.equals(newItem); // ERROR
                                    ~~~~~~~~~~~~~~~
@@ -299,7 +301,8 @@ class DiffUtilDetectorTest : AbstractCheckTest() {
     fun testSealedClasses() {
         // Regression test for issue 132234925
         lint().files(
-            kotlin("""
+            kotlin(
+                """
                 package test.pkg
 
                 import android.support.v7.util.DiffUtil
@@ -319,7 +322,8 @@ class DiffUtilDetectorTest : AbstractCheckTest() {
                         }
                     }
                 }
-                """).indented(),
+                """
+            ).indented(),
             diffUtilStub
         ).run().expectClean()
     }

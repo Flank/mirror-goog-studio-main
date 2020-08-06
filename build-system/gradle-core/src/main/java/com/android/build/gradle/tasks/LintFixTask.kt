@@ -71,8 +71,6 @@ abstract class LintFixTask : LintBaseTask() {
 
         override fun configure(task: LintFixTask) {
             super.configure(task)
-            task.enableGradleWorkers.set(false)
-            task.enableGradleWorkers.disallowChanges()
 
             task.description =
                     "Runs lint on all variants and applies any safe suggestions to the source code."

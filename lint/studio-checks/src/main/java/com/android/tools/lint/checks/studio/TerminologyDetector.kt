@@ -346,85 +346,113 @@ class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
                 2 -> {
                     state = when (c) {
                         'l', 'L' -> 7
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 3 -> {
                     state = when (c) {
                         'u', 'U' -> 8
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 4 -> {
                     state = when (c) {
                         'r', 'R' -> 11
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 5 -> {
                     state = when (c) {
                         'l', 'L' -> 10
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 6 -> {
                     state = when (c) {
                         'h', 'H' -> 9
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 7 -> {
                     state = when (c) {
                         'a', 'A' -> 14
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 8 -> {
                     state = when (c) {
                         'c', 'C' -> 16
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 9 -> {
                     state = when (c) {
                         'i', 'I' -> 13
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 10 -> {
                     state = when (c) {
                         'a', 'A' -> 12
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 11 -> {
                     state = when (c) {
                         'a', 'A' -> 15
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 12 -> {
                     state = when (c) {
                         'v', 'V' -> 21
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 13 -> {
                     state = when (c) {
                         't', 'T' -> 17
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 14 -> {
                     state = when (c) {
                         'c', 'C' -> 18
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 15 -> {
                     state = when (c) {
                         'n', 'N' -> 20
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 16 -> {
@@ -433,25 +461,33 @@ class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
                             report(context, element, source, i - 4, i, "?", false)
                             1
                         }
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 17 -> {
                     state = when (c) {
                         'e', 'E' -> 22
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 18 -> {
                     state = when (c) {
                         'k', 'K' -> 24
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 20 -> {
                     state = when (c) {
                         'd', 'D' -> 25
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 21 -> {
@@ -460,87 +496,115 @@ class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
                             report(context, element, source, begin, i, "secondary", true)
                             1
                         }
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 22 -> {
                     state = when (c) {
                         'l', 'L' -> 27
                         '-' -> 29
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 24 -> {
                     state = when (c) {
                         'l', 'L' -> 26
                         '-' -> 28
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 25 -> {
                     state = when (c) {
                         'f', 'F' -> 30
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 26 -> {
                     state = when (c) {
                         'i', 'I' -> 33
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 27 -> {
                     state = when (c) {
                         'i', 'I' -> 31
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 28 -> {
                     state = when (c) {
                         'l', 'L' -> 34
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 29 -> {
                     state = when (c) {
                         'l', 'L' -> 32
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 30 -> {
                     state = when (c) {
                         'a', 'A' -> 35
-                        else -> { i--; 3 }
+                        else -> {
+                            i--; 3
+                        }
                     }
                 }
                 31 -> {
                     state = when (c) {
                         's', 'S' -> 36
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 32 -> {
                     state = when (c) {
                         'i', 'I' -> 38
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 33 -> {
                     state = when (c) {
                         's', 'S' -> 37
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 34 -> {
                     state = when (c) {
                         'i', 'I' -> 40
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 35 -> {
                     state = when (c) {
                         't', 'T' -> 39
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 36 -> {
@@ -549,7 +613,9 @@ class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
                             report(context, element, source, i - 9, i, "include", false)
                             1
                         }
-                        else -> { i--; 5 }
+                        else -> {
+                            i--; 5
+                        }
                     }
                 }
                 37 -> {
@@ -558,31 +624,41 @@ class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
                             report(context, element, source, i - 9, i, "exclude", false)
                             1
                         }
-                        else -> { i--; 5 }
+                        else -> {
+                            i--; 5
+                        }
                     }
                 }
                 38 -> {
                     state = when (c) {
                         's', 'S' -> 44
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 39 -> {
                     state = when (c) {
                         'h', 'H' -> 41
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 40 -> {
                     state = when (c) {
                         's', 'S' -> 42
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 41 -> {
                     state = when (c) {
                         'e', 'E' -> 48
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 42 -> {
@@ -591,7 +667,9 @@ class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
                             report(context, element, source, i - 10, i, "exclude", false)
                             1
                         }
-                        else -> { i--; 5 }
+                        else -> {
+                            i--; 5
+                        }
                     }
                 }
                 44 -> {
@@ -600,19 +678,25 @@ class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
                             report(context, element, source, i - 10, i, "include", false)
                             1
                         }
-                        else -> { i--; 5 }
+                        else -> {
+                            i--; 5
+                        }
                     }
                 }
                 48 -> {
                     state = when (c) {
                         'r', 'R' -> 49
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 49 -> {
                     state = when (c) {
                         'e', 'E' -> 50
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
                 50 -> {
@@ -621,7 +705,9 @@ class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
                             report(context, element, source, begin, i, "baseline", true)
                             1
                         }
-                        else -> { i--; 1 }
+                        else -> {
+                            i--; 1
+                        }
                     }
                 }
             }

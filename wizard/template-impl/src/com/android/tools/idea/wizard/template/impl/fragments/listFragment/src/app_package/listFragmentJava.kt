@@ -40,7 +40,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
-import ${packageName}.dummy.DummyContent;
+import ${packageName}.placeholder.PlaceholderContent;
 
 /**
  * A fragment representing a list of Items.
@@ -93,7 +93,7 @@ public class ${fragmentClass} extends Fragment {
             } else {
                 recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
             }
-            recyclerView.setAdapter(new ${adapterClassName}(DummyContent.ITEMS));
+            recyclerView.setAdapter(new ${adapterClassName}(PlaceholderContent.ITEMS));
         }
         return view;
     }

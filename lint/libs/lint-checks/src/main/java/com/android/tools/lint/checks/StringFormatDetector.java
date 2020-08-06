@@ -529,7 +529,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
             Handle handle = pair.getFirst();
             String formatString = pair.getSecond();
 
-            //boolean warned = false;
+            // boolean warned = false;
             Matcher matcher = FORMAT.matcher(formatString);
             int index = 0;
             int prevIndex = 0;
@@ -585,7 +585,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                                         + "character in '`%2$s`' ?",
                                                 name, str);
                                 context.report(INVALID, location, message);
-                                //warned = true;
+                                // warned = true;
                                 continue;
                             }
                         }
@@ -648,7 +648,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                         currentFormat,
                                         format,
                                         Lint.getFileNameWithParent(context.getClient(), f));
-                        //warned = true;
+                        // warned = true;
                         context.report(ARG_TYPES, location, message);
                         break;
                     }
@@ -860,14 +860,18 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                             // Precision
                             "(\\.\\d+)?"
                             +
-                            // Conversion. These are all a single character, except date/time conversions
+                            // Conversion. These are all a single character, except date/time
+                            // conversions
                             // which take a prefix of t/T:
                             "([tT])?"
                             +
                             // The current set of conversion characters are
-                            // b,h,s,c,d,o,x,e,f,g,a,t (as well as all those as upper-case characters), plus
-                            // n for newlines and % as a literal %. And then there are all the time/date
-                            // characters: HIKLm etc. Just match on all characters here since there should
+                            // b,h,s,c,d,o,x,e,f,g,a,t (as well as all those as upper-case
+                            // characters), plus
+                            // n for newlines and % as a literal %. And then there are all the
+                            // time/date
+                            // characters: HIKLm etc. Just match on all characters here since there
+                            // should
                             // be at least one.
                             "([a-zA-Z%])");
 
@@ -1416,7 +1420,8 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                     break;
                                 case 'h':
                                 case 'H': // Hex print of hash code of objects
-                                    // From https://developer.android.com/reference/java/util/Formatter.html
+                                    // From
+                                    // https://developer.android.com/reference/java/util/Formatter.html
                                     // """The following general conversions may be applied to any
                                     // argument type: 'b', 'B', 'h', 'H', 's', 'S' """
                                     // We'll still warn about %s since you may have intended
@@ -1519,7 +1524,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
     }
 
     private static boolean isCharacterType(PsiType type) {
-        //return PsiType.CHAR.isAssignableFrom(type);
+        // return PsiType.CHAR.isAssignableFrom(type);
         if (type == PsiType.CHAR) {
             return true;
         }
@@ -1532,7 +1537,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
     }
 
     private static boolean isBooleanType(PsiType type) {
-        //return PsiType.BOOLEAN.isAssignableFrom(type);
+        // return PsiType.BOOLEAN.isAssignableFrom(type);
         if (type == PsiType.BOOLEAN) {
             return true;
         }
@@ -1544,7 +1549,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
         return false;
     }
 
-    //PsiType:java.lang.Boolean
+    // PsiType:java.lang.Boolean
     private static boolean isNumericType(@NonNull PsiType type, boolean allowBigNumbers) {
         if (PsiType.INT.equals(type)
                 || PsiType.FLOAT.equals(type)

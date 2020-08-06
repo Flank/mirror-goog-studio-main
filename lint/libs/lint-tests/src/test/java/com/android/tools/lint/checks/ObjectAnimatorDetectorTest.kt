@@ -552,7 +552,9 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
 
     fun testMotionLayoutKeep() {
         lint().files(
-            xml("src/main/res/layout/mylayout.xml", """
+            xml(
+                "src/main/res/layout/mylayout.xml",
+                """
                 <android.support.constraint.motion.MotionLayout
                     xmlns:android="http://schemas.android.com/apk/res/android"
                     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -583,8 +585,11 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
                         android:background="@color/status_bar_scrim_translucent_dark" />
 
                 </android.support.constraint.motion.MotionLayout>
-            """).indented(),
-            xml("src/main/res/xml/scene_show_details.xml", """
+            """
+            ).indented(),
+            xml(
+                "src/main/res/xml/scene_show_details.xml",
+                """
                 <MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
                     xmlns:app="http://schemas.android.com/apk/res-auto">
 
@@ -633,7 +638,8 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
                     </Constraint>
 
                 </MotionScene>
-            """).indented(),
+            """
+            ).indented(),
             java(
                 """
                 package test.pkg;

@@ -49,7 +49,8 @@ class DataBindingDeterminismTest {
 
             // The following are specific to data binding.
             // Bug 129276057
-            "build/intermediates/data_binding_layout_info_type_merge/debug/out/activity_main-layout.xml"
+            "build/intermediates/data_binding_layout_info_type_merge/debug/out/activity_main-layout.xml",
+            "build/reports/configuration-cache/"
         )
     }
 
