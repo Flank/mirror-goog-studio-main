@@ -41,4 +41,13 @@ interface ApkCreationConfig: ConsumableCreationConfig {
     val shouldPackageDesugarLibDex: Boolean
 
     val needsMainDexListForBundle: Boolean
+
+    /**
+     * If this variant should package additional dependencies (code and native libraries) needed for
+     * profilers support in the IDE.
+     */
+    val shouldPackageProfilerDependencies: Boolean
+
+    /** List of transforms for profilers support in the IDE. */
+    val advancedProfilingTransforms: List<String>
 }

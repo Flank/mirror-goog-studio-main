@@ -201,6 +201,8 @@ InternalArtifactType<T : FileSystemLocation>(
     object MERGED_ML_MODELS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // native libs merged from module(s)
     object MERGED_NATIVE_LIBS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // native libs used by profilers
+    object PROFILERS_NATIVE_LIBS: InternalArtifactType<Directory>(DIRECTORY)
     // native libs stripped of debug symbols
     object STRIPPED_NATIVE_LIBS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // debug metadata extracted from native libs, saved as files with *.so.dbg extension

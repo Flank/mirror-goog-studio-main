@@ -128,6 +128,9 @@ open class TestVariantPropertiesImpl @Inject constructor(
 
     override val shouldPackageDesugarLibDex: Boolean = variantScope.isCoreLibraryDesugaringEnabled
 
+    override val shouldPackageProfilerDependencies: Boolean = false
+    override val advancedProfilingTransforms: List<String> = emptyList()
+
     // ---------------------------------------------------------------------------------------------
     // Private stuff
     // ---------------------------------------------------------------------------------------------

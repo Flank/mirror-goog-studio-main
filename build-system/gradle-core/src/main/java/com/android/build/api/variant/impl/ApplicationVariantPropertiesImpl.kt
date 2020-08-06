@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.IntegerOption
 import com.android.builder.dexing.DexingType
+import com.android.build.gradle.options.StringOption
 import org.gradle.api.provider.Property
 import javax.inject.Inject
 
@@ -124,6 +125,16 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
 
     override val shouldPackageDesugarLibDex: Boolean
         get() = variantScope.isCoreLibraryDesugaringEnabled
+
+    override val shouldPackageProfilerDependencies: Boolean
+        get() = advancedProfilingTransforms.isNotEmpty()
+
+    override val advancedProfilingTransforms: List<String>
+        get() {
+            return services.projectOptions[StringOption.IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS]?.split(
+                ","
+            ) ?: emptyList()
+        }
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff

@@ -18,7 +18,6 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
-import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_API_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_RUNTIME_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_PUBLICATION;
@@ -574,21 +573,11 @@ public class LibraryTaskManager
     protected Set<ScopeType> getJavaResMergingScopes(
             @NonNull ComponentCreationConfig creationConfig,
             @NonNull QualifiedContent.ContentType contentType) {
-        Preconditions.checkArgument(
-                contentType == RESOURCES || contentType == NATIVE_LIBS,
-                "contentType must be RESOURCES or NATIVE_LIBS");
+        Preconditions.checkArgument(contentType == RESOURCES, "contentType must be RESOURCES");
         if (creationConfig.getVariantType().isTestComponent()) {
-            if (contentType == RESOURCES) {
-                return TransformManager.SCOPE_FULL_PROJECT_WITH_LOCAL_JARS;
-            }
-            // contentType is NATIVE_LIBS
-            return TransformManager.SCOPE_FULL_PROJECT;
+            return TransformManager.SCOPE_FULL_PROJECT_WITH_LOCAL_JARS;
         }
-        if (contentType == RESOURCES) {
-            return TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS;
-        }
-        // contentType is NATIVE_LIBS
-        return TransformManager.PROJECT_ONLY;
+        return TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS;
     }
 
     @Override

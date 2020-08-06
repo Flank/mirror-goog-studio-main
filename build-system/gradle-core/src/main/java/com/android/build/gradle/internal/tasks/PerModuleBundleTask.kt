@@ -194,8 +194,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
     private fun hasFeatureDexFiles() = featureDexFiles.files.isNotEmpty()
 
     class CreationAction(
-        creationConfig: ApkCreationConfig,
-        private val packageCustomClassDependencies: Boolean
+        creationConfig: ApkCreationConfig
     ) : VariantTaskCreationAction<PerModuleBundleTask, ApkCreationConfig>(
         creationConfig
     ) {
@@ -277,7 +276,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                     )
                 }
             )
-            task.nativeLibsFiles.from(getNativeLibsFiles(creationConfig, packageCustomClassDependencies))
+            task.nativeLibsFiles.from(getNativeLibsFiles(creationConfig))
 
             if (creationConfig.variantType.isDynamicFeature) {
                 // If this is a dynamic feature, we use the abiFilters published by the base module.
@@ -346,19 +345,11 @@ private class ResRelocator : JarCreator.Relocator {
 /**
  * Returns a file collection containing all of the native libraries to be packaged.
  */
-fun getNativeLibsFiles(
-    creationConfig: ComponentCreationConfig,
-    packageCustomClassDependencies: Boolean
-): FileCollection {
+fun getNativeLibsFiles(creationConfig: ComponentCreationConfig): FileCollection {
     val nativeLibs = creationConfig.services.fileCollection()
     if (creationConfig.variantType.isForTesting) {
         return nativeLibs.from(creationConfig.artifacts.get(MERGED_NATIVE_LIBS))
     }
     nativeLibs.from(creationConfig.artifacts.get(STRIPPED_NATIVE_LIBS))
-    if (packageCustomClassDependencies) {
-        nativeLibs.from(
-            creationConfig.transformManager.getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS)
-        )
-    }
     return nativeLibs
 }

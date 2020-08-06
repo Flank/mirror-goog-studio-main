@@ -283,9 +283,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
     abstract val variantOutput: Property<VariantOutputImpl>
 
     class CreationAction(
-        creationConfig: ApkCreationConfig,
-        // TODO : remove this variable and find ways to access it from scope.
-        private val isAdvancedProfilingOn: Boolean
+        creationConfig: ApkCreationConfig
     ) : VariantTaskCreationAction<ProcessApplicationManifest, ApkCreationConfig>(creationConfig) {
         override val name: String
             get() = computeTaskName("process", "MainManifest")
@@ -380,14 +378,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             task.maxSdkVersion
                 .set(project.provider(creationConfig::maxSdkVersion))
             task.maxSdkVersion.disallowChanges()
-            task.optionalFeatures
-                .set(
-                    project.provider {
-                        getOptionalFeatures(
-                            creationConfig, isAdvancedProfilingOn
-                        )
-                    }
-                )
+            task.optionalFeatures.set(project.provider { getOptionalFeatures(creationConfig) })
             task.optionalFeatures.disallowChanges()
             task.variantOutput.setDisallowChanges(
                 creationConfig.outputs.getMainSplit()
@@ -494,7 +485,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         }
 
         private fun getOptionalFeatures(
-            creationConfig: ApkCreationConfig, isAdvancedProfilingOn: Boolean
+            creationConfig: ApkCreationConfig
         ): EnumSet<Invoker.Feature> {
             val features: MutableList<Invoker.Feature> =
                 ArrayList()
@@ -507,7 +498,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             }
             if (creationConfig.debuggable) {
                 features.add(Invoker.Feature.DEBUGGABLE)
-                if (isAdvancedProfilingOn) {
+                if (creationConfig.advancedProfilingTransforms.isNotEmpty()) {
                     features.add(Invoker.Feature.ADVANCED_PROFILING)
                 }
             }

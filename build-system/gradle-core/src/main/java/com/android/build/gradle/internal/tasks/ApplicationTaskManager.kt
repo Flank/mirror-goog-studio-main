@@ -24,7 +24,6 @@ import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.internal.AbstractAppTaskManager
-import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -258,12 +257,7 @@ class ApplicationTaskManager(
             return
         }
 
-        taskFactory.register(
-            PerModuleBundleTask.CreationAction(
-                variantProperties,
-                TaskManager.packagesCustomClassDependencies(variantProperties)
-            )
-        )
+        taskFactory.register(PerModuleBundleTask.CreationAction(variantProperties))
 
         val debuggable = variant.variant.debuggable
         val includeSdkInfoInApk = variant.variant.dependenciesInfo.includeInApk

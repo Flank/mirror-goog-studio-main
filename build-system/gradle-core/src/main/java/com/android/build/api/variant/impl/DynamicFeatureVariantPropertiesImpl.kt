@@ -30,14 +30,15 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.tasks.ModuleMetadata
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.dexing.DexingType
+import com.android.build.gradle.options.StringOption
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
@@ -139,6 +140,15 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     }
 
     override val shouldPackageDesugarLibDex: Boolean = false
+
+    override val shouldPackageProfilerDependencies: Boolean = false
+
+    override val advancedProfilingTransforms: List<String>
+        get() {
+            return services.projectOptions[StringOption.IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS]?.split(
+                ","
+            ) ?: emptyList()
+        }
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff

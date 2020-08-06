@@ -944,19 +944,16 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @NonNull protected final Provider<Directory> manifests;
         protected boolean useResourceShrinker;
         @NonNull private final Artifact<Directory> manifestType;
-        private final boolean packageCustomClassDependencies;
 
         public CreationAction(
                 @NonNull ApkCreationConfig creationConfig,
                 boolean useResourceShrinker,
                 @NonNull Provider<Directory> manifests,
-                @NonNull Artifact<Directory> manifestType,
-                boolean packageCustomClassDependencies) {
+                @NonNull Artifact<Directory> manifestType) {
             super(creationConfig);
             this.useResourceShrinker = useResourceShrinker;
             this.manifests = manifests;
             this.manifestType = manifestType;
-            this.packageCustomClassDependencies = packageCustomClassDependencies;
         }
 
         @Override
@@ -1090,10 +1087,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         }
 
         protected void finalConfigure(TaskT task) {
-            task.getJniFolders()
-                    .from(
-                            PerModuleBundleTaskKt.getNativeLibsFiles(
-                                    creationConfig, packageCustomClassDependencies));
+            task.getJniFolders().from(PerModuleBundleTaskKt.getNativeLibsFiles(creationConfig));
 
             task.setSigningConfig(SigningConfigProvider.create(creationConfig));
         }

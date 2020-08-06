@@ -22,7 +22,6 @@ import static com.android.build.gradle.internal.dependency.VariantDependencies.C
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_CORE_LIBRARY_DESUGARING;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTCHECKS;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTPUBLISH;
-import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
@@ -177,7 +176,6 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.AnalyzeDependenciesTask;
 import com.android.build.gradle.tasks.CleanBuildCache;
@@ -225,7 +223,6 @@ import com.android.builder.testing.api.TestServer;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -962,35 +959,6 @@ public abstract class TaskManager<
         }
     }
 
-    /** Returns whether or not dependencies from the {@link CustomClassTransform} are packaged */
-    protected static boolean packagesCustomClassDependencies(
-            @NonNull ComponentCreationConfig creationConfig) {
-        return appliesCustomClassTransforms(creationConfig)
-                && !creationConfig.getVariantType().isDynamicFeature();
-    }
-
-    /** Returns whether or not custom class transforms are applied */
-    protected static boolean appliesCustomClassTransforms(
-            @NonNull ComponentCreationConfig creationConfig) {
-        if (creationConfig instanceof ApkCreationConfig) {
-            return ((ApkCreationConfig) creationConfig).getDebuggable()
-                    && !creationConfig.getVariantType().isForTesting()
-                    && !getAdvancedProfilingTransforms(
-                                    creationConfig.getServices().getProjectOptions())
-                            .isEmpty();
-        }
-        return false;
-    }
-
-    @NonNull
-    private static List<String> getAdvancedProfilingTransforms(@NonNull ProjectOptions options) {
-        String string = options.get(StringOption.IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS);
-        if (string == null) {
-            return ImmutableList.of();
-        }
-        return Splitter.on(',').splitToList(string);
-    }
-
     /** Creates the merge manifests task. */
     @NonNull
     protected TaskProvider<? extends ManifestProcessorTask> createMergeManifestTasks(
@@ -1003,12 +971,7 @@ public abstract class TaskManager<
         taskFactory.register(new ProcessPackagedManifestTask.CreationAction(creationConfig));
         taskFactory.register(new GenerateManifestJarTask.CreationAction(creationConfig));
 
-        taskFactory.register(
-                new ProcessApplicationManifest.CreationAction(
-                        creationConfig,
-                        !getAdvancedProfilingTransforms(
-                                        creationConfig.getServices().getProjectOptions())
-                                .isEmpty()));
+        taskFactory.register(new ProcessApplicationManifest.CreationAction(creationConfig));
         return taskFactory.register(
                 new ProcessMultiApkApplicationManifest.CreationAction(creationConfig));
     }
@@ -1151,10 +1114,7 @@ public abstract class TaskManager<
         taskFactory.register(
                 new MergeSourceSetFolders.MergeJniLibFoldersCreationAction(creationConfig));
 
-        // Compute the scopes that need to be merged.
-        Set<ScopeType> mergeScopes = getJavaResMergingScopes(creationConfig, NATIVE_LIBS);
-
-        taskFactory.register(new MergeNativeLibsTask.CreationAction(mergeScopes, creationConfig));
+        taskFactory.register(new MergeNativeLibsTask.CreationAction(creationConfig));
     }
 
     public void createBuildConfigTask(@NonNull VariantCreationConfig creationConfig) {
@@ -2140,12 +2100,12 @@ public abstract class TaskManager<
         List<Transform> customTransforms = extension.getTransforms();
         List<List<Object>> customTransformsDependencies = extension.getTransformsDependencies();
 
-        boolean registeredExternalTransform = false;
+        boolean registeredLegacyTransform = false;
         for (int i = 0, count = customTransforms.size(); i < count; i++) {
             Transform transform = customTransforms.get(i);
 
             List<Object> deps = customTransformsDependencies.get(i);
-            registeredExternalTransform |=
+            registeredLegacyTransform |=
                     transformManager
                             .addTransform(
                                     taskFactory,
@@ -2181,16 +2141,16 @@ public abstract class TaskManager<
 
         // ----- Android studio profiling transforms
 
-        if (appliesCustomClassTransforms(creationConfig)) {
-            for (String jar :
-                    getAdvancedProfilingTransforms(
-                            creationConfig.getServices().getProjectOptions())) {
+        List<String> profilingTransforms = creationConfig.getAdvancedProfilingTransforms();
+        if (!profilingTransforms.isEmpty()) {
+            registeredLegacyTransform = true;
+            for (String jar : profilingTransforms) {
                 if (jar != null) {
                     transformManager.addTransform(
                             taskFactory,
                             creationConfig,
                             new CustomClassTransform(
-                                    jar, packagesCustomClassDependencies(creationConfig)));
+                                    jar, creationConfig.getShouldPackageProfilerDependencies()));
                 }
             }
         }
@@ -2224,7 +2184,7 @@ public abstract class TaskManager<
             taskFactory.register(new D8MainDexListTask.CreationAction(creationConfig, true));
         }
 
-        createDexTasks(creationConfig, dexingType, registeredExternalTransform);
+        createDexTasks(creationConfig, dexingType, registeredLegacyTransform);
 
         maybeCreateResourcesShrinkerTasks(creationConfig);
 
@@ -2292,7 +2252,7 @@ public abstract class TaskManager<
     private void createDexTasks(
             @NonNull ApkCreationConfig creationConfig,
             @NonNull DexingType dexingType,
-            boolean registeredExternalTransform) {
+            boolean registeredLegacyTransforms) {
         DefaultDexOptions dexOptions;
         final VariantType variantType = creationConfig.getVariantType();
         if (variantType.isTestComponent()) {
@@ -2321,10 +2281,9 @@ public abstract class TaskManager<
                                 .getServices()
                                 .getProjectOptions()
                                 .get(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM)
-                        && !registeredExternalTransform
+                        && !registeredLegacyTransforms
                         && !minified
-                        && supportsDesugaring
-                        && !appliesCustomClassTransforms(creationConfig);
+                        && supportsDesugaring;
 
         taskFactory.register(
                 new DexArchiveBuilderTask.CreationAction(
@@ -2606,8 +2565,7 @@ public abstract class TaskManager<
                                 creationConfig.getPaths().getApkLocation(),
                                 variantScope.useResourceShrinker(),
                                 manifests,
-                                manifestType,
-                                packagesCustomClassDependencies(creationConfig)),
+                                manifestType),
                         null,
                         task -> {
                             task.dependsOn(taskContainer.getJavacTask());

@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.transforms;
 
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES;
-import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -351,7 +350,7 @@ public class CustomClassTransformTest {
                 .containsExactly(CLASSES);
         Truth.assertThat(getTransform(true).getOutputTypes())
                 .named("getOutputTypes on addDependency == true")
-                .containsExactly(CLASSES, NATIVE_LIBS);
+                .containsExactly(CLASSES);
     }
 
     @Test
@@ -397,7 +396,7 @@ public class CustomClassTransformTest {
                         .filter(output -> FAKE_DEPENDENCIES.equals(output.name))
                         .findAny();
         Truth.assertThat(depOutput.isPresent()).isTrue();
-        Truth.assertThat(depOutput.get().types).containsExactly(CLASSES, NATIVE_LIBS);
+        Truth.assertThat(depOutput.get().types).containsExactly(CLASSES);
     }
 
     @Test

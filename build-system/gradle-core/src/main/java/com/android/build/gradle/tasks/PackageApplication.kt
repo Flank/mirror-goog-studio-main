@@ -51,14 +51,12 @@ abstract class PackageApplication : PackageAndroidArtifact() {
         private val outputDirectory: File,
         useResourceShrinker: Boolean,
         manifests: Provider<Directory?>,
-        manifestType: Artifact<Directory>,
-        packageCustomClassDependencies: Boolean
+        manifestType: Artifact<Directory>
     ) : PackageAndroidArtifact.CreationAction<PackageApplication>(
         creationConfig,
         useResourceShrinker,
         manifests,
-        manifestType,
-        packageCustomClassDependencies
+        manifestType
     ) {
         private var transformationRequest: ArtifactTransformationRequest<PackageApplication>? = null
         private var task: PackageApplication? = null
