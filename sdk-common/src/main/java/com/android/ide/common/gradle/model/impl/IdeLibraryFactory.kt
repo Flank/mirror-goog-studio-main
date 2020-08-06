@@ -23,7 +23,6 @@ import com.android.builder.model.Library
 import com.android.ide.common.gradle.model.IdeLibrary
 import com.android.ide.common.gradle.model.IdeMavenCoordinates
 import com.android.utils.FileUtils
-import com.google.common.annotations.VisibleForTesting
 import java.io.File
 
 /**
@@ -107,9 +106,9 @@ class IdeLibraryFactory {
   fun createIdeModuleLibrary(library: AndroidLibrary, artifactAddress: String): IdeLibrary {
     val core = IdeModuleLibraryCore(
       artifactAddress = artifactAddress,
-      buildId = IdeModel.copyNewProperty({ library.buildId }, null),
-      projectPath = IdeModel.copyNewProperty({ library.project }, null),
-      variant = IdeModel.copyNewProperty({ library.projectVariant }, null),
+      buildId = ModelCache.copyNewProperty({ library.buildId }, null),
+      projectPath = ModelCache.copyNewProperty({ library.project }, null),
+      variant = ModelCache.copyNewProperty({ library.projectVariant }, null),
       folder = defaultValueIfNotPresent(
         { library.folder }, null),
       lintJar = defaultValueIfNotPresent(
@@ -123,8 +122,8 @@ class IdeLibraryFactory {
   fun createIdeModuleLibrary(library: JavaLibrary, artifactAddress: String): IdeLibrary {
     val core = IdeModuleLibraryCore(
       artifactAddress = artifactAddress,
-      buildId = IdeModel.copyNewProperty({ library.buildId }, null),
-      projectPath = IdeModel.copyNewProperty({ library.project }, null),
+      buildId = ModelCache.copyNewProperty({ library.buildId }, null),
+      projectPath = ModelCache.copyNewProperty({ library.project }, null),
       variant = null,
       folder = null,
       lintJar = null
@@ -168,7 +167,7 @@ class IdeLibraryFactory {
       // in the same MavenCoordinates for different variants of the same module.
       try {
         if (library.project != null && library is AndroidLibrary) {
-          return ((IdeModel.copyNewProperty({ library.getBuildId() }, "")).orEmpty()
+          return ((ModelCache.copyNewProperty({ library.getBuildId() }, "")).orEmpty()
                   + library.getProject()
                   + "::"
                   + library.projectVariant)
@@ -210,7 +209,7 @@ class IdeLibraryFactory {
       val projectPath = androidLibrary.project ?: return false
       val buildFolderPath = buildFolderPaths.findBuildFolderPath(
         projectPath,
-        IdeModel.copyNewProperty({ androidLibrary.buildId }, null)
+        ModelCache.copyNewProperty({ androidLibrary.buildId }, null)
       )
       // If the aar bundle is inside of build directory, then it's a regular library module dependency, otherwise it's a wrapped aar module.
       return (buildFolderPath != null

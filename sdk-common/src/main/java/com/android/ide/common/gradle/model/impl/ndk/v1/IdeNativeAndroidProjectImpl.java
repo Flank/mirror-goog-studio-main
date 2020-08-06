@@ -24,7 +24,6 @@ import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeSettings;
 import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.NativeVariantInfo;
-import com.android.ide.common.gradle.model.impl.IdeModel;
 import com.android.ide.common.gradle.model.impl.ModelCache;
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeAndroidProject;
 import com.google.common.annotations.VisibleForTesting;
@@ -103,14 +102,14 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
     private static Map<String, NativeVariantInfo> copyVariantInfos(@NonNull NativeAndroidProject project) {
         try {
             return copy(
-              project.getVariantInfos(),
-              variantInfo ->
-                new IdeNativeVariantInfoImpl(
-                  variantInfo.getAbiNames(),
-                  Objects.requireNonNull(
-                    IdeModel.copyNewProperty(
-                      () -> variantInfo.getBuildRootFolderMap(),
-                      Collections.emptyMap()))));
+                    project.getVariantInfos(),
+                    variantInfo ->
+                            new IdeNativeVariantInfoImpl(
+                                    variantInfo.getAbiNames(),
+                                    Objects.requireNonNull(
+                                            ModelCache.copyNewProperty(
+                                                    () -> variantInfo.getBuildRootFolderMap(),
+                                                    Collections.emptyMap()))));
         } catch (UnsupportedOperationException e) {
             return Maps.newHashMap();
         }

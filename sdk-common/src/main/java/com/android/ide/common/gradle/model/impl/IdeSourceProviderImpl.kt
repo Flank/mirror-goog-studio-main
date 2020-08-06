@@ -62,11 +62,11 @@ data class IdeSourceProviderImpl(
         myResDirectories = provider.resDirectories.makeRelativeAndDeduplicate(),
         myAssetsDirectories = provider.assetsDirectories.makeRelativeAndDeduplicate(),
         myJniLibsDirectories = provider.jniLibsDirectories.makeRelativeAndDeduplicate(),
-        myShadersDirectories = IdeModel.copyNewPropertyNonNull(
+        myShadersDirectories = ModelCache.copyNewPropertyNonNull(
           { provider.shadersDirectories },
           emptyList()
         ).makeRelativeAndDeduplicate(),
-        myMlModelsDirectories = IdeModel.copyNewPropertyNonNull(
+        myMlModelsDirectories = ModelCache.copyNewPropertyNonNull(
           { provider.mlModelsDirectories },
           emptyList()
         ).makeRelativeAndDeduplicate()

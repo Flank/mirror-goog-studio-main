@@ -163,7 +163,9 @@ class IdeVariantImpl(
         instantAppCompatible = (modelVersion != null &&
                                 modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) &&
                                 variant.isInstantAppCompatible),
-        desugaredMethods = ImmutableList.copyOf(IdeModel.copyNewPropertyNonNull({ variant.desugaredMethods }, emptyList()))
+        desugaredMethods = ImmutableList.copyOf(
+                ModelCache.copyNewPropertyNonNull({ variant.desugaredMethods },
+                                                                                                              emptyList()))
       )
   }
 }

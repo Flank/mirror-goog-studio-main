@@ -16,6 +16,7 @@
 package com.android.ide.common.gradle.model.impl;
 
 import static com.android.ide.common.gradle.model.impl.ModelCache.copy;
+import static com.android.ide.common.gradle.model.impl.ModelCache.copyNewProperty;
 import static com.android.utils.ImmutableCollectors.toImmutableList;
 
 import com.android.annotations.NonNull;
@@ -85,7 +86,7 @@ public final class IdeOutputFileImpl implements OutputFile, Serializable {
         myMainOutputFile = copyMainOutputFile(file, modelCache);
         //noinspection deprecation
         myOutputs = copyOutputs(file, modelCache);
-        myVersionCode = IdeModel.copyNewProperty(file::getVersionCode, null);
+        myVersionCode = copyNewProperty(file::getVersionCode, null);
 
         myHashCode = calculateHashCode();
     }
@@ -100,8 +101,7 @@ public final class IdeOutputFileImpl implements OutputFile, Serializable {
         } catch (UnsupportedOperationException ignored) {
             // getMainOutputFile is supported in AGP 3.0+.
         }
-        return IdeModel.copyNewProperty(
-                modelCache,
+        return copyNewProperty(
                 file::getMainOutputFile,
                 outputFile -> new IdeOutputFileImpl(outputFile, modelCache),
                 null);

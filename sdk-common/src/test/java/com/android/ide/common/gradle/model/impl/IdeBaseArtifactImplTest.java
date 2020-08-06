@@ -52,14 +52,14 @@ public class IdeBaseArtifactImplTest {
                         original.getName(),
                         original.getCompileTaskName(),
                         original.getAssembleTaskName(),
-                        IdeModel.copyNewProperty(original::getAssembleTaskOutputListingFile, ""),
+                        ModelCache.copyNewProperty(original::getAssembleTaskOutputListingFile, ""),
                         original.getClassesFolder(),
-                        IdeModel.copyNewProperty(original::getJavaResourcesFolder, null),
+                        ModelCache.copyNewProperty(original::getJavaResourcesFolder, null),
                         ImmutableSet.copyOf(getIdeSetupTaskNames(original)),
                         new LinkedHashSet<File>(getGeneratedSourceFolders(original)),
                         createSourceProvider(cache, original.getVariantSourceProvider()),
                         createSourceProvider(cache, original.getMultiFlavorSourceProvider()),
-                        IdeModel.copyNewProperty(
+                        ModelCache.copyNewProperty(
                                 original::getAdditionalClassesFolders, Collections.emptySet()),
                         myDependenciesFactory.create(original)) {};
         File folder = new File("foo");
@@ -100,14 +100,14 @@ public class IdeBaseArtifactImplTest {
                         original.getName(),
                         original.getCompileTaskName(),
                         original.getAssembleTaskName(),
-                        IdeModel.copyNewProperty(original::getAssembleTaskOutputListingFile, ""),
+                        ModelCache.copyNewProperty(original::getAssembleTaskOutputListingFile, ""),
                         original.getClassesFolder(),
-                        IdeModel.copyNewProperty(original::getJavaResourcesFolder, null),
+                        ModelCache.copyNewProperty(original::getJavaResourcesFolder, null),
                         ImmutableSet.copyOf(getIdeSetupTaskNames(original)),
                         new LinkedHashSet<File>(getGeneratedSourceFolders(original)),
                         createSourceProvider(cache, original.getVariantSourceProvider()),
                         createSourceProvider(cache, original.getMultiFlavorSourceProvider()),
-                        IdeModel.copyNewProperty(
+                        ModelCache.copyNewProperty(
                                 original::getAdditionalClassesFolders, Collections.emptySet()),
                         myDependenciesFactory.create(original)) {};
         expectUnsupportedOperationException(artifact::getJavaResourcesFolder);

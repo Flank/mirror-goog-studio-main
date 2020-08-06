@@ -64,33 +64,48 @@ data class IdeLintOptionsImpl(
               options.baselineFile
           else
               null,
-          lintConfig = IdeModel.copyNewProperty<File>({ options.lintConfig }, null),
+          lintConfig = ModelCache.copyNewProperty<File>({ options.lintConfig },
+                                                                                                                    null),
           severityOverrides = options.severityOverrides?.let { ImmutableMap.copyOf(it) },
           isCheckTestSources = modelVersion != null &&
                                modelVersion.isAtLeast(2, 4, 0) &&
                                options.isCheckTestSources,
-          isCheckDependencies = IdeModel.copyNewProperty({ options.isCheckDependencies }, false)!!,
-          disable = IdeModel.copy(options.disable)!!,
-          enable = IdeModel.copy(options.enable)!!,
+          isCheckDependencies = ModelCache.copyNewProperty(
+            { options.isCheckDependencies }, false)!!,
+          disable = ModelCache.copy(options.disable)!!,
+          enable = ModelCache.copy(options.enable)!!,
           check = options.check?.let { ImmutableSet.copyOf(it) },
-          isAbortOnError = IdeModel.copyNewProperty({ options.isAbortOnError }, true)!!,
-          isAbsolutePaths = IdeModel.copyNewProperty({ options.isAbsolutePaths }, true)!!,
-          isNoLines = IdeModel.copyNewProperty({ options.isNoLines }, false)!!,
-          isQuiet = IdeModel.copyNewProperty({ options.isQuiet }, false)!!,
-          isCheckAllWarnings = IdeModel.copyNewProperty({ options.isCheckAllWarnings }, false)!!,
-          isIgnoreWarnings = IdeModel.copyNewProperty({ options.isIgnoreWarnings }, false)!!,
-          isWarningsAsErrors = IdeModel.copyNewProperty({ options.isWarningsAsErrors }, false)!!,
-          isIgnoreTestSources = IdeModel.copyNewProperty({ options.isIgnoreTestSources }, false)!!,
-          isCheckGeneratedSources = IdeModel.copyNewProperty({ options.isCheckGeneratedSources }, false)!!,
-          isExplainIssues = IdeModel.copyNewProperty({ options.isExplainIssues }, true)!!,
-          isShowAll = IdeModel.copyNewProperty({ options.isShowAll }, false)!!,
-          textReport = IdeModel.copyNewProperty({ options.textReport }, false)!!,
-          textOutput = IdeModel.copyNewProperty({ options.textOutput }, null),
-          htmlReport = IdeModel.copyNewProperty({ options.htmlReport }, true)!!,
-          htmlOutput = IdeModel.copyNewProperty({ options.htmlOutput }, null),
-          xmlReport = IdeModel.copyNewProperty({ options.xmlReport }, true)!!,
-          xmlOutput = IdeModel.copyNewProperty({ options.xmlOutput }, null),
-          isCheckReleaseBuilds = IdeModel.copyNewProperty({ options.isCheckReleaseBuilds }, true)!!
+          isAbortOnError = ModelCache.copyNewProperty(
+            { options.isAbortOnError }, true)!!,
+          isAbsolutePaths = ModelCache.copyNewProperty(
+            { options.isAbsolutePaths }, true)!!,
+          isNoLines = ModelCache.copyNewProperty({ options.isNoLines },
+                                                                                                             false)!!,
+          isQuiet = ModelCache.copyNewProperty({ options.isQuiet }, false)!!,
+          isCheckAllWarnings = ModelCache.copyNewProperty(
+            { options.isCheckAllWarnings }, false)!!,
+          isIgnoreWarnings = ModelCache.copyNewProperty(
+            { options.isIgnoreWarnings }, false)!!,
+          isWarningsAsErrors = ModelCache.copyNewProperty(
+            { options.isWarningsAsErrors }, false)!!,
+          isIgnoreTestSources = ModelCache.copyNewProperty(
+            { options.isIgnoreTestSources }, false)!!,
+          isCheckGeneratedSources = ModelCache.copyNewProperty(
+            { options.isCheckGeneratedSources }, false)!!,
+          isExplainIssues = ModelCache.copyNewProperty(
+            { options.isExplainIssues }, true)!!,
+          isShowAll = ModelCache.copyNewProperty({ options.isShowAll },
+                                                                                                             false)!!,
+          textReport = ModelCache.copyNewProperty({ options.textReport },
+                                                                                                              false)!!,
+          textOutput = ModelCache.copyNewProperty({ options.textOutput }, null),
+          htmlReport = ModelCache.copyNewProperty({ options.htmlReport },
+                                                                                                              true)!!,
+          htmlOutput = ModelCache.copyNewProperty({ options.htmlOutput }, null),
+          xmlReport = ModelCache.copyNewProperty({ options.xmlReport }, true)!!,
+          xmlOutput = ModelCache.copyNewProperty({ options.xmlOutput }, null),
+          isCheckReleaseBuilds = ModelCache.copyNewProperty(
+            { options.isCheckReleaseBuilds }, true)!!
         )
     }
 }

@@ -77,6 +77,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 
@@ -223,7 +224,7 @@ public class ModelCache {
                         issue ->
                                 new IdeSyncIssueImpl(
                                         issue.getMessage(),
-                                        IdeModel.copyNewProperty(issue::getMultiLineMessage, null),
+                                        copyNewProperty(issue::getMultiLineMessage, null),
                                         issue.getData(),
                                         issue.getSeverity(),
                                         issue.getType()));
@@ -247,16 +248,16 @@ public class ModelCache {
 
         Collection<String> variantNamesCopy =
                 Objects.requireNonNull(
-                        IdeModel.copyNewPropertyWithDefault(
+                        copyNewPropertyWithDefault(
                                 () -> ImmutableList.copyOf(project.getVariantNames()),
                                 () -> computeVariantNames(variantsCopy)));
 
         String defaultVariantCopy =
-                IdeModel.copyNewPropertyWithDefault(
+                copyNewPropertyWithDefault(
                         project::getDefaultVariant, () -> getDefaultVariant(variantNamesCopy));
 
         Collection<String> flavorDimensionCopy =
-                IdeModel.copyNewPropertyNonNull(
+                copyNewPropertyNonNull(
                         () -> ImmutableList.copyOf(project.getFlavorDimensions()),
                         Collections.emptyList());
 
@@ -292,26 +293,24 @@ public class ModelCache {
 
         Collection<String> dynamicFeaturesCopy =
                 ImmutableList.copyOf(
-                        IdeModel.copyNewPropertyNonNull(
-                                project::getDynamicFeatures, ImmutableList.of()));
+                        copyNewPropertyNonNull(project::getDynamicFeatures, ImmutableList.of()));
 
         Collection<IdeVariantBuildInformation> variantBuildInformation =
                 createVariantBuildInformation(project, parsedModelVersion);
 
         IdeViewBindingOptions viewBindingOptionsCopy =
-                IdeModel.copyNewProperty(
+                copyNewProperty(
                         () -> IdeViewBindingOptionsImpl.createFrom(project.getViewBindingOptions()),
                         null);
 
         IdeDependenciesInfo dependenciesInfoCopy =
-                IdeModel.copyNewProperty(
+                copyNewProperty(
                         () -> IdeDependenciesInfoImpl.createOrNull(project.getDependenciesInfo()),
                         null);
 
-        String buildToolsVersionCopy =
-                IdeModel.copyNewProperty(project::getBuildToolsVersion, null);
+        String buildToolsVersionCopy = copyNewProperty(project::getBuildToolsVersion, null);
 
-        String ndkVersionCopy = IdeModel.copyNewProperty(project::getNdkVersion, null);
+        String ndkVersionCopy = copyNewProperty(project::getNdkVersion, null);
 
         String groupId = null;
         if (parsedModelVersion != null
@@ -320,16 +319,15 @@ public class ModelCache {
         }
 
         List<File> lintRuleJarsCopy =
-                IdeModel.copyNewProperty(
-                        () -> ImmutableList.copyOf(project.getLintRuleJars()), null);
+                copyNewProperty(() -> ImmutableList.copyOf(project.getLintRuleJars()), null);
 
         // AndroidProject#isBaseSplit is always non null.
         //noinspection ConstantConditions
-        boolean isBaseSplit = IdeModel.copyNewProperty(project::isBaseSplit, false);
+        boolean isBaseSplit = copyNewProperty(project::isBaseSplit, false);
 
         IdeAndroidGradlePluginProjectFlags agpFlags =
                 Objects.requireNonNull(
-                        IdeModel.copyNewProperty(
+                        copyNewProperty(
                                 () ->
                                         IdeAndroidGradlePluginProjectFlagsImpl.createFrom(
                                                 project.getFlags()),
@@ -365,7 +363,7 @@ public class ModelCache {
                 ndkVersionCopy,
                 project.getResourcePrefix(),
                 groupId,
-                IdeModel.copyNewProperty(project::getPluginGeneration, null) != null,
+                copyNewProperty(project::getPluginGeneration, null) != null,
                 project.getApiVersion(),
                 getProjectType(project, parsedModelVersion),
                 isBaseSplit,
@@ -374,8 +372,7 @@ public class ModelCache {
 
     public static IdeAaptOptionsImpl aaptOptionsFrom(@NonNull AaptOptions original) {
         return new IdeAaptOptionsImpl(
-                convertNamespacing(
-                        IdeModel.copyNewPropertyNonNull(original::getNamespacing, DISABLED)));
+                convertNamespacing(copyNewPropertyNonNull(original::getNamespacing, DISABLED)));
     }
 
     @NotNull
@@ -424,16 +421,16 @@ public class ModelCache {
                 artifact.getName(),
                 artifact.getCompileTaskName(),
                 artifact.getAssembleTaskName(),
-                IdeModel.copyNewPropertyNonNull(artifact::getAssembleTaskOutputListingFile, ""),
+                copyNewPropertyNonNull(artifact::getAssembleTaskOutputListingFile, ""),
                 artifact.getClassesFolder(),
-                IdeModel.copyNewProperty(artifact::getJavaResourcesFolder, null),
+                copyNewProperty(artifact::getJavaResourcesFolder, null),
                 ImmutableSet.copyOf(IdeBaseArtifactImpl.getIdeSetupTaskNames(artifact)),
                 new LinkedHashSet<File>(IdeBaseArtifactImpl.getGeneratedSourceFolders(artifact)),
                 IdeBaseArtifactImpl.createSourceProvider(
                         modelCache, artifact.getVariantSourceProvider()),
                 IdeBaseArtifactImpl.createSourceProvider(
                         modelCache, artifact.getMultiFlavorSourceProvider()),
-                IdeModel.copyNewPropertyNonNull(
+                copyNewPropertyNonNull(
                         artifact::getAdditionalClassesFolders, Collections.emptySet()),
                 dependenciesFactory.create(artifact),
                 copyOutputs(artifact, modelCache, agpVersion),
@@ -447,35 +444,27 @@ public class ModelCache {
                                 MoreObjects.firstNonNull(
                                         artifact.getAbiFilters(), ImmutableSet.of())),
                 artifact.isSigned(),
-                IdeModel.copyNewPropertyNonNull(
+                copyNewPropertyNonNull(
                         () -> new ArrayList<>(artifact.getAdditionalRuntimeApks()),
                         Collections.emptyList()),
-                IdeModel.copyNewProperty(
-                        modelCache,
+                copyNewProperty(
                         artifact::getTestOptions,
                         testOptions -> testOptionsFrom(testOptions),
                         null),
-                IdeModel.copyNewProperty(
-                        modelCache,
-                        artifact::getInstrumentedTestTaskName,
-                        Function.identity(),
-                        null),
-                IdeModel.copyNewProperty(
-                        modelCache, artifact::getBundleTaskName, Function.identity(), null),
-                IdeModel.copyNewProperty(
-                        modelCache,
+                copyNewProperty(
+                        artifact::getInstrumentedTestTaskName, modelCache::deduplicateString, null),
+                copyNewProperty(artifact::getBundleTaskName, modelCache::deduplicateString, null),
+                copyNewProperty(
                         artifact::getBundleTaskOutputListingFile,
-                        Function.identity(),
+                        modelCache::deduplicateString,
                         null),
-                IdeModel.copyNewProperty(
-                        modelCache, artifact::getApkFromBundleTaskName, Function.identity(), null),
-                IdeModel.copyNewProperty(
-                        modelCache,
+                copyNewProperty(
+                        artifact::getApkFromBundleTaskName, modelCache::deduplicateString, null),
+                copyNewProperty(
                         artifact::getApkFromBundleTaskOutputListingFile,
-                        Function.identity(),
+                        modelCache::deduplicateString,
                         null),
-                IdeModel.copyNewProperty(
-                        modelCache, artifact::getCodeShrinker, Function.identity(), null));
+                copyNewProperty(artifact::getCodeShrinker, null));
     }
 
     public static IdeAndroidArtifactOutputImpl androidArtifactOutputFrom(
@@ -484,19 +473,17 @@ public class ModelCache {
                 copy(
                         output.getOutputs(),
                         outputFile -> new IdeOutputFileImpl(outputFile, modelCache)),
-                IdeModel.copyNewProperty(
+                copyNewProperty(
                         () -> ImmutableList.copyOf(output.getFilterTypes()),
                         Collections.emptyList()),
                 IdeVariantOutputImpl.copyFilters(output),
-                IdeModel.copyNewProperty(
-                        modelCache,
+                copyNewProperty(
                         output::getMainOutputFile,
                         file -> new IdeOutputFileImpl(file, modelCache),
                         null),
-                IdeModel.copyNewProperty(output::getOutputType, null),
+                copyNewProperty(output::getOutputType, null),
                 output.getVersionCode(),
-                IdeModel.copyNewProperty(
-                        output::getOutputFile, output.getMainOutputFile().getOutputFile()));
+                copyNewProperty(output::getOutputFile, output.getMainOutputFile().getOutputFile()));
     }
 
     public static IdeApiVersionImpl apiVersionFrom(@NonNull ApiVersion version) {
@@ -524,9 +511,7 @@ public class ModelCache {
     public static IdeBuildTypeImpl buildTypeFrom(@NonNull BuildType buildType) {
         return new IdeBuildTypeImpl(
                 buildType.getName(),
-                copy(
-                        buildType.getResValues(),
-                        classField -> classFieldFrom(classField)),
+                copy(buildType.getResValues(), classField -> classFieldFrom(classField)),
                 ImmutableList.copyOf(buildType.getProguardFiles()),
                 ImmutableList.copyOf(buildType.getConsumerProguardFiles()),
                 buildType.getManifestPlaceholders().entrySet().stream()
@@ -540,8 +525,8 @@ public class ModelCache {
 
                         .collect(toImmutableMap(it -> it.getKey(), it -> it.getValue().toString())),
                 buildType.getApplicationIdSuffix(),
-                IdeModel.copyNewProperty(buildType::getVersionNameSuffix, null),
-                IdeModel.copyNewProperty(buildType::getMultiDexEnabled, null),
+                copyNewProperty(buildType::getVersionNameSuffix, null),
+                copyNewProperty(buildType::getMultiDexEnabled, null),
                 buildType.isDebuggable(),
                 buildType.isJniDebuggable(),
                 buildType.isRenderscriptDebuggable(),
@@ -567,18 +552,18 @@ public class ModelCache {
                 artifact.getName(),
                 artifact.getCompileTaskName(),
                 artifact.getAssembleTaskName(),
-                IdeModel.copyNewPropertyNonNull(artifact::getAssembleTaskOutputListingFile, ""),
+                copyNewPropertyNonNull(artifact::getAssembleTaskOutputListingFile, ""),
                 artifact.getClassesFolder(),
-                IdeModel.copyNewProperty(artifact::getJavaResourcesFolder, null),
+                copyNewProperty(artifact::getJavaResourcesFolder, null),
                 ImmutableSet.copyOf(IdeBaseArtifactImpl.getIdeSetupTaskNames(artifact)),
                 new LinkedHashSet<File>(IdeBaseArtifactImpl.getGeneratedSourceFolders(artifact)),
                 IdeBaseArtifactImpl.createSourceProvider(seen, artifact.getVariantSourceProvider()),
                 IdeBaseArtifactImpl.createSourceProvider(
                         seen, artifact.getMultiFlavorSourceProvider()),
-                IdeModel.copyNewPropertyNonNull(
+                copyNewPropertyNonNull(
                         artifact::getAdditionalClassesFolders, Collections.emptySet()),
                 dependenciesFactory.create(artifact),
-                IdeModel.copyNewProperty(artifact::getMockablePlatformJar, null));
+                copyNewProperty(artifact::getMockablePlatformJar, null));
     }
 
     public static IdeJavaCompileOptionsImpl javaCompileOptionsFrom(@NonNull JavaCompileOptions options) {
@@ -586,7 +571,7 @@ public class ModelCache {
                 options.getEncoding(),
                 options.getSourceCompatibility(),
                 options.getTargetCompatibility(),
-                IdeModel.copyNewPropertyNonNull(options::isCoreLibraryDesugaringEnabled, false));
+                copyNewPropertyNonNull(options::isCoreLibraryDesugaringEnabled, false));
     }
 
     public static IdeMavenCoordinatesImpl mavenCoordinatesFrom(@NonNull MavenCoordinates coordinates) {
@@ -656,9 +641,7 @@ public class ModelCache {
     public static IdeProductFlavorImpl productFlavorFrom(@NonNull ProductFlavor flavor, @NonNull ModelCache modelCache) {
         return new IdeProductFlavorImpl(
                 flavor.getName(),
-                copy(
-                        flavor.getResValues(),
-                        classField -> classFieldFrom(classField)),
+                copy(flavor.getResValues(), classField -> classFieldFrom(classField)),
                 ImmutableList.copyOf(flavor.getProguardFiles()),
                 ImmutableList.copyOf(flavor.getConsumerProguardFiles()),
                 flavor.getManifestPlaceholders().entrySet().stream()
@@ -672,8 +655,8 @@ public class ModelCache {
 
                         .collect(toImmutableMap(it -> it.getKey(), it -> it.getValue().toString())),
                 flavor.getApplicationIdSuffix(),
-                IdeModel.copyNewProperty(flavor::getVersionNameSuffix, null),
-                IdeModel.copyNewProperty(flavor::getMultiDexEnabled, null),
+                copyNewProperty(flavor::getVersionNameSuffix, null),
+                copyNewProperty(flavor::getMultiDexEnabled, null),
                 ImmutableMap.copyOf(flavor.getTestInstrumentationRunnerArguments()),
                 ImmutableList.copyOf(flavor.getResourceConfigurations()),
                 copyVectorDrawables(flavor, modelCache),
@@ -697,7 +680,7 @@ public class ModelCache {
                 config.getStoreFile(),
                 config.getStorePassword(),
                 config.getKeyAlias(),
-                IdeModel.copyNewProperty(config::isV1SigningEnabled, null));
+                copyNewProperty(config::isV1SigningEnabled, null));
     }
 
     public static IdeSourceProviderContainerImpl sourceProviderContainerFrom(
@@ -714,7 +697,7 @@ public class ModelCache {
     public static IdeSyncIssueImpl syncIssueFrom(@NonNull SyncIssue issue) {
         return new IdeSyncIssueImpl(
                 issue.getMessage(),
-                IdeModel.copyNewProperty(issue::getMultiLineMessage, null),
+                copyNewProperty(issue::getMultiLineMessage, null),
                 issue.getData(),
                 issue.getSeverity(),
                 issue.getType());
@@ -773,5 +756,53 @@ public class ModelCache {
         ImmutableMap.Builder<K, R> copies = ImmutableMap.builder();
         original.forEach((k, v) -> copies.put(k, mapper.apply(v)));
         return copies.build();
+    }
+
+    @Nullable
+    public static Set<String> copy(@Nullable Set<String> original) {
+        return original != null ? ImmutableSet.copyOf(original) : null;
+    }
+
+    @Nullable
+    public static <T> T copyNewProperty(
+            @NonNull Supplier<? extends T> propertyInvoker, @Nullable T defaultValue) {
+        try {
+            return propertyInvoker.get();
+        } catch (UnsupportedOperationException ignored) {
+            return defaultValue;
+        }
+    }
+
+    @NonNull
+    public static <T> T copyNewPropertyNonNull(
+            @NonNull Supplier<? extends T> propertyInvoker, @NonNull T defaultValue) {
+        try {
+            return propertyInvoker.get();
+        } catch (UnsupportedOperationException ignored) {
+            return defaultValue;
+        }
+    }
+
+    @Nullable
+    public static <T> T copyNewPropertyWithDefault(
+            @NonNull Supplier<T> propertyInvoker, @NonNull Supplier<T> defaultValue) {
+        try {
+            return propertyInvoker.get();
+        } catch (UnsupportedOperationException ignored) {
+            return defaultValue.get();
+        }
+    }
+
+    @Nullable
+    public static <K, V> V copyNewProperty(
+            @NonNull Supplier<K> keyCreator,
+            @NonNull Function<K, V> mapper,
+            @Nullable V defaultValue) {
+        try {
+            K key = keyCreator.get();
+            return key != null ? mapper.apply(key) : defaultValue;
+        } catch (UnsupportedOperationException ignored) {
+            return defaultValue;
+        }
     }
 }

@@ -22,7 +22,6 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeFile;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
-import com.android.ide.common.gradle.model.impl.IdeModel;
 import com.android.ide.common.gradle.model.impl.ModelCache;
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeArtifact;
 import com.google.common.collect.ImmutableList;
@@ -64,8 +63,8 @@ public final class IdeNativeArtifactImpl implements IdeNativeArtifact, Serializa
         myGroupName = artifact.getGroupName();
         mySourceFiles = copy(artifact.getSourceFiles(), file -> new IdeNativeFileImpl(file));
         myExportedHeaders = ImmutableList.copyOf(artifact.getExportedHeaders());
-        myAbi = IdeModel.copyNewProperty(artifact::getAbi, null);
-        myTargetName = IdeModel.copyNewProperty(artifact::getTargetName, null);
+        myAbi = ModelCache.copyNewProperty(artifact::getAbi, null);
+        myTargetName = ModelCache.copyNewProperty(artifact::getTargetName, null);
         myOutputFile = artifact.getOutputFile();
         myHashCode = calculateHashCode();
     }

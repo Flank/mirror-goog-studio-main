@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
+import static com.android.ide.common.gradle.model.impl.ModelCache.copyNewProperty;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -38,12 +39,12 @@ public class IdeModelTest {
     }
 
     @Test
-    public void copyNewProperty() {
-        String copy = IdeModel.copyNewProperty(() -> "Hello", "Hi!");
+    public void testCopyNewProperty() {
+        String copy = copyNewProperty(() -> "Hello", "Hi!");
         assertEquals("Hello", copy);
 
         copy =
-                IdeModel.copyNewProperty(
+                copyNewProperty(
                         () -> {
                             throw new UnsupportedOperationException("Test");
                         },
@@ -52,31 +53,9 @@ public class IdeModelTest {
     }
 
     @Test
-    public void copyNewPropertyWithModelCache() {
-        Object value = new Object();
-        myModelCache.getData().put("key", value);
-
-        Object copy = IdeModel.copyNewProperty(myModelCache, () -> "key", s -> new Object(), null);
-        // verify the copy comes from the cache.
-        assertSame(value, copy);
-
-        Object defaultValue = new Object();
-        copy =
-                IdeModel.copyNewProperty(
-                        myModelCache,
-                        () -> {
-                            throw new UnsupportedOperationException("Test");
-                        },
-                        (Function<String, Object>) s -> new Object(),
-                        defaultValue);
-        // verify the copy comes the default value.
-        assertSame(defaultValue, copy);
-    }
-
-    @Test
     public void copyStringSet() {
         Set<String> original = Sets.newHashSet("1", "2", "3");
-        Set<String> copy = IdeModel.copy(original);
+        Set<String> copy = ModelCache.copy(original);
         assertThat(copy).isNotSameAs(original);
         assertEquals(original, copy);
     }
