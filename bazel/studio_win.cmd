@@ -26,16 +26,9 @@ for /f %%i in (%SCRIPTDIR%targets.win) do set TARGETS=!TARGETS! %%i
 
 for /f %%e in ('%SCRIPTDIR%bazel.cmd info execution_root') do set EXECROOT=%%e
 set EXECROOT=%EXECROOT:/=\%
-set DUMMYLINK=%EXECROOT%\bazel-out\host\bin\tools\base\bazel\kotlinc.exe.runfiles\dummy_link
-if exist %DUMMYLINK% (
-  @rem Removing dummy_link as a workaround to http://b/160885823
-  del %DUMMYLINK%
-)
-set DUMMYLINK=%EXECROOT%\bazel-out\host\bin\tools\base\bazel\formc.exe.runfiles\dummy_link
-if exist %DUMMYLINK% (
-  @rem Removing dummy_link as a workaround to http://b/160885823
-  del %DUMMYLINK%
-)
+@rem Removing host executable runfiles as a workaround to http://b/160885823
+del /F /Q /S %EXECROOT%\bazel-out\host\bin\tools\base\bazel\kotlinc.exe.runfiles > NUL
+del /F /Q /S %EXECROOT%\bazel-out\host\bin\tools\base\bazel\formc.exe.runfiles > NUL
 
 @echo studio_win.cmd time: %time%
 @rem Remove --nouse_ijars which is a temporary fix for http://b/162497186
