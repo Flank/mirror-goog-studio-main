@@ -1,0 +1,27 @@
+{
+  "buildFiles": [
+    "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/check_that_duplicate_runtimeFiles_does_not_cause_a_build_failure_model___3_10_2_/project/CMakeLists.txt"
+  ],
+  "cleanCommands": [
+    "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/bazel-out/darwin-fastbuild/bin/tools/base/build-system/integration-test/native/CmakeBasicProjectTest.runfiles/__main__/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja -C \"/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/check_that_duplicate_runtimeFiles_does_not_cause_a_build_failure_model___3_10_2_/project/.cxx/cmake/debug/x86_64\" clean"
+  ],
+  "buildTargetsCommand": "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/bazel-out/darwin-fastbuild/bin/tools/base/build-system/integration-test/native/CmakeBasicProjectTest.runfiles/__main__/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja  -C \"/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/check_that_duplicate_runtimeFiles_does_not_cause_a_build_failure_model___3_10_2_/project/.cxx/cmake/debug/x86_64\" {LIST_OF_TARGETS_TO_BUILD}",
+  "libraries": {
+    "foo-Debug-x86_64": {
+      "artifactName": "foo",
+      "buildCommand": "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/bazel-out/darwin-fastbuild/bin/tools/base/build-system/integration-test/native/CmakeBasicProjectTest.runfiles/__main__/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja -C \"/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/check_that_duplicate_runtimeFiles_does_not_cause_a_build_failure_model___3_10_2_/project/.cxx/cmake/debug/x86_64\" foo",
+      "abi": "x86_64",
+      "output": "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/check_that_duplicate_runtimeFiles_does_not_cause_a_build_failure_model___3_10_2_/project/build/intermediates/cmake/debug/obj/x86_64/libfoo.so",
+      "runtimeFiles": []
+    },
+    "bar-Debug-x86_64": {
+      "artifactName": "bar",
+      "buildCommand": "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/bazel-out/darwin-fastbuild/bin/tools/base/build-system/integration-test/native/CmakeBasicProjectTest.runfiles/__main__/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja -C \"/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/check_that_duplicate_runtimeFiles_does_not_cause_a_build_failure_model___3_10_2_/project/.cxx/cmake/debug/x86_64\" bar",
+      "abi": "x86_64",
+      "output": "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/check_that_duplicate_runtimeFiles_does_not_cause_a_build_failure_model___3_10_2_/project/build/intermediates/cmake/debug/obj/x86_64/libbar.so",
+      "runtimeFiles": [
+        "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/check_that_duplicate_runtimeFiles_does_not_cause_a_build_failure_model___3_10_2_/project/build/intermediates/cmake/debug/obj/x86_64/libfoo.so"
+      ]
+    }
+  }
+}

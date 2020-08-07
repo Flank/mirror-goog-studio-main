@@ -1,0 +1,1175 @@
+{
+	"archive" : {},
+	"artifacts" : 
+	[
+		{
+			"path" : "Source/Core/InputCommon/libinputcommon.a"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"target_link_libraries",
+			"add_compile_options",
+			"check_and_add_flag",
+			"add_definitions",
+			"target_compile_definitions",
+			"include_directories",
+			"target_sources"
+		],
+		"files" : 
+		[
+			"Source/Core/InputCommon/CMakeLists.txt",
+			"CMake/CheckAndAddFlag.cmake",
+			"CMakeLists.txt",
+			"Source/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 1,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 63,
+				"parent" : 0
+			},
+			{
+				"file" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 211,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 4
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 225,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 247,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 8
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 255,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 10
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 256,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 12
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 257,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 14
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 258,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 16
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 260,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 18
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 261,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 20
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 262,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 22
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 263,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 24
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 266,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 26
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 267,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 28
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 269,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 30
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 270,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 32
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 272,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 34
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 381,
+				"parent" : 3
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 121,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 100,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 454,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 692,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 505,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 500,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 498,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 191,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 246,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 414,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 415,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 209,
+				"parent" : 3
+			},
+			{
+				"file" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 3,
+				"line" : 73,
+				"parent" : 49
+			},
+			{
+				"command" : 4,
+				"file" : 3,
+				"line" : 72,
+				"parent" : 49
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 731,
+				"parent" : 3
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 694,
+				"parent" : 3
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 511,
+				"parent" : 3
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 513,
+				"parent" : 3
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 574,
+				"parent" : 3
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 619,
+				"parent" : 3
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 658,
+				"parent" : 3
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 720,
+				"parent" : 3
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 743,
+				"parent" : 3
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 774,
+				"parent" : 3
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 789,
+				"parent" : 3
+			},
+			{
+				"command" : 7,
+				"file" : 0,
+				"line" : 122,
+				"parent" : 0
+			},
+			{
+				"command" : 7,
+				"file" : 0,
+				"line" : 133,
+				"parent" : 0
+			},
+			{
+				"command" : 7,
+				"file" : 0,
+				"line" : 161,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -g -DNDEBUG -fPIC  "
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-march=armv8-a+crc"
+				},
+				{
+					"backtrace" : 7,
+					"fragment" : "-fdiagnostics-color"
+				},
+				{
+					"backtrace" : 9,
+					"fragment" : "-Wall"
+				},
+				{
+					"backtrace" : 11,
+					"fragment" : "-Wtype-limits"
+				},
+				{
+					"backtrace" : 13,
+					"fragment" : "-Wsign-compare"
+				},
+				{
+					"backtrace" : 15,
+					"fragment" : "-Wignored-qualifiers"
+				},
+				{
+					"backtrace" : 17,
+					"fragment" : "-Wuninitialized"
+				},
+				{
+					"backtrace" : 19,
+					"fragment" : "-Wshadow"
+				},
+				{
+					"backtrace" : 21,
+					"fragment" : "-Winit-self"
+				},
+				{
+					"backtrace" : 23,
+					"fragment" : "-Wmissing-declarations"
+				},
+				{
+					"backtrace" : 25,
+					"fragment" : "-Wmissing-variable-declarations"
+				},
+				{
+					"backtrace" : 27,
+					"fragment" : "-fno-strict-aliasing"
+				},
+				{
+					"backtrace" : 29,
+					"fragment" : "-fno-exceptions"
+				},
+				{
+					"backtrace" : 31,
+					"fragment" : "-fvisibility-inlines-hidden"
+				},
+				{
+					"backtrace" : 33,
+					"fragment" : "-fvisibility=hidden"
+				},
+				{
+					"backtrace" : 35,
+					"fragment" : "-fomit-frame-pointer"
+				},
+				{
+					"fragment" : "-std=c++17"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 36,
+					"define" : "ANDROID"
+				},
+				{
+					"backtrace" : 37,
+					"define" : "CIFACE_USE_ANDROID"
+				},
+				{
+					"backtrace" : 38,
+					"define" : "DATA_DIR=\"/usr/local/share/dolphin-emu/\""
+				},
+				{
+					"backtrace" : 2,
+					"define" : "FMT_LOCALE"
+				},
+				{
+					"backtrace" : 39,
+					"define" : "HAVE_EGL=1"
+				},
+				{
+					"backtrace" : 40,
+					"define" : "SFML_STATIC"
+				},
+				{
+					"backtrace" : 41,
+					"define" : "USE_ANALYTICS=1"
+				},
+				{
+					"backtrace" : 42,
+					"define" : "USE_MEMORYWATCHER=1"
+				},
+				{
+					"backtrace" : 43,
+					"define" : "USE_PIPES=1"
+				},
+				{
+					"backtrace" : 44,
+					"define" : "_ARCH_64=1"
+				},
+				{
+					"backtrace" : 45,
+					"define" : "_DEFAULT_SOURCE"
+				},
+				{
+					"backtrace" : 46,
+					"define" : "_FILE_OFFSET_BITS=64"
+				},
+				{
+					"backtrace" : 47,
+					"define" : "_LARGEFILE_SOURCE"
+				},
+				{
+					"backtrace" : 48,
+					"define" : "_M_ARM_64=1"
+				},
+				{
+					"backtrace" : 50,
+					"define" : "__STDC_CONSTANT_MACROS"
+				},
+				{
+					"backtrace" : 51,
+					"define" : "__STDC_LIMIT_MACROS"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 52,
+					"path" : "/Users/jomof/projects/dolphin/Externals/curl/include"
+				},
+				{
+					"backtrace" : 53,
+					"path" : "/Users/jomof/projects/dolphin/Externals/SFML/include"
+				},
+				{
+					"backtrace" : 54,
+					"path" : "/Users/jomof/projects/dolphin/Source/Core"
+				},
+				{
+					"backtrace" : 55,
+					"path" : "/Users/jomof/projects/dolphin/Source/Android"
+				},
+				{
+					"backtrace" : 56,
+					"path" : "/Users/jomof/projects/dolphin/Externals/enet/include"
+				},
+				{
+					"backtrace" : 57,
+					"path" : "/Users/jomof/projects/dolphin/External/minizip"
+				},
+				{
+					"backtrace" : 58,
+					"path" : "/Users/jomof/projects/dolphin/Externals/soundtouch"
+				},
+				{
+					"backtrace" : 59,
+					"path" : "/Users/jomof/projects/dolphin/Externals/mbedtls/include"
+				},
+				{
+					"backtrace" : 60,
+					"path" : "/Users/jomof/projects/dolphin/Externals/libiconv-1.14/include"
+				},
+				{
+					"backtrace" : 61,
+					"path" : "/Users/jomof/projects/dolphin/Externals/picojson"
+				},
+				{
+					"backtrace" : 62,
+					"path" : "/Users/jomof/projects/dolphin/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Source/Core"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/Users/jomof/projects/dolphin/Externals/fmt/include"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/Users/jomof/projects/dolphin/Externals/minizip/."
+				}
+			],
+			"language" : "CXX",
+			"sourceIndexes" : 
+			[
+				0,
+				2,
+				4,
+				6,
+				8,
+				10,
+				12,
+				14,
+				16,
+				18,
+				20,
+				22,
+				24,
+				26,
+				28,
+				30,
+				32,
+				34,
+				36,
+				38,
+				40,
+				42,
+				44,
+				47,
+				49,
+				51,
+				53,
+				55,
+				57,
+				59,
+				61,
+				63,
+				65,
+				66
+			],
+			"sysroot" : 
+			{
+				"path" : "/Users/jomof/Library/Android/sdk/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+			}
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 2,
+			"id" : "enet::@3f5dfd7365014ec88a01"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "minizip::@60722d79459882e1fa56"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "common::@9141e9f836bd500e1b01"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "png::@c3b138158b8761823a27"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "mbedcrypto::@732912fcc58a0dc9a42e"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "mbedx509::@732912fcc58a0dc9a42e"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "mbedtls::@732912fcc58a0dc9a42e"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "fmt::@b954ac15050c24475b56"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "curl::@b093635c521e302827eb"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "iconv::@1569e4131ab53f97a747"
+		}
+	],
+	"id" : "inputcommon::@b23540f05ce090a8b659",
+	"name" : "inputcommon",
+	"nameOnDisk" : "libinputcommon.a",
+	"paths" : 
+	{
+		"build" : "Source/Core/InputCommon",
+		"source" : "Source/Core/InputCommon"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0,
+				2,
+				4,
+				6,
+				8,
+				10,
+				12,
+				14,
+				16,
+				18,
+				20,
+				22,
+				24,
+				26,
+				28,
+				30,
+				32,
+				34,
+				36,
+				38,
+				40,
+				42,
+				44,
+				47,
+				49,
+				51,
+				53,
+				55,
+				57,
+				59,
+				61,
+				63,
+				65,
+				66
+			]
+		},
+		{
+			"name" : "Header Files",
+			"sourceIndexes" : 
+			[
+				1,
+				3,
+				5,
+				7,
+				9,
+				11,
+				13,
+				15,
+				17,
+				19,
+				21,
+				23,
+				25,
+				27,
+				29,
+				31,
+				33,
+				35,
+				37,
+				39,
+				41,
+				43,
+				45,
+				46,
+				48,
+				50,
+				52,
+				54,
+				56,
+				58,
+				60,
+				62,
+				64,
+				67
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/InputConfig.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/InputConfig.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/InputProfile.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/InputProfile.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControllerEmu.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControllerEmu.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/StickGate.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/StickGate.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/Control/Control.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/Control/Control.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/Control/Input.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/Control/Input.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/Control/Output.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/Control/Output.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/AnalogStick.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/AnalogStick.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/Attachments.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/Attachments.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/Buttons.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/Buttons.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/ControlGroup.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/ControlGroup.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/Cursor.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/Cursor.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/Force.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/Force.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/IMUAccelerometer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/IMUAccelerometer.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/IMUCursor.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/IMUCursor.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/IMUGyroscope.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/IMUGyroscope.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/MixedTriggers.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/MixedTriggers.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/ModifySettingsButton.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/ModifySettingsButton.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/Slider.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/Slider.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/Tilt.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/Tilt.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/Triggers.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/ControlGroup/Triggers.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerEmu/Setting/NumericSetting.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerEmu/Setting/NumericSetting.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerInterface/DualShockUDPClient/DualShockUDPClient.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerInterface/DualShockUDPClient/DualShockUDPClient.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerInterface/DualShockUDPClient/DualShockUDPProto.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerInterface/ControllerInterface.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerInterface/ControllerInterface.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerInterface/Device.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerInterface/Device.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerInterface/Wiimote/Wiimote.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControllerInterface/Wiimote/Wiimote.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControlReference/ControlReference.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControlReference/ControlReference.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControlReference/ExpressionParser.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControlReference/ExpressionParser.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControlReference/FunctionExpression.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/InputCommon/ControlReference/FunctionExpression.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 63,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerInterface/Android/Android.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 63,
+			"path" : "Source/Core/InputCommon/ControllerInterface/Android/Android.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 63,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerInterface/Touch/ButtonManager.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 63,
+			"path" : "Source/Core/InputCommon/ControllerInterface/Touch/ButtonManager.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 63,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerInterface/Touch/Touchscreen.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 63,
+			"path" : "Source/Core/InputCommon/ControllerInterface/Touch/Touchscreen.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 64,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/GCAdapter_Android.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 65,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/InputCommon/ControllerInterface/Pipes/Pipes.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 65,
+			"path" : "Source/Core/InputCommon/ControllerInterface/Pipes/Pipes.h",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "STATIC_LIBRARY"
+}

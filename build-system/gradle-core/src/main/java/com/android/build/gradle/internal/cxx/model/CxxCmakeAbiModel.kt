@@ -105,3 +105,17 @@ val CxxCmakeAbiModel.compilerCacheWriteFile: File
  */
 val CxxCmakeAbiModel.toolchainSettingsFromCacheFile: File
     get() = join(cmakeWrappingBaseFolder, "compiler_settings_cache.cmake")
+
+/**
+ * The CMake file API query folder.
+ *   ex, $moduleRootFolder/.cxx/cmake/debug/armeabi-v7a/.cmake/api/v1/query/client-agp
+ */
+val CxxCmakeAbiModel.clientQueryFolder: File
+    get() = join(cmakeArtifactsBaseFolder,".cmake/api/v1/query/client-agp")
+
+/**
+ * The CMake file API reply folder.
+ *   ex, $moduleRootFolder/.cxx/cmake/debug/armeabi-v7a/.cmake/api/v1/reply
+ */
+val CxxCmakeAbiModel.clientReplyFolder: File
+    get() = join(cmakeArtifactsBaseFolder,".cmake/api/v1/reply")
