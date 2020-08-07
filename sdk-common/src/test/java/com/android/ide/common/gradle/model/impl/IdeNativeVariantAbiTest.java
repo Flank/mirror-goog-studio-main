@@ -55,7 +55,6 @@ public class IdeNativeVariantAbiTest {
         NativeVariantAbi original = new NativeVariantAbiStub();
         IdeNativeVariantAbiImpl copy = new IdeNativeVariantAbiImpl(original, myModelCache);
         assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
     }
 
     @Test

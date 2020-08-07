@@ -15,8 +15,6 @@
  */
 package com.android.ide.common.gradle.model.impl.ndk.v1;
 
-import static com.android.ide.common.gradle.model.impl.ModelCache.copy;
-
 import com.android.annotations.NonNull;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeSettings;
@@ -69,15 +67,16 @@ public final class IdeNativeVariantAbiImpl implements IdeNativeVariantAbi, Seria
             @NonNull NativeVariantAbi variantAbi, @NonNull ModelCache modelCache) {
         myBuildFiles = ImmutableList.copyOf(variantAbi.getBuildFiles());
         myArtifacts =
-                copy(
+                modelCache.copy(
                         variantAbi.getArtifacts(),
                         artifact -> new IdeNativeArtifactImpl(artifact, modelCache));
         myToolChains =
-                copy(
+                modelCache.copy(
                         variantAbi.getToolChains(),
                         toolchain -> new IdeNativeToolchainImpl(toolchain));
         mySettings =
-                copy(variantAbi.getSettings(), settings -> new IdeNativeSettingsImpl(settings));
+                modelCache.copy(
+                        variantAbi.getSettings(), settings -> new IdeNativeSettingsImpl(settings));
         myFileExtensions = ImmutableMap.copyOf(variantAbi.getFileExtensions());
         myVariantName = variantAbi.getVariantName();
         myAbi = variantAbi.getAbi();

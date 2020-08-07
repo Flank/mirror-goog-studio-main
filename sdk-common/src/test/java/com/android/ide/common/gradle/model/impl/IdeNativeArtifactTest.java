@@ -183,7 +183,6 @@ public class IdeNativeArtifactTest {
         NativeArtifact original = new NativeArtifactStub();
         IdeNativeArtifactImpl copy = new IdeNativeArtifactImpl(original, myModelCache);
         assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
     }
 
     @Test

@@ -44,7 +44,6 @@ public class IdeVariantImplTest {
         IdeVariant copy =
                 IdeVariantImpl.createFrom(
                         original, myModelCache, myDependenciesFactory, myGradleVersion);
-        verifyUsageOfImmutableCollections(copy);
     }
 
     @Test

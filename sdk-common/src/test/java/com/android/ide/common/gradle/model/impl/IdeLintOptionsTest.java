@@ -57,6 +57,5 @@ public class IdeLintOptionsTest {
         assertThat(copy.getSeverityOverrides()).isEqualTo(original.getSeverityOverrides());
         assertThat(copy.isCheckTestSources()).isEqualTo(original.isCheckTestSources());
         assertThat(copy.isCheckDependencies()).isEqualTo(original.isCheckDependencies());
-        verifyUsageOfImmutableCollections(copy);
     }
 }

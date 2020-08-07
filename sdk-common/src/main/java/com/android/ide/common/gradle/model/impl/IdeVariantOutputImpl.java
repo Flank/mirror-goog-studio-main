@@ -15,8 +15,6 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
-import static com.android.ide.common.gradle.model.impl.ModelCache.copy;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
@@ -73,9 +71,10 @@ public abstract class IdeVariantOutputImpl implements VariantOutput, Serializabl
     }
 
     @Nullable
-    public static Collection<FilterData> copyFilters(@NonNull VariantOutput output) {
+    public static Collection<FilterData> copyFilters(
+            @NonNull VariantOutput output, @NonNull ModelCache modelCache) {
         try {
-            return copy(output.getFilters(), data -> ModelCache.filterDataFrom(data));
+            return modelCache.copy(output.getFilters(), data -> modelCache.filterDataFrom(data));
         } catch (UnsupportedOperationException ignored) {
             return null;
         }

@@ -45,8 +45,7 @@ public class IdeProductFlavorTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeProductFlavorImpl buildType =
-          ModelCache.productFlavorFrom(new ProductFlavorStub(), myModelCache);
+        IdeProductFlavorImpl buildType = myModelCache.productFlavorFrom(new ProductFlavorStub());
         byte[] bytes = Serialization.serialize(buildType);
         Object o = Serialization.deserialize(bytes);
         assertEquals(buildType, o);
@@ -93,7 +92,7 @@ public class IdeProductFlavorTest {
                                 getWearAppUnbundled());
                     }
                 };
-        IdeProductFlavorImpl copy = ModelCache.productFlavorFrom(original, myModelCache);
+        IdeProductFlavorImpl copy = myModelCache.productFlavorFrom(original);
         expectUnsupportedOperationException(copy::getVectorDrawables);
     }
 

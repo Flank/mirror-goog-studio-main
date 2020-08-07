@@ -17,7 +17,6 @@ package com.android.ide.common.gradle.model.impl;
 
 import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.*;
 import static com.android.ide.common.gradle.model.impl.IdeVariantOutputImpl.copyFilters;
-import static com.android.ide.common.gradle.model.impl.ModelCache.copyNewProperty;
 
 import com.android.build.VariantOutput;
 import com.android.ide.common.gradle.model.stubs.VariantOutputStub;
@@ -33,18 +32,18 @@ public class IdeVariantOutputTest {
         final ModelCache cache = new ModelCache();
         IdeVariantOutputImpl copy =
                 new IdeVariantOutputImpl(
-                        ModelCache.copy(
+                        cache.copy(
                                 original.getOutputs(),
                                 outputFile -> new IdeOutputFileImpl(outputFile, cache)),
-                        copyNewProperty(
+                        ModelCache.Companion.copyNewProperty(
                                 () -> ImmutableList.copyOf(original.getFilterTypes()),
                                 Collections.emptyList()),
-                        copyFilters(original),
-                        copyNewProperty(
+                        copyFilters(original, cache),
+                        ModelCache.Companion.copyNewProperty(
                                 original::getMainOutputFile,
                                 file -> new IdeOutputFileImpl(file, cache),
                                 null),
-                        copyNewProperty(original::getOutputType, null),
+                        ModelCache.Companion.copyNewProperty(original::getOutputType),
                         original.getVersionCode()) {};
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);

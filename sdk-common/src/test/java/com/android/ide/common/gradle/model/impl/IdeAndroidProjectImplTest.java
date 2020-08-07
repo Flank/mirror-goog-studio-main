@@ -17,8 +17,6 @@ package com.android.ide.common.gradle.model.impl;
 
 import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.createEqualsVerifier;
 import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.expectUnsupportedOperationException;
-import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.verifyUsageOfImmutableCollections;
-import static com.android.ide.common.gradle.model.impl.ModelCache.getDefaultVariant;
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.mock;
@@ -113,7 +111,6 @@ public class IdeAndroidProjectImplTest {
                         original.getVariants(),
                         Collections.emptyList(),
                         Collections.emptyList());
-        verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
@@ -130,7 +127,6 @@ public class IdeAndroidProjectImplTest {
                         Collections.emptyList());
 
         original.getVariants().add(variant);
-        verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
@@ -147,8 +143,6 @@ public class IdeAndroidProjectImplTest {
                         Collections.emptyList());
 
         assertThat(copy.getVariants()).hasSize(2);
-
-        verifyUsageOfImmutableCollections(copy);
     }
 
     @Test
@@ -235,24 +229,26 @@ public class IdeAndroidProjectImplTest {
 
     @Test
     public void defaultVariantHeuristicTest_allVariantsRemoved() {
-        assertThat(getDefaultVariant(ImmutableList.of())).isNull();
+        assertThat(myModelCache.getDefaultVariant(ImmutableList.of())).isNull();
     }
 
     @Test
     public void defaultVariantHeuristicTest_picksDebug() {
-        assertThat(getDefaultVariant(ImmutableList.of("a", "z", "debug", "release")))
+        assertThat(myModelCache.getDefaultVariant(ImmutableList.of("a", "z", "debug", "release")))
                 .isEqualTo("debug");
     }
 
     @Test
     public void defaultVariantHeuristicTest_picksDebugWithFlavors() {
-        assertThat(getDefaultVariant(ImmutableList.of("aRelease", "bRelease", "bDebug", "cDebug")))
+        assertThat(
+                        myModelCache.getDefaultVariant(
+                                ImmutableList.of("aRelease", "bRelease", "bDebug", "cDebug")))
                 .isEqualTo("bDebug");
     }
 
     @Test
     public void defaultVariantHeuristicTest_alphabeticalFallback() {
-        assertThat(getDefaultVariant(ImmutableList.of("a", "b"))).isEqualTo("a");
+        assertThat(myModelCache.getDefaultVariant(ImmutableList.of("a", "b"))).isEqualTo("a");
     }
 
     @Test

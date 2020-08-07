@@ -82,8 +82,7 @@ public class IdeAndroidArtifactImplTest {
                     }
                 };
         IdeAndroidArtifact artifact =
-          ModelCache.androidArtifactFrom(
-                  original, myModelCache, myDependenciesFactory, myGradleVersion);
+                myModelCache.androidArtifactFrom(original, myDependenciesFactory, myGradleVersion);
     }
 
     // See http://b/64305584
@@ -126,8 +125,7 @@ public class IdeAndroidArtifactImplTest {
                     }
                 };
         IdeAndroidArtifactImpl copy =
-          ModelCache.androidArtifactFrom(
-                  original, myModelCache, myDependenciesFactory, myGradleVersion);
+                myModelCache.androidArtifactFrom(original, myDependenciesFactory, myGradleVersion);
         assertThat(copy.getOutputs()).isEmpty();
     }
 
@@ -146,8 +144,7 @@ public class IdeAndroidArtifactImplTest {
                     }
                 };
         IdeAndroidArtifactImpl copy =
-          ModelCache.androidArtifactFrom(
-                  original, myModelCache, myDependenciesFactory, myGradleVersion);
+                myModelCache.androidArtifactFrom(original, myDependenciesFactory, myGradleVersion);
         assertThat(original.getAbiFilters()).isNull();
         assertThat(copy.getAbiFilters()).isEmpty();
     }

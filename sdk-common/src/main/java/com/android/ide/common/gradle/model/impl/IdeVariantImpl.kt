@@ -26,7 +26,6 @@ import com.android.ide.common.gradle.model.IdeJavaArtifact
 import com.android.ide.common.gradle.model.IdeProductFlavor
 import com.android.ide.common.gradle.model.IdeTestedTargetVariant
 import com.android.ide.common.gradle.model.IdeVariant
-import com.android.ide.common.gradle.model.impl.ModelCache.copy
 import com.android.ide.common.repository.GradleVersion
 import com.google.common.collect.ImmutableList
 import java.io.Serializable
@@ -124,7 +123,7 @@ class IdeVariantImpl(
     private const val serialVersionUID = 4L
     private fun getTestedTargetVariants(variant: Variant, modelCache: ModelCache): List<IdeTestedTargetVariantImpl> {
       return try {
-        copy(variant.testedTargetVariants) { targetVariant: TestedTargetVariant ->
+        modelCache.copy(variant.testedTargetVariants) { targetVariant: TestedTargetVariant ->
           IdeTestedTargetVariantImpl(targetVariant.targetProjectPath, targetVariant.targetVariant)
         }
       }
@@ -144,28 +143,24 @@ class IdeVariantImpl(
         name = variant.name,
         displayName = variant.displayName,
         mainArtifact = modelCache.copyModel(variant.mainArtifact) { artifact: AndroidArtifact ->
-          ModelCache.androidArtifactFrom(artifact, modelCache,
-                                         dependenciesFactory, modelVersion)
+          modelCache.androidArtifactFrom(artifact, dependenciesFactory, modelVersion)
         },
-        extraAndroidArtifacts = copy(variant.extraAndroidArtifacts) { artifact: AndroidArtifact ->
-          ModelCache.androidArtifactFrom(artifact, modelCache,
-                                         dependenciesFactory, modelVersion)
+        extraAndroidArtifacts = modelCache.copy(variant.extraAndroidArtifacts) { artifact: AndroidArtifact ->
+          modelCache.androidArtifactFrom(artifact, dependenciesFactory, modelVersion)
         },
-        extraJavaArtifacts = copy(variant.extraJavaArtifacts) { artifact: JavaArtifact ->
-          ModelCache.javaArtifactFrom(artifact, modelCache, dependenciesFactory)
+        extraJavaArtifacts = modelCache.copy(variant.extraJavaArtifacts) { artifact: JavaArtifact ->
+          modelCache.javaArtifactFrom(artifact, dependenciesFactory)
         },
         buildType = variant.buildType,
         productFlavors = ImmutableList.copyOf(variant.productFlavors),
         mergedFlavor = modelCache.copyModel(variant.mergedFlavor) { flavor: ProductFlavor ->
-          ModelCache.productFlavorFrom(flavor, modelCache)
+          modelCache.productFlavorFrom(flavor)
         },
         testedTargetVariants = getTestedTargetVariants(variant, modelCache),
         instantAppCompatible = (modelVersion != null &&
                                 modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) &&
                                 variant.isInstantAppCompatible),
-        desugaredMethods = ImmutableList.copyOf(
-                ModelCache.copyNewPropertyNonNull({ variant.desugaredMethods },
-                                                                                                              emptyList()))
+        desugaredMethods = ImmutableList.copyOf(ModelCache.copyNewProperty({ variant.desugaredMethods }, emptyList()))
       )
   }
 }

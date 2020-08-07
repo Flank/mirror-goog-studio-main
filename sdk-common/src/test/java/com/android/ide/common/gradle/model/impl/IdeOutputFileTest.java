@@ -56,7 +56,6 @@ public class IdeOutputFileTest {
         OutputFile original = createStub();
         IdeOutputFileImpl copy = new IdeOutputFileImpl(original, myModelCache);
         assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
     }
 
     @NonNull

@@ -52,60 +52,45 @@ data class IdeLintOptionsImpl(
   override val xmlOutput: File? = null
 ) : Serializable, IdeLintOptions {
 
-    companion object {
-        private const val serialVersionUID = 2L
+  companion object {
+    private const val serialVersionUID = 2L
 
-        @JvmStatic
-        fun createFrom(
-          options: LintOptions,
-          modelVersion: GradleVersion?
-        ): IdeLintOptionsImpl = IdeLintOptionsImpl(
-          baselineFile = if (modelVersion != null && modelVersion.isAtLeast(2, 3, 0, "beta", 2, true))
-              options.baselineFile
-          else
-              null,
-          lintConfig = ModelCache.copyNewProperty<File>({ options.lintConfig },
-                                                                                                                    null),
-          severityOverrides = options.severityOverrides?.let { ImmutableMap.copyOf(it) },
-          isCheckTestSources = modelVersion != null &&
-                               modelVersion.isAtLeast(2, 4, 0) &&
-                               options.isCheckTestSources,
-          isCheckDependencies = ModelCache.copyNewProperty(
-            { options.isCheckDependencies }, false)!!,
-          disable = ModelCache.copy(options.disable)!!,
-          enable = ModelCache.copy(options.enable)!!,
-          check = options.check?.let { ImmutableSet.copyOf(it) },
-          isAbortOnError = ModelCache.copyNewProperty(
-            { options.isAbortOnError }, true)!!,
-          isAbsolutePaths = ModelCache.copyNewProperty(
-            { options.isAbsolutePaths }, true)!!,
-          isNoLines = ModelCache.copyNewProperty({ options.isNoLines },
-                                                                                                             false)!!,
-          isQuiet = ModelCache.copyNewProperty({ options.isQuiet }, false)!!,
-          isCheckAllWarnings = ModelCache.copyNewProperty(
-            { options.isCheckAllWarnings }, false)!!,
-          isIgnoreWarnings = ModelCache.copyNewProperty(
-            { options.isIgnoreWarnings }, false)!!,
-          isWarningsAsErrors = ModelCache.copyNewProperty(
-            { options.isWarningsAsErrors }, false)!!,
-          isIgnoreTestSources = ModelCache.copyNewProperty(
-            { options.isIgnoreTestSources }, false)!!,
-          isCheckGeneratedSources = ModelCache.copyNewProperty(
-            { options.isCheckGeneratedSources }, false)!!,
-          isExplainIssues = ModelCache.copyNewProperty(
-            { options.isExplainIssues }, true)!!,
-          isShowAll = ModelCache.copyNewProperty({ options.isShowAll },
-                                                                                                             false)!!,
-          textReport = ModelCache.copyNewProperty({ options.textReport },
-                                                                                                              false)!!,
-          textOutput = ModelCache.copyNewProperty({ options.textOutput }, null),
-          htmlReport = ModelCache.copyNewProperty({ options.htmlReport },
-                                                                                                              true)!!,
-          htmlOutput = ModelCache.copyNewProperty({ options.htmlOutput }, null),
-          xmlReport = ModelCache.copyNewProperty({ options.xmlReport }, true)!!,
-          xmlOutput = ModelCache.copyNewProperty({ options.xmlOutput }, null),
-          isCheckReleaseBuilds = ModelCache.copyNewProperty(
-            { options.isCheckReleaseBuilds }, true)!!
-        )
-    }
+    @JvmStatic
+    fun createFrom(
+      options: LintOptions,
+      modelVersion: GradleVersion?
+    ): IdeLintOptionsImpl = IdeLintOptionsImpl(
+      baselineFile = if (modelVersion != null && modelVersion.isAtLeast(2, 3, 0, "beta", 2, true))
+        options.baselineFile
+      else
+        null,
+      lintConfig = ModelCache.copyNewProperty({ options.lintConfig }),
+      severityOverrides = options.severityOverrides?.let { ImmutableMap.copyOf(it) },
+      isCheckTestSources = modelVersion != null &&
+                           modelVersion.isAtLeast(2, 4, 0) &&
+                           options.isCheckTestSources,
+      isCheckDependencies = ModelCache.copyNewProperty({ options.isCheckDependencies }, false),
+      disable = ModelCache.copy(options.disable),
+      enable = ModelCache.copy(options.enable),
+      check = options.check?.let { ImmutableSet.copyOf(it) },
+      isAbortOnError = ModelCache.copyNewProperty({ options.isAbortOnError }, true),
+      isAbsolutePaths = ModelCache.copyNewProperty({ options.isAbsolutePaths }, true),
+      isNoLines = ModelCache.copyNewProperty({ options.isNoLines }, false),
+      isQuiet = ModelCache.copyNewProperty({ options.isQuiet }, false),
+      isCheckAllWarnings = ModelCache.copyNewProperty({ options.isCheckAllWarnings }, false),
+      isIgnoreWarnings = ModelCache.copyNewProperty({ options.isIgnoreWarnings }, false),
+      isWarningsAsErrors = ModelCache.copyNewProperty({ options.isWarningsAsErrors }, false),
+      isIgnoreTestSources = ModelCache.copyNewProperty({ options.isIgnoreTestSources }, false),
+      isCheckGeneratedSources = ModelCache.copyNewProperty({ options.isCheckGeneratedSources }, false),
+      isExplainIssues = ModelCache.copyNewProperty({ options.isExplainIssues }, true),
+      isShowAll = ModelCache.copyNewProperty({ options.isShowAll }, false),
+      textReport = ModelCache.copyNewProperty({ options.textReport }, false),
+      textOutput = ModelCache.copyNewProperty({ options.textOutput }),
+      htmlReport = ModelCache.copyNewProperty({ options.htmlReport }, true),
+      htmlOutput = ModelCache.copyNewProperty({ options.htmlOutput }),
+      xmlReport = ModelCache.copyNewProperty({ options.xmlReport }, true),
+      xmlOutput = ModelCache.copyNewProperty({ options.xmlOutput }),
+      isCheckReleaseBuilds = ModelCache.copyNewProperty({ options.isCheckReleaseBuilds }, true)
+    )
+  }
 }

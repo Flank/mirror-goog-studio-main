@@ -106,9 +106,9 @@ class IdeLibraryFactory {
   fun createIdeModuleLibrary(library: AndroidLibrary, artifactAddress: String): IdeLibrary {
     val core = IdeModuleLibraryCore(
       artifactAddress = artifactAddress,
-      buildId = ModelCache.copyNewProperty({ library.buildId }, null),
-      projectPath = ModelCache.copyNewProperty({ library.project }, null),
-      variant = ModelCache.copyNewProperty({ library.projectVariant }, null),
+      buildId = ModelCache.copyNewProperty({ library.buildId }),
+      projectPath = ModelCache.copyNewProperty({ library.project }),
+      variant = ModelCache.copyNewProperty({ library.projectVariant }),
       folder = defaultValueIfNotPresent(
         { library.folder }, null),
       lintJar = defaultValueIfNotPresent(
@@ -122,8 +122,8 @@ class IdeLibraryFactory {
   fun createIdeModuleLibrary(library: JavaLibrary, artifactAddress: String): IdeLibrary {
     val core = IdeModuleLibraryCore(
       artifactAddress = artifactAddress,
-      buildId = ModelCache.copyNewProperty({ library.buildId }, null),
-      projectPath = ModelCache.copyNewProperty({ library.project }, null),
+      buildId = ModelCache.copyNewProperty({ library.buildId }),
+      projectPath = ModelCache.copyNewProperty({ library.project }),
       variant = null,
       folder = null,
       lintJar = null
@@ -167,7 +167,7 @@ class IdeLibraryFactory {
       // in the same MavenCoordinates for different variants of the same module.
       try {
         if (library.project != null && library is AndroidLibrary) {
-          return ((ModelCache.copyNewProperty({ library.getBuildId() }, "")).orEmpty()
+          return ((ModelCache.copyNewProperty({ library.buildId })).orEmpty()
                   + library.getProject()
                   + "::"
                   + library.projectVariant)
@@ -209,7 +209,7 @@ class IdeLibraryFactory {
       val projectPath = androidLibrary.project ?: return false
       val buildFolderPath = buildFolderPaths.findBuildFolderPath(
         projectPath,
-        ModelCache.copyNewProperty({ androidLibrary.buildId }, null)
+        ModelCache.copyNewProperty({ androidLibrary.buildId })
       )
       // If the aar bundle is inside of build directory, then it's a regular library module dependency, otherwise it's a wrapped aar module.
       return (buildFolderPath != null

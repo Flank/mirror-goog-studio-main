@@ -15,8 +15,6 @@
  */
 package com.android.ide.common.gradle.model.impl.ndk.v1;
 
-import static com.android.ide.common.gradle.model.impl.ModelCache.copy;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.NativeArtifact;
@@ -61,10 +59,11 @@ public final class IdeNativeArtifactImpl implements IdeNativeArtifact, Serializa
         myName = artifact.getName();
         myToolChain = artifact.getToolChain();
         myGroupName = artifact.getGroupName();
-        mySourceFiles = copy(artifact.getSourceFiles(), file -> new IdeNativeFileImpl(file));
+        mySourceFiles =
+                modelCache.copy(artifact.getSourceFiles(), file -> new IdeNativeFileImpl(file));
         myExportedHeaders = ImmutableList.copyOf(artifact.getExportedHeaders());
-        myAbi = ModelCache.copyNewProperty(artifact::getAbi, null);
-        myTargetName = ModelCache.copyNewProperty(artifact::getTargetName, null);
+        myAbi = ModelCache.Companion.copyNewProperty(artifact::getAbi);
+        myTargetName = ModelCache.Companion.copyNewProperty(artifact::getTargetName);
         myOutputFile = artifact.getOutputFile();
         myHashCode = calculateHashCode();
     }

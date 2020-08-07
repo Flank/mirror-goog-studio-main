@@ -41,7 +41,7 @@ public class IdeBuildTypeTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeBuildTypeImpl buildType = ModelCache.buildTypeFrom(new BuildTypeStub());
+        IdeBuildTypeImpl buildType = myModelCache.buildTypeFrom(new BuildTypeStub());
         byte[] bytes = Serialization.serialize(buildType);
         Object o = Serialization.deserialize(bytes);
         assertEquals(buildType, o);
