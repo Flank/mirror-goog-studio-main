@@ -63,7 +63,8 @@ public class DataBindingIntegrationTestAppsTest {
         List<Object[]> params = new ArrayList<>();
         for (boolean useAndroidX : new boolean[] {true, false}) {
             params.add(new Object[] {"IndependentLibrary", useAndroidX});
-            params.add(new Object[] {"TestApp", useAndroidX});
+            // b/161641190 (javac crash when running in RBE)
+            //params.add(new Object[] {"TestApp", useAndroidX});
             params.add(new Object[] {"ViewBindingTestApp", useAndroidX});
             params.add(new Object[] {"ProguardedAppWithTest", useAndroidX});
             params.add(new Object[] {"AppWithDataBindingInTests", useAndroidX});
