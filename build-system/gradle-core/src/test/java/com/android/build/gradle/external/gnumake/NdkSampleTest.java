@@ -76,8 +76,8 @@ public class NdkSampleTest {
     private static final boolean REGENERATE_TEST_JSON_FROM_TEXT = false;
 
     @NonNull
-    private static final String THIS_TEST_FOLDER =
-            "src/test/java/com/android/build/gradle/external/gnumake/";
+    private static final String TEST_DATA_FOLDER =
+            "tools/base/build-system/gradle-core/src/test/data/ndk-sample-baselines/";
 
     private static final ImmutableList<CommandClassifier.BuildTool> extraTestClassifiers =
             ImmutableList.of(
@@ -150,11 +150,14 @@ public class NdkSampleTest {
             @NonNull File testPath,
             @NonNull String variant,
             int operatingSystem) {
-        return new File(
-                THIS_TEST_FOLDER
-                        + "support-files/ndk-sample-baselines/"
+        return TestUtils.getWorkspaceFile(
+                TEST_DATA_FOLDER
                         + testPath.getName()
-                        + "." + variant + "." + getOsName(operatingSystem) + ".txt");
+                        + "."
+                        + variant
+                        + "."
+                        + getOsName(operatingSystem)
+                        + ".txt");
     }
 
     @NonNull
@@ -173,9 +176,8 @@ public class NdkSampleTest {
 
     @NonNull
     private static File getJsonFile(@NonNull File testPath, int operatingSystem) {
-        return new File(
-                THIS_TEST_FOLDER + "support-files/ndk-sample-baselines/"
-                        + testPath.getName() + "." + getOsName(operatingSystem) + ".json");
+        return TestUtils.getWorkspaceFile(
+                TEST_DATA_FOLDER + testPath.getName() + "." + getOsName(operatingSystem) + ".json");
     }
 
     private NativeBuildConfigValues checkJson(String path) throws IOException {
