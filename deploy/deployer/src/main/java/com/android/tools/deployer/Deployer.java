@@ -36,6 +36,7 @@ public class Deployer {
 
     public static final String BASE_DIRECTORY = "/data/local/tmp/.studio";
     public static final String INSTALLER_DIRECTORY = BASE_DIRECTORY + "/bin";
+    public static final String INSTALLER_TMP_DIRECTORY = BASE_DIRECTORY + "/tmp";
 
     private final AdbClient adb;
     private final SqlApkFileDatabase dexDb;

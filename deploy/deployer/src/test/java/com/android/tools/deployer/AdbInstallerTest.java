@@ -42,6 +42,15 @@ import org.mockito.Mockito;
 @RunWith(ApiLevel.class)
 public class AdbInstallerTest {
 
+    private static final String INVOCATION =
+            AdbInstaller.INSTALLER_PATH + " -version=wrong_version_hash -oneshot";
+
+    private static final String INSTALLER_WORKSPACE =
+            Deployer.INSTALLER_DIRECTORY + " " + Deployer.INSTALLER_TMP_DIRECTORY;
+    public static final String RM_DIR = "rm -fr " + INSTALLER_WORKSPACE;
+    public static final String MK_DIR = "mkdir -p " + INSTALLER_WORKSPACE;
+    public static final String CHMOD = "chmod +x " + AdbInstaller.INSTALLER_PATH;
+
     @Rule @ApiLevel.Init public FakeDeviceConnection connection;
     private FakeDevice device;
     private ILogger logger;
@@ -78,14 +87,7 @@ public class AdbInstallerTest {
         } catch (IOException e) {
         }
 
-        String[] expectedHistory = {
-            "getprop",
-            "/data/local/tmp/.studio/bin/installer -version=wrong_version_hash dump foo",
-            "rm -fr /data/local/tmp/.studio",
-            "mkdir -p /data/local/tmp/.studio/bin",
-            "chmod +x /data/local/tmp/.studio/bin/installer",
-            "/data/local/tmp/.studio/bin/installer -version=wrong_version_hash dump foo"
-        };
+        String[] expectedHistory = {"getprop", INVOCATION, RM_DIR, MK_DIR, CHMOD, INVOCATION};
 
         assertHistory(device, expectedHistory);
     }

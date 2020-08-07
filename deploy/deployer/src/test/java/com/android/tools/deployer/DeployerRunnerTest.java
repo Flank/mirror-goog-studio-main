@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,6 +97,9 @@ public class DeployerRunnerTest {
 
     private Benchmark benchmark;
     private long startTime;
+
+    private static final String INSTALLER_INVOCATION =
+            AdbInstaller.INSTALLER_PATH + " -version=$VERSION -oneshot";
 
     @BeforeClass
     public static void prepare() throws Exception {
@@ -226,11 +229,11 @@ public class DeployerRunnerTest {
             assertHistory(
                     device,
                     "getprop",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.helloworld",
-                    "rm -fr /data/local/tmp/.studio",
-                    "mkdir -p /data/local/tmp/.studio/bin",
-                    "chmod +x /data/local/tmp/.studio/bin/installer",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.helloworld",
+                    INSTALLER_INVOCATION, // dump com.example.helloworld
+                    AdbInstallerTest.RM_DIR,
+                    AdbInstallerTest.MK_DIR,
+                    AdbInstallerTest.CHMOD,
+                    INSTALLER_INVOCATION, // dump com.example.helloworld
                     "/system/bin/run-as com.example.helloworld id -u",
                     String.format(
                             "/system/bin/cmd package %s com.example.helloworld", packageCommand),
@@ -289,11 +292,11 @@ public class DeployerRunnerTest {
             assertHistory(
                     device,
                     "getprop",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
-                    "rm -fr /data/local/tmp/.studio",
-                    "mkdir -p /data/local/tmp/.studio/bin",
-                    "chmod +x /data/local/tmp/.studio/bin/installer",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    INSTALLER_INVOCATION,
+                    AdbInstallerTest.RM_DIR,
+                    AdbInstallerTest.MK_DIR,
+                    AdbInstallerTest.CHMOD,
+                    INSTALLER_INVOCATION,
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
                     String.format(
@@ -352,16 +355,16 @@ public class DeployerRunnerTest {
             assertHistory(
                     device,
                     "getprop",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
-                    "rm -fr /data/local/tmp/.studio",
-                    "mkdir -p /data/local/tmp/.studio/bin",
-                    "chmod +x /data/local/tmp/.studio/bin/installer",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    INSTALLER_INVOCATION, // dump
+                    AdbInstallerTest.RM_DIR,
+                    AdbInstallerTest.MK_DIR,
+                    AdbInstallerTest.CHMOD,
+                    INSTALLER_INVOCATION, // dump
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
                     String.format(
                             "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION deltainstall",
+                    INSTALLER_INVOCATION, // deltainstall
                     "/system/bin/cmd package install-create -t -r",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
                     "/system/bin/cmd package install-commit 2");
@@ -440,16 +443,16 @@ public class DeployerRunnerTest {
             assertHistory(
                     device,
                     "getprop",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
-                    "rm -fr /data/local/tmp/.studio",
-                    "mkdir -p /data/local/tmp/.studio/bin",
-                    "chmod +x /data/local/tmp/.studio/bin/installer",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
+                    AdbInstallerTest.RM_DIR,
+                    AdbInstallerTest.MK_DIR,
+                    AdbInstallerTest.CHMOD,
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
                     String.format(
                             "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION deltainstall",
+                    INSTALLER_INVOCATION, // deltainstall
                     "/system/bin/cmd package install-create -t -r",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
                     "/system/bin/cmd package install-commit 2");
@@ -608,16 +611,16 @@ public class DeployerRunnerTest {
                 assertHistory(
                         device,
                         "getprop",
-                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
-                        "rm -fr /data/local/tmp/.studio",
-                        "mkdir -p /data/local/tmp/.studio/bin",
-                        "chmod +x /data/local/tmp/.studio/bin/installer",
-                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                        INSTALLER_INVOCATION, // dump com.example.simpleapp
+                        AdbInstallerTest.RM_DIR,
+                        AdbInstallerTest.MK_DIR,
+                        AdbInstallerTest.CHMOD,
+                        INSTALLER_INVOCATION, // dump com.example.simpleapp
                         "/system/bin/run-as com.example.simpleapp id -u",
                         "id -u",
                         String.format(
                                 "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
-                        "/data/local/tmp/.studio/bin/installer -version=$VERSION deltainstall",
+                        INSTALLER_INVOCATION, // deltainstall
                         "/system/bin/cmd package install-create -t -r",
                         "cmd package install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 split_split_01.apk",
                         "cmd package install-write -S ${size:com.example.simpleapp:base.apk} 2 base.apk",
@@ -712,16 +715,16 @@ public class DeployerRunnerTest {
                 assertHistory(
                         device,
                         "getprop",
-                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
-                        "rm -fr /data/local/tmp/.studio",
-                        "mkdir -p /data/local/tmp/.studio/bin",
-                        "chmod +x /data/local/tmp/.studio/bin/installer",
-                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                        INSTALLER_INVOCATION, // dump com.example.simpleapp
+                        AdbInstallerTest.RM_DIR,
+                        AdbInstallerTest.MK_DIR,
+                        AdbInstallerTest.CHMOD,
+                        INSTALLER_INVOCATION, // dump com.example.simpleapp
                         "/system/bin/run-as com.example.simpleapp id -u",
                         "id -u",
                         String.format(
                                 "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
-                        "/data/local/tmp/.studio/bin/installer -version=$VERSION deltainstall",
+                        INSTALLER_INVOCATION, // detalinstall
                         "/system/bin/cmd package install-create -t -r -p com.example.simpleapp",
                         "cmd package install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 split_split_01.apk",
                         "/system/bin/cmd package install-commit 2");
@@ -817,11 +820,11 @@ public class DeployerRunnerTest {
                 assertHistory(
                         device,
                         "getprop",
-                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
-                        "rm -fr /data/local/tmp/.studio",
-                        "mkdir -p /data/local/tmp/.studio/bin",
-                        "chmod +x /data/local/tmp/.studio/bin/installer",
-                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                        INSTALLER_INVOCATION, // dump com.example.simpleapp
+                        AdbInstallerTest.RM_DIR,
+                        AdbInstallerTest.MK_DIR,
+                        AdbInstallerTest.CHMOD,
+                        INSTALLER_INVOCATION, // dump com.example.simpleapp
                         "/system/bin/run-as com.example.simpleapp id -u",
                         "id -u",
                         String.format(
@@ -923,11 +926,11 @@ public class DeployerRunnerTest {
                 assertHistory(
                         device,
                         "getprop",
-                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
-                        "rm -fr /data/local/tmp/.studio",
-                        "mkdir -p /data/local/tmp/.studio/bin",
-                        "chmod +x /data/local/tmp/.studio/bin/installer",
-                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                        INSTALLER_INVOCATION, // dump com.example.simpleapp
+                        AdbInstallerTest.RM_DIR,
+                        AdbInstallerTest.MK_DIR,
+                        AdbInstallerTest.CHMOD,
+                        INSTALLER_INVOCATION, // dump com.example.simpleapp
                         "/system/bin/run-as com.example.simpleapp id -u",
                         "id -u",
                         String.format(
@@ -995,16 +998,16 @@ public class DeployerRunnerTest {
             assertHistory(
                     device,
                     "getprop",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
-                    "rm -fr /data/local/tmp/.studio",
-                    "mkdir -p /data/local/tmp/.studio/bin",
-                    "chmod +x /data/local/tmp/.studio/bin/installer",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
+                    AdbInstallerTest.RM_DIR,
+                    AdbInstallerTest.MK_DIR,
+                    AdbInstallerTest.CHMOD,
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
                     String.format(
                             "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION deltainstall",
+                    INSTALLER_INVOCATION, // deltainstall
                     "/system/bin/cmd package install-create -t -r",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
                     "/system/bin/cmd package install-commit 2");
@@ -1097,16 +1100,16 @@ public class DeployerRunnerTest {
                 assertHistory(
                         device,
                         "getprop",
-                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
-                        "rm -fr /data/local/tmp/.studio",
-                        "mkdir -p /data/local/tmp/.studio/bin",
-                        "chmod +x /data/local/tmp/.studio/bin/installer",
-                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                        INSTALLER_INVOCATION, // dump com.example.simpleapp
+                        AdbInstallerTest.RM_DIR,
+                        AdbInstallerTest.MK_DIR,
+                        AdbInstallerTest.CHMOD,
+                        INSTALLER_INVOCATION, // dump com.example.simpleapp
                         "/system/bin/run-as com.example.simpleapp id -u",
                         "id -u",
                         String.format(
                                 "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
-                        "/data/local/tmp/.studio/bin/installer -version=$VERSION deltainstall",
+                        INSTALLER_INVOCATION, // deltainstal
                         "/system/bin/cmd package install-create -t -r -p com.example.simpleapp",
                         "cmd package install-write -S ${size:com.example.simpleapp:base.apk} 2 base.apk",
                         "/system/bin/cmd package install-commit 2");
@@ -1249,12 +1252,12 @@ public class DeployerRunnerTest {
             assertHistory(
                     device,
                     "getprop",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
                     String.format(
                             "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
+                    INSTALLER_INVOCATION, // deltapreinstall
                     "/system/bin/cmd package install-create -t -r --dont-kill",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
                     "cmd package install-abandon 2");
@@ -1279,7 +1282,7 @@ public class DeployerRunnerTest {
         AdbClient adb = new AdbClient(iDevice, logger);
         ArrayList<DeployMetric> metrics = new ArrayList<>();
         Installer installer =
-          new AdbInstaller(installersPath.getAbsolutePath(), adb, metrics, logger);
+                new AdbInstaller(installersPath.getAbsolutePath(), adb, metrics, logger);
 
         // Make sure we have true negative.
         Deploy.DumpResponse response = installer.dump(Collections.singletonList(packageName));
@@ -1361,17 +1364,17 @@ public class DeployerRunnerTest {
             assertHistory(
                     device,
                     "getprop",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
-                    "rm -fr /data/local/tmp/.studio",
-                    "mkdir -p /data/local/tmp/.studio/bin",
-                    "chmod +x /data/local/tmp/.studio/bin/installer",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
+                    AdbInstallerTest.RM_DIR,
+                    AdbInstallerTest.MK_DIR,
+                    AdbInstallerTest.CHMOD,
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
                     "/system/bin/cmd package "
                             + (device.getApi() < 28 ? "dump" : "path")
                             + " com.example.simpleapp",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
+                    INSTALLER_INVOCATION, // deltapreinstall
                     "/system/bin/cmd package install-create -t -r --dont-kill",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
                     "cmd package install-abandon 2");
@@ -1441,20 +1444,20 @@ public class DeployerRunnerTest {
             assertHistory(
                     device,
                     "getprop",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
-                    "rm -fr /data/local/tmp/.studio",
-                    "mkdir -p /data/local/tmp/.studio/bin",
-                    "chmod +x /data/local/tmp/.studio/bin/installer",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
+                    AdbInstallerTest.RM_DIR,
+                    AdbInstallerTest.MK_DIR,
+                    AdbInstallerTest.CHMOD,
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
                     "/system/bin/cmd package "
                             + (device.getApi() < 28 ? "dump" : "path")
                             + " com.example.simpleapp",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
+                    INSTALLER_INVOCATION, // deltapreinstall
                     "/system/bin/cmd package install-create -t -r --dont-kill",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION swap",
+                    INSTALLER_INVOCATION, // swap
                     "/system/bin/run-as com.example.simpleapp cp -rF /data/local/tmp/.studio/tmp-$VERSION/ /data/data/com.example.simpleapp/code_cache/.studio/",
                     "cp -rF /data/local/tmp/.studio/tmp-$VERSION/ /data/data/com.example.simpleapp/code_cache/.studio/",
                     "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/.studio/server.so 1 irsocket 5",
@@ -1621,17 +1624,17 @@ public class DeployerRunnerTest {
             assertHistory(
                     device,
                     "getprop",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
-                    "rm -fr /data/local/tmp/.studio",
-                    "mkdir -p /data/local/tmp/.studio/bin",
-                    "chmod +x /data/local/tmp/.studio/bin/installer",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
+                    AdbInstallerTest.RM_DIR,
+                    AdbInstallerTest.MK_DIR,
+                    AdbInstallerTest.CHMOD,
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
                     "/system/bin/cmd package "
                             + (device.getApi() < 28 ? "dump" : "path")
                             + " com.example.simpleapp",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
+                    INSTALLER_INVOCATION, // deltainstall
                     "/system/bin/cmd package install-create -t -r --dont-kill",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
                     "cmd package install-abandon 2");
@@ -1699,20 +1702,20 @@ public class DeployerRunnerTest {
             assertHistory(
                     device,
                     "getprop",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
-                    "rm -fr /data/local/tmp/.studio",
-                    "mkdir -p /data/local/tmp/.studio/bin",
-                    "chmod +x /data/local/tmp/.studio/bin/installer",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
+                    AdbInstallerTest.RM_DIR,
+                    AdbInstallerTest.MK_DIR,
+                    AdbInstallerTest.CHMOD,
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
                     "/system/bin/cmd package "
                             + (device.getApi() < 28 ? "dump" : "path")
                             + " com.example.simpleapp",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
+                    INSTALLER_INVOCATION, // deltapreinstall
                     "/system/bin/cmd package install-create -t -r --dont-kill",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION swap",
+                    INSTALLER_INVOCATION, // swap
                     "/system/bin/run-as com.example.simpleapp cp -rF /data/local/tmp/.studio/tmp-$VERSION/ /data/data/com.example.simpleapp/code_cache/.studio/",
                     "cp -rF /data/local/tmp/.studio/tmp-$VERSION/ /data/data/com.example.simpleapp/code_cache/.studio/",
                     "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/.studio/server.so 1 irsocket 5",
@@ -1772,9 +1775,9 @@ public class DeployerRunnerTest {
             assertHistory(
                     device,
                     "getprop",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
-                    "rm -fr /data/local/tmp/.studio",
-                    "mkdir -p /data/local/tmp/.studio/bin");
+                    INSTALLER_INVOCATION,
+                    AdbInstallerTest.RM_DIR,
+                    AdbInstallerTest.MK_DIR);
         } else {
             // TODO: Add R+ tests.
         }
