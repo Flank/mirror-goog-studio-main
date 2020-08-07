@@ -344,4 +344,43 @@ class LocaleDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(expected)
     }
+
+    fun testNonFields() {
+        // Regression test for https://issuetracker.google.com/122769438
+        lint().files(
+            java(
+                """
+                package test.pkg;
+                import java.util.Locale;
+                public enum JavaEnum {
+                    VALUE {
+                        public Locale getDefaultLocale() {
+                            return Locale.getDefault();
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+                import java.util.Locale
+                enum class KotlinEnum {
+                    VALUE {
+                        fun getDefaultLocale() = Locale.getDefault()
+                    }
+                }
+
+                class Test {
+                    companion object {
+                        val someField = object : Any() {
+                            fun defaultLocale() = Locale.getDefault()
+                        }
+                        val localeLookup: ()->Locale = { Locale.getDefault() }
+                    }
+                }
+                """
+            )
+        ).run().expectClean()
+    }
 }

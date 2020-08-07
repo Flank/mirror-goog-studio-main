@@ -36,6 +36,8 @@ import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UField
+import org.jetbrains.uast.ULambdaExpression
+import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UThrowExpression
 import org.jetbrains.uast.getParentOfType
 
@@ -188,7 +190,13 @@ class LocaleDetector : Detector(), SourceCodeScanner {
         method: PsiMethod,
         node: UCallExpression
     ) {
-        val field = node.getParentOfType<UField>(UField::class.java, true) ?: return
+        val field = node.getParentOfType<UField>(
+            UField::class.java,
+            true,
+            UMethod::class.java,
+            ULambdaExpression::class.java
+        )
+            ?: return
 
         val evaluator = context.evaluator
         if (evaluator.isStatic(field) && evaluator.isFinal(field)) {
