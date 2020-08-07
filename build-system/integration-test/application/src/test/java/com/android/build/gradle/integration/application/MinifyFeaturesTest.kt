@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.build.gradle.integration.common.truth.AabSubject.Companion.assertThat
 import com.android.build.gradle.integration.common.truth.ModelContainerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
@@ -708,7 +709,7 @@ class MinifyFeaturesTest(
                 "Lcom/example/lib1/a;"
             )
             expectedBaseClasses.forEach {
-                    className -> assertThat(it.containsClass("base", className))
+                    className -> assertThat(it).containsClass("base", className)
             }
             val unexpectedBaseClasses = listOf(
                 "Lcom/example/baseFeature/EmptyClassToRemove;",
@@ -720,7 +721,7 @@ class MinifyFeaturesTest(
                 "Lcom/example/otherFeature2/Main;"
             )
             unexpectedBaseClasses.forEach {
-                    className -> assertThat(!it.containsClass("base", className))
+                    className -> assertThat(it).doesNotContainClass("base", className)
             }
             // check otherFeature1 classes
             val expectedOtherFeature1Classes = listOf(
@@ -731,7 +732,7 @@ class MinifyFeaturesTest(
                 "Lcom/example/lib2/a;"
             )
             expectedOtherFeature1Classes.forEach {
-                    className -> assertThat(it.containsClass("otherFeature1", className))
+                    className -> assertThat(it).containsClass("otherFeature1", className)
             }
             val unexpectedOtherFeature1Classes = listOf(
                 "Lcom/example/otherFeature1/EmptyClassToRemove;",
@@ -743,12 +744,12 @@ class MinifyFeaturesTest(
                 "Lcom/example/otherFeature2/Main;"
             )
             unexpectedOtherFeature1Classes.forEach {
-                    className -> assertThat(!it.containsClass("otherFeature1", className))
+                    className -> assertThat(it).doesNotContainClass("otherFeature1", className)
             }
             // check otherFeature2 classes
             val expectedOtherFeature2Classes = listOf("Lcom/example/otherFeature2/Main;")
             expectedOtherFeature2Classes.forEach {
-                    className -> assertThat(it.containsClass("otherFeature2", className))
+                    className -> assertThat(it).containsClass("otherFeature2", className)
             }
             val unexpectedOtherFeature2Classes = listOf(
                 "Lcom/example/lib1/EmptyClassToKeep;",
@@ -757,7 +758,7 @@ class MinifyFeaturesTest(
                 "Lcom/example/otherFeature1/Main;"
             )
             unexpectedOtherFeature2Classes.forEach {
-                    className -> assertThat(!it.containsClass("otherFeature2", className))
+                    className -> assertThat(it).doesNotContainClass("otherFeature2", className)
             }
         }
     }

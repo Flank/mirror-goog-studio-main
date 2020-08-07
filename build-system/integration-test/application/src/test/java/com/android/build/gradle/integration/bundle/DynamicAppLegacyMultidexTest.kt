@@ -18,13 +18,10 @@ package com.android.build.gradle.integration.bundle
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.truth.AabSubject.Companion.assertThat
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.OptionalBooleanOption
-import com.android.testutils.apk.Aab
-import com.android.testutils.apk.Dex
-import com.android.testutils.apk.Zip
-import com.android.testutils.truth.DexSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
@@ -140,15 +137,14 @@ class DynamicAppLegacyMultidexTest {
     fun testPrimaryDexContainsAllNecessaryClasses() {
         project.executor().run("bundleIcsR8")
 
-        val bundleFile = project.outputDir.resolve("bundle/icsR8/multiDex-ics-r8.aab")
-        Aab(bundleFile).use { aab ->
-            multiDexSupportLibClasses.forEach {
-                    className -> assertThat(aab.containsMainClass("base", className))
+        project.getBundle(GradleTestProject.ApkType.of("icsR8", false)).use { aab ->
+            // http://b/163114632
+            multiDexSupportLibClasses.filter { it != "Landroid/support/multidex/MultiDex\$V4;"}.forEach {
+                    className -> assertThat(aab).containsMainClass("base", className)
             }
             forcedPrimaryDexClasses.map { "L$it;" }.forEach {
-                    className -> assertThat(aab.containsMainClass("base", className))
+                    className -> assertThat(aab).containsMainClass("base", className)
             }
-
         }
     }
 
@@ -166,11 +162,14 @@ class DynamicAppLegacyMultidexTest {
                 .map { "L$it;" }
         assertThat(mainDexListClasses).containsAllIn(multiDexSupportLibClasses)
 
-        val bundleFile = project.outputDir.resolve("bundle/icsR8/multiDex-ics-r8.aab")
-        Zip(bundleFile).use { zip ->
-            val primaryDex = Dex(zip.getEntry("base/dex/classes.dex")!!)
-            assertThat(primaryDex).containsClassesIn(multiDexSupportLibClasses)
-            assertThat(primaryDex).containsClassesIn(forcedPrimaryDexClasses.map { "L$it;" })
+        project.getBundle(GradleTestProject.ApkType.of("icsR8", false)).use { aab ->
+            multiDexSupportLibClasses.forEach {
+                className -> assertThat(aab).containsMainClass("base", className)
+            }
+            forcedPrimaryDexClasses.map { "L$it;" }.forEach {
+                className -> assertThat(aab).containsMainClass("base", className)
+            }
+
         }
     }
 }

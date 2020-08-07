@@ -35,6 +35,7 @@ import com.android.sdklib.internal.project.ProjectProperties
 import com.android.testutils.MavenRepoGenerator
 import com.android.testutils.OsType
 import com.android.testutils.TestUtils
+import com.android.testutils.apk.Aab
 import com.android.testutils.apk.Aar
 import com.android.testutils.apk.Apk
 import com.android.testutils.apk.Zip
@@ -1045,6 +1046,18 @@ allprojects { proj ->
                         + apkFileName
             )
         )
+    }
+
+    fun getBundle(type: ApkType): Aab {
+        val bundles =
+            outputDir.resolve("bundle/${type.buildType}/")
+                .walk()
+                .filter { it.extension == SdkConstants.EXT_APP_BUNDLE }
+                .toList()
+        if (bundles.size > 1) {
+            throw UnsupportedOperationException("Support for multiple bundles is not implemented.")
+        }
+        return Aab(bundles.single())
     }
 
     private fun mangleApkName(

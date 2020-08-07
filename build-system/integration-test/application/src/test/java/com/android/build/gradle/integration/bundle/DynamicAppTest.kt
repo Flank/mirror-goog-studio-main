@@ -22,6 +22,7 @@ import com.android.apksig.ApkVerifier
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.truth.AabSubject.Companion.assertThat
 import com.android.build.gradle.integration.common.truth.ApkSubject
 import com.android.build.gradle.integration.common.truth.ModelContainerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
@@ -225,15 +226,15 @@ class DynamicAppTest {
             assertThat(dex).containsExactlyClassesIn(mainDexClasses)
 
             jarClasses.forEach { jarClass ->
-                assertThat(aab.containsClass("base", jarClass)).isTrue()
-                assertThat(aab.containsClass("feature1", jarClass)).isFalse()
-                assertThat(aab.containsClass("feature2", jarClass)).isFalse()
+                assertThat(aab).containsClass("base", jarClass)
+                assertThat(aab).doesNotContainClass("feature1", jarClass)
+                assertThat(aab).doesNotContainClass("feature2", jarClass)
             }
 
             aarClasses.forEach { aarClass ->
-                assertThat(aab.containsClass("base", aarClass)).isTrue()
-                assertThat(aab.containsClass("feature1", aarClass)).isFalse()
-                assertThat(aab.containsClass("feature2", aarClass)).isFalse()
+                assertThat(aab).containsClass("base", aarClass)
+                assertThat(aab).doesNotContainClass("feature1", aarClass)
+                assertThat(aab).doesNotContainClass("feature2", aarClass)
             }
 
             // The main dex list must also analyze the classes from features.
