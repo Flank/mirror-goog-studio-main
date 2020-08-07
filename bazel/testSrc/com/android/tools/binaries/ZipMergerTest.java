@@ -174,6 +174,32 @@ public class ZipMergerTest {
     }
 
     @Test
+    public void testFlattenZipWithZipAndInject() throws Exception {
+        File a = createFile("a.txt", "AA");
+        File zip = createZipFile("zip.zip",
+                "place/here/b.txt", "BB",
+                "place/here/c.txt", "CC",
+                "place/here/d.zip!two.txt", "22");
+
+        File x = createFile("x.txt", "XX");
+        File res = newFile("res.zip");
+        ZipMerger.main(new String[]{
+                "c",
+                res.getAbsolutePath(),
+                "new/a.txt=" + a.getAbsolutePath(),
+                "new/path/=+" + zip.getAbsolutePath(),
+                "#new/path/place/here/d.zip!one.txt=" + x.getAbsolutePath(),
+        });
+
+        assertZipEquals(res,
+                "new/a.txt", "AA",
+                "new/path/place/here/b.txt", "BB",
+                "new/path/place/here/c.txt", "CC",
+                "new/path/place/here/d.zip!one.txt", "XX",
+                "new/path/place/here/d.zip!two.txt", "22");
+    }
+
+    @Test
     public void testAddZipToZipWithTwoOverrides() throws Exception {
         File a = createFile("a.txt", "AA");
         File zip1 = createZipFile("zip1.zip",
