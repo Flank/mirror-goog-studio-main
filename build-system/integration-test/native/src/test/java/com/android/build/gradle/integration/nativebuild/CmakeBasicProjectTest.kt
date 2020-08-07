@@ -27,6 +27,7 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.ZipHelper
+import com.android.build.gradle.internal.cxx.configure.BAKING_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.options.BooleanOption
@@ -76,8 +77,10 @@ class CmakeBasicProjectTest(
         @JvmStatic
         fun data() = arrayOf(
             arrayOf("3.6.0", false),
+            arrayOf(BAKING_CMAKE_VERSION, false),
             arrayOf(DEFAULT_CMAKE_VERSION, false),
             arrayOf("3.6.0", true),
+            arrayOf(BAKING_CMAKE_VERSION, true),
             arrayOf(DEFAULT_CMAKE_VERSION, true)
         )
     }

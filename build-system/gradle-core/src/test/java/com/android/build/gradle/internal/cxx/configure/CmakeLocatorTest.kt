@@ -142,10 +142,10 @@ class CmakeLocatorTest {
      */
     private fun dslVersionNumberTooLowTestCase(cmakeVersion: String) {
         val threeSix = fakeLocalPackageOf("cmake;3.6.4111459", "3.6.4111459")
-        val threeTen = fakeLocalPackageOf("cmake;3.10.2.4988404", "3.10.2")
+        val defaultCmake = fakeLocalPackageOf("cmake;$DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION", DEFAULT_CMAKE_VERSION)
         val encounter = findCmakePath(
             cmakeVersionFromDsl = cmakeVersion,
-            repositoryPackages = { listOf(threeTen, threeSix) })
+            repositoryPackages = { listOf(defaultCmake, threeSix) })
         assertThat(encounter.warnings).hasSize(0)
         assertThat(encounter.errors.single()).isEqualTo(
             "CMake version '" + cmakeVersion.removeSuffix("+") + "' is too low. Use 3.7.0 or higher."
@@ -181,10 +181,10 @@ class CmakeLocatorTest {
     private fun dslVersionTooFewPartsTestCase(cmakeVersion: String) {
         val cmakeVersionWithoutPlus = cmakeVersion.removeSuffix("+")
         val threeSix = fakeLocalPackageOf("cmake;3.6.4111459", "3.6.4111459")
-        val threeTen = fakeLocalPackageOf("cmake;3.10.2.4988404", "3.10.2")
+        val defaultCmake = fakeLocalPackageOf("cmake;$DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION", DEFAULT_CMAKE_VERSION)
         val encounter = findCmakePath(
             cmakeVersionFromDsl = cmakeVersion,
-            repositoryPackages = { listOf(threeTen, threeSix) }
+            repositoryPackages = { listOf(defaultCmake, threeSix) }
         )
         assertThat(encounter.warnings).hasSize(0)
         assertThat(encounter.errors.single()).isEqualTo(

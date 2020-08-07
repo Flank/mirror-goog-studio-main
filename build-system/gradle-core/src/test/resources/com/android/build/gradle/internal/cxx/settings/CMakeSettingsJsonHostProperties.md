@@ -62,7 +62,7 @@ The value of cFlags from android.config.externalNativeBuild.cFlags in build.grad
 
 ## ${ndk.cmakeExecutable}
 Path to CMake executable.
-- example: ${ndk.sdkDir}/cmake/3.10.2/bin/cmake
+- example: ${ndk.sdkDir}/cmake/[Current CMake Version]/bin/cmake
 - environment: android-ndk
 
 ## ${ndk.cmakeToolchain}
@@ -127,7 +127,7 @@ Name of the gradle module.
 
 ## ${ndk.ninjaExecutable}
 Path to Ninja executable if one was found by Gradle. Otherwise, it expands to empty string and it's up to CMake to find the ninja executable.
-- example: ${ndk.sdkDir}/cmake/3.10.2/bin/ninja
+- example: ${ndk.sdkDir}/cmake/[Current CMake Version]/bin/ninja
 - environment: android-ndk
 
 ## ${ndk.platform}

@@ -41,6 +41,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
+import java.io.StringReader
 import java.nio.charset.StandardCharsets
 
 class V2NativeModelTest : ModelComparator() {
@@ -124,8 +125,12 @@ class V2NativeModelTest : ModelComparator() {
         ).containsExactly("{PROJECT}/build/intermediates/cmake/debug/obj/x86{D}")
 
         val gson = Gson()
+        // Some version of CMake (like 3.10) emit double spaces, others (like 3.18) don't.
+        val jsonText = syncedAbi.sourceFlagsFile.readText()
+            .replace(Regex(" +"), " ")
+
         val compileCommandsJsonEntries: List<JsonElement> =
-            syncedAbi.sourceFlagsFile.reader(StandardCharsets.UTF_8).use {
+            StringReader(jsonText).use {
                 gson.fromJson(it, JsonArray::class.java)
                     .map { result.normalizer.normalize(it) }
             }
@@ -136,7 +141,7 @@ class V2NativeModelTest : ModelComparator() {
                     """
                     {
                       "directory": "{PROJECT}/.cxx/cmake/debug/x86",
-                      "command": "{NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=i686-none-linux-android16 --gcc-toolchain={NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64 --sysroot={NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/sysroot    -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O0 -fno-limit-debug-info  -fPIE   -o CMakeFiles/hello-executable.dir/src/main/cxx/executable/main.cpp.o -c {PROJECT}/src/main/cxx/executable/main.cpp",
+                      "command": "{NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=i686-none-linux-android16 --gcc-toolchain={NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64 --sysroot={NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -O0 -fno-limit-debug-info -fPIE -o CMakeFiles/hello-executable.dir/src/main/cxx/executable/main.cpp.o -c {PROJECT}/src/main/cxx/executable/main.cpp",
                       "file": "{PROJECT}/src/main/cxx/executable/main.cpp"
                     }
                     """, JsonObject::class.java
@@ -145,7 +150,7 @@ class V2NativeModelTest : ModelComparator() {
                     """
                     {
                       "directory": "{PROJECT}/.cxx/cmake/debug/x86",
-                      "command": "{NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=i686-none-linux-android16 --gcc-toolchain={NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64 --sysroot={NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/sysroot -Dhello_jni_EXPORTS  -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O0 -fno-limit-debug-info  -fPIC   -o CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o   -c {PROJECT}/src/main/cxx/hello-jni.c",
+                      "command": "{NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=i686-none-linux-android16 --gcc-toolchain={NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64 --sysroot={NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/sysroot -Dhello_jni_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -O0 -fno-limit-debug-info -fPIC -o CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o -c {PROJECT}/src/main/cxx/hello-jni.c",
                       "file": "{PROJECT}/src/main/cxx/hello-jni.c"
                     }
                     """, JsonObject::class.java
@@ -154,7 +159,7 @@ class V2NativeModelTest : ModelComparator() {
                     """
                     {
                       "directory": "{PROJECT}/.cxx/cmake/debug/x86",
-                      "command": "{NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=i686-none-linux-android16 --gcc-toolchain={NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64 --sysroot={NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/sysroot  -Dhello_jni_EXPORTS  -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O0 -fno-limit-debug-info  -fPIC   -o CMakeFiles/hello-jni.dir/src/main/cxx/executable/main.cpp.o -c {PROJECT}/src/main/cxx/executable/main.cpp",
+                      "command": "{NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=i686-none-linux-android16 --gcc-toolchain={NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64 --sysroot={NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/sysroot -Dhello_jni_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -O0 -fno-limit-debug-info -fPIC -o CMakeFiles/hello-jni.dir/src/main/cxx/executable/main.cpp.o -c {PROJECT}/src/main/cxx/executable/main.cpp",
                       "file": "{PROJECT}/src/main/cxx/executable/main.cpp"
                     }
                     """, JsonObject::class.java
@@ -165,7 +170,7 @@ class V2NativeModelTest : ModelComparator() {
                     """
                     {
                       "directory": "{PROJECT}/.cxx/cmake/debug/x86",
-                      "command": "{NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe --target=i686-none-linux-android16 --gcc-toolchain={NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64 --sysroot={NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/sysroot    -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O0 -fno-limit-debug-info  -fPIE   -o CMakeFiles/hello-executable.dir/src/main/cxx/executable/main.cpp.o -c {PROJECT}/src/main/cxx/executable/main.cpp",
+                      "command": "{NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe --target=i686-none-linux-android16 --gcc-toolchain={NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64 --sysroot={NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -O0 -fno-limit-debug-info -fPIE -o CMakeFiles/hello-executable.dir/src/main/cxx/executable/main.cpp.o -c {PROJECT}/src/main/cxx/executable/main.cpp",
                       "file": "{PROJECT}/src/main/cxx/executable/main.cpp"
                     }
                     """, JsonObject::class.java
@@ -174,7 +179,7 @@ class V2NativeModelTest : ModelComparator() {
                     """
                     {
                         "directory":"{PROJECT}/.cxx/cmake/debug/x86",
-                        "command":"{NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe --target=i686-none-linux-android16 --gcc-toolchain={NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64 --sysroot={NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/sysroot  -Dhello_jni_EXPORTS  -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O0 -fno-limit-debug-info  -fPIC   -o CMakeFiles/hello-jni.dir/src/main/cxx/executable/main.cpp.o -c {PROJECT}/src/main/cxx/executable/main.cpp",
+                        "command":"{NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe --target=i686-none-linux-android16 --gcc-toolchain={NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64 --sysroot={NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/sysroot -Dhello_jni_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -O0 -fno-limit-debug-info -fPIC -o CMakeFiles/hello-jni.dir/src/main/cxx/executable/main.cpp.o -c {PROJECT}/src/main/cxx/executable/main.cpp",
                         "file":"{PROJECT}/src/main/cxx/executable/main.cpp"
                     }
                     """, JsonObject::class.java
@@ -183,7 +188,7 @@ class V2NativeModelTest : ModelComparator() {
                     """
                     {
                         "directory":"{PROJECT}/.cxx/cmake/debug/x86",
-                        "command":"{NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe --target=i686-none-linux-android16 --gcc-toolchain={NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64 --sysroot={NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/sysroot -Dhello_jni_EXPORTS  -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O0 -fno-limit-debug-info  -fPIC   -o CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o   -c {PROJECT}/src/main/cxx/hello-jni.c",
+                        "command":"{NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe --target=i686-none-linux-android16 --gcc-toolchain={NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64 --sysroot={NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/sysroot -Dhello_jni_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -O0 -fno-limit-debug-info -fPIC -o CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o -c {PROJECT}/src/main/cxx/hello-jni.c",
                         "file":"{PROJECT}/src/main/cxx/hello-jni.c"
                     }
                     """, JsonObject::class.java

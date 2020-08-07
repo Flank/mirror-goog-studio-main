@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
@@ -56,11 +57,15 @@ class CMakeSettingsJsonPropertiesGoldenFileTest {
                         Abi.X86_64)
                     Macro.values()
                         .toList()
-                        .sortedBy { it.qualifiedName }
+                        .sortedBy { macro -> macro.qualifiedName }
                         .forEach { macro ->
+                            val example = macro.example
+                                .replace(DEFAULT_CMAKE_VERSION, "[Current CMake Version]")
+                                .replace('\\', '/')
+                                .replace(".exe", "")
                             result += "## " + macro.ref
                             result += macro.description
-                            result += "- example: ${macro.example.replace('\\', '/').replace(".exe", "")}"
+                            result += "- example: $example"
                             result += "- environment: ${macro.environment.environment}"
                             result += ""
                     }
