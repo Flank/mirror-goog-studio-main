@@ -27,8 +27,13 @@ for /f %%i in (%SCRIPTDIR%targets.win) do set TARGETS=!TARGETS! %%i
 for /f %%e in ('%SCRIPTDIR%bazel.cmd info execution_root') do set EXECROOT=%%e
 set EXECROOT=%EXECROOT:/=\%
 @rem Removing host executable runfiles as a workaround to http://b/160885823
+dir %EXECROOT%\bazel-out\host\bin\tools\base\bazel\kotlinc.exe.runfiles
+dir %EXECROOT%\bazel-out\host\bin\tools\base\bazel\formc.exe.runfiles
 del /F /Q /S %EXECROOT%\bazel-out\host\bin\tools\base\bazel\kotlinc.exe.runfiles > NUL
 del /F /Q /S %EXECROOT%\bazel-out\host\bin\tools\base\bazel\formc.exe.runfiles > NUL
+@echo Runfile contents after being deleted
+dir %EXECROOT%\bazel-out\host\bin\tools\base\bazel\kotlinc.exe.runfiles
+dir %EXECROOT%\bazel-out\host\bin\tools\base\bazel\formc.exe.runfiles
 
 @echo studio_win.cmd time: %time%
 @rem Remove --nouse_ijars which is a temporary fix for http://b/162497186
@@ -72,6 +77,10 @@ set JAVA=%BASEDIR%\prebuilts\studio\jdk\win64\jre\bin\java.exe
  -perfzip %DISTDIR%\perfgate_data.zip
 
 @echo studio_win.cmd time: %time%
+
+@rem Extra debugging for b/162585987
+dir %EXECROOT%\bazel-out\host\bin\tools\base\bazel\kotlinc.exe.runfiles
+dir %EXECROOT%\bazel-out\host\bin\tools\base\bazel\formc.exe.runfiles
 
 :ENDSCRIPT
 @rem On windows we must explicitly shut down bazel. Otherwise file handles remain open.
