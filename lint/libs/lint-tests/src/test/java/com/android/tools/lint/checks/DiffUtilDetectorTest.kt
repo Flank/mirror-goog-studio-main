@@ -20,17 +20,30 @@ import com.android.tools.lint.detector.api.Detector
 
 class DiffUtilDetectorTest : AbstractCheckTest() {
 
-    private val diffUtilStub = java(
-        """
-        package android.support.v7.util;
-        public class DiffUtil {
-            public abstract static class ItemCallback<T> {
-                public abstract boolean areItemsTheSame(T oldItem, T newItem);
-                public abstract boolean areContentsTheSame(T oldItem, T newItem);
+    private val diffUtilStubs = arrayOf(
+        java(
+            """
+            package android.support.v7.util;
+            public class DiffUtil {
+                public abstract static class ItemCallback<T> {
+                    public abstract boolean areItemsTheSame(T oldItem, T newItem);
+                    public abstract boolean areContentsTheSame(T oldItem, T newItem);
+                }
             }
-        }
-        """
-    ).indented()
+            """
+        ).indented(),
+        java(
+            """
+            package androidx.recyclerview.widget;
+            public class DiffUtil {
+                public abstract static class ItemCallback<T> {
+                    public abstract boolean areItemsTheSame(T oldItem, T newItem);
+                    public abstract boolean areContentsTheSame(T oldItem, T newItem);
+                }
+            }
+            """
+        ).indented()
+    )
 
     fun testIdentityEqualsOkay() {
         // Regression test for b/132234925
@@ -59,7 +72,7 @@ class DiffUtilDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            diffUtilStub
+            *diffUtilStubs
         ).run().expectClean()
     }
 
@@ -106,7 +119,7 @@ class DiffUtilDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            diffUtilStub
+            *diffUtilStubs
         ).run().expectClean()
     }
 
@@ -149,7 +162,7 @@ class DiffUtilDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            diffUtilStub
+            *diffUtilStubs
         ).run().expectClean()
     }
 
@@ -176,7 +189,7 @@ class DiffUtilDetectorTest : AbstractCheckTest() {
                 data class Cheese(var id: String? = null)
                 """
             ).indented(),
-            diffUtilStub
+            *diffUtilStubs
         ).run().expectClean()
     }
 
@@ -225,7 +238,7 @@ class DiffUtilDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            diffUtilStub
+            *diffUtilStubs
         ).run().expect(
             """
             src/test/pkg/MyCallback.java:13: Error: Suspicious equality check: Did you mean .equals() instead of == ? [DiffUtilEquals]
@@ -284,7 +297,7 @@ class DiffUtilDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            diffUtilStub
+            *diffUtilStubs
         ).run().expect(
             """
             src/test/pkg/MyCallback.java:13: Error: Suspicious equality check: equals() is not implemented in test.pkg.Cheese [DiffUtilEquals]
@@ -324,7 +337,61 @@ class DiffUtilDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            diffUtilStub
+            *diffUtilStubs
+        ).run().expectClean()
+    }
+
+    fun testKnownInstance() {
+        // Regression test for https://issuetracker.google.com/161584622
+        // [lint] DiffUtilEquals false positive when type is exactly known
+        lint().files(
+            kotlin(
+                """
+                package com.example
+
+                data class Model(
+                    val id: String,
+                    val content: String
+                ) : IModel
+                """
+            ).indented(),
+            kotlin(
+                """
+                package com.example
+
+                interface IModel {
+                    // Workaround from https://issuetracker.google.com/issues/122928037
+                    //override fun equals(other: Any?): Boolean
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package com.example;
+
+                import androidx.annotation.NonNull;
+                import androidx.recyclerview.widget.DiffUtil;
+
+                public class MyDiffUtilCallbackJava extends DiffUtil.ItemCallback<IModel> {
+
+                        @Override public boolean areItemsTheSame(@NonNull IModel oldItem, @NonNull IModel newItem) {
+                                if (oldItem instanceof Model && newItem instanceof Model) {
+                                        Model model1 = (Model)oldItem;
+                                        Model model2 = (Model)newItem;
+                                        return model1.getId().equals(model2.getId());
+                                }
+                                return false;
+                        }
+                        @Override public boolean areContentsTheSame(@NonNull IModel oldItem, @NonNull IModel newItem) {
+                                if (oldItem instanceof Model && newItem instanceof Model) {
+                                        return oldItem.equals(newItem);
+                                }
+                                return false;
+                        }
+                }
+                """
+            ).indented(),
+            *diffUtilStubs
         ).run().expectClean()
     }
 

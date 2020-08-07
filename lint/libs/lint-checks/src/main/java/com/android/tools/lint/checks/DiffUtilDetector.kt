@@ -29,11 +29,16 @@ import com.intellij.psi.CommonClassNames.JAVA_LANG_OBJECT
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UBinaryExpression
+import org.jetbrains.uast.UBinaryExpressionWithType
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
+import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UastBinaryOperator
+import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
 /** Checks related to DiffUtil computation */
@@ -77,35 +82,13 @@ class DiffUtilDetector : Detector(), SourceCodeScanner {
     }
 
     private fun defaultEquals(context: JavaContext, node: UElement): Boolean {
-        var resolved: PsiMethod?
+        val resolved: PsiMethod?
 
         if (node is UBinaryExpression) {
             resolved = node.resolveOperator()
             if (resolved == null) {
                 val left = node.leftOperand.getExpressionType() as? PsiClassType
-                val cls = left?.resolve() ?: return false
-
-                if (isKotlin(cls) && (
-                    context.evaluator.isSealed(cls) ||
-                        context.evaluator.isData(cls)
-                    )
-                ) {
-                    // Sealed class doesn't guarantee that it defines equals/hashCode
-                    // but it's likely (we'd need to go look at each inner class)
-                    return false
-                }
-
-                for (m in cls.findMethodsByName("equals", true)) {
-                    if (m is PsiMethod) {
-                        val parameters = m.parameterList.parameters
-                        if (parameters.size == 1 &&
-                            parameters[0].type.canonicalText == JAVA_LANG_OBJECT
-                        ) {
-                            resolved = m
-                            break
-                        }
-                    }
-                }
+                return defaultEquals(context, left)
             }
         } else if (node is UCallExpression) {
             resolved = node.resolve()
@@ -118,13 +101,72 @@ class DiffUtilDetector : Detector(), SourceCodeScanner {
         return resolved.containingClass?.qualifiedName == JAVA_LANG_OBJECT
     }
 
+    private fun defaultEquals(
+        context: JavaContext,
+        type: PsiClassType?
+    ): Boolean {
+        val cls = type?.resolve() ?: return false
+
+        if (isKotlin(cls) && (context.evaluator.isSealed(cls) || context.evaluator.isData(cls))) {
+            // Sealed class doesn't guarantee that it defines equals/hashCode
+            // but it's likely (we'd need to go look at each inner class)
+            return false
+        }
+
+        for (m in cls.findMethodsByName("equals", true)) {
+            if (m is PsiMethod) {
+                val parameters = m.parameterList.parameters
+                if (parameters.size == 1 &&
+                    parameters[0].type.canonicalText == JAVA_LANG_OBJECT
+                ) {
+                    return m.containingClass?.qualifiedName == JAVA_LANG_OBJECT
+                }
+            }
+        }
+
+        return false
+    }
+
     private fun checkCall(context: JavaContext, node: UCallExpression) {
         if (defaultEquals(context, node)) {
+            // Within cast or instanceof check which implies a more specific type
+            // which provides an equals implementation?
+            if (withinCastWithEquals(context, node)) {
+                return
+            }
+
             val targetType = node.receiverType?.canonicalText ?: "target"
             val message = "Suspicious equality check: `equals()` is not implemented in $targetType"
             val location = context.getCallLocation(node, false, true)
             context.report(ISSUE, node, location, message)
         }
+    }
+
+    /**
+     * Is this .equals() call within another if check which checks instanceof on a more
+     * specific type than we're calling equals on? If so, does that more specific type
+     * define its own equals?
+     */
+    private fun withinCastWithEquals(context: JavaContext, node: UCallExpression): Boolean {
+        val ifStatement = node.getParentOfType<UElement>(UIfExpression::class.java, false, UMethod::class.java)
+            as? UIfExpression ?: return false
+        val condition = ifStatement.condition
+        return isCastWithEquals(context, condition)
+    }
+
+    private fun isCastWithEquals(context: JavaContext, node: UExpression): Boolean {
+        if (node is UBinaryExpressionWithType) {
+            return !defaultEquals(context, node.type as? PsiClassType)
+        } else if (node is UPolyadicExpression) {
+            for (operand in node.operands) {
+                // Technically we should require && here as well as check that
+                // the operands being compared is our instance in the if expression
+                if (isCastWithEquals(context, operand)) {
+                    return true
+                }
+            }
+        }
+        return false
     }
 
     private fun checkExpression(context: JavaContext, node: UBinaryExpression) {
