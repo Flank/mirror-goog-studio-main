@@ -17,6 +17,7 @@ readonly invocation_id=$(uuidgen | tr A-F a-f)
         test \
         --keep_going \
         --config=local \
+        --config=release \
         --config=cloud_resultstore \
         --invocation_id=${invocation_id} \
         --build_tag_filters=-no_mac \
