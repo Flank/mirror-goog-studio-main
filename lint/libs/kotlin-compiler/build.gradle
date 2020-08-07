@@ -4,8 +4,13 @@ group = 'com.android.tools.external.com-intellij'
 archivesBaseName = 'kotlin-compiler'
 version = rootProject.ext.baseVersion
 
-jar {
-    from zipTree("../../../../../prebuilts/tools/common/lint-psi/kotlin-compiler/kotlin-compiler.jar")
+def prebuiltJars = [
+    "../../../../../prebuilts/tools/common/lint-psi/kotlin-compiler/kotlin-compiler.jar"
+]
+
+prebuiltJars.forEach {
+    jar.from(zipTree(it))
+    dependencies.compile(files(it)) // For Symbol resolution in Intellij IDEA
 }
 
 project.ext.pomName = 'Kotlin Compiler'
