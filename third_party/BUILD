@@ -811,7 +811,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "it.unimi.dsi_fastutil",
-    export_artifact = "//prebuilts/tools/common/m2/repository/it/unimi/dsi/fastutil/7.2.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/it/unimi/dsi/fastutil/8.4.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
