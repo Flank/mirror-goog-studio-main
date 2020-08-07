@@ -58,6 +58,7 @@ import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import java.io.File
@@ -66,8 +67,7 @@ import java.io.File
 abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
 
     @get:OutputDirectory
-    lateinit var compiledDirectory: File
-        private set
+    abstract val compiledDirectory: DirectoryProperty
 
     // Merged resources directory.
     @get:Incremental
@@ -176,6 +176,14 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
         override val type: Class<VerifyLibraryResourcesTask>
             get() = VerifyLibraryResourcesTask::class.java
 
+        override fun handleProvider(taskProvider: TaskProvider<VerifyLibraryResourcesTask>) {
+            super.handleProvider(taskProvider)
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider = taskProvider,
+                property = VerifyLibraryResourcesTask::compiledDirectory
+            ).on(InternalArtifactType.VERIFIED_LIBRARY_RESOURCES)
+        }
+
         /** Configure the given newly-created task object.  */
         override fun configure(
             task: VerifyLibraryResourcesTask
@@ -187,7 +195,6 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                 task.inputDirectory
             )
 
-            task.compiledDirectory = creationConfig.paths.compiledResourcesOutputDir
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
                 task.manifestFiles
