@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.application.testData.TestDependency
 import com.android.build.gradle.integration.application.testData.TestTransform
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.build.gradle.integration.common.truth.AabSubject.Companion.assertThat
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
@@ -45,7 +46,37 @@ class CustomClassTransformTest {
 
     @Test
     fun testCustomClassTransform() {
+        val jarFile = createProfilersJar()
+        // run with ENABLE_DEXING_ARTIFACT_TRANSFORM = true to ensure it gets disabled by
+        // android.advanced.profiling.transforms=<path to jar file>
+        project.executor()
+            .with(StringOption.IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS, jarFile.absolutePath)
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, true)
+            .run("assembleDebug")
+        val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
+        assertThatApk(apk)
+            .containsClass(
+                "Lcom/android/build/gradle/integration/application/testData/TestDependency;")
+        assertThatApk(apk).containsFile("lib/x86/foo.so")
+    }
 
+    @Test
+    fun testBundle() {
+        val jarFile = createProfilersJar()
+        // run with ENABLE_DEXING_ARTIFACT_TRANSFORM = true to ensure it gets disabled by
+        // android.advanced.profiling.transforms=<path to jar file>
+        project.executor()
+            .with(StringOption.IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS, jarFile.absolutePath)
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, true)
+            .run("bundleDebug")
+        project.getBundle(GradleTestProject.ApkType.DEBUG).use {
+            assertThat(it).containsClass("base",
+                "Lcom/android/build/gradle/integration/application/testData/TestDependency;")
+            assertThat(it).contains("base/lib/x86/foo.so")
+        }
+    }
+
+    private fun createProfilersJar(): File {
         // Create a fake dependency jar file
         val dependencyJarFile = project.testDir.resolve("fake_dependency.jar")
         TestInputsGenerator.pathWithClasses(
@@ -93,17 +124,6 @@ class CustomClassTransformTest {
             }
             zip.closeEntry()
         }
-
-        // run with ENABLE_DEXING_ARTIFACT_TRANSFORM = true to ensure it gets disabled by
-        // android.advanced.profiling.transforms=<path to jar file>
-        project.executor()
-            .with(StringOption.IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS, jarFile.absolutePath)
-            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, true)
-            .run("assembleDebug")
-        val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
-        assertThatApk(apk)
-            .containsClass(
-                "Lcom/android/build/gradle/integration/application/testData/TestDependency;")
-        assertThatApk(apk).containsFile("lib/x86/foo.so")
+        return jarFile
     }
 }
