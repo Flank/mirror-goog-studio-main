@@ -195,11 +195,18 @@ sdk_java_binary(
     runtime_deps = [":sdkmanager_lib"],
 )
 
+sdk_java_binary(
+    name = "retrace",
+    main_class = "com.android.tools.r8.retrace.Retrace",
+    runtime_deps = ["//prebuilts/r8"],
+)
+
 sdk_package(
     name = "commandlinetools",
     binaries = [
         ":avdmanager",
         ":sdkmanager",
+        ":retrace",
         "//tools/base/apkparser/cli:apkanalyzer",
         # b/135688047
         # "//tools/base/jobb:jobb",
