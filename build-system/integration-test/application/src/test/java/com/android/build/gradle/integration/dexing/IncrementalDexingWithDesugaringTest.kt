@@ -340,7 +340,7 @@ class IncrementalDexingWithDesugaringTest(
         incrementalTestHelper = IncrementalTestHelper(
             project = project,
             buildTasks = listOf(":app:mergeProjectDexDebug", ":app:mergeLibDexDebug"),
-            filesToTrackChanges = setOf(
+            filesOrDirsToTrackChanges = setOf(
                 interfaceWithDefaultMethodClassFile,
                 classUsingInterfaceWithDefaultMethodClassFile,
                 dummyStandAloneClassFile,
@@ -356,7 +356,7 @@ class IncrementalDexingWithDesugaringTest(
                     dummyStandAlonePublishedClassFile!!
                 )
             })
-        ).useCustomExecutor {
+        ).updateExecutor {
             it.with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM, withIncrementalDexingTransform)
         }
     }

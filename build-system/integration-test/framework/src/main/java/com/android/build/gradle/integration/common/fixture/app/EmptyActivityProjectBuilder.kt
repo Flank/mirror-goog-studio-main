@@ -40,7 +40,7 @@ class EmptyActivityProjectBuilder {
      * The following settings resemble the New Project wizard in Android Studio
      */
     var projectName: String = "My Application"
-    var packageName: String = "com.example.myapplication"
+    var packageName: String = COM_EXAMPLE_MYAPPLICATION
     var minSdkVersion: Int = DEFAULT_MIN_SDK_VERSION
     var useKotlin: Boolean = false
 
@@ -52,14 +52,21 @@ class EmptyActivityProjectBuilder {
     var useGradleBuildCache: Boolean = false
     var gradleBuildCacheDir: File? = null
 
-    /**
-     * The list of all subprojects in the root project. It includes an app subproject and may also
-     * include additional subprojects if they are added to the root project.
-     */
-    private val subProjects: MutableList<GradleProject> = mutableListOf()
+    /** The app subproject. */
+    private lateinit var app: GradleProject
 
-    /** Whether Kotlin is used in any of the subprojects. */
-    private var kotlinUsedInSubProjects: Boolean = false
+    /** The library subprojects. */
+    private val librarySubProjects: MutableList<GradleProject> = mutableListOf()
+
+    /** The library subprojects that app depends on. */
+    private val appDependencies: MutableList<GradleProject> = mutableListOf()
+
+    /**
+     * Whether Kotlin is used in the app subproject or any of the library subprojects.
+     *
+     * Note: It is a `var` because its value can be updated when library subprojects are added.
+     */
+    private var kotlinUsedInSubProjects: Boolean = useKotlin
 
     init {
         if (useGradleBuildCache) {
@@ -71,8 +78,9 @@ class EmptyActivityProjectBuilder {
 
     fun build(): GradleTestProject {
         val subProjectsBuilder = MultiModuleTestProject.builder()
-        addAppSubProject()
-        for (subProject in subProjects) {
+        app = createAppSubProject(APP, packageName, minSdkVersion, useKotlin)
+        subProjectsBuilder.subproject(app.path!!, app)
+        for (subProject in librarySubProjects) {
             subProjectsBuilder.subproject(subProject.path!!, subProject)
         }
 
@@ -95,16 +103,8 @@ class EmptyActivityProjectBuilder {
         return rootProjectBuilder.create()
     }
 
-    private fun addAppSubProject() {
-        val app = createAppSubProject("app", packageName, minSdkVersion, useKotlin)
-        subProjects.add(app)
-        if (useKotlin) {
-            kotlinUsedInSubProjects = true
-        }
-    }
-
     private fun createAppSubProject(
-        subprojectName: String,
+        @Suppress("SameParameterValue") subprojectName: String,
         packageName: String,
         minSdkVersion: Int,
         useKotlin: Boolean
@@ -120,6 +120,9 @@ class EmptyActivityProjectBuilder {
                 this.useKotlin = useKotlin
                 compileSdkVersion = GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                 this.minSdkVersion = minSdkVersion.toString()
+                appDependencies.forEach {
+                    addDependency(dependency = "project(\"${it.path}\")")
+                }
                 if (useAndroidX) {
                     addDependency(
                         dependency = "'androidx.appcompat:appcompat:$ANDROIDX_VERSION'"
@@ -274,10 +277,11 @@ class EmptyActivityProjectBuilder {
      * It resembles the New Module wizard in Android Studio.
      */
     fun addAndroidLibrary(
-        subprojectName: String = "lib",
-        packageName: String = "com.example.lib",
+        subprojectName: String = LIB,
+        packageName: String = COM_EXAMPLE_LIB,
         minSdkVersion: Int = DEFAULT_MIN_SDK_VERSION,
-        useKotlin: Boolean = false
+        useKotlin: Boolean = false,
+        addImplementationDependencyFromApp: Boolean = false // default to false to match AS behavior
     ): EmptyActivityProjectBuilder {
         val lib = EmptyGradleProject(subprojectName)
 
@@ -311,7 +315,10 @@ class EmptyActivityProjectBuilder {
             addUnitTest(lib, packageName, useKotlin)
         }
 
-        subProjects.add(lib)
+        librarySubProjects.add(lib)
+        if (addImplementationDependencyFromApp) {
+            appDependencies.add(lib)
+        }
         if (useKotlin) {
             kotlinUsedInSubProjects = true
         }
@@ -324,8 +331,9 @@ class EmptyActivityProjectBuilder {
      * It resembles the New Module wizard in Android Studio.
      */
     fun addJavaLibrary(
-        subprojectName: String = "javalib",
-        useKotlin: Boolean = false
+        subprojectName: String = JAVALIB,
+        useKotlin: Boolean = false,
+        addImplementationDependencyFromApp: Boolean = false // default to false to match AS behavior
     ): EmptyActivityProjectBuilder {
         val lib = EmptyGradleProject(subprojectName)
 
@@ -338,10 +346,21 @@ class EmptyActivityProjectBuilder {
             }
         )
 
-        subProjects.add(lib)
+        librarySubProjects.add(lib)
+        if (addImplementationDependencyFromApp) {
+            appDependencies.add(lib)
+        }
         if (useKotlin) {
             kotlinUsedInSubProjects = true
         }
         return this
+    }
+
+    companion object {
+        const val APP = "app"
+        const val LIB = "lib"
+        const val JAVALIB = "javalib"
+        const val COM_EXAMPLE_MYAPPLICATION = "com.example.myapplication"
+        const val COM_EXAMPLE_LIB = "com.example.lib"
     }
 }
