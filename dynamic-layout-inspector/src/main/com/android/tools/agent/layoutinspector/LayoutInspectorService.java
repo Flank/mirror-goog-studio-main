@@ -60,6 +60,10 @@ public class LayoutInspectorService {
 
     private boolean mShowComposeNodes = false;
     private boolean mUseScreenshotMode = false;
+    private boolean mCaptureOnlyOnce = false;
+
+    // The generation of the last component tree sent to the client
+    private int mGeneration = 0;
 
     private static LayoutInspectorService sInstance;
 
@@ -86,6 +90,7 @@ public class LayoutInspectorService {
     /** This method is called when a layout inspector command is received by the agent. */
     @SuppressWarnings("unused") // invoked via jni
     public void onStartLayoutInspectorCommand(boolean showComposeNodes) {
+        mCaptureOnlyOnce = false;
         mShowComposeNodes = showComposeNodes;
         List<View> roots = getRootViews();
         for (View root : roots) {
@@ -127,6 +132,11 @@ public class LayoutInspectorService {
                                         byte[] arr = os.toByteArray();
                                         os.reset();
                                         if (mCaptureClosables.get(root) != null) {
+                                            if (mCaptureOnlyOnce) {
+                                                stopCapturing(root);
+                                            } else {
+                                                mGeneration++;
+                                            }
                                             captureAndSendComponentTree(arr, root);
                                         }
                                     }
@@ -168,6 +178,24 @@ public class LayoutInspectorService {
         mDetectRootChange.cancel();
         mDetectRootChange = null;
         stopCapturing();
+        try {
+            mProperties.saveAllViewProperties(getRootViews(), mGeneration);
+            mProperties.saveAllComposeParameters(mGeneration);
+        } catch (Throwable ex) {
+            sendErrorMessage(ex);
+        }
+    }
+
+    /** Sends a single capture and properties. */
+    @SuppressWarnings("unused") // invoked via jni
+    public void onRefreshLayoutInspectorCommand() {
+        mCaptureOnlyOnce = true;
+        mGeneration++;
+        List<View> roots = getRootViews();
+        for (View root : roots) {
+            startLayoutInspector(root);
+        }
+        mProperties.saveAllViewProperties(getRootViews(), mGeneration);
     }
 
     private void stopCapturing() {
@@ -210,7 +238,7 @@ public class LayoutInspectorService {
         }
     }
 
-    @SuppressWarnings("MethodMayBeStatic")
+    @SuppressWarnings("MethodMayBeStatic") // Kept non static for tests
     @NonNull
     public List<View> getRootViews() {
         try {
@@ -247,7 +275,7 @@ public class LayoutInspectorService {
 
     /** Sends a component tree to Android Studio. */
     private native long sendComponentTree(
-            long request, @NonNull byte[] image, int len, int id, int imageType);
+            long request, @NonNull byte[] image, int len, int id, int imageType, int generation);
 
     /** This method is called when a new image has been snapped. */
     private void captureAndSendComponentTree(@NonNull byte[] image, @Nullable View root) {
@@ -277,6 +305,7 @@ public class LayoutInspectorService {
                 ComponentTreeBuilder builder =
                         new ComponentTreeBuilder(event, root, mProperties, mShowComposeNodes);
                 root.post(builder);
+                //noinspection SynchronizationOnLocalVariableOrMethodParameter
                 synchronized (builder) {
                     if (!builder.isDone()) {
                         builder.wait(5000);
@@ -286,10 +315,13 @@ public class LayoutInspectorService {
                 if (ex != null) {
                     throw ex;
                 }
+                if (mShowComposeNodes && mCaptureOnlyOnce) {
+                    mProperties.saveAllComposeParameters(mGeneration);
+                }
             }
             // Send the message from a non UI thread:
             int messageId = (int) System.currentTimeMillis();
-            sendComponentTree(request, image, image.length, messageId, type.ordinal());
+            sendComponentTree(request, image, image.length, messageId, type.ordinal(), mGeneration);
         } catch (LayoutModifiedException e) {
             // The layout changed while we were traversing, start over.
             captureAndSendComponentTree(image, root);
@@ -359,7 +391,7 @@ public class LayoutInspectorService {
     @SuppressWarnings("unused") // invoked via jni
     public void onGetPropertiesInspectorCommand(long viewId) {
         try {
-            mProperties.handleGetProperties(viewId);
+            mProperties.handleGetProperties(viewId, mGeneration);
         } catch (Throwable ex) {
             sendErrorMessage(ex);
         }

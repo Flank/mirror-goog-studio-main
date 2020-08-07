@@ -40,6 +40,7 @@ message ComponentTreeEvent {
   repeated StringEntry string = 4;
   ResourceConfiguration resources = 5;
   repeated int64 all_window_ids = 6;
+  int32 generation = 7;
 }
 
 message PropertyEvent {
@@ -47,6 +48,7 @@ message PropertyEvent {
   Resource layout = 2;
   repeated StringEntry string = 3;
   repeated Property property = 4;
+  int32 generation = 5;
 }
 
 message ResourceConfiguration {
@@ -191,6 +193,7 @@ message LayoutInspectorCommand {
     GET_PROPERTIES = 3;
     EDIT_PROPERTY = 4;
     USE_SCREENSHOT_MODE = 5;
+    REFRESH = 6;
   }
 
   Type type = 1;

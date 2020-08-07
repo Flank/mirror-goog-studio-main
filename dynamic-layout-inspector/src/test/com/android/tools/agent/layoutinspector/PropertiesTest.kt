@@ -33,7 +33,7 @@ import com.android.tools.layoutinspector.proto.LayoutInspectorProto.Property
 import com.android.tools.layoutinspector.proto.LayoutInspectorProto.Property.Type
 import com.android.tools.transport.AgentRule
 import com.google.common.collect.ImmutableSet
-import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -103,10 +103,12 @@ class PropertiesTest {
         val view = StandardView.createTextView()
         WindowInspector.getGlobalWindowViews().add(view)
         val properties = Properties()
-        properties.handleGetProperties(view.uniqueDrawingId)
+        properties.handleGetProperties(view.uniqueDrawingId, 19)
         val event = agentRule.events.poll(5, TimeUnit.SECONDS)!!
         val propertyEvent = event.layoutInspectorEvent.properties
         var index = 0
+        assertThat(propertyEvent.viewId).isEqualTo(view.uniqueDrawingId)
+        assertThat(propertyEvent.generation).isEqualTo(19)
         with (PropertyChecker(propertyEvent)) {
             check(index++, "focused", Type.BOOLEAN, 1)
             check(index++, "byte", Type.BYTE, 7)
@@ -130,7 +132,7 @@ class PropertiesTest {
             check(index++, "layout_height", Type.INT32, 400)
             check(index++, "layout_marginBottom", Type.INT32, 10)
             check(index++, "layout_gravity", Type.GRAVITY, ImmutableSet.of("end"))
-            Truth.assertThat(size).isEqualTo(index)
+            assertThat(size).isEqualTo(index)
         }
     }
 
@@ -149,10 +151,12 @@ class PropertiesTest {
 
         val properties = Properties()
         properties.setComposeParameters(nodes.associateBy({ it.id }, { it.parameters }))
-        properties.handleGetProperties(node.id)
+        properties.handleGetProperties(node.id, 21)
         val event = agentRule.events.poll(5, TimeUnit.SECONDS)!!
         val propertyEvent = event.layoutInspectorEvent.properties
         var index = 0
+        assertThat(propertyEvent.viewId).isEqualTo(node.id)
+        assertThat(propertyEvent.generation).isEqualTo(21)
         with (PropertyChecker(propertyEvent)) {
             check(index++, "name", Type.STRING, "Hello")
             check(index++, "wrap", Type.BOOLEAN, 1)
@@ -168,7 +172,7 @@ class PropertiesTest {
             check(index, 0, "x", Type.DIMENSION_DP, 2.0f)
             check(index, 1, "y", Type.DIMENSION_DP, 2.0f)
             check(index++, "rect", Type.STRING, "Rect")
-            Truth.assertThat(size).isEqualTo(index)
+            assertThat(size).isEqualTo(index)
         }
     }
 
@@ -187,8 +191,8 @@ class PropertiesTest {
         }
 
         private fun check(property: Property, name: String, type: Type, value: Any?) {
-            Truth.assertThat(table[property.name]).isEqualTo(name)
-            Truth.assertThat(property.type).isEqualTo(type)
+            assertThat(table[property.name]).isEqualTo(name)
+            assertThat(property.type).isEqualTo(type)
             @Suppress("UNCHECKED_CAST")
             when (type) {
                 Type.BOOLEAN,
@@ -196,20 +200,20 @@ class PropertiesTest {
                 Type.CHAR,
                 Type.COLOR,
                 Type.INT16,
-                Type.INT32 -> Truth.assertThat(property.int32Value).isEqualTo(value)
-                Type.INT64 -> Truth.assertThat(property.int64Value).isEqualTo(value)
-                Type.DOUBLE -> Truth.assertThat(property.doubleValue).isEqualTo(value)
+                Type.INT32 -> assertThat(property.int32Value).isEqualTo(value)
+                Type.INT64 -> assertThat(property.int64Value).isEqualTo(value)
+                Type.DOUBLE -> assertThat(property.doubleValue).isEqualTo(value)
                 Type.DIMENSION_DP,
                 Type.DIMENSION_SP,
                 Type.DIMENSION_EM,
-                Type.FLOAT -> Truth.assertThat(property.floatValue).isEqualTo(value)
+                Type.FLOAT -> assertThat(property.floatValue).isEqualTo(value)
                 Type.STRING,
-                Type.INT_ENUM -> Truth.assertThat(table[property.int32Value]).isEqualTo(value)
+                Type.INT_ENUM -> assertThat(table[property.int32Value]).isEqualTo(value)
                 Type.GRAVITY,
-                Type.INT_FLAG -> Truth.assertThat(
+                Type.INT_FLAG -> assertThat(
                     property.flagValue.flagList.map { id: Int? -> table[id!!] }
                 ).containsExactlyElementsIn(value as Set<String>)
-                Type.RESOURCE -> Truth.assertThat(table[property.resourceValue]).isEqualTo(value)
+                Type.RESOURCE -> assertThat(table[property.resourceValue]).isEqualTo(value)
                 else -> Assert.fail("Unmapped name: $name, type: $type")
             }
         }

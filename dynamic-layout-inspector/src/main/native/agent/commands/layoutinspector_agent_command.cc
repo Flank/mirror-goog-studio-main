@@ -93,6 +93,14 @@ void LayoutInspectorAgentCommand::RegisterAgentLayoutInspectorCommandHandler(
             break;
           }
 
+          case LayoutInspectorCommand::REFRESH: {
+            jmethodID refresh_command_method = jni_env->GetMethodID(
+                inspector_class, "onRefreshLayoutInspectorCommand", "()V");
+
+            jni_env->CallVoidMethod(inspector_service, refresh_command_method);
+            break;
+          }
+
           default:
             // Ignore unknown commands
             break;
