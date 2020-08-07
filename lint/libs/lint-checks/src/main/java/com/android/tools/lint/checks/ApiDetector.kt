@@ -141,6 +141,7 @@ import org.jetbrains.uast.UInstanceExpression
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.ULocalVariable
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
@@ -152,6 +153,7 @@ import org.jetbrains.uast.UTryExpression
 import org.jetbrains.uast.UTypeReferenceExpression
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.UastCallKind
+import org.jetbrains.uast.expressions.UInjectionHost
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
@@ -2436,7 +2438,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             call: UCallExpression,
             minSdk: Int
         ) {
-            if (minSdk >= 9) {
+            if (minSdk >= 24) {
                 // Already OK
                 return
             }
@@ -2446,24 +2448,66 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 return
             }
             val argument = expressions[0]
-            val constant = ConstantEvaluator.evaluate(context, argument)
+            var warned: MutableList<Char>? = null
+            var checked: Char = 0.toChar()
+            val constant = when (argument) {
+                is ULiteralExpression -> argument.value
+                is UInjectionHost ->
+                    argument.evaluateToString()
+                        ?: ConstantEvaluator().allowUnknowns().evaluate(argument)
+                        ?: return
+                else -> ConstantEvaluator().allowUnknowns().evaluate(argument) ?: return
+            }
             if (constant is String) {
                 var isEscaped = false
-                for (i in 0 until constant.length) {
-                    val c = constant[i]
-                    if (c == '\'') {
-                        isEscaped = !isEscaped
-                    } else if (!isEscaped && (c == 'L' || c == 'c')) {
-                        val message =
-                            "The pattern character '$c' requires API level 9 (current min is $minSdk) : \"`$constant`\""
-                        context.report(
-                            UNSUPPORTED,
-                            call,
-                            context.getRangeLocation(argument, i + 1, 1),
-                            message,
-                            apiLevelFix(9)
-                        )
-                        return
+                for (index in 0 until constant.length) {
+                    when (val c = constant[index]) {
+                        '\'' -> isEscaped = !isEscaped
+                        // Gingerbread
+                        'L', 'c',
+                        // Nougat
+                        'Y', 'X', 'u' -> {
+                            if (!isEscaped && c != checked && (warned == null || !warned.contains(c))) {
+                                val api = if (c == 'L' || c == 'c') 9 else 24
+                                if (minSdk >= api) {
+                                    checked = c
+                                } else if (isWithinVersionCheckConditional(context.evaluator, argument, api, true) ||
+                                    isPrecededByVersionCheckExit(context.evaluator, argument, api, true)
+                                ) {
+                                    checked = c
+                                } else {
+                                    val message =
+                                        "The pattern character '$c' requires API level $api (current min is $minSdk) : \"`$constant`\""
+
+                                    var end = index + 1
+                                    while (end < constant.length && constant[end] == c) {
+                                        end++
+                                    }
+
+                                    val location = if (argument is ULiteralExpression) {
+                                        context.getRangeLocation(argument, index, end - index)
+                                    } else if (argument is UInjectionHost && argument is UPolyadicExpression &&
+                                        argument.operator == UastBinaryOperator.PLUS &&
+                                        argument.operands.size == 1 &&
+                                        argument.operands.first() is ULiteralExpression
+                                    ) {
+                                        context.getRangeLocation(argument.operands[0], index, end - index)
+                                    } else {
+                                        context.getLocation(argument)
+                                    }
+
+                                    context.report(
+                                        UNSUPPORTED,
+                                        call,
+                                        location,
+                                        message,
+                                        apiLevelFix(api)
+                                    )
+                                    val list = warned ?: ArrayList<Char>().also { warned = it }
+                                    list.add(c)
+                                }
+                            }
+                        }
                     }
                 }
             }

@@ -2189,10 +2189,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "                                                       ~~~~~~~~~~~\n"
                         + "src/test/pkg/ApiCallTest12.java:23: Error: The pattern character 'L' requires API level 9 (current min is 4) : \"yyyy-MM-dd LL\" [NewApi]\n"
                         + "  new SimpleDateFormat(\"yyyy-MM-dd LL\", Locale.US);\n"
-                        + "                                   ~\n"
+                        + "                                  ~~\n"
                         + "src/test/pkg/ApiCallTest12.java:25: Error: The pattern character 'c' requires API level 9 (current min is 4) : \"cc yyyy-MM-dd\" [NewApi]\n"
                         + "  SimpleDateFormat format = new SimpleDateFormat(\"cc yyyy-MM-dd\");\n"
-                        + "                                                  ~\n"
+                        + "                                                 ~~\n"
                         + "3 errors, 0 warnings\n";
         lint().files(manifest().minSdk(4), projectProperties().compileSdk(19), mApiCallTest12)
                 .checkMessage(this::checkReportedError)
@@ -2205,6 +2205,54 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expectClean();
+    }
+
+    public void testDateFormatApi24() {
+        lint().files(
+                        manifest().minSdk(8),
+                        kotlin(
+                                ""
+                                        + "import android.os.Build\n"
+                                        + "import java.text.SimpleDateFormat\n"
+                                        + "import java.util.*\n"
+                                        + "\n"
+                                        + "fun test(): String {\n"
+                                        + "    return SimpleDateFormat(\n"
+                                        + "        \"'test'cc-LL-YY-uu-XX-yy\",\n"
+                                        + "        Locale.US\n"
+                                        + "    ).format(Date())\n"
+                                        + "}\n"
+                                        + "\n"
+                                        + "fun testSuppressed(): String {\n"
+                                        + "    return if (Build.VERSION.SDK_INT > 24) {\n"
+                                        + "        SimpleDateFormat(\n"
+                                        + "            \"'test'cc-LL-YY-uu-XX-yy\",\n"
+                                        + "            Locale.US\n"
+                                        + "        ).format(Date())\n"
+                                        + "    } else {\n"
+                                        + "        \"?\";\n"
+                                        + "    }\n"
+                                        + "}\n"))
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect(
+                        ""
+                                + "src/test.kt:7: Error: The pattern character 'L' requires API level 9 (current min is 8) : \"'test'cc-LL-YY-uu-XX-yy\" [NewApi]\n"
+                                + "        \"'test'cc-LL-YY-uu-XX-yy\",\n"
+                                + "                  ~~\n"
+                                + "src/test.kt:7: Error: The pattern character 'X' requires API level 24 (current min is 8) : \"'test'cc-LL-YY-uu-XX-yy\" [NewApi]\n"
+                                + "        \"'test'cc-LL-YY-uu-XX-yy\",\n"
+                                + "                           ~~\n"
+                                + "src/test.kt:7: Error: The pattern character 'Y' requires API level 24 (current min is 8) : \"'test'cc-LL-YY-uu-XX-yy\" [NewApi]\n"
+                                + "        \"'test'cc-LL-YY-uu-XX-yy\",\n"
+                                + "                     ~~\n"
+                                + "src/test.kt:7: Error: The pattern character 'c' requires API level 9 (current min is 8) : \"'test'cc-LL-YY-uu-XX-yy\" [NewApi]\n"
+                                + "        \"'test'cc-LL-YY-uu-XX-yy\",\n"
+                                + "               ~~\n"
+                                + "src/test.kt:7: Error: The pattern character 'u' requires API level 24 (current min is 8) : \"'test'cc-LL-YY-uu-XX-yy\" [NewApi]\n"
+                                + "        \"'test'cc-LL-YY-uu-XX-yy\",\n"
+                                + "                        ~~\n"
+                                + "5 errors, 0 warnings");
     }
 
     public void testJavaConstants() {
