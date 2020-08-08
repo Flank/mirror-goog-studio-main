@@ -23,6 +23,7 @@ import static com.android.SdkConstants.DOT_KTS;
 import static com.android.tools.lint.client.api.LintClient.CLIENT_UNIT_TESTS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -72,6 +73,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.CheckReturnValue;
 
 @SuppressWarnings("SameParameterValue")
 public class TestLintTask {
@@ -131,6 +133,7 @@ public class TestLintTask {
     }
 
     /** Creates a new lint test task */
+    @CheckReturnValue
     @NonNull
     public static TestLintTask lint() {
         return new TestLintTask();
@@ -391,7 +394,7 @@ public class TestLintTask {
                 && projects[0].getFiles().length == 1) {
             this.incrementalFileName = projects[0].getFiles()[0].getTargetPath();
         } else if (projects == null || projects.length == 0) {
-            assert false : "Can't use incremental mode without any projects!";
+            fail("Can't use incremental mode without any projects!");
         } else {
             StringBuilder sb = new StringBuilder();
             for (ProjectDescription project : projects) {
@@ -403,11 +406,11 @@ public class TestLintTask {
                     sb.append(file.getTargetPath());
                 }
             }
-            assert false
-                    : "Can only use implicit incremental mode when there is a single "
+            fail(
+                    "Can only use implicit incremental mode when there is a single "
                             + "source file; use incremental(relativePath) instead. Perhaps you "
                             + "meant one of the following: "
-                            + sb.toString();
+                            + sb.toString());
         }
         return this;
     }
@@ -750,6 +753,7 @@ public class TestLintTask {
      *
      * @return the result
      */
+    @CheckReturnValue
     @NonNull
     public TestLintResult run() {
         alreadyRun = true;

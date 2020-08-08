@@ -322,7 +322,7 @@ public class TestFiles {
         public final File file;
 
         public LibraryReferenceTestFile(@NonNull File file) {
-            this(file.getName(), file);
+            this(file.getPath(), file);
         }
 
         public LibraryReferenceTestFile(@NonNull String to, @NonNull File file) {
