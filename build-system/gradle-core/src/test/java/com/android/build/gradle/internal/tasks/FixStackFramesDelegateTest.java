@@ -36,11 +36,11 @@ import static org.objectweb.asm.Opcodes.V1_8;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.fixtures.ExecutionMode;
+import com.android.build.gradle.internal.fixtures.FakeFileChange;
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor;
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService;
 import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.services.ClassesHierarchyBuildService;
-import com.android.ide.common.resources.FileStatus;
 import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Zip;
@@ -72,6 +72,7 @@ import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.testfixtures.ProjectBuilder;
+import org.gradle.work.ChangeType;
 import org.gradle.workers.WorkerExecutor;
 import org.junit.Before;
 import org.junit.Rule;
@@ -144,13 +145,13 @@ public class FixStackFramesDelegateTest {
                 new FixStackFramesDelegate(ANDROID_JAR, classesToFix, classesToFix, output);
 
         delegate.doIncrementalRun(
-                executor, ImmutableMap.of(), task, classesHierarchyBuildServiceProvider);
+                executor, ImmutableList.of(), task, classesHierarchyBuildServiceProvider);
 
         assertThat(output.list()).named("output artifacts").hasLength(0);
 
         delegate.doIncrementalRun(
                 executor,
-                ImmutableMap.of(jar.toFile(), FileStatus.NEW),
+                ImmutableList.of(new FakeFileChange(jar.toFile(), ChangeType.ADDED)),
                 task,
                 classesHierarchyBuildServiceProvider);
 
@@ -160,7 +161,7 @@ public class FixStackFramesDelegateTest {
         FileUtils.delete(jar.toFile());
         delegate.doIncrementalRun(
                 executor,
-                ImmutableMap.of(jar.toFile(), FileStatus.REMOVED),
+                ImmutableList.of(new FakeFileChange(jar.toFile(), ChangeType.REMOVED)),
                 task,
                 classesHierarchyBuildServiceProvider);
 

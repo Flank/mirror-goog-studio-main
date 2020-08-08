@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.common.resources.FileStatus
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
@@ -31,9 +30,10 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
+import org.gradle.work.Incremental
+import org.gradle.work.InputChanges
 
-abstract class RecalculateStackFramesTask  : IncrementalTask() {
+abstract class RecalculateStackFramesTask : NewIncrementalTask() {
 
     @get:OutputDirectory
     abstract val outFolder: DirectoryProperty
@@ -43,6 +43,7 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
         private set
 
     @get:Classpath
+    @get:Incremental
     lateinit var classesToFix: FileCollection
         private set
 
@@ -57,24 +58,23 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
         bootClasspath.files, classesToFix.files, referencedClasses.files, outFolder.get().asFile
     )
 
-    override val incremental: Boolean = true
-
-    override fun doFullTaskAction() {
-        createDelegate().doFullRun(workerExecutor, this, classesHierarchyBuildService)
-    }
-
-    override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
-        createDelegate().doIncrementalRun(
-            workerExecutor,
-            changedInputs,
-            this,
-            classesHierarchyBuildService
-        )
+    override fun doTaskAction(inputChanges: InputChanges) {
+        if (!inputChanges.isIncremental) {
+            createDelegate().doFullRun(workerExecutor, this, classesHierarchyBuildService)
+        } else {
+            createDelegate().doIncrementalRun(
+                workerExecutor,
+                inputChanges.getFileChanges(classesToFix),
+                this,
+                classesHierarchyBuildService
+            )
+        }
     }
 
     class CreationAction(
         creationConfig: VariantCreationConfig,
-        private val isTestCoverageEnabled: Boolean) :
+        private val isTestCoverageEnabled: Boolean
+    ) :
         VariantTaskCreationAction<RecalculateStackFramesTask, VariantCreationConfig>(
             creationConfig
         ) {
@@ -103,7 +103,9 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
                 creationConfig.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.EXTERNAL,
-                    AndroidArtifacts.ArtifactType.CLASSES_JAR))
+                    AndroidArtifacts.ArtifactType.CLASSES_JAR
+                )
+            )
 
             val referencedClasses =
                 creationConfig.services.fileCollection(creationConfig.variantScope.providedOnlyClasspath)

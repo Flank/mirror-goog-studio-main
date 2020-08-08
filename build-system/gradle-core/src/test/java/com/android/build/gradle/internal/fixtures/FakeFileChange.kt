@@ -21,7 +21,7 @@ import org.gradle.work.ChangeType
 import org.gradle.work.FileChange
 import java.io.File
 
-class FakeFileChange(
+class FakeFileChange @JvmOverloads constructor(
     private val file: File,
     private val changeType: ChangeType = ChangeType.REMOVED,
     private val fileType: FileType = FileType.FILE,
