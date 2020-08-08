@@ -18,6 +18,7 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test:test-projects/lintCustomLocalAndPublishRules",
         "//tools/base/build-system/integration-test:test-projects/lintCustomRules",
         "//tools/base/build-system/integration-test:test-projects/lintDeps",
+        "//tools/base/build-system/integration-test:test-projects/lintInstantiate",
         "//tools/base/build-system/integration-test:test-projects/lintKotlin",
         "//tools/base/build-system/integration-test:test-projects/lintLibraryModel",
         "//tools/base/build-system/integration-test:test-projects/lintLibrarySkipDeps",
