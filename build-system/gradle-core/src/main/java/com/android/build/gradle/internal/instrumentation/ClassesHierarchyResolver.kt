@@ -27,7 +27,12 @@ class ClassesHierarchyResolver(classesDataCache: ClassesDataCache, sources: Set<
 
     private val classesDataCaches = classesDataCache.getSourceCaches(sources)
 
-    private fun loadClassData(className: String): ClassesDataSourceCache.ClassData? {
+    private fun loadClassData(className: String): ClassesDataSourceCache.ClassData {
+        return maybeLoadClassData(className)
+            ?: throw RuntimeException("Unable to find class data for $className")
+    }
+
+    private fun maybeLoadClassData(className: String): ClassesDataSourceCache.ClassData? {
         // Check if it's already cached
         classesDataCaches.forEach {
             it.getClassDataIfLoaded(className)?.let { return it }
@@ -42,7 +47,7 @@ class ClassesHierarchyResolver(classesDataCache: ClassesDataCache, sources: Set<
     }
 
     fun getAnnotations(className: String): List<String> {
-        return loadClassData(className)?.annotations?.map { it.replace('/', '.') }
+        return maybeLoadClassData(className)?.annotations?.map { it.replace('/', '.') }
             ?: emptyList()
     }
 
@@ -59,7 +64,14 @@ class ClassesHierarchyResolver(classesDataCache: ClassesDataCache, sources: Set<
      * the method will return {B, C, java.lang.Object}
      */
     fun getAllSuperClasses(className: String): List<String> {
-        return doGetAllSuperClasses(className).reversed().map { it.replace('/', '.') }
+        return getAllSuperClassesInInternalForm(className).map { it.replace('/', '.') }
+    }
+
+    fun getAllSuperClassesInInternalForm(
+        className: String,
+        failOnError: Boolean = false
+    ): List<String> {
+        return doGetAllSuperClasses(className, failOnError).reversed()
     }
 
     /**
@@ -75,26 +87,36 @@ class ClassesHierarchyResolver(classesDataCache: ClassesDataCache, sources: Set<
      * the method will return {B, C}
      */
     fun getAllInterfaces(className: String): List<String> {
-        return doGetAllInterfaces(className).sorted().map { it.replace('/', '.') }
+        return getAllInterfacesInInternalForm(className).map { it.replace('/', '.') }
     }
 
-    private fun doGetAllSuperClasses(className: String): MutableList<String> {
-        val classData = loadClassData(className)
+    fun getAllInterfacesInInternalForm(
+        className: String,
+        failOnError: Boolean = false
+    ): List<String> {
+        return doGetAllInterfaces(className, failOnError).sorted()
+    }
+
+    private fun doGetAllSuperClasses(className: String, failOnError: Boolean): MutableList<String> {
+        val classData = if (failOnError) loadClassData(className) else maybeLoadClassData(className)
         if (classData?.superClass == null) {
             return mutableListOf()
         }
-        return doGetAllSuperClasses(classData.superClass).apply { add(classData.superClass) }
+        return doGetAllSuperClasses(
+            classData.superClass,
+            failOnError
+        ).apply { add(classData.superClass) }
     }
 
-    private fun doGetAllInterfaces(className: String): MutableSet<String> {
-        val classData = loadClassData(className)
+    private fun doGetAllInterfaces(className: String, failOnError: Boolean): MutableSet<String> {
+        val classData = if (failOnError) loadClassData(className) else maybeLoadClassData(className)
         return mutableSetOf<String>().apply {
             if (classData?.superClass != null) {
-                addAll(doGetAllInterfaces(classData.superClass))
+                addAll(doGetAllInterfaces(classData.superClass, failOnError))
             }
             classData?.interfaces?.forEach { interfaceClass ->
                 if (add(interfaceClass)) {
-                    addAll(doGetAllInterfaces(interfaceClass))
+                    addAll(doGetAllInterfaces(interfaceClass, failOnError))
                 }
             }
         }

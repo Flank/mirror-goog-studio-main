@@ -38,8 +38,9 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.fixtures.ExecutionMode;
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor;
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService;
+import com.android.build.gradle.internal.services.BuildServicesKt;
+import com.android.build.gradle.internal.services.ClassesHierarchyBuildService;
 import com.android.ide.common.resources.FileStatus;
-import com.android.testutils.Serialization;
 import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Zip;
@@ -69,6 +70,7 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Provider;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.gradle.workers.WorkerExecutor;
 import org.junit.Before;
@@ -87,7 +89,10 @@ public class FixStackFramesDelegateTest {
             ImmutableSet.of(TestUtils.getPlatformFile("android.jar"));
 
     private WorkerExecutor executor;
+
     private AndroidVariantTask task;
+
+    private Provider<ClassesHierarchyBuildService> classesHierarchyBuildServiceProvider;
 
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
@@ -101,12 +106,18 @@ public class FixStackFramesDelegateTest {
         ObjectFactory objectFactory = project.getObjects();
         task = project.getTasks().register("taskName", AndroidVariantTask.class).get();
         task.getAnalyticsService().set(new FakeNoOpAnalyticsService());
+        task.setVariantName("test");
         executor =
                 new FakeGradleWorkExecutor(
                         objectFactory,
                         tmp.newFolder(),
                         Collections.emptyList(),
                         ExecutionMode.RUNNING);
+        new ClassesHierarchyBuildService.RegistrationAction(project).execute();
+        classesHierarchyBuildServiceProvider =
+                BuildServicesKt.getBuildService(
+                        project.getGradle().getSharedServices(),
+                        ClassesHierarchyBuildService.class);
     }
 
     @Test
@@ -118,7 +129,7 @@ public class FixStackFramesDelegateTest {
         FixStackFramesDelegate delegate =
                 new FixStackFramesDelegate(ANDROID_JAR, classesToFix, classesToFix, output);
 
-        delegate.doFullRun(executor, task);
+        delegate.doFullRun(executor, task, classesHierarchyBuildServiceProvider);
 
         assertAllClassesAreValid(singleOutput().toPath());
     }
@@ -132,17 +143,26 @@ public class FixStackFramesDelegateTest {
         FixStackFramesDelegate delegate =
                 new FixStackFramesDelegate(ANDROID_JAR, classesToFix, classesToFix, output);
 
-        delegate.doIncrementalRun(executor, ImmutableMap.of(), task);
+        delegate.doIncrementalRun(
+                executor, ImmutableMap.of(), task, classesHierarchyBuildServiceProvider);
 
         assertThat(output.list()).named("output artifacts").hasLength(0);
 
-        delegate.doIncrementalRun(executor, ImmutableMap.of(jar.toFile(), FileStatus.NEW), task);
+        delegate.doIncrementalRun(
+                executor,
+                ImmutableMap.of(jar.toFile(), FileStatus.NEW),
+                task,
+                classesHierarchyBuildServiceProvider);
 
         assertThat(output.list()).named("output artifacts").hasLength(1);
 
+        classesHierarchyBuildServiceProvider.get().close();
         FileUtils.delete(jar.toFile());
         delegate.doIncrementalRun(
-                executor, ImmutableMap.of(jar.toFile(), FileStatus.REMOVED), task);
+                executor,
+                ImmutableMap.of(jar.toFile(), FileStatus.REMOVED),
+                task,
+                classesHierarchyBuildServiceProvider);
 
         assertThat(output.list()).named("output artifacts").hasLength(0);
     }
@@ -153,7 +173,7 @@ public class FixStackFramesDelegateTest {
 
         Set<File> classesToFix = ImmutableSet.of(jar.toFile());
 
-        Path referencedJar = tmp.getRoot().toPath().resolve("ref_input");
+        Path referencedJar = tmp.getRoot().toPath().resolve("ref_input.jar");
         TestInputsGenerator.jarWithEmptyClasses(referencedJar, ImmutableList.of("test/Base"));
 
         Set<File> referencedClasses = ImmutableSet.of(referencedJar.toFile());
@@ -161,7 +181,7 @@ public class FixStackFramesDelegateTest {
         FixStackFramesDelegate delegate =
                 new FixStackFramesDelegate(ANDROID_JAR, classesToFix, referencedClasses, output);
 
-        delegate.doFullRun(executor, task);
+        delegate.doFullRun(executor, task, classesHierarchyBuildServiceProvider);
 
         assertThat(output.list()).named("output artifacts").hasLength(1);
         assertAllClassesAreValid(singleOutput().toPath(), referencedJar);
@@ -176,7 +196,7 @@ public class FixStackFramesDelegateTest {
         FixStackFramesDelegate delegate =
                 new FixStackFramesDelegate(ANDROID_JAR, classesToFix, ImmutableSet.of(), output);
 
-        delegate.doFullRun(executor, task);
+        delegate.doFullRun(executor, task, classesHierarchyBuildServiceProvider);
 
         assertThat(readZipEntry(jar, "test/A.class"))
                 .isEqualTo(readZipEntry(singleOutput().toPath(), "test/A.class"));
@@ -207,7 +227,7 @@ public class FixStackFramesDelegateTest {
         FixStackFramesDelegate delegate =
                 new FixStackFramesDelegate(ANDROID_JAR, classesToFix, ImmutableSet.of(), output);
 
-        delegate.doFullRun(executor, task);
+        delegate.doFullRun(executor, task, classesHierarchyBuildServiceProvider);
 
         try (Zip it = new Zip(singleOutput())) {
             assertThat(it).doesNotContain("LICENSE");
@@ -222,22 +242,9 @@ public class FixStackFramesDelegateTest {
                 new FixStackFramesDelegate(
                         ANDROID_JAR, ImmutableSet.of(), ImmutableSet.of(), output);
 
-        delegate.doFullRun(executor, task);
+        delegate.doFullRun(executor, task, classesHierarchyBuildServiceProvider);
 
         assertThat(output.list()).named("output artifacts").hasLength(0);
-    }
-
-    @Test
-    public void testClassLoaderKeySerializable() throws IOException, ClassNotFoundException {
-        FixStackFramesDelegate.ClassLoaderKey key =
-                new FixStackFramesDelegate.ClassLoaderKey("foo");
-
-        byte[] bytes = Serialization.serialize(key);
-
-        FixStackFramesDelegate.ClassLoaderKey deserializedKey =
-                (FixStackFramesDelegate.ClassLoaderKey) Serialization.deserialize(bytes);
-
-        assertThat(deserializedKey).isEqualTo(key);
     }
 
     /** Loads all classes from jars, to make sure no VerifyError is thrown. */

@@ -19,20 +19,22 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.SdkConstants.DOT_JAR
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.instrumentation.ClassesHierarchyResolver
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
-import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
+import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
 import com.android.builder.utils.isValidZipEntryName
 import com.android.ide.common.resources.FileStatus
 import com.android.utils.FileUtils
-import com.google.common.collect.ImmutableList
 import com.google.common.hash.Hashing
 import com.google.common.io.ByteStreams
-import com.google.common.io.Closer
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
+import org.gradle.workers.WorkerExecutor
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassWriter
 import java.io.File
 import java.io.InputStream
-import java.io.Serializable
-import java.net.URL
-import java.net.URLClassLoader
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.InvalidPathException
@@ -41,10 +43,6 @@ import java.util.zip.CRC32
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
-import org.gradle.api.provider.Property
-import org.gradle.workers.WorkerExecutor
-import org.objectweb.asm.ClassReader
-import org.objectweb.asm.ClassWriter
 
 /**
  * When running Desugar, we need to make sure stack frames information is valid in the class files.
@@ -69,60 +67,72 @@ class FixStackFramesDelegate(
     val outFolder: File
 ) {
 
-    /** ASM class writer that uses specified class loader to resolve types. */
-    private class FixFramesVisitor(flags: Int, val classLoader: URLClassLoader) :
-        ClassWriter(flags) {
+    /** ASM class writer that uses [ClassesHierarchyResolver] to resolve types. */
+    private class FixFramesVisitor(
+        flags: Int,
+        val classesHierarchyResolver: ClassesHierarchyResolver
+    ) : ClassWriter(flags) {
 
-        override fun getCommonSuperClass(type1: String, type2: String): String {
-            var c: Class<*>
-            val d: Class<*>
-            try {
-                c = Class.forName(type1.replace('/', '.'), false, classLoader)
-                d = Class.forName(type2.replace('/', '.'), false, classLoader)
-            } catch (e: Exception) {
-                throw  RuntimeException(
-                    "Unable to find common supper type for $type1 and $type2.",
-                    e
+        private fun isAssignableFrom(
+            type: String,
+            otherType: String,
+            otherTypeInterfaces: List<String>,
+            otherTypeSuperClasses: List<String>
+        ): Boolean {
+            return type == otherType ||
+                    otherTypeInterfaces.contains(type) ||
+                    otherTypeSuperClasses.contains(type)
+        }
+
+        override fun getCommonSuperClass(firstType: String, secondType: String): String {
+            val firstTypeInterfaces =
+                classesHierarchyResolver.getAllInterfacesInInternalForm(firstType, true)
+            val firstTypeSuperClasses =
+                classesHierarchyResolver.getAllSuperClassesInInternalForm(firstType, true)
+            val secondTypeInterfaces =
+                classesHierarchyResolver.getAllInterfacesInInternalForm(secondType, true)
+            val secondTypeSuperClasses =
+                classesHierarchyResolver.getAllSuperClassesInInternalForm(secondType, true)
+
+            if (isAssignableFrom(
+                    firstType,
+                    secondType,
+                    secondTypeInterfaces,
+                    secondTypeSuperClasses
                 )
+            ) {
+                return firstType
             }
-            if (c.isAssignableFrom(d)) {
-                return type1
+
+            if (isAssignableFrom(
+                    secondType,
+                    firstType,
+                    firstTypeInterfaces,
+                    firstTypeSuperClasses
+                )
+            ) {
+                return secondType
             }
-            if (d.isAssignableFrom(c)) {
-                return type2
+
+            firstTypeSuperClasses.forEach { firstTypeSuperClass ->
+                if (isAssignableFrom(
+                        firstTypeSuperClass,
+                        secondType,
+                        secondTypeInterfaces,
+                        secondTypeSuperClasses
+                    )
+                ) {
+                    return firstTypeSuperClass
+                }
             }
-            return if (c.isInterface || d.isInterface) {
-                "java/lang/Object"
-            } else {
-                do {
-                    c = c.superclass
-                } while (!c.isAssignableFrom(d))
-                c.name.replace('.', '/')
-            }
+
+            throw RuntimeException("Unable to find common super type for $firstType and $secondType.")
         }
     }
 
     companion object {
         private val logger = LoggerWrapper.getLogger(FixStackFramesDelegate::class.java)
         private val zeroFileTime: FileTime = FileTime.fromMillis(0)
-
-        // Shared state used in the worker actions.
-        private val sharedState = WorkerActionServiceRegistry()
-    }
-
-    private fun createClassLoader(): URLClassLoader {
-        val urls = ImmutableList.Builder<URL>()
-        bootClasspath.forEach { file ->
-            if (file.exists()) {
-                urls.add(file.toURI().toURL())
-            }
-        }
-        classesToFix.plus(referencedClasses).forEach { file ->
-            if (file.isDirectory || file.isFile) {
-                urls.add(file.toURI().toURL())
-            }
-        }
-        return URLClassLoader(urls.build().toTypedArray())
     }
 
     private fun getUniqueName(input: File): String {
@@ -133,48 +143,55 @@ class FixStackFramesDelegate(
     private fun processFiles(
         workers: WorkerExecutor,
         changedInput: Map<File, FileStatus>,
-        task: AndroidVariantTask
+        task: AndroidVariantTask,
+        classesHierarchyBuildServiceProvider: Provider<ClassesHierarchyBuildService>
     ) {
-        Closer.create().use { closer ->
-            val classLoader = createClassLoader()
-            closer.register(classLoader)
+        changedInput.entries.forEach { entry ->
+            val out = File(outFolder, getUniqueName(entry.key))
 
-            val classLoaderKey = ClassLoaderKey("classLoader" + hashCode())
-            closer.register(sharedState.registerServiceAsCloseable(classLoaderKey, classLoader))
+            Files.deleteIfExists(out.toPath())
 
-            changedInput.entries.forEach { entry ->
-                val out = File(outFolder, getUniqueName(entry.key))
-
-                Files.deleteIfExists(out.toPath())
-
-                if (entry.value == FileStatus.NEW || entry.value == FileStatus.CHANGED) {
-                    workers.noIsolation()
-                        .submit(FixStackFramesRunnable::class.java) { params ->
-                            params.initializeFromAndroidVariantTask(task)
-                            params.input.set(entry.key)
-                            params.output.set(out)
-                            params.classLoaderKey.set(classLoaderKey)
-                        }
-                }
+            if (entry.value == FileStatus.NEW || entry.value == FileStatus.CHANGED) {
+                workers.noIsolation()
+                    .submit(FixStackFramesRunnable::class.java) { params ->
+                        params.initializeFromAndroidVariantTask(task)
+                        params.input.set(entry.key)
+                        params.output.set(out)
+                        params.classesHierarchyBuildService.set(
+                            classesHierarchyBuildServiceProvider
+                        )
+                        params.classpath.set(
+                            listOf(
+                                bootClasspath,
+                                classesToFix,
+                                referencedClasses
+                            ).flatten()
+                        )
+                    }
             }
-            // We keep waiting for all the workers to finnish so that all the work is done before
-            // we remove services in Manager.close()
-            workers.await()
         }
+        // We keep waiting for all the workers to finnish so that all the work is done before
+        // we remove services in Manager.close()
+        workers.await()
     }
 
-    fun doFullRun(workers: WorkerExecutor, task: AndroidVariantTask) {
+    fun doFullRun(
+        workers: WorkerExecutor,
+        task: AndroidVariantTask,
+        classesHierarchyBuildServiceProvider: Provider<ClassesHierarchyBuildService>
+    ) {
         FileUtils.cleanOutputDir(outFolder)
 
         val inputToProcess = classesToFix.map { it to FileStatus.NEW }.toMap()
 
-        processFiles(workers, inputToProcess, task)
+        processFiles(workers, inputToProcess, task, classesHierarchyBuildServiceProvider)
     }
 
     fun doIncrementalRun(
         workers: WorkerExecutor,
         changedInput: Map<File, FileStatus>,
-        task: AndroidVariantTask
+        task: AndroidVariantTask,
+        classesHierarchyBuildServiceProvider: Provider<ClassesHierarchyBuildService>
     ) {
         // We should only process (unzip and fix stack) existing jar input from classesToFix
         // If changedInput contains a folder or deleted jar we will still try to delete
@@ -185,27 +202,7 @@ class FixStackFramesDelegate(
             it.value == FileStatus.REMOVED || jarsToProcess.contains(it.key)
         }.associate { it.key to it.value }
 
-        processFiles(workers, inputToProcess, task)
-    }
-
-    open class BaseKey(val name: String) : Serializable {
-
-        override fun equals(other: Any?): Boolean {
-            if (other is BaseKey) {
-                return this.name == other.name
-            }
-            return false
-        }
-
-        override fun hashCode(): Int {
-            return name.hashCode()
-        }
-    }
-
-    class ClassLoaderKey(name: String) : BaseKey(name),
-        WorkerActionServiceRegistry.ServiceKey<URLClassLoader> {
-        override val type: Class<URLClassLoader>
-            get() = URLClassLoader::class.java
+        processFiles(workers, inputToProcess, task, classesHierarchyBuildServiceProvider)
     }
 
     abstract class Params : ProfileAwareWorkAction.Parameters() {
@@ -213,23 +210,29 @@ class FixStackFramesDelegate(
 
         abstract val output: Property<File>
 
-        abstract val classLoaderKey: Property<ClassLoaderKey>
+        abstract val classesHierarchyBuildService: Property<ClassesHierarchyBuildService>
+
+        abstract val classpath: ListProperty<File>
     }
 
     abstract class FixStackFramesRunnable : ProfileAwareWorkAction<Params>() {
 
         override fun run() {
-            val classLoader = sharedState
-                .getService(parameters.classLoaderKey.get())
-                .service
             createFile(
                 parameters.input.get(),
                 parameters.output.get(),
-                classLoader
+                parameters.classesHierarchyBuildService.get()
+                    .getClassesHierarchyResolverBuilder()
+                    .addSources(parameters.classpath.get())
+                    .build()
             )
         }
 
-        private fun createFile(input: File, output: File, classLoader: URLClassLoader) {
+        private fun createFile(
+            input: File,
+            output: File,
+            classesHierarchyResolver: ClassesHierarchyResolver
+        ) {
             ZipFile(input).use { inputZip ->
                 ZipOutputStream(
                     Files.newOutputStream(output.toPath()).buffered()
@@ -249,7 +252,7 @@ class FixStackFramesDelegate(
                         val originalFile = inputZip.getInputStream(entry).buffered()
                         val outEntry = ZipEntry(entry.name)
 
-                        val newEntryContent = getFixedClass(originalFile, classLoader)
+                        val newEntryContent = getFixedClass(originalFile, classesHierarchyResolver)
 
                         val crc32 = CRC32()
                         crc32.update(newEntryContent)
@@ -272,12 +275,13 @@ class FixStackFramesDelegate(
 
         private fun getFixedClass(
             originalFile: InputStream,
-            classLoader: URLClassLoader
+            classesHierarchyResolver: ClassesHierarchyResolver
         ): ByteArray {
             val bytes = ByteStreams.toByteArray(originalFile)
             return try {
                 val classReader = ClassReader(bytes)
-                val classWriter = FixFramesVisitor(ClassWriter.COMPUTE_FRAMES, classLoader)
+                val classWriter =
+                    FixFramesVisitor(ClassWriter.COMPUTE_FRAMES, classesHierarchyResolver)
                 classReader.accept(classWriter, ClassReader.SKIP_FRAMES)
                 classWriter.toByteArray()
             } catch (t: Throwable) {

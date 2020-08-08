@@ -16,15 +16,19 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.resources.FileStatus
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
@@ -46,18 +50,26 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
     lateinit var referencedClasses: FileCollection
         private set
 
+    @get:Internal
+    abstract val classesHierarchyBuildService: Property<ClassesHierarchyBuildService>
+
     private fun createDelegate() = FixStackFramesDelegate(
-        bootClasspath.files, classesToFix.files, referencedClasses.files, outFolder!!.get().asFile
+        bootClasspath.files, classesToFix.files, referencedClasses.files, outFolder.get().asFile
     )
 
     override val incremental: Boolean = true
 
     override fun doFullTaskAction() {
-        createDelegate().doFullRun(workerExecutor, this)
+        createDelegate().doFullRun(workerExecutor, this, classesHierarchyBuildService)
     }
 
     override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
-        createDelegate().doIncrementalRun(workerExecutor, changedInputs, this)
+        createDelegate().doIncrementalRun(
+            workerExecutor,
+            changedInputs,
+            this,
+            classesHierarchyBuildService
+        )
     }
 
     class CreationAction(
@@ -139,6 +151,10 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
             task.classesToFix = classesToFix
 
             task.referencedClasses = referencedClasses
+
+            task.classesHierarchyBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
         }
     }
 }
