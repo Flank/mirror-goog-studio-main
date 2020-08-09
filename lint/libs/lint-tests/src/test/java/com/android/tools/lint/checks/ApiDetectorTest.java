@@ -106,6 +106,69 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testPropertyAnimator() {
+        // Regression test for https://issuetracker.google.com/149416536
+        lint().supportResourceRepository(true)
+                .files(
+                        manifest().minSdk(15),
+                        kotlin(
+                                        ""
+                                                + "package test.pkg;\n"
+                                                + "import android.animation.AnimatorInflater\n"
+                                                + "import android.app.Activity\n"
+                                                + "\n"
+                                                + "class MyActivity : Activity() {\n"
+                                                + "    fun test() {\n"
+                                                + "        AnimatorInflater.loadAnimator(this, R.anim.blink1) // ERROR\n"
+                                                + "        AnimatorInflater.loadAnimator(this, R.animator.blink2) // ERROR\n"
+                                                + "        AnimatorInflater.loadAnimator(this, R.anim.blink3) // OK\n"
+                                                + "    }\n"
+                                                + "}")
+                                .indented(),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "public class R {\n"
+                                        + "    public static class anim {\n"
+                                        + "        public static final int blink1 = 0x7f070031;\n"
+                                        + "        public static final int blink3 = 0x7f070033;\n"
+                                        + "    }\n"
+                                        + "    public static class animator {\n"
+                                        + "        public static final int blink2 = 0x7f070032;\n"
+                                        + "    }\n"
+                                        + "}\n"
+                                        + ""),
+                        xml(
+                                        "res/anim/blink1.xml",
+                                        ""
+                                                + "<objectAnimator xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                                + "    android:interpolator=\"@android:anim/linear_interpolator\"\n"
+                                                + "    android:duration=\"@android:integer/config_longAnimTime\"\n"
+                                                + "    android:repeatCount=\"-1\"\n"
+                                                + "    android:repeatMode=\"reverse\" >\n"
+                                                + "\n"
+                                                + "    <propertyValuesHolder\n"
+                                                + "        android:propertyName=\"fillColor\"\n"
+                                                + "        android:valueType=\"colorType\"\n"
+                                                + "        android:valueFrom=\"?attr/color1\"\n"
+                                                + "        android:valueTo=\"@android:color/white\" />\n"
+                                                + "\n"
+                                                + "</objectAnimator>\n")
+                                .indented(),
+                        xml("res/animator-v18/blink2.xml", "<propertyValuesHolder />").indented(),
+                        xml("res/anim-v21/blink3.xml", "<propertyValuesHolder />").indented())
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/MyActivity.kt:7: Error: The resource anim.blink1 includes the tag propertyValuesHolder which causes crashes on API < 21. Consider switching to AnimatorInflaterCompat.loadAnimator to safely load the animation. [NewApi]\n"
+                                + "        AnimatorInflater.loadAnimator(this, R.anim.blink1) // ERROR\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/MyActivity.kt:8: Error: The resource animator.blink2 includes the tag propertyValuesHolder which causes crashes on API < 21. Consider switching to AnimatorInflaterCompat.loadAnimator to safely load the animation. [NewApi]\n"
+                                + "        AnimatorInflater.loadAnimator(this, R.animator.blink2) // ERROR\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "2 errors, 0 warnings");
+    }
+
     public void testNoImports() {
         // We shouldn't be flagging warnings on import statements. It's fine to import
         // whatever you want. It's *usages* that count. And those usages may be

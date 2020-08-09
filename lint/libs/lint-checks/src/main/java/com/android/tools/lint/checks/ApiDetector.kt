@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants.ANDROID_PKG
 import com.android.SdkConstants.ANDROID_PREFIX
 import com.android.SdkConstants.ANDROID_THEME_PREFIX
 import com.android.SdkConstants.ANDROID_URI
@@ -60,6 +61,7 @@ import com.android.SdkConstants.TARGET_API
 import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.VIEW_INCLUDE
 import com.android.SdkConstants.VIEW_TAG
+import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.repository.GradleVersion
 import com.android.ide.common.resources.configuration.FolderConfiguration
 import com.android.ide.common.resources.resourceNameToFieldName
@@ -76,6 +78,7 @@ import com.android.tools.lint.checks.VersionChecks.Companion.isPrecededByVersion
 import com.android.tools.lint.checks.VersionChecks.Companion.isVersionCheckConditional
 import com.android.tools.lint.checks.VersionChecks.Companion.isWithinVersionCheckConditional
 import com.android.tools.lint.client.api.JavaEvaluator
+import com.android.tools.lint.client.api.ResourceReference
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ClassContext.Companion.getFqcn
@@ -166,6 +169,9 @@ import org.jetbrains.uast.util.isTypeCast
 import org.w3c.dom.Attr
 import org.w3c.dom.Element
 import org.w3c.dom.Node
+import org.xmlpull.v1.XmlPullParser
+import org.xmlpull.v1.XmlPullParserException
+import java.io.IOException
 import java.lang.Boolean.TRUE
 import java.util.ArrayList
 import java.util.EnumSet
@@ -1284,6 +1290,12 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 desc != "()V"
             ) {
                 checkSimpleDateFormat(context, call, getMinSdk(context))
+            } else if (call != null &&
+                name == "loadAnimator" &&
+                owner == "android.animation.AnimatorInflater" &&
+                desc == "(Landroid.content.Context;I)"
+            ) {
+                checkAnimator(context, call)
             }
 
             var api = apiDatabase.getMethodVersion(owner, name, desc)
@@ -1599,6 +1611,75 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 name,
                 desc
             )
+        }
+
+        private fun checkAnimator(context: JavaContext, call: UCallExpression) {
+            val resourceParameter = call.valueArguments[1]
+            val resource = ResourceReference.get(resourceParameter) ?: return
+            if (resource.`package` == ANDROID_PKG) {
+                return
+            }
+
+            val resources =
+                context.client.getResourceRepository(
+                    context.mainProject,
+                    includeModuleDependencies = true,
+                    includeLibraries = false
+                ) ?: return
+
+            val api = 21
+            if (getMinSdk(context) >= api) {
+                return
+            }
+            if (isWithinVersionCheckConditional(context.evaluator, call, api, true) ||
+                isPrecededByVersionCheckExit(context.evaluator, call, api, true)
+            ) {
+                return
+            }
+
+            // See if the associated resource references propertyValuesHolder, and if so
+            // suggest switching to AnimatorInflaterCompat.loadAnimator.
+            val items =
+                resources.getResources(ResourceNamespace.TODO(), resource.type, resource.name)
+            val paths = items.asSequence().mapNotNull { it.source }.toSet()
+            for (path in paths) {
+                try {
+                    val parser = context.client.createXmlPullParser(path) ?: continue
+                    while (true) {
+                        val event = parser.next()
+                        if (event == XmlPullParser.START_TAG) {
+                            val name = parser.name ?: continue
+                            if (name == ATTR_PROPERTY_VALUES_HOLDER) {
+                                // It's okay if in a -v21+ folder
+                                path.toFile()?.parentFile?.name?.let { nae ->
+                                    FolderConfiguration.getConfigForFolder(nae)?.let { config ->
+                                        val versionQualifier = config.versionQualifier
+                                        if (versionQualifier != null && versionQualifier.version >= api) {
+                                            return
+                                        }
+                                    }
+                                }
+
+                                context.report(
+                                    UNSUPPORTED, call, context.getLocation(call),
+                                    "The resource `${resource.type}.${resource.name}` includes " +
+                                        "the tag `$ATTR_PROPERTY_VALUES_HOLDER` which causes crashes " +
+                                        "on API < $api. Consider switching to " +
+                                        "`AnimatorInflaterCompat.loadAnimator` to safely load the " +
+                                        "animation."
+                                )
+                                return
+                            }
+                        } else if (event == XmlPullParser.END_DOCUMENT) {
+                            return
+                        }
+                    }
+                } catch (ignore: XmlPullParserException) {
+                    // Users might be editing these files in the IDE; don't flag
+                } catch (ignore: IOException) {
+                    // Users might be editing these files in the IDE; don't flag
+                }
+            }
         }
 
         private fun getRequiresApiFromAnnotations(modifierListOwner: PsiModifierListOwner): Int {
@@ -2132,6 +2213,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
         private const val SDK_SUPPRESS_ANNOTATION = "android.support.test.filters.SdkSuppress"
         private const val ANDROIDX_SDK_SUPPRESS_ANNOTATION = "androidx.test.filters.SdkSuppress"
+        private const val ATTR_PROPERTY_VALUES_HOLDER = "propertyValuesHolder"
 
         /** Accessing an unsupported API */
         @JvmField
