@@ -209,8 +209,20 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
 
         val folderType = context.resourceFolderType ?: return
 
-        val file = context.file
         val root = document.documentElement
+        val translatable: Attr? = root?.getAttributeNode(ATTR_TRANSLATABLE)
+        if (translatable?.value == VALUE_FALSE) {
+            if (context.file.parentFile?.name != FD_RES_VALUES &&
+                // Ensure that we're really in a locale folder, not just some non-default
+                // folder (for example, values-en is a locale folder, values-v19 is not)
+                getLocaleAndRegion(context.file.parentFile.name) != null
+            ) {
+                reportTranslatedUntranslatable(context, null, root, translatable, true)
+            }
+            return
+        }
+
+        val file = context.file
         if (folderType != VALUES) {
             // Record resource for the whole file
             val types =
@@ -589,7 +601,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
 
     private fun reportTranslatedUntranslatable(
         context: XmlContext,
-        name: String,
+        name: String?,
         element: Element,
         locationNode: Node,
         translatableDefinedLocally: Boolean
@@ -608,10 +620,10 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         }
 
         val languageDescription = getLanguageDescription(language)
-        val message = if (translatableDefinedLocally) {
-            "The resource string \"$name\" is marked as translatable=\"false\", but is translated to $languageDescription here"
-        } else {
-            "The resource string \"$name\" has been marked as translatable=\"false\" elsewhere (usually in the `values` folder), but is translated to $languageDescription here"
+        val message = when {
+            name == null -> "This resource folder is marked as non-translatable yet is in a translated resource folder ($languageDescription)"
+            translatableDefinedLocally -> "The resource string \"$name\" is marked as translatable=\"false\", but is translated to $languageDescription here"
+            else -> "The resource string \"$name\" has been marked as translatable=\"false\" elsewhere (usually in the `values` folder), but is translated to $languageDescription here"
         }
         val fix =
             fix().name("Remove translation").replace().range(context.getLocation(element)).with("")

@@ -1506,4 +1506,59 @@ class TranslationDetectorTest : AbstractCheckTest() {
             ).indented()
         ).incremental("res/values/strings.xml").run().expectClean()
     }
+
+    fun testNonTranslatableFile() {
+        // Regression test for https://issuetracker.google.com/118332958 :
+        // Allow translatable=false on the root element
+        lint().files(
+            xml(
+                "res/values/strings.xml",
+                """
+                <resources>
+                    <string name="app_name">My Application</string>
+                </resources>
+                """
+            ).indented(),
+            xml(
+                "res/values-en/strings.xml",
+                """
+                <resources>
+                    <string name="app_name">My Application</string>
+                </resources>
+                """
+            ).indented(),
+            xml(
+                "res/values/misc.xml",
+                """
+                <resources translatable="false">
+                    <string name="misc">Misc</string>
+                    <string name="test">Test</string>
+                </resources>
+                """
+            ).indented(),
+            xml(
+                "res/values-en-rUS/strings.xml",
+                """
+                <resources translatable="false">
+                    <string name="app_name">My Application</string>
+                </resources>
+                """
+            ).indented(),
+            xml(
+                "res/values-v11/strings.xml",
+                """
+                <resources translatable="false">
+                    <string name="app_name">My Application</string>
+                </resources>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/values-en-rUS/strings.xml:1: Warning: This resource folder is marked as non-translatable yet is in a translated resource folder ("en" (English)) [Untranslatable]
+            <resources translatable="false">
+                       ~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
 }
