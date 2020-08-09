@@ -134,9 +134,24 @@ def srcjar(name, java_library, visibility = None):
 def _flat_archive_impl(ctx):
     inputs = []
     zipper_args = ["c", ctx.outputs.out.path]
+    files = []
+    if not ctx.attr.deps.items() + ctx.attr.files.items():
+        fail("At least one of 'deps' or 'files' attributes must be non empty")
     for dep, target in ctx.attr.deps.items():
-        file = dep.files.to_list()[0]
-        name = "%s/%s=%s" % (target, file.basename, file.path)
+        list = dep.files.to_list()
+        if len(list) != 1:
+            fail("Only one file per entry is allowed.")
+        file = list[0]
+        files += [("%s/%s" % (target, file.basename), file)]
+    for dep, target in ctx.attr.files.items():
+        list = dep.files.to_list()
+        if len(list) != 1:
+            fail("Only one file per entry is allowed.")
+        file = list[0]
+        files += [(target, file)]
+
+    for path, file in files:
+        name = "%s=%s" % (path, file.path)
         zipper_args.append(name)
         inputs += [file]
 
@@ -151,10 +166,8 @@ def _flat_archive_impl(ctx):
 
 flat_archive = rule(
     attrs = {
-        "deps": attr.label_keyed_string_dict(
-            allow_empty = False,
-            allow_files = True,
-        ),
+        "deps": attr.label_keyed_string_dict(allow_files = True),
+        "files": attr.label_keyed_string_dict(allow_files = True),
         "ext": attr.string(default = "jar"),
         "_zipper": attr.label(
             default = Label("@bazel_tools//tools/zip:zipper"),
