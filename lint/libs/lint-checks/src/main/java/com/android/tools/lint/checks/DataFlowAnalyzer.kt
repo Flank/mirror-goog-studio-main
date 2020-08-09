@@ -37,6 +37,7 @@ import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.UReturnExpression
+import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.USwitchClauseExpression
 import org.jetbrains.uast.USwitchExpression
 import org.jetbrains.uast.UVariable
@@ -45,6 +46,7 @@ import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.getQualifiedParentOrThis
 import org.jetbrains.uast.java.JavaUIfExpression
 import org.jetbrains.uast.kotlin.KotlinUSwitchEntry
+import org.jetbrains.uast.kotlin.expressions.KotlinUElvisExpression
 import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
@@ -250,6 +252,28 @@ abstract class DataFlowAnalyzer(
 
     override fun afterVisitIfExpression(node: UIfExpression) {
         if (node !is JavaUIfExpression) { // Does not apply to Java
+            // Handle Elvis operator
+            val parent = node.uastParent
+            if (parent is KotlinUElvisExpression) {
+                val then = node.thenExpression
+                if (then is USimpleNameReferenceExpression) {
+                    val variable = then.resolve()
+                    if (variable != null) {
+                        if (references.contains(variable)) {
+                            instances.add(parent)
+                        } else if (variable is UVariable) {
+                            val psi = variable.javaPsi
+                            val sourcePsi = variable.sourcePsi
+                            if (psi != null && references.contains(psi) ||
+                                sourcePsi != null && references.contains(sourcePsi)
+                            ) {
+                                instances.add(parent)
+                            }
+                        }
+                    }
+                }
+            }
+
             val thenExpression = node.thenExpression
             val elseExpression = node.elseExpression
             if (thenExpression != null && instances.contains(thenExpression)) {
@@ -289,8 +313,7 @@ abstract class DataFlowAnalyzer(
 
         val rhs = node.rightOperand
         if (instances.contains(rhs)) {
-            val lhs = node.leftOperand.tryResolve()
-            when (lhs) {
+            when (val lhs = node.leftOperand.tryResolve()) {
                 is UVariable -> addVariableReference(lhs)
                 is PsiLocalVariable -> references.add(lhs)
                 is PsiField -> field(rhs)
@@ -299,8 +322,7 @@ abstract class DataFlowAnalyzer(
             val resolved = rhs.resolve()
             if (resolved != null && references.contains(resolved)) {
                 clearLhs = false
-                val lhs = node.leftOperand.tryResolve()
-                when (lhs) {
+                when (val lhs = node.leftOperand.tryResolve()) {
                     is UVariable -> addVariableReference(lhs)
                     is PsiLocalVariable -> references.add(lhs)
                     is PsiField -> field(rhs)
@@ -360,7 +382,7 @@ abstract class DataFlowAnalyzer(
     companion object {
         /** Returns the variable the expression is assigned to, if any  */
         fun getVariableElement(rhs: UCallExpression): PsiVariable? {
-            return getVariableElement(rhs, false, false)
+            return getVariableElement(rhs, allowChainedCalls = false, allowFields = false)
         }
 
         fun getVariableElement(

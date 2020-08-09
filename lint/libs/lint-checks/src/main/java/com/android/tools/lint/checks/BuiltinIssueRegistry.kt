@@ -351,6 +351,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 ServiceCastDetector.WIFI_MANAGER_UNCERTAIN,
                 SetJavaScriptEnabledDetector.ISSUE,
                 SetTextDetector.SET_TEXT_I18N,
+                SharedPrefsDetector.ISSUE,
                 SignatureOrSystemDetector.ISSUE,
                 SliceDetector.ISSUE,
                 SQLiteDetector.ISSUE,
