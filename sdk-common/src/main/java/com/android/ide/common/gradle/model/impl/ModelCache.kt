@@ -16,6 +16,7 @@
 package com.android.ide.common.gradle.model.impl
 
 import com.android.build.FilterData
+import com.android.build.OutputFile
 import com.android.builder.model.AaptOptions
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidArtifactOutput
@@ -275,7 +276,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     )
   }
 
-  fun androidArtifactOutputFrom(output: AndroidArtifactOutput): IdeAndroidArtifactOutputImpl {
+  fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl {
     return IdeAndroidArtifactOutputImpl(
       copy(output.outputs) { IdeOutputFileImpl(it, this) },
       copyNewProperty({ ImmutableList.copyOf(output.filterTypes) }, emptyList()),
