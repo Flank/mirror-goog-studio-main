@@ -317,6 +317,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 RecyclerViewDetector.FIXED_POSITION,
                 RegistrationDetector.ISSUE,
                 RelativeOverlapDetector.ISSUE,
+                RemoteViewDetector.ISSUE,
                 RequiredAttributeDetector.ISSUE,
                 RequiresFeatureDetector.REQUIRES_FEATURE,
                 ResourceCycleDetector.CRASH,
