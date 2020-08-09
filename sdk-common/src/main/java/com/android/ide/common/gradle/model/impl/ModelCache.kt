@@ -20,23 +20,29 @@ import com.android.build.OutputFile
 import com.android.builder.model.AaptOptions
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidArtifactOutput
+import com.android.builder.model.AndroidGradlePluginProjectFlags
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.BuildType
 import com.android.builder.model.BuildTypeContainer
 import com.android.builder.model.ClassField
+import com.android.builder.model.DependenciesInfo
 import com.android.builder.model.JavaArtifact
 import com.android.builder.model.JavaCompileOptions
+import com.android.builder.model.LintOptions
 import com.android.builder.model.MavenCoordinates
 import com.android.builder.model.ProductFlavor
 import com.android.builder.model.ProductFlavorContainer
 import com.android.builder.model.SigningConfig
+import com.android.builder.model.SourceProvider
 import com.android.builder.model.SourceProviderContainer
 import com.android.builder.model.SyncIssue
 import com.android.builder.model.TestOptions
 import com.android.builder.model.TestedTargetVariant
 import com.android.builder.model.Variant
+import com.android.builder.model.VariantBuildInformation
 import com.android.builder.model.VectorDrawablesOptions
+import com.android.builder.model.ViewBindingOptions
 import com.android.ide.common.gradle.model.IdeAaptOptions
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput
 import com.android.ide.common.gradle.model.IdeAndroidGradlePluginProjectFlags
@@ -53,12 +59,6 @@ import com.android.ide.common.gradle.model.IdeVariantBuildInformation
 import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions
 import com.android.ide.common.gradle.model.IdeViewBindingOptions
 import com.android.ide.common.gradle.model.impl.IdeAndroidArtifactOutputImpl.copyFilters
-import com.android.ide.common.gradle.model.impl.IdeAndroidGradlePluginProjectFlagsImpl.Companion.createFrom
-import com.android.ide.common.gradle.model.impl.IdeDependenciesInfoImpl.Companion.createOrNull
-import com.android.ide.common.gradle.model.impl.IdeLintOptionsImpl.Companion.createFrom
-import com.android.ide.common.gradle.model.impl.IdeVariantBuildInformationImpl.Companion.createFrom
-import com.android.ide.common.gradle.model.impl.IdeVariantImpl.Companion.createFrom
-import com.android.ide.common.gradle.model.impl.IdeViewBindingOptionsImpl.Companion.createFrom
 import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeToolchainImpl
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeToolchain
 import com.android.ide.common.repository.GradleVersion
@@ -92,7 +92,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     val variantNames = variants.map { it.name }.toSet()
     val variantsCopy: Collection<IdeVariant> = ImmutableList.copyOf(
       Iterables.concat<IdeVariant>(
-        copy(variants) { variant: Variant -> createFrom(variant, this, dependenciesFactory, parsedModelVersion) },
+        copy(variants) { variant: Variant -> variantFrom(variant, dependenciesFactory, parsedModelVersion) },
         cachedVariants.filter { !variantNames.contains(it.name) }
       ))
     val variantNamesCopy: Collection<String> =
@@ -104,7 +104,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     val bootClasspathCopy: Collection<String> = ImmutableList.copyOf(project.bootClasspath)
     val nativeToolchainsCopy: Collection<IdeNativeToolchain> = copy(project.nativeToolchains) { IdeNativeToolchainImpl(it) }
     val signingConfigsCopy: Collection<IdeSigningConfig> = copy(project.signingConfigs, ::signingConfigFrom)
-    val lintOptionsCopy: IdeLintOptions = copyModel(project.lintOptions, { createFrom(it, parsedModelVersion) })
+    val lintOptionsCopy: IdeLintOptions = copyModel(project.lintOptions, { lintOptionsFrom(it, parsedModelVersion) })
 
     // We need to use the unresolved dependencies to support older versions of the Android
     // Gradle Plugin.
@@ -113,8 +113,8 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     val aaptOptionsCopy = copyModel(project.aaptOptions, ::aaptOptionsFrom)
     val dynamicFeaturesCopy: Collection<String> = ImmutableList.copyOf(copyNewProperty({ project.dynamicFeatures }, ImmutableList.of()))
     val variantBuildInformation = createVariantBuildInformation(project, parsedModelVersion)
-    val viewBindingOptionsCopy: IdeViewBindingOptions? = copyNewProperty({ createFrom(project.viewBindingOptions) })
-    val dependenciesInfoCopy: IdeDependenciesInfo? = copyNewProperty({ createOrNull(project.dependenciesInfo) })
+    val viewBindingOptionsCopy: IdeViewBindingOptions? = copyNewProperty({ viewBindingOptionsFrom(project.viewBindingOptions) })
+    val dependenciesInfoCopy: IdeDependenciesInfo? = copyNewProperty({ project.dependenciesInfo }, { dependenciesInfoFrom(it) }, null)
     val buildToolsVersionCopy = copyNewProperty({ project.buildToolsVersion })
     val ndkVersionCopy = copyNewProperty({ project.ndkVersion })
     val groupId = if (parsedModelVersion != null && parsedModelVersion.isAtLeast(3, 6, 0, "alpha", 5, false)) project.groupId else null
@@ -123,7 +123,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     // AndroidProject#isBaseSplit is always non null.
     val isBaseSplit = copyNewProperty({ project.isBaseSplit }, false)
     val agpFlags: IdeAndroidGradlePluginProjectFlags = copyNewProperty(
-      { createFrom(project.flags) },
+      { androidGradlePluginProjectFlagsFrom(project.flags) },
       IdeAndroidGradlePluginProjectFlagsImpl()
     )
     return IdeAndroidProjectImpl(
@@ -169,7 +169,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
   ): Collection<IdeVariantBuildInformation> {
     return if (agpVersion != null && agpVersion.compareIgnoringQualifiers("4.1.0") >= 0) {
       // make deep copy of VariantBuildInformation.
-      project.variantsBuildInformation.map(::createFrom)
+      project.variantsBuildInformation.map(::ideVariantBuildInformationFrom)
     }
     else emptyList()
     // VariantBuildInformation is not available.
@@ -294,15 +294,15 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
   fun buildTypeContainerFrom(container: BuildTypeContainer): IdeBuildTypeContainerImpl {
     return IdeBuildTypeContainerImpl(
       copyModel(container.buildType, ::buildTypeFrom),
-      copyModel(container.sourceProvider, { IdeSourceProviderImpl.createFrom(it, ::deduplicateString) }),
-      copy(container.extraSourceProviders, this@ModelCache::sourceProviderContainerFrom)
+      copyModel(container.sourceProvider, ::sourceProviderFrom),
+      copy(container.extraSourceProviders, ::sourceProviderContainerFrom)
     )
   }
 
   fun buildTypeFrom(buildType: BuildType): IdeBuildTypeImpl {
     return IdeBuildTypeImpl(
       buildType.name,
-      copy(buildType.resValues, this@ModelCache::classFieldFrom),
+      copy(buildType.resValues, ::classFieldFrom),
       ImmutableList.copyOf(buildType.proguardFiles),
       ImmutableList.copyOf(buildType.consumerProguardFiles),
       // AGP may return internal Groovy GString implementation as a value in
@@ -366,7 +366,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     container: ProductFlavorContainer): IdeProductFlavorContainerImpl {
     return IdeProductFlavorContainerImpl(
       copyModel(container.productFlavor, ::productFlavorFrom),
-      copyModel(container.sourceProvider, { IdeSourceProviderImpl.createFrom(it, ::deduplicateString) }),
+      copyModel(container.sourceProvider, ::sourceProviderFrom),
       copy(container.extraSourceProviders, ::sourceProviderContainerFrom)
     )
   }
@@ -437,7 +437,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
   fun sourceProviderContainerFrom(container: SourceProviderContainer): IdeSourceProviderContainerImpl {
     return IdeSourceProviderContainerImpl(
       container.artifactName,
-      copyModel(container.sourceProvider, { IdeSourceProviderImpl.createFrom(it, ::deduplicateString) })
+      copyModel(container.sourceProvider, ::sourceProviderFrom)
     )
   }
 
@@ -472,6 +472,118 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
   fun vectorDrawablesOptionsFrom(options: VectorDrawablesOptions): IdeVectorDrawablesOptionsImpl {
     return IdeVectorDrawablesOptionsImpl(options.useSupportLibrary)
   }
+
+  fun viewBindingOptionsFrom(model: ViewBindingOptions): IdeViewBindingOptionsImpl {
+    return IdeViewBindingOptionsImpl(enabled = model.isEnabled)
+  }
+
+  fun variantFrom(
+    variant: Variant,
+    dependenciesFactory: IdeDependenciesFactory,
+    modelVersion: GradleVersion?
+  ): IdeVariantImpl =
+    IdeVariantImpl(
+      name = variant.name,
+      displayName = variant.displayName,
+      mainArtifact = copyModel(variant.mainArtifact) { androidArtifactFrom(it, dependenciesFactory, modelVersion) },
+      extraAndroidArtifacts = copy(variant.extraAndroidArtifacts) { androidArtifactFrom(it, dependenciesFactory, modelVersion) },
+      extraJavaArtifacts = copy(variant.extraJavaArtifacts) { javaArtifactFrom(it, dependenciesFactory) },
+      buildType = variant.buildType,
+      productFlavors = ImmutableList.copyOf(variant.productFlavors),
+      mergedFlavor = copyModel(variant.mergedFlavor, ::productFlavorFrom),
+      testedTargetVariants = getTestedTargetVariants(variant),
+      instantAppCompatible = (modelVersion != null &&
+                              modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) &&
+                              variant.isInstantAppCompatible),
+      desugaredMethods = ImmutableList.copyOf(copyNewProperty({ variant.desugaredMethods }, emptyList()))
+    )
+
+  private fun getTestedTargetVariants(variant: Variant): List<IdeTestedTargetVariantImpl> {
+    return try {
+      copy(variant.testedTargetVariants) { targetVariant: TestedTargetVariant ->
+        IdeTestedTargetVariantImpl(targetVariant.targetProjectPath, targetVariant.targetVariant)
+      }
+    }
+    catch (e: UnsupportedOperationException) {
+      emptyList()
+    }
+  }
+
+  fun ideVariantBuildInformationFrom(model: VariantBuildInformation): IdeVariantBuildInformation = IdeVariantBuildInformationImpl(
+    variantName = model.variantName,
+    assembleTaskName = model.assembleTaskName,
+    assembleTaskOutputListingFile = model.assembleTaskOutputListingFile,
+    bundleTaskName = model.bundleTaskName,
+    bundleTaskOutputListingFile = model.bundleTaskOutputListingFile,
+    apkFromBundleTaskName = model.apkFromBundleTaskName,
+    apkFromBundleTaskOutputListingFile = model.apkFromBundleTaskOutputListingFile
+  )
+
+  fun sourceProviderFrom(provider: SourceProvider): IdeSourceProviderImpl {
+    val folder: File? = provider.manifestFile.parentFile
+
+    fun File.makeRelativeAndDeduplicate(): String = (if (folder != null) relativeToOrSelf(folder) else this).path.deduplicate()
+    fun Collection<File>.makeRelativeAndDeduplicate(): Collection<String> = map { it.makeRelativeAndDeduplicate() }
+
+    return IdeSourceProviderImpl(
+      myName = provider.name,
+      myFolder = folder,
+      myManifestFile = provider.manifestFile.makeRelativeAndDeduplicate(),
+      myJavaDirectories = provider.javaDirectories.makeRelativeAndDeduplicate(),
+      myResourcesDirectories = provider.resourcesDirectories.makeRelativeAndDeduplicate(),
+      myAidlDirectories = provider.aidlDirectories.makeRelativeAndDeduplicate(),
+      myRenderscriptDirectories = provider.renderscriptDirectories.makeRelativeAndDeduplicate(),
+      myCDirectories = provider.cDirectories.makeRelativeAndDeduplicate(),
+      myCppDirectories = provider.cppDirectories.makeRelativeAndDeduplicate(),
+      myResDirectories = provider.resDirectories.makeRelativeAndDeduplicate(),
+      myAssetsDirectories = provider.assetsDirectories.makeRelativeAndDeduplicate(),
+      myJniLibsDirectories = provider.jniLibsDirectories.makeRelativeAndDeduplicate(),
+      myShadersDirectories = copyNewProperty({ provider.shadersDirectories }, emptyList()).makeRelativeAndDeduplicate(),
+      myMlModelsDirectories = copyNewProperty({ provider.mlModelsDirectories }, emptyList()).makeRelativeAndDeduplicate()
+    )
+  }
+
+  fun lintOptionsFrom(options: LintOptions, modelVersion: GradleVersion?): IdeLintOptionsImpl = IdeLintOptionsImpl(
+    baselineFile = if (modelVersion != null && modelVersion.isAtLeast(2, 3, 0, "beta", 2, true))
+      options.baselineFile
+    else
+      null,
+    lintConfig = copyNewProperty({ options.lintConfig }),
+    severityOverrides = options.severityOverrides?.let { ImmutableMap.copyOf(it) },
+    isCheckTestSources = modelVersion != null &&
+                         modelVersion.isAtLeast(2, 4, 0) &&
+                         options.isCheckTestSources,
+    isCheckDependencies = copyNewProperty({ options.isCheckDependencies }, false),
+    disable = copy(options.disable),
+    enable = copy(options.enable),
+    check = options.check?.let { ImmutableSet.copyOf(it) },
+    isAbortOnError = copyNewProperty({ options.isAbortOnError }, true),
+    isAbsolutePaths = copyNewProperty({ options.isAbsolutePaths }, true),
+    isNoLines = copyNewProperty({ options.isNoLines }, false),
+    isQuiet = copyNewProperty({ options.isQuiet }, false),
+    isCheckAllWarnings = copyNewProperty({ options.isCheckAllWarnings }, false),
+    isIgnoreWarnings = copyNewProperty({ options.isIgnoreWarnings }, false),
+    isWarningsAsErrors = copyNewProperty({ options.isWarningsAsErrors }, false),
+    isIgnoreTestSources = copyNewProperty({ options.isIgnoreTestSources }, false),
+    isCheckGeneratedSources = copyNewProperty({ options.isCheckGeneratedSources }, false),
+    isExplainIssues = copyNewProperty({ options.isExplainIssues }, true),
+    isShowAll = copyNewProperty({ options.isShowAll }, false),
+    textReport = copyNewProperty({ options.textReport }, false),
+    textOutput = copyNewProperty({ options.textOutput }),
+    htmlReport = copyNewProperty({ options.htmlReport }, true),
+    htmlOutput = copyNewProperty({ options.htmlOutput }),
+    xmlReport = copyNewProperty({ options.xmlReport }, true),
+    xmlOutput = copyNewProperty({ options.xmlOutput }),
+    isCheckReleaseBuilds = copyNewProperty({ options.isCheckReleaseBuilds }, true)
+  )
+
+  fun dependenciesInfoFrom(model: DependenciesInfo) = IdeDependenciesInfoImpl(
+    includeInApk = model.includeInApk,
+    includeInBundle = model.includeInBundle
+  )
+
+  fun androidGradlePluginProjectFlagsFrom(flags: AndroidGradlePluginProjectFlags): IdeAndroidGradlePluginProjectFlagsImpl =
+    IdeAndroidGradlePluginProjectFlagsImpl(flags.booleanFlagMap)
 
   fun <K, V> copy(original: Collection<K>, mapper: (K) -> V): List<V> = original.map(mapper)
 
@@ -543,5 +655,5 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
   fun <K, V> copyModel(key: K, mappingFunction: (K) -> V): V = mappingFunction(key)
 
   fun deduplicateString(s: String): String = myStrings.putIfAbsent(s, s) ?: s
+  fun String.deduplicate() = deduplicateString(this)
 }
-

@@ -26,17 +26,6 @@ class IdeDependenciesInfoImpl(
 ) : IdeDependenciesInfo, Serializable {
     val hashCode: Int = calculateHashCode()
 
-    companion object {
-        @JvmStatic
-        fun createOrNull(model: DependenciesInfo?) = model?.let { createFrom(it) }
-
-        @JvmStatic
-        fun createFrom(model: DependenciesInfo) = IdeDependenciesInfoImpl(
-          includeInApk = model.includeInApk,
-          includeInBundle = model.includeInBundle
-        )
-    }
-
     constructor() : this(
       includeInApk = true,
       includeInBundle = true

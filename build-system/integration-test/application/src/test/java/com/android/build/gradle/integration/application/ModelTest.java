@@ -29,17 +29,17 @@ import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.AndroidGradlePluginProjectFlags.BooleanFlag;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
-import com.android.ide.common.gradle.model.IdeAndroidGradlePluginProjectFlags;
-import com.android.ide.common.gradle.model.impl.IdeAndroidGradlePluginProjectFlagsImpl;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.util.Collection;
+import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -179,11 +179,10 @@ public class ModelTest {
                         .with(BooleanOption.USE_NON_FINAL_RES_IDS, false)
                         .fetchAndroidProjects()
                         .getOnlyModel();
-        IdeAndroidGradlePluginProjectFlags flags =
-                IdeAndroidGradlePluginProjectFlagsImpl.createFrom(model.getFlags());
-        assertThat(flags.getApplicationRClassConstantIds()).isTrue();
-        assertThat(flags.getTestRClassConstantIds()).isTrue();
-        assertThat(flags.getTransitiveRClasses()).isTrue();
+        Map<BooleanFlag, Boolean> flags = model.getFlags().getBooleanFlagMap();
+        assertThat(flags.get(BooleanFlag.APPLICATION_R_CLASS_CONSTANT_IDS)).isTrue();
+        assertThat(flags.get(BooleanFlag.TEST_R_CLASS_CONSTANT_IDS)).isTrue();
+        assertThat(flags.get(BooleanFlag.TRANSITIVE_R_CLASS)).isTrue();
     }
 
     @Test
@@ -194,11 +193,10 @@ public class ModelTest {
                         .with(BooleanOption.USE_NON_FINAL_RES_IDS, true)
                         .fetchAndroidProjects()
                         .getOnlyModel();
-        IdeAndroidGradlePluginProjectFlags flags =
-                IdeAndroidGradlePluginProjectFlagsImpl.createFrom(model.getFlags());
-        assertThat(flags.getApplicationRClassConstantIds()).isFalse();
-        assertThat(flags.getTestRClassConstantIds()).isFalse();
-        assertThat(flags.getTransitiveRClasses()).isFalse();
+        Map<BooleanFlag, Boolean> flags = model.getFlags().getBooleanFlagMap();
+        assertThat(flags.get(BooleanFlag.APPLICATION_R_CLASS_CONSTANT_IDS)).isFalse();
+        assertThat(flags.get(BooleanFlag.TEST_R_CLASS_CONSTANT_IDS)).isFalse();
+        assertThat(flags.get(BooleanFlag.TRANSITIVE_R_CLASS)).isFalse();
     }
 
 }

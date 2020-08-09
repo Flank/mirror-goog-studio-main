@@ -18,11 +18,14 @@ package com.android.ide.common.gradle.model
 
 import com.android.builder.model.AndroidGradlePluginProjectFlags
 import com.android.ide.common.gradle.model.impl.IdeAndroidGradlePluginProjectFlagsImpl
+import com.android.ide.common.gradle.model.impl.ModelCache
 import com.android.ide.common.gradle.model.stubs.AndroidGradlePluginProjectFlagsStub
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class IdeAndroidGradlePluginProjectFlagsTest {
+
+    val modelCache = ModelCache()
 
     @Test
     fun testDefaults() {
@@ -77,6 +80,6 @@ class IdeAndroidGradlePluginProjectFlagsTest {
     }
 
     private fun parse(vararg flags: Pair<AndroidGradlePluginProjectFlags.BooleanFlag, Boolean>): IdeAndroidGradlePluginProjectFlags {
-        return IdeAndroidGradlePluginProjectFlagsImpl.createFrom(AndroidGradlePluginProjectFlagsStub(mapOf(*flags)))
+        return modelCache.androidGradlePluginProjectFlagsFrom(AndroidGradlePluginProjectFlagsStub(mapOf(*flags)))
     }
 }

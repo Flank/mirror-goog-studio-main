@@ -16,7 +16,6 @@
 
 package com.android.ide.common.gradle.model.impl
 
-import com.android.builder.model.AndroidGradlePluginProjectFlags
 import com.android.builder.model.AndroidGradlePluginProjectFlags.BooleanFlag
 import com.android.ide.common.gradle.model.IdeAndroidGradlePluginProjectFlags
 import java.io.Serializable
@@ -70,15 +69,6 @@ data class IdeAndroidGradlePluginProjectFlagsImpl(
    * Create an empty set of flags for older AGPs and for studio serialization.
    */
   constructor() : this(booleanFlagMap = emptyMap())
-
-  companion object {
-    /**
-     * Create based on the android gradle plugin model class.
-     */
-    @JvmStatic
-    fun createFrom(flags: AndroidGradlePluginProjectFlags): IdeAndroidGradlePluginProjectFlagsImpl =
-      IdeAndroidGradlePluginProjectFlagsImpl(flags.booleanFlagMap)
-  }
 }
 
 private fun Map<BooleanFlag, Boolean>.getBooleanFlag(flag: BooleanFlag): Boolean {

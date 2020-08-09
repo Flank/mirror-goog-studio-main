@@ -143,10 +143,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
             @NonNull ModelCache modelCache, @Nullable SourceProvider original) {
         return original != null
                 ? modelCache.copyModel(
-                        original,
-                        provider ->
-                                IdeSourceProviderImpl.createFrom(
-                                        provider, modelCache::deduplicateString))
+                        original, provider -> modelCache.sourceProviderFrom(provider))
                 : null;
     }
 

@@ -16,7 +16,6 @@
 package com.android.ide.common.gradle.model.impl;
 
 import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.createEqualsVerifier;
-import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.verifyUsageOfImmutableCollections;
 
 import com.android.builder.model.Variant;
 import com.android.ide.common.gradle.model.IdeVariant;
@@ -42,8 +41,7 @@ public class IdeVariantImplTest {
     public void constructor() throws Throwable {
         Variant original = new VariantStub();
         IdeVariant copy =
-                IdeVariantImpl.createFrom(
-                        original, myModelCache, myDependenciesFactory, myGradleVersion);
+                myModelCache.variantFrom(original, myDependenciesFactory, myGradleVersion);
     }
 
     @Test
