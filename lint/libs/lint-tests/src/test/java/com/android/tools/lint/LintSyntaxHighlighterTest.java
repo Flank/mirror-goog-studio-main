@@ -50,7 +50,7 @@ public class LintSyntaxHighlighterTest extends TestCase {
                         (""
                                         + "<html><head>\n"
                                         + "<style>\n"
-                                        + HtmlReporter.CSS_STYLES
+                                        + HtmlReporter.Companion.getCssStyles()
                                         + "</style>\n"
                                         + "</head>\n<body>\n")
                                 + builder.getHtml()

@@ -461,7 +461,7 @@ class HtmlReporter(
 <script defer src="https://code.getmdl.io/1.2.0/material.min.js"></script>
 """
         )
-        append("<style>\n$CSS_STYLES</style>\n")
+        append("<style>\n$cssStyles</style>\n")
 
         // JavaScript for collapsing/expanding long lists
         append(
@@ -1049,7 +1049,7 @@ ${action.title}</button>"""
          *
          */
         @Suppress("ConstantConditionIf")
-        private val CSS_SYNTAX_COLORS_LIGHT_THEME = (
+        private val cssSyntaxColorsLightTheme: String get() = (
             """
 pre.errorlines {
     background-color: white;
@@ -1126,7 +1126,7 @@ pre.errorlines {
             )
 
         @Suppress("ConstantConditionIf")
-        private val CSS_SYNTAX_COLORS_DARCULA = (
+        private val cssSyntaxColorsDarcula: String get() = (
             """pre.errorlines {
     background-color: #2b2b2b;
     color: #a9b7c6;
@@ -1197,7 +1197,7 @@ pre.errorlines {
 
         /** Solarized theme. */
         @Suppress("ConstantConditionIf")
-        private val CSS_SYNTAX_COLORS_SOLARIZED = (
+        private val cssSyntaxColorsSolarized: String get() = (
             """pre.errorlines {
     background-color: #FDF6E3;
     color: #586E75;
@@ -1266,14 +1266,13 @@ pre.errorlines {
                 "    background-color: #FFDF80;\n" +
                 "}\n"
             )
-        private var CSS_SYNTAX_COLORS: String? = null
+        private var cssSyntaxColors: String
 
         /**
          * Stylesheet for the HTML report. Note that the [LintSyntaxHighlighter] also depends on
          * these class names.
          */
-        @JvmField
-        val CSS_STYLES =
+        val cssStyles: String get() =
             """section.section--center {
     max-width: 860px;
 }
@@ -1328,7 +1327,7 @@ div.mdl-layout__drawer-button .material-icons {
     float: right;
     vertical-align: middle;
 }
-$CSS_SYNTAX_COLORS.overview {
+$cssSyntaxColors.overview {
     padding: 10pt;
     width: 100%;
     overflow: auto;
@@ -1456,12 +1455,12 @@ $CSS_SYNTAX_COLORS.overview {
             USE_WAVY_UNDERLINES_FOR_ERRORS = underlineErrors
 
             val css: String = when (preferredThemeName) {
-                "darcula" -> CSS_SYNTAX_COLORS_DARCULA
-                "solarized" -> CSS_SYNTAX_COLORS_SOLARIZED
-                "light" -> CSS_SYNTAX_COLORS_LIGHT_THEME
-                else -> CSS_SYNTAX_COLORS_LIGHT_THEME
+                "darcula" -> cssSyntaxColorsDarcula
+                "solarized" -> cssSyntaxColorsSolarized
+                "light" -> cssSyntaxColorsLightTheme
+                else -> cssSyntaxColorsLightTheme
             }
-            CSS_SYNTAX_COLORS = css
+            cssSyntaxColors = css
         }
     }
 }
