@@ -29,7 +29,6 @@ import com.android.ide.common.gradle.model.stubs.BaseArtifactStub;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,8 +59,7 @@ public class IdeBaseArtifactImplTest {
                         new LinkedHashSet<File>(getGeneratedSourceFolders(original)),
                         createSourceProvider(cache, original.getVariantSourceProvider()),
                         createSourceProvider(cache, original.getMultiFlavorSourceProvider()),
-                        ModelCache.Companion.copyNewProperty(
-                                original::getAdditionalClassesFolders, Collections.emptySet()),
+                        cache.copy(original::getAdditionalClassesFolders, cache::deduplicateFile),
                         myDependenciesFactory.create(original)) {};
         File folder = new File("foo");
         copy.addGeneratedSourceFolder(folder);
@@ -109,8 +107,7 @@ public class IdeBaseArtifactImplTest {
                         new LinkedHashSet<File>(getGeneratedSourceFolders(original)),
                         createSourceProvider(cache, original.getVariantSourceProvider()),
                         createSourceProvider(cache, original.getMultiFlavorSourceProvider()),
-                        ModelCache.Companion.copyNewProperty(
-                                original::getAdditionalClassesFolders, Collections.emptySet()),
+                        cache.copy(original::getAdditionalClassesFolders, cache::deduplicateFile),
                         myDependenciesFactory.create(original)) {};
         expectUnsupportedOperationException(artifact::getJavaResourcesFolder);
     }

@@ -19,7 +19,6 @@ import com.android.build.FilterData
 import com.android.build.OutputFile
 import com.android.builder.model.AaptOptions
 import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.AndroidArtifactOutput
 import com.android.builder.model.AndroidGradlePluginProjectFlags
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.ApiVersion
@@ -69,7 +68,6 @@ import com.google.common.collect.ImmutableSet
 import com.google.common.collect.ImmutableSortedSet
 import com.google.common.collect.Iterables
 import java.io.File
-import java.util.ArrayList
 import java.util.HashMap
 import java.util.LinkedHashSet
 
@@ -100,7 +98,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
         { ImmutableList.copyOf(project.variantNames) },
         { computeVariantNames(variantsCopy) })
     val defaultVariantCopy = copyNewPropertyWithDefault({ project.defaultVariant }, { getDefaultVariant(variantNamesCopy) })
-    val flavorDimensionCopy: Collection<String> = copyNewProperty({ ImmutableList.copyOf(project.flavorDimensions) }, emptyList())
+    val flavorDimensionCopy: Collection<String> = copy(project::getFlavorDimensions, ::deduplicateString)
     val bootClasspathCopy: Collection<String> = ImmutableList.copyOf(project.bootClasspath)
     val nativeToolchainsCopy: Collection<IdeNativeToolchain> = copy(project::getNativeToolchains) { IdeNativeToolchainImpl(it) }
     val signingConfigsCopy: Collection<IdeSigningConfig> = copy(project::getSigningConfigs, ::signingConfigFrom)
@@ -111,14 +109,14 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     val unresolvedDependenciesCopy: Set<String> = ImmutableSet.copyOf(project.unresolvedDependencies)
     val javaCompileOptionsCopy = copyModel(project.javaCompileOptions, ::javaCompileOptionsFrom)
     val aaptOptionsCopy = copyModel(project.aaptOptions, ::aaptOptionsFrom)
-    val dynamicFeaturesCopy: Collection<String> = ImmutableList.copyOf(copyNewProperty({ project.dynamicFeatures }, ImmutableList.of()))
+    val dynamicFeaturesCopy: Collection<String> = copy(project::getDynamicFeatures, ::deduplicateString)
     val variantBuildInformation = createVariantBuildInformation(project, parsedModelVersion)
-    val viewBindingOptionsCopy: IdeViewBindingOptions? = copyNewProperty({ viewBindingOptionsFrom(project.viewBindingOptions) })
+    val viewBindingOptionsCopy: IdeViewBindingOptions? = copyNewModel(project::getViewBindingOptions, ::viewBindingOptionsFrom)
     val dependenciesInfoCopy: IdeDependenciesInfo? = copyNewModel(project::getDependenciesInfo, ::dependenciesInfoFrom)
-    val buildToolsVersionCopy = copyNewProperty({ project.buildToolsVersion })
-    val ndkVersionCopy = copyNewProperty({ project.ndkVersion })
+    val buildToolsVersionCopy = copyNewProperty(project::getBuildToolsVersion)
+    val ndkVersionCopy = copyNewProperty(project::getNdkVersion)
     val groupId = if (parsedModelVersion != null && parsedModelVersion.isAtLeast(3, 6, 0, "alpha", 5, false)) project.groupId else null
-    val lintRuleJarsCopy: List<File>? = copyNewProperty({ ImmutableList.copyOf(project.lintRuleJars) })
+    val lintRuleJarsCopy: List<File>? = copy(project::getLintRuleJars, ::deduplicateFile)
 
     // AndroidProject#isBaseSplit is always non null.
     val isBaseSplit = copyNewProperty({ project.isBaseSplit }, false)
@@ -156,7 +154,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       ndkVersionCopy,
       project.resourcePrefix,
       groupId,
-      copyNewProperty({ project.pluginGeneration }) != null,
+      copyNewProperty(project::getPluginGeneration) != null,
       project.apiVersion,
       getProjectType(project, parsedModelVersion),
       isBaseSplit,
@@ -242,12 +240,12 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       artifact.assembleTaskName,
       copyNewProperty({ artifact.assembleTaskOutputListingFile }, ""),
       artifact.classesFolder,
-      copyNewProperty({ artifact.javaResourcesFolder }),
+      copyNewProperty(artifact::getJavaResourcesFolder),
       ImmutableSet.copyOf(IdeBaseArtifactImpl.getIdeSetupTaskNames(artifact)),
       LinkedHashSet(IdeBaseArtifactImpl.getGeneratedSourceFolders(artifact)),
       IdeBaseArtifactImpl.createSourceProvider(this, artifact.variantSourceProvider),
       IdeBaseArtifactImpl.createSourceProvider(this, artifact.multiFlavorSourceProvider),
-      copyNewProperty({ artifact.additionalClassesFolders }, emptySet()),
+      copy(artifact::getAdditionalClassesFolders, ::deduplicateFile),
       dependenciesFactory.create(artifact),
       copyOutputs(artifact, agpVersion),
       artifact.applicationId,
@@ -257,22 +255,22 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       ImmutableSet.copyOf( // In AGP 4.0 and below abiFilters was nullable, normalize null to empty set.
         artifact.abiFilters.orEmpty()),
       artifact.isSigned,
-      copyNewProperty({ ArrayList(artifact.additionalRuntimeApks) }, emptyList()),
+      copy(artifact::getAdditionalRuntimeApks, ::deduplicateFile),
       copyNewModel(artifact::getTestOptions, ::testOptionsFrom),
       copyNewModel(artifact::getInstrumentedTestTaskName, ::deduplicateString),
       copyNewModel(artifact::getBundleTaskName, ::deduplicateString),
       copyNewModel(artifact::getBundleTaskOutputListingFile, ::deduplicateString),
       copyNewModel(artifact::getApkFromBundleTaskName, ::deduplicateString),
       copyNewModel(artifact::getApkFromBundleTaskOutputListingFile, ::deduplicateString),
-      copyNewProperty({ artifact.codeShrinker })
+      copyNewProperty(artifact::getCodeShrinker)
     )
   }
 
   fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl {
     return IdeAndroidArtifactOutputImpl(
-      copyNewProperty({ ImmutableList.copyOf(output.filterTypes) }, emptyList()),
+      copy(output::getFilterTypes, ::deduplicateString),
       copyFilters(output, this),
-      copyNewProperty({ output.outputType }),
+      copyNewProperty(output::getOutputType),
       output.versionCode,
       copyNewProperty({ output.outputFile }, output.mainOutputFile.outputFile)
     )
@@ -334,14 +332,14 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       artifact.assembleTaskName,
       copyNewProperty({ artifact.assembleTaskOutputListingFile }, ""),
       artifact.classesFolder,
-      copyNewProperty({ artifact.javaResourcesFolder }),
+      copyNewProperty(artifact::getJavaResourcesFolder),
       ImmutableSet.copyOf(IdeBaseArtifactImpl.getIdeSetupTaskNames(artifact)),
       LinkedHashSet(IdeBaseArtifactImpl.getGeneratedSourceFolders(artifact)),
       IdeBaseArtifactImpl.createSourceProvider(this, artifact.variantSourceProvider),
       IdeBaseArtifactImpl.createSourceProvider(this, artifact.multiFlavorSourceProvider),
-      copyNewProperty({ artifact.additionalClassesFolders }, emptySet()),
+      copy(artifact::getAdditionalClassesFolders, ::deduplicateFile),
       dependenciesFactory.create(artifact),
-      copyNewProperty({ artifact.mockablePlatformJar })
+      copyNewProperty(artifact::getMockablePlatformJar)
     )
   }
 
@@ -433,9 +431,10 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
   }
 
   fun syncIssueFrom(issue: SyncIssue): IdeSyncIssueImpl {
+
     return IdeSyncIssueImpl(
       issue.message,
-      copyNewProperty(issue::multiLineMessage),
+      copy(fun(): List<String>? = issue.multiLineMessage?.filterNotNull(), ::deduplicateString),
       issue.data,
       issue.severity,
       issue.type
@@ -486,7 +485,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       instantAppCompatible = (modelVersion != null &&
                               modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) &&
                               variant.isInstantAppCompatible),
-      desugaredMethods = ImmutableList.copyOf(copyNewProperty({ variant.desugaredMethods }, emptyList()))
+      desugaredMethods = copy(variant::getDesugaredMethods, ::deduplicateString)
     )
 
   private fun getTestedTargetVariants(variant: Variant): List<IdeTestedTargetVariantImpl> {
@@ -529,8 +528,8 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       myResDirectories = provider.resDirectories.makeRelativeAndDeduplicate(),
       myAssetsDirectories = provider.assetsDirectories.makeRelativeAndDeduplicate(),
       myJniLibsDirectories = provider.jniLibsDirectories.makeRelativeAndDeduplicate(),
-      myShadersDirectories = copyNewProperty({ provider.shadersDirectories }, emptyList()).makeRelativeAndDeduplicate(),
-      myMlModelsDirectories = copyNewProperty({ provider.mlModelsDirectories }, emptyList()).makeRelativeAndDeduplicate()
+      myShadersDirectories = copy(provider::getShadersDirectories, mapper = { it }).makeRelativeAndDeduplicate(),
+      myMlModelsDirectories = copy(provider::getMlModelsDirectories, mapper = { it }).makeRelativeAndDeduplicate()
     )
   }
 
@@ -539,7 +538,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       options.baselineFile
     else
       null,
-    lintConfig = copyNewProperty({ options.lintConfig }),
+    lintConfig = copyNewProperty(options::getLintConfig),
     severityOverrides = options.severityOverrides?.let { ImmutableMap.copyOf(it) },
     isCheckTestSources = modelVersion != null &&
                          modelVersion.isAtLeast(2, 4, 0) &&
@@ -560,11 +559,11 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     isExplainIssues = copyNewProperty({ options.isExplainIssues }, true),
     isShowAll = copyNewProperty({ options.isShowAll }, false),
     textReport = copyNewProperty({ options.textReport }, false),
-    textOutput = copyNewProperty({ options.textOutput }),
+    textOutput = copyNewProperty(options::getTextOutput),
     htmlReport = copyNewProperty({ options.htmlReport }, true),
-    htmlOutput = copyNewProperty({ options.htmlOutput }),
+    htmlOutput = copyNewProperty(options::getHtmlOutput),
     xmlReport = copyNewProperty({ options.xmlReport }, true),
-    xmlOutput = copyNewProperty({ options.xmlOutput }),
+    xmlOutput = copyNewProperty(options::getXmlOutput),
     isCheckReleaseBuilds = copyNewProperty({ options.isCheckReleaseBuilds }, true)
   )
 
@@ -584,6 +583,25 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       listOf<K>()
     }.map(mapper)
 
+  inline fun <K, V> copy(original: () -> Set<K>, mapper: (K) -> V): Set<V> =
+    try {
+      original()
+    }
+    catch (ignored: UnsupportedOperationException) {
+      setOf<K>()
+    }
+      .map(mapper)
+      .toSet()
+
+  @JvmName("copyNullableCollection")
+  inline fun <K, V> copy(original: () -> Collection<K>?, mapper: (K) -> V): List<V>? =
+    try {
+      original()
+    }
+    catch (ignored: UnsupportedOperationException) {
+      null
+    }?.map(mapper)
+
   inline fun <K, V, R> copy(original: () -> Map<K, V>, mapper: (V) -> R): Map<K, R> =
     try {
       original()
@@ -592,8 +610,9 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       mapOf<K, V>()
     }.mapValues { (_, v) -> mapper(v) }
 
+  fun copy(original: Set<String>): Set<String> = original.toSet()
+
   companion object {
-    fun copy(original: Set<String>): Set<String> = original.toSet()
 
     fun <T> copyNewPropertyWithDefault(propertyInvoker: () -> T, defaultValue: () -> T): T {
       return try {
@@ -604,6 +623,10 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       }
     }
 
+    /**
+     * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
+     *       Please use function references or anonymous functions which seeds type inference.
+     **/
     @JvmStatic
     inline fun <T: Any> copyNewProperty(propertyInvoker: () -> T, defaultValue: T): T {
       return try {
@@ -614,6 +637,10 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       }
     }
 
+    /**
+     * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
+     *       Please use function references or anonymous functions which seeds type inference.
+     **/
     @JvmStatic
     inline fun <T: Any?> copyNewProperty(propertyInvoker: () -> T?): T? {
       return try {
@@ -623,6 +650,38 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
         null
       }
     }
+
+    /**
+     * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
+     *       Please use function references or anonymous functions which seeds type inference.
+     **/
+    @JvmStatic
+    inline fun <T : Collection<*>> copyNewProperty(propertyInvoker: () -> T, defaultValue: T): Unit = error(
+      "Cannot be called. Use copy() method.")
+
+    /**
+     * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
+     *       Please use function references or anonymous functions which seeds type inference.
+     **/
+    @JvmStatic
+    inline fun <T : Map<*, *>> copyNewProperty(propertyInvoker: () -> T, defaultValue: T): Unit = error(
+      "Cannot be called. Use copy() method.")
+
+    /**
+     * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
+     *       Please use function references or anonymous functions which seeds type inference.
+     **/
+    @JvmStatic
+    @JvmName("impossibleCopyNewCollectionProperty")
+    inline fun <T : Collection<*>?> copyNewProperty(propertyInvoker: () -> T): Unit = error("Cannot be called. Use copy() method.")
+
+    /**
+     * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
+     *       Please use function references or anonymous functions which seeds type inference.
+     **/
+    @JvmStatic
+    @JvmName("impossibleCopyNewMapProperty")
+    inline fun <T : Map<*, *>?> copyNewProperty(propertyInvoker: () -> T): Unit = error("Cannot be called. Use copy() method.")
 
     fun mavenCoordinatesFrom(coordinates: MavenCoordinates): IdeMavenCoordinatesImpl {
       return IdeMavenCoordinatesImpl(
@@ -643,12 +702,12 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
 
   fun <K, V> copyModel(key: K, mappingFunction: (K) -> V): V = mappingFunction(key)
 
-  fun <K, V: Any> copyNewModel(
-    keyCreator: () -> K?,
+  inline fun <K, V: Any> copyNewModel(
+    getter: () -> K?,
     mapper: (K) -> V
   ): V? {
     return try {
-      val key: K? = keyCreator()
+      val key: K? = getter()
       if (key != null) mapper(key) else null
     }
     catch (ignored: UnsupportedOperationException) {
@@ -657,5 +716,6 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
   }
 
   fun deduplicateString(s: String): String = myStrings.putIfAbsent(s, s) ?: s
+  fun deduplicateFile(f: File): File = File(f.path.deduplicate())
   fun String.deduplicate() = deduplicateString(this)
 }

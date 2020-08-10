@@ -27,7 +27,6 @@ import com.android.ide.common.gradle.model.ndk.v1.IdeNativeAndroidProject;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
@@ -99,14 +98,13 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
     @NonNull
     private static Map<String, NativeVariantInfo> copyVariantInfos(@NonNull NativeAndroidProject project, @NonNull ModelCache modelCache) {
         return modelCache.copy(
-          () -> project.getVariantInfos(),
-          variantInfo ->
-            new IdeNativeVariantInfoImpl(
-              variantInfo.getAbiNames(),
-              Objects.requireNonNull(
-                ModelCache.Companion.copyNewProperty(
-                  () -> variantInfo.getBuildRootFolderMap(),
-                  Collections.emptyMap()))));
+                () -> project.getVariantInfos(),
+                variantInfo ->
+                        new IdeNativeVariantInfoImpl(
+                                variantInfo.getAbiNames(),
+                                modelCache.copy(
+                                        variantInfo::getBuildRootFolderMap,
+                                        modelCache::deduplicateFile)));
     }
 
     @NonNull

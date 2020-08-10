@@ -56,11 +56,9 @@ class IdeLibraryFactory {
         folder = androidLibrary.folder,
         manifest = androidLibrary.manifest.path,
         jarFile = androidLibrary.jarFile.path,
-        compileJarFile = defaultValueIfNotPresent(
-          { androidLibrary.compileJarFile }, androidLibrary.jarFile).path,
+        compileJarFile = (ModelCache.copyNewProperty(androidLibrary::getCompileJarFile) ?: androidLibrary.jarFile).path,
         resFolder = androidLibrary.resFolder.path,
-        resStaticLibrary = defaultValueIfNotPresent(
-          { androidLibrary.resStaticLibrary }, null),
+        resStaticLibrary = ModelCache.copyNewProperty(androidLibrary::getResStaticLibrary),
         assetsFolder = androidLibrary.assetsFolder.path,
         localJars = androidLibrary.localJars.map { it.path },
         jniFolder = androidLibrary.jniFolder.path,
@@ -75,8 +73,7 @@ class IdeLibraryFactory {
           androidLibrary),
         deduplicate = { strings.getOrPut(this) { this } }
       )
-      val isProvided = defaultValueIfNotPresent(
-        { androidLibrary.isProvided }, false)
+      val isProvided = ModelCache.copyNewProperty(androidLibrary::isProvided, false)
       IdeAndroidLibrary(androidLibraryCores.internCore(core), isProvided)
     }
   }
@@ -86,8 +83,7 @@ class IdeLibraryFactory {
    * @return Instance of [Library] based on dependency type.
    */
   fun create(javaLibrary: JavaLibrary): IdeLibrary {
-    val project = defaultValueIfNotPresent(
-      { javaLibrary.project }, null)
+    val project = ModelCache.copyNewProperty(javaLibrary::getProject)
     return if (project != null) {
       // Java modules don't have variant.
       createIdeModuleLibrary(javaLibrary, computeAddress(javaLibrary))
@@ -97,8 +93,7 @@ class IdeLibraryFactory {
         artifactAddress = computeAddress(javaLibrary),
         artifact = javaLibrary.jarFile
       )
-      val isProvided = defaultValueIfNotPresent(
-        { javaLibrary.isProvided }, false)
+      val isProvided = ModelCache.copyNewProperty(javaLibrary::isProvided, false)
       IdeJavaLibrary(javaLibraryCores.internCore(core), isProvided)
     }
   }
@@ -106,30 +101,26 @@ class IdeLibraryFactory {
   fun createIdeModuleLibrary(library: AndroidLibrary, artifactAddress: String): IdeLibrary {
     val core = IdeModuleLibraryCore(
       artifactAddress = artifactAddress,
-      buildId = ModelCache.copyNewProperty({ library.buildId }),
-      projectPath = ModelCache.copyNewProperty({ library.project }),
-      variant = ModelCache.copyNewProperty({ library.projectVariant }),
-      folder = defaultValueIfNotPresent(
-        { library.folder }, null),
-      lintJar = defaultValueIfNotPresent(
-        { library.lintJar.path }, null)
+      buildId = ModelCache.copyNewProperty(library::getBuildId),
+      projectPath = ModelCache.copyNewProperty(library::getProject),
+      variant = ModelCache.copyNewProperty(library::getProjectVariant),
+      folder = ModelCache.copyNewProperty(library::getFolder),
+      lintJar = ModelCache.copyNewProperty(library::getLintJar)?.path
     )
-    val isProvided = defaultValueIfNotPresent(
-      { library.isProvided }, false)
+    val isProvided = ModelCache.copyNewProperty(library::isProvided, false)
     return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided)
   }
 
   fun createIdeModuleLibrary(library: JavaLibrary, artifactAddress: String): IdeLibrary {
     val core = IdeModuleLibraryCore(
       artifactAddress = artifactAddress,
-      buildId = ModelCache.copyNewProperty({ library.buildId }),
-      projectPath = ModelCache.copyNewProperty({ library.project }),
+      buildId = ModelCache.copyNewProperty(library::getBuildId),
+      projectPath = ModelCache.copyNewProperty(library::getProject),
       variant = null,
       folder = null,
       lintJar = null
     )
-    val isProvided = defaultValueIfNotPresent(
-      { library.isProvided }, false)
+    val isProvided = ModelCache.copyNewProperty(library::isProvided, false)
     return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided)
   }
 
@@ -148,15 +139,6 @@ class IdeLibraryFactory {
       }
     }
 
-    fun <T> defaultValueIfNotPresent(propertyInvoker: () -> T, defaultValue: T): T {
-      return try {
-        propertyInvoker()
-      }
-      catch (ignored: UnsupportedOperationException) {
-        defaultValue
-      }
-    }
-
     /**
      * @param library Instance of level 1 Library.
      * @return The artifact address that can be used as unique identifier in global library map.
@@ -167,7 +149,7 @@ class IdeLibraryFactory {
       // in the same MavenCoordinates for different variants of the same module.
       try {
         if (library.project != null && library is AndroidLibrary) {
-          return ((ModelCache.copyNewProperty({ library.buildId })).orEmpty()
+          return ((ModelCache.copyNewProperty(library::getBuildId)).orEmpty()
                   + library.getProject()
                   + "::"
                   + library.projectVariant)
@@ -209,7 +191,7 @@ class IdeLibraryFactory {
       val projectPath = androidLibrary.project ?: return false
       val buildFolderPath = buildFolderPaths.findBuildFolderPath(
         projectPath,
-        ModelCache.copyNewProperty({ androidLibrary.buildId })
+        ModelCache.copyNewProperty(androidLibrary::getBuildId)
       )
       // If the aar bundle is inside of build directory, then it's a regular library module dependency, otherwise it's a wrapped aar module.
       return (buildFolderPath != null
