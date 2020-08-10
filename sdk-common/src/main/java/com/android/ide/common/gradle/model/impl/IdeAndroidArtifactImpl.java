@@ -18,7 +18,6 @@ package com.android.ide.common.gradle.model.impl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.CodeShrinker;
 import com.android.builder.model.NativeLibrary;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
@@ -27,12 +26,9 @@ import com.android.ide.common.gradle.model.IdeClassField;
 import com.android.ide.common.gradle.model.IdeDependencies;
 import com.android.ide.common.gradle.model.IdeSourceProvider;
 import com.android.ide.common.gradle.model.IdeTestOptions;
-import com.android.ide.common.repository.GradleVersion;
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -40,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of {@link AndroidArtifact}. */

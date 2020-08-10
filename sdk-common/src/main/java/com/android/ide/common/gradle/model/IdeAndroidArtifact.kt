@@ -15,10 +15,8 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.ClassField
 import com.android.builder.model.CodeShrinker
 import com.android.builder.model.SigningConfig
-import com.android.builder.model.TestOptions
 import java.io.File
 import java.io.Serializable
 

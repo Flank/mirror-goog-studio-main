@@ -52,6 +52,7 @@ import com.android.ide.common.gradle.model.IdeVariant
 import com.android.ide.common.gradle.model.IdeVariantBuildInformation
 import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions
 import com.android.ide.common.gradle.model.IdeViewBindingOptions
+import com.android.ide.common.gradle.model.impl.IdeAndroidArtifactOutputImpl.copyFilters
 import com.android.ide.common.gradle.model.impl.IdeAndroidGradlePluginProjectFlagsImpl.Companion.createFrom
 import com.android.ide.common.gradle.model.impl.IdeDependenciesInfoImpl.Companion.createOrNull
 import com.android.ide.common.gradle.model.impl.IdeLintOptionsImpl.Companion.createFrom
@@ -278,10 +279,8 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
 
   fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl {
     return IdeAndroidArtifactOutputImpl(
-      copy(output.outputs) { IdeOutputFileImpl(it, this) },
       copyNewProperty({ ImmutableList.copyOf(output.filterTypes) }, emptyList()),
-      IdeVariantOutputImpl.copyFilters(output, this),
-      copyNewProperty({ output.mainOutputFile }, { IdeOutputFileImpl(it, this) }, null),
+      copyFilters(output, this),
       copyNewProperty({ output.outputType }),
       output.versionCode,
       copyNewProperty({ output.outputFile }, output.mainOutputFile.outputFile)
