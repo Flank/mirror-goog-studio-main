@@ -48,4 +48,9 @@ public class TestIssueRegistry extends BuiltinIssueRegistry {
     public List<Issue> getIssuesForScope(@NonNull EnumSet<Scope> scope) {
         return super.getIssuesForScope(scope);
     }
+
+    @Override
+    public int getIssueCapacity(@NonNull EnumSet<Scope> scope) {
+        return super.getIssueCapacity(scope);
+    }
 }

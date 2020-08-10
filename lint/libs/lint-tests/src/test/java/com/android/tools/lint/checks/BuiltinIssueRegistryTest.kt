@@ -32,16 +32,6 @@ class BuiltinIssueRegistryTest : TestCase() {
         clientName = LintClient.CLIENT_UNIT_TESTS
     }
 
-    fun testNoListResize() {
-        val registry = TestIssueRegistry()
-        val issues = registry.issues
-        val issueCount = issues.size
-        assertTrue(
-            "BuiltinIssueRegistry.INITIAL_CAPACITY should be at least " + issueCount,
-            BuiltinIssueRegistry.INITIAL_CAPACITY >= issueCount
-        )
-    }
-
     @Throws(IllegalAccessException::class)
     fun testCapacities() {
         val registry = TestIssueRegistry()
