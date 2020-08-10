@@ -71,6 +71,68 @@ class FixStackFramesDelegate(
     companion object {
         private val logger = LoggerWrapper.getLogger(FixStackFramesDelegate::class.java)
         private val zeroFileTime: FileTime = FileTime.fromMillis(0)
+
+        fun transformJar(
+            inputJar: File,
+            outputJar: File,
+            classesHierarchyResolver: ClassesHierarchyResolver
+        ) {
+            ZipFile(inputJar).use { inputZip ->
+                ZipOutputStream(
+                    Files.newOutputStream(outputJar.toPath()).buffered()
+                ).use { outputZip ->
+                    val inEntries = inputZip.entries()
+                    while (inEntries.hasMoreElements()) {
+                        val entry = inEntries.nextElement()
+                        if (!isValidZipEntryName(entry)) {
+                            throw InvalidPathException(
+                                entry.name,
+                                "Entry name contains invalid characters"
+                            )
+                        }
+                        if (!entry.name.endsWith(SdkConstants.DOT_CLASS)) {
+                            continue
+                        }
+                        val originalFile = inputZip.getInputStream(entry).buffered()
+                        val outEntry = ZipEntry(entry.name)
+
+                        val newEntryContent = getFixedClass(originalFile, classesHierarchyResolver)
+
+                        val crc32 = CRC32()
+                        crc32.update(newEntryContent)
+                        outEntry.crc = crc32.value
+                        outEntry.method = ZipEntry.STORED
+                        outEntry.size = newEntryContent.size.toLong()
+                        outEntry.compressedSize = newEntryContent.size.toLong()
+                        outEntry.lastAccessTime = zeroFileTime
+                        outEntry.lastModifiedTime = zeroFileTime
+                        outEntry.creationTime = zeroFileTime
+
+                        outputZip.putNextEntry(outEntry)
+                        outputZip.write(newEntryContent)
+                        outputZip.closeEntry()
+                    }
+                }
+            }
+        }
+
+        private fun getFixedClass(
+            originalFile: InputStream,
+            classesHierarchyResolver: ClassesHierarchyResolver
+        ): ByteArray {
+            val bytes = ByteStreams.toByteArray(originalFile)
+            return try {
+                val classReader = ClassReader(bytes)
+                val classWriter =
+                    FixFramesClassWriter(ClassWriter.COMPUTE_FRAMES, classesHierarchyResolver)
+                classReader.accept(classWriter, ClassReader.SKIP_FRAMES)
+                classWriter.toByteArray()
+            } catch (t: Throwable) {
+                // we could not fix it, just copy the original and log the exception
+                logger.verbose(t.message!!)
+                bytes
+            }
+        }
     }
 
     private fun getUniqueName(input: File): String {
@@ -156,7 +218,7 @@ class FixStackFramesDelegate(
     abstract class FixStackFramesRunnable : ProfileAwareWorkAction<Params>() {
 
         override fun run() {
-            createFile(
+            transformJar(
                 parameters.input.get(),
                 parameters.output.get(),
                 parameters.classesHierarchyBuildService.get()
@@ -164,69 +226,6 @@ class FixStackFramesDelegate(
                     .addSources(parameters.classpath.get())
                     .build()
             )
-        }
-
-        private fun createFile(
-            input: File,
-            output: File,
-            classesHierarchyResolver: ClassesHierarchyResolver
-        ) {
-            ZipFile(input).use { inputZip ->
-                ZipOutputStream(
-                    Files.newOutputStream(output.toPath()).buffered()
-                ).use { outputZip ->
-                    val inEntries = inputZip.entries()
-                    while (inEntries.hasMoreElements()) {
-                        val entry = inEntries.nextElement()
-                        if (!isValidZipEntryName(entry)) {
-                            throw InvalidPathException(
-                                entry.name,
-                                "Entry name contains invalid characters"
-                            )
-                        }
-                        if (!entry.name.endsWith(SdkConstants.DOT_CLASS)) {
-                            continue
-                        }
-                        val originalFile = inputZip.getInputStream(entry).buffered()
-                        val outEntry = ZipEntry(entry.name)
-
-                        val newEntryContent = getFixedClass(originalFile, classesHierarchyResolver)
-
-                        val crc32 = CRC32()
-                        crc32.update(newEntryContent)
-                        outEntry.crc = crc32.value
-                        outEntry.method = ZipEntry.STORED
-                        outEntry.size = newEntryContent.size.toLong()
-                        outEntry.compressedSize = newEntryContent.size.toLong()
-                        outEntry.lastAccessTime = zeroFileTime
-                        outEntry.lastModifiedTime = zeroFileTime
-                        outEntry.creationTime = zeroFileTime
-
-                        outputZip.putNextEntry(outEntry)
-                        outputZip.write(newEntryContent)
-                        outputZip.closeEntry()
-                    }
-                }
-            }
-
-        }
-
-        private fun getFixedClass(
-            originalFile: InputStream,
-            classesHierarchyResolver: ClassesHierarchyResolver
-        ): ByteArray {
-            val bytes = ByteStreams.toByteArray(originalFile)
-            return try {
-                val classReader = ClassReader(bytes)
-                val classWriter =
-                    FixFramesClassWriter(ClassWriter.COMPUTE_FRAMES, classesHierarchyResolver)
-                classReader.accept(classWriter, ClassReader.SKIP_FRAMES)
-                classWriter.toByteArray()
-            } catch (t: Throwable) {
-                // we could not fix it, just copy the original and log the exception
-                logger.verbose(t.message!!)
-                bytes
-            }
         }
     }
 }

@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform
 import com.android.build.gradle.internal.dependency.MockableJarTransform
 import com.android.build.gradle.internal.dependency.ModelArtifactCompatibilityRule.Companion.setUp
 import com.android.build.gradle.internal.dependency.PlatformAttrTransform
+import com.android.build.gradle.internal.dependency.RecalculateStackFramesTransform
 import com.android.build.gradle.internal.dependency.VersionedCodeShrinker.Companion.of
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfigurations
 import com.android.build.gradle.internal.dependency.registerDexingOutputSplitTransform
@@ -60,6 +61,7 @@ import com.android.build.gradle.internal.res.namespaced.AutoNamespacePreProcessT
 import com.android.build.gradle.internal.res.namespaced.AutoNamespaceTransform
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.ProjectServices
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.ComponentInfo
@@ -392,6 +394,26 @@ class DependencyConfigurator(
             AndroidArtifacts.ArtifactType.CLASSES,
             AndroidArtifacts.ArtifactType.JAR_CLASS_LIST
         )
+
+        dependencies.registerTransform(RecalculateStackFramesTransform::class.java) { spec ->
+            spec.from.attribute(
+                ArtifactAttributes.ARTIFACT_FORMAT,
+                AndroidArtifacts.ArtifactType.CLASSES_JAR.type
+            )
+
+            spec.to.attribute(
+                ArtifactAttributes.ARTIFACT_FORMAT,
+                AndroidArtifacts.ArtifactType.CLASSES_FIXED_FRAMES_JAR.type
+            )
+
+            spec.parameters { params ->
+                params.projectName.set(projectName)
+                params.bootClasspath.set(globalScope.fullBootClasspathProvider)
+                params.classesHierarchyBuildService.set(
+                    getBuildService(projectServices.buildServiceRegistry)
+                )
+            }
+        }
 
         return this
     }

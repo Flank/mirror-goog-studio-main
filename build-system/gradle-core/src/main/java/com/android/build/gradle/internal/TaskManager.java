@@ -146,7 +146,6 @@ import com.android.build.gradle.internal.tasks.PrepareLintJarForPublish;
 import com.android.build.gradle.internal.tasks.ProcessJavaResTask;
 import com.android.build.gradle.internal.tasks.ProguardTask;
 import com.android.build.gradle.internal.tasks.R8Task;
-import com.android.build.gradle.internal.tasks.RecalculateStackFramesTask;
 import com.android.build.gradle.internal.tasks.ShrinkResourcesOldShrinkerTask;
 import com.android.build.gradle.internal.tasks.SigningConfigWriterTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
@@ -2092,11 +2091,7 @@ public abstract class TaskManager<
 
         maybeCreateTransformClassesWithAsmTask(creationConfig, isTestCoverageEnabled);
 
-        maybeCreateDesugarTask(
-                creationConfig,
-                creationConfig.getMinSdkVersion(),
-                transformManager,
-                isTestCoverageEnabled);
+        maybeCreateDesugarTask(creationConfig, creationConfig.getMinSdkVersion(), transformManager);
 
         BaseExtension extension = creationConfig.getGlobalScope().getExtension();
 
@@ -2203,8 +2198,7 @@ public abstract class TaskManager<
     private void maybeCreateDesugarTask(
             @NonNull ApkCreationConfig creationConfig,
             @NonNull AndroidVersion minSdk,
-            @NonNull TransformManager transformManager,
-            boolean isTestCoverageEnabled) {
+            @NonNull TransformManager transformManager) {
         VariantScope variantScope = creationConfig.getVariantScope();
         if (creationConfig.getJava8LangSupportType() == Java8LangSupport.DESUGAR) {
             creationConfig
@@ -2212,10 +2206,6 @@ public abstract class TaskManager<
                     .consumeStreams(
                             ImmutableSet.of(Scope.EXTERNAL_LIBRARIES),
                             TransformManager.CONTENT_CLASS);
-
-            taskFactory.register(
-                    new RecalculateStackFramesTask.CreationAction(
-                            creationConfig, isTestCoverageEnabled));
 
             taskFactory.register(new DesugarTask.CreationAction(creationConfig));
 

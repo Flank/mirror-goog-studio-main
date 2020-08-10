@@ -30,9 +30,9 @@ import org.gradle.api.artifacts.transform.InputArtifactDependencies
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
 import org.gradle.api.attributes.Attribute
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.file.RegularFile
 import org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -72,7 +72,7 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
                         parameters.visitorsList.set(
                             creationConfig.registeredDependenciesClassesVisitors
                         )
-                        parameters.bootClasspath.from(creationConfig.globalScope.fullBootClasspath)
+                        parameters.bootClasspath.set(creationConfig.globalScope.fullBootClasspathProvider)
                         parameters.classesHierarchyBuildService.set(
                             getBuildService(creationConfig.services.buildServiceRegistry)
                         )
@@ -114,7 +114,7 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
             .getClassesHierarchyResolverBuilder()
             .addSources(inputArtifact.get().asFile)
             .addSources(classpath.files)
-            .addSources(parameters.bootClasspath.files)
+            .addSources(parameters.bootClasspath.get().map { it.asFile })
             .build()
 
         AsmInstrumentationManager(
@@ -139,7 +139,7 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
         val visitorsList: ListProperty<AsmClassVisitorFactory<*>>
 
         @get:CompileClasspath
-        val bootClasspath: ConfigurableFileCollection
+        val bootClasspath: ListProperty<RegularFile>
 
         @get:Internal
         val classesHierarchyBuildService: Property<ClassesHierarchyBuildService>
