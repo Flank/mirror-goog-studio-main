@@ -21,10 +21,8 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.FileCollection
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
@@ -43,10 +41,11 @@ import javax.inject.Inject
  * publish, we have to do this.
  */
 abstract class PrepareLintJarForPublish : DefaultTask() {
+
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var lintChecks: FileCollection
-        private set
+    abstract val lintChecks: ConfigurableFileCollection
+
     @get:OutputFile
     abstract val outputLintJar: RegularFileProperty
 
@@ -70,20 +69,21 @@ abstract class PrepareLintJarForPublish : DefaultTask() {
     }
 
     class CreationAction(private val scope: GlobalScope) :
-        TaskCreationAction<PrepareLintJarForPublish>() {
+            TaskCreationAction<PrepareLintJarForPublish>() {
+
         override val name = NAME
         override val type = PrepareLintJarForPublish::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<PrepareLintJarForPublish>) {
             super.handleProvider(taskProvider)
             scope.globalArtifacts.setInitialProvider(
-                taskProvider,
-                PrepareLintJarForPublish::outputLintJar
+                    taskProvider,
+                    PrepareLintJarForPublish::outputLintJar
             ).withName(FN_LINT_JAR).on(InternalArtifactType.LINT_PUBLISH_JAR)
         }
 
         override fun configure(task: PrepareLintJarForPublish) {
-            task.lintChecks = scope.publishedCustomLintChecks
+            task.lintChecks.from(scope.publishedCustomLintChecks)
         }
     }
 }

@@ -29,18 +29,15 @@ abstract class PublishLintJarWorkerRunnable : ProfileAwareWorkAction<PublishLint
         // a weird message, do a manual check
         if (parameters.files.files.size > 1) {
             throw RuntimeException(
-                "Found more than one jar in the '"
-                        + VariantDependencies.CONFIG_NAME_LINTPUBLISH
-                        + "' configuration. Only one file is supported. If using a separate Gradle project, make sure compilation dependencies are using compileOnly"
+                    "Found more than one jar in the '"
+                            + VariantDependencies.CONFIG_NAME_LINTPUBLISH
+                            + "' configuration. Only one file is supported. If using a separate Gradle project, make sure compilation dependencies are using compileOnly"
             )
         }
 
         val outputLintJar = parameters.outputLintJar.asFile.get()
-        if (parameters.files.isEmpty) {
-            if (outputLintJar.isFile) {
-                FileUtils.delete(outputLintJar)
-            }
-        } else {
+        FileUtils.deleteIfExists(outputLintJar)
+        if (!parameters.files.isEmpty) {
             FileUtils.mkdirs(outputLintJar.parentFile)
             parameters.files.singleFile.copyTo(outputLintJar)
         }
