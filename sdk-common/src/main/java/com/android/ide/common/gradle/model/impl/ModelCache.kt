@@ -86,13 +86,13 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     val parsedModelVersion = GradleVersion.tryParse(project.modelVersion)
 
     val defaultConfigCopy: IdeProductFlavorContainer = copyModel(project.defaultConfig, ::productFlavorContainerFrom)
-    val buildTypesCopy: Collection<IdeBuildTypeContainer> = copy(project.buildTypes, ::buildTypeContainerFrom)
-    val productFlavorCopy: Collection<IdeProductFlavorContainer> = copy(project.productFlavors, ::productFlavorContainerFrom)
-    val syncIssuesCopy: Collection<IdeSyncIssue> = copy(syncIssues, ::syncIssueFrom)
+    val buildTypesCopy: Collection<IdeBuildTypeContainer> = copy(project::getBuildTypes, ::buildTypeContainerFrom)
+    val productFlavorCopy: Collection<IdeProductFlavorContainer> = copy(project::getProductFlavors, ::productFlavorContainerFrom)
+    val syncIssuesCopy: Collection<IdeSyncIssue> = syncIssues.map(::syncIssueFrom)
     val variantNames = variants.map { it.name }.toSet()
     val variantsCopy: Collection<IdeVariant> = ImmutableList.copyOf(
       Iterables.concat<IdeVariant>(
-        copy(variants) { variant: Variant -> variantFrom(variant, dependenciesFactory, parsedModelVersion) },
+        variants.map { variant: Variant -> variantFrom(variant, dependenciesFactory, parsedModelVersion) },
         cachedVariants.filter { !variantNames.contains(it.name) }
       ))
     val variantNamesCopy: Collection<String> =
@@ -102,8 +102,8 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     val defaultVariantCopy = copyNewPropertyWithDefault({ project.defaultVariant }, { getDefaultVariant(variantNamesCopy) })
     val flavorDimensionCopy: Collection<String> = copyNewProperty({ ImmutableList.copyOf(project.flavorDimensions) }, emptyList())
     val bootClasspathCopy: Collection<String> = ImmutableList.copyOf(project.bootClasspath)
-    val nativeToolchainsCopy: Collection<IdeNativeToolchain> = copy(project.nativeToolchains) { IdeNativeToolchainImpl(it) }
-    val signingConfigsCopy: Collection<IdeSigningConfig> = copy(project.signingConfigs, ::signingConfigFrom)
+    val nativeToolchainsCopy: Collection<IdeNativeToolchain> = copy(project::getNativeToolchains) { IdeNativeToolchainImpl(it) }
+    val signingConfigsCopy: Collection<IdeSigningConfig> = copy(project::getSigningConfigs, ::signingConfigFrom)
     val lintOptionsCopy: IdeLintOptions = copyModel(project.lintOptions, { lintOptionsFrom(it, parsedModelVersion) })
 
     // We need to use the unresolved dependencies to support older versions of the Android
@@ -228,16 +228,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     if (agpVersion != null && agpVersion.compareIgnoringQualifiers("4.0.0") >= 0) {
       return emptyList()
     }
-    val outputs: List<AndroidArtifactOutput>
-    return try {
-      outputs = ArrayList(artifact.outputs)
-      copy(outputs, this@ModelCache::androidArtifactOutputFrom)
-    }
-    catch (e: RuntimeException) {
-      System.err.println("Caught exception: $e")
-      // See http://b/64305584
-      emptyList()
-    }
+    return copy(artifact::getOutputs, ::androidArtifactOutputFrom)
   }
 
   fun androidArtifactFrom(
@@ -295,14 +286,14 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     return IdeBuildTypeContainerImpl(
       copyModel(container.buildType, ::buildTypeFrom),
       copyModel(container.sourceProvider, ::sourceProviderFrom),
-      copy(container.extraSourceProviders, ::sourceProviderContainerFrom)
+      copy(container::getExtraSourceProviders, ::sourceProviderContainerFrom)
     )
   }
 
   fun buildTypeFrom(buildType: BuildType): IdeBuildTypeImpl {
     return IdeBuildTypeImpl(
       buildType.name,
-      copy(buildType.resValues, ::classFieldFrom),
+      copy(buildType::resValues, ::classFieldFrom),
       ImmutableList.copyOf(buildType.proguardFiles),
       ImmutableList.copyOf(buildType.consumerProguardFiles),
       // AGP may return internal Groovy GString implementation as a value in
@@ -367,7 +358,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     return IdeProductFlavorContainerImpl(
       copyModel(container.productFlavor, ::productFlavorFrom),
       copyModel(container.sourceProvider, ::sourceProviderFrom),
-      copy(container.extraSourceProviders, ::sourceProviderContainerFrom)
+      copy(container::getExtraSourceProviders, ::sourceProviderContainerFrom)
     )
   }
 
@@ -392,7 +383,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
   fun productFlavorFrom(flavor: ProductFlavor): IdeProductFlavorImpl {
     return IdeProductFlavorImpl(
       flavor.name,
-      copy(flavor.resValues, this@ModelCache::classFieldFrom),
+      copy(flavor::resValues, ::classFieldFrom),
       ImmutableList.copyOf(flavor.proguardFiles),
       ImmutableList.copyOf(flavor.consumerProguardFiles),
       // AGP may return internal Groovy GString implementation as a value in
@@ -486,8 +477,8 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       name = variant.name,
       displayName = variant.displayName,
       mainArtifact = copyModel(variant.mainArtifact) { androidArtifactFrom(it, dependenciesFactory, modelVersion) },
-      extraAndroidArtifacts = copy(variant.extraAndroidArtifacts) { androidArtifactFrom(it, dependenciesFactory, modelVersion) },
-      extraJavaArtifacts = copy(variant.extraJavaArtifacts) { javaArtifactFrom(it, dependenciesFactory) },
+      extraAndroidArtifacts = copy(variant::getExtraAndroidArtifacts) { androidArtifactFrom(it, dependenciesFactory, modelVersion) },
+      extraJavaArtifacts = copy(variant::getExtraJavaArtifacts) { javaArtifactFrom(it, dependenciesFactory) },
       buildType = variant.buildType,
       productFlavors = ImmutableList.copyOf(variant.productFlavors),
       mergedFlavor = copyModel(variant.mergedFlavor, ::productFlavorFrom),
@@ -500,7 +491,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
 
   private fun getTestedTargetVariants(variant: Variant): List<IdeTestedTargetVariantImpl> {
     return try {
-      copy(variant.testedTargetVariants) { targetVariant: TestedTargetVariant ->
+      copy(variant::getTestedTargetVariants) { targetVariant: TestedTargetVariant ->
         IdeTestedTargetVariantImpl(targetVariant.targetProjectPath, targetVariant.targetVariant)
       }
     }
@@ -585,9 +576,21 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
   fun androidGradlePluginProjectFlagsFrom(flags: AndroidGradlePluginProjectFlags): IdeAndroidGradlePluginProjectFlagsImpl =
     IdeAndroidGradlePluginProjectFlagsImpl(flags.booleanFlagMap)
 
-  fun <K, V> copy(original: Collection<K>, mapper: (K) -> V): List<V> = original.map(mapper)
+  inline fun <K, V> copy(original: () -> Collection<K>, mapper: (K) -> V): List<V> =
+    try {
+      original()
+    }
+    catch (ignored: UnsupportedOperationException) {
+      listOf<K>()
+    }.map(mapper)
 
-  fun <K, V, R> copy(original: Map<K, V>, mapper: (V) -> R): Map<K, R> = original.mapValues { (_, v) -> mapper(v) }
+  inline fun <K, V, R> copy(original: () -> Map<K, V>, mapper: (V) -> R): Map<K, R> =
+    try {
+      original()
+    }
+    catch (ignored: UnsupportedOperationException) {
+      mapOf<K, V>()
+    }.mapValues { (_, v) -> mapper(v) }
 
   companion object {
     fun copy(original: Set<String>): Set<String> = original.toSet()

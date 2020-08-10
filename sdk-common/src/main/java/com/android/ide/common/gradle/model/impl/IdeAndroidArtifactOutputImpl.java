@@ -83,7 +83,7 @@ public final class IdeAndroidArtifactOutputImpl implements IdeAndroidArtifactOut
     public static Collection<FilterData> copyFilters(
             @NonNull VariantOutput output, @NonNull ModelCache modelCache) {
         try {
-            return modelCache.copy(output.getFilters(), data -> modelCache.filterDataFrom(data));
+            return modelCache.copy(output::getFilters, modelCache::filterDataFrom);
         } catch (UnsupportedOperationException ignored) {
             return output.getOutputs().stream()
                     .map(OutputFile::getFilters)

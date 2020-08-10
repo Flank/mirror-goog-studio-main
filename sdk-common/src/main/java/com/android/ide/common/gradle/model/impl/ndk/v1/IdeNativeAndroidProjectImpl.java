@@ -84,16 +84,12 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
         myBuildFiles = ImmutableList.copyOf(project.getBuildFiles());
         myVariantInfos = copyVariantInfos(project, modelCache);
         myArtifacts =
-                modelCache.copy(
-                        project.getArtifacts(),
-                        artifact -> new IdeNativeArtifactImpl(artifact, modelCache));
+          modelCache.copy(
+            project::getArtifacts,
+            artifact -> new IdeNativeArtifactImpl(artifact, modelCache));
         myToolChains =
-                modelCache.copy(
-                        project.getToolChains(),
-                        toolchain -> new IdeNativeToolchainImpl(toolchain));
-        mySettings =
-                modelCache.copy(
-                        project.getSettings(), settings -> new IdeNativeSettingsImpl(settings));
+                modelCache.copy(project::getToolChains, toolchain -> new IdeNativeToolchainImpl(toolchain));
+        mySettings = modelCache.copy(project::getSettings, settings -> new IdeNativeSettingsImpl(settings));
         myFileExtensions = ImmutableMap.copyOf(project.getFileExtensions());
         myDefaultNdkVersion = copyDefaultNdkVersion(project);
         myBuildSystems = copyBuildSystems(project);
@@ -101,21 +97,16 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
     }
 
     @NonNull
-    private static Map<String, NativeVariantInfo> copyVariantInfos(
-            @NonNull NativeAndroidProject project, @NonNull ModelCache modelCache) {
-        try {
-            return modelCache.copy(
-                    project.getVariantInfos(),
-                    variantInfo ->
-                            new IdeNativeVariantInfoImpl(
-                                    variantInfo.getAbiNames(),
-                                    Objects.requireNonNull(
-                                            ModelCache.Companion.copyNewProperty(
-                                                    () -> variantInfo.getBuildRootFolderMap(),
-                                                    Collections.emptyMap()))));
-        } catch (UnsupportedOperationException e) {
-            return Maps.newHashMap();
-        }
+    private static Map<String, NativeVariantInfo> copyVariantInfos(@NonNull NativeAndroidProject project, @NonNull ModelCache modelCache) {
+        return modelCache.copy(
+          () -> project.getVariantInfos(),
+          variantInfo ->
+            new IdeNativeVariantInfoImpl(
+              variantInfo.getAbiNames(),
+              Objects.requireNonNull(
+                ModelCache.Companion.copyNewProperty(
+                  () -> variantInfo.getBuildRootFolderMap(),
+                  Collections.emptyMap()))));
     }
 
     @NonNull

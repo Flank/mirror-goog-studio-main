@@ -59,8 +59,7 @@ public final class IdeNativeArtifactImpl implements IdeNativeArtifact, Serializa
         myName = artifact.getName();
         myToolChain = artifact.getToolChain();
         myGroupName = artifact.getGroupName();
-        mySourceFiles =
-                modelCache.copy(artifact.getSourceFiles(), file -> new IdeNativeFileImpl(file));
+        mySourceFiles = modelCache.copy(artifact::getSourceFiles, file -> new IdeNativeFileImpl(file));
         myExportedHeaders = ImmutableList.copyOf(artifact.getExportedHeaders());
         myAbi = ModelCache.Companion.copyNewProperty(artifact::getAbi);
         myTargetName = ModelCache.Companion.copyNewProperty(artifact::getTargetName);

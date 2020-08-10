@@ -68,15 +68,14 @@ public final class IdeNativeVariantAbiImpl implements IdeNativeVariantAbi, Seria
         myBuildFiles = ImmutableList.copyOf(variantAbi.getBuildFiles());
         myArtifacts =
                 modelCache.copy(
-                        variantAbi.getArtifacts(),
+                        variantAbi::getArtifacts,
                         artifact -> new IdeNativeArtifactImpl(artifact, modelCache));
         myToolChains =
                 modelCache.copy(
-                        variantAbi.getToolChains(),
+                        variantAbi::getToolChains,
                         toolchain -> new IdeNativeToolchainImpl(toolchain));
         mySettings =
-                modelCache.copy(
-                        variantAbi.getSettings(), settings -> new IdeNativeSettingsImpl(settings));
+                modelCache.copy(variantAbi::getSettings, settings -> new IdeNativeSettingsImpl(settings));
         myFileExtensions = ImmutableMap.copyOf(variantAbi.getFileExtensions());
         myVariantName = variantAbi.getVariantName();
         myAbi = variantAbi.getAbi();
