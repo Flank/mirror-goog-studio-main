@@ -114,7 +114,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     val dynamicFeaturesCopy: Collection<String> = ImmutableList.copyOf(copyNewProperty({ project.dynamicFeatures }, ImmutableList.of()))
     val variantBuildInformation = createVariantBuildInformation(project, parsedModelVersion)
     val viewBindingOptionsCopy: IdeViewBindingOptions? = copyNewProperty({ viewBindingOptionsFrom(project.viewBindingOptions) })
-    val dependenciesInfoCopy: IdeDependenciesInfo? = copyNewProperty({ project.dependenciesInfo }, { dependenciesInfoFrom(it) }, null)
+    val dependenciesInfoCopy: IdeDependenciesInfo? = copyNewModel(project::getDependenciesInfo, ::dependenciesInfoFrom)
     val buildToolsVersionCopy = copyNewProperty({ project.buildToolsVersion })
     val ndkVersionCopy = copyNewProperty({ project.ndkVersion })
     val groupId = if (parsedModelVersion != null && parsedModelVersion.isAtLeast(3, 6, 0, "alpha", 5, false)) project.groupId else null
@@ -267,12 +267,12 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
         artifact.abiFilters.orEmpty()),
       artifact.isSigned,
       copyNewProperty({ ArrayList(artifact.additionalRuntimeApks) }, emptyList()),
-      copyNewProperty({ artifact.testOptions }, ::testOptionsFrom, null),
-      copyNewProperty({ artifact.instrumentedTestTaskName }, ::deduplicateString, null),
-      copyNewProperty({ artifact.bundleTaskName }, ::deduplicateString, null),
-      copyNewProperty({ artifact.bundleTaskOutputListingFile }, ::deduplicateString, null),
-      copyNewProperty({ artifact.apkFromBundleTaskName }, ::deduplicateString, null),
-      copyNewProperty({ artifact.apkFromBundleTaskOutputListingFile }, ::deduplicateString, null),
+      copyNewModel(artifact::getTestOptions, ::testOptionsFrom),
+      copyNewModel(artifact::getInstrumentedTestTaskName, ::deduplicateString),
+      copyNewModel(artifact::getBundleTaskName, ::deduplicateString),
+      copyNewModel(artifact::getBundleTaskOutputListingFile, ::deduplicateString),
+      copyNewModel(artifact::getApkFromBundleTaskName, ::deduplicateString),
+      copyNewModel(artifact::getApkFromBundleTaskOutputListingFile, ::deduplicateString),
       copyNewProperty({ artifact.codeShrinker })
     )
   }
@@ -621,20 +621,6 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       }
     }
 
-    fun <K, V> copyNewProperty(
-      keyCreator: () -> K?,
-      mapper: (K) -> V,
-      defaultValue: V
-    ): V {
-      return try {
-        val key: K? = keyCreator()
-        if (key != null) mapper(key) else defaultValue
-      }
-      catch (ignored: UnsupportedOperationException) {
-        defaultValue
-      }
-    }
-
     fun mavenCoordinatesFrom(coordinates: MavenCoordinates): IdeMavenCoordinatesImpl {
       return IdeMavenCoordinatesImpl(
         coordinates.groupId,
@@ -653,6 +639,19 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
   }
 
   fun <K, V> copyModel(key: K, mappingFunction: (K) -> V): V = mappingFunction(key)
+
+  fun <K, V: Any> copyNewModel(
+    keyCreator: () -> K?,
+    mapper: (K) -> V
+  ): V? {
+    return try {
+      val key: K? = keyCreator()
+      if (key != null) mapper(key) else null
+    }
+    catch (ignored: UnsupportedOperationException) {
+      null
+    }
+  }
 
   fun deduplicateString(s: String): String = myStrings.putIfAbsent(s, s) ?: s
   fun String.deduplicate() = deduplicateString(this)
