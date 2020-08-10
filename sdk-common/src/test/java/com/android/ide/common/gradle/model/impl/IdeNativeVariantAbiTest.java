@@ -51,13 +51,6 @@ public class IdeNativeVariantAbiTest {
     }
 
     @Test
-    public void constructor() throws Throwable {
-        NativeVariantAbi original = new NativeVariantAbiStub();
-        IdeNativeVariantAbiImpl copy = new IdeNativeVariantAbiImpl(original, myModelCache);
-        assertEqualsOrSimilar(original, copy);
-    }
-
-    @Test
     public void equalsAndHashCode() {
         createEqualsVerifier(IdeNativeVariantAbiImpl.class).verify();
     }

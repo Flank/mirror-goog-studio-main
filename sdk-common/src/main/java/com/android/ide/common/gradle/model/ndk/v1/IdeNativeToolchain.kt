@@ -15,6 +15,32 @@
  */
 package com.android.ide.common.gradle.model.ndk.v1
 
-import com.android.builder.model.NativeToolchain
+import java.io.File
 
-interface IdeNativeToolchain: NativeToolchain
+interface IdeNativeToolchain {
+
+  /**
+   * Returns the name of the toolchain.
+   *
+   * e.g. "x86_64", "arm-linux-androideabi"
+   *
+   * @return name of the toolchain.
+   */
+  val name: String
+
+  /**
+   * Returns the full path of the C compiler.
+   * May be null if project do not contain C sources.
+   *
+   * @return the C compiler path.
+   */
+  val cCompilerExecutable: File?
+
+  /**
+   * Returns the full path of the C++ compiler.
+   * May be null if project do not contain C++ sources.
+   *
+   * @return the C++ compiler path.
+   */
+  val cppCompilerExecutable: File?
+}

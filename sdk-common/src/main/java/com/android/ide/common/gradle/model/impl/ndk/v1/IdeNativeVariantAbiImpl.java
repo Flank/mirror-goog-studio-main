@@ -16,11 +16,11 @@
 package com.android.ide.common.gradle.model.impl.ndk.v1;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.NativeArtifact;
-import com.android.builder.model.NativeSettings;
-import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.NativeVariantAbi;
 import com.android.ide.common.gradle.model.impl.ModelCache;
+import com.android.ide.common.gradle.model.ndk.v1.IdeNativeArtifact;
+import com.android.ide.common.gradle.model.ndk.v1.IdeNativeSettings;
+import com.android.ide.common.gradle.model.ndk.v1.IdeNativeToolchain;
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeVariantAbi;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -37,9 +37,9 @@ public final class IdeNativeVariantAbiImpl implements IdeNativeVariantAbi, Seria
     private static final long serialVersionUID = 2L;
 
     @NonNull private final List<File> myBuildFiles;
-    @NonNull private final Collection<NativeArtifact> myArtifacts;
-    @NonNull private final Collection<NativeToolchain> myToolChains;
-    @NonNull private final Collection<NativeSettings> mySettings;
+    @NonNull private final Collection<IdeNativeArtifact> myArtifacts;
+    @NonNull private final Collection<IdeNativeToolchain> myToolChains;
+    @NonNull private final Collection<IdeNativeSettings> mySettings;
     @NonNull private final Map<String, String> myFileExtensions;
     @NonNull private final String myVariantName;
     @NonNull private final String myAbi;
@@ -91,19 +91,19 @@ public final class IdeNativeVariantAbiImpl implements IdeNativeVariantAbi, Seria
 
     @NonNull
     @Override
-    public Collection<NativeArtifact> getArtifacts() {
+    public Collection<IdeNativeArtifact> getArtifacts() {
         return myArtifacts;
     }
 
     @NonNull
     @Override
-    public Collection<NativeToolchain> getToolChains() {
+    public Collection<IdeNativeToolchain> getToolChains() {
         return myToolChains;
     }
 
     @NonNull
     @Override
-    public Collection<NativeSettings> getSettings() {
+    public Collection<IdeNativeSettings> getSettings() {
         return mySettings;
     }
 

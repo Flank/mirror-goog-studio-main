@@ -179,13 +179,6 @@ public class IdeNativeArtifactTest {
     }
 
     @Test
-    public void constructor() throws Throwable {
-        NativeArtifact original = new NativeArtifactStub();
-        IdeNativeArtifactImpl copy = new IdeNativeArtifactImpl(original, myModelCache);
-        assertEqualsOrSimilar(original, copy);
-    }
-
-    @Test
     public void equalsAndHashCode() {
         createEqualsVerifier(IdeNativeArtifactImpl.class).verify();
     }

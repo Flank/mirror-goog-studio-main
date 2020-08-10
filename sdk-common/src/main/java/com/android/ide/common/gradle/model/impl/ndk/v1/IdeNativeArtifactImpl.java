@@ -18,10 +18,10 @@ package com.android.ide.common.gradle.model.impl.ndk.v1;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.NativeArtifact;
-import com.android.builder.model.NativeFile;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import com.android.ide.common.gradle.model.impl.ModelCache;
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeArtifact;
+import com.android.ide.common.gradle.model.ndk.v1.IdeNativeFile;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.Serializable;
@@ -33,7 +33,7 @@ public final class IdeNativeArtifactImpl implements IdeNativeArtifact, Serializa
     @NonNull private final String myName;
     @NonNull private final String myToolChain;
     @NonNull private final String myGroupName;
-    @NonNull private final Collection<NativeFile> mySourceFiles;
+    @NonNull private final Collection<IdeNativeFile> mySourceFiles;
     @NonNull private final Collection<File> myExportedHeaders;
     @Nullable private final File myOutputFile;
     @Nullable private final String myAbi;
@@ -93,7 +93,7 @@ public final class IdeNativeArtifactImpl implements IdeNativeArtifact, Serializa
 
     @Override
     @NonNull
-    public Collection<NativeFile> getSourceFiles() {
+    public Collection<IdeNativeFile> getSourceFiles() {
         return mySourceFiles;
     }
 
