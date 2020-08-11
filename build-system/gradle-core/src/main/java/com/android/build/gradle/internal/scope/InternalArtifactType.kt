@@ -36,8 +36,6 @@ InternalArtifactType<T : FileSystemLocation>(
     // module: InternalArtifactType<RegularFile>(FILE), Replaceable use AnchorOutputType.ALL_CLASSES
     // Javac task output.
     object JAVAC: InternalArtifactType<Directory>(DIRECTORY), Replaceable
-    // Classes with recalculated stack frames information (RecalculateStackFrames task)
-    object FIXED_STACK_FRAMES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     // --- Published classes ---
     // Class-type task output for tasks that generate published classes.
@@ -142,6 +140,10 @@ InternalArtifactType<T : FileSystemLocation>(
     // variantProperties.transformClassesWith
     // This is a temporary artifact until we have a transformable project classes artifact
     object ASM_INSTRUMENTED_PROJECT_JARS : InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // [ASM_INSTRUMENTED_PROJECT_CLASSES] after recalculating the stack frames of all project classes
+    object FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_CLASSES : InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // [ASM_INSTRUMENTED_PROJECT_JARS] after recalculating the stack frames of all project jars
+    object FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_JARS : InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     // --- android res ---
     // output of the resource merger ready for aapt.

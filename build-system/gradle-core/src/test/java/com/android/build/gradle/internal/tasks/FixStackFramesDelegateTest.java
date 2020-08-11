@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks;
 
-import static com.android.testutils.truth.ZipFileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
@@ -43,14 +42,13 @@ import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.services.ClassesHierarchyBuildService;
 import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.TestUtils;
-import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
-import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -64,10 +62,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
-import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
 import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
@@ -97,11 +93,20 @@ public class FixStackFramesDelegateTest {
 
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
-    private File output;
+    private File jarsInputDir;
+
+    private File classesInputDir;
+
+    private File jarsOutputDir;
+
+    private File classesOutputDir;
 
     @Before
     public void setUp() throws IOException {
-        output = tmp.newFolder("out");
+        jarsInputDir = tmp.newFolder("jar-in");
+        classesInputDir = tmp.newFolder("classes-in");
+        jarsOutputDir = tmp.newFolder("jar-out");
+        classesOutputDir = tmp.newFolder("classes-out");
 
         Project project = ProjectBuilder.builder().withProjectDir(tmp.newFolder()).build();
         ObjectFactory objectFactory = project.getObjects();
@@ -122,57 +127,116 @@ public class FixStackFramesDelegateTest {
     }
 
     @Test
-    public void testFramesAreFixed() throws IOException, ClassNotFoundException {
-        Path jar = getJarWithBrokenClasses("input.jar", ImmutableList.of("test/A"));
-
-        Set<File> classesToFix = ImmutableSet.of(jar.toFile());
+    public void testFramesAreFixedForJarClasses() throws IOException, ClassNotFoundException {
+        getJarWithBrokenClasses("input.jar", ImmutableList.of("test/A"));
 
         FixStackFramesDelegate delegate =
-                new FixStackFramesDelegate(ANDROID_JAR, classesToFix, classesToFix, output);
+                new FixStackFramesDelegate(
+                        classesInputDir,
+                        jarsInputDir,
+                        ANDROID_JAR,
+                        ImmutableSet.of(),
+                        classesOutputDir,
+                        jarsOutputDir,
+                        executor,
+                        task,
+                        classesHierarchyBuildServiceProvider);
 
-        delegate.doFullRun(executor, task, classesHierarchyBuildServiceProvider);
-
-        assertAllClassesAreValid(singleOutput().toPath());
+        delegate.doFullRun();
+        assertAllClassesAreValid(singleJar().toPath());
     }
 
     @Test
-    public void testIncrementalBuilds() throws IOException {
-        Path jar = getJarWithBrokenClasses("input.jar", ImmutableList.of("test/A"));
-
-        Set<File> classesToFix = ImmutableSet.of(jar.toFile());
+    public void testFramesAreFixedForDirClasses() throws IOException, ClassNotFoundException {
+        addBrokenClassesToDir(ImmutableList.of("test/A"));
 
         FixStackFramesDelegate delegate =
-                new FixStackFramesDelegate(ANDROID_JAR, classesToFix, classesToFix, output);
+                new FixStackFramesDelegate(
+                        classesInputDir,
+                        jarsInputDir,
+                        ANDROID_JAR,
+                        ImmutableSet.of(),
+                        classesOutputDir,
+                        jarsOutputDir,
+                        executor,
+                        task,
+                        classesHierarchyBuildServiceProvider);
 
+        delegate.doFullRun();
+        assertAllClassesInDirAreValid(classesOutputDir, ImmutableList.of("test.A"));
+    }
+
+    @Test
+    public void testIncrementalBuildsForJarClasses() throws IOException {
+        Path inputFile = getJarWithBrokenClasses("input.jar", ImmutableList.of("test/A"));
+
+        FixStackFramesDelegate delegate =
+                new FixStackFramesDelegate(
+                        classesInputDir,
+                        jarsInputDir,
+                        ANDROID_JAR,
+                        ImmutableSet.of(),
+                        classesOutputDir,
+                        jarsOutputDir,
+                        executor,
+                        task,
+                        classesHierarchyBuildServiceProvider);
+
+        delegate.doIncrementalRun(ImmutableList.of(), ImmutableList.of());
+
+        assertThat(jarsOutputDir.list()).named("output artifacts").hasLength(0);
         delegate.doIncrementalRun(
-                executor, ImmutableList.of(), task, classesHierarchyBuildServiceProvider);
-
-        assertThat(output.list()).named("output artifacts").hasLength(0);
-
-        delegate.doIncrementalRun(
-                executor,
-                ImmutableList.of(new FakeFileChange(jar.toFile(), ChangeType.ADDED)),
-                task,
-                classesHierarchyBuildServiceProvider);
-
-        assertThat(output.list()).named("output artifacts").hasLength(1);
+                ImmutableList.of(new FakeFileChange(inputFile.toFile(), ChangeType.ADDED)),
+                ImmutableList.of());
+        assertThat(jarsOutputDir.list()).named("output artifacts").hasLength(1);
 
         classesHierarchyBuildServiceProvider.get().close();
-        FileUtils.delete(jar.toFile());
-        delegate.doIncrementalRun(
-                executor,
-                ImmutableList.of(new FakeFileChange(jar.toFile(), ChangeType.REMOVED)),
-                task,
-                classesHierarchyBuildServiceProvider);
+        FileUtils.delete(inputFile.toFile());
 
-        assertThat(output.list()).named("output artifacts").hasLength(0);
+        delegate.doIncrementalRun(
+                ImmutableList.of(new FakeFileChange(inputFile.toFile(), ChangeType.REMOVED)),
+                ImmutableList.of());
+        assertThat(jarsOutputDir.list()).named("output artifacts").hasLength(0);
     }
 
     @Test
-    public void testResolvingType() throws Exception {
-        Path jar = getJarWithBrokenClasses("input.jar", ImmutableMap.of("test/A", "test/Base"));
+    public void testIncrementalBuildsForDirClasses() throws IOException {
+        FixStackFramesDelegate delegate =
+                new FixStackFramesDelegate(
+                        classesInputDir,
+                        jarsInputDir,
+                        ANDROID_JAR,
+                        ImmutableSet.of(),
+                        classesOutputDir,
+                        jarsOutputDir,
+                        executor,
+                        task,
+                        classesHierarchyBuildServiceProvider);
 
-        Set<File> classesToFix = ImmutableSet.of(jar.toFile());
+        delegate.doIncrementalRun(ImmutableList.of(), ImmutableList.of());
+
+        assertThat(classesOutputDir.toPath().resolve("test/A.class").toFile().exists()).isFalse();
+
+        addBrokenClassesToDir(ImmutableList.of("test/A"));
+        File inputFile = FileUtils.join(classesInputDir, "test", "A.class");
+
+        delegate.doIncrementalRun(
+                ImmutableList.of(),
+                ImmutableList.of(new FakeFileChange(inputFile, ChangeType.ADDED)));
+        assertThat(classesOutputDir.toPath().resolve("test/A.class").toFile().exists()).isTrue();
+
+        classesHierarchyBuildServiceProvider.get().close();
+        FileUtils.delete(inputFile);
+
+        delegate.doIncrementalRun(
+                ImmutableList.of(),
+                ImmutableList.of(new FakeFileChange(inputFile, ChangeType.REMOVED)));
+        assertThat(classesOutputDir.toPath().resolve("test/A.class").toFile().exists()).isFalse();
+    }
+
+    @Test
+    public void testResolvingTypeForJarClasses() throws Exception {
+        getJarWithBrokenClasses("input.jar", ImmutableMap.of("test/A", "test/Base"));
 
         Path referencedJar = tmp.getRoot().toPath().resolve("ref_input.jar");
         TestInputsGenerator.jarWithEmptyClasses(referencedJar, ImmutableList.of("test/Base"));
@@ -180,57 +244,87 @@ public class FixStackFramesDelegateTest {
         Set<File> referencedClasses = ImmutableSet.of(referencedJar.toFile());
 
         FixStackFramesDelegate delegate =
-                new FixStackFramesDelegate(ANDROID_JAR, classesToFix, referencedClasses, output);
+                new FixStackFramesDelegate(
+                        classesInputDir,
+                        jarsInputDir,
+                        ANDROID_JAR,
+                        referencedClasses,
+                        classesOutputDir,
+                        jarsOutputDir,
+                        executor,
+                        task,
+                        classesHierarchyBuildServiceProvider);
 
-        delegate.doFullRun(executor, task, classesHierarchyBuildServiceProvider);
+        delegate.doFullRun();
 
-        assertThat(output.list()).named("output artifacts").hasLength(1);
-        assertAllClassesAreValid(singleOutput().toPath(), referencedJar);
+        assertAllClassesAreValid(singleJar().toPath(), referencedJar);
     }
 
     @Test
-    public void testOnlyClassesProcessed() throws Exception {
-        Path jar = tmp.getRoot().toPath().resolve("input.jar");
+    public void testResolvingTypeForDirClasses() throws Exception {
+        addBrokenClassesToDir(ImmutableMap.of("test/A", "test/Base"));
 
-        try (ZipOutputStream outputZip =
-                new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(jar)))) {
-            ZipEntry outEntry = new ZipEntry("LICENSE");
-            byte[] newEntryContent = {0x10, 0x20, 0x30};
-            CRC32 crc32 = new CRC32();
-            crc32.update(newEntryContent);
-            outEntry.setCrc(crc32.getValue());
-            outEntry.setMethod(ZipEntry.STORED);
-            outEntry.setSize(newEntryContent.length);
-            outEntry.setCompressedSize(newEntryContent.length);
+        Path referencedJar = tmp.getRoot().toPath().resolve("ref_input.jar");
+        TestInputsGenerator.jarWithEmptyClasses(referencedJar, ImmutableList.of("test/Base"));
 
-            outputZip.putNextEntry(outEntry);
-            outputZip.write(newEntryContent);
-            outputZip.closeEntry();
-        }
-
-        Set<File> classesToFix = ImmutableSet.of(jar.toFile());
-
-        FixStackFramesDelegate delegate =
-                new FixStackFramesDelegate(ANDROID_JAR, classesToFix, ImmutableSet.of(), output);
-
-        delegate.doFullRun(executor, task, classesHierarchyBuildServiceProvider);
-
-        try (Zip it = new Zip(singleOutput())) {
-            assertThat(it).doesNotContain("LICENSE");
-        }
-    }
-
-    @Test
-    public void testNonIncrementalClearsOutput() throws IOException {
-        Files.write(output.toPath().resolve("to-be-removed"), "".getBytes());
+        Set<File> referencedClasses = ImmutableSet.of(referencedJar.toFile());
 
         FixStackFramesDelegate delegate =
                 new FixStackFramesDelegate(
-                        ANDROID_JAR, ImmutableSet.of(), ImmutableSet.of(), output);
+                        classesInputDir,
+                        jarsInputDir,
+                        ANDROID_JAR,
+                        referencedClasses,
+                        classesOutputDir,
+                        jarsOutputDir,
+                        executor,
+                        task,
+                        classesHierarchyBuildServiceProvider);
 
-        delegate.doFullRun(executor, task, classesHierarchyBuildServiceProvider);
+        delegate.doFullRun();
 
-        assertThat(output.list()).named("output artifacts").hasLength(0);
+        assertAllClassesInDirAreValid(classesOutputDir, ImmutableList.of("test.A"), referencedJar);
+    }
+
+    @Test
+    public void testNonIncrementalClearsOutputForJarClasses() throws IOException {
+        Files.write(jarsOutputDir.toPath().resolve("to-be-removed"), "".getBytes());
+
+        FixStackFramesDelegate delegate =
+                new FixStackFramesDelegate(
+                        classesInputDir,
+                        jarsInputDir,
+                        ANDROID_JAR,
+                        ImmutableSet.of(),
+                        classesOutputDir,
+                        jarsOutputDir,
+                        executor,
+                        task,
+                        classesHierarchyBuildServiceProvider);
+
+        delegate.doFullRun();
+
+        assertThat(jarsOutputDir.list()).named("output artifacts").hasLength(0);
+    }
+
+    @Test
+    public void testNonIncrementalClearsOutputForDirClasses() throws IOException {
+        Files.write(classesOutputDir.toPath().resolve("to-be-removed"), "".getBytes());
+
+        FixStackFramesDelegate delegate =
+                new FixStackFramesDelegate(
+                        classesInputDir,
+                        jarsInputDir,
+                        ANDROID_JAR,
+                        ImmutableSet.of(),
+                        classesOutputDir,
+                        jarsOutputDir,
+                        executor,
+                        task,
+                        classesHierarchyBuildServiceProvider);
+
+        delegate.doFullRun();
+        assertThat(classesOutputDir.list()).named("output artifacts").hasLength(0);
     }
 
     /** Loads all classes from jars, to make sure no VerifyError is thrown. */
@@ -261,11 +355,35 @@ public class FixStackFramesDelegateTest {
         }
     }
 
+    private static void assertAllClassesInDirAreValid(
+            @NonNull File dir, @NonNull List<String> classes, @NonNull Path... jars)
+            throws IOException, ClassNotFoundException {
+        URL[] urls = new URL[jars.length + 1];
+        urls[0] = dir.toURI().toURL();
+        for (int i = 0; i < jars.length; i++) {
+            urls[i + 1] = jars[i].toUri().toURL();
+        }
+        try (URLClassLoader classLoader = new URLClassLoader(urls, null)) {
+            for (String className : classes) {
+                Class.forName(className, true, classLoader);
+            }
+        } catch (VerifyError e) {
+            fail("Failed to fix broken stack frames. " + e.getMessage());
+        }
+    }
+
     @NonNull
     private static byte[] readZipEntry(@NonNull Path path, @NonNull String entryName)
             throws IOException {
         try (ZipFile zip = new ZipFile(path.toFile());
                 InputStream original = zip.getInputStream(new ZipEntry(entryName))) {
+            return ByteStreams.toByteArray(original);
+        }
+    }
+
+    @NonNull
+    private static byte[] readFile(@NonNull Path path) throws IOException {
+        try (InputStream original = new FileInputStream(path.toFile())) {
             return ByteStreams.toByteArray(original);
         }
     }
@@ -278,11 +396,30 @@ public class FixStackFramesDelegateTest {
                 classes.stream().collect(Collectors.toMap(c -> c, c -> "java/lang/Object")));
     }
 
+    private void addBrokenClassesToDir(@NonNull List<String> classes) {
+        addBrokenClassesToDir(
+                classes.stream().collect(Collectors.toMap(c -> c, c -> "java/lang/Object")));
+    }
+
+    private void addBrokenClassesToDir(@NonNull Map<String, String> nameToSuperName) {
+        nameToSuperName.forEach(
+                (name, superName) -> {
+                    Path classFile =
+                            classesInputDir.toPath().resolve(name + SdkConstants.DOT_CLASS);
+                    classFile.toFile().getParentFile().mkdirs();
+                    try {
+                        Files.write(classFile, getBrokenFramesClass(name, superName));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
     @NonNull
     private Path getJarWithBrokenClasses(
             @NonNull String jarName, @NonNull Map<String, String> nameToSuperName)
             throws IOException {
-        Path jar = tmp.getRoot().toPath().resolve(jarName);
+        Path jar = new File(jarsInputDir, jarName).toPath();
         try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(jar))) {
             for (Map.Entry<String, String> c : nameToSuperName.entrySet()) {
                 ZipEntry entry = new ZipEntry(c.getKey() + SdkConstants.DOT_CLASS);
@@ -348,8 +485,8 @@ public class FixStackFramesDelegateTest {
         return cw.toByteArray();
     }
 
-    private File singleOutput() {
-        File[] outputs = output.listFiles();
+    private File singleJar() {
+        File[] outputs = jarsOutputDir.listFiles();
         assertThat(outputs).isNotNull();
         assertThat(outputs).hasLength(1);
         return outputs[0];

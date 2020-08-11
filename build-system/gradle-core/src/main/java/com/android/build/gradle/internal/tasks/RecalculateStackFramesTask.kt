@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -23,63 +24,80 @@ import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 
+/**
+ * Recalculates the stack frames for all project classes and jars.
+ *
+ * This is used for recalculating the stack frames after the classes are instrumented with
+ * [com.android.build.gradle.tasks.TransformClassesWithAsmTask], when the stack frames computation
+ * mode is [FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES].
+ */
 abstract class RecalculateStackFramesTask : NewIncrementalTask() {
-
-    @get:OutputDirectory
-    abstract val outFolder: DirectoryProperty
-
-    @get:Classpath
-    lateinit var bootClasspath: FileCollection
-        private set
 
     @get:Classpath
     @get:Incremental
-    lateinit var classesToFix: FileCollection
-        private set
+    abstract val classesInputDir: DirectoryProperty
 
     @get:Classpath
-    lateinit var referencedClasses: FileCollection
-        private set
+    @get:Incremental
+    abstract val jarsInputDir: DirectoryProperty
+
+    @get:CompileClasspath
+    abstract val bootClasspath: ConfigurableFileCollection
+
+    @get:CompileClasspath
+    abstract val referencedClasses: ConfigurableFileCollection
+
+    @get:OutputDirectory
+    abstract val classesOutputDir: DirectoryProperty
+
+    @get:OutputDirectory
+    abstract val jarsOutputDir: DirectoryProperty
 
     @get:Internal
     abstract val classesHierarchyBuildService: Property<ClassesHierarchyBuildService>
 
     private fun createDelegate() = FixStackFramesDelegate(
-        bootClasspath.files, classesToFix.files, referencedClasses.files, outFolder.get().asFile
+        classesDir = classesInputDir.get().asFile,
+        jarsDir = jarsInputDir.get().asFile,
+        bootClasspath = bootClasspath.files,
+        referencedClasses = referencedClasses.files,
+        classesOutDir = classesOutputDir.get().asFile,
+        jarsOutDir = jarsOutputDir.get().asFile,
+        workers = workerExecutor,
+        task = this,
+        classesHierarchyBuildServiceProvider = classesHierarchyBuildService
     )
 
     override fun doTaskAction(inputChanges: InputChanges) {
-        if (!inputChanges.isIncremental) {
-            createDelegate().doFullRun(workerExecutor, this, classesHierarchyBuildService)
-        } else {
+        if (inputChanges.isIncremental) {
             createDelegate().doIncrementalRun(
-                workerExecutor,
-                inputChanges.getFileChanges(classesToFix),
-                this,
-                classesHierarchyBuildService
+                jarChanges = inputChanges.getFileChanges(jarsInputDir),
+                classesChanges = inputChanges.getFileChanges(classesInputDir)
             )
+        } else {
+            createDelegate().doFullRun()
         }
     }
 
     class CreationAction(
-        creationConfig: VariantCreationConfig,
-        private val isTestCoverageEnabled: Boolean
+        creationConfig: VariantCreationConfig
     ) :
         VariantTaskCreationAction<RecalculateStackFramesTask, VariantCreationConfig>(
             creationConfig
         ) {
 
-        override val name = computeTaskName("fixStackFrames")
+        override val name = computeTaskName("fixInstrumented", "ClassesStackFrames")
         override val type = RecalculateStackFramesTask::class.java
 
         override fun handleProvider(
@@ -88,8 +106,13 @@ abstract class RecalculateStackFramesTask : NewIncrementalTask() {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                RecalculateStackFramesTask::outFolder
-            ).on(InternalArtifactType.FIXED_STACK_FRAMES)
+                RecalculateStackFramesTask::classesOutputDir
+            ).on(InternalArtifactType.FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_CLASSES)
+
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider,
+                RecalculateStackFramesTask::jarsOutputDir
+            ).on(InternalArtifactType.FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_JARS)
         }
 
         override fun configure(
@@ -97,62 +120,25 @@ abstract class RecalculateStackFramesTask : NewIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.bootClasspath = creationConfig.variantScope.bootClasspath
-
-            val classesToFix = creationConfig.services.fileCollection(
-                creationConfig.variantDependencies.getArtifactFileCollection(
-                    AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                    AndroidArtifacts.ArtifactScope.EXTERNAL,
-                    AndroidArtifacts.ArtifactType.CLASSES_JAR
-                )
+            creationConfig.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.ASM_INSTRUMENTED_PROJECT_CLASSES,
+                task.classesInputDir
             )
 
-            val referencedClasses =
-                creationConfig.services.fileCollection(creationConfig.variantScope.providedOnlyClasspath)
-
-            referencedClasses.from(
-                creationConfig.variantDependencies.getArtifactFileCollection(
-                    AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                    AndroidArtifacts.ArtifactScope.PROJECT,
-                    AndroidArtifacts.ArtifactType.CLASSES_JAR
-                )
+            creationConfig.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.ASM_INSTRUMENTED_PROJECT_JARS,
+                task.jarsInputDir
             )
 
-            when {
-                creationConfig.registeredProjectClassesVisitors.isNotEmpty() -> {
-                    referencedClasses.from(creationConfig.allProjectClassesPostAsmInstrumentation)
-                }
-                isTestCoverageEnabled -> {
-                    referencedClasses.from(
-                        creationConfig.artifacts.get(
-                            InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES
-                        ),
-                        creationConfig.services.fileCollection(
-                            creationConfig.artifacts.get(
-                                InternalArtifactType.JACOCO_INSTRUMENTED_JARS
-                            )
-                        ).asFileTree
-                    )
-                }
-                else -> {
-                    referencedClasses.from(creationConfig.artifacts.getAllClasses())
-                }
-            }
+            task.bootClasspath.from(creationConfig.variantScope.bootClasspath)
 
-            creationConfig.onTestedConfig {
-                referencedClasses.from(
-                    it.variantDependencies.getArtifactCollection(
-                        AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                        AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.CLASSES_JAR
-                    ).artifactFiles
+            task.referencedClasses.from(creationConfig.variantScope.providedOnlyClasspath)
+
+            task.referencedClasses.from(
+                creationConfig.getDependenciesClassesJarsPostAsmInstrumentation(
+                    AndroidArtifacts.ArtifactScope.ALL
                 )
-
-            }
-
-            task.classesToFix = classesToFix
-
-            task.referencedClasses = referencedClasses
+            )
 
             task.classesHierarchyBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
