@@ -24,6 +24,7 @@ import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.TestComponentBuilderImpl
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.UnitTestImpl
+import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.DefaultContentType
 import com.android.build.api.variant.AndroidVersion
@@ -121,6 +122,7 @@ import com.android.build.gradle.internal.tasks.PrepareLintJarForPublish
 import com.android.build.gradle.internal.tasks.ProcessJavaResTask
 import com.android.build.gradle.internal.tasks.ProguardTask
 import com.android.build.gradle.internal.tasks.R8Task
+import com.android.build.gradle.internal.tasks.RecalculateStackFramesTask
 import com.android.build.gradle.internal.tasks.ShrinkResourcesOldShrinkerTask
 import com.android.build.gradle.internal.tasks.SigningConfigWriterTask
 import com.android.build.gradle.internal.tasks.SigningReportTask
@@ -2769,6 +2771,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             taskFactory.register(
                     TransformClassesWithAsmTask.CreationAction(
                             creationConfig, isTestCoverageEnabled))
+            if (creationConfig.asmFramesComputationMode
+                    == FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES) {
+                taskFactory.register(RecalculateStackFramesTask.CreationAction(creationConfig))
+            }
             creationConfig
                     .transformManager
                     .addStream(

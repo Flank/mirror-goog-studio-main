@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.instrumentation.FramesComputationMode
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
@@ -91,9 +91,9 @@ abstract class RecalculateStackFramesTask : NewIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: VariantCreationConfig
+        creationConfig: ComponentCreationConfig
     ) :
-        VariantTaskCreationAction<RecalculateStackFramesTask, VariantCreationConfig>(
+        VariantTaskCreationAction<RecalculateStackFramesTask, ComponentCreationConfig>(
             creationConfig
         ) {
 

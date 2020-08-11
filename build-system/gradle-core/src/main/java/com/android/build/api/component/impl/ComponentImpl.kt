@@ -178,12 +178,25 @@ abstract class ComponentImpl(
     override val allProjectClassesPostAsmInstrumentation: FileCollection
         get() =
             if (registeredProjectClassesVisitors.isNotEmpty()) {
-                services.fileCollection(
-                    artifacts.get(InternalArtifactType.ASM_INSTRUMENTED_PROJECT_CLASSES),
+                if (asmFramesComputationMode == FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES) {
                     services.fileCollection(
-                        artifacts.get(InternalArtifactType.ASM_INSTRUMENTED_PROJECT_JARS)
-                    ).asFileTree
-                )
+                            artifacts.get(
+                                    FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_CLASSES
+                            ),
+                            services.fileCollection(
+                                    artifacts.get(
+                                            FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_JARS
+                                    )
+                            ).asFileTree
+                    )
+                } else {
+                    services.fileCollection(
+                            artifacts.get(ASM_INSTRUMENTED_PROJECT_CLASSES),
+                            services.fileCollection(
+                                    artifacts.get(ASM_INSTRUMENTED_PROJECT_JARS)
+                            ).asFileTree
+                    )
+                }
             } else {
                 artifacts.getAllClasses()
             }
