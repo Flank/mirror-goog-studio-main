@@ -17,16 +17,14 @@ package com.android.ide.common.gradle.model.impl.ndk.v1;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.NativeArtifact;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
-import com.android.ide.common.gradle.model.impl.ModelCache;
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeArtifact;
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeFile;
-import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public final class IdeNativeArtifactImpl implements IdeNativeArtifact, Serializable {
@@ -36,8 +34,8 @@ public final class IdeNativeArtifactImpl implements IdeNativeArtifact, Serializa
     @NonNull private final Collection<IdeNativeFile> mySourceFiles;
     @NonNull private final Collection<File> myExportedHeaders;
     @Nullable private final File myOutputFile;
-    @Nullable private final String myAbi;
-    @Nullable private final String myTargetName;
+    @NonNull private final String myAbi;
+    @NonNull private final String myTargetName;
     private final int myHashCode;
 
     // Used for serialization by the IDE.
@@ -55,15 +53,23 @@ public final class IdeNativeArtifactImpl implements IdeNativeArtifact, Serializa
         myHashCode = 0;
     }
 
-    public IdeNativeArtifactImpl(@NonNull NativeArtifact artifact, @NonNull ModelCache modelCache) {
-        myName = artifact.getName();
-        myToolChain = artifact.getToolChain();
-        myGroupName = artifact.getGroupName();
-        mySourceFiles = modelCache.copy(artifact::getSourceFiles, file -> new IdeNativeFileImpl(file));
-        myExportedHeaders = ImmutableList.copyOf(artifact.getExportedHeaders());
-        myAbi = ModelCache.Companion.copyNewProperty(artifact::getAbi);
-        myTargetName = ModelCache.Companion.copyNewProperty(artifact::getTargetName);
-        myOutputFile = artifact.getOutputFile();
+    public IdeNativeArtifactImpl(
+            @NonNull String name,
+            @NonNull String toolChain,
+            @NonNull String groupName,
+            @NonNull List<IdeNativeFile> sourceFiles,
+            @NonNull List<File> exportedHeaders,
+            @NonNull String abi,
+            @NonNull String targetName,
+            @Nullable File outputFile) {
+        myName = name;
+        myToolChain = toolChain;
+        myGroupName = groupName;
+        mySourceFiles = sourceFiles;
+        myExportedHeaders = exportedHeaders;
+        myAbi = abi;
+        myTargetName = targetName;
+        myOutputFile = outputFile;
         myHashCode = calculateHashCode();
     }
 
@@ -106,20 +112,13 @@ public final class IdeNativeArtifactImpl implements IdeNativeArtifact, Serializa
     @Override
     @NonNull
     public String getAbi() {
-        if (myAbi != null) {
-            return myAbi;
-        }
-        throw new UnsupportedOperationException("Unsupported method: NativeArtifact.getAbi()");
+        return myAbi;
     }
 
     @Override
     @NonNull
     public String getTargetName() {
-        if (myTargetName != null) {
-            return myTargetName;
-        }
-        throw new UnsupportedOperationException(
-                "Unsupported method: NativeArtifact.getTargetName()");
+        return myTargetName;
     }
 
     @Override

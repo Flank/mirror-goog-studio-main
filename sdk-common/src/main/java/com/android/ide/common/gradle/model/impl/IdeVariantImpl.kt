@@ -15,23 +15,16 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.JavaArtifact
-import com.android.builder.model.ProductFlavor
-import com.android.builder.model.TestedTargetVariant
-import com.android.builder.model.Variant
 import com.android.ide.common.gradle.model.IdeAndroidArtifact
 import com.android.ide.common.gradle.model.IdeBaseArtifact
 import com.android.ide.common.gradle.model.IdeJavaArtifact
 import com.android.ide.common.gradle.model.IdeProductFlavor
 import com.android.ide.common.gradle.model.IdeTestedTargetVariant
 import com.android.ide.common.gradle.model.IdeVariant
-import com.android.ide.common.repository.GradleVersion
 import com.google.common.collect.ImmutableList
 import java.io.Serializable
 import java.util.Objects
 
-/** Creates a deep copy of a [Variant].  */
 class IdeVariantImpl(
   override val name: String,
   override val displayName: String,

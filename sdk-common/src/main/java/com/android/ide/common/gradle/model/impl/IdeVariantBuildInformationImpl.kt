@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.builder.model.VariantBuildInformation
 import com.android.ide.common.gradle.model.IdeVariantBuildInformation
 import java.io.Serializable
 

@@ -18,9 +18,6 @@ package com.android.ide.common.gradle.model.impl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
-import com.android.build.OutputFile;
-import com.android.build.VariantOutput;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import java.io.File;
 import java.io.Serializable;
@@ -28,10 +25,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 
-/** Creates a deep copy of an {@link AndroidArtifactOutput}. */
 public final class IdeAndroidArtifactOutputImpl implements IdeAndroidArtifactOutput, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
@@ -77,19 +72,6 @@ public final class IdeAndroidArtifactOutputImpl implements IdeAndroidArtifactOut
         myOutputFile = outputFile;
 
         myHashCode = calculateHashCode();
-    }
-
-    @NonNull
-    public static Collection<FilterData> copyFilters(
-            @NonNull VariantOutput output, @NonNull ModelCache modelCache) {
-        try {
-            return modelCache.copy(output::getFilters, modelCache::filterDataFrom);
-        } catch (UnsupportedOperationException ignored) {
-            return output.getOutputs().stream()
-                    .map(OutputFile::getFilters)
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toList());
-        }
     }
 
     @Override

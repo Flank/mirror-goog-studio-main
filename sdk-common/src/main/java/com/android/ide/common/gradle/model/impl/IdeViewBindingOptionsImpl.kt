@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.builder.model.ViewBindingOptions
 import com.android.ide.common.gradle.model.IdeViewBindingOptions
 import java.io.Serializable
 import java.util.Objects

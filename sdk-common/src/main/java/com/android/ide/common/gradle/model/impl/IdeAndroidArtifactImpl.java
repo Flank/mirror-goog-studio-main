@@ -17,9 +17,7 @@ package com.android.ide.common.gradle.model.impl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.CodeShrinker;
-import com.android.builder.model.NativeLibrary;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeClassField;
@@ -38,7 +36,6 @@ import java.util.Objects;
 import java.util.Set;
 import org.jetbrains.annotations.NotNull;
 
-/** Creates a deep copy of {@link AndroidArtifact}. */
 public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         implements IdeAndroidArtifact {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
@@ -219,12 +216,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     @NonNull
     public Set<String> getAbiFilters() {
         return myAbiFilters;
-    }
-
-    @Nullable
-    @Deprecated // This is for ndk-compile, which has long been deprecated
-    public Collection<NativeLibrary> getNativeLibraries() {
-        return null;
     }
 
     @Override

@@ -18,7 +18,6 @@ package com.android.ide.common.gradle.model.impl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.BaseConfig;
 import com.android.ide.common.gradle.model.IdeBaseConfig;
 import com.android.ide.common.gradle.model.IdeClassField;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
@@ -32,7 +31,6 @@ import java.util.Map;
 import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 
-/** Creates a deep copy of a {@link BaseConfig}. */
 public abstract class IdeBaseConfigImpl implements IdeBaseConfig, Serializable {
     // Increase the value when adding/removing fields or when changing the
     // serialization/deserialization mechanism.

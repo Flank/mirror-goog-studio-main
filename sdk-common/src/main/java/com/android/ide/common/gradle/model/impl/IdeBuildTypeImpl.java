@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
-import com.android.builder.model.BuildType;
 import com.android.ide.common.gradle.model.IdeBuildType;
 import com.android.ide.common.gradle.model.IdeClassField;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
@@ -27,7 +26,6 @@ import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/** Creates a deep copy of a {@link BuildType}. */
 public final class IdeBuildTypeImpl extends IdeBaseConfigImpl implements IdeBuildType {
     // Increase the value when adding/removing fields or when changing the
     // serialization/deserialization mechanism.

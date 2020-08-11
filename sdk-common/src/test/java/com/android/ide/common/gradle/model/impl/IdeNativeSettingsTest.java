@@ -19,7 +19,6 @@ import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.*;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
-import com.android.builder.model.NativeSettings;
 import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeSettingsImpl;
 import com.android.ide.common.gradle.model.stubs.NativeSettingsStub;
 import com.android.testutils.Serialization;
@@ -43,18 +42,11 @@ public class IdeNativeSettingsTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeNativeSettingsImpl nativeSettings = new IdeNativeSettingsImpl(new NativeSettingsStub());
+        IdeNativeSettingsImpl nativeSettings =
+                myModelCache.nativeSettingsFrom(new NativeSettingsStub());
         byte[] bytes = Serialization.serialize(nativeSettings);
         Object o = Serialization.deserialize(bytes);
         assertEquals(nativeSettings, o);
-    }
-
-    @Test
-    public void constructor() throws Throwable {
-        NativeSettings original = new NativeSettingsStub();
-        IdeNativeSettingsImpl copy = new IdeNativeSettingsImpl(original);
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
     }
 
     @Test

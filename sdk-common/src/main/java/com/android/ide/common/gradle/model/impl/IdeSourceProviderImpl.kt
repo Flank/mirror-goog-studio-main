@@ -15,13 +15,10 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.builder.model.SourceProvider
 import com.android.ide.common.gradle.model.IdeSourceProvider
-import com.google.common.annotations.VisibleForTesting
 import java.io.File
 import java.io.Serializable
 
-/** Creates a deep copy of a [SourceProvider].  */
 data class IdeSourceProviderImpl(
   private val myName: String,
   private val myFolder: File?,

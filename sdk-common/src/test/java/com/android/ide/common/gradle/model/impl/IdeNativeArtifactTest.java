@@ -20,16 +20,15 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.NativeArtifact;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeArtifactImpl;
+import com.android.ide.common.gradle.model.ndk.v1.IdeNativeArtifact;
 import com.android.ide.common.gradle.model.stubs.NativeArtifactStub;
 import com.android.testutils.Serialization;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,8 +48,8 @@ public class IdeNativeArtifactTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeNativeArtifactImpl nativeArtifact =
-                new IdeNativeArtifactImpl(new NativeArtifactStub(), myModelCache);
+        IdeNativeArtifact nativeArtifact =
+                myModelCache.nativeArtifactFrom(new NativeArtifactStub());
         byte[] bytes = Serialization.serialize(nativeArtifact);
         Object o = Serialization.deserialize(bytes);
         assertEquals(nativeArtifact, o);
@@ -80,7 +79,7 @@ public class IdeNativeArtifactTest {
                                 getOutputFile());
                     }
                 };
-        IdeNativeArtifactImpl artifact = new IdeNativeArtifactImpl(original, myModelCache);
+        IdeNativeArtifactImpl artifact = myModelCache.nativeArtifactFrom(original);
         artifact.getRuntimeFiles();
     }
 
@@ -108,7 +107,7 @@ public class IdeNativeArtifactTest {
                                 getRuntimeFiles());
                     }
                 };
-        IdeNativeArtifactImpl artifact = new IdeNativeArtifactImpl(original, myModelCache);
+        IdeNativeArtifactImpl artifact = myModelCache.nativeArtifactFrom(original);
         artifact.getAssembleTaskName();
     }
 
@@ -136,13 +135,8 @@ public class IdeNativeArtifactTest {
                                 getRuntimeFiles());
                     }
                 };
-        IdeNativeArtifactImpl artifact = new IdeNativeArtifactImpl(original, myModelCache);
-        try {
-            artifact.getAbi();
-            Assert.fail("Expecting UnsupportedOperationException");
-        } catch (UnsupportedOperationException expected) {
-            // ignored
-        }
+        IdeNativeArtifactImpl artifact = myModelCache.nativeArtifactFrom(original);
+        assertThat(artifact.getAbi()).isEqualTo("");
     }
 
     @Test
@@ -169,13 +163,8 @@ public class IdeNativeArtifactTest {
                                 getRuntimeFiles());
                     }
                 };
-        IdeNativeArtifactImpl artifact = new IdeNativeArtifactImpl(original, myModelCache);
-        try {
-            artifact.getTargetName();
-            Assert.fail("Expecting UnsupportedOperationException");
-        } catch (UnsupportedOperationException expected) {
-            // ignored
-        }
+        IdeNativeArtifactImpl artifact = myModelCache.nativeArtifactFrom(original);
+        assertThat(artifact.getTargetName()).isEqualTo("");
     }
 
     @Test

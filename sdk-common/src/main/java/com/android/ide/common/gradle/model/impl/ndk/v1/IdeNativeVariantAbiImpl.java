@@ -16,14 +16,10 @@
 package com.android.ide.common.gradle.model.impl.ndk.v1;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.NativeVariantAbi;
-import com.android.ide.common.gradle.model.impl.ModelCache;
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeArtifact;
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeSettings;
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeToolchain;
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeVariantAbi;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
@@ -59,28 +55,22 @@ public final class IdeNativeVariantAbiImpl implements IdeNativeVariantAbi, Seria
         myHashCode = 0;
     }
 
-    public IdeNativeVariantAbiImpl(@NonNull NativeVariantAbi variantAbi) {
-        this(variantAbi, new ModelCache());
-    }
-
     public IdeNativeVariantAbiImpl(
-            @NonNull NativeVariantAbi variantAbi, @NonNull ModelCache modelCache) {
-        myBuildFiles = ImmutableList.copyOf(variantAbi.getBuildFiles());
-        myArtifacts =
-                modelCache.copy(
-                        variantAbi::getArtifacts,
-                        artifact -> new IdeNativeArtifactImpl(artifact, modelCache));
-        myToolChains =
-                modelCache.copy(
-                        variantAbi::getToolChains,
-                        toolchain -> new IdeNativeToolchainImpl(toolchain));
-        mySettings =
-                modelCache.copy(variantAbi::getSettings, settings -> new IdeNativeSettingsImpl(settings));
-        myFileExtensions = ImmutableMap.copyOf(variantAbi.getFileExtensions());
-        myVariantName = variantAbi.getVariantName();
-        myAbi = variantAbi.getAbi();
+            @NonNull List<File> buildFiles,
+            @NonNull List<IdeNativeArtifact> artifacts,
+            @NonNull List<IdeNativeToolchain> toolChains,
+            @NonNull List<IdeNativeSettings> settings,
+            @NonNull Map<String, String> fileExtensions,
+            @NonNull String variantName,
+            @NonNull String abi) {
+        myBuildFiles = buildFiles;
+        myArtifacts = artifacts;
+        myToolChains = toolChains;
+        mySettings = settings;
+        myFileExtensions = fileExtensions;
+        myVariantName = variantName;
+        myAbi = abi;
         myHashCode = calculateHashCode();
-
     }
 
     @NonNull

@@ -15,8 +15,8 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
-import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
-import static com.android.builder.model.AndroidProject.ARTIFACT_UNIT_TEST;
+import static com.android.ide.common.gradle.model.IdeAndroidProject.ARTIFACT_ANDROID_TEST;
+import static com.android.ide.common.gradle.model.IdeAndroidProject.ARTIFACT_UNIT_TEST;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

@@ -28,7 +28,6 @@ import com.android.testutils.Serialization;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,7 +48,7 @@ public class IdeNativeAndroidProjectImplTest {
     @Test
     public void serialization() throws Exception {
         IdeNativeAndroidProject nativeAndroidProject =
-                new IdeNativeAndroidProjectImpl(new NativeAndroidProjectStub(), myModelCache);
+                myModelCache.nativeAndroidProjectFrom(new NativeAndroidProjectStub());
         byte[] bytes = Serialization.serialize(nativeAndroidProject);
         Object o = Serialization.deserialize(bytes);
         assertEquals(nativeAndroidProject, o);
@@ -78,13 +77,8 @@ public class IdeNativeAndroidProjectImplTest {
                                 getApiVersion());
                     }
                 };
-        IdeNativeAndroidProjectImpl copy = new IdeNativeAndroidProjectImpl(original, myModelCache);
-        try {
-            copy.getBuildSystems();
-            Assert.fail("Expecting UnsupportedOperationException");
-        } catch (UnsupportedOperationException expected) {
-            // ignored
-        }
+        IdeNativeAndroidProjectImpl copy = myModelCache.nativeAndroidProjectFrom(original);
+        assertThat(copy.getBuildSystems()).isEmpty();
     }
 
     @Test

@@ -16,17 +16,15 @@
 package com.android.ide.common.gradle.model.impl.ndk.v1;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.NativeSettings;
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeSettings;
-import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 public final class IdeNativeSettingsImpl implements IdeNativeSettings, Serializable {
-    private final String myName;
-    private final List<String> myCompilerFlags;
+    @NonNull private final String myName;
+    @NonNull private final List<String> myCompilerFlags;
     private final int myHashCode;
 
     // Used for serialization by the IDE.
@@ -38,14 +36,9 @@ public final class IdeNativeSettingsImpl implements IdeNativeSettings, Serializa
         myHashCode = 0;
     }
 
-    public IdeNativeSettingsImpl(@NonNull NativeSettings settings) {
-        myName = settings.getName();
-
-        List<String> compilerFlags = settings.getCompilerFlags();
-        myCompilerFlags =
-                compilerFlags != null && !compilerFlags.isEmpty()
-                        ? ImmutableList.copyOf(compilerFlags)
-                        : Collections.emptyList();
+    public IdeNativeSettingsImpl(@NonNull String name, @NonNull List<String> compilerFlags) {
+        myName = name;
+        myCompilerFlags = compilerFlags;
 
         myHashCode = calculateHashCode();
     }

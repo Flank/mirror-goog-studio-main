@@ -17,6 +17,7 @@ package com.android.ide.common.gradle.model.impl
 
 import com.android.build.FilterData
 import com.android.build.OutputFile
+import com.android.build.VariantOutput
 import com.android.builder.model.AaptOptions
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidGradlePluginProjectFlags
@@ -30,6 +31,13 @@ import com.android.builder.model.JavaArtifact
 import com.android.builder.model.JavaCompileOptions
 import com.android.builder.model.LintOptions
 import com.android.builder.model.MavenCoordinates
+import com.android.builder.model.NativeAndroidProject
+import com.android.builder.model.NativeArtifact
+import com.android.builder.model.NativeFile
+import com.android.builder.model.NativeSettings
+import com.android.builder.model.NativeToolchain
+import com.android.builder.model.NativeVariantAbi
+import com.android.builder.model.NativeVariantInfo
 import com.android.builder.model.ProductFlavor
 import com.android.builder.model.ProductFlavorContainer
 import com.android.builder.model.SigningConfig
@@ -42,6 +50,9 @@ import com.android.builder.model.Variant
 import com.android.builder.model.VariantBuildInformation
 import com.android.builder.model.VectorDrawablesOptions
 import com.android.builder.model.ViewBindingOptions
+import com.android.builder.model.v2.models.ndk.NativeAbi
+import com.android.builder.model.v2.models.ndk.NativeModule
+import com.android.builder.model.v2.models.ndk.NativeVariant
 import com.android.ide.common.gradle.model.IdeAaptOptions
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput
 import com.android.ide.common.gradle.model.IdeAndroidGradlePluginProjectFlags
@@ -57,9 +68,18 @@ import com.android.ide.common.gradle.model.IdeVariant
 import com.android.ide.common.gradle.model.IdeVariantBuildInformation
 import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions
 import com.android.ide.common.gradle.model.IdeViewBindingOptions
-import com.android.ide.common.gradle.model.impl.IdeAndroidArtifactOutputImpl.copyFilters
+import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeAndroidProjectImpl
+import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeArtifactImpl
+import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeFileImpl
+import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeSettingsImpl
 import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeToolchainImpl
+import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeVariantAbiImpl
+import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeVariantInfoImpl
+import com.android.ide.common.gradle.model.impl.ndk.v2.IdeNativeAbiImpl
+import com.android.ide.common.gradle.model.impl.ndk.v2.IdeNativeModuleImpl
+import com.android.ide.common.gradle.model.impl.ndk.v2.IdeNativeVariantImpl
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeToolchain
+import com.android.ide.common.gradle.model.ndk.v2.NativeBuildSystem
 import com.android.ide.common.repository.GradleVersion
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableList
@@ -70,6 +90,7 @@ import com.google.common.collect.Iterables
 import java.io.File
 import java.util.HashMap
 import java.util.LinkedHashSet
+import java.util.stream.Collectors
 
 class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<String, String> = HashMap()) {
 
@@ -100,7 +121,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     val defaultVariantCopy = copyNewPropertyWithDefault({ project.defaultVariant }, { getDefaultVariant(variantNamesCopy) })
     val flavorDimensionCopy: Collection<String> = copy(project::getFlavorDimensions, ::deduplicateString)
     val bootClasspathCopy: Collection<String> = ImmutableList.copyOf(project.bootClasspath)
-    val nativeToolchainsCopy: Collection<IdeNativeToolchain> = copy(project::getNativeToolchains) { IdeNativeToolchainImpl(it) }
+    val nativeToolchainsCopy: Collection<IdeNativeToolchain> = copy(project::getNativeToolchains, ::nativeToolchainFrom)
     val signingConfigsCopy: Collection<IdeSigningConfig> = copy(project::getSigningConfigs, ::signingConfigFrom)
     val lintOptionsCopy: IdeLintOptions = copyModel(project.lintOptions, { lintOptionsFrom(it, parsedModelVersion) })
 
@@ -269,7 +290,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
   fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl {
     return IdeAndroidArtifactOutputImpl(
       copy(output::getFilterTypes, ::deduplicateString),
-      copyFilters(output, this),
+      copyFilters(output),
       copyNewProperty(output::getOutputType),
       output.versionCode,
       copyNewProperty({ output.outputFile }, output.mainOutputFile.outputFile)
@@ -572,8 +593,119 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     includeInBundle = model.includeInBundle
   )
 
+  fun nativeAndroidProjectFrom(project: NativeAndroidProject): IdeNativeAndroidProjectImpl {
+    return IdeNativeAndroidProjectImpl(
+            project.modelVersion,
+            project.apiVersion,
+            project.name,
+            copy(project::getBuildFiles, ::deduplicateFile),
+            copy(project::getVariantInfos, ::nativeVariantFrom),
+            copy(project::getArtifacts, ::nativeArtifactFrom),
+            copy(project::getToolChains, ::nativeToolchainFrom),
+            copy(project::getSettings, ::nativeSettingsFrom),
+            copy(project::getFileExtensions, ::deduplicateString),
+            copyNewProperty(project::getDefaultNdkVersion, ""),
+            copy(project::getBuildSystems, ::deduplicateString)
+    )
+  }
+
+  fun nativeToolchainFrom(toolchain: NativeToolchain): IdeNativeToolchainImpl {
+    return IdeNativeToolchainImpl(
+            toolchain.name,
+            toolchain.cCompilerExecutable,
+            toolchain.cppCompilerExecutable
+    )
+  }
+
+  fun nativeVariantFrom(variantInfo: NativeVariantInfo): IdeNativeVariantInfoImpl {
+    return IdeNativeVariantInfoImpl(
+      copy(variantInfo::getAbiNames, ::deduplicateString),
+      copy(variantInfo::getBuildRootFolderMap, ::deduplicateFile))
+  }
+
+  fun nativeArtifactFrom(artifact: NativeArtifact): IdeNativeArtifactImpl {
+    return IdeNativeArtifactImpl(
+            artifact.name,
+            artifact.toolChain,
+            artifact.groupName,
+            copy(artifact::getSourceFiles, ::nativeFileFrom),
+            copy(artifact::getExportedHeaders, ::deduplicateFile),
+            copyNewProperty(artifact::getAbi, ""),
+            copyNewProperty(artifact::getTargetName, ""),
+            artifact.outputFile
+    )
+  }
+
+  fun nativeFileFrom(file: NativeFile): IdeNativeFileImpl {
+    return IdeNativeFileImpl(file.filePath, file.settingsName, file.workingDirectory)
+  }
+
+  fun nativeSettingsFrom(settings: NativeSettings): IdeNativeSettingsImpl {
+    return IdeNativeSettingsImpl(
+            settings.name,
+            copy(settings::getCompilerFlags, ::deduplicateString)
+    )
+  }
+
+  fun nativeVariantAbiFrom(variantAbi: NativeVariantAbi): IdeNativeVariantAbiImpl {
+    return IdeNativeVariantAbiImpl(
+      copy(variantAbi::getBuildFiles, ::deduplicateFile),
+      copy(variantAbi::getArtifacts, ::nativeArtifactFrom),
+      copy(variantAbi::getToolChains, ::nativeToolchainFrom),
+      copy(variantAbi::getSettings, ::nativeSettingsFrom),
+      copy(variantAbi::getFileExtensions, ::deduplicateString),
+      variantAbi.variantName,
+      variantAbi.abi
+    )
+  }
+
+  fun nativeModuleFrom(nativeModule: NativeModule): IdeNativeModuleImpl {
+    return IdeNativeModuleImpl(
+      nativeModule.name,
+      copy(nativeModule::variants, ::nativeVariantFrom),
+      when (nativeModule.nativeBuildSystem) {
+        com.android.builder.model.v2.models.ndk.NativeBuildSystem.NDK_BUILD -> NativeBuildSystem.NDK_BUILD
+        com.android.builder.model.v2.models.ndk.NativeBuildSystem.CMAKE -> NativeBuildSystem.CMAKE
+        // No forward compatibility. Old Studio cannot open projects with newer AGP.
+        else -> error("Unknown native build system: ${nativeModule.nativeBuildSystem}")
+      },
+      nativeModule.ndkVersion,
+      nativeModule.defaultNdkVersion,
+      nativeModule.externalNativeBuildFile
+    )
+  }
+
+  fun nativeVariantFrom(nativeVariant: NativeVariant): IdeNativeVariantImpl {
+    return IdeNativeVariantImpl(
+      nativeVariant.name,
+      copy(nativeVariant::abis, ::nativeAbiFrom)
+    )
+  }
+
+  fun nativeAbiFrom(nativeAbi: NativeAbi): IdeNativeAbiImpl {
+    return IdeNativeAbiImpl(
+      nativeAbi.name,
+      nativeAbi.sourceFlagsFile,
+      nativeAbi.symbolFolderIndexFile,
+      nativeAbi.buildFileIndexFile
+    )
+  }
+
   fun androidGradlePluginProjectFlagsFrom(flags: AndroidGradlePluginProjectFlags): IdeAndroidGradlePluginProjectFlagsImpl =
     IdeAndroidGradlePluginProjectFlagsImpl(flags.booleanFlagMap)
+
+  fun copyFilters(output: VariantOutput): Collection<FilterData> {
+    return copy(
+      fun(): Collection<FilterData> =
+        try {
+          output.filters
+        }
+        catch (ignored: UnsupportedOperationException) {
+          output.outputs.flatMap(OutputFile::getFilters)
+        },
+      ::filterDataFrom
+    )
+  }
 
   inline fun <K, V> copy(original: () -> Collection<K>, mapper: (K) -> V): List<V> =
     try {
@@ -628,7 +760,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
      *       Please use function references or anonymous functions which seeds type inference.
      **/
     @JvmStatic
-    inline fun <T: Any> copyNewProperty(propertyInvoker: () -> T, defaultValue: T): T {
+    inline fun <T : Any> copyNewProperty(propertyInvoker: () -> T, defaultValue: T): T {
       return try {
         propertyInvoker()
       }
@@ -642,7 +774,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
      *       Please use function references or anonymous functions which seeds type inference.
      **/
     @JvmStatic
-    inline fun <T: Any?> copyNewProperty(propertyInvoker: () -> T?): T? {
+    inline fun <T : Any?> copyNewProperty(propertyInvoker: () -> T?): T? {
       return try {
         propertyInvoker()
       }
@@ -702,7 +834,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
 
   fun <K, V> copyModel(key: K, mappingFunction: (K) -> V): V = mappingFunction(key)
 
-  inline fun <K, V: Any> copyNewModel(
+  inline fun <K, V : Any> copyNewModel(
     getter: () -> K?,
     mapper: (K) -> V
   ): V? {
