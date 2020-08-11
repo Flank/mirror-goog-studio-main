@@ -1466,8 +1466,8 @@ public class DeployerRunnerTest {
                     "/system/bin/cmd package install-create -t -r --dont-kill",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
                     INSTALLER_INVOCATION, // swap
-                    "/system/bin/run-as com.example.simpleapp cp -rF /data/local/tmp/.studio/tmp-$VERSION/ /data/data/com.example.simpleapp/code_cache/.studio/",
-                    "cp -rF /data/local/tmp/.studio/tmp-$VERSION/ /data/data/com.example.simpleapp/code_cache/.studio/",
+                    "/system/bin/run-as com.example.simpleapp cp -rF /data/local/tmp/.studio/tmp/$VERSION/ /data/data/com.example.simpleapp/code_cache/.studio/",
+                    "cp -rF /data/local/tmp/.studio/tmp/$VERSION/ /data/data/com.example.simpleapp/code_cache/.studio/",
                     "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/.studio/server.so 1 irsocket 5",
                     "/data/data/com.example.simpleapp/code_cache/.studio/server.so 1 irsocket 5",
                     "/system/bin/cmd activity attach-agent 10001 /data/data/com.example.simpleapp/code_cache/.studio/agent.so=irsocket",
@@ -1724,8 +1724,8 @@ public class DeployerRunnerTest {
                     "/system/bin/cmd package install-create -t -r --dont-kill",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
                     INSTALLER_INVOCATION, // swap
-                    "/system/bin/run-as com.example.simpleapp cp -rF /data/local/tmp/.studio/tmp-$VERSION/ /data/data/com.example.simpleapp/code_cache/.studio/",
-                    "cp -rF /data/local/tmp/.studio/tmp-$VERSION/ /data/data/com.example.simpleapp/code_cache/.studio/",
+                    "/system/bin/run-as com.example.simpleapp cp -rF /data/local/tmp/.studio/tmp/$VERSION/ /data/data/com.example.simpleapp/code_cache/.studio/",
+                    "cp -rF /data/local/tmp/.studio/tmp/$VERSION/ /data/data/com.example.simpleapp/code_cache/.studio/",
                     "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/.studio/server.so 1 irsocket 5",
                     "/data/data/com.example.simpleapp/code_cache/.studio/server.so 1 irsocket 5",
                     "/system/bin/cmd activity attach-agent 10001 /data/data/com.example.simpleapp/code_cache/.studio/agent.so=irsocket",

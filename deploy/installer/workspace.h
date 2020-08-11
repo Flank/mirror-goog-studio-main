@@ -49,6 +49,10 @@ class Workspace {
 
   const std::string GetTmpFolder() const noexcept { return tmp_; }
 
+  const std::string GetInstallerdPidsFolder() const noexcept {
+    return pids_folder_;
+  };
+
   const MessagePipeWrapper& GetOutput() const noexcept { return output_pipe_; }
 
   Executor& GetExecutor() const noexcept { return *executor_; }
@@ -64,6 +68,7 @@ class Workspace {
   std::string cmd_path_;
 
   std::string tmp_;
+  std::string pids_folder_;
 
   Executor* executor_;
 

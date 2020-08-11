@@ -17,6 +17,7 @@
 #include "tools/base/deploy/common/io.h"
 
 #include <fcntl.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -24,7 +25,9 @@
 #include <string>
 
 #include "tools/base/deploy/common/env.h"
+#include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
+#include "tools/base/deploy/common/utils.h"
 
 namespace deploy {
 
@@ -76,6 +79,63 @@ int IO::chmod(const std::string& pathname, mode_t mode) {
 
 int IO::mkdir(const std::string& pathname, mode_t mode) {
   return ::mkdir(ResolvePath(pathname).c_str(), mode);
+}
+
+static bool DirectoryExists(const char* dir_path) {
+  struct stat sb;
+  return (stat(dir_path, &sb) == 0 && S_ISDIR(sb.st_mode));
+}
+
+bool IO::mkpath(const std::string& p, mode_t mode) {
+  std::string resolvedPath = ResolvePath(p);
+
+  char path[resolvedPath.size() + 1];
+  strcpy(path, resolvedPath.c_str());
+  if (path[resolvedPath.size() - 1] == '/') {
+    path[resolvedPath.size() - 1] = 0;
+  }
+
+  if (DirectoryExists(path)) {
+    return true;
+  }
+
+  size_t path_size = strlen(path);
+  for (size_t i = 0; i < path_size; i++) {
+    if (path[i] != '/' || i == 0) {
+      continue;
+    }
+
+    char c = path[i];  // Save character for patching/restoring
+    path[i] = '\0';    // Patch / with string termination.
+
+    if (!DirectoryExists(path)) {
+      int error = ::mkdir(path, mode);
+      if (error) {
+        std::string err_msg = "Unable to create '"_s + path + "'";
+        err_msg += " reason:'"_s + strerror(errno) + "'";
+        ErrEvent(err_msg);
+        return false;
+      }
+    }
+    path[i] = c;
+  }
+
+  // The last directory was not created in the loop.
+  int error = ::mkdir(path, mode);
+  if (error) {
+    std::string err_msg = "Unable to create '"_s + path + "'";
+    err_msg += " reason:'"_s + strerror(errno) + "'";
+    ErrEvent(err_msg);
+  }
+
+  if (!DirectoryExists(path)) {
+    std::string err_msg = "Unable to create '"_s + path + "'";
+    err_msg += " reason:'"_s + strerror(errno) + "'";
+    ErrEvent(err_msg);
+    return false;
+  }
+
+  return true;
 }
 
 int IO::open(const std::string& pathname, int flags) {
