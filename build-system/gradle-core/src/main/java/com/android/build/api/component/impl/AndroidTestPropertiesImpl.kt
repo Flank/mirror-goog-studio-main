@@ -22,9 +22,9 @@ import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTestProp
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.PackagingOptions
+import com.android.build.api.variant.ApkPackagingOptions
 import com.android.build.api.variant.SigningConfig
-import com.android.build.api.variant.impl.PackagingOptionsImpl
+import com.android.build.api.variant.impl.ApkPackagingOptionsImpl
 import com.android.build.api.variant.impl.ResValue
 import com.android.build.api.variant.impl.SigningConfigImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
@@ -118,14 +118,14 @@ open class AndroidTestPropertiesImpl @Inject constructor(
         action.invoke(aaptOptions)
     }
 
-    override val packagingOptions: PackagingOptions by lazy {
-        PackagingOptionsImpl(
+    override val packagingOptions: ApkPackagingOptions by lazy {
+        ApkPackagingOptionsImpl(
             globalScope.extension.packagingOptions,
             variantPropertiesApiServices
         )
     }
 
-    override fun packagingOptions(action: PackagingOptions.() -> Unit) {
+    override fun packagingOptions(action: ApkPackagingOptions.() -> Unit) {
         action.invoke(packagingOptions)
     }
 

@@ -16,6 +16,7 @@
 
 package com.android.build.api.component.analytics
 
+import com.android.build.api.variant.PackagingOptions
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
@@ -52,5 +53,33 @@ class AnalyticsEnabledLibraryVariantPropertiesTest {
         ).isEqualTo(VariantPropertiesMethodType.READ_ONLY_APPLICATION_ID_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
             .applicationId
+    }
+
+    @Test
+    fun getPackagingOptions() {
+        val packagingOptions = Mockito.mock(PackagingOptions::class.java)
+        Mockito.`when`(delegate.packagingOptions).thenReturn(packagingOptions)
+        Truth.assertThat(proxy.packagingOptions).isEqualTo(packagingOptions)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .packagingOptions
+    }
+
+    @Test
+    fun packagingOptionsAction() {
+        @Suppress("UNCHECKED_CAST")
+        val action = Mockito.mock(Function1::class.java) as PackagingOptions.() -> Unit
+        proxy.packagingOptions(action)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .packagingOptions(action)
     }
 }

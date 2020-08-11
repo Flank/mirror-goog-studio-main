@@ -17,6 +17,7 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.ApkPackagingOptions
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.SigningConfig
@@ -79,5 +80,18 @@ open class AnalyticsEnabledApplicationVariantProperties @Inject constructor(
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.SIGNING_CONFIG_ACTION_VALUE
         delegate.signingConfig(action)
+    }
+
+    override val packagingOptions: ApkPackagingOptions
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
+            return delegate.packagingOptions
+        }
+
+    override fun packagingOptions(action: ApkPackagingOptions.() -> Unit) {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
+        delegate.packagingOptions(action)
     }
 }

@@ -38,4 +38,13 @@ interface DynamicFeatureVariantProperties : VariantProperties {
      */
     fun aaptOptions(action: AaptOptions.() -> Unit)
 
+    /**
+     * Variant's packagingOptions, initialized by the corresponding global DSL element.
+     */
+    override val packagingOptions: ApkPackagingOptions
+
+    /**
+     * Variant's packagingOptions, initialized by the corresponding global DSL element.
+     */
+    fun packagingOptions(action: ApkPackagingOptions.() -> Unit)
 }

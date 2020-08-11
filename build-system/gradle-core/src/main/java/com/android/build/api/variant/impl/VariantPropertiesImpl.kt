@@ -122,16 +122,8 @@ abstract class VariantPropertiesImpl(
     }
 
     override val packagingOptions: PackagingOptions by lazy {
-        PackagingOptionsImpl(
-            globalScope.extension.packagingOptions,
-            variantPropertiesApiServices
-        )
+        PackagingOptionsImpl(globalScope.extension.packagingOptions, internalServices)
     }
-
-    override fun packagingOptions(action: PackagingOptions.() -> Unit) {
-        action.invoke(packagingOptions)
-    }
-
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API

@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.component
 
 import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.ApkPackagingOptions
 import org.gradle.api.provider.MapProperty
 
 /**
@@ -50,4 +51,6 @@ interface ApkCreationConfig: ConsumableCreationConfig {
 
     /** List of transforms for profilers support in the IDE. */
     val advancedProfilingTransforms: List<String>
+
+    override val packagingOptions: ApkPackagingOptions
 }

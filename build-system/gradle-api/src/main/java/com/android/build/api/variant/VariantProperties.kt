@@ -86,9 +86,4 @@ interface VariantProperties : ComponentProperties {
      * Variant's packagingOptions, initialized by the corresponding global DSL element.
      */
     val packagingOptions: PackagingOptions
-
-    /**
-     * Variant's packagingOptions, initialized by the corresponding global DSL element.
-     */
-    fun packagingOptions(action: PackagingOptions.() -> Unit)
 }
