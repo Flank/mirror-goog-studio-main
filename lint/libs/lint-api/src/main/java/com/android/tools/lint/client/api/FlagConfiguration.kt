@@ -36,7 +36,7 @@ open class FlagConfiguration : LintXmlConfiguration {
         client: LintClient,
         lintFile: File,
         dir: File
-    ) : super(client, lintFile, dir)
+    ) : super(client, lintFile, dir, true)
 
     open fun fatalOnly(): Boolean = false
     open fun isWarningsAsErrors(): Boolean = false

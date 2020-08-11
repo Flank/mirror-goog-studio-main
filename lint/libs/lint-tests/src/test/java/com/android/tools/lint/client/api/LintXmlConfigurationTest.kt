@@ -45,29 +45,43 @@ import java.util.Locale
 class LintXmlConfigurationTest : AbstractCheckTest() {
     // Sample included via @sample in the KDoc for LintXmlConfiguration
     fun sampleFile() =
-        """
-    <?xml version="1.0" encoding="UTF-8"?>
-    <lint>
-        <issue id="all" severity="ignore" />
-        <issue id="ValidActionsXml" severity="error" />
-        <issue id="ObsoleteLayoutParam">
-            <ignore path="res/layout-xlarge/activation.xml" />
-            <ignore path="**/layout-x*/onclick.xml" />
-            <ignore path="res/**/activation.xml" />
-        </issue>
-        <issue in="studio" id="NewerVersionAvailable" severity="error" />
-        <issue in="!gradle" id="FieldGetter" severity="error" />
-        <issue id="NewApi">
-            <ignore regexp="st.*gs" />
-        </issue>
-        <issue id="UnknownNullness">
-            <option name="ignore-deprecated" value="true" />
-        </issue>
-        <issue id="TooManyViews">
-            <option name="maxCount" value="20" />
-        </issue>
-    </lint>
-    """
+        // Not indented plus .trimIndent() because the IDE support for
+        // showing docs does not handle that very well
+"""
+<?xml version="1.0" encoding="UTF-8"?>
+<lint lintJars="../checks/local.jar;../checks/custom.jar">
+    <!-- The special id "all" matches all issues but is only consulted
+         if there is no specific match -->
+    <issue id="all" severity="ignore" />
+    <!-- Possible severities: ignore, information, warning, error, fatal -->
+    <issue id="ValidActionsXml" severity="error" />
+    <issue id="ObsoleteLayoutParam">
+        <!-- The <ignore> tag has two possible attributes: path and regexp. -->
+        <ignore path="res/layout-xlarge/activation.xml" />
+        <!-- You can use globbing patterns in the path strings -->
+        <ignore path="**/layout-x*/onclick.xml" />
+        <ignore path="res/**/activation.xml" />
+    </issue>
+    <issue id="NewApi">
+        <!-- You can also ignore via a regular expression, this is not only
+            matched against the path but also the error message -->
+        <ignore regexp="st.*gs" />
+    </issue>
+    <!-- The "in" attribute lets you specify that the element only
+         applies in a particular tools, such as gradle, studio, etc; this
+         can be a comma separated list -->
+    <issue in="studio" id="NewerVersionAvailable" severity="error" />
+    <!-- You can also use ! to specify that it does not apply in a tool  -->
+    <issue in="!gradle" id="FieldGetter" severity="error" />
+    <issue id="UnknownNullness">
+        <!-- For detectors that support it, you can also specify option values -->
+        <option name="ignore-deprecated" value="true" />
+    </issue>
+    <issue id="TooManyViews">
+        <option name="maxCount" value="20" />
+    </issue>
+</lint>
+"""
 
     fun testBasic() {
         val configuration = getConfiguration(
@@ -712,7 +726,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
         val configuration = getConfiguration(
             """
             <?xml version="1.0" encoding="UTF-8"?>
-            <lint>
+            <lint lintJars="foo/lint.jar">
               <issue id="ObsoleteLayoutParam">
                   <ignore path="res/layout-xlarge/activation.xml" />
                   <ignore path="res\layout-xlarge\activation2.xml" />
@@ -720,7 +734,13 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
               </issue>
               <issue id="ValidActionsXml" severity="ignore" />
               <issue id="SdCardPath" severity="ignore" /></lint>
-            """.trimIndent()
+            """.trimIndent(),
+            projectLevel = true,
+            create = { f ->
+                val lintJar = File(f.parentFile!!, "foo/lint.jar")
+                lintJar.parentFile!!.mkdirs()
+                lintJar.createNewFile()
+            }
         )
         configuration.startBulkEditing()
         configuration.setSeverity(TypoDetector.ISSUE, Severity.ERROR)
@@ -730,7 +750,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
         assertEquals(
             """
             <?xml version="1.0" encoding="UTF-8"?>
-            <lint>
+            <lint lintJars="foo/lint.jar">
                 <issue id="ObsoleteLayoutParam">
                     <ignore path="res/layout-xlarge/activation.xml" />
                     <ignore path="res/layout-xlarge/activation2.xml" />
@@ -747,11 +767,17 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
         )
     }
 
-    private fun getConfiguration(xml: String): LintXmlConfiguration {
+    private fun getConfiguration(
+        xml: String,
+        projectLevel: Boolean = false,
+        create: (File) -> Unit = {}
+    ): LintXmlConfiguration {
         val client: LintClient = createClient()
         val lintFile = File.createTempFile("lintconfig", ".xml")
         lintFile.writeText(xml)
+        create(lintFile)
         val configuration = client.configurations.getConfigurationForFile(lintFile)
+        configuration.projectLevel = projectLevel
         return configuration as LintXmlConfiguration
     }
 
@@ -882,7 +908,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
                 "src/main/kotlin/test/pkg1/lint.xml",
                 """
                 <!-- lint config file -->
-                <lint>
+                <lint lintJars='notallowed.jar'>
                     <!-- line before -->
                     <issue severity="error">
                         <ignore enabled='false' />
@@ -902,6 +928,9 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
             gradle("")
         ).run().expect(
             """
+            lint.xml:2: Warning: lintJar can only be specified for lint.xml files at the module level or higher [LintWarning]
+            <lint lintJars='notallowed.jar'>
+            ^
             lint.xml:3: Warning: Failed parsing lint.xml: name expected [LintWarning]
                 <issue id="SdCardPath" severity="ignore" />
                 ^
@@ -938,7 +967,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
             src/main/kotlin/test/pkg1/subpkg1/MyTest.kt:4: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
                 val s: String = "/sdcard/mydir"
                                  ~~~~~~~~~~~~~
-            0 errors, 12 warnings
+            0 errors, 13 warnings
             """
         )
     }

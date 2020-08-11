@@ -486,6 +486,10 @@ class LintDriver
             for (library in project.allLibraries) {
                 jarFiles.addAll(client.findRuleJars(library))
             }
+            val configuration = project.getConfiguration(this)
+            if (configuration is LintXmlConfiguration) {
+                jarFiles.addAll(configuration.getLintJars())
+            }
         }
 
         jarFiles.addAll(client.findGlobalRuleJars())

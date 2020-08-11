@@ -177,8 +177,6 @@ abstract class Configuration {
      */
     abstract fun setSeverity(issue: Issue, severity: Severity?)
 
-    // Bulk editing support
-
     /**
      * Marks the beginning of a "bulk" editing operation with repeated calls to
      * [.setSeverity] or [.ignore]. After all the values have been
@@ -214,4 +212,14 @@ abstract class Configuration {
         registry: IssueRegistry
     ) {
     }
+
+    /** Returns a list of lint jar files to include in the analysis */
+    open fun getLintJars(): List<File> = emptyList()
+
+    /**
+     * Whether this configuration corresponds to a project folder or higher.
+     * Certain configuration is not allowed in individual source file folders,
+     * such as enabling disabled lint checks.
+     */
+    open var projectLevel: Boolean = false
 }
