@@ -313,9 +313,9 @@ public abstract class TaskManager<
     // Temporary static variables for Kotlin+Compose configuration
     public static final String KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME =
             "kotlinCompilerClasspath";
-    public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "0.1.0-dev13";
+    public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "0.1.0-dev16";
     public static final String COMPOSE_KOTLIN_COMPILER_VERSION =
-            "1.3.70-dev-withExperimentalGoogleExtensions-20200424";
+            "1.4.0-rc-316";
     public static final String CREATE_MOCKABLE_JAR_TASK_NAME = "createMockableJar";
 
     @NonNull protected final Project project;
