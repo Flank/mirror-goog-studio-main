@@ -25,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Directory representing a dex archive. All dex entries, {@link DexArchiveEntry}, are stored under
@@ -57,8 +58,9 @@ final class DirDexArchive implements DexArchive {
 
     @Override
     @NonNull
-    public List<DexArchiveEntry> getSortedDexArchiveEntries() throws IOException {
-        List<Path> dexFiles = DexUtilsKt.getSortedDexFilesInDir(rootDir);
+    public List<DexArchiveEntry> getSortedDexArchiveEntries(Function<String, Boolean> filter)
+            throws IOException {
+        List<Path> dexFiles = DexUtilsKt.getSortedDexFilesInDir(rootDir, filter::apply);
         List<DexArchiveEntry> dexArchiveEntries = new ArrayList<>(dexFiles.size());
         for (Path dexFile : dexFiles) {
             dexArchiveEntries.add(createEntry(dexFile));
@@ -67,7 +69,7 @@ final class DirDexArchive implements DexArchive {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         // do nothing
     }
 

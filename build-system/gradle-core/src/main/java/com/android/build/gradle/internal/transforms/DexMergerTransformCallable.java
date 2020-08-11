@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.transforms;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.dexing.DexArchiveEntry;
@@ -44,7 +46,7 @@ public class DexMergerTransformCallable implements Callable<Void> {
     @NonNull private final File dexOutputDir;
     @NonNull private final List<DexArchiveEntry> dexArchiveEntries;
     @NonNull private final List<Path> dexRootsForDx;
-    @NonNull private final ForkJoinPool forkJoinPool;
+    @Nullable private final ForkJoinPool forkJoinPool;
     @Nullable private final Path mainDexList;
     @NonNull private final DexMergerTool dexMerger;
     private final int minSdkVersion;
@@ -58,7 +60,7 @@ public class DexMergerTransformCallable implements Callable<Void> {
             @NonNull List<DexArchiveEntry> dexArchiveEntries,
             @NonNull List<Path> dexRootsForDx,
             @Nullable Path mainDexList,
-            @NonNull ForkJoinPool forkJoinPool,
+            @Nullable ForkJoinPool forkJoinPool,
             @NonNull DexMergerTool dexMerger,
             int minSdkVersion,
             boolean isDebuggable) {
@@ -83,7 +85,9 @@ public class DexMergerTransformCallable implements Callable<Void> {
                 DxContext dxContext =
                         new DxContext(
                                 processOutput.getStandardOutput(), processOutput.getErrorOutput());
-                merger = DexArchiveMerger.createDxDexMerger(dxContext, forkJoinPool, isDebuggable);
+                merger =
+                        DexArchiveMerger.createDxDexMerger(
+                                dxContext, checkNotNull(forkJoinPool), isDebuggable);
                 break;
             case D8:
                 int d8MinSdkVersion = minSdkVersion;

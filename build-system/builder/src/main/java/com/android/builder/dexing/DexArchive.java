@@ -21,6 +21,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Interface describing the DEX archive. It contains one DEX file per .class file that was processed
@@ -61,14 +62,19 @@ public interface DexArchive extends Closeable {
      * Returns all dex archive entries in this dex archive.
      *
      * <p>The dex archive entries are sorted to ensure deterministic order.
-     *
-     * <p>Note that dex archive entries across different dex archives should not be sorted together
-     * as the order of dex archives (input files' roots) is controlled by Gradle, and sorting them
-     * could result in a bug (see https://issuetracker.google.com/119064593#comment11 and commit
-     * f4db68dccf76c35f5cdbd2cf3be3fb13b8abb767).
-     *
-     * @return the sorted list of dex archive entries in this dex archive
      */
     @NonNull
-    List<DexArchiveEntry> getSortedDexArchiveEntries() throws IOException;
+    default List<DexArchiveEntry> getSortedDexArchiveEntries() throws IOException {
+        return getSortedDexArchiveEntries(relativePath -> true);
+    }
+
+    /**
+     * Returns all dex archive entries in this dex archive whose relative paths to the dex archive's
+     * root satisfy the given filter.
+     *
+     * <p>The dex archive entries are sorted to ensure deterministic order.
+     */
+    @NonNull
+    List<DexArchiveEntry> getSortedDexArchiveEntries(Function<String, Boolean> filter)
+            throws IOException;
 }

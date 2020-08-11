@@ -30,11 +30,17 @@ import kotlin.streams.toList
  */
 val isJarFile: (File) -> Boolean = { it.extension.equals(SdkConstants.EXT_JAR, ignoreCase = true) }
 
-/** Returns a sorted list of dex files in the given directory. */
-fun getSortedDexFilesInDir(dir: Path): List<Path> {
+/**
+ * Returns a sorted list of dex files in the given directory whose relative paths satisfy the given
+ * filter.
+ */
+fun getSortedDexFilesInDir(dir: Path, filter: (relativePath: String) -> Boolean): List<Path> {
     return Files.walk(dir).use { files ->
         files
-            .filter { it.toString().endsWith(SdkConstants.DOT_DEX, ignoreCase = true) }
+            .filter {
+                it.toString().endsWith(SdkConstants.DOT_DEX, ignoreCase = true)
+                        && filter(dir.relativize(it).toString())
+            }
             .toList()
             .sortedWith(
                 Comparator { left, right ->
@@ -50,16 +56,22 @@ fun getSortedDexFilesInDir(dir: Path): List<Path> {
 }
 
 /**
- * Returns a sorted map of dex entries in the given jar. Each entry in the map maps the relative
- * path of a dex entry to its byte contents.
+ * Returns a sorted map of dex entries in the given jar whose relative paths satisfy the given
+ * filter. Each entry in the map maps the relative path of a dex entry to its byte contents.
  *
  * The given jar must not have duplicate entries.
  */
-fun getSortedDexEntriesInJar(jar: Path): SortedMap<String, ByteArray> {
+fun getSortedDexEntriesInJar(
+    jar: Path,
+    filter: (relativePath: String) -> Boolean
+): SortedMap<String, ByteArray> {
     return ZipFile(jar.toFile()).use { zipFile ->
         zipFile.entries()
             .toList()
-            .filter { entry -> entry.name.endsWith(SdkConstants.DOT_DEX, ignoreCase = true) }
+            .filter { entry ->
+                entry.name.endsWith(SdkConstants.DOT_DEX, ignoreCase = true)
+                        && filter(entry.name)
+            }
             .map {
                 it.name to zipFile.getInputStream(it).buffered().use { stream ->
                     stream.readBytes()

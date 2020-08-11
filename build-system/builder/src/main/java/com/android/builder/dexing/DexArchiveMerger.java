@@ -28,7 +28,7 @@ public interface DexArchiveMerger {
             @NonNull MessageReceiver messageReceiver,
             int minSdkVersion,
             boolean isDebuggable,
-            @NonNull ForkJoinPool forkJoinPool) {
+            @Nullable ForkJoinPool forkJoinPool) {
         return new D8DexArchiveMerger(
                 messageReceiver,
                 minSdkVersion,

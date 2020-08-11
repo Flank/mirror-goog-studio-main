@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.SdkConstants.DOT_DEX
 import com.android.SdkConstants.FD_ASSETS
 import com.android.SdkConstants.FD_DEX
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -321,8 +322,11 @@ private class DexRelocator(private val prefix: String): JarCreator.Relocator {
     val index = AtomicInteger(2)
     val classesDexNameUsed = AtomicBoolean(false)
     override fun relocate(entryPath: String): String {
-        if (entryPath.startsWith("classes")) {
-            return if (entryPath == "classes.dex" && !classesDexNameUsed.get()) {
+        // Note that the dex file may be in a subdirectory (e.g.,
+        // `<dex_merging_task_output>/bucket_0/classes.dex`). Also, it may not have the name
+        // `classesXY.dex` (e.g., it could be `ExampleClass.dex`).
+        if (entryPath.endsWith(DOT_DEX, ignoreCase=true)) {
+            return if (entryPath.endsWith("classes.dex") && !classesDexNameUsed.get()) {
                 classesDexNameUsed.set(true)
                 "$prefix/classes.dex"
             } else {

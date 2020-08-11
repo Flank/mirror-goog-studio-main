@@ -91,10 +91,12 @@ class DynamicAppTest {
         "/base/resources.pb",
         "/base/root/com/example/localLibJavaRes.txt",
         "/feature1/dex/classes.dex",
+        "/feature1/dex/classes2.dex",
         "/feature1/manifest/AndroidManifest.xml",
         "/feature1/res/layout/feature_layout.xml",
         "/feature1/resources.pb",
         "/feature2/dex/classes.dex",
+        "/feature2/dex/classes2.dex",
         "/feature2/manifest/AndroidManifest.xml",
         "/feature2/res/layout/feature2_layout.xml",
         "/feature2/resources.pb")
@@ -104,12 +106,20 @@ class DynamicAppTest {
         "/base/dex/classes2.dex" // Legacy multidex has minimal main dex in debug mode
     ))
 
-    private val releaseUnsignedContent: Array<String> = bundleContent.plus(arrayOf(
-        // Only the release variant is shrunk, so only it will contain a proguard mapping file.
-        "/BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map",
-        // Only the release variant would have the dependencies file.
-        "/BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.pb"
-    ))
+    private val releaseUnsignedContent: Array<String> = bundleContent.toList().plus(
+        listOf(
+            // Only the release variant is shrunk, so only it will contain a proguard mapping file.
+            "/BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map",
+            // Only the release variant would have the dependencies file.
+            "/BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.pb"
+        )
+    ).minus(
+        listOf(
+            // Dex files are merged into classes.dex
+            "/feature1/dex/classes2.dex",
+            "/feature2/dex/classes2.dex"
+        )
+    ).toTypedArray()
 
     private val mainDexClasses: List<String> =
         multiDexSupportLibClasses.plus("Lcom/example/app/AppClassNeededInMainDexList;")

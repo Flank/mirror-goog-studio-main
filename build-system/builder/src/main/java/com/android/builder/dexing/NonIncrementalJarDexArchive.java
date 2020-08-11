@@ -28,6 +28,7 @@ import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedMap;
+import java.util.function.Function;
 import java.util.jar.JarOutputStream;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
@@ -88,11 +89,12 @@ final class NonIncrementalJarDexArchive implements DexArchive {
 
     @NonNull
     @Override
-    public List<DexArchiveEntry> getSortedDexArchiveEntries() {
+    public List<DexArchiveEntry> getSortedDexArchiveEntries(Function<String, Boolean> filter) {
         Preconditions.checkState(
                 jarOutputStream == null, "Archive is not for reading: %s", targetPath);
 
-        SortedMap<String, byte[]> dexEntries = DexUtilsKt.getSortedDexEntriesInJar(targetPath);
+        SortedMap<String, byte[]> dexEntries =
+                DexUtilsKt.getSortedDexEntriesInJar(targetPath, filter::apply);
         List<DexArchiveEntry> dexArchiveEntries = new ArrayList<>(dexEntries.size());
         for (String relativePath : dexEntries.keySet()) {
             dexArchiveEntries.add(
