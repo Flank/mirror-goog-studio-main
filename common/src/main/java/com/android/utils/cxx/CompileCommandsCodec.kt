@@ -237,10 +237,10 @@ class CompileCommandsEncoder(val file : File) : AutoCloseable {
      */
     fun writeCompileCommand(
         sourceFile: File,
-        compiler: String, // Not file because it might not have .exe on windows
+        compiler: File,
         flags: List<String>,
         workingDirectory: File) {
-        val compilerIndex = intern(compiler)
+        val compilerIndex = intern(compiler.path)
         val flagsIndex = intern(flags.map { intern(it) })
         val workingDirectoryIndex = intern(workingDirectory.path)
         if (compilerIndex != lastCompilerWritten ||
@@ -386,14 +386,14 @@ private fun MappedByteBuffer.readFlagsTable(start: Int, strings : Array<String?>
  *
  * The callback [action] takes four parameters:
  * - sourceFile: File
- * - compiler: String (not a file because it may not have .exe suffix on Windows)
+ * - compiler: the path to the compiler executable
  * - flags: List<String>
  * - workingDirectory: File
  *
  * All of these parameters are interned and do not need to be re-interned on the receiving side.
  */
 fun streamCompileCommands(file: File,
-        action : (sourceFile:File, compiler:String, flags:List<String>, workingDirectory:File) -> Unit) {
+        action : (sourceFile:File, compiler:File, flags:List<String>, workingDirectory:File) -> Unit) {
     RandomAccessFile(file, "r").use { ras ->
         val map = ras.channel.map(FileChannel.MapMode.READ_ONLY, 0, file.length())
         val start = map.positionAfterMagicAndVersion(file)
@@ -408,13 +408,13 @@ fun streamCompileCommands(file: File,
         }
         map.seekSection(start, CompileCommands)
         val sourceMessagesCount = map.int
-        var lastCompiler = ""
+        lateinit var lastCompiler: File
         var lastFlags = listOf<String>()
         var lastWorkingDirectory = File("")
         repeat(sourceMessagesCount) {
             when(map.get()) {
                 COMPILE_COMMAND_CONTEXT_MESSAGE -> {
-                    lastCompiler = strings[map.int]!!
+                    lastCompiler = File(strings[map.int]!!)
                     lastFlags = flags[map.int]
                     lastWorkingDirectory = internFile(map.int)!!
                 }

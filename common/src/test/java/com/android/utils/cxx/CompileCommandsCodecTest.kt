@@ -29,9 +29,9 @@ class CompileCommandsCodecTest {
     @Test
     fun singleFile() {
         val folder = tempFolder.newFolder()
-        val out = File(folder, "compile_commands.bin")
+        val out = File(folder, "compile_commands.json.bin")
         val sourceFile = File("my/source/file.cpp")
-        val compiler = "clang.exe"
+        val compiler = File("clang.exe")
         val flags = listOf("-a", "-b")
         val workingDirectory = File("my/working/directory")
         CompileCommandsEncoder(out).use { encoder ->
@@ -60,10 +60,10 @@ class CompileCommandsCodecTest {
     @Test
     fun checkInterning() {
         val folder = tempFolder.newFolder()
-        val out = File(folder, "compile_commands.bin")
+        val out = File(folder, "compile_commands.json.bin")
         val sourceFile1 = File("my/source/file-1.cpp")
         val sourceFile2 = File("my/source/file-2.cpp")
-        val compiler = "clang.exe"
+        val compiler = File("clang.exe")
         val flags = listOf("-a", "-b")
         val workingDirectory = File("my/working/directory")
         CompileCommandsEncoder(out).use { encoder ->
@@ -82,7 +82,7 @@ class CompileCommandsCodecTest {
         }
 
         var count = 0
-        var lastCompiler = ""
+        lateinit var lastCompiler: File
         var lastFlags = listOf("")
         var lastWorkingDirectory = File("")
         streamCompileCommands(out) {
@@ -120,13 +120,13 @@ class CompileCommandsCodecTest {
     @Test
     fun stress() {
         val folder = tempFolder.newFolder()
-        val out = File(folder, "compile_commands.bin")
+        val out = File(folder, "compile_commands.json.bin")
         val fileCount = 100000
         CompileCommandsEncoder(out).use { encoder ->
             repeat(fileCount) { i ->
                 encoder.writeCompileCommand(
                         sourceFile = File("source-$i.cpp"),
-                        compiler = "compiler-$i",
+                        compiler = File("compiler-$i"),
                         flags = listOf("flags-$i"),
                         workingDirectory = File("working-dir-$i")
                 )
@@ -136,7 +136,7 @@ class CompileCommandsCodecTest {
         var streamedFileCount = 0
         streamCompileCommands(out) { sourceFile,compiler,flags,workingDirectory ->
             assertThat(sourceFile.path).isEqualTo("source-$streamedFileCount.cpp")
-            assertThat(compiler).isEqualTo("compiler-$streamedFileCount")
+            assertThat(compiler.path).isEqualTo("compiler-$streamedFileCount")
             assertThat(flags).isEqualTo(listOf("flags-$streamedFileCount"))
             assertThat(workingDirectory.path).isEqualTo("working-dir-$streamedFileCount")
             ++streamedFileCount
@@ -147,7 +147,7 @@ class CompileCommandsCodecTest {
     @Test
     fun readInvalidFile() {
         val folder = tempFolder.newFolder()
-        val out = File(folder, "compile_commands.bin")
+        val out = File(folder, "compile_commands.json.bin")
         out.writeText("This is an invalid file")
         try {
             streamCompileCommands(out) { _, _, _, _ -> }
