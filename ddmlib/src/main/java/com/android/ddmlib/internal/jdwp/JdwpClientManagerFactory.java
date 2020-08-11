@@ -23,27 +23,34 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A simple factory that returns a new or existing {@link JdwpClientManager} for a given
- * {@link JdwpClientManagerId}.
+ * A simple factory that returns a new or existing {@link JdwpClientManager} for a given {@link
+ * JdwpClientManagerId}.
  */
 public class JdwpClientManagerFactory {
-  private Map<JdwpClientManagerId, JdwpClientManager> myConnections = new HashMap<>();
-  byte[] mBuffer;
-  Selector selector;
 
-  public JdwpClientManagerFactory(Selector selector, byte[] buffer) {
-    mBuffer = buffer;
-    this.selector = selector;
-  }
+    private Map<JdwpClientManagerId, JdwpClientManager> myConnections = new HashMap<>();
 
-  public JdwpClientManager createConnection(JdwpClientManagerId id) throws AdbCommandRejectedException, TimeoutException,
-                                                                           IOException {
-    JdwpClientManager connection = myConnections.get(id);
-    if (connection == null) {
-      connection = new JdwpClientManager(id, selector, mBuffer);
-      connection.addShutdownListener(() -> myConnections.remove(id));
-      myConnections.put(id, connection);
+    byte[] mBuffer;
+
+    Selector selector;
+
+    public JdwpClientManagerFactory(Selector selector, byte[] buffer) {
+        mBuffer = buffer;
+        this.selector = selector;
     }
-    return connection;
-  }
+
+    public JdwpClientManager getConnection(String deviceId, int pid) {
+        return myConnections.getOrDefault(new JdwpClientManagerId(deviceId, pid), null);
+    }
+
+    public JdwpClientManager createConnection(JdwpClientManagerId id)
+            throws AdbCommandRejectedException, TimeoutException, IOException {
+        JdwpClientManager connection = myConnections.get(id);
+        if (connection == null) {
+            connection = new JdwpClientManager(id, selector, mBuffer);
+            connection.addShutdownListener(() -> myConnections.remove(id));
+            myConnections.put(id, connection);
+        }
+        return connection;
+    }
 }
