@@ -148,6 +148,10 @@ perfetto::protos::TraceConfig PerfettoManager::BuildFtraceConfig(
   ftrace_config->add_ftrace_events("fence/signaled");
   ftrace_config->add_ftrace_events("fence/fence_wait_start");
 
+  // Enable CPU frequency events
+  ftrace_config->add_ftrace_events("power/cpu_frequency");
+  ftrace_config->add_ftrace_events("power/cpu_idle");
+
   // Enable task tracking
   // This enables us to capture events/metadata that helps to track
   // processes/threads as they get renamed/spawned. Reduces the number of
