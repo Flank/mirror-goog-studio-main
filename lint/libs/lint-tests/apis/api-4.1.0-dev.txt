@@ -1,0 +1,513 @@
+// Signature format: 3.0
+package com.android.tools.lint.checks.infrastructure {
+
+  public abstract class BaseLintDetectorTest extends junit.framework.TestCase implements com.android.tools.lint.checks.infrastructure.TestResourceProvider {
+    ctor public BaseLintDetectorTest();
+    method protected static void addCleanupDir(java.io.File!);
+    method public static String! addSelection(String!, int, int);
+    method protected void assertEqualsGolden(String!, String!) throws java.io.IOException;
+    method protected void assertEqualsGolden(String!, String!, String!) throws java.io.IOException;
+    method protected String! cleanup(String!);
+    method protected static void deleteFile(java.io.File!);
+    method protected java.io.File! findSrcDir();
+    method protected java.io.File! findSrcRelativeDir(String!);
+    method public static String! getCaretContext(String!, int);
+    method public static int getCaretOffset(String!, String!);
+    method protected java.io.File! getTargetDir();
+    method public static java.io.File! getTempDir();
+    method protected String! getTestDataRelPath();
+    method public java.io.InputStream! getTestResource(String!, boolean);
+    method protected java.io.File! getTestfile(java.io.File!, String!) throws java.io.IOException;
+    method protected static java.io.File! makeTestFile(java.io.File!, String!, String!, java.io.InputStream!) throws java.io.IOException;
+    method protected String! readTestFile(String!, boolean) throws java.io.IOException;
+    method protected String! removeSessionData(String!);
+    field protected static final java.util.Set<java.io.File!>! sCleanDirs;
+  }
+
+  public final class ClassName {
+    ctor public ClassName(String source);
+    method public String? getClassName();
+    method public String? getPackageName();
+    method public String packageNameWithDefault();
+    property public final String? className;
+    property public final String? packageName;
+  }
+
+  public final class ClassNameKt {
+    method public static String? getClassName(String source);
+    method public static String? getPackage(String source);
+    method public static String stripComments(String source, boolean stripLineComments = true);
+  }
+
+  public class GradleModelMocker {
+    ctor public GradleModelMocker(@org.intellij.lang.annotations.Language("Groovy") String!);
+    method public com.android.tools.lint.checks.infrastructure.GradleModelMocker! allowUnrecognizedConstructs();
+    method public com.android.builder.model.level2.GlobalLibraryMap? getGlobalLibraryMap();
+    method public com.android.ide.common.gradle.model.IdeAndroidProject! getProject();
+    method public java.io.File getProjectDir();
+    method public com.android.builder.model.Variant! getVariant();
+    method public boolean hasAndroidLibraryPlugin();
+    method public boolean hasJavaLibraryPlugin();
+    method public boolean hasJavaPlugin();
+    method public boolean isLibrary();
+    method public void setVariantName(String);
+    method public void syncFlagsTo(com.android.tools.lint.LintCliFlags!);
+    method public com.android.tools.lint.checks.infrastructure.GradleModelMocker! withBuildCache(boolean);
+    method public com.android.tools.lint.checks.infrastructure.GradleModelMocker withDependencyGraph(String);
+    method public com.android.tools.lint.checks.infrastructure.GradleModelMocker! withFullDependencies(boolean);
+    method public com.android.tools.lint.checks.infrastructure.GradleModelMocker withLogger(com.android.utils.ILogger?);
+    method public com.android.tools.lint.checks.infrastructure.GradleModelMocker withModelVersion(String);
+    method public com.android.tools.lint.checks.infrastructure.GradleModelMocker withProjectDir(java.io.File);
+    field public static final int PROJECT_TYPE_JAVA_LIBRARY = 999; // 0x3e7
+  }
+
+  public class GroovyGradleVisitor extends com.android.tools.lint.client.api.GradleVisitor {
+    ctor public GroovyGradleVisitor();
+  }
+
+  public final class KotlinClasspathKt {
+    method public static java.util.List<java.lang.String> findKotlinStdlibPath();
+  }
+
+  @com.google.common.annotations.Beta public abstract class LintDetectorTest extends com.android.tools.lint.checks.infrastructure.BaseLintDetectorTest {
+    ctor public LintDetectorTest();
+    method protected boolean allowAndroidBuildEnvironment();
+    method protected boolean allowCompilationErrors();
+    method protected boolean allowMissingSdk();
+    method protected boolean allowObsoleteCustomRules();
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.BinaryTestFile! base64(String, String);
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.BinaryTestFile base64gzip(String, String);
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.BinaryTestFile bytecode(String, com.android.tools.lint.checks.infrastructure.TestFile.BytecodeProducer);
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.BinaryTestFile bytes(String, byte[]);
+    method @Deprecated protected String! checkLint(java.util.List<java.io.File!>!) throws java.lang.Exception;
+    method protected String! checkLint(com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestLintClient!, java.util.List<java.io.File!>!) throws java.lang.Exception;
+    method protected void checkReportedError(com.android.tools.lint.detector.api.Context, com.android.tools.lint.detector.api.Issue, com.android.tools.lint.detector.api.Severity, com.android.tools.lint.detector.api.Location, String);
+    method protected void checkReportedError(com.android.tools.lint.detector.api.Context, com.android.tools.lint.detector.api.Issue, com.android.tools.lint.detector.api.Severity, com.android.tools.lint.detector.api.Location, String, com.android.tools.lint.detector.api.LintFix?);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile! classpath(java.lang.String!...);
+    method protected void configureDriver(com.android.tools.lint.client.api.LintDriver!);
+    method public com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile copy(String);
+    method public com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile copy(String, String);
+    method protected com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestLintClient! createClient();
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile file();
+    method protected boolean forceErrors();
+    method protected com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestConfiguration! getConfiguration(com.android.tools.lint.client.api.LintClient!, com.android.tools.lint.detector.api.Project!);
+    method protected abstract com.android.tools.lint.detector.api.Detector! getDetector();
+    method protected final com.android.tools.lint.detector.api.Detector! getDetectorInstance();
+    method protected abstract java.util.List<com.android.tools.lint.detector.api.Issue!>! getIssues();
+    method protected java.util.EnumSet<com.android.tools.lint.detector.api.Scope!>! getLintScope(java.util.List<java.io.File!>!);
+    method protected java.io.File! getProjectDir(String!, com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile!...) throws java.lang.Exception;
+    method public String! getSuperClass(com.android.tools.lint.detector.api.Project!, String!);
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile gradle(String, @org.intellij.lang.annotations.Language("Groovy") String);
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile gradle(@org.intellij.lang.annotations.Language("Groovy") String);
+    method protected boolean ignoreSystemErrors();
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.ImageTestFile! image(String, int, int);
+    method protected static boolean imageFormatSupported(String);
+    method protected boolean includeParentPath();
+    method protected boolean isEnabled(com.android.tools.lint.detector.api.Issue!);
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.JarTestFile jar(String);
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.JarTestFile jar(String, com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile!...);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile java(String, @org.intellij.lang.annotations.Language("JAVA") String);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile java(@org.intellij.lang.annotations.Language("JAVA") String);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile kotlin(String, @org.intellij.lang.annotations.Language("kotlin") String);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile kotlin(@org.intellij.lang.annotations.Language("kotlin") String);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile kts(@org.intellij.lang.annotations.Language("kotlin-script") String);
+    method protected com.android.tools.lint.checks.infrastructure.TestLintTask lint();
+    method @Deprecated protected String! lintFiles(com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile!...) throws java.lang.Exception;
+    method @Deprecated protected String! lintProject(com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile!...) throws java.lang.Exception;
+    method @Deprecated protected String! lintProjectIncrementally(String!, com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile!...) throws java.lang.Exception;
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.ManifestTestFile manifest();
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile manifest(@org.intellij.lang.annotations.Language("XML") String);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile manifest(String, @org.intellij.lang.annotations.Language("XML") String);
+    method public static void populateProjectDirectory(java.io.File, com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile!...) throws java.io.IOException;
+    method protected static com.android.tools.lint.checks.infrastructure.ProjectDescription! project(com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile!...);
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.PropertyTestFile projectProperties();
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile propertyFile(String, @org.intellij.lang.annotations.Language("Properties") String);
+    method protected boolean requireCompileSdk();
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile source(String, String);
+    method public static String! toBase64(byte[]);
+    method public static String! toBase64(java.io.File) throws java.io.IOException;
+    method public static String! toBase64gzip(byte[]);
+    method public static String! toBase64gzip(java.io.File) throws java.io.IOException;
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile xml(String, @org.intellij.lang.annotations.Language("XML") String);
+  }
+
+  public class LintDetectorTest.CustomIssueRegistry extends com.android.tools.lint.client.api.IssueRegistry {
+    ctor public LintDetectorTest.CustomIssueRegistry();
+    method public java.util.List<com.android.tools.lint.detector.api.Issue!> getIssues();
+  }
+
+  public class LintDetectorTest.TestConfiguration extends com.android.tools.lint.client.api.DefaultConfiguration {
+    ctor protected LintDetectorTest.TestConfiguration(com.android.tools.lint.client.api.LintClient, com.android.tools.lint.detector.api.Project, com.android.tools.lint.client.api.Configuration?);
+    ctor public LintDetectorTest.TestConfiguration(com.android.tools.lint.client.api.LintClient, com.android.tools.lint.detector.api.Project?, com.android.tools.lint.client.api.Configuration?, java.io.File);
+  }
+
+  public static class LintDetectorTest.TestFile extends com.android.tools.lint.checks.infrastructure.TestFile {
+    ctor public LintDetectorTest.TestFile();
+    method public com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile! copy(String, com.android.tools.lint.checks.infrastructure.TestResourceProvider);
+    method public com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile! from(String, com.android.tools.lint.checks.infrastructure.TestResourceProvider);
+    method public com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile! indented();
+    method public com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile! to(String);
+    method public com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile! withBytes(byte[]);
+    method public com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile! withSource(String);
+    method public com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile! within(String?);
+  }
+
+  public class LintDetectorTest.TestLintClient extends com.android.tools.lint.LintCliClient {
+    ctor public LintDetectorTest.TestLintClient();
+    method protected boolean allowAndroidBuildEnvironment();
+    method public String! analyze(java.util.List<java.io.File!>!) throws java.lang.Exception;
+    method protected String! cleanup(String!);
+    method public String! getErrors();
+    method protected String? getProjectResourceLibraryName();
+    method public void setIncremental(java.io.File!);
+    field protected java.io.File! incrementalCheck;
+    field protected final java.io.StringWriter! writer;
+  }
+
+  public class LintFixVerifier {
+    method public com.android.tools.lint.checks.infrastructure.LintFixVerifier! checkFix(String?, com.android.tools.lint.checks.infrastructure.TestFile);
+    method public com.android.tools.lint.checks.infrastructure.LintFixVerifier! expectFixDiffs(String);
+    method public com.android.tools.lint.checks.infrastructure.LintFixVerifier! reformatDiffs(boolean);
+    method public com.android.tools.lint.checks.infrastructure.LintFixVerifier! robot(boolean);
+    method public com.android.tools.lint.checks.infrastructure.LintFixVerifier! window();
+    method public com.android.tools.lint.checks.infrastructure.LintFixVerifier! window(int);
+  }
+
+  public final class ProjectDescription {
+    ctor public ProjectDescription();
+    ctor public ProjectDescription(com.android.tools.lint.checks.infrastructure.TestFile... files);
+    method public com.android.tools.lint.checks.infrastructure.ProjectDescription dependsOn(com.android.tools.lint.checks.infrastructure.ProjectDescription library);
+    method public com.android.tools.lint.checks.infrastructure.ProjectDescription files(com.android.tools.lint.checks.infrastructure.TestFile... files);
+    method public String? getDependencyGraph();
+    method public java.util.List<com.android.tools.lint.checks.infrastructure.ProjectDescription> getDependsOn();
+    method public com.android.tools.lint.checks.infrastructure.TestFile![] getFiles();
+    method public String getName();
+    method public boolean getReport();
+    method public com.android.tools.lint.checks.infrastructure.ProjectDescription.Type getType();
+    method public com.android.tools.lint.checks.infrastructure.ProjectDescription name(String name);
+    method public com.android.tools.lint.checks.infrastructure.ProjectDescription report(boolean report);
+    method public void setDependencyGraph(String? p);
+    method public void setFiles(com.android.tools.lint.checks.infrastructure.TestFile![] p);
+    method public void setName(String p);
+    method public void setReport(boolean p);
+    method public void setType(com.android.tools.lint.checks.infrastructure.ProjectDescription.Type p);
+    method public com.android.tools.lint.checks.infrastructure.ProjectDescription type(com.android.tools.lint.checks.infrastructure.ProjectDescription.Type type);
+    method public com.android.tools.lint.checks.infrastructure.ProjectDescription withDependencyGraph(String dependencyGraph);
+    property public final String? dependencyGraph;
+    property public final java.util.List<com.android.tools.lint.checks.infrastructure.ProjectDescription> dependsOn;
+    property public final com.android.tools.lint.checks.infrastructure.TestFile![] files;
+    property public final String name;
+    property public final boolean report;
+    property public final com.android.tools.lint.checks.infrastructure.ProjectDescription.Type type;
+  }
+
+  public enum ProjectDescription.Type {
+    method public static com.android.tools.lint.checks.infrastructure.ProjectDescription.Type valueOf(String name) throws java.lang.IllegalArgumentException;
+    method public static com.android.tools.lint.checks.infrastructure.ProjectDescription.Type[] values();
+    enum_constant public static final com.android.tools.lint.checks.infrastructure.ProjectDescription.Type APP;
+    enum_constant public static final com.android.tools.lint.checks.infrastructure.ProjectDescription.Type JAVA;
+    enum_constant public static final com.android.tools.lint.checks.infrastructure.ProjectDescription.Type LIBRARY;
+  }
+
+  public final class TestConfiguration extends com.android.tools.lint.client.api.DefaultConfiguration {
+    ctor public TestConfiguration(com.android.tools.lint.checks.infrastructure.TestLintTask task, com.android.tools.lint.client.api.LintClient client, com.android.tools.lint.detector.api.Project project, com.android.tools.lint.client.api.Configuration? parent);
+  }
+
+  public class TestFile {
+    ctor public TestFile();
+    method public com.android.tools.lint.checks.infrastructure.TestFile! copy(String, com.android.tools.lint.checks.infrastructure.TestResourceProvider);
+    method public java.io.File createFile(java.io.File) throws java.io.IOException;
+    method public com.android.tools.lint.checks.infrastructure.TestFile! from(String, com.android.tools.lint.checks.infrastructure.TestResourceProvider);
+    method public String? getContents();
+    method public String? getRawContents();
+    method public String getTargetPath();
+    method public com.android.tools.lint.checks.infrastructure.TestFile! indented();
+    method public com.android.tools.lint.checks.infrastructure.TestFile! to(String);
+    method public com.android.tools.lint.checks.infrastructure.TestFile! withBytes(byte[]);
+    method public com.android.tools.lint.checks.infrastructure.TestFile! withSource(String);
+    method public com.android.tools.lint.checks.infrastructure.TestFile! within(String?);
+    field public byte[]! bytes;
+    field public String! contents;
+    field public String! sourceRelativePath;
+    field public String! targetRelativePath;
+    field public String! targetRootFolder;
+  }
+
+  public static class TestFile.BinaryTestFile extends com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile {
+    ctor public TestFile.BinaryTestFile(String, com.android.tools.lint.checks.infrastructure.TestFile.BytecodeProducer);
+    method public byte[]! getBinaryContents();
+  }
+
+  public static class TestFile.ByteProducer {
+    ctor public TestFile.ByteProducer();
+    method public byte[] produce();
+  }
+
+  public static class TestFile.BytecodeProducer extends com.android.tools.lint.checks.infrastructure.TestFile.ByteProducer implements org.objectweb.asm.Opcodes {
+    ctor public TestFile.BytecodeProducer();
+  }
+
+  public static class TestFile.GradleTestFile extends com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile {
+    ctor public TestFile.GradleTestFile(String, @org.intellij.lang.annotations.Language("Groovy") String);
+    method public com.android.tools.lint.checks.infrastructure.GradleModelMocker getMocker(java.io.File);
+  }
+
+  public static class TestFile.ImageTestFile extends com.android.tools.lint.checks.infrastructure.TestFile.BinaryTestFile {
+    ctor public TestFile.ImageTestFile(String, int, int);
+    method public com.android.tools.lint.checks.infrastructure.TestFile.ImageTestFile fill(int);
+    method public com.android.tools.lint.checks.infrastructure.TestFile.ImageTestFile fill(int, int, int, int, int);
+    method public com.android.tools.lint.checks.infrastructure.TestFile.ImageTestFile! fillOval(int, int, int, int, int);
+    method public com.android.tools.lint.checks.infrastructure.TestFile.ImageTestFile! format(String!);
+    method public com.android.tools.lint.checks.infrastructure.TestFile.ImageTestFile text(int, int, String!, int);
+  }
+
+  public static class TestFile.JarTestFile extends com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile {
+    ctor public TestFile.JarTestFile(String);
+    method public com.android.tools.lint.checks.infrastructure.TestFile.JarTestFile! add(com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile, String);
+    method public com.android.tools.lint.checks.infrastructure.TestFile.JarTestFile! add(com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile);
+    method public com.android.tools.lint.checks.infrastructure.TestFile.JarTestFile! files(com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile!...);
+  }
+
+  public static class TestFile.JavaTestFile extends com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile {
+    ctor public TestFile.JavaTestFile();
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile create(@org.intellij.lang.annotations.Language("JAVA") String);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile create(String, @org.intellij.lang.annotations.Language("JAVA") String);
+  }
+
+  public static class TestFile.KotlinTestFile extends com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile {
+    ctor public TestFile.KotlinTestFile();
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile create(@org.intellij.lang.annotations.Language("kotlin") String);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile create(String, @org.intellij.lang.annotations.Language("kotlin") String);
+  }
+
+  public static class TestFile.ManifestTestFile extends com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile {
+    ctor public TestFile.ManifestTestFile();
+    method public com.android.tools.lint.checks.infrastructure.TestFile.ManifestTestFile! minSdk(int);
+    method public com.android.tools.lint.checks.infrastructure.TestFile.ManifestTestFile! minSdk(String);
+    method public com.android.tools.lint.checks.infrastructure.TestFile.ManifestTestFile! permissions(java.lang.String!...);
+    method public com.android.tools.lint.checks.infrastructure.TestFile.ManifestTestFile! pkg(String!);
+    method public com.android.tools.lint.checks.infrastructure.TestFile.ManifestTestFile! targetSdk(int);
+    method public com.android.tools.lint.checks.infrastructure.TestFile.ManifestTestFile! targetSdk(String);
+    field public String! minSdk;
+    field public String![]! permissions;
+    field public String! pkg;
+    field public String! targetSdk;
+  }
+
+  public static class TestFile.PropertyTestFile extends com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile {
+    ctor public TestFile.PropertyTestFile();
+    method public com.android.tools.lint.checks.infrastructure.TestFile.PropertyTestFile! compileSdk(int);
+    method public com.android.tools.lint.checks.infrastructure.TestFile.PropertyTestFile! dependsOn(String!);
+    method public com.android.tools.lint.checks.infrastructure.TestFile.PropertyTestFile! library(boolean);
+    method public com.android.tools.lint.checks.infrastructure.TestFile.PropertyTestFile! manifestMerger(boolean);
+    method public com.android.tools.lint.checks.infrastructure.TestFile.PropertyTestFile! property(String!, String!);
+  }
+
+  public static class TestFile.XmlTestFile extends com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile {
+    ctor public TestFile.XmlTestFile();
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile create(String, @org.intellij.lang.annotations.Language("XML") String);
+    method public com.android.tools.lint.checks.infrastructure.TestFile.XmlTestFile! keepProcessingInstructions();
+  }
+
+  public class TestFiles {
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.BinaryTestFile! base64(String, String);
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.BinaryTestFile base64gzip(String, String);
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.BinaryTestFile bytecode(String, com.android.tools.lint.checks.infrastructure.TestFile.BytecodeProducer);
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.BinaryTestFile bytes(String, byte[]);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile! classpath(java.lang.String!...);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile copy(String, com.android.tools.lint.checks.infrastructure.TestResourceProvider);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile copy(String, String, com.android.tools.lint.checks.infrastructure.TestResourceProvider);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile file();
+    method public static com.android.tools.lint.checks.infrastructure.TestFile![]! getLintClassPath();
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile gradle(String, @org.intellij.lang.annotations.Language("Groovy") String);
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile gradle(@org.intellij.lang.annotations.Language("Groovy") String);
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.ImageTestFile! image(String, int, int);
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.JarTestFile jar(String);
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.JarTestFile jar(String, com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile!...);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile java(String, @org.intellij.lang.annotations.Language("JAVA") String);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile java(@org.intellij.lang.annotations.Language("JAVA") String);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile kotlin(@org.intellij.lang.annotations.Language("kotlin") String);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile kotlin(String, @org.intellij.lang.annotations.Language("kotlin") String);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile kt(@org.intellij.lang.annotations.Language("kotlin") String);
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile kt(String, @org.intellij.lang.annotations.Language("kotlin") String);
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.ManifestTestFile manifest();
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile manifest(@org.intellij.lang.annotations.Language("XML") String);
+    method public static com.android.tools.lint.checks.infrastructure.TestFile.PropertyTestFile projectProperties();
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile source(String, String);
+    method public static String! toBase64(byte[]);
+    method public static String! toBase64(java.io.File) throws java.io.IOException;
+    method public static String! toBase64gzip(byte[]);
+    method public static String! toBase64gzip(java.io.File) throws java.io.IOException;
+    method public static com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile xml(String, @org.intellij.lang.annotations.Language("XML") String);
+  }
+
+  public static class TestFiles.LibraryReferenceTestFile extends com.android.tools.lint.checks.infrastructure.TestFile {
+    ctor public TestFiles.LibraryReferenceTestFile(java.io.File);
+    ctor public TestFiles.LibraryReferenceTestFile(String, java.io.File);
+    field public final java.io.File! file;
+  }
+
+  public class TestIssueRegistry extends com.android.tools.lint.checks.BuiltinIssueRegistry {
+    ctor public TestIssueRegistry();
+    ctor public TestIssueRegistry(java.util.List<com.android.tools.lint.detector.api.Issue!>);
+    method public java.util.List<com.android.tools.lint.detector.api.Issue!> getIssuesForScope(java.util.EnumSet<com.android.tools.lint.detector.api.Scope!>);
+  }
+
+  public class TestLintClient extends com.android.tools.lint.LintCliClient {
+    ctor public TestLintClient();
+    ctor public TestLintClient(String!);
+    ctor public TestLintClient(com.android.tools.lint.LintCliFlags!);
+    ctor public TestLintClient(com.android.tools.lint.LintCliFlags!, String!);
+    method protected void addCleanupDir(java.io.File);
+    method protected boolean allowAndroidBuildEnvironment();
+    method public String! analyze(java.util.List<java.io.File!>!, java.util.List<com.android.tools.lint.detector.api.Issue!>!) throws java.lang.Exception;
+    method protected com.android.utils.Pair<java.lang.String!,java.util.List<com.android.tools.lint.Warning!>!>! checkLint(java.util.List<java.io.File!>!, java.util.List<com.android.tools.lint.detector.api.Issue!>!) throws java.lang.Exception;
+    method protected String! cleanup(String!);
+    method public String! getErrors();
+    method protected String? getProjectResourceLibraryName();
+    method public void setIncremental(java.io.File!);
+    method protected void setLintTask(com.android.tools.lint.checks.infrastructure.TestLintTask?);
+    field protected final java.util.Set<java.io.File!>! cleanupDirs;
+    field protected java.io.File! incrementalCheck;
+    field protected final java.io.StringWriter! writer;
+  }
+
+  public static class TestLintClient.TestProject extends com.android.tools.lint.detector.api.Project {
+    ctor public TestLintClient.TestProject(com.android.tools.lint.client.api.LintClient, java.io.File, java.io.File, com.android.tools.lint.checks.infrastructure.ProjectDescription?, com.android.tools.lint.checks.infrastructure.GradleModelMocker?);
+    field public final com.android.tools.lint.checks.infrastructure.GradleModelMocker? mocker;
+  }
+
+  public final class TestLintResult {
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult check(com.android.tools.lint.checks.infrastructure.TestResultChecker checker, com.android.tools.lint.checks.infrastructure.TestResultTransformer transformer = TestResultTransformer({ 
+    return it
+}));
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult check(com.android.tools.lint.checks.infrastructure.TestResultChecker checker);
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult checkFix(String? fix, com.android.tools.lint.checks.infrastructure.TestFile after);
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult checkHtmlReport(com.android.tools.lint.checks.infrastructure.TestResultChecker![] checkers, com.android.tools.lint.checks.infrastructure.TestResultTransformer transformer = TestResultTransformer({ 
+    return it
+}));
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult checkXmlReport(com.android.tools.lint.checks.infrastructure.TestResultChecker![] checkers, com.android.tools.lint.checks.infrastructure.TestResultTransformer transformer = TestResultTransformer({ 
+    return it
+}));
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult checkXmlReport(com.android.tools.lint.checks.infrastructure.TestResultChecker![] checkers, boolean includeFixes = false, boolean fullPaths = false, boolean intendedForBaseline = false, com.android.tools.lint.checks.infrastructure.TestResultTransformer transformer = TestResultTransformer({ 
+    return it
+}));
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult expect(String expectedText, Class<? extends java.lang.Exception>? expectedException = null, com.android.tools.lint.checks.infrastructure.TestResultTransformer transformer = TestResultTransformer({ 
+    return it
+}));
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult expect(String expectedText, Class<? extends java.lang.Exception>? expectedException = null);
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult expect(String expectedText);
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult expectClean();
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult expectCount(int expectedCount, com.android.tools.lint.detector.api.Severity... severities);
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult expectErrorCount(int expectedCount);
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult expectFixDiffs(String expected);
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult expectHtml(@org.intellij.lang.annotations.Language("HTML") String expected, com.android.tools.lint.checks.infrastructure.TestResultTransformer transformer = TestResultTransformer({ 
+    return it
+}));
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult expectInlinedMessages(boolean useRaw = false);
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult expectMatches(@org.intellij.lang.annotations.Language("RegExp") String regexp, com.android.tools.lint.checks.infrastructure.TestResultTransformer transformer = TestResultTransformer({ 
+    return it
+}));
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult expectMatches(@org.intellij.lang.annotations.Language("RegExp") String regexp);
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult expectWarningCount(int expectedCount);
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult expectXml(@org.intellij.lang.annotations.Language("XML") String expected, com.android.tools.lint.checks.infrastructure.TestResultTransformer transformer = TestResultTransformer({ 
+    return it
+}));
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult expectXml(@org.intellij.lang.annotations.Language("XML") String expected, boolean includeFixes = false, boolean fullPaths = false, boolean intendedForBaseline = false, com.android.tools.lint.checks.infrastructure.TestResultTransformer transformer = TestResultTransformer({ 
+    return it
+}));
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult maxLineLength(int maxLineLength);
+    method public com.android.tools.lint.checks.infrastructure.LintFixVerifier verifyFixes();
+    field public static final com.android.tools.lint.checks.infrastructure.TestLintResult.Companion Companion;
+  }
+
+  public static final class TestLintResult.Companion {
+    method public java.util.Comparator<com.android.tools.lint.Warning> getComparator();
+    property public final java.util.Comparator<com.android.tools.lint.Warning> comparator;
+  }
+
+  public class TestLintTask {
+    ctor public TestLintTask();
+    ctor public TestLintTask(com.android.tools.lint.checks.infrastructure.ProjectDescription![]);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! allowCompilationErrors();
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! allowCompilationErrors(boolean);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! allowDelayedIssueRegistration(boolean);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! allowDelayedIssueRegistration();
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! allowDuplicates();
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! allowMissingSdk();
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! allowMissingSdk(boolean);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! allowNetworkAccess(boolean);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! allowObsoleteLintChecks(boolean);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! allowSystemErrors(boolean);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! baseline(com.android.tools.lint.checks.infrastructure.TestFile);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! checkMessage(com.android.tools.lint.checks.infrastructure.TestLintTask.ErrorMessageChecker);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! checkUInjectionHost(boolean);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! client(com.android.tools.lint.checks.infrastructure.TestLintClient?);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! configureDriver(com.android.tools.lint.checks.infrastructure.TestLintTask.LintDriverConfigurator);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! configureOptions(com.android.tools.lint.checks.infrastructure.TestLintTask.OptionSetter);
+    method public java.util.List<java.io.File!> createProjects(java.io.File!);
+    method public java.util.List<com.android.tools.lint.detector.api.Project!> createProjects(boolean);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask customRules(java.io.File!...);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! customScope(java.util.EnumSet<com.android.tools.lint.detector.api.Scope!>?);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! desugaring(java.util.Set<com.android.tools.lint.detector.api.Desugaring!>);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! detector(com.android.tools.lint.detector.api.Detector);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! files(com.android.tools.lint.checks.infrastructure.TestFile!...);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! forceSymbolResolutionErrors();
+    method public java.util.List<com.android.tools.lint.detector.api.Issue!> getCheckedIssues();
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! ignoreUnknownGradleConstructs();
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! incremental(String);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! incremental();
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! issueIds(java.lang.String!...);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! issues(com.android.tools.lint.detector.api.Issue!...);
+    method public static com.android.tools.lint.checks.infrastructure.TestLintTask lint();
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! listener(com.android.tools.lint.client.api.LintListener);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! modifyGradleMocks(com.android.tools.lint.checks.infrastructure.TestLintTask.GradleMockModifier);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask networkData(String, byte[]);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask networkData(String, String);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! platforms(java.util.EnumSet<com.android.tools.lint.detector.api.Platform!>!);
+    method public void populateProjectDirectory(com.android.tools.lint.checks.infrastructure.ProjectDescription, java.io.File, com.android.tools.lint.checks.infrastructure.TestFile!...) throws java.io.IOException;
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! projects(com.android.tools.lint.checks.infrastructure.ProjectDescription!...);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! requireCompileSdk();
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! requireCompileSdk(boolean);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! rootDirectory(java.io.File?);
+    method public com.android.tools.lint.checks.infrastructure.TestLintResult run();
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! sdkHome(java.io.File!);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! supportResourceRepository(boolean);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! useTestProjectImplementation(boolean);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! variant(String!);
+    method public com.android.tools.lint.checks.infrastructure.TestLintTask! vital(boolean);
+    field public boolean forceSymbolResolutionErrors;
+    field protected com.android.tools.lint.checks.infrastructure.ProjectDescription![]! projects;
+    field public java.io.File! sdkHome;
+  }
+
+  public static interface TestLintTask.ErrorMessageChecker {
+    method public void checkReportedError(com.android.tools.lint.detector.api.Context, com.android.tools.lint.detector.api.Issue, com.android.tools.lint.detector.api.Severity, com.android.tools.lint.detector.api.Location, String, com.android.tools.lint.detector.api.LintFix?);
+  }
+
+  @Deprecated public static interface TestLintTask.GradleMockModifier {
+    method @Deprecated public void modify(com.android.ide.common.gradle.model.IdeAndroidProject, com.android.builder.model.Variant);
+  }
+
+  public static interface TestLintTask.LintDriverConfigurator {
+    method public void configure(com.android.tools.lint.client.api.LintDriver);
+  }
+
+  public static interface TestLintTask.OptionSetter {
+    method public void set(com.android.tools.lint.LintCliFlags);
+  }
+
+  public interface TestResourceProvider {
+    method public java.io.InputStream getTestResource(String relativePath, boolean expectExists);
+  }
+
+  public interface TestResultChecker {
+    method public void check(String);
+  }
+
+  public interface TestResultTransformer {
+    method public String transform(String);
+  }
+
+}
+
