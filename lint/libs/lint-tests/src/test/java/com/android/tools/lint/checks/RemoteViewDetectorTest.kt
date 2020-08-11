@@ -76,7 +76,7 @@ class RemoteViewDetectorTest : AbstractCheckTest() {
                 ).indented()
             ).run().expect(
                 """
-            src/test/pkg/test.kt:5: Error: @layout.test includes views not allowed in a RemoteView: DatePicker, androidx.appcompat.widget.AppCompatTextView [RemoteViewLayout]
+            src/test/pkg/test.kt:5: Error: @layout/test includes views not allowed in a RemoteView: DatePicker, androidx.appcompat.widget.AppCompatTextView [RemoteViewLayout]
                 val remoteView = RemoteViews(packageName, R.layout.test)
                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings

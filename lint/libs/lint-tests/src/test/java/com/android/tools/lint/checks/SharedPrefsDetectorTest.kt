@@ -74,45 +74,6 @@ class SharedPrefsDetectorTest : AbstractCheckTest() {
                     s.add("error")
                 }
                 """
-            /*
-public static final fun editSet(@org.jetbrains.annotations.NotNull prefs: android.content.SharedPreferences) : void {
-    var s: java.util.Set<java.lang.String> = elvis {
-        var var9c7f81a: java.util.Set<java.lang.String> = prefs.getStringSet("key", null)
-        if (var9c7f81a != null) var9c7f81a else return
-    }
-    s.add("error")
-}
-
-UMethod (name = editSet)
-    UParameter (name = prefs)
-        UAnnotation (fqName = org.jetbrains.annotations.NotNull)
-    UBlockExpression
-        UDeclarationsExpression
-            ULocalVariable (name = s)
-                UExpressionList (elvis) <!--
-                    UDeclarationsExpression
-                        ULocalVariable (name = var9c7f81a)
-                            UQualifiedReferenceExpression
-                                USimpleNameReferenceExpression (identifier = prefs)
-                                UCallExpression (kind = UastCallKind(name='method_call'), argCount = 2))
-                                    UIdentifier (Identifier (getStringSet))
-                                    USimpleNameReferenceExpression (identifier = getStringSet, resolvesTo = null)
-                                    ULiteralExpression (value = "key")
-                                    ULiteralExpression (value = null)
-                    UIfExpression
-                        UBinaryExpression (operator = !=)
-                            USimpleNameReferenceExpression (identifier = var9c7f81a)
-                            ULiteralExpression (value = null)
-                        USimpleNameReferenceExpression (identifier = var9c7f81a)
-                        UReturnExpression
-        UQualifiedReferenceExpression
-            USimpleNameReferenceExpression (identifier = s)
-            UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1))
-                UIdentifier (Identifier (add))
-                USimpleNameReferenceExpression (identifier = add, resolvesTo = null)
-                ULiteralExpression (value = "error")
-
-             */
             ).indented()
         ).run().expect(
             """

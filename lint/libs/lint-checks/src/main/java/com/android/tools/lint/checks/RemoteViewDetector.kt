@@ -119,7 +119,7 @@ class RemoteViewDetector : Detector(), SourceCodeScanner {
             val sorted = set.toSortedSet()
             context.report(
                 ISSUE, node, context.getLocation(node),
-                "`@layout.${resource.name}` includes views not allowed in a `RemoteView`: ${sorted.joinToString()}"
+                "`@layout/${resource.name}` includes views not allowed in a `RemoteView`: ${sorted.joinToString()}"
             )
         }
     }
