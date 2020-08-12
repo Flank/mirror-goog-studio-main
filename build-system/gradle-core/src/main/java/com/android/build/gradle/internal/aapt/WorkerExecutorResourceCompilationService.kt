@@ -18,23 +18,28 @@ package com.android.build.gradle.internal.aapt
 
 import com.android.SdkConstants.DOT_9PNG
 import com.android.aaptcompiler.canCompileResourceInJvm
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.ResourceCompilerRunnable
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
+import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.tasks.MergeResources
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.ResourceCompilationService
+import org.gradle.api.provider.Provider
+import org.gradle.workers.WorkerExecutor
 import java.io.File
 
 /** Resource compilation service built on top of a Aapt2Daemon and Gradle Worker Executors. */
 class WorkerExecutorResourceCompilationService(
     private val maxWorkersCount: Int,
-    private val mergeResourcesTask: MergeResources,
-    private val aapt2ServiceKey: Aapt2DaemonServiceKey,
-    private val errorFormatMode: SyncOptions.ErrorFormatMode,
-    private val useJvmResourceCompiler: Boolean
+    private val projectName: String,
+    private val taskOwner: String,
+    private val workerExecutor: WorkerExecutor,
+    private val analyticsService: Provider<AnalyticsService>,
+    private val aapt2Input: Aapt2Input
 ) : ResourceCompilationService {
 
     /** Temporary workaround for b/73804575 / https://github.com/gradle/gradle/issues/4502
@@ -65,7 +70,7 @@ class WorkerExecutorResourceCompilationService(
         if (requests.isEmpty()) {
             return
         }
-        if (useJvmResourceCompiler) {
+        if (aapt2Input.useJvmResourceCompiler.get()) {
             // First remove all values files to be consumed by the kotlin compiler.
             val valuesRequests = requests.filter {
                 canCompileResourceInJvm(it.inputFile, it.isPngCrunching)
@@ -78,9 +83,9 @@ class WorkerExecutorResourceCompilationService(
                 valuesRequests.groupByTo(HashMap(maxWorkersCount)) { (ord++) % maxWorkersCount }
 
             buckets.values.forEach { bucket ->
-                mergeResourcesTask.workerExecutor.noIsolation()
+                workerExecutor.noIsolation()
                     .submit(ResourceCompilerRunnable::class.java) {
-                        it.initializeFromAndroidVariantTask(mergeResourcesTask)
+                        it.initializeWith(projectName = projectName, taskOwner = taskOwner, analyticsService = analyticsService)
                         it.request.set(bucket)
                     }
             }
@@ -97,13 +102,12 @@ class WorkerExecutorResourceCompilationService(
                 i.rem(buckets) == bucket
             }
             // b/73804575
-            mergeResourcesTask.workerExecutor.noIsolation().submit(
+            workerExecutor.noIsolation().submit(
                 Aapt2CompileRunnable::class.java
             ) {
-                it.initializeFromAndroidVariantTask(mergeResourcesTask)
-                it.aapt2ServiceKey.set(aapt2ServiceKey)
+                it.initializeWith(projectName = projectName, taskOwner = taskOwner, analyticsService = analyticsService)
+                it.aapt2Input.set(aapt2Input)
                 it.requests.set(bucketRequests)
-                it.errorFormatMode.set(errorFormatMode)
                 it.enableBlame.set(true)
             }
         }
