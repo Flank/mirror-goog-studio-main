@@ -29,6 +29,7 @@ fun fragmentItemListTwoPaneXml(
   useAndroidX: Boolean
 ) = """
   <${getMaterialComponentName("android.support.constraint.ConstraintLayout", useAndroidX)}
+    android:id="@+id/${itemListLayout}_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:android="http://schemas.android.com/apk/res/android"

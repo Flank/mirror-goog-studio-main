@@ -15,8 +15,12 @@
  */
 package com.android.tools.idea.wizard.template.impl.activities.basicActivity.src
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.renderIf
 
 fun basicActivityKt(
@@ -27,7 +31,8 @@ fun basicActivityKt(
   activityClass: String,
   layoutName: String,
   menuName: String,
-  navHostFragmentId: String
+  navHostFragmentId: String,
+  isViewBindingSupported: Boolean
 ): String {
   val applicationPackageBlock = renderIf(applicationPackage != null) { "import $applicationPackage.R" }
   val newProjectImportBlock = renderIf(isNewProject) {
@@ -57,6 +62,11 @@ import android.view.MenuItem
     """
   }
 
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layoutName)}.inflate(layoutInflater)
+     setContentView(binding.root)
+  """ else "setContentView(R.layout.$layoutName)"
+
   return """
 package ${escapeKotlinIdentifier(packageName)}
 
@@ -70,21 +80,30 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 $newProjectImportBlock
 $applicationPackageBlock
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
 
 class $activityClass : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
+${renderIf(isViewBindingSupported) {"""
+    private lateinit var binding: ${layoutToViewBindingClass(layoutName)}
+"""}}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.$layoutName)
-        setSupportActionBar(findViewById(R.id.toolbar))
+        ${contentViewBlock}
+        setSupportActionBar(${findViewById(Language.Kotlin, isViewBindingSupported, id = "toolbar", bindingName = "binding")})
 
         val navController = findNavController(R.id.${navHostFragmentId})
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
 
-        findViewById<FloatingActionButton>(R.id.fab).setOnClickListener { view ->
+        ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "fab",
+          bindingName = "binding",
+          className = "FloatingActionButton")}.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }

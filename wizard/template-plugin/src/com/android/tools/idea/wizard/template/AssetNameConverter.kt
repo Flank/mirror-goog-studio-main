@@ -117,9 +117,9 @@ class AssetNameConverter(private val type: Type, private val name: String) {
       if (layoutName.startsWith(layoutPrefix)) {
         layoutName = layoutName.substring(layoutPrefix.length)
       }
-      underlinesToCamelCase(layoutName)
+      underscoreToCamelCase(layoutName)
     }
-    Type.RESOURCE -> underlinesToCamelCase(name)
+    Type.RESOURCE -> underscoreToCamelCase(name)
     Type.CLASS_NAME -> {
       var className = name
       // TODO(qumeric): it should not depend on the order
@@ -127,7 +127,7 @@ class AssetNameConverter(private val type: Type, private val name: String) {
         className = className.stripSuffix(it, recursively = true)
       }
       if (layoutPrefixOverride != null) {
-        val prefixAsSuffix = underlinesToCamelCase(layoutPrefixOverride!!)
+        val prefixAsSuffix = underscoreToCamelCase(layoutPrefixOverride!!)
         className = className.stripSuffix(prefixAsSuffix)
       }
       className

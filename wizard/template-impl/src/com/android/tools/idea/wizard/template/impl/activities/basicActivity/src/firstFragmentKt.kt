@@ -15,17 +15,28 @@
  */
 package com.android.tools.idea.wizard.template.impl.activities.basicActivity.src
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
-
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
 
 fun firstFragmentKt(
   packageName: String,
   firstFragmentClass: String,
   secondFragmentClass: String,
   firstFragmentLayoutName: String,
-  useAndroidX: Boolean = true
-) =
-"""package ${packageName}
+  useAndroidX: Boolean = true,
+  isViewBindingSupported: Boolean
+): String {
+
+  val onCreateViewBlock = if (isViewBindingSupported) """
+      _binding = ${layoutToViewBindingClass(firstFragmentLayoutName)}.inflate(inflater, container, false)
+      return binding.root
+  """ else "return inflater.inflate(R.layout.$firstFragmentLayoutName, container, false)"
+
+  return  """package ${packageName}
 
 import android.os.Bundle
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)}
@@ -34,26 +45,47 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.navigation.fragment.findNavController
+${importViewBindingClass(isViewBindingSupported, packageName, firstFragmentLayoutName)}
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.
  */
 class $firstFragmentClass : Fragment() {
 
+${renderIf(isViewBindingSupported) {"""
+    private var _binding: ${layoutToViewBindingClass(firstFragmentLayoutName)}? = null
+    // This property is only valid between onCreateView and
+    // onDestroyView.
+    private val binding get() = _binding!!
+"""}}
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.$firstFragmentLayoutName, container, false)
+        $onCreateViewBlock
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.findViewById<Button>(R.id.button_first).setOnClickListener {
+        ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported,
+          id = "button_first",
+          bindingName = "binding",
+          className = "Button",
+          parentView = "view")}.setOnClickListener {
             findNavController().navigate(R.id.action_${firstFragmentClass}_to_${secondFragmentClass})
         }
     }
+
+${renderIf(isViewBindingSupported) {"""
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+"""}}
 }
 """
+}

@@ -83,6 +83,7 @@ fun RecipeExecutor.generateBasicActivity(
   val ktOrJavaExt = projectData.language.extension
   val simpleActivityPath = srcOut.resolve("$activityClass.$ktOrJavaExt")
   val generateKotlin = projectData.language == Language.Kotlin
+  val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()
   val simpleActivity = when (projectData.language) {
     Language.Java ->
       basicActivityJava(
@@ -93,7 +94,8 @@ fun RecipeExecutor.generateBasicActivity(
         activityClass = activityClass,
         layoutName = layoutName,
         menuName = menuName,
-        navHostFragmentId = navHostFragmentId
+        navHostFragmentId = navHostFragmentId,
+        isViewBindingSupported = isViewBindingSupported
       )
     Language.Kotlin ->
       basicActivityKt(
@@ -104,7 +106,8 @@ fun RecipeExecutor.generateBasicActivity(
         activityClass = activityClass,
         layoutName = layoutName,
         menuName = menuName,
-        navHostFragmentId = navHostFragmentId
+        navHostFragmentId = navHostFragmentId,
+        isViewBindingSupported = isViewBindingSupported
       )
   }
 
@@ -114,18 +117,38 @@ fun RecipeExecutor.generateBasicActivity(
   val secondFragmentClass = layoutToFragment(secondFragmentLayoutName)
   val firstFragmentClassContent = when (projectData.language) {
     Language.Java -> firstFragmentJava(
-      packageName, useAndroidX, firstFragmentClass, secondFragmentClass, firstFragmentLayoutName
+      packageName = packageName,
+      useAndroidX = useAndroidX,
+      firstFragmentClass = firstFragmentClass,
+      secondFragmentClass = secondFragmentClass,
+      firstFragmentLayoutName = firstFragmentLayoutName,
+      isViewBindingSupported = isViewBindingSupported
     )
     Language.Kotlin -> firstFragmentKt(
-      packageName, firstFragmentClass, secondFragmentClass, firstFragmentLayoutName, useAndroidX
+      packageName = packageName,
+      firstFragmentClass = firstFragmentClass,
+      secondFragmentClass = secondFragmentClass,
+      firstFragmentLayoutName = firstFragmentLayoutName,
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported
     )
   }
   val secondFragmentClassContent = when (projectData.language) {
     Language.Java -> secondFragmentJava(
-      packageName, useAndroidX, firstFragmentClass, secondFragmentClass, secondFragmentLayoutName
+      packageName = packageName,
+      useAndroidX = useAndroidX,
+      firstFragmentClass = firstFragmentClass,
+      secondFragmentClass = secondFragmentClass,
+      secondFragmentLayoutName = secondFragmentLayoutName,
+      isViewBindingSupported = isViewBindingSupported
     )
     Language.Kotlin -> secondFragmentKt(
-      packageName, useAndroidX, firstFragmentClass, secondFragmentClass, secondFragmentLayoutName
+      packageName = packageName,
+      useAndroidX = useAndroidX,
+      firstFragmentClass = firstFragmentClass,
+      secondFragmentClass = secondFragmentClass,
+      secondFragmentLayoutName = secondFragmentLayoutName,
+      isViewBindingSupported = isViewBindingSupported
     )
   }
   val firstFragmentLayoutContent = fragmentFirstLayout(useAndroidX, firstFragmentClass)

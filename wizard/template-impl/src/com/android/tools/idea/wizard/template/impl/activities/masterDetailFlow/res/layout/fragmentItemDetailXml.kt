@@ -24,10 +24,12 @@ fun fragmentItemDetailXml(
   packageName: String,
   useAndroidX: Boolean
 ) = """
+<!-- Adding the same root's ID for view binding as other layout configurations -->
 <${getMaterialComponentName("android.support.design.widget.CoordinatorLayout",
                             useAndroidX)} xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/${detailNameLayout}_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="${packageName}.${detailName}HostActivity"
@@ -59,7 +61,7 @@ fun fragmentItemDetailXml(
     </${getMaterialComponentName("android.support.design.widget.AppBarLayout", useAndroidX)}>
 
     <${getMaterialComponentName("android.support.v4.widget.NestedScrollView", useAndroidX)}
-        android:id="@+id/${detailNameLayout}_container"
+        android:id="@+id/${detailNameLayout}_scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">

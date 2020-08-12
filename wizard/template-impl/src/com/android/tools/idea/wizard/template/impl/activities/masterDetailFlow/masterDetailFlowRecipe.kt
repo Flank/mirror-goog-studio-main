@@ -109,7 +109,7 @@ fun RecipeExecutor.primaryDetailFlowRecipe(
 
   save(fragmentItemDetailXml(detailName, detailNameLayout, packageName, useAndroidX),
        resOut.resolve("layout/${detailNameFragmentLayout}.xml"))
-  save(fragmentItemDetailTwoPaneXml(detailName, detailNameLayout, packageName),
+  save(fragmentItemDetailTwoPaneXml(detailName, detailNameLayout, packageName, useAndroidX),
        resOut.resolve("layout-sw600dp/${detailNameFragmentLayout}.xml"))
   save(fragmentItemListXml(collectionName, detailName, itemListLayout, itemListContentLayout, packageName, useAndroidX),
        resOut.resolve("layout/fragment_${itemListLayout}.xml"))
