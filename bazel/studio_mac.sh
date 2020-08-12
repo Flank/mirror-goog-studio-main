@@ -36,7 +36,10 @@ readonly config_options="--config=local --config=release --config=cloud_resultst
 readonly bazel_status=$?
 
 if [[ -d "${dist_dir}" ]]; then
-  readonly bin_dir="$("${script_dir}"/bazel info ${config_options} bazel-bin)"
+  # info breaks if we pass --config=local or --config=cloud_resultstore because they don't
+  # affect info, so we need to pass only --config=release here in order to fetch the proper
+  # binaries
+  readonly bin_dir="$("${script_dir}"/bazel info --config=release bazel-bin)"
   cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${dist_dir}
   cp -a ${bin_dir}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${dist_dir}
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
