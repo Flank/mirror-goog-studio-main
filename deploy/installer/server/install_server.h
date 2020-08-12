@@ -21,6 +21,7 @@
 #include <string>
 
 #include "tools/base/deploy/common/proto_pipe.h"
+#include "tools/base/deploy/common/socket.h"
 #include "tools/base/deploy/installer/executor/executor.h"
 #include "tools/base/deploy/installer/server/install_client.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
@@ -40,6 +41,7 @@ class InstallServer {
  private:
   ProtoPipe input_;
   ProtoPipe output_;
+  Socket agent_server_;
 
   void Acknowledge();
   void Pump();
@@ -55,6 +57,18 @@ class InstallServer {
   void HandleGetAgentExceptionLog(
       const proto::GetAgentExceptionLogRequest& request,
       proto::GetAgentExceptionLogResponse* response) const;
+
+  // Opens a socket to listen for agent connections. The opened socket is closed
+  // by HandleSendMessage.
+  void HandleOpenSocket(const proto::OpenAgentSocketRequest& request,
+                        proto::OpenAgentSocketResponse* response);
+
+  // Waits for a number of agents to connect to the socket, sends them a
+  // message, and collects their responses. This method also closes the socket.
+  void HandleSendMessage(const proto::SendAgentMessageRequest& request,
+                         proto::SendAgentMessageResponse* response);
+  void HandleSendMessageInner(const proto::SendAgentMessageRequest& request,
+                              proto::SendAgentMessageResponse* response);
 
   bool DoesOverlayIdMatch(const std::string& overlay_folder,
                           const std::string& expected_id) const;

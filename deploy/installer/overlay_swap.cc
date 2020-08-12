@@ -61,13 +61,9 @@ proto::SwapRequest OverlaySwapCommand::PrepareAndBuildRequest(
   std::string studio_path = code_cache + ".studio/";
   std::string agent_path = startup_path + version + agent;
 
-  // TODO: Remove once agent_server functionality is migrated to install_server
-  std::string agent_server_path = studio_path + version + kAgentServer;
-
   std::unordered_set<std::string> missing_files;
   // TODO: Error checking
-  CheckFilesExist({startup_path, studio_path, agent_path, agent_server_path},
-                  &missing_files);
+  CheckFilesExist({startup_path, studio_path, agent_path}, &missing_files);
 
   RunasExecutor run_as(package_name_, workspace_.GetExecutor());
   std::string error;
@@ -86,20 +82,15 @@ proto::SwapRequest OverlaySwapCommand::PrepareAndBuildRequest(
     return request;
   }
 
-  std::unordered_map<std::string, std::string> copies;
-  copies[workspace_.GetTmpFolder() + agent] = agent_path;
-  copies[workspace_.GetTmpFolder() + kAgentServer] = agent_server_path;
-
-  for (const auto& entry : copies) {
-    if (missing_files.find(entry.second) != missing_files.end() &&
-        !run_as.Run("cp", {"-F", entry.first, entry.second}, nullptr, &error)) {
-      response->set_status(proto::SwapResponse::SETUP_FAILED);
-      ErrEvent("Could not copy binaries: " + error);
-      return request;
-    }
+  if (missing_files.find(agent_path) != missing_files.end() &&
+      !run_as.Run("cp", {"-F", workspace_.GetTmpFolder() + agent, agent_path},
+                  nullptr, &error)) {
+    response->set_status(proto::SwapResponse::SETUP_FAILED);
+    ErrEvent("Could not copy binaries: " + error);
+    return request;
   }
 
-  SetAgentPaths(agent_path, agent_server_path);
+  SetAgentPath(agent_path);
 
   for (auto& clazz : request_.new_classes()) {
     request.add_new_classes()->CopyFrom(clazz);

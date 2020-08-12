@@ -17,13 +17,13 @@
 #ifndef BASE_SWAP_H
 #define BASE_SWAP_H
 
-#include "tools/base/deploy/installer/command.h"
-#include "tools/base/deploy/installer/server/install_client.h"
-#include "tools/base/deploy/proto/deploy.pb.h"
-
 #include <string>
 #include <unordered_set>
 #include <vector>
+
+#include "tools/base/deploy/installer/command.h"
+#include "tools/base/deploy/installer/server/install_client.h"
+#include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
 
@@ -63,12 +63,8 @@ class BaseSwapCommand : public Command {
   }
 
   // This must be called by derived classes in the PrepareAndBuildRequest method
-  // with the paths to the agent and agent server to be used for swapping.
-  void SetAgentPaths(const std::string& agent_path,
-                     const std::string& agent_server_path) {
-    agent_path_ = agent_path;
-    agent_server_path_ = agent_server_path;
-  }
+  // with the path to the agent to be used for swapping.
+  void SetAgentPath(const std::string& agent_path) { agent_path_ = agent_path; }
 
   // Sends a request to the server to check for the existence of files
   // accessible to the target package.
@@ -77,12 +73,10 @@ class BaseSwapCommand : public Command {
 
   const std::string kAgent = "agent.so";
   const std::string kAgentAlt = "agent-alt.so";
-  const std::string kAgentServer = "agent_server";
   const std::string kInstallServer = "install_server";
 
  private:
   std::string agent_path_;
-  std::string agent_server_path_;
 
   void Swap(const proto::SwapRequest& request, proto::SwapResponse* response);
 
@@ -90,8 +84,11 @@ class BaseSwapCommand : public Command {
   // range [FIRST_APPLICATION_UID, LAST_APPLICATION_UID] in android.os.Process.
   void FilterProcessIds(std::vector<int>* process_ids);
 
-  bool StartAgentServer(int agent_count, int* server_pid, int* read_fd,
-                        int* write_fd) const;
+  // Instruct the install-server to open a socket that will listen for agent
+  // connections. This method does NOT inform the install-server of how many
+  // agents will be connecting, or tell the install-server what SwapRequest to
+  // forward the agents.
+  proto::SwapResponse::Status ListenForAgents() const;
 
   bool AttachAgents() const;
 };

@@ -26,6 +26,8 @@
 
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/io.h"
+#include "tools/base/deploy/common/message_pipe_wrapper.h"
+#include "tools/base/deploy/common/socket.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/executor/runas_executor.h"
 #include "tools/base/deploy/installer/overlay/overlay.h"
@@ -134,6 +136,14 @@ void InstallServer::HandleRequest(const ServerRequest& request) {
   ServerResponse response;
 
   switch (request.message_case()) {
+    case ServerRequest::MessageCase::kSocketRequest:
+      HandleOpenSocket(request.socket_request(),
+                       response.mutable_socket_response());
+      break;
+    case ServerRequest::MessageCase::kSendRequest:
+      HandleSendMessage(request.send_request(),
+                        response.mutable_send_response());
+      break;
     case ServerRequest::MessageCase::kCheckRequest:
       HandleCheckSetup(request.check_request(),
                        response.mutable_check_response());
@@ -151,6 +161,66 @@ void InstallServer::HandleRequest(const ServerRequest& request) {
 
   response.set_status(ServerResponse::REQUEST_COMPLETED);
   output_.Write(response);
+}
+
+void InstallServer::HandleOpenSocket(
+    const proto::OpenAgentSocketRequest& request,
+    proto::OpenAgentSocketResponse* response) {
+  if (agent_server_.Open() &&
+      agent_server_.BindAndListen(request.socket_name())) {
+    response->set_status(proto::OpenAgentSocketResponse::OK);
+  } else {
+    response->set_status(proto::OpenAgentSocketResponse::BIND_SOCKET_FAILED);
+  }
+}
+
+void InstallServer::HandleSendMessage(
+    const proto::SendAgentMessageRequest& request,
+    proto::SendAgentMessageResponse* response) {
+  HandleSendMessageInner(request, response);
+  agent_server_.Close();
+}
+
+void InstallServer::HandleSendMessageInner(
+    const proto::SendAgentMessageRequest& request,
+    proto::SendAgentMessageResponse* response) {
+  const std::string request_bytes = request.swap_request().SerializeAsString();
+  std::vector<std::unique_ptr<Socket>> agents;
+  for (int i = 0; i < request.agent_count(); ++i) {
+    std::unique_ptr<Socket> agent(new Socket);
+    // 15 seconds since there is a chance we need to wait for the
+    // host to attach an agent from the debugger.
+    if (!agent_server_.Accept(agent.get(), 15000)) {
+      response->set_status(
+          proto::SendAgentMessageResponse::AGENT_ACCEPT_FAILED);
+      return;
+    }
+
+    if (!agent->Write(request_bytes)) {
+      response->set_status(
+          proto::SendAgentMessageResponse::WRITE_TO_AGENT_FAILED);
+      return;
+    }
+
+    agents.push_back(std::move(agent));
+  }
+
+  for (auto& agent : agents) {
+    std::string message;
+    if (!agent->Read(&message)) {
+      response->set_status(
+          proto::SendAgentMessageResponse::READ_FROM_AGENT_FAILED);
+      return;
+    }
+
+    if (!response->add_agent_responses()->ParseFromString(message)) {
+      response->set_status(
+          proto::SendAgentMessageResponse::UNPARSEABLE_AGENT_RESPONSE);
+      return;
+    }
+  }
+
+  response->set_status(proto::SendAgentMessageResponse::OK);
 }
 
 void InstallServer::HandleCheckSetup(
