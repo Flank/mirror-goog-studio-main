@@ -153,7 +153,8 @@ class AsmInstrumentationManager(
             classInputStream.invoke().use {
                 val bytes = ByteStreams.toByteArray(it)
                 val classReader = ClassReader(bytes)
-                val classWriter = ClassWriter(classReader, classWriterFlags)
+                val classWriter =
+                    FixFramesClassWriter(classReader, classWriterFlags, classesHierarchyResolver)
                 var nextVisitor: ClassVisitor = classWriter
 
                 if (framesComputationMode == FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES) {

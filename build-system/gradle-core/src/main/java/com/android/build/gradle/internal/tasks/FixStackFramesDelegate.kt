@@ -20,6 +20,7 @@ import com.android.SdkConstants
 import com.android.SdkConstants.DOT_JAR
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.instrumentation.ClassesHierarchyResolver
+import com.android.build.gradle.internal.instrumentation.FixFramesClassWriter
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
 import com.android.builder.utils.isValidZipEntryName
@@ -66,70 +67,6 @@ class FixStackFramesDelegate(
     val referencedClasses: Set<File>,
     val outFolder: File
 ) {
-
-    /** ASM class writer that uses [ClassesHierarchyResolver] to resolve types. */
-    private class FixFramesVisitor(
-        flags: Int,
-        val classesHierarchyResolver: ClassesHierarchyResolver
-    ) : ClassWriter(flags) {
-
-        private fun isAssignableFrom(
-            type: String,
-            otherType: String,
-            otherTypeInterfaces: List<String>,
-            otherTypeSuperClasses: List<String>
-        ): Boolean {
-            return type == otherType ||
-                    otherTypeInterfaces.contains(type) ||
-                    otherTypeSuperClasses.contains(type)
-        }
-
-        override fun getCommonSuperClass(firstType: String, secondType: String): String {
-            val firstTypeInterfaces =
-                classesHierarchyResolver.getAllInterfacesInInternalForm(firstType, true)
-            val firstTypeSuperClasses =
-                classesHierarchyResolver.getAllSuperClassesInInternalForm(firstType, true)
-            val secondTypeInterfaces =
-                classesHierarchyResolver.getAllInterfacesInInternalForm(secondType, true)
-            val secondTypeSuperClasses =
-                classesHierarchyResolver.getAllSuperClassesInInternalForm(secondType, true)
-
-            if (isAssignableFrom(
-                    firstType,
-                    secondType,
-                    secondTypeInterfaces,
-                    secondTypeSuperClasses
-                )
-            ) {
-                return firstType
-            }
-
-            if (isAssignableFrom(
-                    secondType,
-                    firstType,
-                    firstTypeInterfaces,
-                    firstTypeSuperClasses
-                )
-            ) {
-                return secondType
-            }
-
-            firstTypeSuperClasses.forEach { firstTypeSuperClass ->
-                if (isAssignableFrom(
-                        firstTypeSuperClass,
-                        secondType,
-                        secondTypeInterfaces,
-                        secondTypeSuperClasses
-                    )
-                ) {
-                    return firstTypeSuperClass
-                }
-            }
-
-            throw RuntimeException("Unable to find common super type for $firstType and $secondType.")
-        }
-    }
-
     companion object {
         private val logger = LoggerWrapper.getLogger(FixStackFramesDelegate::class.java)
         private val zeroFileTime: FileTime = FileTime.fromMillis(0)
@@ -281,7 +218,7 @@ class FixStackFramesDelegate(
             return try {
                 val classReader = ClassReader(bytes)
                 val classWriter =
-                    FixFramesVisitor(ClassWriter.COMPUTE_FRAMES, classesHierarchyResolver)
+                    FixFramesClassWriter(ClassWriter.COMPUTE_FRAMES, classesHierarchyResolver)
                 classReader.accept(classWriter, ClassReader.SKIP_FRAMES)
                 classWriter.toByteArray()
             } catch (t: Throwable) {
