@@ -89,8 +89,6 @@ import com.google.common.collect.ImmutableSortedSet
 import com.google.common.collect.Iterables
 import java.io.File
 import java.util.HashMap
-import java.util.LinkedHashSet
-import java.util.stream.Collectors
 
 class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<String, String> = HashMap()) {
 
@@ -256,34 +254,34 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     agpVersion: GradleVersion?
   ): IdeAndroidArtifactImpl {
     return IdeAndroidArtifactImpl(
-      artifact.name,
-      artifact.compileTaskName,
-      artifact.assembleTaskName,
-      copyNewProperty({ artifact.assembleTaskOutputListingFile }, ""),
-      artifact.classesFolder,
-      copyNewProperty(artifact::getJavaResourcesFolder),
-      ImmutableSet.copyOf(IdeBaseArtifactImpl.getIdeSetupTaskNames(artifact)),
-      LinkedHashSet(IdeBaseArtifactImpl.getGeneratedSourceFolders(artifact)),
-      IdeBaseArtifactImpl.createSourceProvider(this, artifact.variantSourceProvider),
-      IdeBaseArtifactImpl.createSourceProvider(this, artifact.multiFlavorSourceProvider),
-      copy(artifact::getAdditionalClassesFolders, ::deduplicateFile),
-      dependenciesFactory.create(artifact),
-      copyOutputs(artifact, agpVersion),
-      artifact.applicationId,
-      artifact.sourceGenTaskName,
-      ImmutableList.copyOf(artifact.generatedResourceFolders),
-      artifact.signingConfigName,
-      ImmutableSet.copyOf( // In AGP 4.0 and below abiFilters was nullable, normalize null to empty set.
-        artifact.abiFilters.orEmpty()),
-      artifact.isSigned,
-      copy(artifact::getAdditionalRuntimeApks, ::deduplicateFile),
-      copyNewModel(artifact::getTestOptions, ::testOptionsFrom),
-      copyNewModel(artifact::getInstrumentedTestTaskName, ::deduplicateString),
-      copyNewModel(artifact::getBundleTaskName, ::deduplicateString),
-      copyNewModel(artifact::getBundleTaskOutputListingFile, ::deduplicateString),
-      copyNewModel(artifact::getApkFromBundleTaskName, ::deduplicateString),
-      copyNewModel(artifact::getApkFromBundleTaskOutputListingFile, ::deduplicateString),
-      copyNewProperty(artifact::getCodeShrinker)
+            artifact.name,
+            artifact.compileTaskName,
+            artifact.assembleTaskName,
+            copyNewProperty({ artifact.assembleTaskOutputListingFile }, ""),
+            artifact.classesFolder,
+            copyNewProperty(artifact::getJavaResourcesFolder),
+            copyNewPropertyWithDefault(artifact::getIdeSetupTaskNames, defaultValue = { setOf(artifact.sourceGenTaskName) }).toList(),
+            copy(artifact::getGeneratedSourceFolders, ::deduplicateFile).distinct(), // The source model can contain duplicates.
+            copyNewModel(artifact::getVariantSourceProvider, ::sourceProviderFrom),
+            copyNewModel(artifact::getMultiFlavorSourceProvider, ::sourceProviderFrom),
+            copy(artifact::getAdditionalClassesFolders, ::deduplicateFile),
+            dependenciesFactory.create(artifact),
+            copyOutputs(artifact, agpVersion),
+            artifact.applicationId,
+            artifact.sourceGenTaskName,
+            copy(artifact::getGeneratedResourceFolders, ::deduplicateFile),
+            artifact.signingConfigName,
+            ImmutableSet.copyOf( // In AGP 4.0 and below abiFilters was nullable, normalize null to empty set.
+                    artifact.abiFilters.orEmpty()),
+            artifact.isSigned,
+            copy(artifact::getAdditionalRuntimeApks, ::deduplicateFile),
+            copyNewModel(artifact::getTestOptions, ::testOptionsFrom),
+            copyNewModel(artifact::getInstrumentedTestTaskName, ::deduplicateString),
+            copyNewModel(artifact::getBundleTaskName, ::deduplicateString),
+            copyNewModel(artifact::getBundleTaskOutputListingFile, ::deduplicateString),
+            copyNewModel(artifact::getApkFromBundleTaskName, ::deduplicateString),
+            copyNewModel(artifact::getApkFromBundleTaskOutputListingFile, ::deduplicateString),
+            copyNewProperty(artifact::getCodeShrinker)
     )
   }
 
@@ -354,10 +352,10 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       copyNewProperty({ artifact.assembleTaskOutputListingFile }, ""),
       artifact.classesFolder,
       copyNewProperty(artifact::getJavaResourcesFolder),
-      ImmutableSet.copyOf(IdeBaseArtifactImpl.getIdeSetupTaskNames(artifact)),
-      LinkedHashSet(IdeBaseArtifactImpl.getGeneratedSourceFolders(artifact)),
-      IdeBaseArtifactImpl.createSourceProvider(this, artifact.variantSourceProvider),
-      IdeBaseArtifactImpl.createSourceProvider(this, artifact.multiFlavorSourceProvider),
+      copy(artifact::getIdeSetupTaskNames, ::deduplicateString).toList(),
+      copy(artifact::getGeneratedSourceFolders, ::deduplicateFile).distinct(),
+      copyNewModel(artifact::getVariantSourceProvider, ::sourceProviderFrom),
+      copyNewModel(artifact::getMultiFlavorSourceProvider, ::sourceProviderFrom),
       copy(artifact::getAdditionalClassesFolders, ::deduplicateFile),
       dependenciesFactory.create(artifact),
       copyNewProperty(artifact::getMockablePlatformJar)
@@ -391,20 +389,12 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     return copyModel(vectorDrawables, ::vectorDrawablesOptionsFrom)
   }
 
-  private fun copy(apiVersion: ApiVersion?): IdeApiVersionImpl? {
-    return if (apiVersion != null) copyModel(apiVersion, ::apiVersionFrom) else null
-  }
-
-  private fun copy(signingConfig: SigningConfig?): IdeSigningConfig? {
-    return if (signingConfig != null) copyModel(signingConfig, ::signingConfigFrom) else null
-  }
-
   fun productFlavorFrom(flavor: ProductFlavor): IdeProductFlavorImpl {
     return IdeProductFlavorImpl(
-      flavor.name,
-      copy(flavor::resValues, ::classFieldFrom),
-      ImmutableList.copyOf(flavor.proguardFiles),
-      ImmutableList.copyOf(flavor.consumerProguardFiles),
+            flavor.name,
+            copy(flavor::resValues, ::classFieldFrom),
+            ImmutableList.copyOf(flavor.proguardFiles),
+            ImmutableList.copyOf(flavor.consumerProguardFiles),
       // AGP may return internal Groovy GString implementation as a value in
       // manifestPlaceholders
       // map. It cannot be serialized
@@ -412,25 +402,25 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       // make them
       // usable as they are converted to String by
       // the manifest merger anyway.
-      ImmutableMap.copyOf(flavor.manifestPlaceholders.entries.associate { it.key to it.value.toString() }),
-      flavor.applicationIdSuffix,
-      copyNewProperty(flavor::versionNameSuffix),
-      copyNewProperty(flavor::multiDexEnabled),
-      ImmutableMap.copyOf(flavor.testInstrumentationRunnerArguments),
-      ImmutableList.copyOf(flavor.resourceConfigurations),
-      copyVectorDrawables(flavor),
-      flavor.dimension,
-      flavor.applicationId,
-      flavor.versionCode,
-      flavor.versionName,
-      copy(flavor.minSdkVersion),
-      copy(flavor.targetSdkVersion),
-      flavor.maxSdkVersion,
-      flavor.testApplicationId,
-      flavor.testInstrumentationRunner,
-      flavor.testFunctionalTest,
-      flavor.testHandleProfiling,
-      copy(flavor.signingConfig)
+            ImmutableMap.copyOf(flavor.manifestPlaceholders.entries.associate { it.key to it.value.toString() }),
+            flavor.applicationIdSuffix,
+            copyNewProperty(flavor::versionNameSuffix),
+            copyNewProperty(flavor::multiDexEnabled),
+            ImmutableMap.copyOf(flavor.testInstrumentationRunnerArguments),
+            ImmutableList.copyOf(flavor.resourceConfigurations),
+            copyVectorDrawables(flavor),
+            flavor.dimension,
+            flavor.applicationId,
+            flavor.versionCode,
+            flavor.versionName,
+            copyModel(flavor.minSdkVersion, ::apiVersionFrom),
+            copyModel(flavor.targetSdkVersion, ::apiVersionFrom),
+            flavor.maxSdkVersion,
+            flavor.testApplicationId,
+            flavor.testInstrumentationRunner,
+            flavor.testFunctionalTest,
+            flavor.testHandleProfiling,
+            copyModel(flavor.signingConfig, ::signingConfigFrom)
     )
   }
 
@@ -565,8 +555,8 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
                          modelVersion.isAtLeast(2, 4, 0) &&
                          options.isCheckTestSources,
     isCheckDependencies = copyNewProperty({ options.isCheckDependencies }, false),
-    disable = copy(options.disable),
-    enable = copy(options.enable),
+    disable = copy(options::getDisable, ::deduplicateString),
+    enable = copy(options::getEnable, ::deduplicateString),
     check = options.check?.let { ImmutableSet.copyOf(it) },
     isAbortOnError = copyNewProperty({ options.isAbortOnError }, true),
     isAbsolutePaths = copyNewProperty({ options.isAbsolutePaths }, true),
@@ -742,8 +732,6 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       mapOf<K, V>()
     }.mapValues { (_, v) -> mapper(v) }
 
-  fun copy(original: Set<String>): Set<String> = original.toSet()
-
   companion object {
 
     fun <T> copyNewPropertyWithDefault(propertyInvoker: () -> T, defaultValue: () -> T): T {
@@ -832,7 +820,10 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     const val LOCAL_AARS = "__local_aars__"
   }
 
-  fun <K, V> copyModel(key: K, mappingFunction: (K) -> V): V = mappingFunction(key)
+  inline fun <K : Any, V> copyModel(key: K, mappingFunction: (K) -> V): V = mappingFunction(key)
+
+  @JvmName("copyModelNullable")
+  inline fun <K : Any, V> copyModel(key: K?, mappingFunction: (K) -> V): V? = key?.let(mappingFunction)
 
   inline fun <K, V : Any> copyNewModel(
     getter: () -> K?,

@@ -20,20 +20,18 @@ import static com.android.ide.common.gradle.model.IdeAndroidProject.ARTIFACT_UNI
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.BaseArtifact;
-import com.android.builder.model.SourceProvider;
 import com.android.ide.common.gradle.model.IdeBaseArtifact;
 import com.android.ide.common.gradle.model.IdeDependencies;
 import com.android.ide.common.gradle.model.IdeSourceProvider;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import org.jetbrains.annotations.NotNull;
@@ -50,8 +48,8 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
     @NonNull private final String myPostAssembleModelFile;
     @NonNull private final String myAssembleTaskName;
     @NonNull private final File myClassesFolder;
-    @NonNull private final Set<String> myIdeSetupTaskNames;
-    @NonNull private final Set<File> myGeneratedSourceFolders;
+    @NonNull private final List<String> myIdeSetupTaskNames;
+    @NonNull private final List<File> myGeneratedSourceFolders;
     @NonNull private final Set<File> myAdditionalClassFolders;
 
     @NonNull private final IdeDependencies myLevel2Dependencies;
@@ -69,8 +67,8 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
         myPostAssembleModelFile = "";
         //noinspection ConstantConditions
         myClassesFolder = null;
-        myIdeSetupTaskNames = Collections.emptySet();
-        myGeneratedSourceFolders = Collections.emptySet();
+        myIdeSetupTaskNames = Collections.emptyList();
+        myGeneratedSourceFolders = Collections.emptyList();
         myAdditionalClassFolders = Collections.emptySet();
 
         myLevel2Dependencies = new IdeDependenciesImpl();
@@ -89,8 +87,8 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
             @NotNull String postAssembleModelFile,
             @NotNull File classesFolder,
             @Nullable File javaResourcesFolder,
-            @NotNull ImmutableSet<String> ideSetupTaskNames,
-            @NotNull LinkedHashSet<File> generatedSourceFolders,
+            @NotNull List<String> ideSetupTaskNames,
+            @NotNull List<File> generatedSourceFolders,
             @Nullable IdeSourceProvider variantSourceProvider,
             @Nullable IdeSourceProvider multiFlavorSourceProvider,
             @NotNull Set<File> additionalClassFolders,
@@ -103,48 +101,12 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
         myJavaResourcesFolder = javaResourcesFolder;
 
         myIdeSetupTaskNames = ideSetupTaskNames;
-        myGeneratedSourceFolders = generatedSourceFolders;
+        myGeneratedSourceFolders = new ArrayList<>(generatedSourceFolders); // Because of [addGeneratedSourceFolder].
         myVariantSourceProvider = variantSourceProvider;
         myMultiFlavorSourceProvider = multiFlavorSourceProvider;
         myAdditionalClassFolders = additionalClassFolders;
         myLevel2Dependencies = level2Dependencies;
         hashCode = calculateHashCode();
-    }
-
-    @NonNull
-    public static Set<String> getIdeSetupTaskNames(@NonNull BaseArtifact artifact) {
-        try {
-            // This method was added in 1.1 - we have to handle the case when it's missing on the Gradle side.
-            return ImmutableSet.copyOf(artifact.getIdeSetupTaskNames());
-        } catch (NoSuchMethodError | UnsupportedOperationException e) {
-            if (artifact instanceof AndroidArtifact) {
-                return Collections.singleton(((AndroidArtifact) artifact).getSourceGenTaskName());
-            }
-        }
-        return Collections.emptySet();
-    }
-
-    @NonNull
-    public static Collection<File> getGeneratedSourceFolders(@NonNull BaseArtifact artifact) {
-        try {
-            Collection<File> folders = artifact.getGeneratedSourceFolders();
-            // JavaArtifactImpl#getGeneratedSourceFolders returns null even though BaseArtifact#getGeneratedSourceFolders is marked as @NonNull.
-            // See https://code.google.com/p/android/issues/detail?id=216236
-            //noinspection ConstantConditions
-            return folders != null ? folders : Collections.emptyList();
-        } catch (UnsupportedOperationException e) {
-            // Model older than 1.2.
-        }
-        return Collections.emptyList();
-    }
-
-    @Nullable
-    public static IdeSourceProvider createSourceProvider(
-            @NonNull ModelCache modelCache, @Nullable SourceProvider original) {
-        return original != null
-                ? modelCache.copyModel(
-                        original, provider -> modelCache.sourceProviderFrom(provider))
-                : null;
     }
 
     @Override
@@ -189,7 +151,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
 
     @Override
     @NonNull
-    public Set<String> getIdeSetupTaskNames() {
+    public List<String> getIdeSetupTaskNames() {
         return myIdeSetupTaskNames;
     }
 

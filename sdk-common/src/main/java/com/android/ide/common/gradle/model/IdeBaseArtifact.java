@@ -21,6 +21,7 @@ import com.android.builder.model.ArtifactMetaData;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 public interface IdeBaseArtifact extends Serializable {
@@ -99,7 +100,7 @@ public interface IdeBaseArtifact extends Serializable {
      * place.
      */
     @NonNull
-    Set<String> getIdeSetupTaskNames();
+    List<String> getIdeSetupTaskNames();
 
     /**
      * Returns all the source folders that are generated. This is typically folders for the R, the

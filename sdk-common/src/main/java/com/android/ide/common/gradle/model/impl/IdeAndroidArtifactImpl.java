@@ -24,12 +24,9 @@ import com.android.ide.common.gradle.model.IdeClassField;
 import com.android.ide.common.gradle.model.IdeDependencies;
 import com.android.ide.common.gradle.model.IdeSourceProvider;
 import com.android.ide.common.gradle.model.IdeTestOptions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -82,34 +79,33 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     }
 
     public IdeAndroidArtifactImpl(
-      @NotNull String name,
-      @NotNull String compileTaskName,
-      @NotNull String assembleTaskName,
-      @NotNull String postAssembleModelFile,
-      @NotNull File classesFolder,
-      @Nullable File javaResourcesFolder,
-      @NotNull ImmutableSet<String> ideSetupTaskNames,
-      @NotNull LinkedHashSet<File> generatedSourceFolders,
-      @Nullable IdeSourceProvider variantSourceProvider,
-      @Nullable IdeSourceProvider multiFlavorSourceProvider,
-      @NotNull Set<File> additionalClassFolders,
-      @NotNull IdeDependencies level2Dependencies,
-      @NotNull List<IdeAndroidArtifactOutput> outputs,
-      @NotNull String applicationId,
-      @NotNull String sourceGenTaskName,
-      @NotNull ImmutableList<File> generatedResourceFolders,
-      @Nullable String signingConfigName,
-      @NotNull ImmutableSet<String> abiFilters,
-      boolean signed,
-      @NotNull List<File> additionalRuntimeApks,
-      @Nullable IdeTestOptionsImpl testOptions,
-      @Nullable String instrumentedTestTaskName,
-      @Nullable String bundleTaskName,
-      @Nullable String postBundleTaskModelFile,
-      @Nullable String apkFromBundleTaskName,
-      @Nullable String postApkFromBundleTaskModelFile,
-      @Nullable CodeShrinker codeShrinker
-    ) {
+            @NotNull String name,
+            @NotNull String compileTaskName,
+            @NotNull String assembleTaskName,
+            @NotNull String postAssembleModelFile,
+            @NotNull File classesFolder,
+            @Nullable File javaResourcesFolder,
+            @NotNull List<String> ideSetupTaskNames,
+            @NotNull List<File> generatedSourceFolders,
+            @Nullable IdeSourceProvider variantSourceProvider,
+            @Nullable IdeSourceProvider multiFlavorSourceProvider,
+            @NotNull Set<File> additionalClassFolders,
+            @NotNull IdeDependencies level2Dependencies,
+            @NotNull List<IdeAndroidArtifactOutput> outputs,
+            @NotNull String applicationId,
+            @NotNull String sourceGenTaskName,
+            @NotNull List<File> generatedResourceFolders,
+            @Nullable String signingConfigName,
+            @NotNull Set<String> abiFilters,
+            boolean signed,
+            @NotNull List<File> additionalRuntimeApks,
+            @Nullable IdeTestOptionsImpl testOptions,
+            @Nullable String instrumentedTestTaskName,
+            @Nullable String bundleTaskName,
+            @Nullable String postBundleTaskModelFile,
+            @Nullable String apkFromBundleTaskName,
+            @Nullable String postApkFromBundleTaskModelFile,
+            @Nullable CodeShrinker codeShrinker) {
         super(name,
               compileTaskName,
               assembleTaskName,

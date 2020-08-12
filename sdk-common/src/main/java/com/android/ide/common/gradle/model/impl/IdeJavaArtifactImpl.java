@@ -19,9 +19,9 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.gradle.model.IdeDependencies;
 import com.android.ide.common.gradle.model.IdeJavaArtifact;
 import com.android.ide.common.gradle.model.IdeSourceProvider;
-import com.google.common.collect.ImmutableSet;
 import java.io.File;
-import java.util.LinkedHashSet;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import org.jetbrains.annotations.NotNull;
@@ -49,8 +49,8 @@ public final class IdeJavaArtifactImpl extends IdeBaseArtifactImpl implements Id
             @NotNull String postAssembleModelFile,
             @NotNull File classesFolder,
             @Nullable File javaResourcesFolder,
-            @NotNull ImmutableSet<String> ideSetupTaskNames,
-            @NotNull LinkedHashSet<File> generatedSourceFolders,
+            @NotNull List<String> ideSetupTaskNames,
+            @NotNull List<File> generatedSourceFolders,
             @Nullable IdeSourceProvider variantSourceProvider,
             @Nullable IdeSourceProvider multiFlavorSourceProvider,
             @NotNull Set<File> additionalClassFolders,
