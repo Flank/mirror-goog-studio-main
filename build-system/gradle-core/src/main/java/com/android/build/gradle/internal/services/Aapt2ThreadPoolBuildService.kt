@@ -44,16 +44,21 @@ abstract class Aapt2ThreadPoolBuildService : BuildService<Aapt2ThreadPoolBuildSe
             Aapt2ThreadPoolBuildService::class.java
         ) {
         private val aapt2ThreadPoolSize =
-            projectOptions.get(IntegerOption.AAPT2_THREAD_POOL_SIZE) ?: Integer.min(
-                MAX_AAPT2_THREAD_POOL_SIZE,
-                ForkJoinPool.getCommonPoolParallelism()
-            )
+            computeMaxAapt2Daemons(projectOptions)
+
+
 
         override fun configure(parameters: Params) {
             parameters.aapt2ThreadPoolSize.set(aapt2ThreadPoolSize)
         }
     }
-    companion object {
-        private const val MAX_AAPT2_THREAD_POOL_SIZE = 8
-    }
+}
+
+private const val MAX_AAPT2_THREAD_POOL_SIZE = 8
+
+fun computeMaxAapt2Daemons(projectOptions: ProjectOptions): Int {
+    return projectOptions.get(IntegerOption.AAPT2_THREAD_POOL_SIZE) ?: Integer.min(
+        MAX_AAPT2_THREAD_POOL_SIZE,
+        ForkJoinPool.getCommonPoolParallelism()
+    )
 }

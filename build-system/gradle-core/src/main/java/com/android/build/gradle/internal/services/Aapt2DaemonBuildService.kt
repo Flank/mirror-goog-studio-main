@@ -150,7 +150,8 @@ abstract class Aapt2DaemonBuildService : BuildService<Aapt2DaemonBuildService.Pa
     class RegistrationAction(project: Project, val projectOptions: ProjectOptions) :
         ServiceRegistrationAction<Aapt2DaemonBuildService, Parameters>(
             project,
-            Aapt2DaemonBuildService::class.java
+            Aapt2DaemonBuildService::class.java,
+            computeMaxAapt2Daemons(projectOptions)
         ) {
         override fun configure(parameters: Parameters) {
             parameters.errorFormatMode.set(SyncOptions.getErrorFormatMode(projectOptions))
@@ -195,7 +196,7 @@ fun Aapt2Input.getAapt2Executable(): Path {
     return buildService.get().getAapt2ExecutablePath(this)
 }
 
-
+@Deprecated("Use gradle workers with `Aapt2Input.getLeasingAapt2()` directly")
 fun Aapt2Input.use(
     context: ProfileAwareWorkAction.Parameters,
     block: (AsyncResourceProcessor<Aapt2>) -> Unit
@@ -210,6 +211,10 @@ fun Aapt2Input.use(
         service = daemonBuildService.getLeasingAapt2(this),
         errorFormatMode = daemonBuildService.parameters.errorFormatMode.get()
     ).use(block)
+}
+
+fun Aapt2Input.getLeasingAapt2(): Aapt2 {
+    return buildService.get().getLeasingAapt2(this)
 }
 
 /**
