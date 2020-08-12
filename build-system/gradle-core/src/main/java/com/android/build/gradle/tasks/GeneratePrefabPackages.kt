@@ -68,5 +68,5 @@ fun generatePrefabPackages(
         abiModel.soFolder,
         "prefab_${buildSystem}_${abiModel.abi.tag}",
         builder, "prefab"
-    ).javaProcess().logStderrToInfo().execute(ops::javaexec)
+    ).javaProcess().logStderrToLifecycle().execute(ops::javaexec)
 }

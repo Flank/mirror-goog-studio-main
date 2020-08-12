@@ -123,7 +123,7 @@ internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
             "android_gradle_generate_cmake_ninja_json_${abi.abi.tag}",
             getProcessBuilder(abi),
             logPrefix)
-            .logStderrToInfo()
+            .logStderrToLifecycle()
             .logStdoutToInfo()
             .executeAndReturnStdoutString(ops::exec)
     }

@@ -455,11 +455,11 @@ public class NativeBuildOutputTest {
         TestFileUtils.appendToFile(project.file("CMakeLists.txt"), cmakeLists);
 
         checkSucceeded(
+                ImmutableList.of(),
                 ImmutableList.of(
                         "Building CXX",
                         FileUtils.toSystemIndependentPath(FileUtils.join("cpp", "hello-jni.cpp")),
-                        FileUtils.join("x86", "libhello-jni.so")),
-                ImmutableList.of());
+                        FileUtils.join("x86", "libhello-jni.so")));
     }
 
     private void checkSucceeded(List<String> expectInStdout, List<String> dontExpectInStdout)

@@ -126,7 +126,7 @@ private fun findNdkPathImpl(
                         "android.ndkVersion to [$revision] would result in the same NDK")
                 val resolutionWithoutNdkDir = PassThroughPrefixingLoggingEnvironment(
                     tag = "ndk.dir delete check",
-                    treatWarningsAndErrorsAsInfo = true // We don't want hypothetical warnings and errors
+                    treatAllMessagesAsInfo = true // We don't want hypothetical warnings and errors
                     ).use {
                         val resolutionWithoutNdkDir = findNdkPathImpl(
                             userSettings.copy(

@@ -53,7 +53,7 @@ class ProcessOutputJunction(
     private val logPrefix: String,
     private val execute: (ProcessInfo, ProcessOutputHandler, (Action<in BaseExecSpec?>) -> ExecResult) -> ProcessResult
 ) {
-    private var logErrorToInfo: Boolean = false
+    private var logErrorToLifecycle: Boolean = false
     private var logOutputToInfo: Boolean = false
     private var isJavaProcess: Boolean = false
     private val stderrFile = File(outputFolder, "$outputBaseName.stderr.txt")
@@ -70,8 +70,8 @@ class ProcessOutputJunction(
         return this
     }
 
-    fun logStderrToInfo(): ProcessOutputJunction {
-        logErrorToInfo = true
+    fun logStderrToLifecycle(): ProcessOutputJunction {
+        logErrorToLifecycle = true
         return this
     }
 
@@ -109,7 +109,7 @@ class ProcessOutputJunction(
             stderrFile,
             stdoutFile,
             logPrefix,
-            logErrorToInfo,
+            logErrorToLifecycle,
             logOutputToInfo
         )
         execute(handler, execOperations)
@@ -125,7 +125,7 @@ class ProcessOutputJunction(
             stderrFile,
             stdoutFile,
             logPrefix,
-            logErrorToInfo,
+            logErrorToLifecycle,
             logOutputToInfo
         )
         execute(handler, execOperations)

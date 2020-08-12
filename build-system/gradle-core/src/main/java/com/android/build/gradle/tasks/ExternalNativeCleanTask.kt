@@ -115,7 +115,7 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
                 processBuilder,
                 ""
             )
-                .logStderrToInfo()
+                .logStderrToLifecycle()
                 .logStdoutToInfo()
                 .execute(ops::exec)
         }

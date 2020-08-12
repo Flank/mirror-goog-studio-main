@@ -130,7 +130,7 @@ internal class NdkBuildExternalNativeJsonGenerator(
             getProcessBuilder(abi),
             ""
         )
-            .logStderrToInfo()
+            .logStderrToLifecycle()
             .executeAndReturnStdoutString(ops::exec)
     }
 

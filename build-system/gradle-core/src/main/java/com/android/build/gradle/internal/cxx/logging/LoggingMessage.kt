@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.logging
 import com.android.build.gradle.internal.cxx.logging.LoggingLevel.ERROR
 import com.android.build.gradle.internal.cxx.logging.LoggingLevel.INFO
+import com.android.build.gradle.internal.cxx.logging.LoggingLevel.LIFECYCLE
 import com.android.build.gradle.internal.cxx.logging.LoggingLevel.WARN
 import java.io.File
 
@@ -37,4 +38,5 @@ fun LoggingLevel.recordOf(message : String) = LoggingMessage(this, message)
 
 fun errorRecordOf(message : String) = ERROR.recordOf(message)
 fun warnRecordOf(message : String) = WARN.recordOf(message)
+fun lifecycleRecordOf(message : String) = LIFECYCLE.recordOf(message)
 fun infoRecordOf(message : String) = INFO.recordOf(message)
