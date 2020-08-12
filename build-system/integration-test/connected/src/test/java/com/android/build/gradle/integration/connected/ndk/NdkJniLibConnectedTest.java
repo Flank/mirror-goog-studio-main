@@ -14,26 +14,27 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.ndk;
+package com.android.build.gradle.integration.connected.ndk;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
+import com.android.tools.bazel.avd.Emulator;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+/** Connected tests for ndkJniLib. */
 public class NdkJniLibConnectedTest {
+
+    @ClassRule
+    public static final Emulator EMULATOR = EmulatorUtils.getEmulator();
+
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestProject("ndkJniLib")
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                    .create();
+            GradleTestProject.builder().fromTestProject("ndkJniLib").create();
 
     @Test
-    @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
-        project.executeConnectedCheck();
+        project.executor().run("connectedAndroidTest");
     }
 }

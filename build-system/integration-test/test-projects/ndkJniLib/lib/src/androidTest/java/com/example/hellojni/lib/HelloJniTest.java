@@ -21,6 +21,6 @@ public class HelloJniTest {
         // ensure a valid handle to the activity has been returned
         assertNotNull(a);
 
-        assertFalse("unknown".equals(a.jniNameFromJNI()));
+        assertTrue(a.stringFromJNI().startsWith("Hello from JNI !"));
     }
 }
