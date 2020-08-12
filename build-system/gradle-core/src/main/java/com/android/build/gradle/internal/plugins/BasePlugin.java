@@ -683,6 +683,9 @@ public abstract class BasePlugin<
 
         checkSplitConfiguration();
         variantManager.setHasCreatedTasks(true);
+        for (ComponentInfo<VariantT, VariantPropertiesT> variant : variants) {
+            variant.getProperties().getArtifacts().ensureAllOperationsAreSatisfied();
+        }
         // notify our properties that configuration is over for us.
         GradleProperty.Companion.endOfEvaluation();
     }
