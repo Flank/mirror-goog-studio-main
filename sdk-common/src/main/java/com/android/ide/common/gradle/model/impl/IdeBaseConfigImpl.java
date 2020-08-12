@@ -20,13 +20,11 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.gradle.model.IdeBaseConfig;
 import com.android.ide.common.gradle.model.IdeClassField;
-import com.android.ide.common.gradle.model.UnusedModelMethodException;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
@@ -40,7 +38,7 @@ public abstract class IdeBaseConfigImpl implements IdeBaseConfig, Serializable {
     @NonNull private final Map<String, IdeClassField> myResValues;
     @NonNull private final Collection<File> myProguardFiles;
     @NonNull private final Collection<File> myConsumerProguardFiles;
-    @NonNull private final Map<String, Object> myManifestPlaceholders;
+    @NonNull private final Map<String, String> myManifestPlaceholders;
     @Nullable private final String myApplicationIdSuffix;
     @Nullable private final String myVersionNameSuffix;
     @Nullable private final Boolean myMultiDexEnabled;
@@ -63,9 +61,9 @@ public abstract class IdeBaseConfigImpl implements IdeBaseConfig, Serializable {
     protected IdeBaseConfigImpl(
             @NotNull String name,
             @NotNull Map<String, IdeClassField> resValues,
-            @NotNull ImmutableList<File> proguardFiles,
-            @NotNull ImmutableList<File> consumerProguardFiles,
-            @NotNull ImmutableMap<String, Object> manifestPlaceholders,
+            @NotNull List<File> proguardFiles,
+            @NotNull List<File> consumerProguardFiles,
+            @NotNull Map<String, String> manifestPlaceholders,
             @Nullable String applicationIdSuffix,
             @Nullable String versionNameSuffix,
             @Nullable Boolean multiDexEnabled) {
@@ -89,12 +87,6 @@ public abstract class IdeBaseConfigImpl implements IdeBaseConfig, Serializable {
 
     @Override
     @NonNull
-    public Map<String, IdeClassField> getBuildConfigFields() {
-        throw new UnusedModelMethodException("getBuildConfigFields");
-    }
-
-    @Override
-    @NonNull
     public Map<String, IdeClassField> getResValues() {
         return myResValues;
     }
@@ -113,13 +105,7 @@ public abstract class IdeBaseConfigImpl implements IdeBaseConfig, Serializable {
 
     @Override
     @NonNull
-    public Collection<File> getTestProguardFiles() {
-        throw new UnusedModelMethodException("getTestProguardFiles");
-    }
-
-    @Override
-    @NonNull
-    public Map<String, Object> getManifestPlaceholders() {
+    public Map<String, String> getManifestPlaceholders() {
         return myManifestPlaceholders;
     }
 
@@ -139,18 +125,6 @@ public abstract class IdeBaseConfigImpl implements IdeBaseConfig, Serializable {
     @Nullable
     public Boolean getMultiDexEnabled() {
         return myMultiDexEnabled;
-    }
-
-    @Override
-    @Nullable
-    public File getMultiDexKeepFile() {
-        throw new UnusedModelMethodException("getMultiDexKeepFile");
-    }
-
-    @Override
-    @Nullable
-    public File getMultiDexKeepProguard() {
-        throw new UnusedModelMethodException("getMultiDexKeepProguard");
     }
 
     @Override

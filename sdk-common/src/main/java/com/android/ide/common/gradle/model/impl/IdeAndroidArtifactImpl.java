@@ -41,7 +41,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     @NonNull private final List<IdeAndroidArtifactOutput> myOutputs;
     @NonNull private final String myApplicationId;
     @NonNull private final String mySourceGenTaskName;
-    @NonNull private final List<File> myGeneratedResourceFolders;
+    @NonNull private final Collection<File> myGeneratedResourceFolders;
     @NonNull private final List<File> myAdditionalRuntimeApks;
     @Nullable private final String mySigningConfigName;
     @NonNull private final Set<String> myAbiFilters;
@@ -94,7 +94,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
             @NotNull List<IdeAndroidArtifactOutput> outputs,
             @NotNull String applicationId,
             @NotNull String sourceGenTaskName,
-            @NotNull List<File> generatedResourceFolders,
+            @NotNull Collection<File> generatedResourceFolders,
             @Nullable String signingConfigName,
             @NotNull Set<String> abiFilters,
             boolean signed,
@@ -150,7 +150,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
 
     @Override
     @NonNull
-    public List<File> getGeneratedResourceFolders() {
+    public Collection<File> getGeneratedResourceFolders() {
         return myGeneratedResourceFolders;
     }
 

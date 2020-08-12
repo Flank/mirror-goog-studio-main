@@ -50,15 +50,6 @@ public class IdeClassFieldTest {
     }
 
     @Test
-    public void constructor() throws Throwable {
-        ModelCache modelCache = new ModelCache();
-        ClassField original = new ClassFieldStub();
-        IdeClassFieldImpl copy = modelCache.classFieldFrom(original);
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
     public void equalsAndHashCode() {
         createEqualsVerifier(IdeClassFieldImpl.class).verify();
     }

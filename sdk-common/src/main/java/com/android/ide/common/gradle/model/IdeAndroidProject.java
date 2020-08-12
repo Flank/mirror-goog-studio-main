@@ -18,7 +18,6 @@ package com.android.ide.common.gradle.model;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
-import com.android.ide.common.repository.GradleVersion;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
@@ -209,22 +208,6 @@ public interface IdeAndroidProject extends Serializable {
     IdeLintOptions getLintOptions();
 
     /**
-     * Returns the dependencies that were not successfully resolved. The returned list gets
-     * populated only if the system property {@link
-     * AndroidProject#PROPERTY_BUILD_MODEL_ONLY} has been set to {@code
-     * true}.
-     *
-     * <p>Each value of the collection has the format group:name:version, for example:
-     * com.google.guava:guava:15.0.2
-     *
-     * @return the dependencies that were not successfully resolved.
-     * @deprecated use {@link #getSyncIssues()}
-     */
-    @Deprecated
-    @NonNull
-    Collection<String> getUnresolvedDependencies();
-
-    /**
      * Returns issues found during sync. The returned list gets populated only if the system
      * property {@link AndroidProject#PROPERTY_BUILD_MODEL_ONLY} has been
      * set to {@code true}.
@@ -257,7 +240,7 @@ public interface IdeAndroidProject extends Serializable {
      *
      * @return the build tools version.
      */
-    @NonNull
+    @Nullable
     String getBuildToolsVersion();
 
     /**
@@ -265,7 +248,7 @@ public interface IdeAndroidProject extends Serializable {
      *
      * @return the NDK version.
      */
-    @NonNull
+    @Nullable
     String getNdkVersion();
 
     /**
@@ -291,9 +274,6 @@ public interface IdeAndroidProject extends Serializable {
 
     @Nullable
     IdeDependenciesInfo getDependenciesInfo();
-
-    @Nullable
-    GradleVersion getParsedModelVersion();
 
     /**
      * Returns the optional group-id of the artifact represented by this project.

@@ -16,26 +16,21 @@
 package com.android.ide.common.gradle.model.impl;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
-import org.jetbrains.annotations.NotNull;
 
 public final class IdeAndroidArtifactOutputImpl implements IdeAndroidArtifactOutput, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
-    @NonNull private final Collection<String> myFilterTypes;
     @NonNull private final Collection<FilterData> myFilters;
-    @Nullable private final String myOutputType;
     private final int myVersionCode;
-    @Nullable private final File myOutputFile;
+    @NonNull private final File myOutputFile;
     private final int myHashCode;
 
     // Used for serialization by the IDE.
@@ -43,24 +38,16 @@ public final class IdeAndroidArtifactOutputImpl implements IdeAndroidArtifactOut
     IdeAndroidArtifactOutputImpl() {
         super();
 
-        myFilterTypes = Collections.emptyList();
         myFilters = Collections.emptyList();
-        myOutputType = null;
         myVersionCode = 0;
-        myOutputFile = null;
+        myOutputFile = new File("");
 
         myHashCode = 0;
     }
 
     public IdeAndroidArtifactOutputImpl(
-            @NotNull List<String> filterTypes,
-            @NonNull Collection<FilterData> filters,
-            @Nullable String outputType,
-            int versionCode,
-            @Nullable File outputFile) {
-        myFilterTypes = filterTypes;
+            @NonNull Collection<FilterData> filters, int versionCode, @NonNull File outputFile) {
         myFilters = filters;
-        myOutputType = outputType;
         myVersionCode = versionCode;
         // Even though getOutputFile is not new, the class hierarchies in builder-model have changed
         // a lot (e.g. new interfaces have been
@@ -72,21 +59,6 @@ public final class IdeAndroidArtifactOutputImpl implements IdeAndroidArtifactOut
         myOutputFile = outputFile;
 
         myHashCode = calculateHashCode();
-    }
-
-    @Override
-    @NonNull
-    public String getOutputType() {
-        if (myOutputType != null) {
-            return myOutputType;
-        }
-        throw new UnsupportedOperationException("getOutputType");
-    }
-
-    @Override
-    @NonNull
-    public Collection<String> getFilterTypes() {
-        return myFilterTypes;
     }
 
     @Override
@@ -103,10 +75,7 @@ public final class IdeAndroidArtifactOutputImpl implements IdeAndroidArtifactOut
     @Override
     @NonNull
     public File getOutputFile() {
-        if (myOutputFile != null) {
-            return myOutputFile;
-        }
-        throw new UnsupportedOperationException("getOutputFile");
+        return myOutputFile;
     }
 
     @Override
@@ -119,8 +88,6 @@ public final class IdeAndroidArtifactOutputImpl implements IdeAndroidArtifactOut
         }
         IdeAndroidArtifactOutputImpl output = (IdeAndroidArtifactOutputImpl) o;
         return myVersionCode == output.myVersionCode
-                && Objects.equals(myOutputType, output.myOutputType)
-                && Objects.equals(myFilterTypes, output.myFilterTypes)
                 && Objects.equals(myFilters, output.myFilters)
                 && Objects.equals(myOutputFile, output.myOutputFile);
     }
@@ -131,7 +98,7 @@ public final class IdeAndroidArtifactOutputImpl implements IdeAndroidArtifactOut
     }
 
     private int calculateHashCode() {
-        return Objects.hash(myOutputType, myFilterTypes, myFilters, myVersionCode, myOutputFile);
+        return Objects.hash(myFilters, myVersionCode, myOutputFile);
     }
 
     @Override

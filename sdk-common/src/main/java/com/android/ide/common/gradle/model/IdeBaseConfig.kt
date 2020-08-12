@@ -36,11 +36,6 @@ interface IdeBaseConfig {
     val versionNameSuffix: String?
 
     /**
-     * Map of Build Config Fields where the key is the field name.
-     */
-    val buildConfigFields: Map<String, IdeClassField>
-
-    /**
      * Map of generated res values where the key is the res name.
      */
     val resValues: Map<String, IdeClassField>
@@ -66,15 +61,12 @@ interface IdeBaseConfig {
     /** The collection of proguard rule files for consumers of the library to use. */
     val consumerProguardFiles: Collection<File>
 
-    /** The collection of proguard rule files to use for the test APK. */
-    val testProguardFiles: Collection<File>
-
     /**
      * The map of key value pairs for placeholder substitution in the android manifest file.
      *
      * This map will be used by the manifest merger.
      */
-    val manifestPlaceholders: Map<String, Any>
+    val manifestPlaceholders: Map<String, String>
 
     /**
      * Returns whether multi-dex is enabled.
@@ -82,8 +74,4 @@ interface IdeBaseConfig {
      * This can be null if the flag is not set, in which case the default value is used.
      */
     val multiDexEnabled: Boolean?
-
-    val multiDexKeepFile: File?
-    val multiDexKeepProguard: File?
-
 }

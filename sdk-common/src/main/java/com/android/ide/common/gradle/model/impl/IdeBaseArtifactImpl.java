@@ -24,7 +24,6 @@ import com.android.builder.model.BaseArtifact;
 import com.android.ide.common.gradle.model.IdeBaseArtifact;
 import com.android.ide.common.gradle.model.IdeDependencies;
 import com.android.ide.common.gradle.model.IdeSourceProvider;
-import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -140,18 +139,14 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
     }
 
     @Override
-    @NonNull
+    @Nullable
     public File getJavaResourcesFolder() {
-        if (myJavaResourcesFolder != null) {
-            return myJavaResourcesFolder;
-        }
-        throw new UnsupportedOperationException(
-                "Unsupported method: BaseArtifact.getJavaResourcesFolder");
+        return myJavaResourcesFolder;
     }
 
     @Override
     @NonNull
-    public List<String> getIdeSetupTaskNames() {
+    public Collection<String> getIdeSetupTaskNames() {
         return myIdeSetupTaskNames;
     }
 
@@ -164,7 +159,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
     @Override
     @NonNull
     public Collection<File> getGeneratedSourceFolders() {
-        return ImmutableList.copyOf(myGeneratedSourceFolders);
+        return myGeneratedSourceFolders;
     }
 
     @Override
@@ -185,7 +180,7 @@ public abstract class IdeBaseArtifactImpl implements IdeBaseArtifact, Serializab
     }
 
     @Override
-    public @NotNull Set<File> getAdditionalClassesFolders() {
+    public @NotNull Collection<File> getAdditionalClassesFolders() {
         return myAdditionalClassFolders;
     }
 

@@ -617,11 +617,7 @@ class LintModelFactory : LintModelModuleLoader {
     }
 
     private fun useSupportLibraryVectorDrawables(variant: IdeVariant): Boolean {
-        return try {
-            variant.mergedFlavor.vectorDrawables.useSupportLibrary == true
-        } catch (e: Throwable) {
-            false
-        }
+        return variant.mergedFlavor.vectorDrawables?.useSupportLibrary ?: false
     }
 
     private fun getGradleVersion(project: IdeAndroidProject): GradleVersion? {

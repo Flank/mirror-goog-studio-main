@@ -597,7 +597,7 @@ public class GradleModelMockerTest {
                                 + "}");
 
         IdeProductFlavor defaultConfig = findProductFlavor(mocker, "defaultConfig");
-        Map<String, Object> manifestPlaceholders = defaultConfig.getManifestPlaceholders();
+        Map<String, String> manifestPlaceholders = defaultConfig.getManifestPlaceholders();
         assertThat(manifestPlaceholders)
                 .containsEntry("localApplicationId", "com.example.manifest_merger_example");
         IdeProductFlavor flavor = findProductFlavor(mocker, "flavor");

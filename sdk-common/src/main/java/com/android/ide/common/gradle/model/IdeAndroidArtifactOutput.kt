@@ -60,16 +60,6 @@ interface IdeAndroidArtifactOutput {
     DENSITY, ABI, LANGUAGE
   }
 
-
-  /** Returns the output type of the referenced APK.  */
-  val outputType: String
-
-  /**
-   * Returns the split dimensions the referenced APK was created with. Each collection's value is
-   * the string representation of an element of the [FilterType] enum.
-   */
-  val filterTypes: Collection<String?>
-
   /** Returns all the split information used to create the APK.  */
   val filters: Collection<FilterData?>
 

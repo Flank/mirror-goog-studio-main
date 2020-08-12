@@ -88,37 +88,6 @@ public final class IdeSigningConfigImpl implements IdeSigningConfig, Serializabl
     }
 
     @Override
-    @Nullable
-    public String getKeyPassword() {
-        throw new UnusedModelMethodException("getKeyPassword");
-    }
-
-    @Override
-    @Nullable
-    public String getStoreType() {
-        throw new UnusedModelMethodException("getStoreType");
-    }
-
-    @Override
-    public boolean isV1SigningEnabled() {
-        if (myV1SigningEnabled != null) {
-            return myV1SigningEnabled;
-        }
-        throw new UnsupportedOperationException(
-                "Unsupported method: SigningConfig.isV1SigningEnabled()");
-    }
-
-    @Override
-    public boolean isV2SigningEnabled() {
-        throw new UnusedModelMethodException("isV2SigningEnabled");
-    }
-
-    @Override
-    public boolean isSigningReady() {
-        throw new UnusedModelMethodException("isSigningReady");
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;

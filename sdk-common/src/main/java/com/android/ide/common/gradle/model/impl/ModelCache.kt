@@ -122,10 +122,6 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     val nativeToolchainsCopy: Collection<IdeNativeToolchain> = copy(project::getNativeToolchains, ::nativeToolchainFrom)
     val signingConfigsCopy: Collection<IdeSigningConfig> = copy(project::getSigningConfigs, ::signingConfigFrom)
     val lintOptionsCopy: IdeLintOptions = copyModel(project.lintOptions, { lintOptionsFrom(it, parsedModelVersion) })
-
-    // We need to use the unresolved dependencies to support older versions of the Android
-    // Gradle Plugin.
-    val unresolvedDependenciesCopy: Set<String> = ImmutableSet.copyOf(project.unresolvedDependencies)
     val javaCompileOptionsCopy = copyModel(project.javaCompileOptions, ::javaCompileOptionsFrom)
     val aaptOptionsCopy = copyModel(project.aaptOptions, ::aaptOptionsFrom)
     val dynamicFeaturesCopy: Collection<String> = copy(project::getDynamicFeatures, ::deduplicateString)
@@ -145,7 +141,6 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     )
     return IdeAndroidProjectImpl(
       project.modelVersion,
-      parsedModelVersion,
       project.name,
       defaultConfigCopy,
       buildTypesCopy,
@@ -161,7 +156,6 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       signingConfigsCopy,
       lintOptionsCopy,
       lintRuleJarsCopy,
-      unresolvedDependenciesCopy,
       javaCompileOptionsCopy,
       aaptOptionsCopy,
       project.buildFolder,
@@ -269,7 +263,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
             copyOutputs(artifact, agpVersion),
             artifact.applicationId,
             artifact.sourceGenTaskName,
-            copy(artifact::getGeneratedResourceFolders, ::deduplicateFile),
+            copy(artifact::getGeneratedResourceFolders, ::deduplicateFile).distinct(),
             artifact.signingConfigName,
             ImmutableSet.copyOf( // In AGP 4.0 and below abiFilters was nullable, normalize null to empty set.
                     artifact.abiFilters.orEmpty()),
@@ -287,9 +281,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
 
   fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl {
     return IdeAndroidArtifactOutputImpl(
-      copy(output::getFilterTypes, ::deduplicateString),
       copyFilters(output),
-      copyNewProperty(output::getOutputType),
       output.versionCode,
       copyNewProperty({ output.outputFile }, output.mainOutputFile.outputFile)
     )

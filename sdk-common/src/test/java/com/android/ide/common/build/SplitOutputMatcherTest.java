@@ -80,22 +80,6 @@ public class SplitOutputMatcherTest extends TestCase {
 
         @NonNull
         @Override
-        public String getOutputType() {
-            return OutputFile.FULL_SPLIT;
-        }
-
-        @NonNull
-        @Override
-        public Collection<String> getFilterTypes() {
-            ImmutableList.Builder<String> splitTypeBuilder = ImmutableList.builder();
-            if (abiFilter != null) {
-                splitTypeBuilder.add(OutputFile.ABI);
-            }
-            return splitTypeBuilder.build();
-        }
-
-        @NonNull
-        @Override
         public Collection<FilterData> getFilters() {
             ImmutableList.Builder<FilterData> filters = ImmutableList.builder();
             if (abiFilter != null) {

@@ -50,14 +50,6 @@ public class IdeSigningConfigTest {
     }
 
     @Test
-    public void constructor() throws Throwable {
-        SigningConfig original = new SigningConfigStub();
-        IdeSigningConfigImpl copy = myModelCache.signingConfigFrom(original);
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
     public void equalsAndHashCode() {
         createEqualsVerifier(IdeSigningConfigImpl.class).verify();
     }

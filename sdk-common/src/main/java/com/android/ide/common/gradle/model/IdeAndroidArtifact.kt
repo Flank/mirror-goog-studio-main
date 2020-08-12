@@ -39,7 +39,7 @@ interface IdeAndroidArtifact : Serializable, IdeBaseArtifact {
    */
   val isSigned: Boolean
 
-  val generatedResourceFolders: List<File>
+  val generatedResourceFolders: Collection<File>
 
   /**
    * Map of generated res values where the key is the res name. This method is deprecated and will

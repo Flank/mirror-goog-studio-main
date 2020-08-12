@@ -93,7 +93,7 @@ public class IdeProductFlavorTest {
                     }
                 };
         IdeProductFlavorImpl copy = myModelCache.productFlavorFrom(original);
-        expectUnsupportedOperationException(copy::getVectorDrawables);
+        assertThat(copy.getVectorDrawables()).isNull();
     }
 
     @Test

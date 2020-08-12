@@ -16,7 +16,6 @@
 package com.android.ide.common.gradle.model.impl;
 
 import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.createEqualsVerifier;
-import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.expectUnsupportedOperationException;
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.mock;
@@ -98,7 +97,7 @@ public class IdeAndroidProjectImplTest {
                         original.getVariants(),
                         Collections.emptyList(),
                         Collections.emptyList());
-        expectUnsupportedOperationException(androidProject::getBuildToolsVersion);
+        assertThat(androidProject.getBuildToolsVersion()).isNull();
     }
 
     @Test
