@@ -1,15 +1,15 @@
 {
 	"archive" : {},
-	"artifacts" : 
+	"artifacts" :
 	[
 		{
 			"path" : "Source/Core/UICommon/libuicommon.a"
 		}
 	],
 	"backtrace" : 1,
-	"backtraceGraph" : 
+	"backtraceGraph" :
 	{
-		"commands" : 
+		"commands" :
 		[
 			"add_library",
 			"target_link_libraries",
@@ -18,14 +18,14 @@
 			"add_definitions",
 			"include_directories"
 		],
-		"files" : 
+		"files" :
 		[
 			"Source/Core/UICommon/CMakeLists.txt",
 			"CMake/CheckAndAddFlag.cmake",
 			"CMakeLists.txt",
 			"Source/CMakeLists.txt"
 		],
-		"nodes" : 
+		"nodes" :
 		[
 			{
 				"file" : 0
@@ -392,10 +392,10 @@
 			}
 		]
 	},
-	"compileGroups" : 
+	"compileGroups" :
 	[
 		{
-			"compileCommandFragments" : 
+			"compileCommandFragments" :
 			[
 				{
 					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -g -DNDEBUG -fPIC  "
@@ -468,7 +468,7 @@
 					"fragment" : "-std=c++17"
 				}
 			],
-			"defines" : 
+			"defines" :
 			[
 				{
 					"backtrace" : 36,
@@ -531,71 +531,71 @@
 					"define" : "__STDC_LIMIT_MACROS"
 				}
 			],
-			"includes" : 
+			"includes" :
 			[
 				{
 					"backtrace" : 51,
-					"path" : "/Users/jomof/projects/dolphin/Externals/curl/include"
+					"path" : "/{PROJECT}/Externals/curl/include"
 				},
 				{
 					"backtrace" : 52,
-					"path" : "/Users/jomof/projects/dolphin/Externals/SFML/include"
+					"path" : "/{PROJECT}/Externals/SFML/include"
 				},
 				{
 					"backtrace" : 53,
-					"path" : "/Users/jomof/projects/dolphin/Source/Core"
+					"path" : "/{PROJECT}/Source/Core"
 				},
 				{
 					"backtrace" : 54,
-					"path" : "/Users/jomof/projects/dolphin/Source/Android"
+					"path" : "/{PROJECT}/Source/Android"
 				},
 				{
 					"backtrace" : 55,
-					"path" : "/Users/jomof/projects/dolphin/Externals/enet/include"
+					"path" : "/{PROJECT}/Externals/enet/include"
 				},
 				{
 					"backtrace" : 56,
-					"path" : "/Users/jomof/projects/dolphin/External/minizip"
+					"path" : "/{PROJECT}/External/minizip"
 				},
 				{
 					"backtrace" : 57,
-					"path" : "/Users/jomof/projects/dolphin/Externals/soundtouch"
+					"path" : "/{PROJECT}/Externals/soundtouch"
 				},
 				{
 					"backtrace" : 58,
-					"path" : "/Users/jomof/projects/dolphin/Externals/mbedtls/include"
+					"path" : "/{PROJECT}/Externals/mbedtls/include"
 				},
 				{
 					"backtrace" : 59,
-					"path" : "/Users/jomof/projects/dolphin/Externals/libiconv-1.14/include"
+					"path" : "/{PROJECT}/Externals/libiconv-1.14/include"
 				},
 				{
 					"backtrace" : 60,
-					"path" : "/Users/jomof/projects/dolphin/Externals/picojson"
+					"path" : "/{PROJECT}/Externals/picojson"
 				},
 				{
 					"backtrace" : 61,
-					"path" : "/Users/jomof/projects/dolphin/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Source/Core"
+					"path" : "/{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Source/Core"
 				},
 				{
 					"backtrace" : 2,
-					"path" : "/Users/jomof/projects/dolphin/Externals/fmt/include"
+					"path" : "/{PROJECT}/Externals/fmt/include"
 				},
 				{
 					"backtrace" : 2,
-					"path" : "/Users/jomof/projects/dolphin/Externals/minizip/."
+					"path" : "/{PROJECT}/Externals/minizip/."
 				},
 				{
 					"backtrace" : 2,
-					"path" : "/Users/jomof/projects/dolphin/Externals/cpp-optparse/."
+					"path" : "/{PROJECT}/Externals/cpp-optparse/."
 				},
 				{
 					"backtrace" : 2,
-					"path" : "/Users/jomof/projects/dolphin/Externals/pugixml/."
+					"path" : "/{PROJECT}/Externals/pugixml/."
 				}
 			],
 			"language" : "CXX",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				0,
 				2,
@@ -611,13 +611,13 @@
 				22,
 				24
 			],
-			"sysroot" : 
+			"sysroot" :
 			{
-				"path" : "/Users/jomof/Library/Android/sdk/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+				"path" : "/{SDK}/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
 			}
 		}
 	],
-	"dependencies" : 
+	"dependencies" :
 	[
 		{
 			"backtrace" : 2,
@@ -671,16 +671,16 @@
 	"id" : "uicommon::@ae1587772a74627bbcb2",
 	"name" : "uicommon",
 	"nameOnDisk" : "libuicommon.a",
-	"paths" : 
+	"paths" :
 	{
 		"build" : "Source/Core/UICommon",
 		"source" : "Source/Core/UICommon"
 	},
-	"sourceGroups" : 
+	"sourceGroups" :
 	[
 		{
 			"name" : "Source Files",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				0,
 				2,
@@ -699,7 +699,7 @@
 		},
 		{
 			"name" : "Header Files",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				1,
 				3,
@@ -717,7 +717,7 @@
 			]
 		}
 	],
-	"sources" : 
+	"sources" :
 	[
 		{
 			"backtrace" : 1,

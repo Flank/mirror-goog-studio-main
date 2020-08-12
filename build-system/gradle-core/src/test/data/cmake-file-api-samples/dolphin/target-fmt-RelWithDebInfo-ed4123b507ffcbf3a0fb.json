@@ -1,15 +1,15 @@
 {
 	"archive" : {},
-	"artifacts" : 
+	"artifacts" :
 	[
 		{
 			"path" : "Externals/fmt/libfmt.a"
 		}
 	],
 	"backtrace" : 1,
-	"backtraceGraph" : 
+	"backtraceGraph" :
 	{
-		"commands" : 
+		"commands" :
 		[
 			"add_library",
 			"add_compile_options",
@@ -19,13 +19,13 @@
 			"include_directories",
 			"target_include_directories"
 		],
-		"files" : 
+		"files" :
 		[
 			"Externals/fmt/CMakeLists.txt",
 			"CMake/CheckAndAddFlag.cmake",
 			"CMakeLists.txt"
 		],
-		"nodes" : 
+		"nodes" :
 		[
 			{
 				"file" : 0
@@ -323,10 +323,10 @@
 			}
 		]
 	},
-	"compileGroups" : 
+	"compileGroups" :
 	[
 		{
-			"compileCommandFragments" : 
+			"compileCommandFragments" :
 			[
 				{
 					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -g -DNDEBUG -fPIC  "
@@ -399,7 +399,7 @@
 					"fragment" : "-std=gnu++11"
 				}
 			],
-			"defines" : 
+			"defines" :
 			[
 				{
 					"backtrace" : 35,
@@ -450,46 +450,46 @@
 					"define" : "_M_ARM_64=1"
 				}
 			],
-			"includes" : 
+			"includes" :
 			[
 				{
 					"backtrace" : 47,
-					"path" : "/Users/jomof/projects/dolphin/Source/Core"
+					"path" : "/{PROJECT}/Source/Core"
 				},
 				{
 					"backtrace" : 48,
-					"path" : "/Users/jomof/projects/dolphin/Source/Android"
+					"path" : "/{PROJECT}/Source/Android"
 				},
 				{
 					"backtrace" : 49,
-					"path" : "/Users/jomof/projects/dolphin/Externals/fmt/include"
+					"path" : "/{PROJECT}/Externals/fmt/include"
 				}
 			],
 			"language" : "CXX",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				0,
 				1
 			],
-			"sysroot" : 
+			"sysroot" :
 			{
-				"path" : "/Users/jomof/Library/Android/sdk/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+				"path" : "/{SDK}/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
 			}
 		}
 	],
 	"id" : "fmt::@b954ac15050c24475b56",
 	"name" : "fmt",
 	"nameOnDisk" : "libfmt.a",
-	"paths" : 
+	"paths" :
 	{
 		"build" : "Externals/fmt",
 		"source" : "Externals/fmt"
 	},
-	"sourceGroups" : 
+	"sourceGroups" :
 	[
 		{
 			"name" : "Source Files",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				0,
 				1
@@ -497,7 +497,7 @@
 		},
 		{
 			"name" : "Header Files",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				2,
 				3,
@@ -514,14 +514,14 @@
 		},
 		{
 			"name" : "",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				13,
 				14
 			]
 		}
 	],
-	"sources" : 
+	"sources" :
 	[
 		{
 			"backtrace" : 1,

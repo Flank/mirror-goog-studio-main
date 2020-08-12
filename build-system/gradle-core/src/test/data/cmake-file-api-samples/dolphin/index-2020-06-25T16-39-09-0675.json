@@ -1,19 +1,19 @@
-{
-	"cmake" : 
+    {
+	"cmake" :
 	{
-		"generator" : 
+		"generator" :
 		{
 			"multiConfig" : false,
 			"name" : "Ninja"
 		},
-		"paths" : 
+		"paths" :
 		{
-			"cmake" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/bin/cmake",
-			"cpack" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/bin/cpack",
-			"ctest" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/bin/ctest",
-			"root" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17"
+			"cmake" : "/{SDK}/cmake/3.17.0/bin/cmake",
+			"cpack" : "/{SDK}/cmake/3.17.0/bin/cpack",
+			"ctest" : "/{SDK}/cmake/3.17.0/bin/ctest",
+			"root" : "/{SDK}/cmake/3.17.0/share/cmake-3.17"
 		},
-		"version" : 
+		"version" :
 		{
 			"isDirty" : false,
 			"major" : 3,
@@ -23,12 +23,12 @@
 			"suffix" : "gc5272a5"
 		}
 	},
-	"objects" : 
+	"objects" :
 	[
 		{
 			"jsonFile" : "codemodel-v2-ba560e640682820c771e.json",
 			"kind" : "codemodel",
-			"version" : 
+			"version" :
 			{
 				"major" : 2,
 				"minor" : 0
@@ -37,7 +37,7 @@
 		{
 			"jsonFile" : "cache-v2-53b408740be947be368e.json",
 			"kind" : "cache",
-			"version" : 
+			"version" :
 			{
 				"major" : 2,
 				"minor" : 0
@@ -46,80 +46,80 @@
 		{
 			"jsonFile" : "cmakeFiles-v1-9426926ad1f372e0420d.json",
 			"kind" : "cmakeFiles",
-			"version" : 
+			"version" :
 			{
 				"major" : 1,
 				"minor" : 0
 			}
 		}
 	],
-	"reply" : 
+	"reply" :
 	{
-		"client-agp" : 
+		"client-agp" :
 		{
-			"cache-v1" : 
+			"cache-v1" :
 			{
 				"error" : "unknown query file"
 			},
-			"cache-v2" : 
+			"cache-v2" :
 			{
 				"jsonFile" : "cache-v2-53b408740be947be368e.json",
 				"kind" : "cache",
-				"version" : 
+				"version" :
 				{
 					"major" : 2,
 					"minor" : 0
 				}
 			},
-			"cache-v3" : 
+			"cache-v3" :
 			{
 				"error" : "unknown query file"
 			},
-			"cache-v4" : 
+			"cache-v4" :
 			{
 				"error" : "unknown query file"
 			},
-			"cmakeFiles-v1" : 
+			"cmakeFiles-v1" :
 			{
 				"jsonFile" : "cmakeFiles-v1-9426926ad1f372e0420d.json",
 				"kind" : "cmakeFiles",
-				"version" : 
+				"version" :
 				{
 					"major" : 1,
 					"minor" : 0
 				}
 			},
-			"cmakeFiles-v2" : 
+			"cmakeFiles-v2" :
 			{
 				"error" : "unknown query file"
 			},
-			"cmakeFiles-v3" : 
+			"cmakeFiles-v3" :
 			{
 				"error" : "unknown query file"
 			},
-			"cmakeFiles-v4" : 
+			"cmakeFiles-v4" :
 			{
 				"error" : "unknown query file"
 			},
-			"codemodel-v1" : 
+			"codemodel-v1" :
 			{
 				"error" : "unknown query file"
 			},
-			"codemodel-v2" : 
+			"codemodel-v2" :
 			{
 				"jsonFile" : "codemodel-v2-ba560e640682820c771e.json",
 				"kind" : "codemodel",
-				"version" : 
+				"version" :
 				{
 					"major" : 2,
 					"minor" : 0
 				}
 			},
-			"codemodel-v3" : 
+			"codemodel-v3" :
 			{
 				"error" : "unknown query file"
 			},
-			"codemodel-v4" : 
+			"codemodel-v4" :
 			{
 				"error" : "unknown query file"
 			}

@@ -7,25 +7,25 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeDetermineSystem.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeDetermineSystem.cmake"
 		},
 		{
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/ndk/21.1.6352462/build/cmake/android.toolchain.cmake"
+			"path" : "/{SDK}/ndk/21.1.6352462/build/cmake/android.toolchain.cmake"
 		},
 		{
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/ndk/21.1.6352462/build/cmake/platforms.cmake"
-		},
-		{
-			"isCMake" : true,
-			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android-Determine.cmake"
+			"path" : "/{SDK}/ndk/21.1.6352462/build/cmake/platforms.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeSystem.cmake.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android-Determine.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeSystem.cmake.in"
 		},
 		{
 			"isGenerated" : true,
@@ -33,52 +33,52 @@
 		},
 		{
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/ndk/21.1.6352462/build/cmake/android.toolchain.cmake"
+			"path" : "/{SDK}/ndk/21.1.6352462/build/cmake/android.toolchain.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeSystemSpecificInitialize.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeSystemSpecificInitialize.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android-Initialize.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android-Initialize.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeDetermineCCompiler.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeDetermineCCompiler.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeDetermineCompiler.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeDetermineCompiler.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android-Determine-C.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android-Determine-C.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android/Determine-Compiler.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android/Determine-Compiler.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeFindBinUtils.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeFindBinUtils.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Compiler/Clang-FindBinUtils.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Compiler/Clang-FindBinUtils.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCCompiler.cmake.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCCompiler.cmake.in"
 		},
 		{
 			"isGenerated" : true,
@@ -87,37 +87,37 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeDetermineCXXCompiler.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeDetermineCXXCompiler.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeDetermineCompiler.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeDetermineCompiler.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android-Determine-CXX.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android-Determine-CXX.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android/Determine-Compiler.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android/Determine-Compiler.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeFindBinUtils.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeFindBinUtils.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Compiler/Clang-FindBinUtils.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Compiler/Clang-FindBinUtils.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCXXCompiler.cmake.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCXXCompiler.cmake.in"
 		},
 		{
 			"isGenerated" : true,
@@ -126,142 +126,142 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeSystemSpecificInformation.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeSystemSpecificInformation.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeGenericSystem.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeGenericSystem.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeInitializeConfigs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeInitializeConfigs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Linux.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Linux.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Platform/UnixPaths.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Platform/UnixPaths.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCInformation.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCInformation.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeLanguageInformation.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeLanguageInformation.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Compiler/Clang-C.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Compiler/Clang-C.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Compiler/Clang.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Compiler/Clang.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Compiler/GNU.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Compiler/GNU.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Internal/CMakeCheckCompilerFlag.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Internal/CMakeCheckCompilerFlag.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android-Clang-C.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android-Clang-C.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android-Clang.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android-Clang.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCommonLanguageInclude.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCommonLanguageInclude.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeTestCCompiler.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeTestCCompiler.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeTestCompilerCommon.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeTestCompilerCommon.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeDetermineCompilerABI.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeDetermineCompilerABI.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeParseImplicitIncludeInfo.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeParseImplicitIncludeInfo.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeParseImplicitLinkInfo.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeParseImplicitLinkInfo.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeTestCompilerCommon.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeTestCompilerCommon.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCCompilerABI.c"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCCompilerABI.c"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeDetermineCompileFeatures.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeDetermineCompileFeatures.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Internal/FeatureTesting.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Internal/FeatureTesting.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCCompiler.cmake.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCCompiler.cmake.in"
 		},
 		{
 			"isGenerated" : true,
@@ -270,87 +270,87 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCXXInformation.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCXXInformation.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeLanguageInformation.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeLanguageInformation.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Compiler/Clang-CXX.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Compiler/Clang-CXX.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Compiler/Clang.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Compiler/Clang.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android-Clang-CXX.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android-Clang-CXX.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android-Clang.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Platform/Android-Clang.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCommonLanguageInclude.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCommonLanguageInclude.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeTestCXXCompiler.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeTestCXXCompiler.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeTestCompilerCommon.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeTestCompilerCommon.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeDetermineCompilerABI.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeDetermineCompilerABI.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeParseImplicitIncludeInfo.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeParseImplicitIncludeInfo.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeParseImplicitLinkInfo.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeParseImplicitLinkInfo.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeTestCompilerCommon.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeTestCompilerCommon.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCXXCompilerABI.cpp"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCXXCompilerABI.cpp"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeDetermineCompileFeatures.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeDetermineCompileFeatures.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/Internal/FeatureTesting.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/Internal/FeatureTesting.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCXXCompiler.cmake.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCXXCompiler.cmake.in"
 		},
 		{
 			"isGenerated" : true,
@@ -362,37 +362,37 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckCCompilerFlag.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckCCompilerFlag.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckCSourceCompiles.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckCSourceCompiles.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckCXXCompilerFlag.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckCXXCompilerFlag.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckCXXSourceCompiles.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckCXXSourceCompiles.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckCCompilerFlag.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckCCompilerFlag.cmake"
 		},
 		{
 			"path" : "CMake/DolphinCompileDefinitions.cmake"
@@ -403,67 +403,67 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindGit.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindGit.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindThreads.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindThreads.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckLibraryExists.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckLibraryExists.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckCSourceCompiles.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckCSourceCompiles.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.c.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.c.in"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckForPthreads.c"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckForPthreads.c"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"path" : "CMake/CheckLib.cmake"
@@ -471,37 +471,37 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckCXXSourceRuns.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckCXXSourceRuns.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindOpenGL.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindOpenGL.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"path" : "CMake/FindEGL.cmake"
@@ -509,27 +509,27 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"path" : "CMake/FindFFmpeg.cmake"
@@ -537,132 +537,132 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"path" : "CMake/Findpugixml.cmake"
@@ -670,77 +670,77 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindBZip2.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindBZip2.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/SelectLibraryConfigurations.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/SelectLibraryConfigurations.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindLibLZMA.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindLibLZMA.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/SelectLibraryConfigurations.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/SelectLibraryConfigurations.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.c.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.c.in"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindZLIB.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindZLIB.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/SelectLibraryConfigurations.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/SelectLibraryConfigurations.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"path" : "CMake/FindCubeb.cmake"
@@ -748,12 +748,12 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"path" : "CMake/FindSFML.cmake"
@@ -764,47 +764,47 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindCURL.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindCURL.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/SelectLibraryConfigurations.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/SelectLibraryConfigurations.cmake"
 		},
 		{
 			"path" : "CMake/FindLibsystemd.cmake"
@@ -812,27 +812,27 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"path" : "Source/Core/Common/scmrev.h.in"
@@ -840,20 +840,20 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CPack.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CPack.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CPackComponent.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CPackComponent.cmake"
 		},
 		{
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Templates/CPackConfig.cmake.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Templates/CPackConfig.cmake.in"
 		},
 		{
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Templates/CPackConfig.cmake.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Templates/CPackConfig.cmake.in"
 		},
 		{
 			"path" : ".git/HEAD"
@@ -873,27 +873,27 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckCXXSourceCompiles.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckCXXSourceCompiles.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckCXXCompilerFlag.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckCXXCompilerFlag.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckCXXCompilerFlag.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckCXXCompilerFlag.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckSymbolExists.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckSymbolExists.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
 		},
 		{
 			"path" : "Externals/glslang/CMakeLists.txt"
@@ -910,82 +910,82 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckStructHasMember.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckStructHasMember.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckCSourceCompiles.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckCSourceCompiles.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckCXXSourceCompiles.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckCXXSourceCompiles.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckTypeSize.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckTypeSize.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFileCXX.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFileCXX.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckTypeSize.c.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckTypeSize.c.in"
 		},
 		{
 			"isGenerated" : true,
@@ -1000,52 +1000,52 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckTypeSize.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckTypeSize.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFileCXX.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFileCXX.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckCSourceCompiles.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckCSourceCompiles.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.c.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.c.in"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.c.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.c.in"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.c.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.c.in"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckTypeSize.c.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckTypeSize.c.in"
 		},
 		{
 			"isGenerated" : true,
@@ -1054,12 +1054,12 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.c"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.c.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.c.in"
 		},
 		{
 			"path" : "Externals/liblzma/CMakeLists.txt"
@@ -1067,32 +1067,32 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckTypeSize.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckTypeSize.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFileCXX.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFileCXX.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckFunctionExists.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckCSourceCompiles.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckCSourceCompiles.cmake"
 		},
 		{
 			"path" : "Externals/minizip/CMakeLists.txt"
@@ -1142,37 +1142,37 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/GenerateExportHeader.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/GenerateExportHeader.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckCCompilerFlag.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckCCompilerFlag.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckCXXCompilerFlag.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckCXXCompilerFlag.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/exportheader.cmake.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/exportheader.cmake.in"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakePackageConfigHelpers.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakePackageConfigHelpers.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/WriteBasicConfigVersionFile.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/WriteBasicConfigVersionFile.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/BasicConfigVersion-SameMajorVersion.cmake.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/BasicConfigVersion-SameMajorVersion.cmake.in"
 		},
 		{
 			"path" : "Externals/cubeb/Config.cmake.in"
@@ -1180,12 +1180,12 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFiles.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFiles.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
 		},
 		{
 			"isGenerated" : true,
@@ -1194,7 +1194,7 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
 		},
 		{
 			"isGenerated" : true,
@@ -1203,7 +1203,7 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
 		},
 		{
 			"isGenerated" : true,
@@ -1212,7 +1212,7 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
 		},
 		{
 			"isGenerated" : true,
@@ -1221,7 +1221,7 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
 		},
 		{
 			"isGenerated" : true,
@@ -1230,7 +1230,7 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
 		},
 		{
 			"isGenerated" : true,
@@ -1239,7 +1239,7 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
 		},
 		{
 			"isGenerated" : true,
@@ -1248,7 +1248,7 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
 		},
 		{
 			"isGenerated" : true,
@@ -1257,7 +1257,7 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
 		},
 		{
 			"isGenerated" : true,
@@ -1266,7 +1266,7 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CMakeConfigurableFile.in"
 		},
 		{
 			"isGenerated" : true,
@@ -1299,47 +1299,47 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPythonInterp.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPythonInterp.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindThreads.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindThreads.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckLibraryExists.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckLibraryExists.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckIncludeFile.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/CheckCSourceCompiles.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/CheckCSourceCompiles.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"path" : "Source/CMakeLists.txt"
@@ -1356,12 +1356,12 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"path" : "CMake/FindALSA.cmake"
@@ -1369,12 +1369,12 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"path" : "CMake/FindPulseAudio.cmake"
@@ -1382,27 +1382,27 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPkgConfig.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageHandleStandardArgs.cmake"
 		},
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/Users/jomof/Library/Android/sdk/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
+			"path" : "/{SDK}/cmake/3.17.0/share/cmake-3.17/Modules/FindPackageMessage.cmake"
 		},
 		{
 			"path" : "Source/Core/Common/CMakeLists.txt"
@@ -1456,8 +1456,8 @@
 	"kind" : "cmakeFiles",
 	"paths" :
 	{
-		"build" : "/Users/jomof/projects/dolphin/Source/Android/app/.cxx/cmake/debug/arm64-v8a",
-		"source" : "/Users/jomof/projects/dolphin"
+		"build" : "/{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a",
+		"source" : "/{PROJECT}"
 	},
 	"version" :
 	{

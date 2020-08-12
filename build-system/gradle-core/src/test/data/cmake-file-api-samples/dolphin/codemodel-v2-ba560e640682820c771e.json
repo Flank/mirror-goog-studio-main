@@ -1,12 +1,12 @@
 {
-	"configurations" : 
+	"configurations" :
 	[
 		{
-			"directories" : 
+			"directories" :
 			[
 				{
 					"build" : ".",
-					"childIndexes" : 
+					"childIndexes" :
 					[
 						1,
 						2,
@@ -31,7 +31,7 @@
 						23
 					],
 					"hasInstallRule" : true,
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
@@ -40,196 +40,196 @@
 				},
 				{
 					"build" : "Externals/cpp-optparse",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 0,
 					"source" : "Externals/cpp-optparse",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						30
 					]
 				},
 				{
 					"build" : "Externals/fmt",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.1.0"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 1,
 					"source" : "Externals/fmt",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						35
 					]
 				},
 				{
 					"build" : "Externals/glslang",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 0,
 					"source" : "Externals/glslang",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						36
 					]
 				},
 				{
 					"build" : "Externals/imgui",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 0,
 					"source" : "Externals/imgui",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						40
 					]
 				},
 				{
 					"build" : "Externals/pugixml",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "2.6"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 2,
 					"source" : "Externals/pugixml",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						51
 					]
 				},
 				{
 					"build" : "Externals/enet",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "2.6"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 3,
 					"source" : "Externals/enet",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						34
 					]
 				},
 				{
 					"build" : "Externals/xxhash",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 4,
 					"source" : "Externals/xxhash",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						64
 					]
 				},
 				{
 					"build" : "Externals/bzip2",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 5,
 					"source" : "Externals/bzip2",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						27
 					]
 				},
 				{
 					"build" : "Externals/liblzma",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 6,
 					"source" : "Externals/liblzma",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						43
 					]
 				},
 				{
 					"build" : "Externals/minizip",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 7,
 					"source" : "Externals/minizip",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						49
 					]
 				},
 				{
 					"build" : "Externals/LZO",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 0,
 					"source" : "Externals/LZO",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						44
 					]
 				},
 				{
 					"build" : "Externals/libpng",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 0,
 					"source" : "Externals/libpng",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						50
 					]
 				},
 				{
 					"build" : "Externals/FreeSurround",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 0,
 					"source" : "Externals/FreeSurround",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						16
 					]
 				},
 				{
 					"build" : "Externals/soundtouch",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 0,
 					"source" : "Externals/soundtouch",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						22
 					]
@@ -237,14 +237,14 @@
 				{
 					"build" : "Externals/cubeb",
 					"hasInstallRule" : true,
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.1"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 8,
 					"source" : "Externals/cubeb",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						31,
 						54
@@ -252,14 +252,14 @@
 				},
 				{
 					"build" : "Externals/SFML",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 0,
 					"source" : "Externals/SFML",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						52,
 						53
@@ -267,12 +267,12 @@
 				},
 				{
 					"build" : "Externals/mbedtls",
-					"childIndexes" : 
+					"childIndexes" :
 					[
 						18
 					],
 					"hasInstallRule" : true,
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "2.6"
 					},
@@ -283,14 +283,14 @@
 				{
 					"build" : "Externals/mbedtls/library",
 					"hasInstallRule" : true,
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "2.6"
 					},
 					"parentIndex" : 17,
 					"projectIndex" : 9,
 					"source" : "Externals/mbedtls/library",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						42,
 						46,
@@ -300,11 +300,11 @@
 				},
 				{
 					"build" : "Externals/curl",
-					"childIndexes" : 
+					"childIndexes" :
 					[
 						20
 					],
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
@@ -314,42 +314,42 @@
 				},
 				{
 					"build" : "Externals/curl/lib",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 19,
 					"projectIndex" : 0,
 					"source" : "Externals/curl/lib",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						32
 					]
 				},
 				{
 					"build" : "Externals/libiconv-1.14",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 0,
 					"source" : "Externals/libiconv-1.14",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						39
 					]
 				},
 				{
 					"build" : "Externals/gtest",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "2.6.4"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 10,
 					"source" : "Externals/gtest",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						37,
 						38
@@ -357,13 +357,13 @@
 				},
 				{
 					"build" : "Source",
-					"childIndexes" : 
+					"childIndexes" :
 					[
 						24,
 						37,
 						38
 					],
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
@@ -373,7 +373,7 @@
 				},
 				{
 					"build" : "Source/Core",
-					"childIndexes" : 
+					"childIndexes" :
 					[
 						25,
 						26,
@@ -384,7 +384,7 @@
 						31,
 						32
 					],
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
@@ -394,28 +394,28 @@
 				},
 				{
 					"build" : "Source/Core/AudioCommon",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 24,
 					"projectIndex" : 0,
 					"source" : "Source/Core/AudioCommon",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						26
 					]
 				},
 				{
 					"build" : "Source/Core/Common",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 24,
 					"projectIndex" : 0,
 					"source" : "Source/Core/Common",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						28,
 						55
@@ -423,84 +423,84 @@
 				},
 				{
 					"build" : "Source/Core/Core",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 24,
 					"projectIndex" : 0,
 					"source" : "Source/Core/Core",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						29
 					]
 				},
 				{
 					"build" : "Source/Core/DiscIO",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 24,
 					"projectIndex" : 0,
 					"source" : "Source/Core/DiscIO",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						33
 					]
 				},
 				{
 					"build" : "Source/Core/InputCommon",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 24,
 					"projectIndex" : 0,
 					"source" : "Source/Core/InputCommon",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						41
 					]
 				},
 				{
 					"build" : "Source/Core/UICommon",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 24,
 					"projectIndex" : 0,
 					"source" : "Source/Core/UICommon",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						56
 					]
 				},
 				{
 					"build" : "Source/Core/VideoCommon",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 24,
 					"projectIndex" : 0,
 					"source" : "Source/Core/VideoCommon",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						59
 					]
 				},
 				{
 					"build" : "Source/Core/VideoBackends",
-					"childIndexes" : 
+					"childIndexes" :
 					[
 						33,
 						34,
 						35,
 						36
 					],
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
@@ -510,90 +510,90 @@
 				},
 				{
 					"build" : "Source/Core/VideoBackends/OGL",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 32,
 					"projectIndex" : 0,
 					"source" : "Source/Core/VideoBackends/OGL",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						61
 					]
 				},
 				{
 					"build" : "Source/Core/VideoBackends/Null",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 32,
 					"projectIndex" : 0,
 					"source" : "Source/Core/VideoBackends/Null",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						60
 					]
 				},
 				{
 					"build" : "Source/Core/VideoBackends/Software",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 32,
 					"projectIndex" : 0,
 					"source" : "Source/Core/VideoBackends/Software",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						62
 					]
 				},
 				{
 					"build" : "Source/Core/VideoBackends/Vulkan",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 32,
 					"projectIndex" : 0,
 					"source" : "Source/Core/VideoBackends/Vulkan",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						63
 					]
 				},
 				{
 					"build" : "Source/Android/jni",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 23,
 					"projectIndex" : 0,
 					"source" : "Source/Android/jni",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						45
 					]
 				},
 				{
 					"build" : "Source/UnitTests",
-					"childIndexes" : 
+					"childIndexes" :
 					[
 						39,
 						40,
 						41
 					],
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 23,
 					"projectIndex" : 0,
 					"source" : "Source/UnitTests",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						57,
 						58
@@ -601,14 +601,14 @@
 				},
 				{
 					"build" : "Source/UnitTests/Common",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 38,
 					"projectIndex" : 0,
 					"source" : "Source/UnitTests/Common",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						0,
 						1,
@@ -630,14 +630,14 @@
 				},
 				{
 					"build" : "Source/UnitTests/Core",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 38,
 					"projectIndex" : 0,
 					"source" : "Source/UnitTests/Core",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						6,
 						8,
@@ -650,24 +650,24 @@
 				},
 				{
 					"build" : "Source/UnitTests/VideoCommon",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.6.0"
 					},
 					"parentIndex" : 38,
 					"projectIndex" : 0,
 					"source" : "Source/UnitTests/VideoCommon",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						25
 					]
 				}
 			],
 			"name" : "RelWithDebInfo",
-			"projects" : 
+			"projects" :
 			[
 				{
-					"childIndexes" : 
+					"childIndexes" :
 					[
 						1,
 						2,
@@ -680,7 +680,7 @@
 						9,
 						10
 					],
-					"directoryIndexes" : 
+					"directoryIndexes" :
 					[
 						0,
 						1,
@@ -715,7 +715,7 @@
 						41
 					],
 					"name" : "dolphin-emu",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						0,
 						1,
@@ -770,111 +770,111 @@
 					]
 				},
 				{
-					"directoryIndexes" : 
+					"directoryIndexes" :
 					[
 						2
 					],
 					"name" : "FMT",
 					"parentIndex" : 0,
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						35
 					]
 				},
 				{
-					"directoryIndexes" : 
+					"directoryIndexes" :
 					[
 						5
 					],
 					"name" : "pugixml",
 					"parentIndex" : 0,
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						51
 					]
 				},
 				{
-					"directoryIndexes" : 
+					"directoryIndexes" :
 					[
 						6
 					],
 					"name" : "enet",
 					"parentIndex" : 0,
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						34
 					]
 				},
 				{
-					"directoryIndexes" : 
+					"directoryIndexes" :
 					[
 						7
 					],
 					"name" : "xxhash",
 					"parentIndex" : 0,
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						64
 					]
 				},
 				{
-					"directoryIndexes" : 
+					"directoryIndexes" :
 					[
 						8
 					],
 					"name" : "bzip2",
 					"parentIndex" : 0,
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						27
 					]
 				},
 				{
-					"directoryIndexes" : 
+					"directoryIndexes" :
 					[
 						9
 					],
 					"name" : "lzma",
 					"parentIndex" : 0,
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						43
 					]
 				},
 				{
-					"directoryIndexes" : 
+					"directoryIndexes" :
 					[
 						10
 					],
 					"name" : "minizip",
 					"parentIndex" : 0,
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						49
 					]
 				},
 				{
-					"directoryIndexes" : 
+					"directoryIndexes" :
 					[
 						15
 					],
 					"name" : "cubeb",
 					"parentIndex" : 0,
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						31,
 						54
 					]
 				},
 				{
-					"directoryIndexes" : 
+					"directoryIndexes" :
 					[
 						17,
 						18
 					],
 					"name" : "mbed TLS",
 					"parentIndex" : 0,
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						42,
 						46,
@@ -883,20 +883,20 @@
 					]
 				},
 				{
-					"directoryIndexes" : 
+					"directoryIndexes" :
 					[
 						22
 					],
 					"name" : "gtest",
 					"parentIndex" : 0,
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						37,
 						38
 					]
 				}
 			],
-			"targets" : 
+			"targets" :
 			[
 				{
 					"directoryIndex" : 39,
@@ -1357,12 +1357,12 @@
 		}
 	],
 	"kind" : "codemodel",
-	"paths" : 
+	"paths" :
 	{
-		"build" : "/Users/jomof/projects/dolphin/Source/Android/app/.cxx/cmake/debug/arm64-v8a",
-		"source" : "/Users/jomof/projects/dolphin"
+		"build" : "/{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a",
+		"source" : "/{PROJECT}"
 	},
-	"version" : 
+	"version" :
 	{
 		"major" : 2,
 		"minor" : 0
