@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact
 import com.android.build.gradle.internal.dependency.AsmClassesTransform
+import com.android.build.gradle.internal.dependency.RecalculateStackFramesTransform
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.instrumentation.AsmClassVisitorsFactoryRegistry
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -699,21 +700,29 @@ abstract class ComponentImpl(
 
     override fun getDependenciesClassesJarsPostAsmInstrumentation(scope: ArtifactScope): FileCollection {
         return if (registeredDependenciesClassesVisitors.isNotEmpty()) {
-            variantDependencies.getArtifactFileCollection(
-                ConsumedConfigType.RUNTIME_CLASSPATH,
-                scope,
-                AndroidArtifacts.ArtifactType.ASM_INSTRUMENTED_JARS,
-                AsmClassesTransform.getAttributesForConfig(this)
-            )
+            if (asmFramesComputationMode == FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES) {
+                variantDependencies.getArtifactFileCollection(
+                        ConsumedConfigType.RUNTIME_CLASSPATH,
+                        scope,
+                        AndroidArtifacts.ArtifactType.CLASSES_FIXED_FRAMES_JAR,
+                        RecalculateStackFramesTransform.getAttributesForConfig(this)
+                )
+            } else {
+                variantDependencies.getArtifactFileCollection(
+                        ConsumedConfigType.RUNTIME_CLASSPATH,
+                        scope,
+                        AndroidArtifacts.ArtifactType.ASM_INSTRUMENTED_JARS,
+                        AsmClassesTransform.getAttributesForConfig(this)
+                )
+            }
         } else {
             variantDependencies.getArtifactFileCollection(
-                ConsumedConfigType.RUNTIME_CLASSPATH,
-                scope,
-                AndroidArtifacts.ArtifactType.CLASSES_JAR
+                    ConsumedConfigType.RUNTIME_CLASSPATH,
+                    scope,
+                    AndroidArtifacts.ArtifactType.CLASSES_JAR
             )
         }
     }
-
     companion object {
         // String to
         final val ENABLE_LEGACY_API: String =

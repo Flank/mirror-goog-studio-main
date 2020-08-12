@@ -22,6 +22,7 @@ import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.coverage.JacocoConfigurations
+import com.android.build.gradle.internal.dependency.RecalculateStackFramesTransform
 import com.android.build.gradle.internal.pipeline.OriginalStream
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -209,7 +210,8 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                 creationConfig.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.EXTERNAL,
-                    AndroidArtifacts.ArtifactType.CLASSES_FIXED_FRAMES_JAR
+                    AndroidArtifacts.ArtifactType.CLASSES_FIXED_FRAMES_JAR,
+                    RecalculateStackFramesTransform.getAttributesForConfig(creationConfig)
                 )
             )
 
