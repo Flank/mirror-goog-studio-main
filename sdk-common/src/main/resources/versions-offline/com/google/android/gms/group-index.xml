@@ -1,13 +1,13 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <com.google.android.gms>
   <auth-api-impl versions="11.6.0"/>
   <oss-licenses-plugin versions="0.10.2"/>
   <play-services versions="11.8.0,12.0.1"/>
-  <play-services-ads versions="18.3.0,19.2.0"/>
-  <play-services-ads-base versions="18.3.0,19.2.0"/>
+  <play-services-ads versions="18.3.0,19.3.0"/>
+  <play-services-ads-base versions="18.3.0,19.3.0"/>
   <play-services-ads-identifier versions="16.0.0,17.0.0"/>
   <play-services-ads-license versions="11.8.0,12.0.1"/>
-  <play-services-ads-lite versions="18.3.0,19.2.0"/>
+  <play-services-ads-lite versions="18.3.0,19.3.0"/>
   <play-services-ads-lite-license versions="11.8.0,12.0.1"/>
   <play-services-afs-native versions="17.0.0,18.0.0"/>
   <play-services-all-wear versions="12.0.1,15.0.1"/>
@@ -20,10 +20,10 @@
   <play-services-appinvite-license versions="11.8.0,12.0.1"/>
   <play-services-appstate versions="7.8.0,8.4.0"/>
   <play-services-audience versions="16.0.0,17.0.0"/>
-  <play-services-auth versions="17.0.0,18.0.0"/>
+  <play-services-auth versions="17.0.0,18.1.0"/>
   <play-services-auth-api-phone versions="16.0.0,17.4.0"/>
   <play-services-auth-api-phone-license versions="11.8.0,12.0.1"/>
-  <play-services-auth-base versions="16.0.0,17.1.0"/>
+  <play-services-auth-base versions="16.0.0,17.1.1"/>
   <play-services-auth-base-license versions="11.8.0,12.0.1"/>
   <play-services-auth-license versions="11.4.2"/>
   <play-services-awareness versions="17.1.0,18.0.0"/>
@@ -32,10 +32,11 @@
   <play-services-base-license versions="11.8.0,12.0.1"/>
   <play-services-basement versions="16.2.0,17.3.0"/>
   <play-services-basement-license versions="11.8.0,12.0.1"/>
-  <play-services-cast versions="17.1.0,18.1.0"/>
-  <play-services-cast-framework versions="17.1.0,18.1.0"/>
+  <play-services-cast versions="18.1.0,19.0.0"/>
+  <play-services-cast-framework versions="18.1.0,19.0.0"/>
   <play-services-cast-framework-license versions="11.8.0,12.0.1"/>
   <play-services-cast-license versions="11.8.0,12.0.1"/>
+  <play-services-cast-tv versions="17.0.0"/>
   <play-services-clearcut versions="16.0.0,17.0.0"/>
   <play-services-contextmanager versions="9.4.0"/>
   <play-services-cronet versions="16.0.0,17.0.0"/>
@@ -43,12 +44,12 @@
   <play-services-drive-license versions="11.8.0,12.0.1"/>
   <play-services-fido versions="17.0.0,18.1.0"/>
   <play-services-fido-license versions="11.8.0,12.0.1"/>
-  <play-services-fitness versions="17.0.0,18.0.0"/>
+  <play-services-fitness versions="18.0.0,19.0.0"/>
   <play-services-fitness-license versions="11.8.0,12.0.1"/>
   <play-services-flags versions="16.0.1,17.0.0"/>
   <play-services-games versions="18.0.1,19.0.0"/>
   <play-services-games-license versions="11.8.0,12.0.1"/>
-  <play-services-gass versions="18.3.0,19.2.0"/>
+  <play-services-gass versions="18.3.0,19.3.0"/>
   <play-services-gass-license versions="11.8.0,12.0.1"/>
   <play-services-gcm versions="16.1.0,17.0.0"/>
   <play-services-gcm-license versions="11.8.0,12.0.1"/>
@@ -62,15 +63,15 @@
   <play-services-location-license versions="11.8.0,12.0.1"/>
   <play-services-maps versions="16.1.0,17.0.0"/>
   <play-services-maps-license versions="11.8.0,12.0.1"/>
-  <play-services-measurement versions="16.5.0,17.4.3"/>
-  <play-services-measurement-api versions="16.5.0,17.4.3"/>
-  <play-services-measurement-base versions="16.5.0,17.4.3"/>
-  <play-services-measurement-impl versions="16.5.0,17.4.3"/>
-  <play-services-measurement-sdk versions="16.5.0,17.4.3"/>
-  <play-services-measurement-sdk-api versions="16.5.0,17.4.3"/>
-  <play-services-mlkit-barcode-scanning versions="16.0.0"/>
-  <play-services-mlkit-face-detection versions="16.0.0"/>
-  <play-services-mlkit-text-recognition versions="16.0.0"/>
+  <play-services-measurement versions="16.5.0,17.4.4"/>
+  <play-services-measurement-api versions="16.5.0,17.4.4"/>
+  <play-services-measurement-base versions="16.5.0,17.4.4"/>
+  <play-services-measurement-impl versions="16.5.0,17.4.4"/>
+  <play-services-measurement-sdk versions="16.5.0,17.4.4"/>
+  <play-services-measurement-sdk-api versions="16.5.0,17.4.4"/>
+  <play-services-mlkit-barcode-scanning versions="16.1.1"/>
+  <play-services-mlkit-face-detection versions="16.1.0"/>
+  <play-services-mlkit-text-recognition versions="16.1.0"/>
   <play-services-nearby versions="16.0.0,17.0.0"/>
   <play-services-nearby-license versions="11.8.0,12.0.1"/>
   <play-services-oss-licenses versions="16.0.2,17.0.0"/>
