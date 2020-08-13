@@ -23,6 +23,7 @@ import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.LibraryVariantProperties
+import com.android.build.api.variant.PackagingOptions
 import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -93,6 +94,10 @@ open class LibraryVariantPropertiesImpl @Inject constructor(
             )
         }
         super.transformClassesWith(classVisitorFactoryImplClass, scope, instrumentationParamsConfig)
+    }
+
+    override fun packagingOptions(action: PackagingOptions.() -> Unit) {
+        action.invoke(packagingOptions)
     }
 
     // ---------------------------------------------------------------------------------------------

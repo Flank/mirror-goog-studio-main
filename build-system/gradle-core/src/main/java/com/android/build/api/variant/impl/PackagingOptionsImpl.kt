@@ -20,7 +20,7 @@ import com.android.build.api.variant.PackagingOptions
 import com.android.build.api.variant.ResourcesPackagingOptions
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 
-class PackagingOptionsImpl(
+open class PackagingOptionsImpl(
     dslPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions,
     variantPropertiesApiServices: VariantPropertiesApiServices
 ) : PackagingOptions {

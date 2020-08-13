@@ -89,10 +89,4 @@ abstract class AnalyticsEnabledVariantProperties (
                 VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
             return delegate.packagingOptions
         }
-
-    override fun packagingOptions(action: PackagingOptions.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
-        delegate.packagingOptions(action)
-    }
 }

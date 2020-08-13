@@ -158,18 +158,4 @@ class AnalyticsEnabledVariantPropertiesTest {
         Mockito.verify(delegate, Mockito.times(1))
             .packagingOptions
     }
-
-    @Test
-    fun packagingOptionsAction() {
-        @Suppress("UNCHECKED_CAST")
-        val action = Mockito.mock(Function1::class.java) as PackagingOptions.() -> Unit
-        proxy.packagingOptions(action)
-
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
-        Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE)
-        Mockito.verify(delegate, Mockito.times(1))
-            .packagingOptions(action)
-    }
 }

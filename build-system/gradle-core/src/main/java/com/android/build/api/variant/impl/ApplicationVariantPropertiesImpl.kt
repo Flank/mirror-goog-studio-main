@@ -19,6 +19,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariantProperties
 import com.android.build.api.component.impl.ConsumableCreationConfigImpl
 import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.ApkPackagingOptions
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.SigningConfig
@@ -111,6 +112,14 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
 
     override fun signingConfig(action: SigningConfig.() -> Unit) {
         action.invoke(signingConfig)
+    }
+
+    override val packagingOptions: ApkPackagingOptions by lazy {
+        ApkPackagingOptionsImpl(globalScope.extension.packagingOptions, internalServices)
+    }
+
+    override fun packagingOptions(action: ApkPackagingOptions.() -> Unit) {
+        action.invoke(packagingOptions)
     }
 
     override val minifiedEnabled: Boolean

@@ -21,6 +21,7 @@ import com.android.build.api.component.analytics.AnalyticsEnabledTestVariantProp
 import com.android.build.api.component.analytics.AnalyticsEnabledVariantProperties
 import com.android.build.api.component.impl.ConsumableCreationConfigImpl
 import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.ApkPackagingOptions
 import com.android.build.api.variant.TestVariantProperties
 import com.android.build.gradle.internal.component.TestVariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -111,6 +112,14 @@ open class TestVariantPropertiesImpl @Inject constructor(
 
     override val testLabel: Property<String?> =
         internalServices.nullablePropertyOf(String::class.java, variantDslInfo.testLabel)
+
+    override val packagingOptions: ApkPackagingOptions by lazy {
+        ApkPackagingOptionsImpl(globalScope.extension.packagingOptions, internalServices)
+    }
+
+    override fun packagingOptions(action: ApkPackagingOptions.() -> Unit) {
+        action.invoke(packagingOptions)
+    }
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API

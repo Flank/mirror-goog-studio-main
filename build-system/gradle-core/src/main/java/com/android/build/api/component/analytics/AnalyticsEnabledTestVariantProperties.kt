@@ -17,6 +17,7 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.ApkPackagingOptions
 import com.android.build.api.variant.TestVariantProperties
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -84,4 +85,17 @@ open class AnalyticsEnabledTestVariantProperties @Inject constructor(
                 VariantPropertiesMethodType.TEST_LABEL_VALUE
             return delegate.testLabel
         }
+
+    override val packagingOptions: ApkPackagingOptions
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
+            return delegate.packagingOptions
+        }
+
+    override fun packagingOptions(action: ApkPackagingOptions.() -> Unit) {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
+        delegate.packagingOptions(action)
+    }
 }
