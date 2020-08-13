@@ -547,6 +547,13 @@ public final class SdkConstants {
     public static final String FD_SOURCE_GEN = "source";
     /** Name of the generated R.class source folder */
     public static final String FD_RES_CLASS = "r";
+    /** Name of folder where merged XML files are placed before processing by resource compiler. */
+    public static final String FD_MERGED_DOT_DIR = "merged.dir";
+    /**
+     * Name of folder where data-binding stripped merged layout XML files are placed before
+     * processing by resource compiler.
+     */
+    public static final String FD_STRIPPED_DOT_DIR = "stripped.dir";
 
     /** Name of the cache folder in the $HOME/.android. */
     public static final String FD_CACHE = "cache"; //$NON-NLS-1$

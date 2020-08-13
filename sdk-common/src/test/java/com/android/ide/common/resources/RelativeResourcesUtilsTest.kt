@@ -41,12 +41,14 @@ class RelativeResourcesUtilsTest {
         val testAbsoluteFile = File(testAbsolutePath)
         val packageName = "com.foobar.myproject.app"
         val sourceSets = listOf(
-                listOf(File(FileUtils.join("usr", "a", "b", "myproject", "app", "src", "main", "res"))),
-                listOf(File(FileUtils.join("usr", "a", "b", "myproject", "app", "src", "debug", "res")))
+                File(FileUtils.join("usr", "a", "b", "myproject", "app", "src", "main", "res")),
+                File(FileUtils.join("usr", "a", "b", "myproject", "app", "src", "debug", "res"))
         )
-
-        val expected = produceRelativeSourceSetPath(testAbsoluteFile, packageName, sourceSets)
-        assertThat(expected).isEqualTo("com.foobar.myproject.app-0:/layout/activity_map_tv.xml")
+        val identifiedSourceSetMap = getIdentifiedSourceSetMap(sourceSets, packageName, "app")
+        val expected = getRelativeSourceSetPath(testAbsoluteFile, identifiedSourceSetMap)
+        // Ordinal value is 1 due to invariantPath sorting in getIdentifiedSourceSetMap
+        assertThat(expected)
+                .isEqualTo("com.foobar.myproject.app-main-1:/layout/activity_map_tv.xml")
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -56,11 +58,11 @@ class RelativeResourcesUtilsTest {
         val testAbsoluteFile = File(testAbsolutePath)
         val packageName = "com.foobar.myproject.app"
         val sourceSets = listOf(
-                listOf(File(FileUtils.join("myproject", "app", "src", "custom", "res"))),
-                listOf(File(FileUtils.join("myproject", "app", "src", "debug", "res")))
+                File(FileUtils.join("myproject", "app", "src", "custom", "res")),
+                File(FileUtils.join("myproject", "app", "src", "debug", "res"))
         )
-
-        val expected = produceRelativeSourceSetPath(testAbsoluteFile, packageName, sourceSets)
+        val identifiedSourceSetMap = getIdentifiedSourceSetMap(sourceSets, packageName, "")
+        val expected = getRelativeSourceSetPath(testAbsoluteFile, identifiedSourceSetMap)
         assertThat(expected).isEqualTo("com.foobar.myproject.app-0:res/layout/activity_map_tv.xml")
     }
 
@@ -72,13 +74,12 @@ class RelativeResourcesUtilsTest {
 
         val packageName = "com.foobar.myproject.app"
         val sourceSets = listOf(
-                listOf(
                     File(FileUtils.join(
                                     "usr", "a", "b", "myproject", "app", "src", "main", "res"))
-                )
         )
 
-        produceRelativeSourceSetPath(testAbsoluteFile, packageName, sourceSets)
+        val identifiedSourceSetMap = getIdentifiedSourceSetMap(sourceSets, packageName, "app")
+        getRelativeSourceSetPath(testAbsoluteFile, identifiedSourceSetMap)
     }
 
     @Test
@@ -89,15 +90,15 @@ class RelativeResourcesUtilsTest {
         val testAbsoluteFile = File(testAbsolutePath)
         val packageName = "com.foobar.myproject.app"
         val sourceSets = listOf(
-                listOf(File(FileUtils.join(
+                File(FileUtils.join(
                         "usr", "a", "b", "myproject", "build", "intermediates",
-                        "incremental", "mergeDebugResources", "merged.dir")))
+                        "incremental", "mergeDebugResources", "merged.dir"))
         )
 
-        val relativePath =
-                produceRelativeSourceSetPath(testAbsoluteFile, packageName, sourceSets)
+        val identifiedSourceSetMap = getIdentifiedSourceSetMap(sourceSets, packageName, "app")
+        val relativePath = getRelativeSourceSetPath(testAbsoluteFile, identifiedSourceSetMap)
         assertThat(relativePath).isEqualTo(
-                "com.foobar.myproject.app-0:/layout/activity_map_tv.xml"
+                "com.foobar.myproject.app-mergeDebugResources-0:/layout/activity_map_tv.xml"
         )
     }
 
@@ -108,15 +109,15 @@ class RelativeResourcesUtilsTest {
                 "pngs", "debug", "drawable", "a.png")
         val testAbsoluteFile = File(testAbsolutePath)
         val sourceSets = listOf(
-                listOf(File(FileUtils.join(
+                File(FileUtils.join(
                         "usr", "a", "b", "myproject", "build", "generated", "res",
-                        "pngs", "debug")))
+                        "pngs", "debug"))
         )
 
         val packageName = "com.foobar.myproject.app"
-        val result = produceRelativeSourceSetPath(testAbsoluteFile, packageName, sourceSets)
-        assertThat(result)
-                .isEqualTo("com.foobar.myproject.app-0:/drawable/a.png")
+        val identifiedSourceSetMap = getIdentifiedSourceSetMap(sourceSets, packageName, "app")
+        val result = getRelativeSourceSetPath(testAbsoluteFile, identifiedSourceSetMap)
+        assertThat(result).isEqualTo("com.foobar.myproject.app-pngs-0:/drawable/a.png")
     }
 
     @Test

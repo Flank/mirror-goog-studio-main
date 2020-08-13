@@ -70,6 +70,10 @@ fun makeCompileCommand(request: CompileResourceRequest): ImmutableList<String> {
     parameters.add("-o", request.outputDirectory.absolutePath)
     parameters.add(request.inputFile.absolutePath)
 
+    request.sourcePath.let {
+        parameters.add("--source-path")
+        parameters.add(it)
+    }
     return parameters.build()
 }
 

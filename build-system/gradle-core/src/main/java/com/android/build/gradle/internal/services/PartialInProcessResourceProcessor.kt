@@ -36,7 +36,11 @@ class PartialInProcessResourceProcessor (val delegate: Aapt2):
         // TODO(b/160949546): merge partial r support to work in the same invocation,
         //                    rather than falling back to calling AAPT
         if (canCompileResourceInJvm(request.inputFile, request.isPngCrunching) && request.partialRFile == null) {
-            val options = ResourceCompilerOptions(pseudolocalize = request.isPseudoLocalize, legacyMode = true)
+            val options = ResourceCompilerOptions(
+                    pseudolocalize = request.isPseudoLocalize,
+                    legacyMode = true,
+                    sourcePath = request.sourcePath
+            )
             val blameLogger = blameLoggerFor(request, LoggerWrapper.getLogger(this::class.java))
             compileResource(request.inputFile, request.outputDirectory, options, blameLogger)
         } else {

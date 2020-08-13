@@ -12,25 +12,20 @@ import java.lang.IllegalStateException
  * The absolute path to the module source set is identified by the source set ordering of a module.
  * Format of the returned String is `<package name - source set module order>:<path to source set>`.
  */
-fun produceRelativeSourceSetPath(
-        resourceFile: File,
-        packageName: String,
-        moduleSourceSets: Collection<Collection<File>>
-) : String {
-    // Allows for relocatablity as various file system formats streamline to the same path format.
-    val invariantFilePath = resourceFile.invariantSeparatorsPath
-    for (sourceSet in moduleSourceSets) {
-        for ((index, sourceSetFile) in sourceSet.withIndex()) {
-            if (invariantFilePath.startsWith(sourceSetFile.invariantSeparatorsPath)) {
-                val resIndex = sourceSetFile.invariantSeparatorsPath.length
-                val relativePathToSourceSet = invariantFilePath.substring(resIndex)
-                return "$packageName-$index:$relativePathToSourceSet"
-            }
+fun getRelativeSourceSetPath(resourceFile: File, moduleSourceSets: Map<String, String>)
+        : String {
+    val absoluteResFilePath = resourceFile.absolutePath
+    for ((identifier, absoluteSourceSetPath) in moduleSourceSets.entries) {
+        if (absoluteResFilePath.startsWith(absoluteSourceSetPath)) {
+            val invariantFilePath = resourceFile.absoluteFile.invariantSeparatorsPath
+            val resIndex = File(absoluteSourceSetPath).absoluteFile.invariantSeparatorsPath.length
+            val relativePathToSourceSet = invariantFilePath.substring(resIndex)
+            return "$identifier:$relativePathToSourceSet"
         }
     }
 
     throw IllegalArgumentException(
-            "Unable to locate resourceFile (${resourceFile.absolutePath}) in source-sets.")
+            "Unable to locate resourceFile ($absoluteResFilePath) in source-sets.")
 }
 
 /**
@@ -81,13 +76,27 @@ fun readFromSourceSetPathsFile(artifactFile: File) : Map<String, String> {
  * in the format of 'packageName.projectName-sortedOrderPosition absolutePath'.
  */
 fun writeIdentifiedSourceSetsFile(
-        resourceSourceSets: Collection<File>,
+        resourceSourceSets: List<File>,
         packageName: String,
         projectName: String,
         output: File
 ) {
+    output.bufferedWriter().use { bw ->
+        getIdentifiedSourceSetMap(resourceSourceSets, packageName, projectName).forEach {
+            bw.write("${it.key} ${it.value}\n")
+        }
+    }
+}
+
+fun getIdentifiedSourceSetMap(
+        resourceSourceSets: List<File>,
+        packageName: String,
+        projectName: String) : Map<String, String> {
     var i = 0
-    val sourceSetMap: Map<String, String> = resourceSourceSets
+    return resourceSourceSets
+            .asSequence()
+            .filterNotNull()
+            .distinctBy(File::invariantSeparatorsPath)
             .sortedBy(File::invariantSeparatorsPath)
             .associate { sourceSet ->
                 val sourceSetFolderName = sourceSet.parentFile.name
@@ -96,9 +105,4 @@ fun writeIdentifiedSourceSetsFile(
                 val appId = "$packageName$appendProjectName-$sourceSetFolderName-${i++}"
                 appId to sourceSet.absolutePath
             }
-    output.bufferedWriter().use { bw ->
-        sourceSetMap.forEach {
-            bw.write("${it.key} ${it.value}\n")
-        }
-    }
 }
