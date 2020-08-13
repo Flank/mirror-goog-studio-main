@@ -19,8 +19,6 @@ import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.JavaLibrary
 import com.android.builder.model.Library
 import com.android.builder.model.MavenCoordinates
-import com.android.ide.common.gradle.model.impl.IdeLibraryFactory.Companion.computeAddress
-import com.android.ide.common.gradle.model.impl.IdeLibraryFactory.Companion.isLocalAarModule
 import com.android.ide.common.gradle.model.stubs.AndroidLibraryStub
 import com.android.ide.common.gradle.model.stubs.JavaLibraryStub
 import com.android.ide.common.gradle.model.stubs.LibraryStub
@@ -33,18 +31,17 @@ import java.io.File
 
 /** Tests for [IdeLibraryFactory].  */
 class IdeLibraryFactoryTest {
-  private var myLibraryFactory: IdeLibraryFactory? = null
+  lateinit var modelCache: ModelCache
 
   @Before
-  @Throws(Exception::class)
   fun setUp() {
-    myLibraryFactory = IdeLibraryFactory()
+    modelCache = ModelCache();
   }
 
   @Test
   fun createFromJavaLibrary() {
     // Verify JavaLibrary of module dependency returns instance of IdeModuleLibrary.
-    val moduleLibrary = myLibraryFactory!!.create(JavaLibraryStub())
+    val moduleLibrary = modelCache.libraryFrom(JavaLibraryStub())
     Truth.assertThat(moduleLibrary).isInstanceOf(IdeModuleLibrary::class.java)
 
     // Verify JavaLibrary of jar dependency returns instance of IdeJavaLibrary.
@@ -53,12 +50,12 @@ class IdeLibraryFactoryTest {
         return null
       }
     }
-    Truth.assertThat(myLibraryFactory!!.create(javaLibrary)).isInstanceOf(IdeJavaLibrary::class.java)
+    Truth.assertThat(modelCache.libraryFrom(javaLibrary)).isInstanceOf(IdeJavaLibrary::class.java)
   }
 
   @Test
   fun createFromString() {
-    Truth.assertThat(myLibraryFactory!!.create("lib", ":lib@@:", "/rootDir/lib"))
+    Truth.assertThat(modelCache.libraryFrom("lib", ":lib@@:", "/rootDir/lib"))
       .isInstanceOf(IdeModuleLibrary::class.java)
   }
 
@@ -69,7 +66,7 @@ class IdeLibraryFactoryTest {
         return MavenCoordinatesStub("com.android.tools", "test", "2.1", "aar")
       }
     }
-    Truth.assertThat(computeAddress(library)).isEqualTo("com.android.tools:test:2.1@aar")
+    Truth.assertThat(modelCache.computeAddress(library)).isEqualTo("com.android.tools:test:2.1@aar")
   }
 
   @Test
@@ -83,7 +80,7 @@ class IdeLibraryFactoryTest {
         return "release"
       }
     }
-    Truth.assertThat(computeAddress(library)).isEqualTo(":androidLib::release")
+    Truth.assertThat(modelCache.computeAddress(library)).isEqualTo(":androidLib::release")
   }
 
   @Test
@@ -101,7 +98,7 @@ class IdeLibraryFactoryTest {
         return "release"
       }
     }
-    Truth.assertThat(computeAddress(library)).isEqualTo("/project/root:androidLib::release")
+    Truth.assertThat(modelCache.computeAddress(library)).isEqualTo("/project/root:androidLib::release")
   }
 
   @Test
@@ -113,7 +110,7 @@ class IdeLibraryFactoryTest {
         )
       }
     }
-    Truth.assertThat(computeAddress(library))
+    Truth.assertThat(modelCache.computeAddress(library))
       .isEqualTo("myGroup:androidLib.subModule:undefined@aar")
   }
 
@@ -142,17 +139,16 @@ class IdeLibraryFactoryTest {
         return null
       }
     }
-    val buildFolderPaths = BuildFolderPaths()
-    buildFolderPaths.setRootBuildId("project")
-    buildFolderPaths.addBuildFolderMapping(
+    modelCache.setRootBuildId("project")
+    modelCache.addBuildFolderPath(
       "project", ":aarModule", File("/ProjectRoot/aarModule/build/")
     )
-    buildFolderPaths.addBuildFolderMapping(
+    modelCache.addBuildFolderPath(
       "project", ":androidLib", File("/ProjectRoot/androidLib/build/")
     )
-    Assert.assertTrue(isLocalAarModule(localAarLibrary, buildFolderPaths))
-    Assert.assertFalse(isLocalAarModule(moduleLibrary, buildFolderPaths))
-    Assert.assertFalse(isLocalAarModule(externalLibrary, buildFolderPaths))
+    Assert.assertTrue(modelCache.isLocalAarModule(localAarLibrary))
+    Assert.assertFalse(modelCache.isLocalAarModule(moduleLibrary))
+    Assert.assertFalse(modelCache.isLocalAarModule(externalLibrary))
   }
 
   @Test
@@ -219,24 +215,23 @@ class IdeLibraryFactoryTest {
         return null
       }
     }
-    val buildFolderPaths = BuildFolderPaths()
-    buildFolderPaths.setRootBuildId("Project")
-    buildFolderPaths.addBuildFolderMapping(
+    modelCache.setRootBuildId("Project")
+    modelCache.addBuildFolderPath(
       "Project", ":aarModule", File("/Project/aarModule/build/")
     )
-    buildFolderPaths.addBuildFolderMapping(
+    modelCache.addBuildFolderPath(
       "Project", ":androidLib", File("/Project/androidLib/build/")
     )
-    buildFolderPaths.addBuildFolderMapping(
+    modelCache.addBuildFolderPath(
       "Project1", ":aarModule", File("/Project1/aarModule/build/")
     )
-    buildFolderPaths.addBuildFolderMapping(
+    modelCache.addBuildFolderPath(
       "Project1", ":androidLib", File("/Project1/androidLib/build/")
     )
-    Assert.assertTrue(isLocalAarModule(localAarLibraryInRootProject, buildFolderPaths))
-    Assert.assertTrue(isLocalAarModule(localAarLibraryInProject1, buildFolderPaths))
-    Assert.assertFalse(isLocalAarModule(moduleLibraryInRootProject, buildFolderPaths))
-    Assert.assertFalse(isLocalAarModule(moduleLibraryInProject1, buildFolderPaths))
-    Assert.assertFalse(isLocalAarModule(externalLibrary, buildFolderPaths))
+    Assert.assertTrue(modelCache.isLocalAarModule(localAarLibraryInRootProject))
+    Assert.assertTrue(modelCache.isLocalAarModule(localAarLibraryInProject1))
+    Assert.assertFalse(modelCache.isLocalAarModule(moduleLibraryInRootProject))
+    Assert.assertFalse(modelCache.isLocalAarModule(moduleLibraryInProject1))
+    Assert.assertFalse(modelCache.isLocalAarModule(externalLibrary))
   }
 }

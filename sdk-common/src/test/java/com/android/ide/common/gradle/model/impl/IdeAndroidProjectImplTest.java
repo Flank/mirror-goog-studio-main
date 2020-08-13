@@ -38,12 +38,10 @@ import org.junit.Test;
 /** Tests for {@link IdeAndroidProjectImpl}. */
 public class IdeAndroidProjectImplTest {
     private ModelCache myModelCache;
-    private IdeDependenciesFactory myDependenciesFactory;
 
     @Before
     public void setUp() throws Exception {
         myModelCache = new ModelCache();
-        myDependenciesFactory = new IdeDependenciesFactory();
     }
 
     @Test
@@ -93,7 +91,6 @@ public class IdeAndroidProjectImplTest {
         IdeAndroidProject androidProject =
                 myModelCache.androidProjectFrom(
                         original,
-                        myDependenciesFactory,
                         original.getVariants(),
                         Collections.emptyList(),
                         Collections.emptyList());
@@ -106,7 +103,6 @@ public class IdeAndroidProjectImplTest {
         IdeAndroidProjectImpl copy =
                 myModelCache.androidProjectFrom(
                         original,
-                        myDependenciesFactory,
                         original.getVariants(),
                         Collections.emptyList(),
                         Collections.emptyList());
@@ -120,7 +116,6 @@ public class IdeAndroidProjectImplTest {
         IdeAndroidProjectImpl copy =
                 myModelCache.androidProjectFrom(
                         original,
-                        myDependenciesFactory,
                         singletonList(variant),
                         Collections.emptyList(),
                         Collections.emptyList());
@@ -136,7 +131,6 @@ public class IdeAndroidProjectImplTest {
         IdeAndroidProjectImpl copy =
                 myModelCache.androidProjectFrom(
                         original,
-                        myDependenciesFactory,
                         singletonList(variant),
                         singletonList(mock(IdeVariant.class)),
                         Collections.emptyList());
@@ -200,7 +194,6 @@ public class IdeAndroidProjectImplTest {
         IdeAndroidProject androidProject =
                 myModelCache.androidProjectFrom(
                         original,
-                        myDependenciesFactory,
                         original.getVariants(),
                         Collections.emptyList(),
                         Collections.emptyList());
@@ -219,7 +212,6 @@ public class IdeAndroidProjectImplTest {
         IdeAndroidProject androidProject =
                 myModelCache.androidProjectFrom(
                         original,
-                        myDependenciesFactory,
                         original.getVariants(),
                         Collections.emptyList(),
                         Collections.emptyList());

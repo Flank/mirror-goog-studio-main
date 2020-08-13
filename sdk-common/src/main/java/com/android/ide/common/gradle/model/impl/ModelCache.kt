@@ -15,20 +15,26 @@
  */
 package com.android.ide.common.gradle.model.impl
 
+import com.android.SdkConstants
 import com.android.build.FilterData
 import com.android.build.OutputFile
 import com.android.build.VariantOutput
 import com.android.builder.model.AaptOptions
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidGradlePluginProjectFlags
+import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.ApiVersion
+import com.android.builder.model.BaseArtifact
 import com.android.builder.model.BuildType
 import com.android.builder.model.BuildTypeContainer
 import com.android.builder.model.ClassField
+import com.android.builder.model.Dependencies
 import com.android.builder.model.DependenciesInfo
 import com.android.builder.model.JavaArtifact
 import com.android.builder.model.JavaCompileOptions
+import com.android.builder.model.JavaLibrary
+import com.android.builder.model.Library
 import com.android.builder.model.LintOptions
 import com.android.builder.model.MavenCoordinates
 import com.android.builder.model.NativeAndroidProject
@@ -58,8 +64,11 @@ import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput
 import com.android.ide.common.gradle.model.IdeAndroidGradlePluginProjectFlags
 import com.android.ide.common.gradle.model.IdeAndroidProject
 import com.android.ide.common.gradle.model.IdeBuildTypeContainer
+import com.android.ide.common.gradle.model.IdeDependencies
 import com.android.ide.common.gradle.model.IdeDependenciesInfo
+import com.android.ide.common.gradle.model.IdeLibrary
 import com.android.ide.common.gradle.model.IdeLintOptions
+import com.android.ide.common.gradle.model.IdeMavenCoordinates
 import com.android.ide.common.gradle.model.IdeProductFlavorContainer
 import com.android.ide.common.gradle.model.IdeSigningConfig
 import com.android.ide.common.gradle.model.IdeSyncIssue
@@ -81,6 +90,7 @@ import com.android.ide.common.gradle.model.impl.ndk.v2.IdeNativeVariantImpl
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeToolchain
 import com.android.ide.common.gradle.model.ndk.v2.NativeBuildSystem
 import com.android.ide.common.repository.GradleVersion
+import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
@@ -90,14 +100,32 @@ import com.google.common.collect.Iterables
 import java.io.File
 import java.util.HashMap
 
-class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<String, String> = HashMap()) {
+class ModelCache {
+  private val strings: MutableMap<String, String> = HashMap()
+  private val buildFolderPaths = BuildFolderPaths()
+  private val androidLibraryCores = mutableMapOf<IdeAndroidLibraryCore, IdeAndroidLibraryCore>()
+  private val javaLibraryCores = mutableMapOf<IdeJavaLibraryCore, IdeJavaLibraryCore>()
+  private val moduleLibraryCores = mutableMapOf<IdeModuleLibraryCore, IdeModuleLibraryCore>()
+
+  /**
+   * Stores the [buildFolder] path for the given [moduleGradlePath] and [buildId].
+   */
+  fun addBuildFolderPath(buildId: String, moduleGradlePath: String, buildFolder: File) {
+    buildFolderPaths.addBuildFolderMapping(buildId, moduleGradlePath, buildFolder)
+  }
+
+  /**
+   * Set the build identifier of root project.
+   */
+  fun setRootBuildId(rootBuildId: String) {
+    buildFolderPaths.setRootBuildId(rootBuildId)
+  }
 
   fun androidProjectFrom(
-    project: AndroidProject,
-    dependenciesFactory: IdeDependenciesFactory,
-    variants: Collection<Variant>,
-    cachedVariants: Collection<IdeVariant>,
-    syncIssues: Collection<SyncIssue>
+          project: AndroidProject,
+          variants: Collection<Variant>,
+          cachedVariants: Collection<IdeVariant>,
+          syncIssues: Collection<SyncIssue>
   ): IdeAndroidProjectImpl {
     // Old plugin versions do not return model version.
     val parsedModelVersion = GradleVersion.tryParse(project.modelVersion)
@@ -109,8 +137,8 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     val variantNames = variants.map { it.name }.toSet()
     val variantsCopy: Collection<IdeVariant> = ImmutableList.copyOf(
       Iterables.concat<IdeVariant>(
-        variants.map { variant: Variant -> variantFrom(variant, dependenciesFactory, parsedModelVersion) },
-        cachedVariants.filter { !variantNames.contains(it.name) }
+              variants.map { variant: Variant -> variantFrom(variant, parsedModelVersion) },
+              cachedVariants.filter { !variantNames.contains(it.name) }
       ))
     val variantNamesCopy: Collection<String> =
       copyNewPropertyWithDefault(
@@ -244,38 +272,37 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
 
   fun androidArtifactFrom(
     artifact: AndroidArtifact,
-    dependenciesFactory: IdeDependenciesFactory,
     agpVersion: GradleVersion?
   ): IdeAndroidArtifactImpl {
     return IdeAndroidArtifactImpl(
-            artifact.name,
-            artifact.compileTaskName,
-            artifact.assembleTaskName,
-            copyNewProperty({ artifact.assembleTaskOutputListingFile }, ""),
-            artifact.classesFolder,
-            copyNewProperty(artifact::getJavaResourcesFolder),
-            copyNewPropertyWithDefault(artifact::getIdeSetupTaskNames, defaultValue = { setOf(artifact.sourceGenTaskName) }).toList(),
-            copy(artifact::getGeneratedSourceFolders, ::deduplicateFile).distinct(), // The source model can contain duplicates.
-            copyNewModel(artifact::getVariantSourceProvider, ::sourceProviderFrom),
-            copyNewModel(artifact::getMultiFlavorSourceProvider, ::sourceProviderFrom),
-            copy(artifact::getAdditionalClassesFolders, ::deduplicateFile),
-            dependenciesFactory.create(artifact),
-            copyOutputs(artifact, agpVersion),
-            artifact.applicationId,
-            artifact.sourceGenTaskName,
-            copy(artifact::getGeneratedResourceFolders, ::deduplicateFile).distinct(),
-            artifact.signingConfigName,
-            ImmutableSet.copyOf( // In AGP 4.0 and below abiFilters was nullable, normalize null to empty set.
+      artifact.name,
+      artifact.compileTaskName,
+      artifact.assembleTaskName,
+      copyNewProperty({ artifact.assembleTaskOutputListingFile }, ""),
+      artifact.classesFolder,
+      copyNewProperty(artifact::getJavaResourcesFolder),
+      copyNewPropertyWithDefault(artifact::getIdeSetupTaskNames, defaultValue = { setOf(artifact.sourceGenTaskName) }).toList(),
+      copy(artifact::getGeneratedSourceFolders, ::deduplicateFile).distinct(), // The source model can contain duplicates.
+      copyNewModel(artifact::getVariantSourceProvider, ::sourceProviderFrom),
+      copyNewModel(artifact::getMultiFlavorSourceProvider, ::sourceProviderFrom),
+      copy(artifact::getAdditionalClassesFolders, ::deduplicateFile),
+      dependenciesFrom(artifact),
+      copyOutputs(artifact, agpVersion),
+      artifact.applicationId,
+      artifact.sourceGenTaskName,
+      copy(artifact::getGeneratedResourceFolders, ::deduplicateFile).distinct(),
+      artifact.signingConfigName,
+      ImmutableSet.copyOf( // In AGP 4.0 and below abiFilters was nullable, normalize null to empty set.
                     artifact.abiFilters.orEmpty()),
-            artifact.isSigned,
-            copy(artifact::getAdditionalRuntimeApks, ::deduplicateFile),
-            copyNewModel(artifact::getTestOptions, ::testOptionsFrom),
-            copyNewModel(artifact::getInstrumentedTestTaskName, ::deduplicateString),
-            copyNewModel(artifact::getBundleTaskName, ::deduplicateString),
-            copyNewModel(artifact::getBundleTaskOutputListingFile, ::deduplicateString),
-            copyNewModel(artifact::getApkFromBundleTaskName, ::deduplicateString),
-            copyNewModel(artifact::getApkFromBundleTaskOutputListingFile, ::deduplicateString),
-            copyNewProperty(artifact::getCodeShrinker)
+      artifact.isSigned,
+      copy(artifact::getAdditionalRuntimeApks, ::deduplicateFile),
+      copyNewModel(artifact::getTestOptions, ::testOptionsFrom),
+      copyNewModel(artifact::getInstrumentedTestTaskName, ::deduplicateString),
+      copyNewModel(artifact::getBundleTaskName, ::deduplicateString),
+      copyNewModel(artifact::getBundleTaskOutputListingFile, ::deduplicateString),
+      copyNewModel(artifact::getApkFromBundleTaskName, ::deduplicateString),
+      copyNewModel(artifact::getApkFromBundleTaskOutputListingFile, ::deduplicateString),
+      copyNewProperty(artifact::getCodeShrinker)
     )
   }
 
@@ -333,10 +360,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     return IdeFilterDataImpl(data.identifier, data.filterType)
   }
 
-  fun javaArtifactFrom(
-    artifact: JavaArtifact,
-    dependenciesFactory: IdeDependenciesFactory
-  ): IdeJavaArtifactImpl {
+  fun javaArtifactFrom(artifact: JavaArtifact): IdeJavaArtifactImpl {
     return IdeJavaArtifactImpl(
       artifact.name,
       artifact.compileTaskName,
@@ -349,7 +373,7 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       copyNewModel(artifact::getVariantSourceProvider, ::sourceProviderFrom),
       copyNewModel(artifact::getMultiFlavorSourceProvider, ::sourceProviderFrom),
       copy(artifact::getAdditionalClassesFolders, ::deduplicateFile),
-      dependenciesFactory.create(artifact),
+      dependenciesFrom(artifact),
       copyNewProperty(artifact::getMockablePlatformJar)
     )
   }
@@ -472,23 +496,22 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
 
   fun variantFrom(
     variant: Variant,
-    dependenciesFactory: IdeDependenciesFactory,
     modelVersion: GradleVersion?
   ): IdeVariantImpl =
     IdeVariantImpl(
-      name = variant.name,
-      displayName = variant.displayName,
-      mainArtifact = copyModel(variant.mainArtifact) { androidArtifactFrom(it, dependenciesFactory, modelVersion) },
-      extraAndroidArtifacts = copy(variant::getExtraAndroidArtifacts) { androidArtifactFrom(it, dependenciesFactory, modelVersion) },
-      extraJavaArtifacts = copy(variant::getExtraJavaArtifacts) { javaArtifactFrom(it, dependenciesFactory) },
-      buildType = variant.buildType,
-      productFlavors = ImmutableList.copyOf(variant.productFlavors),
-      mergedFlavor = copyModel(variant.mergedFlavor, ::productFlavorFrom),
-      testedTargetVariants = getTestedTargetVariants(variant),
-      instantAppCompatible = (modelVersion != null &&
-                              modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) &&
-                              variant.isInstantAppCompatible),
-      desugaredMethods = copy(variant::getDesugaredMethods, ::deduplicateString)
+            name = variant.name,
+            displayName = variant.displayName,
+            mainArtifact = copyModel(variant.mainArtifact) { androidArtifactFrom(it, modelVersion) },
+            extraAndroidArtifacts = copy(variant::getExtraAndroidArtifacts) { androidArtifactFrom(it, modelVersion) },
+            extraJavaArtifacts = copy(variant::getExtraJavaArtifacts) { javaArtifactFrom(it) },
+            buildType = variant.buildType,
+            productFlavors = ImmutableList.copyOf(variant.productFlavors),
+            mergedFlavor = copyModel(variant.mergedFlavor, ::productFlavorFrom),
+            testedTargetVariants = getTestedTargetVariants(variant),
+            instantAppCompatible = (modelVersion != null &&
+                                    modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) &&
+                                    variant.isInstantAppCompatible),
+            desugaredMethods = copy(variant::getDesugaredMethods, ::deduplicateString)
     )
 
   private fun getTestedTargetVariants(variant: Variant): List<IdeTestedTargetVariantImpl> {
@@ -666,15 +689,15 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
 
   fun nativeAbiFrom(nativeAbi: NativeAbi): IdeNativeAbiImpl {
     return IdeNativeAbiImpl(
-      nativeAbi.name,
-      nativeAbi.sourceFlagsFile,
-      nativeAbi.symbolFolderIndexFile,
-      nativeAbi.buildFileIndexFile
+            nativeAbi.name,
+            nativeAbi.sourceFlagsFile,
+            nativeAbi.symbolFolderIndexFile,
+            nativeAbi.buildFileIndexFile
     )
   }
 
   fun androidGradlePluginProjectFlagsFrom(flags: AndroidGradlePluginProjectFlags): IdeAndroidGradlePluginProjectFlagsImpl =
-    IdeAndroidGradlePluginProjectFlagsImpl(flags.booleanFlagMap)
+          IdeAndroidGradlePluginProjectFlagsImpl(flags.booleanFlagMap)
 
   fun copyFilters(output: VariantOutput): Collection<FilterData> {
     return copy(
@@ -689,13 +712,322 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     )
   }
 
-  inline fun <K, V> copy(original: () -> Collection<K>, mapper: (K) -> V): List<V> =
-    try {
-      original()
+  /**
+   * Create [IdeDependencies] from [BaseArtifact].
+   */
+  fun dependenciesFrom(artifact: BaseArtifact): IdeDependencies {
+    return createFromDependencies(artifact.dependencies)
+  }
+
+
+  /**
+   * @param androidLibrary Instance of [AndroidLibrary] returned by android plugin.
+   * @param moduleBuildDirs Instance of [BuildFolderPaths] that contains map from project
+   * path to build directory for all modules.
+   * @return Instance of [Library] based on dependency type.
+   */
+  fun libraryFrom(androidLibrary: AndroidLibrary): IdeLibrary {
+    // If the dependency is a sub-module that wraps local aar, it should be considered as external dependency, i.e. type LIBRARY_ANDROID.
+    // In AndroidLibrary, getProject() of such dependency returns non-null project name, but they should be converted to IdeLevel2AndroidLibrary.
+    // Identify such case with the location of aar bundle.
+    // If the aar bundle is inside of build directory of sub-module, then it's regular library module dependency, otherwise it's a wrapped aar module.
+    return if (androidLibrary.project != null && !isLocalAarModule(androidLibrary)) {
+      createIdeModuleLibrary(androidLibrary, computeAddress(androidLibrary))
     }
-    catch (ignored: UnsupportedOperationException) {
-      listOf<K>()
-    }.map(mapper)
+    else {
+      val core = IdeAndroidLibraryCore.create(
+              artifactAddress = computeAddress(androidLibrary),
+              folder = androidLibrary.folder,
+              manifest = androidLibrary.manifest.path,
+              jarFile = androidLibrary.jarFile.path,
+              compileJarFile = (copyNewProperty(androidLibrary::getCompileJarFile) ?: androidLibrary.jarFile).path,
+              resFolder = androidLibrary.resFolder.path,
+              resStaticLibrary = copyNewProperty(androidLibrary::getResStaticLibrary),
+              assetsFolder = androidLibrary.assetsFolder.path,
+              localJars = androidLibrary.localJars.map { it.path },
+              jniFolder = androidLibrary.jniFolder.path,
+              aidlFolder = androidLibrary.aidlFolder.path,
+              renderscriptFolder = androidLibrary.renderscriptFolder.path,
+              proguardRules = androidLibrary.proguardRules.path,
+              lintJar = androidLibrary.lintJar.path,
+              externalAnnotations = androidLibrary.externalAnnotations.path,
+              publicResources = androidLibrary.publicResources.path,
+              artifact = androidLibrary.bundle,
+              symbolFile = getSymbolFilePath(
+                      androidLibrary),
+              deduplicate = { strings.getOrPut(this) { this } }
+      )
+      val isProvided = copyNewProperty(androidLibrary::isProvided, false)
+      IdeAndroidLibrary(androidLibraryCores.internCore(core), isProvided)
+    }
+  }
+
+  /**
+   * @param javaLibrary Instance of [JavaLibrary] returned by android plugin.
+   * @return Instance of [Library] based on dependency type.
+   */
+  fun libraryFrom(javaLibrary: JavaLibrary): IdeLibrary {
+    val project = copyNewProperty(javaLibrary::getProject)
+    return if (project != null) {
+      // Java modules don't have variant.
+      createIdeModuleLibrary(javaLibrary, computeAddress(javaLibrary))
+    }
+    else {
+      val core = IdeJavaLibraryCore(
+              artifactAddress = computeAddress(javaLibrary),
+              artifact = javaLibrary.jarFile
+      )
+      val isProvided = copyNewProperty(javaLibrary::isProvided, false)
+      IdeJavaLibrary(javaLibraryCores.internCore(core), isProvided)
+    }
+  }
+
+  private fun createIdeModuleLibrary(library: AndroidLibrary, artifactAddress: String): IdeLibrary {
+    val core = IdeModuleLibraryCore(
+            artifactAddress = artifactAddress,
+            buildId = copyNewProperty(library::getBuildId),
+            projectPath = copyNewProperty(library::getProject),
+            variant = copyNewProperty(library::getProjectVariant),
+            folder = copyNewProperty(library::getFolder),
+            lintJar = copyNewProperty(library::getLintJar)?.path
+    )
+    val isProvided = copyNewProperty(library::isProvided, false)
+    return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided)
+  }
+
+  private fun createIdeModuleLibrary(library: JavaLibrary, artifactAddress: String): IdeLibrary {
+    val core = IdeModuleLibraryCore(
+            artifactAddress = artifactAddress,
+            buildId = copyNewProperty(library::getBuildId),
+            projectPath = copyNewProperty(library::getProject),
+            variant = null,
+            folder = null,
+            lintJar = null
+    )
+    val isProvided = copyNewProperty(library::isProvided, false)
+    return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided)
+  }
+
+  fun libraryFrom(projectPath: String, artifactAddress: String, buildId: String?): IdeLibrary {
+    val core = IdeModuleLibraryCore(projectPath, artifactAddress, buildId)
+    return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided = false)
+  }
+
+  companion object {
+    const val LOCAL_AARS = "__local_aars__"
+  }
+
+  private fun getSymbolFilePath(androidLibrary: AndroidLibrary): String {
+    return try {
+      androidLibrary.symbolFile.path
+    }
+    catch (e: UnsupportedOperationException) {
+      File(androidLibrary.folder, SdkConstants.FN_RESOURCE_TEXT).path
+    }
+  }
+
+  /**
+   * @param library Instance of level 1 Library.
+   * @return The artifact address that can be used as unique identifier in global library map.
+   */
+  fun computeAddress(library: Library): String {
+    // If the library is an android module dependency, use projectId:projectPath::variant as unique identifier.
+    // MavenCoordinates cannot be used because it doesn't contain variant information, which results
+    // in the same MavenCoordinates for different variants of the same module.
+    try {
+      if (library.project != null && library is AndroidLibrary) {
+        return ((copyNewProperty(library::getBuildId)).orEmpty()
+                + library.getProject()
+                + "::"
+                + library.projectVariant)
+      }
+    }
+    catch (ex: UnsupportedOperationException) {
+      // getProject() isn't available for pre-2.0 plugins. Proceed with MavenCoordinates.
+      // Anyway pre-2.0 plugins don't have variant information for module dependency.
+    }
+    val coordinate: IdeMavenCoordinates = computeResolvedCoordinate(library)
+    var artifactId = coordinate.artifactId
+    if (artifactId.startsWith(":")) {
+      artifactId = artifactId.substring(1)
+    }
+    artifactId = artifactId.replace(':', '.')
+    var address = coordinate.groupId + ":" + artifactId + ":" + coordinate.version
+    val classifier = coordinate.classifier
+    if (classifier != null) {
+      address = "$address:$classifier"
+    }
+    val packaging = coordinate.packaging
+    address = "$address@$packaging"
+    return address
+  }
+
+  /**
+   * @param projectIdentifier Instance of ProjectIdentifier.
+   * @return The artifact address that can be used as unique identifier in global library map.
+   */
+  fun computeAddress(projectIdentifier: Dependencies.ProjectIdentifier): String {
+    return projectIdentifier.buildId + "@@" + projectIdentifier.projectPath
+  }
+
+  /** Indicates whether the given library is a module wrapping an AAR file.  */
+  fun isLocalAarModule(androidLibrary: AndroidLibrary): Boolean {
+    val projectPath = androidLibrary.project ?: return false
+    val buildFolderPath = buildFolderPaths.findBuildFolderPath(
+      projectPath,
+      copyNewProperty(androidLibrary::getBuildId)
+    )
+    // If the aar bundle is inside of build directory, then it's a regular library module dependency, otherwise it's a wrapped aar module.
+    return (buildFolderPath != null
+            && !FileUtils.isFileInDirectory(androidLibrary.bundle, buildFolderPath))
+  }
+
+  private fun computeResolvedCoordinate(library: Library): IdeMavenCoordinatesImpl {
+    // Although getResolvedCoordinates is annotated with @NonNull, it can return null for plugin 1.5,
+    // when the library dependency is from local jar.
+    return if (library.resolvedCoordinates != null) {
+      mavenCoordinatesFrom(library.resolvedCoordinates)
+    }
+    else {
+      val jarFile: File =
+              if (library is JavaLibrary) {
+                library.jarFile
+              }
+              else {
+                (library as AndroidLibrary).bundle
+              }
+      mavenCoordinatesFrom(jarFile)
+    }
+  }
+
+
+  /** Call this method on level 1 Dependencies model.  */
+  private fun createFromDependencies(dependencies: Dependencies): IdeDependencies {
+    val worker = Worker(dependencies)
+    return worker.createInstance()
+  }
+
+  private inner class Worker(private val dependencies: Dependencies) {
+    // Map from unique artifact address to level2 library instance. The library instances are
+    // supposed to be shared by all artifacts. When creating IdeLevel2Dependencies, check if current library is available in this map,
+    // if it's available, don't create new one, simple add reference to it. If it's not available, create new instance and save
+    // to this map, so it can be reused the next time when the same library is added.
+    private val librariesById = mutableMapOf<String, IdeLibrary>()
+
+    fun createInstance(): IdeDependencies {
+      val visited = mutableSetOf<String>()
+      populateAndroidLibraries(dependencies.libraries, visited)
+      populateJavaLibraries(dependencies.javaLibraries, visited)
+      populateModuleDependencies(dependencies, visited)
+      val jars: Collection<File> = try {
+        dependencies.runtimeOnlyClasses
+      }
+      catch (e: UnsupportedOperationException) {
+        // Gradle older than 3.4.
+        emptyList()
+      }
+      return createInstance(visited, jars)
+    }
+
+    private fun populateModuleDependencies(dependencies: Dependencies, visited: MutableSet<String>) {
+      try {
+        for (identifier in dependencies.javaModules) {
+          createModuleLibrary(
+                  visited,
+                  identifier.projectPath,
+                  computeAddress(identifier),
+                  identifier.buildId)
+        }
+      }
+      catch (ignored: UnsupportedOperationException) {
+        // Dependencies::getJavaModules is available for AGP 3.1+. Use
+        // Dependencies::getProjects for the old plugins.
+        for (projectPath in dependencies.projects) {
+          createModuleLibrary(visited, projectPath, projectPath, null)
+        }
+      }
+    }
+
+    private fun createModuleLibrary(
+            visited: MutableSet<String>,
+            projectPath: String,
+            artifactAddress: String,
+            buildId: String?
+    ) {
+      if (!visited.contains(artifactAddress)) {
+        visited.add(artifactAddress)
+        librariesById.computeIfAbsent(artifactAddress) { libraryFrom(projectPath, artifactAddress, buildId) }
+      }
+    }
+
+    private fun populateAndroidLibraries(
+            androidLibraries: Collection<AndroidLibrary>,
+            visited: MutableSet<String>
+    ) {
+      for (androidLibrary in androidLibraries) {
+        val address = computeAddress(androidLibrary)
+        if (!visited.contains(address)) {
+          visited.add(address)
+          librariesById.computeIfAbsent(address) { libraryFrom(androidLibrary) }
+          populateAndroidLibraries(androidLibrary.libraryDependencies, visited)
+          populateJavaLibraries(getJavaDependencies(androidLibrary), visited)
+        }
+      }
+    }
+
+    private fun getJavaDependencies(androidLibrary: AndroidLibrary): Collection<JavaLibrary> {
+      return try {
+        androidLibrary.javaDependencies
+      }
+      catch (e: UnsupportedOperationException) {
+        emptyList()
+      }
+    }
+
+    private fun populateJavaLibraries(
+            javaLibraries: Collection<JavaLibrary>,
+            visited: MutableSet<String>) {
+      for (javaLibrary in javaLibraries) {
+        val address = computeAddress(javaLibrary)
+        if (!visited.contains(address)) {
+          visited.add(address)
+          librariesById.computeIfAbsent(address) { libraryFrom(javaLibrary) }
+          populateJavaLibraries(javaLibrary.dependencies, visited)
+        }
+      }
+    }
+
+    private fun createInstance(
+            artifactAddresses: Collection<String>,
+            runtimeOnlyJars: Collection<File>
+    ): IdeDependencies {
+      val androidLibraries = ImmutableList.builder<IdeLibrary?>()
+      val javaLibraries = ImmutableList.builder<IdeLibrary?>()
+      val moduleDependencies = ImmutableList.builder<IdeLibrary?>()
+      for (address in artifactAddresses) {
+        val library = librariesById[address]!!
+        when (library.type) {
+          IdeLibrary.LibraryType.LIBRARY_ANDROID -> androidLibraries.add(library)
+          IdeLibrary.LibraryType.LIBRARY_JAVA -> javaLibraries.add(library)
+          IdeLibrary.LibraryType.LIBRARY_MODULE -> moduleDependencies.add(library)
+          else -> throw UnsupportedOperationException("Unknown library type " + library.type)
+        }
+      }
+      return IdeDependenciesImpl(
+              androidLibraries.build(),
+              javaLibraries.build(),
+              moduleDependencies.build(),
+              ImmutableList.copyOf(runtimeOnlyJars))
+    }
+  }
+
+  inline fun <K, V> copy(original: () -> Collection<K>, mapper: (K) -> V): List<V> =
+          try {
+            original()
+          }
+          catch (ignored: UnsupportedOperationException) {
+            listOf<K>()
+          }.map(mapper)
 
   inline fun <K, V> copy(original: () -> Set<K>, mapper: (K) -> V): Set<V> =
     try {
@@ -724,8 +1056,6 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
       mapOf<K, V>()
     }.mapValues { (_, v) -> mapper(v) }
 
-  companion object {
-
     fun <T> copyNewPropertyWithDefault(propertyInvoker: () -> T, defaultValue: () -> T): T {
       return try {
         propertyInvoker()
@@ -739,7 +1069,6 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
      * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
      *       Please use function references or anonymous functions which seeds type inference.
      **/
-    @JvmStatic
     inline fun <T : Any> copyNewProperty(propertyInvoker: () -> T, defaultValue: T): T {
       return try {
         propertyInvoker()
@@ -753,7 +1082,6 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
      * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
      *       Please use function references or anonymous functions which seeds type inference.
      **/
-    @JvmStatic
     inline fun <T : Any?> copyNewProperty(propertyInvoker: () -> T?): T? {
       return try {
         propertyInvoker()
@@ -767,7 +1095,6 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
      * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
      *       Please use function references or anonymous functions which seeds type inference.
      **/
-    @JvmStatic
     inline fun <T : Collection<*>> copyNewProperty(propertyInvoker: () -> T, defaultValue: T): Unit = error(
       "Cannot be called. Use copy() method.")
 
@@ -775,7 +1102,6 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
      * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
      *       Please use function references or anonymous functions which seeds type inference.
      **/
-    @JvmStatic
     inline fun <T : Map<*, *>> copyNewProperty(propertyInvoker: () -> T, defaultValue: T): Unit = error(
       "Cannot be called. Use copy() method.")
 
@@ -783,7 +1109,6 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
      * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
      *       Please use function references or anonymous functions which seeds type inference.
      **/
-    @JvmStatic
     @JvmName("impossibleCopyNewCollectionProperty")
     inline fun <T : Collection<*>?> copyNewProperty(propertyInvoker: () -> T): Unit = error("Cannot be called. Use copy() method.")
 
@@ -791,7 +1116,6 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
      * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
      *       Please use function references or anonymous functions which seeds type inference.
      **/
-    @JvmStatic
     @JvmName("impossibleCopyNewMapProperty")
     inline fun <T : Map<*, *>?> copyNewProperty(propertyInvoker: () -> T): Unit = error("Cannot be called. Use copy() method.")
 
@@ -808,9 +1132,6 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     fun mavenCoordinatesFrom(localJar: File): IdeMavenCoordinatesImpl {
       return IdeMavenCoordinatesImpl(LOCAL_AARS, localJar.path, "unspecified", "jar", null)
     }
-
-    const val LOCAL_AARS = "__local_aars__"
-  }
 
   inline fun <K : Any, V> copyModel(key: K, mappingFunction: (K) -> V): V = mappingFunction(key)
 
@@ -830,7 +1151,10 @@ class ModelCache @JvmOverloads constructor(private val myStrings: MutableMap<Str
     }
   }
 
-  fun deduplicateString(s: String): String = myStrings.putIfAbsent(s, s) ?: s
+  fun deduplicateString(s: String): String = strings.putIfAbsent(s, s) ?: s
   fun deduplicateFile(f: File): File = File(f.path.deduplicate())
   fun String.deduplicate() = deduplicateString(this)
 }
+
+private fun <T> MutableMap<T, T>.internCore(core: T): T = getOrPut(core) { core }
+

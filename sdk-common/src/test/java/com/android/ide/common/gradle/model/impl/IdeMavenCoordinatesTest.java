@@ -25,10 +25,18 @@ import com.android.builder.model.MavenCoordinates;
 import com.android.ide.common.gradle.model.stubs.MavenCoordinatesStub;
 import com.android.testutils.Serialization;
 import java.io.Serializable;
+import org.junit.Before;
 import org.junit.Test;
 
 /** Tests for {@link IdeMavenCoordinatesImpl}. */
 public class IdeMavenCoordinatesTest {
+    private ModelCache myModelCache;
+
+    @Before
+    public void setUp() throws Exception {
+        myModelCache = new ModelCache();
+    }
+
     @Test
     public void serializable() {
         assertThat(IdeMavenCoordinatesImpl.class).isAssignableTo(Serializable.class);
@@ -37,7 +45,7 @@ public class IdeMavenCoordinatesTest {
     @Test
     public void serialization() throws Exception {
         IdeMavenCoordinatesImpl coordinates =
-                ModelCache.Companion.mavenCoordinatesFrom(new MavenCoordinatesStub());
+                myModelCache.mavenCoordinatesFrom(new MavenCoordinatesStub());
         byte[] bytes = Serialization.serialize(coordinates);
         Object o = Serialization.deserialize(bytes);
         assertEquals(coordinates, o);
@@ -46,7 +54,7 @@ public class IdeMavenCoordinatesTest {
     @Test
     public void constructor() throws Throwable {
         MavenCoordinates original = new MavenCoordinatesStub();
-        IdeMavenCoordinatesImpl copy = ModelCache.Companion.mavenCoordinatesFrom(original);
+        IdeMavenCoordinatesImpl copy = myModelCache.mavenCoordinatesFrom(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

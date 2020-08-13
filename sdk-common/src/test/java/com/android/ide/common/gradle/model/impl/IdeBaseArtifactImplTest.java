@@ -17,18 +17,10 @@ package com.android.ide.common.gradle.model.impl;
 
 import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.createEqualsVerifier;
 
-import org.junit.Before;
 import org.junit.Test;
 
 /** Tests for {@link IdeBaseArtifactImpl}. */
 public class IdeBaseArtifactImplTest {
-    private IdeDependenciesFactory myDependenciesFactory;
-
-    @Before
-    public void setup() {
-        myDependenciesFactory = new IdeDependenciesFactory();
-    }
-
     @Test
     public void equalsAndHashCode() {
         createEqualsVerifier(IdeBaseArtifactImpl.class, "hashCode")
