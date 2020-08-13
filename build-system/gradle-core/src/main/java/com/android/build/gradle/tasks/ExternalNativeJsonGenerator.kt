@@ -299,16 +299,9 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     }
 
                     infoln("executing %s %s", variant.module.buildSystem.tag, processBuilder)
-                    val buildOutput = executeProcess(ops, abi)
+                    executeProcess(ops, abi)
                     infoln("done executing %s", variant.module.buildSystem.tag)
 
-                    // Write the captured process output to a file for diagnostic purposes.
-                    infoln("write build output %s", abi.buildOutputFile.absolutePath)
-                    Files.write(
-                        abi.buildOutputFile.toPath(),
-                        buildOutput.toByteArray(Charsets.UTF_8)
-                    )
-                    processBuildOutput(buildOutput, abi)
                     if (!abi.jsonFile.exists()) {
                         throw GradleException(
                             String.format(
@@ -404,21 +397,13 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         )
     }
 
-    /**
-     * Derived class implements this method to post-process build output. NdkPlatform-build uses
-     * this to capture and analyze the compile and link commands that were written to stdout.
-     */
-    @Throws(IOException::class)
-    abstract fun processBuildOutput(buildOutput: String, abiConfig: CxxAbiModel)
     abstract fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder
 
     /**
      * Executes the JSON generation process. Return the combination of STDIO and STDERR from running
      * the process.
-     *
-     * @return Returns the combination of STDIO and STDERR from running the process.
      */
-    abstract fun executeProcess(ops: ExecOperations, abi: CxxAbiModel): String
+    abstract fun executeProcess(ops: ExecOperations, abi: CxxAbiModel)
 
     companion object {
         /**

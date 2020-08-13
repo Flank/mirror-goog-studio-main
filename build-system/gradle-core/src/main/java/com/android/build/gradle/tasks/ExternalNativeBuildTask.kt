@@ -505,8 +505,9 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
                     }
 
             createProcessOutputJunction(
-                buildStep.outputFolder,
-                "android_gradle_build_$logFileSuffix",
+                buildStep.outputFolder.resolve("android_gradle_build_command_$logFileSuffix.txt"),
+                buildStep.outputFolder.resolve("android_gradle_build_stdout_$logFileSuffix.txt"),
+                buildStep.outputFolder.resolve("android_gradle_build_stderr_$logFileSuffix.txt"),
                 processBuilder,
                 "")
                 .logStderrToLifecycle()

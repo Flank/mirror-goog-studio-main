@@ -65,8 +65,9 @@ fun generatePrefabPackages(
         .addArgs(packagePaths)
 
     createProcessOutputJunction(
-        abiModel.soFolder,
-        "prefab_${buildSystem}_${abiModel.abi.tag}",
+        abiModel.soFolder.resolve("prefab_command_${buildSystem}_${abiModel.abi.tag}.txt"),
+        abiModel.soFolder.resolve("prefab_stdout_${buildSystem}_${abiModel.abi.tag}.txt"),
+        abiModel.soFolder.resolve("prefab_stderr_${buildSystem}_${abiModel.abi.tag}.txt"),
         builder, "prefab"
     ).javaProcess().logStderrToLifecycle().execute(ops::javaexec)
 }

@@ -90,12 +90,9 @@ internal class CmakeServerExternalNativeJsonGenerator(
 
     private val cmake get() = variant.module.cmake!!
 
-    override fun executeProcess(ops: ExecOperations, abi: CxxAbiModel): String {
-        val output = executeProcessAndGetOutput(abi)
-        return makeCmakeMessagePathsAbsolute(output, variant.module.makeFile.parentFile.parentFile)
+    override fun executeProcess(ops: ExecOperations, abi: CxxAbiModel) {
+        executeProcessAndGetOutput(abi)
     }
-
-    override fun processBuildOutput(buildOutput: String, abiConfig: CxxAbiModel) {}
 
     override fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder {
         val builder = ProcessInfoBuilder()
@@ -113,7 +110,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
      *
      * @return Returns the combination of STDIO and STDERR from running the process.
      */
-    private fun executeProcessAndGetOutput(abi: CxxAbiModel): String {
+    private fun executeProcessAndGetOutput(abi: CxxAbiModel) {
         // Once a Cmake server object is created
         // - connect to the server
         // - perform a handshake
@@ -200,7 +197,6 @@ internal class CmakeServerExternalNativeJsonGenerator(
                     )
                 }
                 generateAndroidGradleBuild(abi, cmakeServer)
-                configureCommandResult.interactiveMessages
             } finally {
                 cmakeServer.disconnect()
             }

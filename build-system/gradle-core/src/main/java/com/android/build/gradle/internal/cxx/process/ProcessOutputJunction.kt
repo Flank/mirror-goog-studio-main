@@ -48,17 +48,16 @@ import java.io.IOException
  */
 class ProcessOutputJunction(
     private val process: ProcessInfoBuilder,
-    outputFolder: File,
-    outputBaseName: String,
+    private val commandFile: File,
+    private val stdoutFile: File,
+    private val stderrFile: File,
     private val logPrefix: String,
     private val execute: (ProcessInfo, ProcessOutputHandler, (Action<in BaseExecSpec?>) -> ExecResult) -> ProcessResult
 ) {
     private var logErrorToLifecycle: Boolean = false
     private var logOutputToInfo: Boolean = false
     private var isJavaProcess: Boolean = false
-    private val stderrFile = File(outputFolder, "$outputBaseName.stderr.txt")
-    private val stdoutFile = File(outputFolder, "$outputBaseName.stdout.txt")
-    private val commandFile = File(outputFolder, "$outputBaseName.command.txt")
+
 
     fun javaProcess(): ProcessOutputJunction {
         isJavaProcess = true
@@ -100,23 +99,6 @@ class ProcessOutputJunction(
     }
 
     /**
-     * Execute the process and return stdout as a String. If you don't need the String then you
-     * should use execute() instead.
-     */
-    @Throws(BuildCommandException::class, IOException::class)
-    fun executeAndReturnStdoutString(execOperations: (Action<in ExecSpec?>) -> ExecResult): String {
-        val handler = DefaultProcessOutputHandler(
-            stderrFile,
-            stdoutFile,
-            logPrefix,
-            logErrorToLifecycle,
-            logOutputToInfo
-        )
-        execute(handler, execOperations)
-        return stdoutFile.readText()
-    }
-
-    /**
      * Execute the process.
      */
     @Throws(BuildCommandException::class, IOException::class)
@@ -136,15 +118,17 @@ class ProcessOutputJunction(
  * Create a ProcessOutputJunction from a ProcessInfoBuilder.
  */
 fun createProcessOutputJunction(
-    outputFolder: File,
-    outputBaseName: String,
+    commandFile: File,
+    stdoutFile: File,
+    stderrFile: File,
     process: ProcessInfoBuilder,
     logPrefix: String
 ): ProcessOutputJunction {
     return ProcessOutputJunction(
         process,
-        outputFolder,
-        outputBaseName,
+        commandFile,
+        stdoutFile,
+        stderrFile,
         logPrefix) { processInfo: ProcessInfo, outputHandler: ProcessOutputHandler, baseExecOperation: (Action<in BaseExecSpec?>) -> ExecResult ->
         if (processInfo is JavaProcessInfo) {
             @Suppress("UNCHECKED_CAST")

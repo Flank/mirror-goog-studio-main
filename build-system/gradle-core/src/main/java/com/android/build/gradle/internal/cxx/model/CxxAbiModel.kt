@@ -168,6 +168,30 @@ val CxxAbiModel.symbolFolderIndexFile: File
 val CxxAbiModel.buildFileIndexFile: File
     get() = FileUtils.join(originalCxxBuildFolder, "build_file_index.txt")
 
+/**
+ * Text file containing command run to generate C/C++ metadata.
+ *
+ * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/metadata_generation_command.txt
+ */
+val CxxAbiModel.metadataGenerationCommandFile: File
+    get() = FileUtils.join(originalCxxBuildFolder, "metadata_generation_command.txt")
+
+/**
+ * Text file containing STDOUT for the process run to generate C/C++ metadata.
+ *
+ * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/metadata_generation_stdout.txt
+ */
+val CxxAbiModel.metadataGenerationStdoutFile: File
+    get() = FileUtils.join(originalCxxBuildFolder, "metadata_generation_stdout.txt")
+
+/**
+ * Text file containing STDERR for the process run to generate C/C++ metadata.
+ *
+ * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/metadata_generation_stderr.txt
+ */
+val CxxAbiModel.metadataGenerationStderrFile: File
+    get() = FileUtils.join(originalCxxBuildFolder, "metadata_generation_stderr.txt")
+
 fun CxxAbiModel.shouldGeneratePrefabPackages(): Boolean {
     // Prefab will fail if we try to create ARMv5/MIPS/MIPS64 modules. r17 was the first NDK version
     // that we can guarantee will not be used to use those ABIs.
