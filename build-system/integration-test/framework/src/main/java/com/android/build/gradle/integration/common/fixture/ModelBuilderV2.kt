@@ -325,15 +325,24 @@ class FileNormalizerImpl(
         })
 
         mutableList.add(RootData(gradleUserHome, "GRADLE"))
+
+        androidNdkSxSRoot?.resolve(defaultNdkSideBySideVersion)?.let {
+            mutableList.add(RootData(it, "NDK_ROOT"))
+            // Some tools in NDK follows symbolic links. So do the same and add the real location
+            // of NDK to the known roots.
+            mutableList.add(
+                RootData(
+                    it.resolve("source.properties").canonicalFile.parentFile,
+                    "NDK_ROOT"
+                )
+            )
+        }
+
         androidSdk?.let {
             mutableList.add(RootData(it, "SDK"))
         }
         androidHome?.let {
             mutableList.add(RootData(it, "ANDROID_HOME"))
-        }
-
-        androidNdkSxSRoot?.resolve(defaultNdkSideBySideVersion)?.let {
-            mutableList.add(RootData(it, "NDK_ROOT"))
         }
 
         localRepos.asSequence().map { it.toFile() }.forEach {

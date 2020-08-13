@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataG
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.model.buildFileIndexFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
-import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.symbolFolderIndexFile
 import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.profile.AnalyticsService
@@ -102,10 +101,7 @@ class NativeModelBuilder(
             NativeVariantImpl(generator.variant.variantName, generator.abis.map { cxxAbiModel ->
                 NativeAbiImpl(
                     cxxAbiModel.abi.tag,
-                    when (cxxModuleModel.buildSystem) {
-                        com.android.build.gradle.tasks.NativeBuildSystem.CMAKE -> cxxAbiModel.compileCommandsJsonFile.canonicalFile
-                        com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD -> cxxAbiModel.compileCommandsJsonBinFile.canonicalFile
-                    },
+                    cxxAbiModel.compileCommandsJsonBinFile.canonicalFile,
                     cxxAbiModel.symbolFolderIndexFile.canonicalFile,
                     cxxAbiModel.buildFileIndexFile.canonicalFile
                 )

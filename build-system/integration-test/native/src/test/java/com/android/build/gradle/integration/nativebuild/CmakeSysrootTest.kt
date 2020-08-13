@@ -19,7 +19,7 @@ package com.android.build.gradle.integration.nativebuild
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.build.gradle.integration.common.fixture.model.readCompileCommandsJsonEntries
+import com.android.build.gradle.integration.common.fixture.model.readCompileCommandsJsonBin
 import com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION
@@ -97,10 +97,11 @@ class CmakeSysrootTest(private val useV2NativeModel: Boolean) {
             assertThat(nativeModule.variants.map { it.name }).containsExactly("debug", "release")
             for (variant in nativeModule.variants) {
                 for (abi in variant.abis) {
-                    for (entry in abi.sourceFlagsFile.readCompileCommandsJsonEntries()) {
-                        assertThat(entry.command).contains("--target=")
-                        assertThat(entry.command).contains("--sysroot=")
-                    }
+                    val flags =
+                        abi.sourceFlagsFile.readCompileCommandsJsonBin(nativeModules.normalizer)
+                            .single().flags
+                    assertThat(flags.any { it.startsWith("--target") }).named("one of the following flags starts with '--target': $flags").isTrue()
+                    assertThat(flags.any { it.startsWith("--sysroot") }).named("one of the following flags starts with '--sysroot': $flags").isTrue()
                 }
             }
         } else {

@@ -18,16 +18,16 @@ package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.dump;
-import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.readCompileCommandsJsonBinEntries;
+import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.dumpCompileCommandsJsonBin;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2;
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
-import com.android.build.gradle.integration.common.fixture.model.CompileCommandsJsonBinEntry;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.NativeBuildSystem;
@@ -44,7 +44,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -236,17 +235,35 @@ public class NdkBuildTargetsTest {
                         .filter(abi -> abi.getName().equals("x86"))
                         .findFirst()
                         .get();
-        List<CompileCommandsJsonBinEntry> commandsJsonBinEntries =
-                readCompileCommandsJsonBinEntries(
-                        debugX86Abi.getSourceFlagsFile(), fetchResult.getNormalizer());
-        assertThat(commandsJsonBinEntries).hasSize(2);
-        assertThat(
-                        commandsJsonBinEntries.stream()
-                                .map(CompileCommandsJsonBinEntry::getSourceFile)
-                                .collect(Collectors.toList()))
-                .containsExactly(
-                        "{PROJECT}/src/main/cpp/library1/library1.cpp{F}",
-                        "{PROJECT}/src/main/cpp/library2/library2.cpp{F}");
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX) {
+            assertThat(
+                            dumpCompileCommandsJsonBin(
+                                    debugX86Abi.getSourceFlagsFile(), fetchResult.getNormalizer()))
+                    .isEqualTo(
+                            "sourceFile: {PROJECT}/src/main/cpp/library1/library1.cpp{F}\n"
+                                    + "compiler:   {NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++{F}\n"
+                                    + "workingDir: {PROJECT}/{D}\n"
+                                    + "flags:      [-target, i686-none-linux-android16, -fdata-sections, -ffunction-sections, -fstack-protector-strong, -funwind-tables, -no-canonical-prefixes, --sysroot, {NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/sysroot, -g, -Wno-invalid-command-line-argument, -Wno-unused-command-line-argument, -D_FORTIFY_SOURCE=2, -fno-exceptions, -fno-rtti, -fPIC, -O0, -UNDEBUG, -fno-limit-debug-info, -I{PROJECT}/src/main/cpp/library1, -I{PROJECT}/src/main/cpp/library1, -DTEST_C_FLAG, -DTEST_C_FLAG_2, -DTEST_CPP_FLAG, -DANDROID, -Wformat, -Werror=format-security, -mstackrealign]\n"
+                                    + "\n"
+                                    + "sourceFile: {PROJECT}/src/main/cpp/library2/library2.cpp{F}\n"
+                                    + "compiler:   {NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++{F}\n"
+                                    + "workingDir: {PROJECT}/{D}\n"
+                                    + "flags:      [-target, i686-none-linux-android16, -fdata-sections, -ffunction-sections, -fstack-protector-strong, -funwind-tables, -no-canonical-prefixes, --sysroot, {NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/sysroot, -g, -Wno-invalid-command-line-argument, -Wno-unused-command-line-argument, -D_FORTIFY_SOURCE=2, -fno-exceptions, -fno-rtti, -fPIC, -O0, -UNDEBUG, -fno-limit-debug-info, -I{PROJECT}/src/main/cpp/library2, -I{PROJECT}/src/main/cpp/library2, -DTEST_C_FLAG, -DTEST_C_FLAG_2, -DTEST_CPP_FLAG, -DANDROID, -Wformat, -Werror=format-security, -mstackrealign]");
+        } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            assertThat(
+                            dumpCompileCommandsJsonBin(
+                                    debugX86Abi.getSourceFlagsFile(), fetchResult.getNormalizer()))
+                    .isEqualTo(
+                            "sourceFile: {PROJECT}/src/main/cpp/library1/library1.cpp{F}\n"
+                                    + "compiler:   {NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe{F}\n"
+                                    + "workingDir: {PROJECT}/{D}\n"
+                                    + "flags:      [-target, i686-none-linux-android16, -fdata-sections, -ffunction-sections, -fstack-protector-strong, -funwind-tables, -no-canonical-prefixes, --sysroot, {NDK_ROOT}/build//../toolchains/llvm/prebuilt/windows-x86_64/sysroot, -g, -Wno-invalid-command-line-argument, -Wno-unused-command-line-argument, -D_FORTIFY_SOURCE=2, -fno-exceptions, -fno-rtti, -fPIC, -O0, -UNDEBUG, -fno-limit-debug-info, -I{PROJECT}/src/main/cpp/library1, -I{PROJECT}/src/main/cpp/library1, -DTEST_C_FLAG, -DTEST_C_FLAG_2, -DTEST_CPP_FLAG, -DANDROID, -Wformat, -Werror=format-security, -mstackrealign]\n"
+                                    + "\n"
+                                    + "sourceFile: {PROJECT}/src/main/cpp/library2/library2.cpp{F}\n"
+                                    + "compiler:   {NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe{F}\n"
+                                    + "workingDir: {PROJECT}/{D}\n"
+                                    + "flags:      [-target, i686-none-linux-android16, -fdata-sections, -ffunction-sections, -fstack-protector-strong, -funwind-tables, -no-canonical-prefixes, --sysroot, {NDK_ROOT}/build//../toolchains/llvm/prebuilt/windows-x86_64/sysroot, -g, -Wno-invalid-command-line-argument, -Wno-unused-command-line-argument, -D_FORTIFY_SOURCE=2, -fno-exceptions, -fno-rtti, -fPIC, -O0, -UNDEBUG, -fno-limit-debug-info, -I{PROJECT}/src/main/cpp/library2, -I{PROJECT}/src/main/cpp/library2, -DTEST_C_FLAG, -DTEST_C_FLAG_2, -DTEST_CPP_FLAG, -DANDROID, -Wformat, -Werror=format-security, -mstackrealign]");
+        }
     }
 
     private static void assertModel(NativeAndroidProject model) {

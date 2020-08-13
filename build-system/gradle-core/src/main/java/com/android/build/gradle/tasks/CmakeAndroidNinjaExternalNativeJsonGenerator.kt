@@ -112,5 +112,4 @@ internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
     override fun checkPrefabConfig() {
         errorln("Prefab cannot be used with CMake 3.6. Use CMake 3.7 or newer.")
     }
-
 }

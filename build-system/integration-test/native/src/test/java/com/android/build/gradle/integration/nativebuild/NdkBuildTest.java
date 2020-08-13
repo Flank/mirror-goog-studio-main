@@ -18,19 +18,19 @@ package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.dump;
+import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.dumpCompileCommandsJsonBin;
 import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.readAsFileIndex;
-import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.readCompileCommandsJsonBinEntries;
 import static com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2;
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
-import com.android.build.gradle.integration.common.fixture.model.CompileCommandsJsonBinEntry;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
@@ -52,7 +52,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -224,24 +223,37 @@ public class NdkBuildTest {
                             .filter(abi -> abi.getName().equals("arm64-v8a"))
                             .findFirst()
                             .get();
-            List<CompileCommandsJsonBinEntry> commandsJsonBinEntries =
-                    readCompileCommandsJsonBinEntries(
-                            debugX86Abi.getSourceFlagsFile(), fetchResult.getNormalizer());
+            if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX) {
+                assertThat(
+                        dumpCompileCommandsJsonBin(
+                                debugX86Abi.getSourceFlagsFile(),
+                                fetchResult.getNormalizer()))
+                        .isEqualTo(
+                                "sourceFile: {PROJECT}/src/main/jni/hello-jni.c{F}\n"
+                                        + "compiler:   {NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang{F}\n"
+                                        + "workingDir: {PROJECT}/{D}\n"
+                                        + "flags:      [-target, aarch64-none-linux-android21, -fdata-sections, -ffunction-sections, -fstack-protector-strong, -funwind-tables, -no-canonical-prefixes, --sysroot, {NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/sysroot, -g, -Wno-invalid-command-line-argument, -Wno-unused-command-line-argument, -D_FORTIFY_SOURCE=2, -fpic, -O0, -UNDEBUG, -fno-limit-debug-info, -I{PROJECT}/src/main/jni, -DANDROID, -Wformat, -Werror=format-security]");
+            } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+                assertThat(
+                        dumpCompileCommandsJsonBin(
+                                debugX86Abi.getSourceFlagsFile(),
+                                fetchResult.getNormalizer()))
+                        .isEqualTo(
+                                "sourceFile: {PROJECT}/src/main/jni/hello-jni.c{F}\n"
+                                        + "compiler:   {NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe{F}\n"
+                                        + "workingDir: {PROJECT}/{D}\n"
+                                        + "flags:      [-target, aarch64-none-linux-android21, -fdata-sections, -ffunction-sections, -fstack-protector-strong, -funwind-tables, -no-canonical-prefixes, --sysroot, {NDK_ROOT}/build//../toolchains/llvm/prebuilt/windows-x86_64/sysroot, -g, -Wno-invalid-command-line-argument, -Wno-unused-command-line-argument, -D_FORTIFY_SOURCE=2, -fpic, -O0, -UNDEBUG, -fno-limit-debug-info, -I{PROJECT}/src/main/jni, -DANDROID, -Wformat, -Werror=format-security]");
+            }
             assertThat(
-                            commandsJsonBinEntries.stream()
-                                    .map(CompileCommandsJsonBinEntry::getSourceFile)
-                                    .collect(Collectors.toList()))
-                    .containsExactly("{PROJECT}/src/main/jni/hello-jni.c{F}");
-            assertThat(
-                            readAsFileIndex(
-                                    debugX86Abi.getSymbolFolderIndexFile(),
-                                    fetchResult.getNormalizer()))
+                    readAsFileIndex(
+                            debugX86Abi.getSymbolFolderIndexFile(),
+                            fetchResult.getNormalizer()))
                     .containsExactly(
                             "{PROJECT}/build/intermediates/ndkBuild/debug/obj/local/arm64-v8a{!}");
             assertThat(
-                            readAsFileIndex(
-                                    debugX86Abi.getBuildFileIndexFile(),
-                                    fetchResult.getNormalizer()))
+                    readAsFileIndex(
+                            debugX86Abi.getBuildFileIndexFile(),
+                            fetchResult.getNormalizer()))
                     .containsExactly("{PROJECT}/src/main/jni/Android.mk{F}");
         } else {
             project.model()

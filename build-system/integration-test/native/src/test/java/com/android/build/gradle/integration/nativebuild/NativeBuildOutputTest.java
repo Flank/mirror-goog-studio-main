@@ -407,7 +407,7 @@ public class NativeBuildOutputTest {
                                     + "          > abis:\n"
                                     + "             * NativeAbi:\n"
                                     + "                * name                  = \"x86_64\"\n"
-                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json{!}\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{!}\n"
                                     + "                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{!}\n"
                                     + "                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{!}\n"
                                     + "          < abis\n"
@@ -416,7 +416,7 @@ public class NativeBuildOutputTest {
                                     + "          > abis:\n"
                                     + "             * NativeAbi:\n"
                                     + "                * name                  = \"x86_64\"\n"
-                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json{!}\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json.bin{!}\n"
                                     + "                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{!}\n"
                                     + "                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{!}\n"
                                     + "          < abis\n"
@@ -425,8 +425,7 @@ public class NativeBuildOutputTest {
                                     + "    - ndkVersion              = \"{DEFAULT_NDK_VERSION}\"\n"
                                     + "    - defaultNdkVersion       = \"{DEFAULT_NDK_VERSION}\"\n"
                                     + "    - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}\n"
-                                    + "< NativeModule"
-                    );
+                                    + "< NativeModule");
         } else {
             Collection<SyncIssue> syncIssues =
                     project.model().fetchAndroidProjects().getOnlyModelSyncIssues();

@@ -18,16 +18,16 @@ package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.dump;
-import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.readCompileCommandsJsonBinEntries;
+import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.dumpCompileCommandsJsonBin;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2;
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
-import com.android.build.gradle.integration.common.fixture.model.CompileCommandsJsonBinEntry;
 import com.android.build.gradle.integration.common.utils.NdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
@@ -221,12 +221,27 @@ public class NdkBuildJniLibTest {
                             .filter(abi -> abi.getName().equals("x86"))
                             .findFirst()
                             .get();
-            List<CompileCommandsJsonBinEntry> commandsJsonBinEntries =
-                    readCompileCommandsJsonBinEntries(
-                            debugX86Abi.getSourceFlagsFile(), fetchResult.getNormalizer());
-            assertThat(commandsJsonBinEntries).hasSize(1);
-            assertThat(commandsJsonBinEntries.get(0).getSourceFile())
-                    .isEqualTo("{PROJECT}/lib/src/main/cxx/hello-jni.c{F}");
+            if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX) {
+                assertThat(
+                                dumpCompileCommandsJsonBin(
+                                        debugX86Abi.getSourceFlagsFile(),
+                                        fetchResult.getNormalizer()))
+                        .isEqualTo(
+                                "sourceFile: {PROJECT}/lib/src/main/cxx/hello-jni.c{F}\n"
+                                        + "compiler:   {NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang{F}\n"
+                                        + "workingDir: {PROJECT}/lib{D}\n"
+                                        + "flags:      [-target, i686-none-linux-android21, -fdata-sections, -ffunction-sections, -fstack-protector-strong, -funwind-tables, -no-canonical-prefixes, --sysroot, {NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/sysroot, -g, -Wno-invalid-command-line-argument, -Wno-unused-command-line-argument, -D_FORTIFY_SOURCE=2, -fPIC, -O0, -UNDEBUG, -fno-limit-debug-info, -I{PROJECT}/lib/src/main/cxx, -DANDROID, -Wformat, -Werror=format-security, -mstackrealign]");
+            } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+                assertThat(
+                                dumpCompileCommandsJsonBin(
+                                        debugX86Abi.getSourceFlagsFile(),
+                                        fetchResult.getNormalizer()))
+                        .isEqualTo(
+                                "sourceFile: {PROJECT}/lib/src/main/cxx/hello-jni.c{F}\n"
+                                        + "compiler:   {NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe{F}\n"
+                                        + "workingDir: {PROJECT}/lib{D}\n"
+                                        + "flags:      [-target, i686-none-linux-android21, -fdata-sections, -ffunction-sections, -fstack-protector-strong, -funwind-tables, -no-canonical-prefixes, --sysroot, {NDK_ROOT}/build//../toolchains/llvm/prebuilt/windows-x86_64/sysroot, -g, -Wno-invalid-command-line-argument, -Wno-unused-command-line-argument, -D_FORTIFY_SOURCE=2, -fPIC, -O0, -UNDEBUG, -fno-limit-debug-info, -I{PROJECT}/lib/src/main/cxx, -DANDROID, -Wformat, -Werror=format-security, -mstackrealign]");
+            }
         } else {
             // Make sure we can successfully get AndroidProject
             project.model().fetchAndroidProjects().getOnlyModelMap().get(":app");

@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.cxx.configure.JsonGenerationInvalidatio
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.gradle.generator.NativeAndroidProjectBuilder
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
+import com.android.build.gradle.internal.cxx.json.CompileCommandFlagListInterner
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.logging.PassThroughPrefixingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment.Companion.requireExplicitLogger
@@ -32,7 +33,8 @@ import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState
 import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState.Companion.fromJson
 import com.android.build.gradle.internal.cxx.model.buildCommandFile
 import com.android.build.gradle.internal.cxx.model.buildFileIndexFile
-import com.android.build.gradle.internal.cxx.model.buildOutputFile
+import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
+import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
 import com.android.build.gradle.internal.cxx.model.modelOutputFile
@@ -46,6 +48,9 @@ import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils
+import com.android.utils.cxx.CompileCommandsEncoder
+import com.android.utils.cxx.stripArgsForIde
+import com.android.utils.tokenizeCommandLineToEscaped
 import com.google.common.base.Charsets
 import com.google.common.collect.Lists
 import com.google.gson.Gson
@@ -348,6 +353,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                 }
                 abi.generateSymbolFolderIndexFile()
                 abi.generateBuildFilesIndex(variantBuilder)
+                abi.generateCompileCommandsJsonBin()
                 infoln("JSON generation completed without problems")
             } catch (e: GradleException) {
                 variantStats.outcome = GenerationOutcome.FAILED
@@ -395,6 +401,44 @@ abstract class ExternalNativeJsonGenerator internal constructor(
             ).buildFiles.joinToString(System.lineSeparator()),
             StandardCharsets.UTF_8
         )
+    }
+
+    private fun CxxAbiModel.generateCompileCommandsJsonBin() {
+        val interner = CompileCommandFlagListInterner()
+        val compileCommandsJsonReader =
+            compileCommandsJsonFile.takeIf { it.exists() }?.reader(StandardCharsets.UTF_8) ?: return
+        JsonReader(compileCommandsJsonReader).use { reader ->
+            CompileCommandsEncoder(compileCommandsJsonBinFile).use { encoder ->
+                reader.beginArray()
+                while (reader.hasNext()) {
+                    reader.beginObject()
+                    lateinit var directory: String
+                    lateinit var command: String
+                    lateinit var sourceFile: String
+                    while (reader.hasNext()) {
+                        when (reader.nextName()) {
+                            "directory" -> directory = reader.nextString()
+                            "command" -> command = reader.nextString()
+                            "file" -> sourceFile = reader.nextString()
+                            // swallow other optional fields
+                            else -> reader.skipValue()
+                        }
+                    }
+                    reader.endObject()
+                    val args = interner.internFlags(command)
+                    val compiler = args[0]
+                    val flags = stripArgsForIde(sourceFile, args.subList(1, args.size))
+                    encoder.writeCompileCommand(
+                        File(sourceFile),
+                        File(compiler),
+                        flags,
+                        File(directory)
+                    )
+                }
+                reader.endArray()
+
+            }
+        }
     }
 
     abstract fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder
