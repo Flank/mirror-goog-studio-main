@@ -126,8 +126,8 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     } catch (e: GradleException) {
                         errorln("exception while building Json %s", e.message!!)
                     } catch (e: ProcessException) {
-                        errorln("executing external native build for %s %s",
-                            variant.module.buildSystem.tag, variant.module.makeFile)
+                        errorln("error when building with %s using %s: %s",
+                            variant.module.buildSystem.tag, variant.module.makeFile, e.message!!)
                     }
                 }
             )
