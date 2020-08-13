@@ -20,16 +20,11 @@ import com.android.ide.common.gradle.model.IdeLibrary
 import java.io.File
 
 class IdeDependenciesStub(
-  private val androidLibraries : Collection<IdeLibrary>,
-  private val javaLibraries : Collection<IdeLibrary>,
-  private val moduleDependencies : Collection<IdeLibrary>,
-  private val runtimeOnlyClasses : Collection<File>
-) : IdeDependencies {
-  override fun getAndroidLibraries(): Collection<IdeLibrary> = androidLibraries
-  override fun getJavaLibraries(): Collection<IdeLibrary> = javaLibraries
-  override fun getModuleDependencies(): Collection<IdeLibrary> = moduleDependencies
-  override fun getRuntimeOnlyClasses(): Collection<File> = runtimeOnlyClasses
-}
+  override val androidLibraries : Collection<IdeLibrary>,
+  override val javaLibraries : Collection<IdeLibrary>,
+  override val moduleDependencies : Collection<IdeLibrary>,
+  override val runtimeOnlyClasses : Collection<File>
+) : IdeDependencies
 
 class IdeDependenciesStubBuilder(
   var androidLibraries : Collection<IdeLibrary> = emptyList(),

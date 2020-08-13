@@ -352,13 +352,6 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         return myAgpFlags;
     }
 
-    @Override
-    public void forEachVariant(@NonNull Consumer<IdeVariant> action) {
-        for (IdeVariant variant : myVariants) {
-            action.accept(variant);
-        }
-    }
-
     @NonNull
     @Override
     public Collection<IdeVariantBuildInformation> getVariantsBuildInformation() {
