@@ -17,16 +17,14 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants.FD_RES_VALUES
-import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
+import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
-import com.android.build.gradle.internal.services.AsyncResourceProcessor
-import com.android.build.gradle.internal.services.use
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.files.SerializableInputChanges
-import com.android.builder.internal.aapt.v2.Aapt2
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
@@ -43,7 +41,9 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
+import org.gradle.workers.WorkerExecutor
 import java.io.File
+import javax.inject.Inject
 
 @CacheableTask
 abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
@@ -101,18 +101,28 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
 
     protected abstract class CompileLibraryResourcesAction :
         ProfileAwareWorkAction<CompileLibraryResourcesParams>() {
+
+        @get:Inject
+        abstract val workerExecutor: WorkerExecutor
+
         override fun run() {
 
-            parameters.aapt2.get().use(parameters) { processor ->
+            WorkerExecutorResourceCompilationService(
+                projectName = parameters.projectName.get(),
+                taskOwner = parameters.taskOwner.get(),
+                workerExecutor = workerExecutor,
+                analyticsService = parameters.analyticsService,
+                aapt2Input = parameters.aapt2.get()
+            ).use { compilationService ->
                 if (parameters.incremental.get()) {
-                    handleIncrementalChanges(parameters.incrementalChanges.get(), processor)
+                    handleIncrementalChanges(parameters.incrementalChanges.get(), compilationService)
                 } else {
-                    handleFullRun(processor)
+                    handleFullRun(compilationService)
                 }
             }
         }
 
-        private fun handleFullRun(processor: AsyncResourceProcessor<Aapt2>) {
+        private fun handleFullRun(processor: WorkerExecutorResourceCompilationService) {
             FileUtils.deleteDirectoryContents(parameters.outputDirectory.asFile.get())
             // filter out the values files as they have to go through the resources merging
             // pipeline.
@@ -127,7 +137,7 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
 
         private fun submitFileToBeCompiled(
             file: File,
-            processor: AsyncResourceProcessor<Aapt2>
+            compilationService: WorkerExecutorResourceCompilationService
         ) {
             val request = CompileResourceRequest(
                 file,
@@ -135,15 +145,13 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
                 isPseudoLocalize = parameters.pseudoLocalize.get(),
                 isPngCrunching = parameters.crunchPng.get()
             )
-            processor.submit(parameters.analyticsService.get()) { aapt2 ->
-                aapt2.compile(request, processor.iLogger)
-            }
+            compilationService.submitCompile(request)
         }
 
         private fun handleModifiedFile(
             file: File,
             changeType: FileStatus,
-            processor: AsyncResourceProcessor<Aapt2>
+            compilationService: WorkerExecutorResourceCompilationService
         ) {
             if (changeType == FileStatus.CHANGED || changeType == FileStatus.REMOVED) {
                 FileUtils.deleteIfExists(
@@ -154,13 +162,13 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
                 )
             }
             if (changeType == FileStatus.NEW || changeType == FileStatus.CHANGED) {
-                submitFileToBeCompiled(file, processor)
+                submitFileToBeCompiled(file, compilationService)
             }
         }
 
         private fun handleIncrementalChanges(
             fileChanges: SerializableInputChanges,
-            processor: AsyncResourceProcessor<Aapt2>
+            compilationService: WorkerExecutorResourceCompilationService
         ) {
             fileChanges.changes.filter {
                 !it.file.parentFile.name.startsWith(FD_RES_VALUES)
@@ -169,7 +177,7 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
                     handleModifiedFile(
                         fileChange.file,
                         fileChange.fileStatus,
-                        processor
+                        compilationService
                     )
                 }
         }
