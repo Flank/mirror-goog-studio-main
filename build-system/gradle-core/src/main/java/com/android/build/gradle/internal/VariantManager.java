@@ -25,7 +25,10 @@ import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.TestComponentProperties;
+import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTestProperties;
+import com.android.build.api.component.analytics.AnalyticsEnabledUnitTestProperties;
 import com.android.build.api.component.analytics.AnalyticsEnabledVariant;
+import com.android.build.api.component.analytics.AnalyticsEnabledVariantProperties;
 import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
@@ -56,12 +59,14 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.manifest.LazyManifestParser;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScopeImpl;
+import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.TaskCreationServices;
@@ -84,8 +89,6 @@ import com.android.build.gradle.options.SigningOptions;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingTypeKt;
 import com.android.builder.errors.IssueReporter;
-import com.android.builder.profile.ProcessProfileWriter;
-import com.android.builder.profile.Recorder;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.wireless.android.sdk.stats.ApiVersion;
@@ -120,7 +123,6 @@ public class VariantManager<
     @NonNull private final TaskCreationServices taskCreationServices;
     @NonNull private final ProjectServices projectServices;
 
-    @NonNull private final Recorder recorder;
     @NonNull private final VariantFilter variantFilter;
 
     @NonNull
@@ -152,8 +154,7 @@ public class VariantManager<
             @NonNull BaseExtension extension,
             @NonNull VariantFactory<VariantT, VariantPropertiesT> variantFactory,
             @NonNull VariantInputModel variantInputModel,
-            @NonNull ProjectServices projectServices,
-            @NonNull Recorder recorder) {
+            @NonNull ProjectServices projectServices) {
         this.globalScope = globalScope;
         this.extension = extension;
         this.project = project;
@@ -161,7 +162,6 @@ public class VariantManager<
         this.variantFactory = variantFactory;
         this.variantInputModel = variantInputModel;
         this.projectServices = projectServices;
-        this.recorder = recorder;
         this.signingOverride = createSigningOverride();
         this.variantFilter = new VariantFilter(new ReadOnlyObjectProvider());
 
@@ -360,12 +360,7 @@ public class VariantManager<
         VariantSources variantSources = variantBuilder.createVariantSources();
 
         // Only record release artifacts
-        if (!buildTypeData.getBuildType().isDebuggable()
-                && variantType.isApk()
-                && !variantDslInfo.getVariantType().isForTesting()) {
-            ProcessProfileWriter.get()
-                    .recordApplicationId(() -> variantDslInfo.getApplicationId().get());
-        }
+        //TODO(b/162715908) record application ids
 
         // Add the container of dependencies.
         // The order of the libraries is important, in descending order:
@@ -422,7 +417,7 @@ public class VariantManager<
 
         MutableTaskContainer taskContainer = new MutableTaskContainer();
         TransformManager transformManager =
-                new TransformManager(project, dslServices.getIssueReporter(), recorder);
+                new TransformManager(project, dslServices.getIssueReporter());
 
         // create the obsolete VariantScope
         VariantScopeImpl variantScope =
@@ -466,10 +461,14 @@ public class VariantManager<
                         taskCreationServices);
 
         // Run the VariantProperties actions
-        commonExtension.executeVariantPropertiesOperations(variantProperties);
+        AnalyticsEnabledVariantProperties userVisibleVariantPropertiesObject =
+                ((VariantPropertiesImpl) variantProperties)
+                        .createUserVisibleVariantPropertiesObject(projectServices, apiAccessStats);
+        commonExtension.executeVariantPropertiesOperations(userVisibleVariantPropertiesObject);
 
         // also execute the delayed actions registered on the Variant object itself
-        ((VariantImpl<VariantPropertiesImpl>) variant).executePropertiesActions(variantProperties);
+        ((VariantImpl<VariantProperties>) variant)
+                .executePropertiesActions(userVisibleVariantPropertiesObject);
 
         return new ComponentInfo(variant, variantProperties, userVisibleVariantObject);
     }
@@ -670,7 +669,7 @@ public class VariantManager<
 
         MutableTaskContainer taskContainer = new MutableTaskContainer();
         TransformManager transformManager =
-                new TransformManager(project, dslServices.getIssueReporter(), recorder);
+                new TransformManager(project, dslServices.getIssueReporter());
 
         VariantScopeImpl variantScope =
                 new VariantScopeImpl(
@@ -727,9 +726,14 @@ public class VariantManager<
 
             // also execute the delayed actions registered on the Component via
             // androidTest { onProperties {} }
-            testComponent.executePropertiesActions(androidTestProperties);
+            AnalyticsEnabledAndroidTestProperties userVisibleVariantPropertiesObject =
+                    androidTestProperties.createUserVisibleVariantPropertiesObject(
+                            projectServices, apiAccessStats);
+            ((AndroidTestImpl) component)
+                    .executePropertiesActions(userVisibleVariantPropertiesObject);
             // or on the tested variant via unitTestProperties {}
-            userVisibleTestedVariant.executeAndroidTestPropertiesActions(androidTestProperties);
+            userVisibleTestedVariant.executeAndroidTestPropertiesActions(
+                    userVisibleVariantPropertiesObject);
 
             componentProperties = androidTestProperties;
         } else {
@@ -752,9 +756,13 @@ public class VariantManager<
 
             // execute the delayed actions registered on the Component via
             // unitTest { onProperties {} }
-            testComponent.executePropertiesActions(unitTestProperties);
+            AnalyticsEnabledUnitTestProperties userVisibleVariantPropertiesObject =
+                    unitTestProperties.createUserVisibleVariantPropertiesObject(
+                            projectServices, apiAccessStats);
+            ((UnitTestImpl) component).executePropertiesActions(userVisibleVariantPropertiesObject);
             // or on the tested variant via unitTestProperties {}
-            userVisibleTestedVariant.executeUnitTestPropertiesActions(unitTestProperties);
+            userVisibleTestedVariant.executeUnitTestPropertiesActions(
+                    userVisibleVariantPropertiesObject);
 
             componentProperties = unitTestProperties;
         }
@@ -853,56 +861,63 @@ public class VariantManager<
                                             variantProperties.getName()));
                 }
 
-                GradleBuildVariant.Builder profileBuilder =
-                        ProcessProfileWriter.getOrCreateVariant(
-                                        project.getPath(), variantProperties.getName())
-                                .setIsDebug(buildType.isDebuggable())
-                                .setMinSdkVersion(
-                                        AnalyticsUtil.toProto(
-                                                variantInfo.getVariant().getMinSdkVersion()))
-                                .setMinifyEnabled(variantScope.getCodeShrinker() != null)
-                                .setUseMultidex(variantDslInfo.isMultiDexEnabled())
-                                .setUseLegacyMultidex(
-                                        DexingTypeKt.isLegacyMultiDexMode(
-                                                variantProperties.getDexingType()))
-                                .setVariantType(
-                                        variantProperties
-                                                .getVariantType()
-                                                .getAnalyticsVariantType())
-                                .setDexBuilder(AnalyticsUtil.toProto(variantScope.getDexer()))
-                                .setDexMerger(AnalyticsUtil.toProto(variantScope.getDexMerger()))
-                                .setCoreLibraryDesugaringEnabled(
-                                        variantScope.isCoreLibraryDesugaringEnabled())
-                                .setTestExecution(
-                                        AnalyticsUtil.toProto(
-                                                globalScope
-                                                        .getExtension()
-                                                        .getTestOptions()
-                                                        .getExecutionEnum()))
-                                .setVariantApiAccess(
-                                        variantInfo
-                                                .getUserVisibleVariant()
-                                                .getStats()
-                                                .getVariantApiAccess());
+                AnalyticsConfiguratorService configuratorService =
+                        BuildServicesKt
+                                .getBuildService(
+                                        project.getGradle().getSharedServices(),
+                                        AnalyticsConfiguratorService.class).
+                                get();
+
+                GradleBuildVariant.Builder variantBuilder =
+                        configuratorService
+                                .getVariantBuilder(project.getPath(), variantProperties.getName())
+                        .setIsDebug(buildType.isDebuggable())
+                        .setMinSdkVersion(
+                                AnalyticsUtil.toProto(
+                                        variantInfo.getVariant().getMinSdkVersion()))
+                        .setMinifyEnabled(variantScope.getCodeShrinker() != null)
+                        .setUseMultidex(variantDslInfo.isMultiDexEnabled())
+                        .setUseLegacyMultidex(
+                                DexingTypeKt.isLegacyMultiDexMode(
+                                        variantProperties.getDexingType()))
+                        .setVariantType(
+                                variantProperties
+                                        .getVariantType()
+                                        .getAnalyticsVariantType())
+                        .setDexBuilder(AnalyticsUtil.toProto(variantScope.getDexer()))
+                        .setDexMerger(AnalyticsUtil.toProto(variantScope.getDexMerger()))
+                        .setCoreLibraryDesugaringEnabled(
+                                variantScope.isCoreLibraryDesugaringEnabled())
+                        .setTestExecution(
+                                AnalyticsUtil.toProto(
+                                        globalScope
+                                                .getExtension()
+                                                .getTestOptions()
+                                                .getExecutionEnum()))
+                        .setVariantApiAccess(
+                                variantInfo
+                                        .getUserVisibleVariant()
+                                        .getStats()
+                                        .getVariantApiAccess());
 
                 if (variantScope.getCodeShrinker() != null) {
-                    profileBuilder.setCodeShrinker(
+                    variantBuilder.setCodeShrinker(
                             AnalyticsUtil.toProto(variantScope.getCodeShrinker()));
                 }
 
                 if (variantDslInfo.getTargetSdkVersion().getApiLevel() > 0) {
-                    profileBuilder.setTargetSdkVersion(
+                    variantBuilder.setTargetSdkVersion(
                             AnalyticsUtil.toProto(variantDslInfo.getTargetSdkVersion()));
                 }
                 if (variantDslInfo.getMaxSdkVersion() != null) {
-                    profileBuilder.setMaxSdkVersion(
+                    variantBuilder.setMaxSdkVersion(
                             ApiVersion.newBuilder().setApiLevel(variantDslInfo.getMaxSdkVersion()));
                 }
 
                 VariantScope.Java8LangSupport supportType = variantScope.getJava8LangSupportType();
                 if (supportType != VariantScope.Java8LangSupport.INVALID
                         && supportType != VariantScope.Java8LangSupport.UNUSED) {
-                    profileBuilder.setJava8LangSupport(AnalyticsUtil.toProto(supportType));
+                    variantBuilder.setJava8LangSupport(AnalyticsUtil.toProto(supportType));
                 }
 
                 if (variantFactory.getVariantType().getHasTestComponents()) {

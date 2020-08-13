@@ -26,10 +26,11 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
+import com.android.build.gradle.internal.profile.AnalyticsService;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
+import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.profile.Recorder;
-import com.android.builder.profile.ThreadRecorder;
 import com.android.ide.common.util.ReferenceHolder;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -178,15 +179,15 @@ public abstract class TransformTask extends StreamBasedTask {
                         .setTransformClassName(transform.getClass().getName())
                         .build();
 
-        Recorder recorder = ThreadRecorder.get();
-        recorder.record(
+        AnalyticsService analyticsService = getAnalyticsService().get();
+        analyticsService.recordBlock(
                 ExecutionType.TASK_TRANSFORM_PREPARATION,
                 preExecutionInfo,
                 getProjectPath().get(),
                 getVariantName(),
-                new Recorder.Block<Void>() {
+                new Recorder.VoidBlock() {
                     @Override
-                    public Void call() throws Exception {
+                    public void call() {
 
                         Map<File, Status> changedMap = Maps.newHashMap();
                         Set<File> removedFiles = Sets.newHashSet();
@@ -232,22 +233,20 @@ public abstract class TransformTask extends StreamBasedTask {
                             changedSecondaryInputs.setValue(
                                     gatherSecondaryInputChanges(changedMap, removedFiles));
                         }
-
-                        return null;
                     }
                 });
 
         GradleTransformExecution executionInfo =
                 preExecutionInfo.toBuilder().setIsIncremental(isIncremental.getValue()).build();
 
-        recorder.record(
+        analyticsService.recordBlock(
                 ExecutionType.TASK_TRANSFORM,
                 executionInfo,
                 getProjectPath().get(),
                 getVariantName(),
-                new Recorder.Block<Void>() {
+                new Recorder.VoidBlock() {
                     @Override
-                    public Void call() throws Exception {
+                    public void call() throws Exception {
                         Context context =
                                 new Context() {
                                     @Override
@@ -297,7 +296,6 @@ public abstract class TransformTask extends StreamBasedTask {
                         if (outputStream != null) {
                             outputStream.save();
                         }
-                        return null;
                     }
                 });
     }
@@ -545,7 +543,6 @@ public abstract class TransformTask extends StreamBasedTask {
         private Collection<TransformStream> referencedInputStreams;
         @Nullable
         private IntermediateStream outputStream;
-        @NonNull private final Recorder recorder;
 
         CreationAction(
                 @NonNull String variantName,
@@ -553,15 +550,13 @@ public abstract class TransformTask extends StreamBasedTask {
                 @NonNull T transform,
                 @NonNull Collection<TransformStream> consumedInputStreams,
                 @NonNull Collection<TransformStream> referencedInputStreams,
-                @Nullable IntermediateStream outputStream,
-                @NonNull Recorder recorder) {
+                @Nullable IntermediateStream outputStream) {
             this.variantName = variantName;
             this.taskName = taskName;
             this.transform = transform;
             this.consumedInputStreams = consumedInputStreams;
             this.referencedInputStreams = referencedInputStreams;
             this.outputStream = outputStream;
-            this.recorder = recorder;
         }
 
         @NonNull
@@ -600,6 +595,8 @@ public abstract class TransformTask extends StreamBasedTask {
                                     secondaryFile ->
                                             secondaryFile.getFileCollection(task.getProject()))
                             .collect(Collectors.toList());
+            task.getAnalyticsService().set(BuildServicesKt.getBuildService(
+                    task.getProject().getGradle().getSharedServices(), AnalyticsService.class));
         }
     }
 }

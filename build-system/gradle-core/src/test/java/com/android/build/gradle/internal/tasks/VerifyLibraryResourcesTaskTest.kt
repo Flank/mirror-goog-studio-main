@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.services.AsyncResourceProcessor
 import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask
@@ -102,7 +103,8 @@ class VerifyLibraryResourcesTaskTest {
             inputs = SerializableInputChanges(roots = listOf(mergedDir), changes = inputs),
             outDirectory = outputDir,
             asyncResourceProcessor = processor,
-            mergeBlameFolder = temporaryFolder.newFolder()
+            mergeBlameFolder = temporaryFolder.newFolder(),
+            analyticsService = FakeNoOpAnalyticsService()
         )
 
         val fileOut = TestAapt2.compileOutputFor(CompileResourceRequest(file, outputDir, "values"))

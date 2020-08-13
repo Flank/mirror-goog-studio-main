@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.pipeline;
 
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
-import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -76,8 +75,6 @@ public class TransformManager extends FilterableStreamCollection {
     public static final Set<ContentType> CONTENT_CLASS = ImmutableSet.of(CLASSES);
     public static final Set<ContentType> CONTENT_JARS = ImmutableSet.of(CLASSES, RESOURCES);
     public static final Set<ContentType> CONTENT_RESOURCES = ImmutableSet.of(RESOURCES);
-    public static final Set<ContentType> CONTENT_NATIVE_LIBS =
-            ImmutableSet.of(NATIVE_LIBS);
     public static final Set<ContentType> CONTENT_DEX = ImmutableSet.of(ExtendedContentType.DEX);
     public static final Set<ContentType> CONTENT_DEX_WITH_RESOURCES =
             ImmutableSet.of(ExtendedContentType.DEX, RESOURCES);
@@ -102,8 +99,6 @@ public class TransformManager extends FilterableStreamCollection {
     private final Project project;
     @NonNull private final IssueReporter issueReporter;
     @NonNull private final Logger logger;
-    @NonNull
-    private final Recorder recorder;
 
     /**
      * These are the streams that are available for new Transforms to consume.
@@ -122,11 +117,9 @@ public class TransformManager extends FilterableStreamCollection {
 
     public TransformManager(
             @NonNull Project project,
-            @NonNull IssueReporter issueReporter,
-            @NonNull Recorder recorder) {
+            @NonNull IssueReporter issueReporter) {
         this.project = project;
         this.issueReporter = issueReporter;
-        this.recorder = recorder;
         this.logger = Logging.getLogger(TransformManager.class);
     }
 
@@ -260,8 +253,7 @@ public class TransformManager extends FilterableStreamCollection {
                                 transform,
                                 inputStreams,
                                 referencedStreams,
-                                outputStream,
-                                recorder),
+                                outputStream),
                         preConfigAction,
                         wrappedConfigAction,
                         providerCallback));

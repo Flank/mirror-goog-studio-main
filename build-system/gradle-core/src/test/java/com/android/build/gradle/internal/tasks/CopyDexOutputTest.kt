@@ -19,8 +19,11 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.dependency.KEEP_RULES_FILE_NAME
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.provider.Property
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -54,6 +57,9 @@ class CopyDexOutputTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(
+                        FakeNoOpAnalyticsService()
+                    )
                 }
             }
         }.execute()
@@ -81,6 +87,7 @@ class CopyDexOutputTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()

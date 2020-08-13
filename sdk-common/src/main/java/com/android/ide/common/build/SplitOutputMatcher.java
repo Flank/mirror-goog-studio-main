@@ -20,8 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
-import com.android.build.VariantOutput;
 import com.android.builder.testing.api.DeviceConfigProvider;
+import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Helper class to help with installation of multi-output variants.
@@ -50,18 +49,16 @@ public class SplitOutputMatcher {
     @NonNull
     public static List<File> computeBestOutputs(
             @NonNull DeviceConfigProvider deviceConfigProvider,
-            @NonNull Collection<OutputFile> outputs,
+            @NonNull Collection<IdeAndroidArtifactOutput> outputs,
             @Nullable Collection<String> variantAbiFilters) {
 
         List<File> apkFiles = new ArrayList<>();
 
         // now look for a matching output file
-        List<OutputFile> outputFiles =
+        List<IdeAndroidArtifactOutput> outputFiles =
                 SplitOutputMatcher.computeBestOutput(
-                        outputs,
-                        variantAbiFilters,
-                        deviceConfigProvider.getAbis());
-        for (OutputFile outputFile : outputFiles) {
+                        outputs, variantAbiFilters, deviceConfigProvider.getAbis());
+        for (IdeAndroidArtifactOutput outputFile : outputFiles) {
             apkFiles.add(outputFile.getOutputFile());
         }
         return apkFiles;
@@ -82,16 +79,16 @@ public class SplitOutputMatcher {
      * @return the list of APKs to install or null if none are compatible.
      */
     @NonNull
-    public static <T extends VariantOutput> List<T> computeBestOutput(
-            @NonNull Collection<? extends T> outputs,
+    public static List<IdeAndroidArtifactOutput> computeBestOutput(
+            @NonNull Collection<IdeAndroidArtifactOutput> outputs,
             @Nullable Collection<String> variantAbiFilters,
             @NonNull List<String> deviceAbis) {
 
         // gather all compatible matches.
-        List<T> matches = Lists.newArrayList();
+        List<IdeAndroidArtifactOutput> matches = Lists.newArrayList();
 
         // find a matching output.
-        for (T variantOutput : outputs) {
+        for (IdeAndroidArtifactOutput variantOutput : outputs) {
             String abiFilter = getFilter(variantOutput, OutputFile.ABI);
 
             if (abiFilter != null && !deviceAbis.contains(abiFilter)) {
@@ -104,7 +101,7 @@ public class SplitOutputMatcher {
             return ImmutableList.of();
         }
 
-        T match =
+        IdeAndroidArtifactOutput match =
                 Collections.max(
                         matches,
                         (splitOutput, splitOutput2) -> {
@@ -125,11 +122,12 @@ public class SplitOutputMatcher {
     /**
      * Return the preference score of a VariantOutput for the deviceAbi list.
      *
-     * Higher score means a better match.  Scores returned by different call are only comparable if
-     * the specified deviceAbi is the same.
+     * <p>Higher score means a better match. Scores returned by different call are only comparable
+     * if the specified deviceAbi is the same.
      */
-    private static int getAbiPreferenceOrder(VariantOutput variantOutput, List<String> deviceAbi) {
-        String abiFilter = getFilter(variantOutput, OutputFile.ABI);
+    private static int getAbiPreferenceOrder(
+            IdeAndroidArtifactOutput variantOutput, List<String> deviceAbi) {
+        String abiFilter = getFilter(variantOutput, IdeAndroidArtifactOutput.ABI);
         if (Strings.isNullOrEmpty(abiFilter)) {
             // Null or empty imply a universal APK, which would return the second highest score.
             return deviceAbi.size() - 1;
@@ -149,11 +147,11 @@ public class SplitOutputMatcher {
     }
 
     private static boolean isMainApkCompatibleWithDevice(
-            VariantOutput mainOutputFile,
+            IdeAndroidArtifactOutput mainOutputFile,
             Collection<String> variantAbiFilters,
             Collection<String> deviceAbis) {
         // so far, we are not dealing with the pure split files...
-        if (getFilter(mainOutputFile, OutputFile.ABI) == null
+        if (getFilter(mainOutputFile, IdeAndroidArtifactOutput.ABI) == null
                 && variantAbiFilters != null
                 && !variantAbiFilters.isEmpty()) {
             // if we have a match that has no abi filter, and we have variant-level filters, then
@@ -170,21 +168,8 @@ public class SplitOutputMatcher {
 
     @Nullable
     private static String getFilter(
-            @NonNull VariantOutput variantOutput, @NonNull String filterType) {
-        Collection<FilterData> filters;
-        try {
-            filters = variantOutput.getFilters();
-        } catch (UnsupportedOperationException ignored) {
-            // Before plugin 3.0, only OutputFilter::getFilters exists, but not VariantOutput::getFilters.
-            filters =
-                    variantOutput
-                            .getOutputs()
-                            .stream()
-                            .map(OutputFile::getFilters)
-                            .flatMap(Collection::stream)
-                            .collect(Collectors.toList());
-        }
-        for (FilterData filterData : filters) {
+            @NonNull IdeAndroidArtifactOutput variantOutput, @NonNull String filterType) {
+        for (FilterData filterData : variantOutput.getFilters()) {
             if (filterData.getFilterType().equals(filterType)) {
                 return filterData.getIdentifier();
             }

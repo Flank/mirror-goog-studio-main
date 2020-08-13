@@ -20,7 +20,9 @@ import com.android.build.gradle.internal.dexing.DexParameters
 import com.android.build.gradle.internal.dexing.DxDexParameters
 import com.android.build.gradle.internal.fixtures.FakeFileChange
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
-import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Cat
@@ -484,7 +486,9 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             numberOfBuckets = 2,
             workerExecutor = workerExecutor,
             projectName = "",
-            taskPath = ""
+            taskPath = "",
+            analyticsService = FakeObjectFactory.factory.property(AnalyticsService::class.java)
+                .value(FakeNoOpAnalyticsService())
         )
     }
 

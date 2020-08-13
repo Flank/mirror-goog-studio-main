@@ -17,18 +17,23 @@
 package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
+import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.dump;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION;
 import static com.android.build.gradle.internal.cxx.configure.ConstantsKt.CXX_DEFAULT_CONFIGURATION_SUBFOLDER;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2;
+import com.android.build.gradle.integration.common.fixture.ModelContainerV2;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.SyncIssue;
+import com.android.builder.model.v2.models.ndk.NativeModule;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
@@ -39,12 +44,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Tests expected build output */
+@RunWith(Parameterized.class)
 public class NativeBuildOutputTest {
 
     private static String zeroLibraryCmakeLists =
@@ -66,18 +75,32 @@ public class NativeBuildOutputTest {
                     + "LOCAL_SRC_FILES := hello-jni.cpp\n"
                     + "include $(BUILD_SHARED_LIBRARY)";
 
-    @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestApp(
-                            HelloWorldJniApp.builder()
-                                    .withNativeDir("cpp")
-                                    .useCppSource(true)
-                                    .build())
-                    .setCmakeVersion("3.10.4819442")
-                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-                    .setWithCmakeDirInLocalProp(true)
-                    .create();
+    private final boolean useV2NativeModel;
+    @Rule public GradleTestProject project;
+
+    @Parameterized.Parameters(name = "useV2NativeModel={0}")
+    public static Collection<Object[]> data() {
+        return ImmutableList.of(new Object[] {false}, new Object[] {true});
+    }
+
+    public NativeBuildOutputTest(boolean useV2NativeModel) {
+        this.useV2NativeModel = useV2NativeModel;
+        project =
+                GradleTestProject.builder()
+                        .fromTestApp(
+                                HelloWorldJniApp.builder()
+                                        .withNativeDir("cpp")
+                                        .useCppSource(true)
+                                        .build())
+                        .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
+                        .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+                        .setWithCmakeDirInLocalProp(true)
+                        .addGradleProperties(
+                                BooleanOption.ENABLE_V2_NATIVE_MODEL.getPropertyName()
+                                        + "="
+                                        + useV2NativeModel)
+                        .create();
+    }
 
     @Before
     public void setup() throws IOException {
@@ -364,19 +387,62 @@ public class NativeBuildOutputTest {
                 ImmutableList.of("void main() {}"),
                 StandardCharsets.UTF_8);
 
-        Collection<SyncIssue> syncIssues =
-                project.model().fetchAndroidProjects().getOnlyModelSyncIssues();
-        assertThat(syncIssues).hasSize(0);
-        NativeAndroidProject nativeProject = project.model().fetch(NativeAndroidProject.class);
-        // TODO: remove this if statement once a fresh CMake is deployed to buildbots.
-        // Old behavior was to emit two targets: "hello-jni-Debug-x86" and "hello-jni-Release-x86"
-        if (nativeProject.getArtifacts().size() != 2) {
-            assertThat(nativeProject)
-                    .hasTargetsNamed(
-                            "lib_gmath-Release-x86",
-                            "hello-jni-Debug-x86",
-                            "hello-jni-Release-x86",
-                            "lib_gmath-Debug-x86");
+        if (useV2NativeModel) {
+            ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> result =
+                    project.modelV2().fetchNativeModules(ImmutableList.of(), ImmutableList.of());
+            for (Map<String, ModelContainerV2.ModelInfo<NativeModule>> map :
+                    result.getContainer().getInfoMaps().values()) {
+                for (ModelContainerV2.ModelInfo<NativeModule> modelInfo : map.values()) {
+                    assertThat(modelInfo.getIssues().getSyncIssues()).isEmpty();
+                }
+            }
+            assertThat(dump(result))
+                    .isEqualTo(
+                            "[:]\n"
+                                    + "> NativeModule:\n"
+                                    + "    - name                    = \"project\"\n"
+                                    + "    > variants:\n"
+                                    + "       * NativeVariant:\n"
+                                    + "          * name = \"debug\"\n"
+                                    + "          > abis:\n"
+                                    + "             * NativeAbi:\n"
+                                    + "                * name                  = \"x86_64\"\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json{!}\n"
+                                    + "                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{!}\n"
+                                    + "                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{!}\n"
+                                    + "          < abis\n"
+                                    + "       * NativeVariant:\n"
+                                    + "          * name = \"release\"\n"
+                                    + "          > abis:\n"
+                                    + "             * NativeAbi:\n"
+                                    + "                * name                  = \"x86_64\"\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json{!}\n"
+                                    + "                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{!}\n"
+                                    + "                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{!}\n"
+                                    + "          < abis\n"
+                                    + "    < variants\n"
+                                    + "    - nativeBuildSystem       = CMAKE\n"
+                                    + "    - ndkVersion              = \"{DEFAULT_NDK_VERSION}\"\n"
+                                    + "    - defaultNdkVersion       = \"{DEFAULT_NDK_VERSION}\"\n"
+                                    + "    - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}\n"
+                                    + "< NativeModule"
+                    );
+        } else {
+            Collection<SyncIssue> syncIssues =
+                    project.model().fetchAndroidProjects().getOnlyModelSyncIssues();
+            assertThat(syncIssues).hasSize(0);
+            NativeAndroidProject nativeProject = project.model().fetch(NativeAndroidProject.class);
+            // TODO: remove this if statement once a fresh CMake is deployed to buildbots.
+            // Old behavior was to emit two targets: "hello-jni-Debug-x86" and
+            // "hello-jni-Release-x86"
+            if (nativeProject.getArtifacts().size() != 2) {
+                assertThat(nativeProject)
+                        .hasTargetsNamed(
+                                "lib_gmath-Release-x86",
+                                "hello-jni-Debug-x86",
+                                "hello-jni-Release-x86",
+                                "lib_gmath-Debug-x86");
+            }
         }
     }
 

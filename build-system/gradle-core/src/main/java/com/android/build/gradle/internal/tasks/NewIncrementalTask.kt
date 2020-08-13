@@ -28,6 +28,6 @@ abstract class NewIncrementalTask: AndroidVariantTask() {
 
     @TaskAction
     fun taskAction(inputChanges: InputChanges) {
-        recordTaskAction { doTaskAction(inputChanges) }
+        recordTaskAction(analyticsService.get()) { doTaskAction(inputChanges) }
     }
 }

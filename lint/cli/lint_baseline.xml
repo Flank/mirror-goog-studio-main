@@ -6,7 +6,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `toUpperCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="src/main/java/com/android/tools/lint/ProjectInitializer.kt"
-            line="416"/>
+            line="424"/>
     </issue>
 
 </issues>

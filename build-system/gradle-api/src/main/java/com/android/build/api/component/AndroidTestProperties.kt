@@ -18,6 +18,7 @@ package com.android.build.api.component
 
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.PackagingOptions
 import com.android.build.api.variant.SigningConfig
 import org.gradle.api.Incubating
 import org.gradle.api.provider.MapProperty
@@ -112,4 +113,14 @@ interface AndroidTestProperties : TestComponentProperties {
      * Variant's signingConfig, initialized by the corresponding DSL element.
      */
     fun signingConfig(action: SigningConfig.() -> Unit)
+
+    /**
+     * Variant's packagingOptions, initialized by the corresponding global DSL element.
+     */
+    val packagingOptions: PackagingOptions
+
+    /**
+     * Variant's packagingOptions, initialized by the corresponding global DSL element.
+     */
+    fun packagingOptions(action: PackagingOptions.() -> Unit)
 }

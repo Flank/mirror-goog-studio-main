@@ -52,7 +52,6 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.jsonFile
-import com.android.build.gradle.internal.cxx.model.statsBuilder
 import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.settings.getFinalCmakeCommandLineArguments
 import com.android.ide.common.process.ProcessException
@@ -62,6 +61,7 @@ import com.google.common.base.Strings
 import com.google.common.collect.Maps
 import com.google.common.primitives.UnsignedInts
 import com.google.gson.stream.JsonReader
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule.NativeBuildSystemType.CMAKE
 import org.gradle.process.ExecOperations
 import java.io.File
@@ -80,10 +80,11 @@ import java.util.HashMap
  */
 internal class CmakeServerExternalNativeJsonGenerator(
     variant: CxxVariantModel,
-    abis: List<CxxAbiModel>
-) : ExternalNativeJsonGenerator(variant, abis) {
+    abis: List<CxxAbiModel>,
+    variantBuilder: GradleBuildVariant.Builder
+) : ExternalNativeJsonGenerator(variant, abis, variantBuilder) {
     init {
-        variant.statsBuilder.nativeBuildSystemType = CMAKE
+        variantBuilder.nativeBuildSystemType = CMAKE
         cmakeMakefileChecks(variant)
     }
 
@@ -308,12 +309,12 @@ internal class CmakeServerExternalNativeJsonGenerator(
             StringTable(nativeBuildConfigValue.stringTable!!)
         assert(nativeBuildConfigValue.buildFiles != null)
         nativeBuildConfigValue.buildFiles!!.addAll(getBuildFiles(cmakeServer))
-        assert(nativeBuildConfigValue.cleanCommands != null)
-        nativeBuildConfigValue.cleanCommands!!.add(
+        assert(nativeBuildConfigValue.cleanCommandsComponents != null)
+        nativeBuildConfigValue.cleanCommandsComponents!!.add(
             CmakeUtils.getCleanCommand(cmake.cmakeExe, abi.cxxBuildFolder)
         )
-        assert(nativeBuildConfigValue.buildTargetsCommand != null)
-        nativeBuildConfigValue.buildTargetsCommand = CmakeUtils.getBuildTargetsCommand(
+        assert(nativeBuildConfigValue.buildTargetsCommandComponents != null)
+        nativeBuildConfigValue.buildTargetsCommandComponents = CmakeUtils.getBuildTargetsCommand(
             cmake.cmakeExe,
             abi.cxxBuildFolder,
             abi.getBuildCommandArguments()
@@ -334,17 +335,19 @@ internal class CmakeServerExternalNativeJsonGenerator(
         nativeBuildConfigValue.cppFileExtensions!!.addAll(CmakeUtils.getCppExtensionSet(codeModel))
 
         // toolchains
-        nativeBuildConfigValue.toolchains =
-            getNativeToolchains(
-                abi,
-                cmakeServer,
-                nativeBuildConfigValue.cppFileExtensions!!,
-                nativeBuildConfigValue.cFileExtensions!!
-            )
-        val toolchainHashString =
-            getOnlyToolchainName(
-                nativeBuildConfigValue.toolchains!!
-            )
+        val toolchainHashString = if (abi.variant.module.project.isV2NativeModelEnabled) {
+            // With V2 model, there is no need to populate the toolchains.
+            null
+        } else {
+            nativeBuildConfigValue.toolchains =
+                getNativeToolchains(
+                    abi,
+                    cmakeServer,
+                    nativeBuildConfigValue.cppFileExtensions!!,
+                    nativeBuildConfigValue.cFileExtensions!!
+                )
+            getOnlyToolchainName(nativeBuildConfigValue.toolchains!!)
+        }
 
         // Fill in the required fields in NativeBuildConfigValue from the code model obtained from
         // Cmake server.
@@ -587,7 +590,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
         ): NativeLibraryValue {
             val nativeLibraryValue = NativeLibraryValue()
             nativeLibraryValue.abi = abi
-            nativeLibraryValue.buildCommand =
+            nativeLibraryValue.buildCommandComponents =
                 CmakeUtils.getBuildCommand(cmakeExecutable, outputFolder, target.name)
             nativeLibraryValue.artifactName = target.name
             nativeLibraryValue.buildType = if (isDebuggable) "debug" else "release"
@@ -732,7 +735,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
         private fun createDefaultNativeBuildConfigValue(): NativeBuildConfigValue {
             val nativeBuildConfigValue = NativeBuildConfigValue()
             nativeBuildConfigValue.buildFiles = ArrayList()
-            nativeBuildConfigValue.cleanCommands = ArrayList()
+            nativeBuildConfigValue.cleanCommandsComponents = ArrayList()
             nativeBuildConfigValue.libraries =
                 HashMap()
             nativeBuildConfigValue.toolchains =

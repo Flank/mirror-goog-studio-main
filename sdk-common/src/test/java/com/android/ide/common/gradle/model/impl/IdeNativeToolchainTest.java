@@ -43,7 +43,8 @@ public class IdeNativeToolchainTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeNativeToolchainImpl toolchain = new IdeNativeToolchainImpl(new NativeToolchainStub());
+        IdeNativeToolchainImpl toolchain =
+                myModelCache.nativeToolchainFrom(new NativeToolchainStub());
         byte[] bytes = Serialization.serialize(toolchain);
         Object o = Serialization.deserialize(bytes);
         assertEquals(toolchain, o);
@@ -52,7 +53,7 @@ public class IdeNativeToolchainTest {
     @Test
     public void constructor() throws Throwable {
         NativeToolchain original = new NativeToolchainStub();
-        IdeNativeToolchainImpl copy = new IdeNativeToolchainImpl(original);
+        IdeNativeToolchainImpl copy = myModelCache.nativeToolchainFrom(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

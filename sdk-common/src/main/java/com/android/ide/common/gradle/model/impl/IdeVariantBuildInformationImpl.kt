@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.builder.model.VariantBuildInformation
 import com.android.ide.common.gradle.model.IdeVariantBuildInformation
 import java.io.Serializable
 
@@ -27,20 +26,4 @@ data class IdeVariantBuildInformationImpl(
   override val bundleTaskOutputListingFile: String?,
   override val apkFromBundleTaskName: String?,
   override val apkFromBundleTaskOutputListingFile: String?
-) : IdeVariantBuildInformation, Serializable {
-
-  companion object {
-    private const val serialVersionUID: Long = 1L
-
-    @JvmStatic
-    fun createFrom(model: VariantBuildInformation): IdeVariantBuildInformation = IdeVariantBuildInformationImpl(
-      variantName = model.variantName,
-      assembleTaskName = model.assembleTaskName,
-      assembleTaskOutputListingFile = model.assembleTaskOutputListingFile,
-      bundleTaskName = model.bundleTaskName,
-      bundleTaskOutputListingFile = model.bundleTaskOutputListingFile,
-      apkFromBundleTaskName = model.apkFromBundleTaskName,
-      apkFromBundleTaskOutputListingFile = model.apkFromBundleTaskOutputListingFile
-    )
-  }
-}
+) : IdeVariantBuildInformation, Serializable

@@ -16,16 +16,16 @@
 package com.android.ide.common.gradle.model.impl.ndk.v1;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.NativeFile;
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeFile;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Objects;
+import org.jetbrains.annotations.Nullable;
 
 public final class IdeNativeFileImpl implements IdeNativeFile, Serializable {
-    private final File myFilePath;
-    private final String mySettingsName;
-    private final File myWorkingDirectory;
+    @NonNull private final File myFilePath;
+    @NonNull private final String mySettingsName;
+    @Nullable private final File myWorkingDirectory;
     private final int myHashCode;
 
     // Used for serialization by the IDE.
@@ -38,10 +38,11 @@ public final class IdeNativeFileImpl implements IdeNativeFile, Serializable {
         myHashCode = 0;
     }
 
-    public IdeNativeFileImpl(@NonNull NativeFile file) {
-        myFilePath = file.getFilePath();
-        mySettingsName = file.getSettingsName();
-        myWorkingDirectory = file.getWorkingDirectory();
+    public IdeNativeFileImpl(
+            @NonNull File filePath, @NonNull String settingsName, @Nullable File workingDirectory) {
+        myFilePath = filePath;
+        mySettingsName = settingsName;
+        myWorkingDirectory = workingDirectory;
         myHashCode = calculateHashCode();
     }
 

@@ -43,8 +43,7 @@ public class IdeProductFlavorContainerTest {
     @Test
     public void serialization() throws Exception {
         IdeProductFlavorContainerImpl container =
-                ModelCache.productFlavorContainerFrom(
-                        new ProductFlavorContainerStub(), myModelCache);
+                myModelCache.productFlavorContainerFrom(new ProductFlavorContainerStub());
         byte[] bytes = serialize(container);
         Object o = deserialize(bytes);
         assertEquals(container, o);

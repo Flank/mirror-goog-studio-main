@@ -15,6 +15,9 @@
  */
 package com.android.ide.common.gradle.model.ndk.v1
 
-import com.android.builder.model.NativeSettings
+interface IdeNativeSettings {
 
-interface IdeNativeSettings: NativeSettings
+  val name: String
+
+  val compilerFlags: List<String>
+}

@@ -17,18 +17,11 @@ package com.android.ide.common.gradle.model.impl.ndk.v1;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.NativeAndroidProject;
-import com.android.builder.model.NativeArtifact;
-import com.android.builder.model.NativeSettings;
-import com.android.builder.model.NativeToolchain;
-import com.android.builder.model.NativeVariantInfo;
-import com.android.ide.common.gradle.model.impl.IdeModel;
-import com.android.ide.common.gradle.model.impl.ModelCache;
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeAndroidProject;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+import com.android.ide.common.gradle.model.ndk.v1.IdeNativeArtifact;
+import com.android.ide.common.gradle.model.ndk.v1.IdeNativeSettings;
+import com.android.ide.common.gradle.model.ndk.v1.IdeNativeToolchain;
+import com.android.ide.common.gradle.model.ndk.v1.IdeNativeVariantInfo;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
@@ -44,10 +37,10 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
     @NonNull private final String myModelVersion;
     @NonNull private final String myName;
     @NonNull private final List<File> myBuildFiles;
-    @NonNull private final Map<String, NativeVariantInfo> myVariantInfos;
-    @NonNull private final Collection<NativeArtifact> myArtifacts;
-    @NonNull private final Collection<NativeToolchain> myToolChains;
-    @NonNull private final Collection<NativeSettings> mySettings;
+    @NonNull private final Map<String, IdeNativeVariantInfo> myVariantInfos;
+    @NonNull private final Collection<IdeNativeArtifact> myArtifacts;
+    @NonNull private final Collection<IdeNativeToolchain> myToolChains;
+    @NonNull private final Collection<IdeNativeSettings> mySettings;
     @NonNull private final Map<String, String> myFileExtensions;
     @Nullable private final Collection<String> myBuildSystems;
     @NonNull private final String myDefaultNdkVersion;
@@ -72,75 +65,30 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
         myHashCode = 0;
     }
 
-    public IdeNativeAndroidProjectImpl(@NonNull NativeAndroidProject project) {
-        this(project, new ModelCache());
-    }
-
-    @VisibleForTesting
     public IdeNativeAndroidProjectImpl(
-            @NonNull NativeAndroidProject project, @NonNull ModelCache modelCache) {
-        myModelVersion = project.getModelVersion();
-        myApiVersion = project.getApiVersion();
-        myName = project.getName();
-        myBuildFiles = ImmutableList.copyOf(project.getBuildFiles());
-        myVariantInfos = copyVariantInfos(project, modelCache);
-        myArtifacts =
-                IdeModel.copy(
-                        project.getArtifacts(),
-                        modelCache,
-                        artifact -> new IdeNativeArtifactImpl(artifact, modelCache));
-        myToolChains =
-                IdeModel.copy(
-                        project.getToolChains(),
-                        modelCache,
-                        toolchain -> new IdeNativeToolchainImpl(toolchain));
-        mySettings =
-                IdeModel.copy(
-                        project.getSettings(),
-                        modelCache,
-                        settings -> new IdeNativeSettingsImpl(settings));
-        myFileExtensions = ImmutableMap.copyOf(project.getFileExtensions());
-        myDefaultNdkVersion = copyDefaultNdkVersion(project);
-        myBuildSystems = copyBuildSystems(project);
+            @NonNull String modelVersion,
+            int apiVersion,
+            @NonNull String name,
+            @NonNull List<File> buildFiles,
+            @NonNull Map<String, IdeNativeVariantInfo> variantInfos,
+            @NonNull List<IdeNativeArtifact> artifacts,
+            @NonNull List<IdeNativeToolchain> toolChains,
+            @NonNull List<IdeNativeSettings> settings,
+            @NonNull Map<String, String> fileExtensions,
+            @NonNull String defaultNdkVersion,
+            @Nullable List<String> buildSystems) {
+        myModelVersion = modelVersion;
+        myApiVersion = apiVersion;
+        myName = name;
+        myBuildFiles = buildFiles;
+        myVariantInfos = variantInfos;
+        myArtifacts = artifacts;
+        myToolChains = toolChains;
+        mySettings = settings;
+        myFileExtensions = fileExtensions;
+        myDefaultNdkVersion = defaultNdkVersion;
+        myBuildSystems = buildSystems;
         myHashCode = calculateHashCode();
-    }
-
-    @NonNull
-    private static Map<String, NativeVariantInfo> copyVariantInfos(
-            @NonNull NativeAndroidProject project, @NonNull ModelCache modelCache) {
-        try {
-            return IdeModel.copy(
-                    project.getVariantInfos(),
-                    modelCache,
-                    variantInfo ->
-                            new IdeNativeVariantInfoImpl(
-                                    variantInfo.getAbiNames(),
-                                    Objects.requireNonNull(
-                                            IdeModel.copyNewProperty(
-                                                    () -> variantInfo.getBuildRootFolderMap(),
-                                                    Collections.emptyMap()))));
-        } catch (UnsupportedOperationException e) {
-            return Maps.newHashMap();
-        }
-    }
-
-    @NonNull
-    private static String copyDefaultNdkVersion(@NonNull NativeAndroidProject project) {
-        try {
-            return project.getDefaultNdkVersion();
-        } catch (UnsupportedOperationException e) {
-            // We have a serialized model from an older version of AGP.
-            return "";
-        }
-    }
-
-    @Nullable
-    private static Collection<String> copyBuildSystems(@NonNull NativeAndroidProject project) {
-        try {
-            return ImmutableList.copyOf(project.getBuildSystems());
-        } catch (UnsupportedOperationException e) {
-            return null;
-        }
     }
 
     @Override
@@ -162,7 +110,7 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
 
     @NonNull
     @Override
-    public Map<String, NativeVariantInfo> getVariantInfos() {
+    public Map<String, IdeNativeVariantInfo> getVariantInfos() {
         return myVariantInfos;
     }
 
@@ -174,19 +122,19 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
 
     @Override
     @NonNull
-    public Collection<NativeArtifact> getArtifacts() {
+    public Collection<IdeNativeArtifact> getArtifacts() {
         return myArtifacts;
     }
 
     @Override
     @NonNull
-    public Collection<NativeToolchain> getToolChains() {
+    public Collection<IdeNativeToolchain> getToolChains() {
         return myToolChains;
     }
 
     @Override
     @NonNull
-    public Collection<NativeSettings> getSettings() {
+    public Collection<IdeNativeSettings> getSettings() {
         return mySettings;
     }
 
@@ -199,11 +147,7 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
     @Override
     @NonNull
     public Collection<String> getBuildSystems() {
-        if (myBuildSystems != null) {
-            return myBuildSystems;
-        }
-        throw new UnsupportedOperationException(
-                "Unsupported method: NativeAndroidProject.getBuildSystems()");
+        return myBuildSystems;
     }
 
     @NonNull
@@ -284,13 +228,5 @@ public final class IdeNativeAndroidProjectImpl implements IdeNativeAndroidProjec
                 + ", myDefaultNdkVersion="
                 + myDefaultNdkVersion
                 + "}";
-    }
-
-    public static class FactoryImpl implements Factory {
-        @Override
-        @NonNull
-        public IdeNativeAndroidProject create(@NonNull NativeAndroidProject project) {
-            return new IdeNativeAndroidProjectImpl(project);
-        }
     }
 }

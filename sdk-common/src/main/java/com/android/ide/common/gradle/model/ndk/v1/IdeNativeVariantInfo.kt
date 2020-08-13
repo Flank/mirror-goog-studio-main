@@ -15,6 +15,38 @@
  */
 package com.android.ide.common.gradle.model.ndk.v1
 
-import com.android.builder.model.NativeVariantInfo
+import java.io.File
 
-interface IdeNativeVariantInfo: NativeVariantInfo
+interface IdeNativeVariantInfo {
+  /**
+   * Names of ABIs built by this variant. Typical values are: x86, x86_64, armeabi-v7a, and
+   * arm64-v8a Rarer values are: armeabi, mips, and mip64
+   *
+   * @return set of ABI names.
+   */
+  val abiNames: List<String>
+
+  /**
+   * Map of ABI name to corresponding build root folder for that ABI.
+   *
+   *
+   * For CMake, the build root folder is the one that contains the generated build system. For
+   * example, this is where build.ninja is emitted. This is also the folder with
+   * compile_commands.json. This is the folder that is set by passing -B [folder] to CMake at
+   * project generation time.
+   *
+   *
+   * For both ndk-build and CMake, this is the folder that contains android_gradle_build.json
+   * is emitted.
+   *
+   *
+   * In general, this is the folder that contains metadata about the build for this particular
+   * ABI.
+   *
+   *
+   * There should be one entry in the map per ABI name returned by getAbiNames().
+   *
+   * @return the map of ABI to build root folder.
+   */
+  val buildRootFolderMap: Map<String, File>
+}

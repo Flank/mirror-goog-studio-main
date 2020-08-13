@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.fixtures.ExecutionMode
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.tasks.DesugarWorkerItem.DesugarActionParams
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testfixtures.ProjectBuilder
@@ -42,7 +43,7 @@ class DesugarTaskDelegateTest {
         MockitoAnnotations.initMocks(this)
         val project = ProjectBuilder.builder().withProjectDir(tmp.newFolder()).build()
         task = project.tasks.create("task", AndroidVariantTask::class.java)
-
+        task.analyticsService.set(FakeNoOpAnalyticsService())
         executor =  FakeGradleWorkExecutor(
             project.objects, tmp.newFolder(), executionMode = ExecutionMode.CAPTURING
         )

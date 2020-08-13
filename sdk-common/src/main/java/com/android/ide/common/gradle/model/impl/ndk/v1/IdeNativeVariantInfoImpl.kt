@@ -16,27 +16,24 @@
 
 package com.android.ide.common.gradle.model.impl.ndk.v1
 
-import com.android.builder.model.NativeVariantInfo
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeVariantInfo
-import com.google.common.collect.ImmutableList
 import java.io.File
+import java.io.Serializable
 
 class IdeNativeVariantInfoImpl(
-    private val abiNames : List<String>,
-    private val buildRootFolderMap : Map<String, File>
-) : IdeNativeVariantInfo {
-    override fun getAbiNames() = ImmutableList.copyOf(abiNames)!!
-    override fun getBuildRootFolderMap() = buildRootFolderMap.toMap()
+    override val abiNames : List<String>,
+    override val buildRootFolderMap : Map<String, File>
+) : IdeNativeVariantInfo, Serializable {
     override fun equals(o: Any?): Boolean {
         if (this === o) {
             return true
         }
-        val stub = o as? NativeVariantInfo ?: return false
+        val stub = o as? IdeNativeVariantInfo ?: return false
         return (abiNames == stub.abiNames) && (buildRootFolderMap == stub.buildRootFolderMap)
     }
 
     override fun hashCode(): Int {
-        return getAbiNames().hashCode() + getBuildRootFolderMap().hashCode()
+        return abiNames.hashCode() + buildRootFolderMap.hashCode()
     }
 
     override fun toString(): String {

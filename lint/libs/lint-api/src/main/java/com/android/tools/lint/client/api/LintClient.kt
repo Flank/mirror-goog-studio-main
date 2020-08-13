@@ -113,22 +113,39 @@ abstract class LintClient {
         clientName = "unknown"
     }
 
+    /** Configurations referenced by this client */
+    @Suppress("LeakingThis")
+    open val configurations = ConfigurationHierarchy(this)
+
     /**
      * Returns a configuration for use by the given project. The configuration
      * provides information about which issues are enabled, any customizations
      * to the severity of an issue, etc.
      *
-     *
-     * By default this method returns a [DefaultConfiguration].
+     * By default this method returns a [LintXmlConfiguration].
      *
      * @param project the project to obtain a configuration for
-     *
      * @param driver the current driver, if any
-     *
      * @return a configuration, never null.
      */
     open fun getConfiguration(project: Project, driver: LintDriver?): Configuration =
-        DefaultConfiguration.create(this, project, null)
+        configurations.getConfigurationForProject(project)
+
+    /**
+     * Returns a configuration for use for the given file.
+     *
+     * @param file the source file to obtain a configuration for
+     * @return a configuration, or null if no configuration is found
+     */
+    open fun getConfiguration(file: File): Configuration? =
+        configurations.getConfigurationForFolder(file.parentFile)
+
+    /**
+     * Returns the parent configuration to inherit from for the given
+     * [configuration], if any.
+     */
+    open fun getParentConfiguration(configuration: Configuration): Configuration? =
+        configurations.getParentConfiguration(configuration)
 
     /**
      * Report the given issue. This method will only be called if the configuration
@@ -2023,6 +2040,11 @@ abstract class LintClient {
                 severity != null -> severity
                 configuration != null -> configuration.getSeverity(issue)
                 context != null -> context.configuration.getSeverity(issue)
+                file != null ->
+                    client.configurations.getConfigurationForFolder(
+                        if (file.isFile) file.parentFile else file
+                    )
+                        ?.getSeverity(issue) ?: issue.defaultSeverity
                 project != null && driver != null ->
                     project.getConfiguration(driver).getSeverity(issue)
                 else -> issue.defaultSeverity

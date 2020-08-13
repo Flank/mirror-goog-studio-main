@@ -74,6 +74,7 @@ class LintModuleLoader(
                     model,
                     factory,
                     model.variants,
+                    emptyList(),
                     emptyList()
                 )
             } finally {

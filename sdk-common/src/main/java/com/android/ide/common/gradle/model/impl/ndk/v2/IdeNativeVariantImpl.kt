@@ -15,15 +15,10 @@
  */
 package com.android.ide.common.gradle.model.impl.ndk.v2
 
-import com.android.builder.model.v2.models.ndk.NativeVariant
 import com.android.ide.common.gradle.model.ndk.v2.IdeNativeAbi
 import com.android.ide.common.gradle.model.ndk.v2.IdeNativeVariant
 
 data class IdeNativeVariantImpl(
     override val name: String,
     override val abis: List<IdeNativeAbi>
-) : IdeNativeVariant {
-    constructor(nativeVariant: NativeVariant) : this(
-        nativeVariant.name,
-        nativeVariant.abis.map { IdeNativeAbiImpl(it) })
-}
+) : IdeNativeVariant

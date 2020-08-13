@@ -17,14 +17,15 @@
 package com.android.build.gradle.integration.nativebuild
 
 import com.android.SdkConstants
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject
 import com.android.utils.FileUtils
 import org.junit.Before
@@ -35,22 +36,28 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class CMakeBuildSettingsTest(private val cmakeVersionInDsl: String) {
+class CMakeBuildSettingsTest(
+    private val cmakeVersionInDsl: String,
+    private val useV2NativeModel: Boolean
+) {
     @Rule
     @JvmField
     val project = GradleTestProject.builder()
         .fromTestApp(
             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build()
         )
+        .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=$useV2NativeModel")
         .setSideBySideNdkVersion(GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .create()
 
     companion object {
-        @Parameterized.Parameters(name = "model = {0}")
+        @Parameterized.Parameters(name = "version={0} useV2NativeModel={1}")
         @JvmStatic
         fun data() = arrayOf(
-            arrayOf("3.6.0"),
-            arrayOf("3.10.2")
+            arrayOf("3.6.0", false),
+            arrayOf(DEFAULT_CMAKE_VERSION, false),
+            arrayOf("3.6.0", true),
+            arrayOf(DEFAULT_CMAKE_VERSION, true)
         )
     }
 

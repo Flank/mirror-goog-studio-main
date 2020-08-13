@@ -16,10 +16,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES
-import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
-import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.cxx.gradle.generator.variantObjFolder
 import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
@@ -30,6 +28,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIV
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.resources.FileStatus
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
@@ -41,6 +40,7 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -71,6 +71,11 @@ abstract class MergeNativeLibsTask
     @get:SkipWhenEmpty
     abstract val externalLibNativeLibs: ConfigurableFileCollection
 
+    @get:Classpath
+    @get:Optional
+    @get:SkipWhenEmpty
+    abstract val profilerNativeLibs: DirectoryProperty
+
     @get:Nested
     lateinit var packagingOptions: SerializablePackagingOptions
         private set
@@ -97,46 +102,35 @@ abstract class MergeNativeLibsTask
     abstract val unfilteredProjectNativeLibs: ConfigurableFileCollection
 
     override fun doFullTaskAction() {
-        workerExecutor.noIsolation().submit(MergeJavaResWorkAction::class.java) {
-            it.initializeFromAndroidVariantTask(this)
-            it.projectJavaRes.from(unfilteredProjectNativeLibs)
-            it.subProjectJavaRes.from(subProjectNativeLibs)
-            it.externalLibJavaRes.from(externalLibNativeLibs)
-            it.outputDirectory.set(outputDir)
-            it.packagingOptions.set(packagingOptions)
-            it.incrementalStateFile.set(incrementalStateFile)
-            it.incremental.set(false)
-            it.cacheDir.set(cacheDir)
-            it.contentType.set(NATIVE_LIBS)
-        }
+        doProcessing(false, emptyMap())
     }
 
     override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
-        if (!incrementalStateFile.isFile) {
-            doFullTaskAction()
-            return
-        }
+        val canRunIncrementally = incrementalStateFile.isFile
+        doProcessing(canRunIncrementally, changedInputs)
+    }
+
+    private fun doProcessing(isIncremental: Boolean, changedInputs: Map<File, FileStatus>) {
+        val allProfilerNativeLibs = profilerNativeLibs.orNull?.asFile?.listFiles()?.toSet() ?: emptySet()
         workerExecutor.noIsolation().submit(MergeJavaResWorkAction::class.java) {
             it.initializeFromAndroidVariantTask(this)
             it.projectJavaRes.from(unfilteredProjectNativeLibs)
             it.subProjectJavaRes.from(subProjectNativeLibs)
-            it.externalLibJavaRes.from(externalLibNativeLibs)
+            it.externalLibJavaRes.from(externalLibNativeLibs, allProfilerNativeLibs)
             it.outputDirectory.set(outputDir)
             it.packagingOptions.set(packagingOptions)
             it.incrementalStateFile.set(incrementalStateFile)
-            it.incremental.set(true)
+            it.incremental.set(isIncremental)
             it.cacheDir.set(cacheDir)
-            it.changedInputs.set(changedInputs)
+            if (isIncremental) {
+                it.changedInputs.set(changedInputs)
+            }
             it.contentType.set(NATIVE_LIBS)
         }
     }
 
-    class CreationAction(
-        private val mergeScopes: Collection<ScopeType>,
-        creationConfig: VariantCreationConfig
-    ) : VariantTaskCreationAction<MergeNativeLibsTask, VariantCreationConfig>(
-        creationConfig
-    ) {
+    class CreationAction(creationConfig: VariantCreationConfig) :
+            VariantTaskCreationAction<MergeNativeLibsTask, VariantCreationConfig>(creationConfig) {
 
         override val name: String
             get() = computeTaskName("merge", "NativeLibs")
@@ -145,7 +139,7 @@ abstract class MergeNativeLibsTask
             get() = MergeNativeLibsTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<MergeNativeLibsTask>
+                taskProvider: TaskProvider<MergeNativeLibsTask>
         ) {
             super.handleProvider(taskProvider)
 
@@ -178,15 +172,17 @@ abstract class MergeNativeLibsTask
                 .from(getProjectNativeLibs(creationConfig).asFileTree.matching(patternSet))
                 .disallowChanges()
 
-            if (mergeScopes.contains(SUB_PROJECTS)) {
-                task.subProjectNativeLibs.from(getSubProjectNativeLibs(creationConfig))
-            }
-            task.subProjectNativeLibs.disallowChanges()
-
-            if (mergeScopes.contains(EXTERNAL_LIBRARIES)) {
+            if (creationConfig is ApkCreationConfig) {
                 task.externalLibNativeLibs.from(getExternalNativeLibs(creationConfig))
+                    .disallowChanges()
+                task.subProjectNativeLibs.from(getSubProjectNativeLibs(creationConfig))
+                    .disallowChanges()
+                if (creationConfig.shouldPackageProfilerDependencies) {
+                    task.profilerNativeLibs.setDisallowChanges(
+                            creationConfig.artifacts.get(InternalArtifactType.PROFILERS_NATIVE_LIBS)
+                    )
+                }
             }
-            task.externalLibNativeLibs.disallowChanges()
 
             task.unfilteredProjectNativeLibs
                 .from(getProjectNativeLibs(creationConfig)).disallowChanges()

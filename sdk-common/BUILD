@@ -149,6 +149,7 @@ kotlin_test(
         "//tools/base/third_party:net.sf.kxml_kxml2",
         "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
         "//tools/base/third_party:org.easymock_easymock",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib-jdk8",
         "//tools/base/third_party:org.jetbrains.trove4j_trove4j",
         "//tools/base/third_party:org.mockito_mockito-core",
     ],

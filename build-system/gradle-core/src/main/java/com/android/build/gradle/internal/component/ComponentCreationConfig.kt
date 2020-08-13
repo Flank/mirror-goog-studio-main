@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.component
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
+import com.android.build.api.instrumentation.AsmClassVisitorFactory
+import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
@@ -39,9 +41,11 @@ import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
 import com.android.builder.model.ApiVersion
 import com.google.common.collect.ImmutableSet
+import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 
 /**
@@ -69,6 +73,11 @@ interface ComponentCreationConfig : ComponentIdentity {
     val packageName: Provider<String>
     val resourceConfigurations: ImmutableSet<String>
     val isPrecompileDependenciesResourcesEnabled: Boolean
+    val asmApiVersion: Int
+    val asmFramesComputationMode: FramesComputationMode
+    val registeredProjectClassesVisitors: List<AsmClassVisitorFactory<*>>
+    val registeredDependenciesClassesVisitors: List<AsmClassVisitorFactory<*>>
+    val allProjectClassesPostAsmInstrumentation: FileCollection
 
     // ---------------------------------------------------------------------------------------------
     // TODO figure out whether these properties are needed by all
@@ -137,4 +146,8 @@ interface ComponentCreationConfig : ComponentIdentity {
      * Get the list of folders containing compilable source files.
      */
     val javaSources: List<ConfigurableFileTree>
+
+    fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory)
+
+    fun getDependenciesClassesJarsPostAsmInstrumentation(scope: AndroidArtifacts.ArtifactScope): FileCollection
 }

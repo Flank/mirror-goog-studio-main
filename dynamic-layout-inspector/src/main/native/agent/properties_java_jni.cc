@@ -69,9 +69,10 @@ Java_com_android_tools_agent_layoutinspector_Properties_freePropertyEvent(
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_agent_layoutinspector_Properties_sendPropertyEvent(
-    JNIEnv *env, jclass clazz, jlong jevent, jlong viewId) {
+    JNIEnv *env, jclass clazz, jlong jevent, jlong viewId, jint generation) {
   PropertyEvent *event = (PropertyEvent *)jevent;
   event->set_view_id((long)viewId);
+  event->set_generation(generation);
   PropertyEvent property_event = *event;
 
   // Note: property_event is copied by value here which is not optimal.

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
@@ -40,7 +41,7 @@ class AndroidVariantTaskTest {
         private val called: AtomicBoolean): AndroidVariantTask() {
 
         fun entryPoint() {
-            recordTaskAction { actualAction() }
+            recordTaskAction(FakeNoOpAnalyticsService()) { actualAction() }
         }
 
         private fun actualAction() {

@@ -199,21 +199,23 @@ public class AndroidBuildGradleJsons {
         }
 
         @Override
-        protected void visitLibraryBuildCommand(@NonNull String buildCommand) {
-            super.visitLibraryBuildCommand(buildCommand);
-            miniConfig.libraries.get(libraryName).buildCommand = buildCommand;
+        protected void visitLibraryBuildCommandComponents(
+                @NonNull List<String> buildCommandComponents) {
+            super.visitLibraryBuildCommandComponents(buildCommandComponents);
+            miniConfig.libraries.get(libraryName).buildCommandComponents = buildCommandComponents;
         }
 
         @Override
-        protected void visitCleanCommands(@NonNull String cleanCommand) {
-            super.visitCleanCommands(cleanCommand);
-            miniConfig.cleanCommands.add(cleanCommand);
+        protected void visitCleanCommandsComponents(@NonNull List<String> cleanCommandComponents) {
+            super.visitCleanCommandsComponents(cleanCommandComponents);
+            miniConfig.cleanCommandsComponents.add(cleanCommandComponents);
         }
 
         @Override
-        protected void visitBuildTargetsCommand(@Nullable String buildTargetsCommand) {
-            super.visitBuildTargetsCommand(buildTargetsCommand);
-            miniConfig.buildTargetsCommand = buildTargetsCommand;
+        protected void visitBuildTargetsCommandComponents(
+                @Nullable List<String> buildTargetsCommandComponents) {
+            super.visitBuildTargetsCommandComponents(buildTargetsCommandComponents);
+            miniConfig.buildTargetsCommandComponents = buildTargetsCommandComponents;
         }
 
         @Override

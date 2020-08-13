@@ -15,13 +15,10 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.builder.model.SourceProvider
 import com.android.ide.common.gradle.model.IdeSourceProvider
-import com.google.common.annotations.VisibleForTesting
 import java.io.File
 import java.io.Serializable
 
-/** Creates a deep copy of a [SourceProvider].  */
 data class IdeSourceProviderImpl(
   private val myName: String,
   private val myFolder: File?,
@@ -40,43 +37,6 @@ data class IdeSourceProviderImpl(
 ) : Serializable, IdeSourceProvider {
   private fun String.translate(): File = (myFolder?.resolve(this) ?: File(this)).normalize()
   private fun Collection<String>.translate(): Collection<File> = map { it.translate() }
-
-  companion object {
-    @JvmStatic
-    fun createFrom(provider: SourceProvider, deduplicate: String.() -> String): IdeSourceProviderImpl {
-      val folder: File? = provider.manifestFile.parentFile
-
-      fun File.makeRelativeAndDeduplicate(): String = (if (folder != null) relativeToOrSelf(folder) else this).path.deduplicate()
-      fun Collection<File>.makeRelativeAndDeduplicate(): Collection<String> = map { it.makeRelativeAndDeduplicate() }
-
-      return IdeSourceProviderImpl(
-        myName = provider.name,
-        myFolder = folder,
-        myManifestFile = provider.manifestFile.makeRelativeAndDeduplicate(),
-        myJavaDirectories = provider.javaDirectories.makeRelativeAndDeduplicate(),
-        myResourcesDirectories = provider.resourcesDirectories.makeRelativeAndDeduplicate(),
-        myAidlDirectories = provider.aidlDirectories.makeRelativeAndDeduplicate(),
-        myRenderscriptDirectories = provider.renderscriptDirectories.makeRelativeAndDeduplicate(),
-        myCDirectories = provider.cDirectories.makeRelativeAndDeduplicate(),
-        myCppDirectories = provider.cppDirectories.makeRelativeAndDeduplicate(),
-        myResDirectories = provider.resDirectories.makeRelativeAndDeduplicate(),
-        myAssetsDirectories = provider.assetsDirectories.makeRelativeAndDeduplicate(),
-        myJniLibsDirectories = provider.jniLibsDirectories.makeRelativeAndDeduplicate(),
-        myShadersDirectories = IdeModel.copyNewPropertyNonNull(
-          { provider.shadersDirectories },
-          emptyList()
-        ).makeRelativeAndDeduplicate(),
-        myMlModelsDirectories = IdeModel.copyNewPropertyNonNull(
-          { provider.mlModelsDirectories },
-          emptyList()
-        ).makeRelativeAndDeduplicate()
-      )
-    }
-
-    @JvmStatic
-    @VisibleForTesting
-    fun createFrom(provider: SourceProvider): IdeSourceProvider = createFrom(provider, deduplicate = { this })
-  }
 
   // Used for serialization by the IDE.
   constructor() : this(

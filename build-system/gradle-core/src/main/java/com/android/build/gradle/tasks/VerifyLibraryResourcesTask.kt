@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.AndroidJarInput
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.processResources
@@ -137,7 +138,8 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                     inputs = parameters.inputs.get(),
                     outDirectory = parameters.compiledDirectory.get().asFile,
                     asyncResourceProcessor = asyncAapt2,
-                    mergeBlameFolder = parameters.mergeBlameFolder.get().asFile
+                    mergeBlameFolder = parameters.mergeBlameFolder.get().asFile,
+                    analyticsService = parameters.analyticsService.get()
                 )
 
                 val compiledDependenciesResourcesDirs = parameters.compiledDependenciesResources.reversed()
@@ -156,7 +158,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                     .build()
 
                 asyncAapt2.await() // All compilation must be done before linking.
-                asyncAapt2.submit { aapt2 ->
+                asyncAapt2.submit(parameters.analyticsService.get()) { aapt2 ->
                     processResources(aapt2, config, null, asyncAapt2.logger, asyncAapt2.errorFormatMode)
                 }
             }
@@ -223,6 +225,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
          * @param inputs the new, changed or modified files that need to be compiled or removed.
          * @param outDirectory the directory containing compiled resources.
          * @param asyncResourceProcessor AAPT tool to execute the resource compiling
+         * @param analyticsService the build service to record execution spans
          */
         @JvmStatic
         @VisibleForTesting
@@ -230,7 +233,8 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
             inputs: SerializableInputChanges,
             outDirectory: File,
             asyncResourceProcessor: AsyncResourceProcessor<Aapt2>,
-            mergeBlameFolder: File
+            mergeBlameFolder: File,
+            analyticsService: AnalyticsService
         ) {
             for (change in inputs.changes) {
                 // Accept only files in subdirectories of the merged resources directory.
@@ -254,7 +258,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                                 isPngCrunching = false,
                                 mergeBlameFolder = mergeBlameFolder
                             )
-                            asyncResourceProcessor.submit {
+                            asyncResourceProcessor.submit(analyticsService) {
                                 it.compile(request, asyncResourceProcessor.iLogger)
                             }
                         } catch (e: Exception) {

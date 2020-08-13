@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.builder.model.ViewBindingOptions
 import com.android.ide.common.gradle.model.IdeViewBindingOptions
 import java.io.Serializable
 import java.util.Objects
@@ -28,13 +27,6 @@ class IdeViewBindingOptionsImpl(
 
   // Used for serialization by the IDE.
   constructor() : this(enabled = false)
-
-  companion object {
-    @JvmStatic
-    fun createFrom(model: ViewBindingOptions): IdeViewBindingOptionsImpl = IdeViewBindingOptionsImpl(
-      enabled = model.isEnabled
-    )
-  }
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true

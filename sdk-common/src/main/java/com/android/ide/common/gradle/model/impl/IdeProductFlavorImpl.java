@@ -22,11 +22,10 @@ import com.android.ide.common.gradle.model.IdeClassField;
 import com.android.ide.common.gradle.model.IdeProductFlavor;
 import com.android.ide.common.gradle.model.IdeSigningConfig;
 import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
@@ -80,14 +79,14 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
     public IdeProductFlavorImpl(
             @NotNull String name,
             @NotNull Map<String, IdeClassField> resValues,
-            @NotNull ImmutableList<File> proguardFiles,
-            @NotNull ImmutableList<File> consumerProguardFiles,
-            @NotNull ImmutableMap<String, Object> manifestPlaceholders,
+            @NotNull List<File> proguardFiles,
+            @NotNull List<File> consumerProguardFiles,
+            @NotNull Map<String, String> manifestPlaceholders,
             @Nullable String applicationIdSuffix,
             @Nullable String versionNameSuffix,
             @Nullable Boolean multiDexEnabled,
-            @NotNull ImmutableMap<String, String> testInstrumentationRunnerArguments,
-            @NotNull ImmutableList<String> resourceConfigurations,
+            @NotNull Map<String, String> testInstrumentationRunnerArguments,
+            @NotNull List<String> resourceConfigurations,
             @Nullable IdeVectorDrawablesOptions vectorDrawables,
             @Nullable String dimension,
             @Nullable String applicationId,
@@ -143,13 +142,9 @@ public final class IdeProductFlavorImpl extends IdeBaseConfigImpl implements Ide
     }
 
     @Override
-    @NonNull
+    @Nullable
     public IdeVectorDrawablesOptions getVectorDrawables() {
-        if (myVectorDrawables != null) {
-            return myVectorDrawables;
-        }
-        throw new UnsupportedOperationException(
-                "Unsupported method: ProductFlavor.getVectorDrawables");
+        return myVectorDrawables;
     }
 
     @Override

@@ -68,3 +68,36 @@ private class Receiver : MultiLineReceiver() {
 
     override fun isCancelled() = false
 }
+
+private const val MDNS_TLS_SUFFIX = "_adb-tls-connect._tcp."
+
+private const val MDNS_UNENCRYPTED_SUFFIX = "_adb._tcp."
+
+/**
+ * Returns `true` is the device is using mDNS auto-connect and TLS
+ *
+ * Example: `adb-xxxxxxxx-vWgJpq._adb-tls-connect._tcp.`
+ *
+ * See [ADB_MDNS_AUTO_CONNECT](https://android.googlesource.com/platform/system/core/+/master/adb/client/commandline.cpp#244)
+ */
+val IDevice.isMdnsAutoConnectTls : Boolean
+    get() = isMdnsAutoConnectTls(this.serialNumber)
+
+/**
+ * Returns `true` is the device is using mDNS auto-connect clear.
+ *
+ * Example: `adb-xxxxxxxx-vWgJpq._adb._tcp.`
+ *
+ * See [ADB_MDNS_AUTO_CONNECT](https://android.googlesource.com/platform/system/core/+/master/adb/client/commandline.cpp#244)
+ *
+ */
+val IDevice.isMdnsAutoConnectUnencrypted : Boolean
+    get() = isMdnsAutoConnectUnencrypted(this.serialNumber)
+
+fun isMdnsAutoConnectTls(serialNumber: String): Boolean {
+    return serialNumber.endsWith(MDNS_TLS_SUFFIX)
+}
+
+fun isMdnsAutoConnectUnencrypted(serialNumber: String): Boolean {
+    return serialNumber.endsWith(MDNS_UNENCRYPTED_SUFFIX)
+}

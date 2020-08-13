@@ -18,6 +18,10 @@ package com.android.build.gradle.integration.dexing
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
+import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder.Companion.COM_EXAMPLE_LIB
+import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder.Companion.COM_EXAMPLE_MYAPPLICATION
+import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder.Companion.JAVALIB
+import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder.Companion.LIB
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.ChangeType.CHANGED
 import com.android.build.gradle.integration.common.utils.ChangeType.CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS
@@ -35,6 +39,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_LIBR
 import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.TestInputsGenerator
+import com.android.utils.FileUtils
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -59,7 +64,8 @@ class IncrementalDexingWithDesugaringTest(
     companion object {
 
         @Parameterized.Parameters(
-            name = "scenario_{0}_minSdk24Plus_{1}_withIncrementalDexingTransform_{2}")
+            name = "scenario_{0}_minSdk24Plus_{1}_incrementalDexingTransform_{2}"
+        )
         @JvmStatic
         fun parameters(): List<Array<Any>> {
             val incrementalDexingTransformDefaultValue =
@@ -74,12 +80,21 @@ class IncrementalDexingWithDesugaringTest(
                 arrayOf(ANDROID_LIB, false, incrementalDexingTransformDefaultValue),
                 arrayOf(ANDROID_LIB_WITH_POST_JAVAC_CLASSES, true, true),
                 arrayOf(ANDROID_LIB_WITH_POST_JAVAC_CLASSES, true, false),
-                arrayOf(ANDROID_LIB_WITH_POST_JAVAC_CLASSES, false, incrementalDexingTransformDefaultValue),
+                arrayOf(
+                    ANDROID_LIB_WITH_POST_JAVAC_CLASSES,
+                    false,
+                    incrementalDexingTransformDefaultValue
+                ),
                 arrayOf(JAVA_LIB, true, true),
                 arrayOf(JAVA_LIB, true, false),
                 arrayOf(JAVA_LIB, false, incrementalDexingTransformDefaultValue)
             )
         }
+
+        private const val INTERFACE_WITH_DEFAULT_METHOD = "InterfaceWithDefaultMethod"
+        private const val CLASS_USING_INTERFACE_WITH_DEFAULT_METHOD =
+            "ClassUsingInterfaceWithDefaultMethod"
+        private const val STAND_ALONE_CLASS = "StandAloneClass"
     }
 
     @get:Rule
@@ -92,99 +107,72 @@ class IncrementalDexingWithDesugaringTest(
             }
             it.withUnitTest = false
         }
-        .addAndroidLibrary()
-        .addJavaLibrary()
+        .addAndroidLibrary(
+            addImplementationDependencyFromApp =
+            scenario in setOf(ANDROID_LIB, ANDROID_LIB_WITH_POST_JAVAC_CLASSES)
+        )
+        .addJavaLibrary(
+            addImplementationDependencyFromApp = scenario == JAVA_LIB
+        )
         .build()
+
+    private lateinit var app: GradleTestProject
+    private lateinit var androidLib: GradleTestProject
+    private lateinit var javaLib: GradleTestProject
 
     // Java source files
     private lateinit var interfaceWithDefaultMethodJavaFile: File
     private lateinit var classUsingInterfaceWithDefaultMethodJavaFile: File
-    private lateinit var dummyStandAloneJavaFile: File
+    private lateinit var standAloneClassJavaFile: File
 
     // Compiled class files
     private lateinit var interfaceWithDefaultMethodClassFile: File
     private lateinit var classUsingInterfaceWithDefaultMethodClassFile: File
-    private lateinit var dummyStandAloneClassFile: File
+    private lateinit var standAloneClassClassFile: File
 
     // Published class files (from libraries), `null` for app
     private var interfaceWithDefaultMethodPublishedClassFile: File? = null
     private var classUsingInterfaceWithDefaultMethodPublishedClassFile: File? = null
-    private var dummyStandAlonePublishedClassFile: File? = null
+    private var standAloneClassPublishedClassFile: File? = null
 
     // Output dex files
     private lateinit var interfaceWithDefaultMethodDexFile: File
     private lateinit var classUsingInterfaceWithDefaultMethodDexFile: File
-    private lateinit var dummyStandAloneDexFile: File
+    private lateinit var standAloneClassDexFile: File
 
     private lateinit var incrementalTestHelper: IncrementalTestHelper
 
+    /** Returns the subproject where we will apply a change. */
+    private fun getSubproject() = when (scenario) {
+        APP -> app
+        ANDROID_LIB, ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> androidLib
+        JAVA_LIB -> javaLib
+    }
+
+    /** Returns package name of the subproject where we will apply a change. */
+    private fun getPackageName() = when (scenario) {
+        APP -> COM_EXAMPLE_MYAPPLICATION
+        ANDROID_LIB, ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> COM_EXAMPLE_LIB
+        JAVA_LIB -> "com.example.javalib"
+    }
+
+    /** Returns package path of the subproject where we will apply a change. */
+    private fun getPackagePath() = getPackageName().replace('.', '/')
+
     @Before
     fun setUp() {
-        val app = project.getSubproject("app")
+        app = project.getSubproject(EmptyActivityProjectBuilder.APP)
+        androidLib = project.getSubproject(LIB)
+        javaLib = project.getSubproject(JAVALIB)
 
-        // The subproject (and its packageName) where we will apply a change.
-        val subproject: GradleTestProject
-        val packageName: String
-        when (scenario) {
-            APP -> {
-                subproject = app
-                packageName = "com.example.myapplication"
-            }
-            ANDROID_LIB, ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> {
-                subproject = project.getSubproject("lib")
-                packageName = "com.example.lib"
-
-            }
-            JAVA_LIB -> {
-                subproject = project.getSubproject("javalib")
-                packageName = "com.example.javalib"
-            }
-        }
-        val packagePath = packageName.replace('.', '/')
-
-        // Add a dependency from app to the subproject where we will we apply a change.
-        if (scenario != APP) {
-            TestFileUtils.appendToFile(
-                app.buildFile,
-                """
-                dependencies {
-                    implementation project(":${subproject.name}")
-                }
-                """.trimIndent()
-            )
-        }
-
-        // Use Java 8 features to test desugaring
-        TestFileUtils.appendToFile(
-            app.buildFile,
-            """
-            android.compileOptions {
-                sourceCompatibility JavaVersion.VERSION_1_8
-                targetCompatibility JavaVersion.VERSION_1_8
-            }
-            """.trimIndent()
-        )
-        if (scenario in setOf(ANDROID_LIB, ANDROID_LIB_WITH_POST_JAVAC_CLASSES)) {
-            TestFileUtils.appendToFile(
-                subproject.buildFile,
-                """
-                android.compileOptions {
-                    sourceCompatibility JavaVersion.VERSION_1_8
-                    targetCompatibility JavaVersion.VERSION_1_8
-                }
-                """.trimIndent()
-            )
-        }
-
-        // Add post-javac classes (when applicable) to be published together with the subproject's
-        // classes.
+        // Add post-javac classes for the ANDROID_LIB_WITH_POST_JAVAC_CLASSES scenario
         if (scenario == ANDROID_LIB_WITH_POST_JAVAC_CLASSES) {
             TestInputsGenerator.jarWithEmptyClasses(
-                subproject.testDir.resolve("post-javac-classes.jar").toPath(),
+                androidLib.testDir.resolve("post-javac-classes.jar").toPath(),
                 setOf("post/javac/classes/SampleClass")
             )
             TestFileUtils.appendToFile(
-                subproject.buildFile,
+                androidLib.buildFile,
                 """
                 android.libraryVariants.all { variant ->
                     variant.registerPostJavacGeneratedBytecode(project.files("post-javac-classes.jar"))
@@ -193,24 +181,29 @@ class IncrementalDexingWithDesugaringTest(
             )
         }
 
-        val interfaceWithDefaultMethodPath = "$packagePath/InterfaceWithDefaultMethod"
-        val classUsingInterfaceWithDefaultMethodPath =
-            "$packagePath/ClassUsingInterfaceWithDefaultMethod"
-        val dummyStandAlonePath = "$packagePath/DummyStandAlone"
+        val subproject = getSubproject()
+        val packageName = getPackageName()
+        val packagePath = getPackagePath()
+
+        val interfaceWithDefaultMethodFullName = "$packagePath/$INTERFACE_WITH_DEFAULT_METHOD"
+        val classUsingInterfaceWithDefaultMethodFullName =
+            "$packagePath/$CLASS_USING_INTERFACE_WITH_DEFAULT_METHOD"
+        val standAloneClassFullName = "$packagePath/$STAND_ALONE_CLASS"
 
         // Java source files
-        val javaFile: (String) -> File = { File("${subproject.mainSrcDir}/$it.java") }
-        interfaceWithDefaultMethodJavaFile = javaFile(interfaceWithDefaultMethodPath)
+        val javaFile: (classFullName: String) -> File =
+            { File("${subproject.mainSrcDir}/$it.java") }
+        interfaceWithDefaultMethodJavaFile = javaFile(interfaceWithDefaultMethodFullName)
         classUsingInterfaceWithDefaultMethodJavaFile =
-            javaFile(classUsingInterfaceWithDefaultMethodPath)
-        dummyStandAloneJavaFile = javaFile(dummyStandAlonePath)
+            javaFile(classUsingInterfaceWithDefaultMethodFullName)
+        standAloneClassJavaFile = javaFile(standAloneClassFullName)
 
-        interfaceWithDefaultMethodJavaFile.parentFile.mkdirs()
+        FileUtils.mkdirs(interfaceWithDefaultMethodJavaFile.parentFile)
         interfaceWithDefaultMethodJavaFile.writeText(
             """
             package $packageName;
 
-            interface InterfaceWithDefaultMethod {
+            interface $INTERFACE_WITH_DEFAULT_METHOD {
 
                 default void defaultMethod() {
                     System.out.println("Hello from default method!");
@@ -221,12 +214,12 @@ class IncrementalDexingWithDesugaringTest(
             """.trimIndent()
         )
 
-        classUsingInterfaceWithDefaultMethodJavaFile.parentFile.mkdirs()
+        FileUtils.mkdirs(classUsingInterfaceWithDefaultMethodJavaFile.parentFile)
         classUsingInterfaceWithDefaultMethodJavaFile.writeText(
             """
             package $packageName;
 
-            class ClassUsingInterfaceWithDefaultMethod implements InterfaceWithDefaultMethod {
+            class $CLASS_USING_INTERFACE_WITH_DEFAULT_METHOD implements $INTERFACE_WITH_DEFAULT_METHOD {
 
                 @Override
                 public void nonDefaultMethod() {
@@ -236,157 +229,160 @@ class IncrementalDexingWithDesugaringTest(
             """.trimIndent()
         )
 
-        dummyStandAloneJavaFile.parentFile.mkdirs()
-        dummyStandAloneJavaFile.writeText(
+        FileUtils.mkdirs(standAloneClassJavaFile.parentFile)
+        standAloneClassJavaFile.writeText(
             """
             package $packageName;
 
-            class DummyStandAlone {
+            class $STAND_ALONE_CLASS {
             }
             """.trimIndent()
         )
 
         // Compiled class files
-        val classFile: (String) -> File =
+        val classFile: (classFullName: String) -> File =
             when (scenario) {
-                APP, ANDROID_LIB, ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> {
-                    { JAVAC.getOutputDir(subproject.buildDir).resolve("debug/classes/$it.class") }
+                APP, ANDROID_LIB, ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> { classFullName ->
+                    JAVAC.getOutputDir(subproject.buildDir)
+                        .resolve("debug/classes/$classFullName.class")
                 }
-                JAVA_LIB -> {
-                    { subproject.buildDir.resolve("classes/java/main/$it.class") }
+                JAVA_LIB -> { classFullName ->
+                    subproject.buildDir.resolve("classes/java/main/$classFullName.class")
                 }
             }
-        interfaceWithDefaultMethodClassFile = classFile(interfaceWithDefaultMethodPath)
+        interfaceWithDefaultMethodClassFile = classFile(interfaceWithDefaultMethodFullName)
         classUsingInterfaceWithDefaultMethodClassFile =
-            classFile(classUsingInterfaceWithDefaultMethodPath)
-        dummyStandAloneClassFile = classFile(dummyStandAlonePath)
+            classFile(classUsingInterfaceWithDefaultMethodFullName)
+        standAloneClassClassFile = classFile(standAloneClassFullName)
 
         // Published class files (from libraries), `null` for app
-        val publishedClassFile: (String) -> File? =
+        val publishedClassFile: (classFullName: String) -> File? =
             when (scenario) {
-                APP -> {
-                    { null }
+                APP -> { _ ->
+                    null
                 }
-                ANDROID_LIB -> {
-                    {
-                        if (withIncrementalDexingTransform && withMinSdk24Plus) {
-                            RUNTIME_LIBRARY_CLASSES_DIR.getOutputDir(subproject.buildDir)
-                                .resolve("debug/$it.class")
-                        } else {
-                            RUNTIME_LIBRARY_CLASSES_JAR.getOutputDir(subproject.buildDir)
-                                .resolve("debug/classes.jar")
-                        }
+                ANDROID_LIB -> { classFullName ->
+                    if (withIncrementalDexingTransform && withMinSdk24Plus) {
+                        RUNTIME_LIBRARY_CLASSES_DIR.getOutputDir(subproject.buildDir)
+                            .resolve("debug/$classFullName.class")
+                    } else {
+                        RUNTIME_LIBRARY_CLASSES_JAR.getOutputDir(subproject.buildDir)
+                            .resolve("debug/classes.jar")
                     }
                 }
-                ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> {
-                    {
-                        if (withIncrementalDexingTransform && withMinSdk24Plus) {
-                            RUNTIME_LIBRARY_CLASSES_DIR.getOutputDir(subproject.buildDir)
-                                .resolve("debug/classes.jar")
-                        } else {
-                            RUNTIME_LIBRARY_CLASSES_JAR.getOutputDir(subproject.buildDir)
-                                .resolve("debug/classes.jar")
-                        }
+                ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> { _ ->
+                    if (withIncrementalDexingTransform && withMinSdk24Plus) {
+                        RUNTIME_LIBRARY_CLASSES_DIR.getOutputDir(subproject.buildDir)
+                            .resolve("debug/classes.jar")
+                    } else {
+                        RUNTIME_LIBRARY_CLASSES_JAR.getOutputDir(subproject.buildDir)
+                            .resolve("debug/classes.jar")
                     }
                 }
-                JAVA_LIB -> {
-                    { subproject.buildDir.resolve("classes/java/main/$it.class") }
+                JAVA_LIB -> { classFullName ->
+                    subproject.buildDir.resolve("classes/java/main/$classFullName.class")
                 }
             }
         interfaceWithDefaultMethodPublishedClassFile =
-            publishedClassFile(interfaceWithDefaultMethodPath)
+            publishedClassFile(interfaceWithDefaultMethodFullName)
         classUsingInterfaceWithDefaultMethodPublishedClassFile =
-            publishedClassFile(classUsingInterfaceWithDefaultMethodPath)
-        dummyStandAlonePublishedClassFile = publishedClassFile(dummyStandAlonePath)
+            publishedClassFile(classUsingInterfaceWithDefaultMethodFullName)
+        standAloneClassPublishedClassFile = publishedClassFile(standAloneClassFullName)
 
-        // Output dex files
-        val dexFile: (String) -> File =
-            when (scenario) {
-                APP -> {
-                    {
-                        PROJECT_DEX_ARCHIVE.getOutputDir(subproject.buildDir)
-                            .resolve("debug/out/$it.dex")
-                    }
-                }
-                ANDROID_LIB -> {
-                    {
-                        if (withIncrementalDexingTransform && withMinSdk24Plus) {
-                            findDexTransformOutputDir(subproject.buildDir).resolve("debug/$it.dex")
-                        } else {
-                            findDexTransformOutputDir(subproject.buildDir).resolve("classes/classes.dex")
-                        }
-                    }
-                }
-                ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> {
-                    {
-                        findDexTransformOutputDir(subproject.buildDir).resolve("classes/classes.dex")
-                    }
-                }
-                JAVA_LIB -> {
-                    {
-                        if (withIncrementalDexingTransform && withMinSdk24Plus) {
-                            findDexTransformOutputDir(subproject.buildDir).resolve("main/$it.dex")
-                        } else {
-                            findDexTransformOutputDir(subproject.buildDir).resolve("jetified-javalib/classes.dex")
-                        }
-                    }
-                }
-            }
-        interfaceWithDefaultMethodDexFile = dexFile(interfaceWithDefaultMethodPath)
-        classUsingInterfaceWithDefaultMethodDexFile =
-            dexFile(classUsingInterfaceWithDefaultMethodPath)
-        dummyStandAloneDexFile = dexFile(dummyStandAlonePath)
+        // Directory containing output dex files
+        val dexDir = when (scenario) {
+            APP -> PROJECT_DEX_ARCHIVE.getOutputDir(app.buildDir)
+            ANDROID_LIB, ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> androidLib.buildDir.resolve(".transforms")
+            JAVA_LIB -> javaLib.buildDir.resolve(".transforms")
+        }
 
         incrementalTestHelper = IncrementalTestHelper(
             project = project,
             buildTasks = listOf(":app:mergeProjectDexDebug", ":app:mergeLibDexDebug"),
-            filesToTrackChanges = setOf(
+            filesOrDirsToTrackChanges = setOf(
                 interfaceWithDefaultMethodClassFile,
                 classUsingInterfaceWithDefaultMethodClassFile,
-                dummyStandAloneClassFile,
-                interfaceWithDefaultMethodDexFile,
-                classUsingInterfaceWithDefaultMethodDexFile,
-                dummyStandAloneDexFile
-            ) + (if (scenario in setOf(APP)) {
-                emptySet()
-            } else {
-                setOf(
-                    interfaceWithDefaultMethodPublishedClassFile!!,
-                    classUsingInterfaceWithDefaultMethodPublishedClassFile!!,
-                    dummyStandAlonePublishedClassFile!!
-                )
-            })
-        ).useCustomExecutor {
-            it.with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM, withIncrementalDexingTransform)
+                standAloneClassClassFile
+            ) + listOfNotNull( // These can be null for app
+                interfaceWithDefaultMethodPublishedClassFile,
+                classUsingInterfaceWithDefaultMethodPublishedClassFile,
+                standAloneClassPublishedClassFile
+            ) + dexDir
+        ).updateExecutor {
+            it.with(
+                BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM,
+                withIncrementalDexingTransform
+            )
         }
     }
 
     /**
-     * Finds the output directory of the dexing transform using heuristics. We can't hard-code the
-     * path because it contains Gradle hashes.
+     * Finds the dex files after a build.
      *
-     * For example, given this directory structure:
-     * `../build/.transforms/16e674a220d3c8cee4f318266cc44626/classes/classes.dex`, this method
-     * returns `../build/.transforms/16e674a220d3c8cee4f318266cc44626`.
+     * We can't locate them before the build because they may reside in a
+     * `<project>/build/.transforms/<hash>` directory where `<hash>` is not known in advance.
      */
-    private fun findDexTransformOutputDir(buildDir: File): File {
-        // Run a full build so that dex outputs are generated, then we will try to locate them.
-        project.executor()
-            .with(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM, withIncrementalDexingTransform)
-            .run("clean", ":app:mergeProjectDexDebug", ":app:mergeLibDexDebug")
+    private fun findDexFiles() {
+        val packagePath = getPackagePath()
 
-        val dexOutputDirs = buildDir.resolve(".transforms").listFiles()!!.filter {
+        val interfaceWithDefaultMethodFullName = "$packagePath/$INTERFACE_WITH_DEFAULT_METHOD"
+        val classUsingInterfaceWithDefaultMethodFullName =
+            "$packagePath/$CLASS_USING_INTERFACE_WITH_DEFAULT_METHOD"
+        val standAloneClassFullName = "$packagePath/$STAND_ALONE_CLASS"
+
+        val dexFile: (classFullName: String) -> File =
+            when (scenario) {
+                APP -> { classFullName ->
+                    PROJECT_DEX_ARCHIVE.getOutputDir(app.buildDir)
+                        .resolve("debug/out/$classFullName.dex")
+                }
+                ANDROID_LIB -> { classFullName ->
+                    if (withIncrementalDexingTransform && withMinSdk24Plus) {
+                        findDexTransformDir(androidLib).resolve("debug/$classFullName.dex")
+                    } else {
+                        findDexTransformDir(androidLib).resolve("classes/classes.dex")
+                    }
+                }
+                ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> { _ ->
+                    findDexTransformDir(androidLib).resolve("classes/classes.dex")
+                }
+                JAVA_LIB -> { classFullName ->
+                    if (withIncrementalDexingTransform && withMinSdk24Plus) {
+                        findDexTransformDir(javaLib).resolve("main/$classFullName.dex")
+                    } else {
+                        findDexTransformDir(javaLib).resolve("jetified-javalib/classes.dex")
+                    }
+                }
+            }
+        interfaceWithDefaultMethodDexFile = dexFile(interfaceWithDefaultMethodFullName)
+        classUsingInterfaceWithDefaultMethodDexFile =
+            dexFile(classUsingInterfaceWithDefaultMethodFullName)
+        standAloneClassDexFile = dexFile(standAloneClassFullName)
+    }
+
+    /**
+     * Finds the dex transform directories after a build.
+     *
+     * We can't locate them before the build because they take the form of
+     * `<project>/build/.transforms/<hash>` where `<hash>` is not known in advance.
+     *
+     * For example, if the given project contains
+     * `<project>/build/.transforms/16e674a220d3c8cee4f318266cc44626/classes/classes.dex`, this
+     * method returns `<project>/build/.transforms/16e674a220d3c8cee4f318266cc44626`.
+     */
+    private fun findDexTransformDir(project: GradleTestProject): File {
+        val dexDirs = project.buildDir.resolve(".transforms").listFiles()!!.filter {
             it.isDirectory && it.walk().any { file ->
                 file.extension.equals("dex", ignoreCase = true)
             }
         }
 
-        check(dexOutputDirs.isNotEmpty()) { "Can't find dex files in `${buildDir.path}`" }
-        check(dexOutputDirs.size == 1) {
-            "Expected 1 dex output dir but found multiple ones: " +
-                    dexOutputDirs.joinToString(", ", transform = { it.path })
+        check(dexDirs.isNotEmpty()) { "Can't find dex files in `${project.buildDir.path}`" }
+        check(dexDirs.size == 1) {
+            "Expected 1 dex directory but found multiple ones: " +
+                    dexDirs.joinToString(", ", transform = { it.path })
         }
-        return dexOutputDirs[0]
+        return dexDirs[0]
     }
 
     @Test
@@ -401,6 +397,7 @@ class IncrementalDexingWithDesugaringTest(
                 )
             }
             .runIncrementalBuild()
+        findDexFiles()
 
         when (scenario) {
             APP -> {
@@ -409,7 +406,7 @@ class IncrementalDexingWithDesugaringTest(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        dummyStandAloneClassFile to UNCHANGED,
+                        standAloneClassClassFile to UNCHANGED,
                         // Dex files
                         interfaceWithDefaultMethodDexFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodDexFile to
@@ -418,7 +415,7 @@ class IncrementalDexingWithDesugaringTest(
                                 } else {
                                     CHANGED
                                 },
-                        dummyStandAloneDexFile to UNCHANGED
+                        standAloneClassDexFile to UNCHANGED
                     )
                 )
             }
@@ -428,7 +425,7 @@ class IncrementalDexingWithDesugaringTest(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        dummyStandAloneClassFile to UNCHANGED,
+                        standAloneClassClassFile to UNCHANGED,
                         // Published class files
                         interfaceWithDefaultMethodPublishedClassFile!! to CHANGED,
                         classUsingInterfaceWithDefaultMethodPublishedClassFile!! to
@@ -437,7 +434,7 @@ class IncrementalDexingWithDesugaringTest(
                                 } else {
                                     CHANGED
                                 },
-                        dummyStandAlonePublishedClassFile!! to
+                        standAloneClassPublishedClassFile!! to
                                 if (scenario == ANDROID_LIB && withIncrementalDexingTransform && withMinSdk24Plus) {
                                     UNCHANGED
                                 } else {
@@ -451,7 +448,7 @@ class IncrementalDexingWithDesugaringTest(
                                 } else {
                                     CHANGED
                                 },
-                        dummyStandAloneDexFile to
+                        standAloneClassDexFile to
                                 if (scenario == ANDROID_LIB && withIncrementalDexingTransform && withMinSdk24Plus) {
                                     UNCHANGED
                                 } else {
@@ -466,11 +463,11 @@ class IncrementalDexingWithDesugaringTest(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        dummyStandAloneClassFile to UNCHANGED,
+                        standAloneClassClassFile to UNCHANGED,
                         // Published class files
                         interfaceWithDefaultMethodPublishedClassFile!! to CHANGED,
                         classUsingInterfaceWithDefaultMethodPublishedClassFile!! to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        dummyStandAlonePublishedClassFile!! to UNCHANGED,
+                        standAloneClassPublishedClassFile!! to UNCHANGED,
                         // Dex files
                         interfaceWithDefaultMethodDexFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodDexFile to
@@ -479,12 +476,12 @@ class IncrementalDexingWithDesugaringTest(
                                 } else {
                                     CHANGED
                                 },
-                        dummyStandAloneDexFile to
-                            if (withIncrementalDexingTransform && withMinSdk24Plus) {
-                                UNCHANGED
-                            } else {
-                                CHANGED
-                            }
+                        standAloneClassDexFile to
+                                if (withIncrementalDexingTransform && withMinSdk24Plus) {
+                                    UNCHANGED
+                                } else {
+                                    CHANGED
+                                }
                     )
                 )
             }
@@ -503,6 +500,7 @@ class IncrementalDexingWithDesugaringTest(
                 )
             }
             .runIncrementalBuild()
+        findDexFiles()
 
         when (scenario) {
             APP -> {
@@ -511,7 +509,7 @@ class IncrementalDexingWithDesugaringTest(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        dummyStandAloneClassFile to UNCHANGED,
+                        standAloneClassClassFile to UNCHANGED,
                         // Dex files
                         interfaceWithDefaultMethodDexFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodDexFile to
@@ -520,7 +518,7 @@ class IncrementalDexingWithDesugaringTest(
                                 } else {
                                     CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS
                                 },
-                        dummyStandAloneDexFile to UNCHANGED
+                        standAloneClassDexFile to UNCHANGED
                     )
                 )
             }
@@ -530,7 +528,7 @@ class IncrementalDexingWithDesugaringTest(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        dummyStandAloneClassFile to UNCHANGED,
+                        standAloneClassClassFile to UNCHANGED,
                         // Published class files
                         interfaceWithDefaultMethodPublishedClassFile!! to CHANGED,
                         classUsingInterfaceWithDefaultMethodPublishedClassFile!! to
@@ -539,7 +537,7 @@ class IncrementalDexingWithDesugaringTest(
                                 } else {
                                     CHANGED
                                 },
-                        dummyStandAlonePublishedClassFile!! to
+                        standAloneClassPublishedClassFile!! to
                                 if (scenario == ANDROID_LIB && withIncrementalDexingTransform && withMinSdk24Plus) {
                                     UNCHANGED
                                 } else {
@@ -553,7 +551,7 @@ class IncrementalDexingWithDesugaringTest(
                                 } else {
                                     CHANGED
                                 },
-                        dummyStandAloneDexFile to
+                        standAloneClassDexFile to
                                 if (scenario == ANDROID_LIB && withIncrementalDexingTransform && withMinSdk24Plus) {
                                     UNCHANGED
                                 } else {
@@ -568,11 +566,11 @@ class IncrementalDexingWithDesugaringTest(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        dummyStandAloneClassFile to UNCHANGED,
+                        standAloneClassClassFile to UNCHANGED,
                         // Published class files
                         interfaceWithDefaultMethodPublishedClassFile!! to CHANGED,
                         classUsingInterfaceWithDefaultMethodPublishedClassFile!! to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
-                        dummyStandAlonePublishedClassFile!! to UNCHANGED,
+                        standAloneClassPublishedClassFile!! to UNCHANGED,
                         // Dex files
                         interfaceWithDefaultMethodDexFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodDexFile to
@@ -581,7 +579,7 @@ class IncrementalDexingWithDesugaringTest(
                                 } else {
                                     CHANGED
                                 },
-                        dummyStandAloneDexFile to
+                        standAloneClassDexFile to
                                 if (withIncrementalDexingTransform && withMinSdk24Plus) {
                                     UNCHANGED
                                 } else {

@@ -19,12 +19,6 @@ interface IdeBuildType : IdeBaseConfig {
     /** Whether the build type is configured to generate a debuggable apk. */
     val isDebuggable: Boolean
 
-    /** Whether the build type is configured to be build with support for code coverage. */
-    val isTestCoverageEnabled: Boolean
-
-    /** Whether the build type is configured to be build with support for pseudolocales. */
-    val isPseudoLocalesEnabled: Boolean
-
     /** Whether the build type is configured to generate an apk with debuggable native code. */
     val isJniDebuggable: Boolean
 
@@ -47,7 +41,4 @@ interface IdeBuildType : IdeBaseConfig {
 
     /** Whether zipalign is enabled for this build type. */
     val isZipAlignEnabled: Boolean
-
-    /**Whether the variant embeds the micro app. */
-    val isEmbedMicroApp: Boolean
 }

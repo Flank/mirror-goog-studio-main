@@ -45,8 +45,8 @@ public class ClientLifecycleIntegrationTest {
     assertThat(AndroidDebugBridge.getBridge().getDevices()).hasLength(1);
     IDevice device = AndroidDebugBridge.getBridge().getDevices()[0];
     assertThat(device.getClients()).isEmpty();
-    // Bring up a basic client
-    myFakeAdb.launchAndWaitForProcess(state, true);
+        // Bring up a basic client
+        FakeAdbTestRule.launchAndWaitForProcess(state, true);
     assertThat(device.getClients()).hasLength(1);
   }
 
@@ -55,33 +55,40 @@ public class ClientLifecycleIntegrationTest {
     assertThat(AndroidDebugBridge.getBridge().getDevices()).isEmpty();
     // Connect a test device.
     DeviceState state = myFakeAdb.connectAndWaitForDevice();
-    myFakeAdb.launchAndWaitForProcess(state, true);
+        Client client = FakeAdbTestRule.launchAndWaitForProcess(state, true);
     IDevice device = AndroidDebugBridge.getBridge().getDevices()[0];
     CountDownLatch latch = new CountDownLatch(1);
-    AndroidDebugBridge.addDeviceChangeListener(new AndroidDebugBridge.IDeviceChangeListener() {
-      @Override
-      public void deviceConnected(@NonNull IDevice device) { }
+        AndroidDebugBridge.IDeviceChangeListener listener =
+                new AndroidDebugBridge.IDeviceChangeListener() {
+                    @Override
+                    public void deviceConnected(@NonNull IDevice device) {}
 
-      @Override
-      public void deviceDisconnected(@NonNull IDevice device) {}
+                    @Override
+                    public void deviceDisconnected(@NonNull IDevice device) {}
 
-      @Override
-      public void deviceChanged(@NonNull IDevice device, int changeMask) {
-        latch.countDown();
-      }
-    });
-    device.getClients()[0].kill();
+                    @Override
+                    public void deviceChanged(@NonNull IDevice changedDevice, int changeMask) {
+                        if ((changeMask & IDevice.CHANGE_CLIENT_LIST)
+                                == IDevice.CHANGE_CLIENT_LIST) {
+                            latch.countDown();
+                        }
+                    }
+                };
+        AndroidDebugBridge.addDeviceChangeListener(listener);
+        client.kill();
     // Block until we get a deviceChanged notification.
     assertThat(latch.await(FakeAdbTestRule.TEST_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
+        AndroidDebugBridge.removeDeviceChangeListener(listener);
     assertThat(device.getClients()).isEmpty();
   }
 
-  @Test
-  public void clientDefaultState() throws Exception {
+    @Test
+    @Ignore
+    public void clientDefaultState() throws Exception {
     assertThat(AndroidDebugBridge.getBridge().getDevices()).isEmpty();
     DeviceState state = myFakeAdb.connectAndWaitForDevice();
     IDevice device = AndroidDebugBridge.getBridge().getDevices()[0];
-    myFakeAdb.launchAndWaitForProcess(state, true);
+        FakeAdbTestRule.launchAndWaitForProcess(state, true);
     ClientImpl client = (ClientImpl)device.getClient(FakeAdbTestRule.CLIENT_PACKAGE_NAME);
     assertThat(client.isDebuggerAttached()).isFalse();
     assertThat(client.isValid()).isTrue();
@@ -99,11 +106,13 @@ public class ClientLifecycleIntegrationTest {
     FakeAdbTestRule.launchAndWaitForProcess(state, true);
     ClientImpl client = (ClientImpl)device.getClient(FakeAdbTestRule.CLIENT_PACKAGE_NAME);
     CountDownLatch hasDebuggerStateChangedEvent = new CountDownLatch(1);
-    AndroidDebugBridge.addClientChangeListener((client1, changeMask) -> {
-      if((changeMask & Client.CHANGE_DEBUGGER_STATUS) != 0) {
-        hasDebuggerStateChangedEvent.countDown();
-      }
-    });
+        AndroidDebugBridge.IClientChangeListener listener =
+                (client1, changeMask) -> {
+                    if ((changeMask & Client.CHANGE_DEBUGGER_STATUS) != 0) {
+                        hasDebuggerStateChangedEvent.countDown();
+                    }
+                };
+        AndroidDebugBridge.addClientChangeListener(listener);
     assertThat(client.getDebugger().getListenPort()).isEqualTo(client.getDebuggerListenPort());
     SocketChannel debugger = SocketChannel.open(new InetSocketAddress("localhost", client.getDebuggerListenPort()));
     FakeAdbTestRule.issueHandshake(debugger);
@@ -112,5 +121,6 @@ public class ClientLifecycleIntegrationTest {
     assertThat(hasDebuggerStateChangedEvent.await(FakeAdbTestRule.TEST_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
     assertThat(client.getClientData().getDebuggerConnectionStatus()).isEqualTo(ATTACHED);
     assertThat(client.getDebugger().getConnectionState()).isEqualTo(Debugger.ConnectionState.ST_READY);
+        AndroidDebugBridge.removeClientChangeListener(listener);
   }
 }

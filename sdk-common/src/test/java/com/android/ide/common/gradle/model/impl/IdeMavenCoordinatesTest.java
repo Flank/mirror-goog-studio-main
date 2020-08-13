@@ -15,7 +15,9 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
-import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.*;
+import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.assertEqualsOrSimilar;
+import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.createEqualsVerifier;
+import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.verifyUsageOfImmutableCollections;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
@@ -23,18 +25,10 @@ import com.android.builder.model.MavenCoordinates;
 import com.android.ide.common.gradle.model.stubs.MavenCoordinatesStub;
 import com.android.testutils.Serialization;
 import java.io.Serializable;
-import org.junit.Before;
 import org.junit.Test;
 
 /** Tests for {@link IdeMavenCoordinatesImpl}. */
 public class IdeMavenCoordinatesTest {
-    private ModelCache myModelCache;
-
-    @Before
-    public void setUp() throws Exception {
-        myModelCache = new ModelCache();
-    }
-
     @Test
     public void serializable() {
         assertThat(IdeMavenCoordinatesImpl.class).isAssignableTo(Serializable.class);
@@ -43,7 +37,7 @@ public class IdeMavenCoordinatesTest {
     @Test
     public void serialization() throws Exception {
         IdeMavenCoordinatesImpl coordinates =
-                ModelCache.mavenCoordinatesFrom(new MavenCoordinatesStub());
+                ModelCache.Companion.mavenCoordinatesFrom(new MavenCoordinatesStub());
         byte[] bytes = Serialization.serialize(coordinates);
         Object o = Serialization.deserialize(bytes);
         assertEquals(coordinates, o);
@@ -52,7 +46,7 @@ public class IdeMavenCoordinatesTest {
     @Test
     public void constructor() throws Throwable {
         MavenCoordinates original = new MavenCoordinatesStub();
-        IdeMavenCoordinatesImpl copy = ModelCache.mavenCoordinatesFrom(original);
+        IdeMavenCoordinatesImpl copy = ModelCache.Companion.mavenCoordinatesFrom(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

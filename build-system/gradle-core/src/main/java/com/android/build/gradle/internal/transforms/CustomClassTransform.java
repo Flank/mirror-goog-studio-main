@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.transforms;
 
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES;
-import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -32,12 +31,12 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.tasks.ExtractProfilerNativeDependenciesTaskKt;
 import com.android.builder.utils.ZipEntryUtils;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.FileInputStream;
@@ -56,8 +55,6 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -113,7 +110,7 @@ public class CustomClassTransform extends Transform {
     @NonNull
     @Override
     public Set<QualifiedContent.ContentType> getOutputTypes() {
-        return addDependencies ? ImmutableSet.of(CLASSES, NATIVE_LIBS) : ImmutableSet.of(CLASSES);
+        return ImmutableSet.of(CLASSES);
     }
 
     @NonNull
@@ -143,29 +140,12 @@ public class CustomClassTransform extends Transform {
         // as the secondary file is will trigger a full build if modified.
         if (!invocation.isIncremental()) {
             outputProvider.deleteAll();
-
             if (addDependencies) {
-                // To avoid https://bugs.openjdk.java.net/browse/JDK-7183373
-                // we extract the resources directly as a zip file.
-                try (ZipInputStream zis = new ZipInputStream(new FileInputStream(path))) {
-                    ZipEntry entry;
-                    Pattern pattern = Pattern.compile("dependencies/(.*)\\.jar");
-                    while ((entry = zis.getNextEntry()) != null
-                            && ZipEntryUtils.isValidZipEntryName(entry)) {
-                        Matcher matcher = pattern.matcher(entry.getName());
-                        if (matcher.matches()) {
-                            String name = matcher.group(1);
-                            File outputJar =
-                                    outputProvider.getContentLocation(
-                                            name, getOutputTypes(), SCOPE_EXTERNAL, Format.JAR);
-                            Files.createParentDirs(outputJar);
-                            try (FileOutputStream fos = new FileOutputStream(outputJar)) {
-                                ByteStreams.copy(zis, fos);
-                            }
-                        }
-                        zis.closeEntry();
-                    }
-                }
+                ExtractProfilerNativeDependenciesTaskKt.extractSingleFile(
+                        new File(path),
+                        name ->
+                                outputProvider.getContentLocation(
+                                        name, getOutputTypes(), SCOPE_EXTERNAL, Format.JAR));
             }
         }
 

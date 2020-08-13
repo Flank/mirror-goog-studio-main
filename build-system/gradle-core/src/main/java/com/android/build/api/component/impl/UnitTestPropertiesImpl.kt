@@ -18,6 +18,8 @@ package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.UnitTestProperties
+import com.android.build.api.component.analytics.AnalyticsEnabledComponentProperties
+import com.android.build.api.component.analytics.AnalyticsEnabledUnitTestProperties
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
@@ -28,11 +30,13 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.google.common.collect.ImmutableList
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
@@ -102,4 +106,14 @@ open class UnitTestPropertiesImpl @Inject constructor(
 
     override val minSdkVersion: AndroidVersion
         get() = testedVariant.variant.minSdkVersion
+
+    override fun createUserVisibleVariantPropertiesObject(
+        projectServices: ProjectServices,
+        stats: GradleBuildVariant.Builder
+    ): AnalyticsEnabledUnitTestProperties =
+        projectServices.objectFactory.newInstance(
+            AnalyticsEnabledUnitTestProperties::class.java,
+            this,
+            stats
+        )
 }

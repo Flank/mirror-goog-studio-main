@@ -32,13 +32,11 @@ internal fun initializeAaptOptionsFromDsl(
     return AaptOptionsImpl(
         ignoreAssetsPatterns = variantPropertiesApiServices.listPropertyOf(
             String::class.java,
-            dslAaptOptions.ignoreAssetsPattern?.split(':') ?: listOf(),
-            "ignoreAssetsPatterns"
+            dslAaptOptions.ignoreAssetsPattern?.split(':') ?: listOf()
         ),
         additionalParameters = variantPropertiesApiServices.listPropertyOf(
             String::class.java,
-            dslAaptOptions.additionalParameters,
-            "additionalParameters"
+            dslAaptOptions.additionalParameters
         )
     )
 }

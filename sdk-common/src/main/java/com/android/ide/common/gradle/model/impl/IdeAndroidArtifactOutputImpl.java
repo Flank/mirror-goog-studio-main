@@ -16,25 +16,21 @@
 package com.android.ide.common.gradle.model.impl;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.FilterData;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
-import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
-import org.jetbrains.annotations.NotNull;
 
-/** Creates a deep copy of an {@link AndroidArtifactOutput}. */
-public final class IdeAndroidArtifactOutputImpl extends IdeVariantOutputImpl
-        implements IdeAndroidArtifactOutput {
+public final class IdeAndroidArtifactOutputImpl implements IdeAndroidArtifactOutput, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
 
-    @Nullable private final File myOutputFile;
+    @NonNull private final Collection<FilterData> myFilters;
+    private final int myVersionCode;
+    @NonNull private final File myOutputFile;
     private final int myHashCode;
 
     // Used for serialization by the IDE.
@@ -42,20 +38,17 @@ public final class IdeAndroidArtifactOutputImpl extends IdeVariantOutputImpl
     IdeAndroidArtifactOutputImpl() {
         super();
 
-        myOutputFile = null;
+        myFilters = Collections.emptyList();
+        myVersionCode = 0;
+        myOutputFile = new File("");
 
         myHashCode = 0;
     }
 
     public IdeAndroidArtifactOutputImpl(
-            @NotNull List<IdeOutputFileImpl> outputs,
-            @NotNull List<String> filterTypes,
-            @Nullable Collection<FilterData> filters,
-            @Nullable IdeOutputFileImpl mainOutputFile,
-            @Nullable String outputType,
-            int versionCode,
-            @Nullable File outputFile) {
-        super(outputs, filterTypes, filters, mainOutputFile, outputType, versionCode);
+            @NonNull Collection<FilterData> filters, int versionCode, @NonNull File outputFile) {
+        myFilters = filters;
+        myVersionCode = versionCode;
         // Even though getOutputFile is not new, the class hierarchies in builder-model have changed
         // a lot (e.g. new interfaces have been
         // created, and existing methods have been moved around to new interfaces) making Gradle
@@ -70,11 +63,19 @@ public final class IdeAndroidArtifactOutputImpl extends IdeVariantOutputImpl
 
     @Override
     @NonNull
+    public Collection<FilterData> getFilters() {
+        return myFilters;
+    }
+
+    @Override
+    public int getVersionCode() {
+        return myVersionCode;
+    }
+
+    @Override
+    @NonNull
     public File getOutputFile() {
-        if (myOutputFile != null) {
-            return myOutputFile;
-        }
-        throw new UnsupportedOperationException("getOutputFile");
+        return myOutputFile;
     }
 
     @Override
@@ -85,17 +86,10 @@ public final class IdeAndroidArtifactOutputImpl extends IdeVariantOutputImpl
         if (!(o instanceof IdeAndroidArtifactOutputImpl)) {
             return false;
         }
-        if (!super.equals(o)) {
-            return false;
-        }
         IdeAndroidArtifactOutputImpl output = (IdeAndroidArtifactOutputImpl) o;
-        return output.canEquals(this)
+        return myVersionCode == output.myVersionCode
+                && Objects.equals(myFilters, output.myFilters)
                 && Objects.equals(myOutputFile, output.myOutputFile);
-    }
-
-    @Override
-    protected boolean canEquals(Object other) {
-        return other instanceof IdeAndroidArtifactOutputImpl;
     }
 
     @Override
@@ -103,9 +97,8 @@ public final class IdeAndroidArtifactOutputImpl extends IdeVariantOutputImpl
         return myHashCode;
     }
 
-    @Override
-    protected int calculateHashCode() {
-        return Objects.hash(super.calculateHashCode(), myOutputFile);
+    private int calculateHashCode() {
+        return Objects.hash(myFilters, myVersionCode, myOutputFile);
     }
 
     @Override

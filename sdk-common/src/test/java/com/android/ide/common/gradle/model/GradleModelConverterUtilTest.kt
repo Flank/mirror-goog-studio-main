@@ -31,11 +31,14 @@ import org.junit.Test
  * Tests for [GradleModelConverterUtil].
  */
 class GradleModelConverterUtilTest {
+
+    val modelCache = ModelCache()
+
     @Test
     fun testClassFieldsToDynamicResourceValues() {
         val input = mapOf(
-          "foo" to ModelCache.classFieldFrom(ClassFieldStub(ResourceType.STRING.getName(), "foo", "baz")),
-          "foo2" to ModelCache.classFieldFrom(ClassFieldStub(ResourceType.INTEGER.getName(), "foo2", "123")))
+          "foo" to modelCache.classFieldFrom(ClassFieldStub(ResourceType.STRING.getName(), "foo", "baz")),
+          "foo2" to modelCache.classFieldFrom(ClassFieldStub(ResourceType.INTEGER.getName(), "foo2", "123")))
         val output = classFieldsToDynamicResourceValues(input)
 
         val expectedOutput = mapOf(

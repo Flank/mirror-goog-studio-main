@@ -16,7 +16,6 @@
 package com.android.ide.common.gradle.model.impl;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.BuildTypeContainer;
 import com.android.ide.common.gradle.model.IdeBuildType;
 import com.android.ide.common.gradle.model.IdeBuildTypeContainer;
 import com.android.ide.common.gradle.model.IdeSourceProvider;
@@ -28,7 +27,6 @@ import java.util.List;
 import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 
-/** Creates a deep copy of a {@link BuildTypeContainer}. */
 public final class IdeBuildTypeContainerImpl implements IdeBuildTypeContainer, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;

@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.builder.model.DependenciesInfo
 import com.android.ide.common.gradle.model.IdeDependenciesInfo
 import java.io.Serializable
 import java.util.Objects
@@ -25,17 +24,6 @@ class IdeDependenciesInfoImpl(
   override val includeInBundle: Boolean
 ) : IdeDependenciesInfo, Serializable {
     val hashCode: Int = calculateHashCode()
-
-    companion object {
-        @JvmStatic
-        fun createOrNull(model: DependenciesInfo?) = model?.let { createFrom(it) }
-
-        @JvmStatic
-        fun createFrom(model: DependenciesInfo) = IdeDependenciesInfoImpl(
-          includeInApk = model.includeInApk,
-          includeInBundle = model.includeInBundle
-        )
-    }
 
     constructor() : this(
       includeInApk = true,

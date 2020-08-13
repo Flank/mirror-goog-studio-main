@@ -17,6 +17,7 @@
 package com.android.tools.agent.app.inspection;
 
 import androidx.annotation.NonNull;
+import androidx.inspection.ArtToolInterface;
 import androidx.inspection.InspectorEnvironment;
 import androidx.inspection.InspectorExecutors;
 import java.util.Arrays;
@@ -42,13 +43,14 @@ class InspectorEnvironmentImpl implements InspectorEnvironment {
     }
 
     @Override
-    public void registerEntryHook(Class<?> originClass, String originMethod, EntryHook entryHook) {
+    public void registerEntryHook(
+            Class<?> originClass, String originMethod, ArtToolInterface.EntryHook entryHook) {
         AppInspectionService.addEntryHook(inspectorId, originClass, originMethod, entryHook);
     }
 
     @Override
     public <T> void registerExitHook(
-            Class<?> originClass, String originMethod, ExitHook<T> exitHook) {
+            Class<?> originClass, String originMethod, ArtToolInterface.ExitHook<T> exitHook) {
         AppInspectionService.addExitHook(inspectorId, originClass, originMethod, exitHook);
     }
 

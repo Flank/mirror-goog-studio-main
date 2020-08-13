@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.instrumentation
 
 import com.android.SdkConstants.DOT_CLASS
+import com.android.SdkConstants.DOT_JAR
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.io.ByteStreams
 import org.objectweb.asm.AnnotationVisitor
@@ -40,12 +41,14 @@ class ClassesHierarchyData(private val asmApiVersion: Int) {
     private val sourceJars: MutableList<File> = mutableListOf()
     private val loadedClassesData: MutableMap<String, ClassData> = mutableMapOf()
 
-    fun addClassesFromDir(dir: File) {
-        sourceDirs.add(dir)
-    }
-
-    fun addClassesFromJar(jarFile: File) {
-        sourceJars.add(jarFile)
+    fun addClasses(files: Set<File>) {
+        files.forEach {
+            if (it.name.endsWith(DOT_JAR)) {
+                sourceJars.add(it)
+            } else {
+                sourceDirs.add(it)
+            }
+        }
     }
 
     @VisibleForTesting

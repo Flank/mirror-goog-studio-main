@@ -105,6 +105,7 @@ private const val ATTR_ANDROID = "android"
 private const val ATTR_LIBRARY = "library"
 private const val ATTR_MODULE = "module"
 private const val ATTR_INCOMPLETE = "incomplete"
+private const val ATTR_CLIENT = "client"
 private const val ATTR_JAVA8_LIBS = "android_java8_libs"
 private const val ATTR_DESUGAR = "desugar"
 private const val ATTR_JAVA_LEVEL = "javaLanguage"
@@ -160,7 +161,12 @@ data class ProjectMetadata(
      * without full project context should be attempted. This is what happens for
      * "on-the-fly" checks running in the IDE.
      */
-    val incomplete: Boolean = false
+    val incomplete: Boolean = false,
+    /**
+     * A client name to use instead of the default; this is written into baseline
+     * files, can be queried by detectors from [LintClient] etc
+     */
+    val clientName: String? = null
 )
 
 /**
@@ -265,6 +271,7 @@ private class ProjectInitializer(
         val incomplete = projectElement.getAttribute(ATTR_INCOMPLETE) == VALUE_TRUE
         android = projectElement.getAttribute(ATTR_ANDROID) == VALUE_TRUE
         desugaring = handleDesugaring(projectElement)
+        val client = projectElement.getAttribute(ATTR_CLIENT)
 
         val globalLintChecks = mutableListOf<File>()
 
@@ -384,7 +391,8 @@ private class ProjectInitializer(
             mergedManifests = mergedManifests,
             incomplete = incomplete,
             jdkBootClasspath = jdkBootClasspath,
-            platforms = if (android) Platform.ANDROID_SET else Platform.JDK_SET
+            platforms = if (android) Platform.ANDROID_SET else Platform.JDK_SET,
+            clientName = client
         )
     }
 

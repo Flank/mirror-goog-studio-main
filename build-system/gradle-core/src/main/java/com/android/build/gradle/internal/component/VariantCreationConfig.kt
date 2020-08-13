@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.component
 
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.PackagingOptions
 import com.android.build.api.variant.impl.ResValue
 import org.gradle.api.provider.MapProperty
 
@@ -25,4 +26,6 @@ interface VariantCreationConfig: ComponentCreationConfig {
     val buildConfigFields: MapProperty<String, BuildConfigField<out java.io.Serializable>>
 
     val resValues: MapProperty<ResValue.Key, ResValue>
+
+    val packagingOptions: PackagingOptions
 }

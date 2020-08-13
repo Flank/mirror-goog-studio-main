@@ -42,7 +42,7 @@ public class IdeAndroidArtifactOutputTest {
     @Test
     public void serialization() throws Exception {
         IdeAndroidArtifactOutputImpl output =
-          ModelCache.androidArtifactOutputFrom(new AndroidArtifactOutputStub(), myModelCache);
+                myModelCache.androidArtifactOutputFrom(new AndroidArtifactOutputStub());
         byte[] bytes = Serialization.serialize(output);
         Object o = Serialization.deserialize(bytes);
         assertEquals(output, o);
@@ -51,8 +51,7 @@ public class IdeAndroidArtifactOutputTest {
     @Test
     public void equalsAndHashCode() {
         createEqualsVerifier(IdeAndroidArtifactOutputImpl.class)
-                .withRedefinedSuperclass()
-                .withIgnoredFields("hashCode")
+                .withIgnoredFields("myHashCode")
                 .verify();
     }
 }

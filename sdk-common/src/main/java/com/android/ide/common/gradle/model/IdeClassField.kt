@@ -19,6 +19,4 @@ interface IdeClassField {
   val type: String
   val name: String
   val value: String
-  val documentation: String
-  val annotations: Set<String>
 }

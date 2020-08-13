@@ -15,11 +15,7 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.builder.model.LintOptions
 import com.android.ide.common.gradle.model.IdeLintOptions
-import com.android.ide.common.repository.GradleVersion
-import com.google.common.collect.ImmutableMap
-import com.google.common.collect.ImmutableSet
 import java.io.File
 import java.io.Serializable
 
@@ -50,47 +46,4 @@ data class IdeLintOptionsImpl(
   override val htmlOutput: File? = null,
   override val xmlReport: Boolean = true,
   override val xmlOutput: File? = null
-) : Serializable, IdeLintOptions {
-
-    companion object {
-        private const val serialVersionUID = 2L
-
-        @JvmStatic
-        fun createFrom(
-          options: LintOptions,
-          modelVersion: GradleVersion?
-        ): IdeLintOptionsImpl = IdeLintOptionsImpl(
-          baselineFile = if (modelVersion != null && modelVersion.isAtLeast(2, 3, 0, "beta", 2, true))
-              options.baselineFile
-          else
-              null,
-          lintConfig = IdeModel.copyNewProperty<File>({ options.lintConfig }, null),
-          severityOverrides = options.severityOverrides?.let { ImmutableMap.copyOf(it) },
-          isCheckTestSources = modelVersion != null &&
-                               modelVersion.isAtLeast(2, 4, 0) &&
-                               options.isCheckTestSources,
-          isCheckDependencies = IdeModel.copyNewProperty({ options.isCheckDependencies }, false)!!,
-          disable = IdeModel.copy(options.disable)!!,
-          enable = IdeModel.copy(options.enable)!!,
-          check = options.check?.let { ImmutableSet.copyOf(it) },
-          isAbortOnError = IdeModel.copyNewProperty({ options.isAbortOnError }, true)!!,
-          isAbsolutePaths = IdeModel.copyNewProperty({ options.isAbsolutePaths }, true)!!,
-          isNoLines = IdeModel.copyNewProperty({ options.isNoLines }, false)!!,
-          isQuiet = IdeModel.copyNewProperty({ options.isQuiet }, false)!!,
-          isCheckAllWarnings = IdeModel.copyNewProperty({ options.isCheckAllWarnings }, false)!!,
-          isIgnoreWarnings = IdeModel.copyNewProperty({ options.isIgnoreWarnings }, false)!!,
-          isWarningsAsErrors = IdeModel.copyNewProperty({ options.isWarningsAsErrors }, false)!!,
-          isIgnoreTestSources = IdeModel.copyNewProperty({ options.isIgnoreTestSources }, false)!!,
-          isCheckGeneratedSources = IdeModel.copyNewProperty({ options.isCheckGeneratedSources }, false)!!,
-          isExplainIssues = IdeModel.copyNewProperty({ options.isExplainIssues }, true)!!,
-          isShowAll = IdeModel.copyNewProperty({ options.isShowAll }, false)!!,
-          textReport = IdeModel.copyNewProperty({ options.textReport }, false)!!,
-          textOutput = IdeModel.copyNewProperty({ options.textOutput }, null),
-          htmlReport = IdeModel.copyNewProperty({ options.htmlReport }, true)!!,
-          htmlOutput = IdeModel.copyNewProperty({ options.htmlOutput }, null),
-          xmlReport = IdeModel.copyNewProperty({ options.xmlReport }, true)!!,
-          xmlOutput = IdeModel.copyNewProperty({ options.xmlOutput }, null),
-          isCheckReleaseBuilds = IdeModel.copyNewProperty({ options.isCheckReleaseBuilds }, true)!!
-        )
-    }
-}
+) : Serializable, IdeLintOptions

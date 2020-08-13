@@ -18,8 +18,10 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_DIR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR
@@ -31,6 +33,9 @@ import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject
 import com.android.utils.FileUtils
+import com.google.common.util.concurrent.MoreExecutors
+import org.gradle.api.provider.Property
+import org.gradle.work.FileChange
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -125,6 +130,8 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService>
+                        get() = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -164,6 +171,8 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService>
+                        get() = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -203,6 +212,8 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService>
+                        get() = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -245,6 +256,8 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService>
+                        get() = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -289,6 +302,8 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService>
+                        get() = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -328,6 +343,8 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService>
+                        get() = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -387,6 +404,8 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                     override val projectName = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService>
+                        get() = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()

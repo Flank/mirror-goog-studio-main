@@ -17,33 +17,22 @@ package com.android.ide.common.gradle.model.impl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.CodeShrinker;
-import com.android.builder.model.NativeLibrary;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.android.ide.common.gradle.model.IdeClassField;
 import com.android.ide.common.gradle.model.IdeDependencies;
 import com.android.ide.common.gradle.model.IdeSourceProvider;
 import com.android.ide.common.gradle.model.IdeTestOptions;
-import com.android.ide.common.repository.GradleVersion;
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import org.jetbrains.annotations.NotNull;
 
-/** Creates a deep copy of {@link AndroidArtifact}. */
 public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         implements IdeAndroidArtifact {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
@@ -52,7 +41,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     @NonNull private final List<IdeAndroidArtifactOutput> myOutputs;
     @NonNull private final String myApplicationId;
     @NonNull private final String mySourceGenTaskName;
-    @NonNull private final List<File> myGeneratedResourceFolders;
+    @NonNull private final Collection<File> myGeneratedResourceFolders;
     @NonNull private final List<File> myAdditionalRuntimeApks;
     @Nullable private final String mySigningConfigName;
     @NonNull private final Set<String> myAbiFilters;
@@ -90,34 +79,33 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     }
 
     public IdeAndroidArtifactImpl(
-      @NotNull String name,
-      @NotNull String compileTaskName,
-      @NotNull String assembleTaskName,
-      @NotNull String postAssembleModelFile,
-      @NotNull File classesFolder,
-      @Nullable File javaResourcesFolder,
-      @NotNull ImmutableSet<String> ideSetupTaskNames,
-      @NotNull LinkedHashSet<File> generatedSourceFolders,
-      @Nullable IdeSourceProvider variantSourceProvider,
-      @Nullable IdeSourceProvider multiFlavorSourceProvider,
-      @NotNull Set<File> additionalClassFolders,
-      @NotNull IdeDependencies level2Dependencies,
-      @NotNull List<IdeAndroidArtifactOutput> outputs,
-      @NotNull String applicationId,
-      @NotNull String sourceGenTaskName,
-      @NotNull ImmutableList<File> generatedResourceFolders,
-      @Nullable String signingConfigName,
-      @NotNull ImmutableSet<String> abiFilters,
-      boolean signed,
-      @NotNull List<File> additionalRuntimeApks,
-      @Nullable IdeTestOptionsImpl testOptions,
-      @Nullable String instrumentedTestTaskName,
-      @Nullable String bundleTaskName,
-      @Nullable String postBundleTaskModelFile,
-      @Nullable String apkFromBundleTaskName,
-      @Nullable String postApkFromBundleTaskModelFile,
-      @Nullable CodeShrinker codeShrinker
-    ) {
+            @NotNull String name,
+            @NotNull String compileTaskName,
+            @NotNull String assembleTaskName,
+            @NotNull String postAssembleModelFile,
+            @NotNull File classesFolder,
+            @Nullable File javaResourcesFolder,
+            @NotNull List<String> ideSetupTaskNames,
+            @NotNull List<File> generatedSourceFolders,
+            @Nullable IdeSourceProvider variantSourceProvider,
+            @Nullable IdeSourceProvider multiFlavorSourceProvider,
+            @NotNull Set<File> additionalClassFolders,
+            @NotNull IdeDependencies level2Dependencies,
+            @NotNull List<IdeAndroidArtifactOutput> outputs,
+            @NotNull String applicationId,
+            @NotNull String sourceGenTaskName,
+            @NotNull Collection<File> generatedResourceFolders,
+            @Nullable String signingConfigName,
+            @NotNull Set<String> abiFilters,
+            boolean signed,
+            @NotNull List<File> additionalRuntimeApks,
+            @Nullable IdeTestOptionsImpl testOptions,
+            @Nullable String instrumentedTestTaskName,
+            @Nullable String bundleTaskName,
+            @Nullable String postBundleTaskModelFile,
+            @Nullable String apkFromBundleTaskName,
+            @Nullable String postApkFromBundleTaskModelFile,
+            @Nullable CodeShrinker codeShrinker) {
         super(name,
               compileTaskName,
               assembleTaskName,
@@ -162,7 +150,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
 
     @Override
     @NonNull
-    public List<File> getGeneratedResourceFolders() {
+    public Collection<File> getGeneratedResourceFolders() {
         return myGeneratedResourceFolders;
     }
 
@@ -224,12 +212,6 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     @NonNull
     public Set<String> getAbiFilters() {
         return myAbiFilters;
-    }
-
-    @Nullable
-    @Deprecated // This is for ndk-compile, which has long been deprecated
-    public Collection<NativeLibrary> getNativeLibraries() {
-        return null;
     }
 
     @Override

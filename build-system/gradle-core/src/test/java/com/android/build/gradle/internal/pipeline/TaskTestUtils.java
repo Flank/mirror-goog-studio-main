@@ -16,12 +16,6 @@
 
 package com.android.build.gradle.internal.pipeline;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
@@ -30,14 +24,15 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter;
+import com.android.build.gradle.internal.profile.AnalyticsService;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.model.SyncIssue;
-import com.android.builder.profile.NoOpRecorder;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -45,17 +40,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.security.CodeSource;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
+import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
@@ -64,6 +49,25 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.security.CodeSource;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Base class for Junit-4 based tests that need to manually instantiate tasks to test them.
@@ -94,7 +98,7 @@ public class TaskTestUtils {
         TestProjects.loadGradleProperties(project, ImmutableMap.of());
         creationConfig = getCreationConfig();
         issueReporter = new FakeSyncIssueReporter();
-        transformManager = new TransformManager(project, issueReporter, new NoOpRecorder());
+        transformManager = new TransformManager(project, issueReporter);
         taskFactory = new TaskFactoryImpl(project.getTasks());
         syncIssueToException =
                 () -> {
@@ -104,6 +108,18 @@ public class TaskTestUtils {
                                     "Transform task creation failed.  Sync issue:\n %s",
                                     syncIssue.toString()));
                 };
+
+        project.getGradle().getSharedServices().registerIfAbsent(
+                BuildServicesKt.getBuildServiceName(AnalyticsService.class),
+                AnalyticsService.class,
+                it -> {
+                    byte[] profile = GradleBuildProfile.newBuilder().build().toByteArray();
+                    it.getParameters().getProfile().set(Base64.getEncoder().encodeToString(profile));
+                    it.getParameters().getProjects().set(new HashMap());
+                    it.getParameters().getEnableProfileJson().set(true);
+                    it.getParameters().getTaskMetadata().set(new HashMap());
+                }
+        );
     }
 
     protected StreamTester streamTester() {

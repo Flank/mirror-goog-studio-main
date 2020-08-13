@@ -23,7 +23,6 @@ import com.android.build.api.variant.impl.DynamicFeatureVariantImpl
 import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
-import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask
@@ -37,15 +36,13 @@ internal class DynamicFeatureTaskManager(
     testComponents: List<ComponentInfo<TestComponentImpl<out TestComponentProperties>, TestComponentPropertiesImpl>>,
     hasFlavors: Boolean,
     globalScope: GlobalScope,
-    extension: BaseExtension,
-    recorder: Recorder
+    extension: BaseExtension
 ) : AbstractAppTaskManager<DynamicFeatureVariantImpl, DynamicFeatureVariantPropertiesImpl>(
     variants,
     testComponents,
     hasFlavors,
     globalScope,
-    extension,
-    recorder
+    extension
 ) {
 
     override fun doCreateTasksForVariant(
@@ -80,12 +77,7 @@ internal class DynamicFeatureTaskManager(
             return
         }
 
-        taskFactory.register(
-            PerModuleBundleTask.CreationAction(
-                variantProperties,
-                TaskManager.packagesCustomClassDependencies(variantProperties)
-            )
-        )
+        taskFactory.register(PerModuleBundleTask.CreationAction(variantProperties))
 
         if (!variantProperties.variantDslInfo.isDebuggable) {
             taskFactory.register(PerModuleReportDependenciesTask.CreationAction(variantProperties))

@@ -24,6 +24,7 @@ import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
 import org.gradle.api.component.SoftwareComponentFactory;
+import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects. */
@@ -34,8 +35,10 @@ public abstract class AbstractAppPlugin<
 
     @Inject
     public AbstractAppPlugin(
-            ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
-        super(registry, componentFactory);
+            ToolingModelBuilderRegistry registry,
+            SoftwareComponentFactory componentFactory,
+            BuildEventsListenerRegistry listenerRegistry) {
+        super(registry, componentFactory, listenerRegistry);
     }
 
     @Override

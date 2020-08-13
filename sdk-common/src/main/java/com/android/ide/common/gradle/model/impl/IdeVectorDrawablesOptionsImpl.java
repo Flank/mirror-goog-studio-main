@@ -36,7 +36,7 @@ public final class IdeVectorDrawablesOptionsImpl
         myHashCode = 0;
     }
 
-    public IdeVectorDrawablesOptionsImpl(Boolean useSupportLibrary) {
+    public IdeVectorDrawablesOptionsImpl(@Nullable Boolean useSupportLibrary) {
         myUseSupportLibrary = useSupportLibrary;
 
         myHashCode = calculateHashCode();

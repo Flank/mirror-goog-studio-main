@@ -21,8 +21,6 @@ import com.android.annotations.Nullable;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import com.google.wireless.android.sdk.stats.GradleTransformExecution;
-import java.io.IOException;
-import java.util.concurrent.Callable;
 
 /**
  * A {@link GradleBuildProfileSpan} recorder for a block execution.
@@ -31,89 +29,45 @@ import java.util.concurrent.Callable;
  */
 public interface Recorder {
 
-    /**
-     * Abstraction of a block of code that produces a result of type T and may throw exceptions. Any
-     * exception thrown by {@link Callable#call()} will be passed to the {@link
-     * #handleException(Exception)} method. Default implementation of this method is to repackage
-     * the exception as {@link RuntimeException} unless it already is one.
-     *
-     * @param <T> the type of result produced by executing this block of code.
-     */
-    interface Block<T> extends Callable<T> {
-
-        /**
-         * Notification that an exception was raised during the {@link #call()} method invocation.
-         * Default behavior is to repackage as a {@link RuntimeException}, subclasses can choose
-         * differently including swallowing the exception. Swallowing the exception will make the
-         * {@link Recorder#record(ExecutionType, String, String, Block)} return null.
-         *
-         * @param e the exception raised during the {@link #call()} execution.
-         */
-        default void handleException(@NonNull Exception e) {
-            // by default we rethrow as a runtime exception, implementations should override for
-            // more precise handling.
-            throw e instanceof RuntimeException ? (RuntimeException) e : new RuntimeException(e);
-        }
-    }
-
     interface VoidBlock {
-        void call() throws IOException;
+        void call() throws Exception;
     }
 
     /**
-     * Records the time elapsed while executing a {@link Block} and saves the resulting {@link
-     * GradleBuildProfileSpan} to {@link ProcessProfileWriter}.
+     * Creates a {@link GradleBuildProfileSpan} to record a block execution.
      *
-     * @param <T> the type of the returned value from the block.
      * @param executionType the task type, so aggregation can be performed.
-     * @param projectPath the full path of the project that contains this span. (e.g. ":a:b")
-     * @param variant the variant that contains this span.
+     * @param projectId the id of the project that contains this span.
+     * @param variantId the id of the variant that contains this span.
+     * @param recordId the id allocated for this span.
      * @param block the block of code to execution and measure.
-     * @return the value returned from the block (including null) or null if the block execution
-     *     raised an exception which was subsequently swallowed by {@link
-     *     Block#handleException(Exception)}
+     * @return the {@link GradleBuildProfileSpan} created for this block execution
      */
     @Nullable
-    <T> T record(
+    GradleBuildProfileSpan record(
             @NonNull ExecutionType executionType,
-            @NonNull String projectPath,
-            @Nullable String variant,
-            @NonNull Block<T> block);
-
-    /**
-     * Records the time elapsed while executing a {@link VoidBlock} and saves the resulting {@link
-     * GradleBuildProfileSpan} to {@link ProfileRecordWriter}.
-     *
-     * @param executionType the task type, so aggregation can be performed.
-     * @param projectPath the full path of the project that contains this span. (e.g. ":a:b")
-     * @param variant the variant that contains this span.
-     * @param block the block of code to execution and measure.
-     */
-    void record(
-            @NonNull ExecutionType executionType,
-            @NonNull String projectPath,
-            @Nullable String variant,
+            @NonNull Long projectId,
+            @NonNull Long variantId,
+            @NonNull Long recordId,
             @NonNull VoidBlock block);
 
     /**
-     * Records the time elapsed while executing a {@link Block} and saves the resulting {@link
-     * GradleBuildProfileSpan} to {@link ProcessProfileWriter}.
+     * Creates a {@link GradleBuildProfileSpan} to record a block execution.
      *
-     * @param <T> the type of the returned value from the block.
      * @param executionType the task type, so aggregation can be performed.
-     * @param projectPath the full path of the project that contains this span. (e.g. ":a:b")
-     * @param variant the variant that contains this span.
+     * @param transform the gradle transform execution
+     * @param projectId the id of the project that contains this span.
+     * @param variantId the id of the variant that contains this span.
+     * @param recordId the id allocated for this span.
      * @param block the block of code to execution and measure.
-     * @return the value returned from the block (including null) or null if the block execution
-     *     raised an exception which was subsequently swallowed by {@link
-     *     Block#handleException(Exception)}
+     * @return the {@link GradleBuildProfileSpan} created for this block execution
      */
     @Nullable
-    <T> T record(
+    GradleBuildProfileSpan record(
             @NonNull ExecutionType executionType,
             @Nullable GradleTransformExecution transform,
-            @NonNull String projectPath,
-            @Nullable String variant,
-            @NonNull Block<T> block);
-
+            @Nullable Long projectId,
+            @Nullable Long variantId,
+            @NonNull Long recordId,
+            @NonNull VoidBlock block);
 }

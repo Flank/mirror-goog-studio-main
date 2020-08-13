@@ -42,7 +42,7 @@ public class IdeBuildTypeContainerTest {
     @Test
     public void serialization() throws Exception {
         IdeBuildTypeContainerImpl buildType =
-                ModelCache.buildTypeContainerFrom(new BuildTypeContainerStub(), myModelCache);
+                myModelCache.buildTypeContainerFrom(new BuildTypeContainerStub());
         byte[] bytes = Serialization.serialize(buildType);
         Object o = Serialization.deserialize(bytes);
         assertEquals(buildType, o);

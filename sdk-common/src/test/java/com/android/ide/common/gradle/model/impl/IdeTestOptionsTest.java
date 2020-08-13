@@ -41,7 +41,7 @@ public class IdeTestOptionsTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeTestOptionsImpl testOptions = ModelCache.testOptionsFrom(new TestOptionsStub());
+        IdeTestOptionsImpl testOptions = myModelCache.testOptionsFrom(new TestOptionsStub());
         byte[] bytes = Serialization.serialize(testOptions);
         Object o = Serialization.deserialize(bytes);
         assertEquals(testOptions, o);
@@ -50,7 +50,7 @@ public class IdeTestOptionsTest {
     @Test
     public void constructor() throws Throwable {
         TestOptions original = new TestOptionsStub();
-        IdeTestOptionsImpl copy = ModelCache.testOptionsFrom(original);
+        IdeTestOptionsImpl copy = myModelCache.testOptionsFrom(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

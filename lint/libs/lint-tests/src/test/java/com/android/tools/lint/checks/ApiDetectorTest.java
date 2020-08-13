@@ -106,6 +106,69 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testPropertyAnimator() {
+        // Regression test for https://issuetracker.google.com/149416536
+        lint().supportResourceRepository(true)
+                .files(
+                        manifest().minSdk(15),
+                        kotlin(
+                                        ""
+                                                + "package test.pkg;\n"
+                                                + "import android.animation.AnimatorInflater\n"
+                                                + "import android.app.Activity\n"
+                                                + "\n"
+                                                + "class MyActivity : Activity() {\n"
+                                                + "    fun test() {\n"
+                                                + "        AnimatorInflater.loadAnimator(this, R.anim.blink1) // ERROR\n"
+                                                + "        AnimatorInflater.loadAnimator(this, R.animator.blink2) // ERROR\n"
+                                                + "        AnimatorInflater.loadAnimator(this, R.anim.blink3) // OK\n"
+                                                + "    }\n"
+                                                + "}")
+                                .indented(),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "public class R {\n"
+                                        + "    public static class anim {\n"
+                                        + "        public static final int blink1 = 0x7f070031;\n"
+                                        + "        public static final int blink3 = 0x7f070033;\n"
+                                        + "    }\n"
+                                        + "    public static class animator {\n"
+                                        + "        public static final int blink2 = 0x7f070032;\n"
+                                        + "    }\n"
+                                        + "}\n"
+                                        + ""),
+                        xml(
+                                        "res/anim/blink1.xml",
+                                        ""
+                                                + "<objectAnimator xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                                + "    android:interpolator=\"@android:anim/linear_interpolator\"\n"
+                                                + "    android:duration=\"@android:integer/config_longAnimTime\"\n"
+                                                + "    android:repeatCount=\"-1\"\n"
+                                                + "    android:repeatMode=\"reverse\" >\n"
+                                                + "\n"
+                                                + "    <propertyValuesHolder\n"
+                                                + "        android:propertyName=\"fillColor\"\n"
+                                                + "        android:valueType=\"colorType\"\n"
+                                                + "        android:valueFrom=\"?attr/color1\"\n"
+                                                + "        android:valueTo=\"@android:color/white\" />\n"
+                                                + "\n"
+                                                + "</objectAnimator>\n")
+                                .indented(),
+                        xml("res/animator-v18/blink2.xml", "<propertyValuesHolder />").indented(),
+                        xml("res/anim-v21/blink3.xml", "<propertyValuesHolder />").indented())
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/MyActivity.kt:7: Error: The resource anim.blink1 includes the tag propertyValuesHolder which causes crashes on API < 21. Consider switching to AnimatorInflaterCompat.loadAnimator to safely load the animation. [NewApi]\n"
+                                + "        AnimatorInflater.loadAnimator(this, R.anim.blink1) // ERROR\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/MyActivity.kt:8: Error: The resource animator.blink2 includes the tag propertyValuesHolder which causes crashes on API < 21. Consider switching to AnimatorInflaterCompat.loadAnimator to safely load the animation. [NewApi]\n"
+                                + "        AnimatorInflater.loadAnimator(this, R.animator.blink2) // ERROR\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "2 errors, 0 warnings");
+    }
+
     public void testNoImports() {
         // We shouldn't be flagging warnings on import statements. It's fine to import
         // whatever you want. It's *usages* that count. And those usages may be
@@ -2189,10 +2252,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "                                                       ~~~~~~~~~~~\n"
                         + "src/test/pkg/ApiCallTest12.java:23: Error: The pattern character 'L' requires API level 9 (current min is 4) : \"yyyy-MM-dd LL\" [NewApi]\n"
                         + "  new SimpleDateFormat(\"yyyy-MM-dd LL\", Locale.US);\n"
-                        + "                                   ~\n"
+                        + "                                  ~~\n"
                         + "src/test/pkg/ApiCallTest12.java:25: Error: The pattern character 'c' requires API level 9 (current min is 4) : \"cc yyyy-MM-dd\" [NewApi]\n"
                         + "  SimpleDateFormat format = new SimpleDateFormat(\"cc yyyy-MM-dd\");\n"
-                        + "                                                  ~\n"
+                        + "                                                 ~~\n"
                         + "3 errors, 0 warnings\n";
         lint().files(manifest().minSdk(4), projectProperties().compileSdk(19), mApiCallTest12)
                 .checkMessage(this::checkReportedError)
@@ -2205,6 +2268,54 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expectClean();
+    }
+
+    public void testDateFormatApi24() {
+        lint().files(
+                        manifest().minSdk(8),
+                        kotlin(
+                                ""
+                                        + "import android.os.Build\n"
+                                        + "import java.text.SimpleDateFormat\n"
+                                        + "import java.util.*\n"
+                                        + "\n"
+                                        + "fun test(): String {\n"
+                                        + "    return SimpleDateFormat(\n"
+                                        + "        \"'test'cc-LL-YY-uu-XX-yy\",\n"
+                                        + "        Locale.US\n"
+                                        + "    ).format(Date())\n"
+                                        + "}\n"
+                                        + "\n"
+                                        + "fun testSuppressed(): String {\n"
+                                        + "    return if (Build.VERSION.SDK_INT > 24) {\n"
+                                        + "        SimpleDateFormat(\n"
+                                        + "            \"'test'cc-LL-YY-uu-XX-yy\",\n"
+                                        + "            Locale.US\n"
+                                        + "        ).format(Date())\n"
+                                        + "    } else {\n"
+                                        + "        \"?\";\n"
+                                        + "    }\n"
+                                        + "}\n"))
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect(
+                        ""
+                                + "src/test.kt:7: Error: The pattern character 'L' requires API level 9 (current min is 8) : \"'test'cc-LL-YY-uu-XX-yy\" [NewApi]\n"
+                                + "        \"'test'cc-LL-YY-uu-XX-yy\",\n"
+                                + "                  ~~\n"
+                                + "src/test.kt:7: Error: The pattern character 'X' requires API level 24 (current min is 8) : \"'test'cc-LL-YY-uu-XX-yy\" [NewApi]\n"
+                                + "        \"'test'cc-LL-YY-uu-XX-yy\",\n"
+                                + "                           ~~\n"
+                                + "src/test.kt:7: Error: The pattern character 'Y' requires API level 24 (current min is 8) : \"'test'cc-LL-YY-uu-XX-yy\" [NewApi]\n"
+                                + "        \"'test'cc-LL-YY-uu-XX-yy\",\n"
+                                + "                     ~~\n"
+                                + "src/test.kt:7: Error: The pattern character 'c' requires API level 9 (current min is 8) : \"'test'cc-LL-YY-uu-XX-yy\" [NewApi]\n"
+                                + "        \"'test'cc-LL-YY-uu-XX-yy\",\n"
+                                + "               ~~\n"
+                                + "src/test.kt:7: Error: The pattern character 'u' requires API level 24 (current min is 8) : \"'test'cc-LL-YY-uu-XX-yy\" [NewApi]\n"
+                                + "        \"'test'cc-LL-YY-uu-XX-yy\",\n"
+                                + "                        ~~\n"
+                                + "5 errors, 0 warnings");
     }
 
     public void testJavaConstants() {

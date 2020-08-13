@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -97,19 +98,31 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
 
             referencedClasses.from(
                 creationConfig.variantDependencies.getArtifactFileCollection(
-                AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                AndroidArtifacts.ArtifactScope.PROJECT,
-                AndroidArtifacts.ArtifactType.CLASSES_JAR))
+                    AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                    AndroidArtifacts.ArtifactScope.PROJECT,
+                    AndroidArtifacts.ArtifactType.CLASSES_JAR
+                )
+            )
 
-            if (isTestCoverageEnabled) {
-                referencedClasses.from(
-                    creationConfig.artifacts.get(
-                        InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES),
-                    creationConfig.services.fileCollection(
+            when {
+                creationConfig.registeredProjectClassesVisitors.isNotEmpty() -> {
+                    referencedClasses.from(creationConfig.allProjectClassesPostAsmInstrumentation)
+                }
+                isTestCoverageEnabled -> {
+                    referencedClasses.from(
                         creationConfig.artifacts.get(
-                            InternalArtifactType.JACOCO_INSTRUMENTED_JARS)).asFileTree)
-            } else {
-                referencedClasses.from(creationConfig.artifacts.getAllClasses())
+                            InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES
+                        ),
+                        creationConfig.services.fileCollection(
+                            creationConfig.artifacts.get(
+                                InternalArtifactType.JACOCO_INSTRUMENTED_JARS
+                            )
+                        ).asFileTree
+                    )
+                }
+                else -> {
+                    referencedClasses.from(creationConfig.artifacts.getAllClasses())
+                }
             }
 
             creationConfig.onTestedConfig {

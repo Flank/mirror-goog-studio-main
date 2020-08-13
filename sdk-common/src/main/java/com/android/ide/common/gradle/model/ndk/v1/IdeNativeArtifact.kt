@@ -15,6 +15,56 @@
  */
 package com.android.ide.common.gradle.model.ndk.v1
 
-import com.android.builder.model.NativeArtifact
+import java.io.File
 
-interface IdeNativeArtifact: NativeArtifact
+interface IdeNativeArtifact {
+
+  /**
+   * Returns the name of the artifact.
+   */
+  val name: String
+
+  /**
+   * Returns the toolchain used for compilation.
+   */
+  val toolChain: String
+
+  /**
+   * Returns the group this artifact is associated with.
+   */
+  val groupName: String
+
+  /**
+   * Returns the name of the task used to generate the artifact output.
+   */
+  val assembleTaskName: String
+
+  /**
+   * Returns the source files.
+   */
+  val sourceFiles: Collection<IdeNativeFile>
+
+  /**
+   * Returns the folders container headers exported for the library.
+   */
+  val exportedHeaders: Collection<File>
+
+  /**
+   * Returns the target ABI of the artifact.
+   */
+  val abi: String
+
+  /**
+   * Returns the name of the target that builds this artifact.
+   */
+  val targetName: String
+
+  /** Returns the output file with debug symbols unstripped.  */
+  val outputFile: File?
+
+  /**
+   * Returns the files that needs to be deployed with getOutputFile to be executed on device.
+   */
+  val runtimeFiles: Collection<File>
+
+}

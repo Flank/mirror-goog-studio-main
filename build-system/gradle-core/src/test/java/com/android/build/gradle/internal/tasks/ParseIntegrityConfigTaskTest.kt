@@ -20,13 +20,17 @@ import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.BundleOptions
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.build.gradle.internal.services.createProjectServices
 import com.android.build.gradle.internal.services.createTaskCreationServices
+import com.android.build.gradle.internal.services.getBuildServiceName
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantType
 import com.android.bundle.AppIntegrityConfigOuterClass.AppIntegrityConfig
@@ -39,6 +43,7 @@ import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
@@ -72,6 +77,8 @@ class ParseIntegrityConfigTaskTest {
     fun setup() {
         project = ProjectBuilder.builder().withProjectDir(testFolder.newFolder()).build()
         task = project.tasks.create("test", ParseIntegrityConfigTask::class.java)
+        project.gradle.sharedServices.registerIfAbsent(
+            getBuildServiceName(AnalyticsService::class.java), AnalyticsService::class.java) {}
     }
 
     @Test
@@ -91,6 +98,9 @@ class ParseIntegrityConfigTaskTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(
+                        FakeNoOpAnalyticsService()
+                    )
                 }
             }
         }.execute()
@@ -135,6 +145,8 @@ class ParseIntegrityConfigTaskTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService>
+                        get() = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()

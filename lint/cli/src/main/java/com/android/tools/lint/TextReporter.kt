@@ -254,8 +254,11 @@ class TextReporter(
         output: StringBuilder,
         issue: Issue?
     ) {
-        if (issue == null || !flags.isExplainIssues ||
-            issue === IssueRegistry.LINT_ERROR || issue === IssueRegistry.BASELINE
+        if (issue == null ||
+            !flags.isExplainIssues ||
+            issue === IssueRegistry.LINT_ERROR ||
+            issue === IssueRegistry.LINT_WARNING ||
+            issue === IssueRegistry.BASELINE
         ) {
             return
         }

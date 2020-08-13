@@ -16,87 +16,47 @@
 
 package com.android.build.gradle.internal.packaging
 
-import com.android.build.gradle.internal.dsl.PackagingOptions
 import com.android.build.gradle.internal.matcher.GlobPathMatcherFactory
-import com.google.common.collect.ImmutableSet
 import java.io.File
 import java.nio.file.PathMatcher
 import java.nio.file.Paths
 
 /**
- * Maintains a set of parsed packaging options. Packaging options are defined in
- * [PackagingOptions]. This class extends the information in the packaging options by
+ * This class extends the information in the packaging options for resources or native libs by
  * compiling patterns and providing matching data.
  */
 class ParsedPackagingOptions
 /**
  * Creates a new parsed packaging options based on the provided options.
  *
- * @param packagingOptions the DSL packaging options, if `null`, it is interpreted as
- * an empty packaging options
+ * @param excludePatterns the collection of patterns to exclude
+ * @param pickFirstPatterns the collection of patterns to pick first
+ * @param mergePatterns the collection of patterns to merge
  */
     constructor(
-        packagingOptions: SerializablePackagingOptions =
-            SerializablePackagingOptions(PackagingOptions())
+        excludePatterns: Collection<String>,
+        pickFirstPatterns: Collection<String>,
+        mergePatterns: Collection<String>
     )
 {
 
-    constructor(packagingOptions: PackagingOptions) :
-            this(SerializablePackagingOptions(packagingOptions))
+    constructor(packagingOptions: SerializablePackagingOptions) :
+            this(packagingOptions.excludes, packagingOptions.pickFirsts, packagingOptions.merges)
 
     /**
      * Paths excluded.
      */
-    private val excludes: Set<PathMatcher>
+    private val excludes: Set<PathMatcher> = excludePatterns.map(this::compileGlob).toSet()
 
     /**
      * Paths that should do first-pick.
      */
-    private val pickFirsts: Set<PathMatcher>
+    private val pickFirsts: Set<PathMatcher> = pickFirstPatterns.map(this::compileGlob).toSet()
 
     /**
      * Paths that should be merged.
      */
-    private val merges: Set<PathMatcher>
-
-    /**
-     * Exclude patterns.
-     */
-    /**
-     * Obtains the raw set of exclude patterns.
-     *
-     * @return the patterns
-     */
-    private val excludePatterns: Set<String>
-
-    /**
-     * Pick-first patterns.
-     */
-    /**
-     * Obtains the raw set of pick first patterns.
-     *
-     * @return the patterns
-     */
-    private val pickFirstPatterns: Set<String>
-
-    /**
-     * Merge patterns.
-     */
-    /**
-     * Obtains the raw set of merge patterns.
-     *
-     * @return the patterns
-     */
-    private val mergePatterns: Set<String>
-
-    init {
-        excludePatterns = ImmutableSet.copyOf(packagingOptions.excludes)
-        pickFirstPatterns = ImmutableSet.copyOf(packagingOptions.pickFirsts)
-        mergePatterns = ImmutableSet.copyOf(packagingOptions.merges)
-        excludes = packagingOptions.excludes.map(this::compileGlob).toSet()
-        pickFirsts = packagingOptions.pickFirsts.map(this::compileGlob).toSet()
-        merges = packagingOptions.merges.map(this::compileGlob).toSet()
-    }
+    private val merges: Set<PathMatcher> = mergePatterns.map(this::compileGlob).toSet()
 
     /**
      * Compiles a glob pattern.

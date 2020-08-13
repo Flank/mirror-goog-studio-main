@@ -1,0 +1,128 @@
+{
+	"cmake" :
+	{
+		"generator" :
+		{
+			"multiConfig" : false,
+			"name" : "Ninja"
+		},
+		"paths" :
+		{
+			"cmake" : "/project/prebuilts/studio/sdk/darwin/cmake/3.17.0/bin/cmake",
+			"cpack" : "/project/prebuilts/studio/sdk/darwin/cmake/3.17.0/bin/cpack",
+			"ctest" : "/project/prebuilts/studio/sdk/darwin/cmake/3.17.0/bin/ctest",
+			"root" : "/project/prebuilts/studio/sdk/darwin/cmake/3.17.0/share/cmake-3.17"
+		},
+		"version" :
+		{
+			"isDirty" : false,
+			"major" : 3,
+			"minor" : 17,
+			"patch" : 0,
+			"string" : "3.17.0-gc5272a5",
+			"suffix" : "gc5272a5"
+		}
+	},
+	"objects" :
+	[
+		{
+			"jsonFile" : "codemodel-v2-fd024598510af29c1f3a.json",
+			"kind" : "codemodel",
+			"version" :
+			{
+				"major" : 2,
+				"minor" : 0
+			}
+		},
+		{
+			"jsonFile" : "cache-v2-9859d6eef3bde463c00c.json",
+			"kind" : "cache",
+			"version" :
+			{
+				"major" : 2,
+				"minor" : 0
+			}
+		},
+		{
+			"jsonFile" : "cmakeFiles-v1-e5e3a89483999eb0cf18.json",
+			"kind" : "cmakeFiles",
+			"version" :
+			{
+				"major" : 1,
+				"minor" : 0
+			}
+		}
+	],
+	"reply" :
+	{
+		"client-agp" :
+		{
+			"cache-v1" :
+			{
+				"error" : "unknown query file"
+			},
+			"cache-v2" :
+			{
+				"jsonFile" : "cache-v2-9859d6eef3bde463c00c.json",
+				"kind" : "cache",
+				"version" :
+				{
+					"major" : 2,
+					"minor" : 0
+				}
+			},
+			"cache-v3" :
+			{
+				"error" : "unknown query file"
+			},
+			"cache-v4" :
+			{
+				"error" : "unknown query file"
+			},
+			"cmakeFiles-v1" :
+			{
+				"jsonFile" : "cmakeFiles-v1-e5e3a89483999eb0cf18.json",
+				"kind" : "cmakeFiles",
+				"version" :
+				{
+					"major" : 1,
+					"minor" : 0
+				}
+			},
+			"cmakeFiles-v2" :
+			{
+				"error" : "unknown query file"
+			},
+			"cmakeFiles-v3" :
+			{
+				"error" : "unknown query file"
+			},
+			"cmakeFiles-v4" :
+			{
+				"error" : "unknown query file"
+			},
+			"codemodel-v1" :
+			{
+				"error" : "unknown query file"
+			},
+			"codemodel-v2" :
+			{
+				"jsonFile" : "codemodel-v2-fd024598510af29c1f3a.json",
+				"kind" : "codemodel",
+				"version" :
+				{
+					"major" : 2,
+					"minor" : 0
+				}
+			},
+			"codemodel-v3" :
+			{
+				"error" : "unknown query file"
+			},
+			"codemodel-v4" :
+			{
+				"error" : "unknown query file"
+			}
+		}
+	}
+}

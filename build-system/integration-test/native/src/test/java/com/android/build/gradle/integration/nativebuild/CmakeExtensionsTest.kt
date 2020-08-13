@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.cxx.configure.CmakeCompilerCacheUse
 import com.android.build.gradle.internal.cxx.configure.CmakeCompilerCacheWrite
 import com.android.build.gradle.internal.cxx.configure.CmakeCompilerSettingsCache
 import com.android.build.gradle.internal.cxx.configure.CmakePropertyValue
+import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.*
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.buildGenerationStateFile
@@ -75,12 +76,12 @@ class CmakeExtensionsTest(
         @JvmStatic
         fun data(): Array<Array<Any?>> {
             return arrayOf(
-                arrayOf("3.10.2", true, null, true),
+                arrayOf(DEFAULT_CMAKE_VERSION, true, null, true),
                 arrayOf<Any?>("3.6.0", true, ".cxx-alternate", true),
-                arrayOf("3.10.2", false, null, false),
-                arrayOf<Any?>("3.10.2", false, ".cxx-alternate", false),
+                arrayOf(DEFAULT_CMAKE_VERSION, false, null, false),
+                arrayOf<Any?>(DEFAULT_CMAKE_VERSION, false, ".cxx-alternate", false),
                 arrayOf("3.6.0", false, null, false),
-                arrayOf("3.10.2", null, ".cxx-alternate", false),
+                arrayOf(DEFAULT_CMAKE_VERSION, null, ".cxx-alternate", false),
                 arrayOf("3.6.0", null, null, false)
             )
         }

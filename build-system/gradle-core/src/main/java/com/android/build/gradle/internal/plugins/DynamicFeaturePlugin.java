@@ -47,6 +47,7 @@ import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.component.SoftwareComponentFactory;
+import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects, applied on an optional APK module */
@@ -54,8 +55,10 @@ public class DynamicFeaturePlugin
         extends AbstractAppPlugin<DynamicFeatureVariantImpl, DynamicFeatureVariantPropertiesImpl> {
     @Inject
     public DynamicFeaturePlugin(
-            ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
-        super(registry, componentFactory);
+            ToolingModelBuilderRegistry registry,
+            SoftwareComponentFactory componentFactory,
+            BuildEventsListenerRegistry listenerRegistry) {
+        super(registry, componentFactory, listenerRegistry);
     }
 
     @Override
@@ -132,10 +135,9 @@ public class DynamicFeaturePlugin
                             testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension,
-            @NonNull Recorder threadRecorder) {
+            @NonNull BaseExtension extension) {
         return new DynamicFeatureTaskManager(
-                variants, testComponents, hasFlavors, globalScope, extension, threadRecorder);
+                variants, testComponents, hasFlavors, globalScope, extension);
     }
 
     @NonNull

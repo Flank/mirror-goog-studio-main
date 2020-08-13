@@ -43,18 +43,10 @@ public class IdeSigningConfigTest {
     @Test
     public void serialization() throws Exception {
         IdeSigningConfigImpl signingConfig =
-                ModelCache.signingConfigFrom(new SigningConfigStub());
+                myModelCache.signingConfigFrom(new SigningConfigStub());
         byte[] bytes = Serialization.serialize(signingConfig);
         Object o = Serialization.deserialize(bytes);
         assertEquals(signingConfig, o);
-    }
-
-    @Test
-    public void constructor() throws Throwable {
-        SigningConfig original = new SigningConfigStub();
-        IdeSigningConfigImpl copy = ModelCache.signingConfigFrom(original);
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
     }
 
     @Test

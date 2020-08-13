@@ -116,6 +116,9 @@ val CxxAbiModel.soFolder: File
 val CxxAbiModel.buildCommandFile: File
     get() = FileUtils.join(originalCxxBuildFolder, "build_command.txt")
 
+val CxxAbiModel.androidGradleBuildVersion: File
+    get() = FileUtils.join(originalCxxBuildFolder, "android_gradle_build_version.txt")
+
 /**
  * Output of the build
  *   ex $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/build_output.txt

@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.errors.SyncIssueReporter;
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
 import com.android.build.gradle.internal.fixtures.FakeLogger;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -65,6 +66,8 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import org.gradle.StartParameter;
+import org.gradle.TaskExecutionRequest;
 import org.gradle.api.Project;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.internal.impldep.com.google.common.base.Charsets;
@@ -87,6 +90,8 @@ public class ModelBuilderTest {
     @Mock BaseExtension extension;
     @Mock ExtraModelInfo extraModelInfo;
     @Mock ArtifactsImpl artifacts;
+    @Mock StartParameter startParameter;
+    @Mock TaskExecutionRequest taskRequest;
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -110,6 +115,8 @@ public class ModelBuilderTest {
         when(gradle.getRootProject()).thenReturn(project);
         when(gradle.getParent()).thenReturn(null);
         when(gradle.getIncludedBuilds()).thenReturn(ImmutableList.of());
+        when(gradle.getStartParameter()).thenReturn(startParameter);
+        when(startParameter.getTaskRequests()).thenReturn(ImmutableList.of(taskRequest));
 
         syncIssueReporter =
                 new SyncIssueReporterImpl(SyncOptions.EvaluationMode.IDE, new FakeLogger());
@@ -119,6 +126,8 @@ public class ModelBuilderTest {
         new SyncIssueReporterImpl.GlobalSyncIssueService.RegistrationAction(
                         project, SyncOptions.EvaluationMode.IDE)
                 .execute();
+
+        new AnalyticsConfiguratorService.RegistrationAction(project).execute();
 
         DslServices dslServices = FakeServices.createDslServices(projectServices);
         when(globalScope.getDslServices()).thenReturn(dslServices);

@@ -15,19 +15,15 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
-import com.android.builder.model.BuildType;
 import com.android.ide.common.gradle.model.IdeBuildType;
 import com.android.ide.common.gradle.model.IdeClassField;
-import com.android.ide.common.gradle.model.UnusedModelMethodException;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/** Creates a deep copy of a {@link BuildType}. */
 public final class IdeBuildTypeImpl extends IdeBaseConfigImpl implements IdeBuildType {
     // Increase the value when adding/removing fields or when changing the
     // serialization/deserialization mechanism.
@@ -56,9 +52,9 @@ public final class IdeBuildTypeImpl extends IdeBaseConfigImpl implements IdeBuil
     public IdeBuildTypeImpl(
             @NotNull String name,
             @NotNull Map<String, IdeClassField> resValues,
-            @NotNull ImmutableList<File> proguardFiles,
-            @NotNull ImmutableList<File> consumerProguardFiles,
-            @NotNull ImmutableMap<String, Object> manifestPlaceholders,
+            @NotNull List<File> proguardFiles,
+            @NotNull List<File> consumerProguardFiles,
+            @NotNull Map<String, String> manifestPlaceholders,
             @Nullable String applicationIdSuffix,
             @Nullable String versionNameSuffix,
             @Nullable Boolean multiDexEnabled,
@@ -93,16 +89,6 @@ public final class IdeBuildTypeImpl extends IdeBaseConfigImpl implements IdeBuil
     }
 
     @Override
-    public boolean isTestCoverageEnabled() {
-        throw new UnusedModelMethodException("isTestCoverageEnabled");
-    }
-
-    @Override
-    public boolean isPseudoLocalesEnabled() {
-        throw new UnusedModelMethodException("isPseudoLocalesEnabled");
-    }
-
-    @Override
     public boolean isJniDebuggable() {
         return myJniDebuggable;
     }
@@ -125,11 +111,6 @@ public final class IdeBuildTypeImpl extends IdeBaseConfigImpl implements IdeBuil
     @Override
     public boolean isZipAlignEnabled() {
         return myZipAlignEnabled;
-    }
-
-    @Override
-    public boolean isEmbedMicroApp() {
-        throw new UnusedModelMethodException("isEmbedMicroApp");
     }
 
     @Override

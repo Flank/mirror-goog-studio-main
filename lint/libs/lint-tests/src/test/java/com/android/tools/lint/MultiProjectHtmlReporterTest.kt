@@ -127,7 +127,7 @@ class MultiProjectHtmlReporterTest : AbstractCheckTest() {
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Roboto:300,400,500,700" type="text/css">
 <script defer src="https://code.getmdl.io/1.2.0/material.min.js"></script>
 <style>
-${HtmlReporter.CSS_STYLES}</style>
+${HtmlReporter.cssStyles}</style>
 <script language="javascript" type="text/javascript">
 <!--
 function reveal(id) {

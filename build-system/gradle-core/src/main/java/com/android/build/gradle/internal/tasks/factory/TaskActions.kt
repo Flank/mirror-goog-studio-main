@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks.factory
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.options.BooleanOption
@@ -88,6 +89,7 @@ abstract class VariantTaskCreationAction<TaskT, CreationConfigT: ComponentCreati
         }
 
         task.variantName = creationConfig.name
+        task.analyticsService.set(getBuildService(task.project.gradle.sharedServices))
     }
 }
 
@@ -111,6 +113,7 @@ abstract class GlobalTaskCreationAction<TaskT>(
     }
 
     override fun configure(task: TaskT) {
+        task.analyticsService.set(getBuildService(task.project.gradle.sharedServices))
     }
 }
 /**

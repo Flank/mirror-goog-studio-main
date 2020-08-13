@@ -15,6 +15,16 @@
  */
 package com.android.ide.common.gradle.model.ndk.v1
 
-import com.android.builder.model.NativeFile
+import java.io.File
 
-interface IdeNativeFile: NativeFile
+interface IdeNativeFile {
+
+  /** The source file.  */
+  val filePath: File
+
+  /** The name of a [IdeNativeSettings] for the source file.  */
+  val settingsName: String
+
+  /** The working directory for the compiler.  */
+  val workingDirectory: File?
+}

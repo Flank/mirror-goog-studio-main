@@ -33,8 +33,9 @@ public class IdeVectorDrawablesOptionsTest {
 
     @Test
     public void serialization() throws Exception {
+        ModelCache modelCache = new ModelCache();
         IdeVectorDrawablesOptionsImpl options =
-                ModelCache.vectorDrawablesOptionsFrom(new VectorDrawablesOptionsStub());
+                modelCache.vectorDrawablesOptionsFrom(new VectorDrawablesOptionsStub());
         byte[] bytes = Serialization.serialize(options);
         Object o = Serialization.deserialize(bytes);
         assertEquals(options, o);

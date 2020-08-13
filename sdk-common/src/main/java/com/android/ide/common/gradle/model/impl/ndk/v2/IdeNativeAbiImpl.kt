@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.gradle.model.impl.ndk.v2
 
-import com.android.builder.model.v2.models.ndk.NativeAbi
 import com.android.ide.common.gradle.model.ndk.v2.IdeNativeAbi
 import java.io.File
 
@@ -24,11 +23,4 @@ data class IdeNativeAbiImpl(
   override val sourceFlagsFile: File,
   override val symbolFolderIndexFile: File,
   override val buildFileIndexFile: File
-) : IdeNativeAbi {
-    constructor(nativeAbi: NativeAbi) : this(
-        nativeAbi.name,
-        nativeAbi.sourceFlagsFile,
-        nativeAbi.symbolFolderIndexFile,
-        nativeAbi.buildFileIndexFile
-    )
-}
+) : IdeNativeAbi

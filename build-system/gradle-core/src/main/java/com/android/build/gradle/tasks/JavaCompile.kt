@@ -18,12 +18,14 @@ package com.android.build.gradle.tasks
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.profile.PROPERTY_VARIANT_NAME_KEY
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_SOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_EXPORT_CLASS_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
@@ -130,7 +132,11 @@ class JavaCompileCreationAction(
             task.inputs.files(apList).withPathSensitivity(PathSensitivity.NONE)
                 .withPropertyName("annotationProcessorList")
 
-            task.recordAnnotationProcessors(apList, creationConfig.name)
+            task.recordAnnotationProcessors(
+                apList,
+                creationConfig.name,
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
         }
 
         // Set up the outputs
@@ -205,7 +211,8 @@ fun registerDataBindingOutputs(
 
 private fun JavaCompile.recordAnnotationProcessors(
     processorListFile: Provider<RegularFile>,
-    variantName: String
+    variantName: String,
+    analyticsService: Provider<AnalyticsService>
 ) {
     val projectPath = this.project.path
     doFirst {
@@ -230,7 +237,7 @@ private fun JavaCompile.recordAnnotationProcessors(
         // instead of JavaPreCompileTask as it needs to be done even in incremental builds where
         // JavaPreCompileTask may be UP-TO-DATE.
         recordAnnotationProcessorsForAnalytics(
-            annotationProcessors, projectPath, variantName
+            annotationProcessors, projectPath, variantName, analyticsService.get()
         )
     }
 }

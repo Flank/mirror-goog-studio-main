@@ -18,12 +18,12 @@ package com.android.build.gradle.tasks
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
+import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfigs
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.infoln
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
-import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.build.gradle.internal.services.getBuildService
@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.errors.DefaultIssueReporter
 import com.android.ide.common.process.ProcessInfoBuilder
-import com.android.utils.tokenizeCommandLineToEscaped
 import com.google.common.base.Joiner
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
@@ -60,7 +59,8 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
             val generator =
                 createCxxMetadataGenerator(
                     sdkComponents.get(),
-                    configurationModel
+                    configurationModel,
+                    analyticsService.get()
                 )
             val existingJsons = mutableListOf<File>()
             for (abi in generator.abis) {
@@ -73,11 +73,11 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
                 }
             }
             val configValueList = getNativeBuildMiniConfigs(existingJsons, null)
-            val cleanCommands = mutableListOf<String>()
+            val cleanCommands = mutableListOf<List<String>>()
             val targetNames = mutableListOf<String>()
 
             for (config in configValueList) {
-                cleanCommands.addAll(config.cleanCommands)
+                cleanCommands.addAll(config.cleanCommandsComponents)
                 val targets = mutableSetOf<String>()
                 for (library in config.libraries.values) {
                     targets.add(String.format("%s %s", library.artifactName, library.abi))
@@ -96,13 +96,13 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
      */
     private fun executeProcessBatch(
         generator: CxxMetadataGenerator,
-        commands: List<String>,
-        targetNames: List<String>) {
+        commands: List<List<String>>,
+        targetNames: List<String>
+    ) {
         for (commandIndex in commands.indices) {
-            val command = commands[commandIndex]
+            val tokens = commands[commandIndex]
             val target = targetNames[commandIndex]
             logger.lifecycle(String.format("Clean %s", target))
-            val tokens = command.tokenizeCommandLineToEscaped()
             val processBuilder = ProcessInfoBuilder()
             processBuilder.setExecutable(tokens[0])
             for (i in 1 until tokens.size) {

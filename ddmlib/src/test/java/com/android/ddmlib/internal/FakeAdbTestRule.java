@@ -78,19 +78,38 @@ public class FakeAdbTestRule extends ExternalResource {
 
 
   public static ClientImpl launchAndWaitForProcess(DeviceState device, boolean waitingForDebugger) throws Exception {
-    CountDownLatch latch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(2);
     ClientImpl[] launchedClient = new ClientImpl[1];
-    AndroidDebugBridge.IClientChangeListener clientListener = (client, changeMask) -> {
-      if (changeMask == Client.CHANGE_NAME) {
-        assertThat(client.isValid()).isTrue();
-        launchedClient[0] = (ClientImpl) client;
-        latch.countDown();
-      }
-    };
+        AndroidDebugBridge.IDeviceChangeListener deviceListener =
+                new AndroidDebugBridge.IDeviceChangeListener() {
+                    @Override
+                    public void deviceConnected(@NonNull IDevice device) {}
+
+                    @Override
+                    public void deviceDisconnected(@NonNull IDevice device) {}
+
+                    @Override
+                    public void deviceChanged(@NonNull IDevice changedDevice, int changeMask) {
+                        if ((changeMask & IDevice.CHANGE_CLIENT_LIST)
+                                == IDevice.CHANGE_CLIENT_LIST) {
+                            latch.countDown();
+                        }
+                    }
+                };
+        AndroidDebugBridge.IClientChangeListener clientListener =
+                (client, changeMask) -> {
+                    if (changeMask == Client.CHANGE_NAME) {
+                        assertThat(client.isValid()).isTrue();
+                        launchedClient[0] = (ClientImpl) client;
+                        latch.countDown();
+                    }
+                };
     AndroidDebugBridge.addClientChangeListener(clientListener);
+        AndroidDebugBridge.addDeviceChangeListener(deviceListener);
     device.startClient(PID, 4321, CLIENT_PACKAGE_NAME, waitingForDebugger);
     assertThat(latch.await(TEST_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
     AndroidDebugBridge.removeClientChangeListener(clientListener);
+        AndroidDebugBridge.removeDeviceChangeListener(deviceListener);
     return launchedClient[0];
   }
 

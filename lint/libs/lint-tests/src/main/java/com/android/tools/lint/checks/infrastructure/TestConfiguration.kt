@@ -16,10 +16,9 @@
 
 package com.android.tools.lint.checks.infrastructure
 
-import com.android.tools.lint.client.api.Configuration
-import com.android.tools.lint.client.api.DefaultConfiguration
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintClient
+import com.android.tools.lint.client.api.LintXmlConfiguration
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Location
@@ -30,9 +29,8 @@ import org.junit.Assert.fail
 class TestConfiguration(
     private val task: TestLintTask,
     client: LintClient,
-    project: Project,
-    parent: Configuration?
-) : DefaultConfiguration(client, project, parent) {
+    project: Project
+) : LintXmlConfiguration(client, project) {
 
     override fun getDefaultSeverity(issue: Issue): Severity {
         // In unit tests, include issues that are ignored by default

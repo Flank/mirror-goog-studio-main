@@ -131,6 +131,11 @@ maven_pom(
     source = "//tools/buildSrc/base:build_version",
 )
 
+fileset(
+    name = "TestData",
+    srcs = glob(["src/test/data/**"]),
+)
+
 kotlin_test(
     name = "tests",
     size = "large",
@@ -140,6 +145,7 @@ kotlin_test(
         "src/test/java/**/*.java",
     ]),
     data = [
+        ":TestData",
         "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
         "//prebuilts/studio/sdk:build-tools/latest",
         "//prebuilts/studio/sdk:platform-tools",

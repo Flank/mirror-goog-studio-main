@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.google.common.truth.Truth.assertThat
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import org.junit.Test
@@ -55,31 +56,19 @@ class BlocksTest {
 
     @Test
     fun testRecordSpan() {
-        Blocks.recordSpan<Exception>("foo", "bar", GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_ALL_PHASES,
+        Blocks.recordSpan<Exception>("bar",
+            GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_ALL_PHASES,
+            FakeNoOpAnalyticsService(),
             testClass::methodNotThrowing)
         assertThat(called.get()).isTrue()
     }
 
     @Test(expected = IllegalStateException::class)
     fun testThrowingBlock() {
-        Blocks.recordSpan<Exception>("foo", "bar", GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_ALL_PHASES,
+        Blocks.recordSpan<Exception>("bar",
+            GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_ALL_PHASES,
+            FakeNoOpAnalyticsService(),
             testClass::methodThrowing)
         fail("should not reach this statement")
-    }
-
-    @Test
-    fun testWithReturnRecordSpan() {
-        assertThat(testClass.methodWithReturnNotThrowing()).isEqualTo(101)
-        Blocks.recordSpan<Int, Exception>("foo", "bar", GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_ALL_PHASES,
-            testClass::methodWithReturnNotThrowing)
-        assertThat(called.get()).isTrue()
-    }
-
-    @Test(expected = IllegalStateException::class)
-    fun testWithReturnThrowingBlock() {
-        Blocks.recordSpan<Int, Exception>("foo", "bar", GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_ALL_PHASES,
-            testClass::methodWithReturnThrowing)
-        fail("should not reach this statement")
-
     }
 }

@@ -20,6 +20,9 @@ import com.android.build.gradle.internal.dexing.DexParameters
 import com.android.build.gradle.internal.dexing.DxDexParameters
 import com.android.build.gradle.internal.fixtures.FakeFileChange
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.DexerTool
@@ -421,7 +424,9 @@ class DexArchiveBuilderDelegateTest(
                 jumboMode = true
             ),
             projectName = "",
-            taskPath = ""
+            taskPath = "",
+            analyticsService = FakeObjectFactory.factory.property(AnalyticsService::class.java)
+                .value(FakeNoOpAnalyticsService())
         )
     }
 

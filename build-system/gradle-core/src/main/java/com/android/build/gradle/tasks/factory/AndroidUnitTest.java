@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks.factory;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 import com.android.annotations.NonNull;
@@ -185,16 +184,13 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             }
 
             // 2. the test creationConfig classes and java_res
-            collection.from(creationConfig.getArtifacts().getAllClasses());
+            collection.from(creationConfig.getAllProjectClassesPostAsmInstrumentation());
             // TODO is this the right thing? this doesn't include the res merging via transform
             // AFAIK
             collection.from(artifacts.get(InternalArtifactType.JAVA_RES.INSTANCE));
 
             // 3. the runtime dependencies for both CLASSES and JAVA_RES type
-            collection.from(
-                    creationConfig
-                            .getVariantDependencies()
-                            .getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, CLASSES_JAR));
+            collection.from(creationConfig.getDependenciesClassesJarsPostAsmInstrumentation(ALL));
             collection.from(
                     creationConfig
                             .getVariantDependencies()

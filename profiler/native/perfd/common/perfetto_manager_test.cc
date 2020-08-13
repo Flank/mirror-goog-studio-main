@@ -185,5 +185,7 @@ TEST(PerfettoManagerTest, ValidateHeapprofdConfig) {
   EXPECT_EQ(heap_config.process_cmdline()[0], app_name);
   EXPECT_EQ(heap_config.shmem_size_bytes(), shmem_size);
   EXPECT_EQ(heap_config.continuous_dump_config().dump_interval_ms(), dump_interval);
+  EXPECT_TRUE(heap_config.all_heaps());
+  EXPECT_TRUE(heap_config.block_client());
 }
 }  // namespace profiler

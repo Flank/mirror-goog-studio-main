@@ -19,7 +19,6 @@ package com.android.tools.lint
 import com.android.tools.analytics.Anonymizer
 import com.android.tools.analytics.CommonMetricsData
 import com.android.tools.analytics.UsageTracker
-import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.detector.api.Project
@@ -167,7 +166,7 @@ class LintBatchAnalytics {
         flags: LintCliFlags,
         registry: IssueRegistry
     ): Map<String, LintIssueId.Builder> {
-        val map = LinkedHashMap<String, LintIssueId.Builder>(BuiltinIssueRegistry.INITIAL_CAPACITY)
+        val map = LinkedHashMap<String, LintIssueId.Builder>(registry.issues.size)
         for (incident in incidents) {
             val issue = incident.issue
             val id = issue.id

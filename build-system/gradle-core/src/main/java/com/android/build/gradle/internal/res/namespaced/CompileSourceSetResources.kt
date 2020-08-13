@@ -152,7 +152,7 @@ abstract class CompileSourceSetResources : IncrementalTask() {
         override fun run() {
             parameters.aapt2.get().use(parameters) { processor ->
                 for (request in parameters.compileRequests.get()) {
-                    processor.submit { aapt2 ->
+                    processor.submit(parameters.analyticsService.get()) { aapt2 ->
                         aapt2.compile(request, processor.iLogger)
                     }
                 }

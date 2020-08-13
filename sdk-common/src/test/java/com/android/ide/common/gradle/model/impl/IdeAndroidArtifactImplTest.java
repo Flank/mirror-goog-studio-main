@@ -21,12 +21,10 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.InstantRun;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.stubs.AndroidArtifactStub;
 import com.android.ide.common.repository.GradleVersion;
-import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
 import org.junit.Before;
@@ -82,53 +80,7 @@ public class IdeAndroidArtifactImplTest {
                     }
                 };
         IdeAndroidArtifact artifact =
-          ModelCache.androidArtifactFrom(
-                  original, myModelCache, myDependenciesFactory, myGradleVersion);
-    }
-
-    // See http://b/64305584
-    @Test
-    public void withNpeInGetOutputs() throws Throwable {
-        AndroidArtifact original =
-                new AndroidArtifactStub() {
-                    @Override
-                    @NonNull
-                    public Collection<AndroidArtifactOutput> getOutputs() {
-                        throw new NullPointerException();
-                    }
-
-                    @Override
-                    public int hashCode() {
-                        return Objects.hash(
-                                getName(),
-                                getCompileTaskName(),
-                                getAssembleTaskName(),
-                                getClassesFolder(),
-                                getJavaResourcesFolder(),
-                                getDependencies(),
-                                getCompileDependencies(),
-                                getDependencyGraphs(),
-                                getIdeSetupTaskNames(),
-                                getGeneratedSourceFolders(),
-                                getVariantSourceProvider(),
-                                getMultiFlavorSourceProvider(),
-                                getApplicationId(),
-                                getSourceGenTaskName(),
-                                getGeneratedResourceFolders(),
-                                getInstantRun(),
-                                getSigningConfigName(),
-                                getAbiFilters(),
-                                getNativeLibraries(),
-                                isSigned(),
-                                getAdditionalRuntimeApks(),
-                                getTestOptions(),
-                                getInstrumentedTestTaskName());
-                    }
-                };
-        IdeAndroidArtifactImpl copy =
-          ModelCache.androidArtifactFrom(
-                  original, myModelCache, myDependenciesFactory, myGradleVersion);
-        assertThat(copy.getOutputs()).isEmpty();
+                myModelCache.androidArtifactFrom(original, myDependenciesFactory, myGradleVersion);
     }
 
     /**
@@ -146,8 +98,7 @@ public class IdeAndroidArtifactImplTest {
                     }
                 };
         IdeAndroidArtifactImpl copy =
-          ModelCache.androidArtifactFrom(
-                  original, myModelCache, myDependenciesFactory, myGradleVersion);
+                myModelCache.androidArtifactFrom(original, myDependenciesFactory, myGradleVersion);
         assertThat(original.getAbiFilters()).isNull();
         assertThat(copy.getAbiFilters()).isEmpty();
     }

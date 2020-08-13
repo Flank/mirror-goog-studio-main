@@ -16,18 +16,13 @@
 
 package com.android.build.gradle.internal.workeractions
 
-import com.android.ide.common.workers.GradlePluginMBeans
-import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Property
 import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
 import java.io.Serializable
-import javax.inject.Inject
 
 /**
  * Adapted version of the Gradle's [WorkAction] for handling BuiltArtifact instances.
  *
- * This subclass of ][WorkAction] receives a subclass of [DecoratedWorkParameters] as parameters
+ * This subclass of [WorkAction] receives a subclass of [DecoratedWorkParameters] as parameters
  * to the work item.
  *
  * Subclasses must implement the [doExecute] method where the can access the parameters through the
@@ -39,15 +34,11 @@ interface WorkActionAdapter<WorkItemParametersT>
 
     @JvmDefault
     override fun execute() {
-        if (parameters.projectName.isPresent && parameters.projectName.get().isNotBlank()) {
-            GradlePluginMBeans.getProfileMBean(parameters.projectName.get())
-                ?.workerStarted(parameters.taskName.get(), parameters.workerKey.get())
-        }
+        parameters.analyticsService.get()
+            .workerStarted(parameters.taskPath.get(), parameters.workerKey.get())
         doExecute()
-        if (parameters.projectName.isPresent && parameters.projectName.get().isNotBlank()) {
-            GradlePluginMBeans.getProfileMBean(parameters.projectName.get())
-                ?.workerFinished(parameters.taskName.get(), parameters.workerKey.get())
-        }
+        parameters.analyticsService.get()
+            .workerFinished(parameters.taskPath.get(), parameters.workerKey.get())
     }
 
     /**

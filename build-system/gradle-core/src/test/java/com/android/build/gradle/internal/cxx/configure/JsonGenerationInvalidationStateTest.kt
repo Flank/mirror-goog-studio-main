@@ -39,22 +39,22 @@ class JsonGenerationInvalidationStateTest {
     fun testBasicClean() {
         createInTimestampOrder(dependentBuildFile, expectedJson, commandFile)
         val state = JsonGenerationInvalidationState(
-                forceRegeneration = false,
-                expectedJson = expectedJson,
-                commandFile = commandFile,
-                currentBuildCommand = "build command",
-                previousBuildCommand = "build command",
-                dependentBuildFiles = listOf(dependentBuildFile),
-                currentPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                ),
-                previousPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                )
+            forceRegeneration = false,
+            expectedJson = expectedJson,
+            commandFile = commandFile,
+            currentBuildCommand = "build command",
+            previousBuildCommand = "build command",
+            dependentBuildFiles = listOf(dependentBuildFile),
+            currentPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            ),
+            previousPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            )
         )
         assertThat(state.rebuild).isFalse()
         assertThat(state.softRegeneration).isFalse()
@@ -64,22 +64,22 @@ class JsonGenerationInvalidationStateTest {
     @Test
     fun testBasicDirty() {
         val state = JsonGenerationInvalidationState(
-                forceRegeneration = false,
-                expectedJson = expectedJson,
-                commandFile = commandFile,
-                currentBuildCommand = "current build command",
-                previousBuildCommand = "previous build command",
-                dependentBuildFiles = listOf(dependentBuildFile),
-                currentPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                ),
-                previousPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                )
+            forceRegeneration = false,
+            expectedJson = expectedJson,
+            commandFile = commandFile,
+            currentBuildCommand = "current build command",
+            previousBuildCommand = "previous build command",
+            dependentBuildFiles = listOf(dependentBuildFile),
+            currentPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            ),
+            previousPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            )
         )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isFalse()
@@ -93,22 +93,22 @@ class JsonGenerationInvalidationStateTest {
     fun testEverythingDirtyExceptDependentBuildFile() {
         // Note that dependent build file state is mutually exclusive with expectedJson missing
         val state = JsonGenerationInvalidationState(
-                forceRegeneration = true,
-                expectedJson = expectedJson,
-                commandFile = commandFile,
-                currentBuildCommand = "current build command",
-                previousBuildCommand = "previous build command",
-                dependentBuildFiles = listOf(dependentBuildFile),
-                currentPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                ),
-                previousPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                )
+            forceRegeneration = true,
+            expectedJson = expectedJson,
+            commandFile = commandFile,
+            currentBuildCommand = "current build command",
+            previousBuildCommand = "previous build command",
+            dependentBuildFiles = listOf(dependentBuildFile),
+            currentPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            ),
+            previousPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            )
         )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isFalse()
@@ -124,22 +124,22 @@ class JsonGenerationInvalidationStateTest {
         // Note that dependent build file state is mutually exclusive with expectedJson missing
         createInTimestampOrder(expectedJson, dependentBuildFile)
         val state = JsonGenerationInvalidationState(
-                forceRegeneration = true,
-                expectedJson = expectedJson,
-                commandFile = commandFile,
-                currentBuildCommand = "current build command",
-                previousBuildCommand = "previous build command",
-                dependentBuildFiles = listOf(dependentBuildFile),
-                currentPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                ),
-                previousPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                )
+            forceRegeneration = true,
+            expectedJson = expectedJson,
+            commandFile = commandFile,
+            currentBuildCommand = "current build command",
+            previousBuildCommand = "previous build command",
+            dependentBuildFiles = listOf(dependentBuildFile),
+            currentPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            ),
+            previousPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            )
         )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isFalse()
@@ -155,22 +155,22 @@ class JsonGenerationInvalidationStateTest {
     fun testBasicOnlyLastCommandChanged() {
         createInTimestampOrder(dependentBuildFile, expectedJson, commandFile)
         val state = JsonGenerationInvalidationState(
-                forceRegeneration = false,
-                expectedJson = expectedJson,
-                commandFile = commandFile,
-                currentBuildCommand = "current build command",
-                previousBuildCommand = "previous build command",
-                dependentBuildFiles = listOf(dependentBuildFile),
-                currentPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                ),
-                previousPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                )
+            forceRegeneration = false,
+            expectedJson = expectedJson,
+            commandFile = commandFile,
+            currentBuildCommand = "current build command",
+            previousBuildCommand = "previous build command",
+            dependentBuildFiles = listOf(dependentBuildFile),
+            currentPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            ),
+            previousPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            )
         )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isFalse()
@@ -182,22 +182,22 @@ class JsonGenerationInvalidationStateTest {
     fun testOnlyExpectJsonIsMissing() {
         createInTimestampOrder(commandFile)
         val state = JsonGenerationInvalidationState(
-                forceRegeneration = false,
-                expectedJson = expectedJson,
-                commandFile = commandFile,
-                currentBuildCommand = "build command",
-                previousBuildCommand = "build command",
-                dependentBuildFiles = listOf(dependentBuildFile),
-                currentPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                ),
-                previousPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                )
+            forceRegeneration = false,
+            expectedJson = expectedJson,
+            commandFile = commandFile,
+            currentBuildCommand = "build command",
+            previousBuildCommand = "build command",
+            dependentBuildFiles = listOf(dependentBuildFile),
+            currentPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            ),
+            previousPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            )
         )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isFalse()
@@ -209,22 +209,22 @@ class JsonGenerationInvalidationStateTest {
     fun testOnlyCommandFileIsMissing() {
         createInTimestampOrder(dependentBuildFile, expectedJson)
         val state = JsonGenerationInvalidationState(
-                forceRegeneration = false,
-                expectedJson = expectedJson,
-                commandFile = commandFile,
-                currentBuildCommand = "build command",
-                previousBuildCommand = "build command",
-                dependentBuildFiles = listOf(dependentBuildFile),
-                currentPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                ),
-                previousPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                )
+            forceRegeneration = false,
+            expectedJson = expectedJson,
+            commandFile = commandFile,
+            currentBuildCommand = "build command",
+            previousBuildCommand = "build command",
+            dependentBuildFiles = listOf(dependentBuildFile),
+            currentPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            ),
+            previousPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            )
         )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isFalse()
@@ -236,22 +236,22 @@ class JsonGenerationInvalidationStateTest {
     fun testOnlyForceFlag() {
         createInTimestampOrder(dependentBuildFile, expectedJson, commandFile)
         val state = JsonGenerationInvalidationState(
-                forceRegeneration = true,
-                expectedJson = expectedJson,
-                commandFile = commandFile,
-                currentBuildCommand = "build command",
-                previousBuildCommand = "build command",
-                dependentBuildFiles = listOf(dependentBuildFile),
-                currentPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                ),
-                previousPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                )
+            forceRegeneration = true,
+            expectedJson = expectedJson,
+            commandFile = commandFile,
+            currentBuildCommand = "build command",
+            previousBuildCommand = "build command",
+            dependentBuildFiles = listOf(dependentBuildFile),
+            currentPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            ),
+            previousPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            )
         )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isFalse()
@@ -263,22 +263,22 @@ class JsonGenerationInvalidationStateTest {
     fun testOnlyDependentBuildFileChanged() {
         createInTimestampOrder(expectedJson, commandFile, dependentBuildFile)
         val state = JsonGenerationInvalidationState(
-                forceRegeneration = false,
-                expectedJson = expectedJson,
-                commandFile = commandFile,
-                currentBuildCommand = "build command",
-                previousBuildCommand = "build command",
-                dependentBuildFiles = listOf(dependentBuildFile),
-                currentPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                ),
-                previousPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                )
+            forceRegeneration = false,
+            expectedJson = expectedJson,
+            commandFile = commandFile,
+            currentBuildCommand = "build command",
+            previousBuildCommand = "build command",
+            dependentBuildFiles = listOf(dependentBuildFile),
+            currentPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            ),
+            previousPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            )
         )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isTrue()
@@ -292,22 +292,22 @@ class JsonGenerationInvalidationStateTest {
     fun `enabling prefab invalidates`() {
         createInTimestampOrder(dependentBuildFile, expectedJson, commandFile)
         val state = JsonGenerationInvalidationState(
-                forceRegeneration = false,
-                expectedJson = expectedJson,
-                commandFile = commandFile,
-                currentBuildCommand = "build command",
-                previousBuildCommand = "build command",
-                dependentBuildFiles = listOf(dependentBuildFile),
-                currentPrefabConfiguration = PrefabConfigurationState(
-                        enabled = true,
-                        prefabPath = File("/path/to/prefab.jar"),
-                        packages = emptyList()
-                ),
-                previousPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                )
+            forceRegeneration = false,
+            expectedJson = expectedJson,
+            commandFile = commandFile,
+            currentBuildCommand = "build command",
+            previousBuildCommand = "build command",
+            dependentBuildFiles = listOf(dependentBuildFile),
+            currentPrefabConfiguration = PrefabConfigurationState(
+                enabled = true,
+                prefabPath = File("/path/to/prefab.jar"),
+                packages = emptyList()
+            ),
+            previousPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            )
         )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isFalse()
@@ -318,22 +318,22 @@ class JsonGenerationInvalidationStateTest {
     fun `disabling prefab invalidates`() {
         createInTimestampOrder(dependentBuildFile, expectedJson, commandFile)
         val state = JsonGenerationInvalidationState(
-                forceRegeneration = false,
-                expectedJson = expectedJson,
-                commandFile = commandFile,
-                currentBuildCommand = "build command",
-                previousBuildCommand = "build command",
-                dependentBuildFiles = listOf(dependentBuildFile),
-                currentPrefabConfiguration = PrefabConfigurationState(
-                        enabled = false,
-                        prefabPath = null,
-                        packages = emptyList()
-                ),
-                previousPrefabConfiguration = PrefabConfigurationState(
-                        enabled = true,
-                        prefabPath = File("/path/to/prefab.jar"),
-                        packages = emptyList()
-                )
+            forceRegeneration = false,
+            expectedJson = expectedJson,
+            commandFile = commandFile,
+            currentBuildCommand = "build command",
+            previousBuildCommand = "build command",
+            dependentBuildFiles = listOf(dependentBuildFile),
+            currentPrefabConfiguration = PrefabConfigurationState(
+                enabled = false,
+                prefabPath = null,
+                packages = emptyList()
+            ),
+            previousPrefabConfiguration = PrefabConfigurationState(
+                enabled = true,
+                prefabPath = File("/path/to/prefab.jar"),
+                packages = emptyList()
+            )
         )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isFalse()
@@ -344,22 +344,22 @@ class JsonGenerationInvalidationStateTest {
     fun `changing prefab path invalidates`() {
         createInTimestampOrder(dependentBuildFile, expectedJson, commandFile)
         val state = JsonGenerationInvalidationState(
-                forceRegeneration = false,
-                expectedJson = expectedJson,
-                commandFile = commandFile,
-                currentBuildCommand = "build command",
-                previousBuildCommand = "build command",
-                dependentBuildFiles = listOf(dependentBuildFile),
-                currentPrefabConfiguration = PrefabConfigurationState(
-                        enabled = true,
-                        prefabPath = File("/new/path/to/prefab.jar"),
-                        packages = emptyList()
-                ),
-                previousPrefabConfiguration = PrefabConfigurationState(
-                        enabled = true,
-                        prefabPath = File("/path/to/prefab.jar"),
-                        packages = emptyList()
-                )
+            forceRegeneration = false,
+            expectedJson = expectedJson,
+            commandFile = commandFile,
+            currentBuildCommand = "build command",
+            previousBuildCommand = "build command",
+            dependentBuildFiles = listOf(dependentBuildFile),
+            currentPrefabConfiguration = PrefabConfigurationState(
+                enabled = true,
+                prefabPath = File("/new/path/to/prefab.jar"),
+                packages = emptyList()
+            ),
+            previousPrefabConfiguration = PrefabConfigurationState(
+                enabled = true,
+                prefabPath = File("/path/to/prefab.jar"),
+                packages = emptyList()
+            )
         )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isFalse()
@@ -370,25 +370,25 @@ class JsonGenerationInvalidationStateTest {
     fun `changing prefab packages invalidates`() {
         createInTimestampOrder(dependentBuildFile, expectedJson, commandFile)
         val state = JsonGenerationInvalidationState(
-                forceRegeneration = false,
-                expectedJson = expectedJson,
-                commandFile = commandFile,
-                currentBuildCommand = "build command",
-                previousBuildCommand = "build command",
-                dependentBuildFiles = listOf(dependentBuildFile),
-                currentPrefabConfiguration = PrefabConfigurationState(
-                        enabled = true,
-                        prefabPath = File("/path/to/prefab.jar"),
-                        packages = listOf(
-                                File("/path/to/package/foo"),
-                                File("/path/to/package/bar")
-                        )
-                ),
-                previousPrefabConfiguration = PrefabConfigurationState(
-                        enabled = true,
-                        prefabPath = File("/path/to/prefab.jar"),
-                        packages = listOf(File("/path/to/package/foo"))
+            forceRegeneration = false,
+            expectedJson = expectedJson,
+            commandFile = commandFile,
+            currentBuildCommand = "build command",
+            previousBuildCommand = "build command",
+            dependentBuildFiles = listOf(dependentBuildFile),
+            currentPrefabConfiguration = PrefabConfigurationState(
+                enabled = true,
+                prefabPath = File("/path/to/prefab.jar"),
+                packages = listOf(
+                    File("/path/to/package/foo"),
+                    File("/path/to/package/bar")
                 )
+            ),
+            previousPrefabConfiguration = PrefabConfigurationState(
+                enabled = true,
+                prefabPath = File("/path/to/prefab.jar"),
+                packages = listOf(File("/path/to/package/foo"))
+            )
         )
         assertThat(state.rebuild).isTrue()
         assertThat(state.softRegeneration).isFalse()

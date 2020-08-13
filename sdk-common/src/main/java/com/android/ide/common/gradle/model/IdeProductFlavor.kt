@@ -85,5 +85,5 @@ interface IdeProductFlavor : IdeBaseConfig {
      */
     val resourceConfigurations: Collection<String>
 
-    val vectorDrawables: IdeVectorDrawablesOptions
+    val vectorDrawables: IdeVectorDrawablesOptions?
 }

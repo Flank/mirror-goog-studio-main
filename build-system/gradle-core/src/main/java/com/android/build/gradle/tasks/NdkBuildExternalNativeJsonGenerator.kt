@@ -25,12 +25,12 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.soFolder
-import com.android.build.gradle.internal.cxx.model.statsBuilder
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.google.common.base.Charsets
 import com.google.common.collect.Lists
 import com.google.gson.GsonBuilder
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule
 import org.gradle.process.ExecOperations
 import java.io.File
@@ -43,8 +43,9 @@ import java.nio.file.Files
  */
 internal class NdkBuildExternalNativeJsonGenerator(
     variant: CxxVariantModel,
-    abis: List<CxxAbiModel>
-) : ExternalNativeJsonGenerator(variant, abis) {
+    abis: List<CxxAbiModel>,
+    variantBuilder: GradleBuildVariant.Builder
+) : ExternalNativeJsonGenerator(variant, abis, variantBuilder) {
     @Throws(IOException::class)
     override fun processBuildOutput(buildOutput: String, abiConfig: CxxAbiModel) {
         // Write the captured ndk-build output to a file for diagnostic purposes.
@@ -80,7 +81,7 @@ internal class NdkBuildExternalNativeJsonGenerator(
             )
                 .setCommands(
                     getBuildCommand(abiConfig, removeJobsFlag = false),
-                    getBuildCommand(abiConfig, removeJobsFlag = true) + " clean",
+                    getBuildCommand(abiConfig, removeJobsFlag = true) + listOf("clean"),
                     variant.variantName,
                     buildOutput
                 )
@@ -275,11 +276,11 @@ internal class NdkBuildExternalNativeJsonGenerator(
     }
 
     /** Get the build command  */
-    private fun getBuildCommand(abi: CxxAbiModel, removeJobsFlag: Boolean): String =
-        "$ndkBuild " + getBaseArgs(abi, removeJobsFlag).joinToString(" ")
+    private fun getBuildCommand(abi: CxxAbiModel, removeJobsFlag: Boolean): List<String> =
+        listOf(ndkBuild) + getBaseArgs(abi, removeJobsFlag)
 
     init {
-        variant.statsBuilder.nativeBuildSystemType = GradleNativeAndroidModule.NativeBuildSystemType.NDK_BUILD
+        variantBuilder.nativeBuildSystemType = GradleNativeAndroidModule.NativeBuildSystemType.NDK_BUILD
 
         // Do some basic sync time checks.
         if (this.variant.module.makeFile.isDirectory) {

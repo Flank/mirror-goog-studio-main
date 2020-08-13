@@ -64,7 +64,7 @@ class NativeBuildConfigValueBuilder internal constructor(
     private val cppFileExtensions: MutableSet<String> = HashSet()
     private val outputs: MutableList<Output>
     private val fileConventions: OsFileConventions
-    private var buildTargetsCommand: String? = null
+    private var buildTargetsCommand: List<String>? = null
 
     /**
      * Constructs a NativeBuildConfigValueBuilder which can be used to build a [ ].
@@ -80,8 +80,8 @@ class NativeBuildConfigValueBuilder internal constructor(
 
     /** Set the commands and variantName for the NativeBuildConfigValue being built.  */
     fun setCommands(
-        buildCommand: String,
-        cleanCommand: String,
+        buildCommand: List<String>,
+        cleanCommand: List<String>,
         variantName: String,
         dryRunOutput: String
     ): NativeBuildConfigValueBuilder {
@@ -93,7 +93,8 @@ class NativeBuildConfigValueBuilder internal constructor(
         for ((key, value) in outputs.entries()) {
             this.outputs.add(Output(key, value, buildCommand, cleanCommand, variantName))
         }
-        buildTargetsCommand = buildCommand + " " + ExternalNativeBuildTask.BUILD_TARGETS_PLACEHOLDER
+        buildTargetsCommand =
+            buildCommand + listOf(ExternalNativeBuildTask.BUILD_TARGETS_PLACEHOLDER)
         return this
     }
 
@@ -107,8 +108,8 @@ class NativeBuildConfigValueBuilder internal constructor(
         val config = NativeBuildConfigValue()
         // Sort by library name so that output is stable
         outputs.sortBy { it.libraryName }
-        config.cleanCommands = generateCleanCommands()
-        config.buildTargetsCommand = buildTargetsCommand
+        config.cleanCommandsComponents = generateCleanCommands()
+        config.buildTargetsCommandComponents = buildTargetsCommand
         config.buildFiles = Lists.newArrayList(androidMk)
         config.libraries = generateLibraries()
         config.toolchains = generateToolchains()
@@ -202,8 +203,8 @@ class NativeBuildConfigValueBuilder internal constructor(
         }
     }
 
-    private fun generateCleanCommands(): List<String> {
-        val cleanCommands: MutableSet<String> =
+    private fun generateCleanCommands(): List<List<String>> {
+        val cleanCommands: MutableSet<List<String>> =
             Sets.newHashSet()
         for (output in outputs) {
             cleanCommands.add(output.cleanCommand)
@@ -216,7 +217,7 @@ class NativeBuildConfigValueBuilder internal constructor(
         for (output in outputs) {
             val value = NativeLibraryValue()
             librariesMap[output.libraryName] = value
-            value.buildCommand = output.buildCommand + " " + output.outputFileName
+            value.buildCommandComponents = output.buildCommand + listOf(output.outputFileName)
             value.abi = fileConventions.getFileName(
                 fileConventions.getFileParent(output.outputFileName)
             )
@@ -281,8 +282,8 @@ class NativeBuildConfigValueBuilder internal constructor(
     private class Output constructor(
         val outputFileName: String,
         val commandInputs: List<BuildStepInfo>,
-        val buildCommand: String,
-        val cleanCommand: String,
+        val buildCommand: List<String>,
+        val cleanCommand: List<String>,
         val variantName: String
     ) {
         var artifactName: String? = null

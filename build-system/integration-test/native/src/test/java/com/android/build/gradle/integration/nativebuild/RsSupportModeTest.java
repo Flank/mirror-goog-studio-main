@@ -19,9 +19,9 @@ package com.android.build.gradle.integration.nativebuild;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
+import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION;
 
 import com.android.SdkConstants;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
@@ -45,7 +45,7 @@ public class RsSupportModeTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("rsSupportMode")
-                    .setCmakeVersion("3.10.4819442")
+                    .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
                     .setWithCmakeDirInLocalProp(true)
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .create();

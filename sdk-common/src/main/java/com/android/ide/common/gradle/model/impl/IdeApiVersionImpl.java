@@ -17,7 +17,6 @@ package com.android.ide.common.gradle.model.impl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.ApiVersion;
 import com.android.ide.common.gradle.model.IdeApiVersion;
 import java.io.Serializable;
 import java.util.Objects;

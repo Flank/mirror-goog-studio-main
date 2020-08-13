@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.cxx.gradle.generator
 
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.tasks.Internal
 import org.gradle.process.ExecOperations
 import java.util.concurrent.Callable
@@ -32,6 +33,9 @@ interface CxxMetadataGenerator {
 
     @get:Internal
     val abis: List<CxxAbiModel>
+
+    @get:Internal
+    val variantBuilder: GradleBuildVariant.Builder
     //endregion
 
     //region Build metadata generation

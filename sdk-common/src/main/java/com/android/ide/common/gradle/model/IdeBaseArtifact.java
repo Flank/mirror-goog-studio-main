@@ -21,7 +21,6 @@ import com.android.builder.model.ArtifactMetaData;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Set;
 
 public interface IdeBaseArtifact extends Serializable {
     /** Name of the artifact. This should match {@link ArtifactMetaData#getName()}. */
@@ -62,13 +61,13 @@ public interface IdeBaseArtifact extends Serializable {
      * plugins like Kotlin).
      */
     @NonNull
-    Set<File> getAdditionalClassesFolders();
+    Collection<File> getAdditionalClassesFolders();
 
     /**
      * Returns the folder containing resource files that classes form this artifact expect to find
      * on the classpath.
      */
-    @NonNull
+    @Nullable
     File getJavaResourcesFolder();
 
     /**
@@ -99,7 +98,7 @@ public interface IdeBaseArtifact extends Serializable {
      * place.
      */
     @NonNull
-    Set<String> getIdeSetupTaskNames();
+    Collection<String> getIdeSetupTaskNames();
 
     /**
      * Returns all the source folders that are generated. This is typically folders for the R, the

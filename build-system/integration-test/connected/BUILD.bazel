@@ -136,9 +136,33 @@ gradle_connected_test(
 )
 
 gradle_connected_test(
+    name = "DependenciesConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/dependencies"],
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
     name = "FlavoredConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/flavored"],
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "KotlinAppConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/kotlinApp"],
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "MigratedConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/migrated"],
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )

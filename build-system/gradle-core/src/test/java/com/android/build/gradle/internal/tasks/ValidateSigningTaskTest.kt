@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.SigningConfigFactory
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.hash.Hashing
@@ -49,8 +50,8 @@ class ValidateSigningTaskTest {
         @JvmStatic
         fun createProject() {
             project = ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build()
-                .also {
-                    it.tasks.register(PRE_BUILD_TASKNAME)
+                .also { project ->
+                    project.tasks.register(PRE_BUILD_TASKNAME)
                 }
         }
 
@@ -74,6 +75,7 @@ class ValidateSigningTaskTest {
     fun testErrorIfNoKeystoreFileSet() {
         val task= project!!.tasks.create("validateSigning", ValidateSigningTask::class.java)
         task.dummyOutputDirectory.set(outputDirectory)
+        task.analyticsService.set(FakeNoOpAnalyticsService())
         task.signingConfig= SigningConfig("release")
         assertThat(task.forceRerun()).named("forceRerun").isTrue()
         // If no config file set, throws InvalidUserDataException
@@ -101,7 +103,7 @@ class ValidateSigningTaskTest {
         val task = project!!.tasks.create("validateGreenSigning", ValidateSigningTask::class.java)
         task.signingConfig = dslSigningConfig
         task.dummyOutputDirectory.set(outputDirectory)
-
+        task.analyticsService.set(FakeNoOpAnalyticsService())
 
         assertThat(task.forceRerun()).named("forceRerun").isTrue()
         // If no config file set, throws InvalidUserDataException
@@ -123,6 +125,7 @@ class ValidateSigningTaskTest {
         val task = project!!.tasks.create("validateRedSigning", ValidateSigningTask::class.java)
         task.signingConfig = dslSigningConfig
         task.dummyOutputDirectory.set(outputDirectory)
+        task.analyticsService.set(FakeNoOpAnalyticsService())
         task.defaultDebugKeystoreLocation = defaultDebugKeystore
 
         // Sanity check

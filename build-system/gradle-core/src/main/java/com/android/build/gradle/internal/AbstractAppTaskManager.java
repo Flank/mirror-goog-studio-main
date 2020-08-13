@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.CheckMultiApkLibrariesTask;
 import com.android.build.gradle.internal.tasks.CompressAssetsTask;
 import com.android.build.gradle.internal.tasks.ExtractNativeDebugMetadataTask;
+import com.android.build.gradle.internal.tasks.ExtractProfilerNativeDependenciesTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
@@ -86,9 +87,8 @@ public abstract class AbstractAppTaskManager<
                             testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension,
-            @NonNull Recorder recorder) {
-        super(variants, testComponents, hasFlavors, globalScope, extension, recorder);
+            @NonNull BaseExtension extension) {
+        super(variants, testComponents, hasFlavors, globalScope, extension);
     }
 
     protected void createCommonTasks(
@@ -147,6 +147,8 @@ public abstract class AbstractAppTaskManager<
         // Add external native build tasks
         createExternalNativeBuildJsonGenerators(variant.getVariant(), appVariantProperties);
         createExternalNativeBuildTasks(variant.getVariant(), appVariantProperties);
+
+        maybeExtractProfilerDependencies(apkCreationConfig);
 
         // Add a task to merge the jni libs folders
         createMergeJniLibFoldersTasks(appVariantProperties);
@@ -318,6 +320,14 @@ public abstract class AbstractAppTaskManager<
                     false,
                     ImmutableSet.of(),
                     null);
+        }
+    }
+
+    /** Extract dependencies for profiler supports if needed. */
+    private void maybeExtractProfilerDependencies(@NonNull ApkCreationConfig apkCreationConfig) {
+        if (apkCreationConfig.getShouldPackageProfilerDependencies()) {
+            taskFactory.register(
+                    new ExtractProfilerNativeDependenciesTask.CreationAction(apkCreationConfig));
         }
     }
 }

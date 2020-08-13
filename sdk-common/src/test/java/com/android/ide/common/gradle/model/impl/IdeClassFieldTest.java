@@ -42,18 +42,11 @@ public class IdeClassFieldTest {
 
     @Test
     public void serialization() throws Exception {
-        IdeClassFieldImpl classField = ModelCache.classFieldFrom(new ClassFieldStub());
+        ModelCache modelCache = new ModelCache();
+        IdeClassFieldImpl classField = modelCache.classFieldFrom(new ClassFieldStub());
         byte[] bytes = Serialization.serialize(classField);
         Object o = Serialization.deserialize(bytes);
         assertEquals(classField, o);
-    }
-
-    @Test
-    public void constructor() throws Throwable {
-        ClassField original = new ClassFieldStub();
-        IdeClassFieldImpl copy = ModelCache.classFieldFrom(original);
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
     }
 
     @Test

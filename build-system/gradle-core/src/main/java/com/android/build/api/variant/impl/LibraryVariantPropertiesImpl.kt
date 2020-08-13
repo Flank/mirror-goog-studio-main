@@ -16,6 +16,8 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariantProperties
+import com.android.build.api.component.analytics.AnalyticsEnabledVariantProperties
 import com.android.build.api.component.impl.ConsumableCreationConfigImpl
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.InstrumentationParameters
@@ -30,10 +32,12 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.dexing.DexingType
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
@@ -99,4 +103,14 @@ open class LibraryVariantPropertiesImpl @Inject constructor(
 
     override val dexingType: DexingType
         get() = delegate.dexingType
+
+    override fun createUserVisibleVariantPropertiesObject(
+        projectServices: ProjectServices,
+        stats: GradleBuildVariant.Builder
+    ): AnalyticsEnabledVariantProperties =
+        projectServices.objectFactory.newInstance(
+            AnalyticsEnabledLibraryVariantProperties::class.java,
+            this,
+            stats
+        )
 }

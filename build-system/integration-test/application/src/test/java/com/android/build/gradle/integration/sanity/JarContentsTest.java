@@ -1069,6 +1069,7 @@ public class JarContentsTest {
                 "com/android/tools/",
                 "com/android/tools/proguard/",
                 "com/android/utils/",
+                "com/android/utils/cxx/",
                 "com/android/utils/concurrency/",
                 "com/android/utils/reflection/",
                 "com/android/version.properties",

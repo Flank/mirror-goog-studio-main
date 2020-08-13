@@ -17,9 +17,8 @@
 package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.profile.ProfilerInitializer
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.options.SyncOptions
-import com.android.ide.common.workers.GradlePluginMBeans
 import com.android.ide.common.workers.WorkerExecutorException
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import org.gradle.api.logging.Logging
@@ -47,13 +46,13 @@ class AsyncResourceProcessor<ServiceT> constructor(
 
 
     @Synchronized
-    fun submit(action: (ServiceT) -> Unit) {
+    fun submit(analyticsService: AnalyticsService, action: (ServiceT) -> Unit) {
         val workerKey = "$owner${counter.inc()}"
-        ProfilerInitializer.getListener()?.getTaskRecord(owner)?.addWorker(workerKey, GradleBuildProfileSpan.ExecutionType.THREAD_EXECUTION)
+        analyticsService.getTaskRecord(owner)?.addWorker(workerKey, GradleBuildProfileSpan.ExecutionType.THREAD_EXECUTION)
         futures.add(executor.submit {
-            GradlePluginMBeans.getProfileMBean(projectName)?.workerStarted(owner, workerKey)
+            analyticsService.workerStarted(owner, workerKey)
             action.invoke(service)
-            GradlePluginMBeans.getProfileMBean(projectName)?.workerFinished(owner, workerKey)
+            analyticsService.workerFinished(owner, workerKey)
         })
     }
 

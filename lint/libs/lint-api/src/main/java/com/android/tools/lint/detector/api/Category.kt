@@ -47,10 +47,6 @@ constructor(
     val name: String,
     private val priority: Int
 ) : Comparable<Category> {
-    init {
-        categoryMap[name] = this
-    }
-
     /**
      * Returns a full name for this category. For a top level category, this is just
      * the [.getName] value, but for nested categories it will include the parent
@@ -64,6 +60,13 @@ constructor(
         } else {
             name
         }
+
+    init {
+        categoryMap[name] = this
+        if (parent != null) {
+            categoryMap[fullName] = this
+        }
+    }
 
     override fun toString(): String = fullName
 

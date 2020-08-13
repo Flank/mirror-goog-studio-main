@@ -1,0 +1,4101 @@
+{
+	"archive" : {},
+	"artifacts" : 
+	[
+		{
+			"path" : "Source/Core/Core/libcore.a"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"add_compile_options",
+			"check_and_add_flag",
+			"add_definitions",
+			"target_link_libraries",
+			"include_directories",
+			"target_sources"
+		],
+		"files" : 
+		[
+			"Source/Core/Core/CMakeLists.txt",
+			"CMake/CheckAndAddFlag.cmake",
+			"CMakeLists.txt",
+			"Source/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 1,
+				"parent" : 0
+			},
+			{
+				"file" : 2
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 211,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 225,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 5
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 247,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 7
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 255,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 9
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 256,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 11
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 257,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 13
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 258,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 15
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 260,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 17
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 261,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 19
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 262,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 21
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 263,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 23
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 266,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 25
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 267,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 27
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 269,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 29
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 270,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 31
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 272,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 47,
+				"parent" : 33
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 381,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 100,
+				"parent" : 2
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 544,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 454,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 692,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 505,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 500,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 498,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 191,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 246,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 414,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 415,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 209,
+				"parent" : 2
+			},
+			{
+				"file" : 3
+			},
+			{
+				"command" : 3,
+				"file" : 3,
+				"line" : 73,
+				"parent" : 48
+			},
+			{
+				"command" : 3,
+				"file" : 3,
+				"line" : 72,
+				"parent" : 48
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 731,
+				"parent" : 2
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 694,
+				"parent" : 2
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 511,
+				"parent" : 2
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 513,
+				"parent" : 2
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 574,
+				"parent" : 2
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 619,
+				"parent" : 2
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 658,
+				"parent" : 2
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 720,
+				"parent" : 2
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 743,
+				"parent" : 2
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 774,
+				"parent" : 2
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 789,
+				"parent" : 2
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 521,
+				"parent" : 0
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 615,
+				"parent" : 0
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 619,
+				"parent" : 0
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 664,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -g -DNDEBUG -fPIC  "
+				},
+				{
+					"backtrace" : 4,
+					"fragment" : "-march=armv8-a+crc"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-fdiagnostics-color"
+				},
+				{
+					"backtrace" : 8,
+					"fragment" : "-Wall"
+				},
+				{
+					"backtrace" : 10,
+					"fragment" : "-Wtype-limits"
+				},
+				{
+					"backtrace" : 12,
+					"fragment" : "-Wsign-compare"
+				},
+				{
+					"backtrace" : 14,
+					"fragment" : "-Wignored-qualifiers"
+				},
+				{
+					"backtrace" : 16,
+					"fragment" : "-Wuninitialized"
+				},
+				{
+					"backtrace" : 18,
+					"fragment" : "-Wshadow"
+				},
+				{
+					"backtrace" : 20,
+					"fragment" : "-Winit-self"
+				},
+				{
+					"backtrace" : 22,
+					"fragment" : "-Wmissing-declarations"
+				},
+				{
+					"backtrace" : 24,
+					"fragment" : "-Wmissing-variable-declarations"
+				},
+				{
+					"backtrace" : 26,
+					"fragment" : "-fno-strict-aliasing"
+				},
+				{
+					"backtrace" : 28,
+					"fragment" : "-fno-exceptions"
+				},
+				{
+					"backtrace" : 30,
+					"fragment" : "-fvisibility-inlines-hidden"
+				},
+				{
+					"backtrace" : 32,
+					"fragment" : "-fvisibility=hidden"
+				},
+				{
+					"backtrace" : 34,
+					"fragment" : "-fomit-frame-pointer"
+				},
+				{
+					"fragment" : "-std=c++17"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 35,
+					"define" : "ANDROID"
+				},
+				{
+					"backtrace" : 36,
+					"define" : "DATA_DIR=\"/usr/local/share/dolphin-emu/\""
+				},
+				{
+					"backtrace" : 37,
+					"define" : "FMT_LOCALE"
+				},
+				{
+					"backtrace" : 38,
+					"define" : "HAVE_EGL=1"
+				},
+				{
+					"backtrace" : 39,
+					"define" : "SFML_STATIC"
+				},
+				{
+					"backtrace" : 40,
+					"define" : "USE_ANALYTICS=1"
+				},
+				{
+					"backtrace" : 41,
+					"define" : "USE_MEMORYWATCHER=1"
+				},
+				{
+					"backtrace" : 42,
+					"define" : "USE_PIPES=1"
+				},
+				{
+					"backtrace" : 43,
+					"define" : "_ARCH_64=1"
+				},
+				{
+					"backtrace" : 44,
+					"define" : "_DEFAULT_SOURCE"
+				},
+				{
+					"backtrace" : 45,
+					"define" : "_FILE_OFFSET_BITS=64"
+				},
+				{
+					"backtrace" : 46,
+					"define" : "_LARGEFILE_SOURCE"
+				},
+				{
+					"backtrace" : 47,
+					"define" : "_M_ARM_64=1"
+				},
+				{
+					"backtrace" : 49,
+					"define" : "__STDC_CONSTANT_MACROS"
+				},
+				{
+					"backtrace" : 50,
+					"define" : "__STDC_LIMIT_MACROS"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 51,
+					"path" : "/Users/jomof/projects/dolphin/Externals/curl/include"
+				},
+				{
+					"backtrace" : 52,
+					"path" : "/Users/jomof/projects/dolphin/Externals/SFML/include"
+				},
+				{
+					"backtrace" : 53,
+					"path" : "/Users/jomof/projects/dolphin/Source/Core"
+				},
+				{
+					"backtrace" : 54,
+					"path" : "/Users/jomof/projects/dolphin/Source/Android"
+				},
+				{
+					"backtrace" : 55,
+					"path" : "/Users/jomof/projects/dolphin/Externals/enet/include"
+				},
+				{
+					"backtrace" : 56,
+					"path" : "/Users/jomof/projects/dolphin/External/minizip"
+				},
+				{
+					"backtrace" : 57,
+					"path" : "/Users/jomof/projects/dolphin/Externals/soundtouch"
+				},
+				{
+					"backtrace" : 58,
+					"path" : "/Users/jomof/projects/dolphin/Externals/mbedtls/include"
+				},
+				{
+					"backtrace" : 59,
+					"path" : "/Users/jomof/projects/dolphin/Externals/libiconv-1.14/include"
+				},
+				{
+					"backtrace" : 60,
+					"path" : "/Users/jomof/projects/dolphin/Externals/picojson"
+				},
+				{
+					"backtrace" : 61,
+					"path" : "/Users/jomof/projects/dolphin/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Source/Core"
+				},
+				{
+					"backtrace" : 37,
+					"path" : "/Users/jomof/projects/dolphin/Externals/fmt/include"
+				},
+				{
+					"backtrace" : 37,
+					"path" : "/Users/jomof/projects/dolphin/Externals/minizip/."
+				},
+				{
+					"backtrace" : 37,
+					"path" : "/Users/jomof/projects/dolphin/Externals/cubeb/include"
+				},
+				{
+					"backtrace" : 37,
+					"path" : "/Users/jomof/projects/dolphin/Source/Android/app/.cxx/cmake/debug/arm64-v8a/exports"
+				},
+				{
+					"backtrace" : 37,
+					"path" : "/Users/jomof/projects/dolphin/Externals/pugixml/."
+				},
+				{
+					"backtrace" : 37,
+					"path" : "/Users/jomof/projects/dolphin/Externals/LZO"
+				}
+			],
+			"language" : "CXX",
+			"sourceIndexes" : 
+			[
+				0,
+				2,
+				4,
+				6,
+				9,
+				11,
+				13,
+				15,
+				17,
+				19,
+				22,
+				24,
+				26,
+				28,
+				30,
+				32,
+				34,
+				36,
+				38,
+				40,
+				42,
+				44,
+				46,
+				47,
+				49,
+				50,
+				52,
+				55,
+				57,
+				59,
+				61,
+				63,
+				65,
+				67,
+				69,
+				71,
+				73,
+				75,
+				77,
+				80,
+				82,
+				84,
+				86,
+				88,
+				90,
+				92,
+				95,
+				97,
+				99,
+				101,
+				103,
+				105,
+				107,
+				109,
+				110,
+				111,
+				113,
+				115,
+				117,
+				118,
+				119,
+				120,
+				123,
+				125,
+				127,
+				129,
+				131,
+				133,
+				135,
+				137,
+				139,
+				141,
+				143,
+				145,
+				147,
+				149,
+				151,
+				153,
+				157,
+				159,
+				161,
+				163,
+				165,
+				167,
+				169,
+				171,
+				173,
+				175,
+				177,
+				178,
+				180,
+				182,
+				184,
+				186,
+				188,
+				190,
+				192,
+				194,
+				196,
+				198,
+				200,
+				202,
+				204,
+				206,
+				208,
+				210,
+				212,
+				214,
+				216,
+				218,
+				220,
+				222,
+				224,
+				226,
+				228,
+				230,
+				232,
+				234,
+				236,
+				238,
+				240,
+				242,
+				244,
+				246,
+				248,
+				250,
+				252,
+				254,
+				256,
+				258,
+				260,
+				262,
+				264,
+				266,
+				268,
+				270,
+				272,
+				277,
+				279,
+				281,
+				282,
+				284,
+				286,
+				288,
+				290,
+				292,
+				294,
+				296,
+				298,
+				300,
+				302,
+				304,
+				306,
+				308,
+				310,
+				312,
+				314,
+				317,
+				319,
+				321,
+				323,
+				325,
+				327,
+				329,
+				331,
+				333,
+				335,
+				337,
+				338,
+				339,
+				340,
+				341,
+				342,
+				343,
+				345,
+				347,
+				348,
+				351,
+				352,
+				354,
+				356,
+				358,
+				360,
+				362,
+				364,
+				366,
+				368,
+				370,
+				372,
+				374,
+				376,
+				378,
+				380,
+				382,
+				384,
+				386,
+				388,
+				390,
+				392,
+				394,
+				396,
+				398,
+				400,
+				402,
+				406,
+				408,
+				410,
+				412,
+				414,
+				416,
+				418,
+				420,
+				422,
+				424,
+				426,
+				428,
+				430,
+				433,
+				435,
+				437,
+				439,
+				441,
+				443,
+				445,
+				447,
+				449,
+				452,
+				453,
+				455,
+				457,
+				458,
+				459,
+				460,
+				461,
+				462,
+				463,
+				465,
+				466,
+				467,
+				468,
+				469,
+				470,
+				471,
+				472,
+				473,
+				474,
+				475,
+				477,
+				478,
+				480,
+				482,
+				483,
+				485
+			],
+			"sysroot" : 
+			{
+				"path" : "/Users/jomof/Library/Android/sdk/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+			}
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"id" : "videocommon::@9d180031f3c4a228f149"
+		}
+	],
+	"id" : "core::@ca4b04e15e5407d68ad6",
+	"name" : "core",
+	"nameOnDisk" : "libcore.a",
+	"paths" : 
+	{
+		"build" : "Source/Core/Core",
+		"source" : "Source/Core/Core"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0,
+				2,
+				4,
+				6,
+				9,
+				11,
+				13,
+				15,
+				17,
+				19,
+				22,
+				24,
+				26,
+				28,
+				30,
+				32,
+				34,
+				36,
+				38,
+				40,
+				42,
+				44,
+				46,
+				47,
+				49,
+				50,
+				52,
+				55,
+				57,
+				59,
+				61,
+				63,
+				65,
+				67,
+				69,
+				71,
+				73,
+				75,
+				77,
+				80,
+				82,
+				84,
+				86,
+				88,
+				90,
+				92,
+				95,
+				97,
+				99,
+				101,
+				103,
+				105,
+				107,
+				109,
+				110,
+				111,
+				113,
+				115,
+				117,
+				118,
+				119,
+				120,
+				123,
+				125,
+				127,
+				129,
+				131,
+				133,
+				135,
+				137,
+				139,
+				141,
+				143,
+				145,
+				147,
+				149,
+				151,
+				153,
+				157,
+				159,
+				161,
+				163,
+				165,
+				167,
+				169,
+				171,
+				173,
+				175,
+				177,
+				178,
+				180,
+				182,
+				184,
+				186,
+				188,
+				190,
+				192,
+				194,
+				196,
+				198,
+				200,
+				202,
+				204,
+				206,
+				208,
+				210,
+				212,
+				214,
+				216,
+				218,
+				220,
+				222,
+				224,
+				226,
+				228,
+				230,
+				232,
+				234,
+				236,
+				238,
+				240,
+				242,
+				244,
+				246,
+				248,
+				250,
+				252,
+				254,
+				256,
+				258,
+				260,
+				262,
+				264,
+				266,
+				268,
+				270,
+				272,
+				277,
+				279,
+				281,
+				282,
+				284,
+				286,
+				288,
+				290,
+				292,
+				294,
+				296,
+				298,
+				300,
+				302,
+				304,
+				306,
+				308,
+				310,
+				312,
+				314,
+				317,
+				319,
+				321,
+				323,
+				325,
+				327,
+				329,
+				331,
+				333,
+				335,
+				337,
+				338,
+				339,
+				340,
+				341,
+				342,
+				343,
+				345,
+				347,
+				348,
+				351,
+				352,
+				354,
+				356,
+				358,
+				360,
+				362,
+				364,
+				366,
+				368,
+				370,
+				372,
+				374,
+				376,
+				378,
+				380,
+				382,
+				384,
+				386,
+				388,
+				390,
+				392,
+				394,
+				396,
+				398,
+				400,
+				402,
+				406,
+				408,
+				410,
+				412,
+				414,
+				416,
+				418,
+				420,
+				422,
+				424,
+				426,
+				428,
+				430,
+				433,
+				435,
+				437,
+				439,
+				441,
+				443,
+				445,
+				447,
+				449,
+				452,
+				453,
+				455,
+				457,
+				458,
+				459,
+				460,
+				461,
+				462,
+				463,
+				465,
+				466,
+				467,
+				468,
+				469,
+				470,
+				471,
+				472,
+				473,
+				474,
+				475,
+				477,
+				478,
+				480,
+				482,
+				483,
+				485
+			]
+		},
+		{
+			"name" : "Header Files",
+			"sourceIndexes" : 
+			[
+				1,
+				3,
+				5,
+				7,
+				8,
+				10,
+				12,
+				14,
+				16,
+				18,
+				20,
+				21,
+				23,
+				25,
+				27,
+				29,
+				31,
+				33,
+				35,
+				37,
+				39,
+				41,
+				43,
+				45,
+				48,
+				51,
+				53,
+				54,
+				56,
+				58,
+				60,
+				62,
+				64,
+				66,
+				68,
+				70,
+				72,
+				74,
+				76,
+				78,
+				79,
+				81,
+				83,
+				85,
+				87,
+				89,
+				91,
+				93,
+				94,
+				96,
+				98,
+				100,
+				102,
+				104,
+				106,
+				108,
+				112,
+				114,
+				116,
+				121,
+				122,
+				124,
+				126,
+				128,
+				130,
+				132,
+				134,
+				136,
+				138,
+				140,
+				142,
+				144,
+				146,
+				148,
+				150,
+				152,
+				154,
+				155,
+				156,
+				158,
+				160,
+				162,
+				164,
+				166,
+				168,
+				170,
+				172,
+				174,
+				176,
+				179,
+				181,
+				183,
+				185,
+				187,
+				189,
+				191,
+				193,
+				195,
+				197,
+				199,
+				201,
+				203,
+				205,
+				207,
+				209,
+				211,
+				213,
+				215,
+				217,
+				219,
+				221,
+				223,
+				225,
+				227,
+				229,
+				231,
+				233,
+				235,
+				237,
+				239,
+				241,
+				243,
+				245,
+				247,
+				249,
+				251,
+				253,
+				255,
+				257,
+				259,
+				261,
+				263,
+				265,
+				267,
+				269,
+				271,
+				273,
+				274,
+				275,
+				276,
+				278,
+				280,
+				283,
+				285,
+				287,
+				289,
+				291,
+				293,
+				295,
+				297,
+				299,
+				301,
+				303,
+				305,
+				307,
+				309,
+				311,
+				313,
+				315,
+				316,
+				318,
+				320,
+				322,
+				324,
+				326,
+				328,
+				330,
+				332,
+				334,
+				336,
+				344,
+				346,
+				349,
+				350,
+				353,
+				355,
+				357,
+				359,
+				361,
+				363,
+				365,
+				367,
+				369,
+				371,
+				373,
+				375,
+				377,
+				379,
+				381,
+				383,
+				385,
+				387,
+				389,
+				391,
+				393,
+				395,
+				397,
+				399,
+				401,
+				403,
+				404,
+				405,
+				407,
+				409,
+				411,
+				413,
+				415,
+				417,
+				419,
+				421,
+				423,
+				425,
+				427,
+				429,
+				431,
+				432,
+				434,
+				436,
+				438,
+				440,
+				442,
+				444,
+				446,
+				448,
+				450,
+				451,
+				454,
+				456,
+				464,
+				476,
+				479,
+				481,
+				484,
+				486
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/ActionReplay.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/ActionReplay.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/Analytics.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/Analytics.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/ARDecrypt.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/ARDecrypt.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/BootManager.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/BootManager.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/CommonTitles.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/ConfigManager.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/ConfigManager.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/Core.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/Core.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/CoreTiming.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/CoreTiming.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSPEmulator.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSPEmulator.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/GeckoCodeConfig.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/GeckoCodeConfig.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/GeckoCode.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/GeckoCode.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/Host.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HotkeyManager.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HotkeyManager.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/LibusbUtils.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/LibusbUtils.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/MemTools.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/MemTools.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/Movie.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/Movie.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/NetPlayClient.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/NetPlayClient.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/NetPlayServer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/NetPlayServer.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PatchEngine.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PatchEngine.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/State.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/State.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/SysConf.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/SysConf.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/TitleDatabase.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/TitleDatabase.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/WiiRoot.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/WiiRoot.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/WiiUtils.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/WiiUtils.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/Boot/Boot_BS2Emu.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/Boot/Boot.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/Boot/Boot.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/Boot/Boot_WiiWAD.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/Boot/DolReader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/Boot/DolReader.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/Boot/ElfReader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/Boot/ElfReader.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/Boot/ElfTypes.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/Config/GraphicsSettings.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/Config/GraphicsSettings.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/Config/MainSettings.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/Config/MainSettings.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/Config/NetplaySettings.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/Config/NetplaySettings.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/Config/SYSCONFSettings.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/Config/SYSCONFSettings.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/Config/UISettings.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/Config/UISettings.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/ConfigLoaders/BaseConfigLoader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/ConfigLoaders/BaseConfigLoader.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/ConfigLoaders/GameConfigLoader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/ConfigLoaders/GameConfigLoader.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/ConfigLoaders/IsSettingSaveable.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/ConfigLoaders/IsSettingSaveable.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/ConfigLoaders/MovieConfigLoader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/ConfigLoaders/MovieConfigLoader.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/ConfigLoaders/NetPlayConfigLoader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/ConfigLoaders/NetPlayConfigLoader.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/Debugger/Debugger_SymbolMap.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/Debugger/Debugger_SymbolMap.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/Debugger/Dump.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/Debugger/Dump.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/Debugger/GCELF.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/Debugger/PPCDebugInterface.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/Debugger/PPCDebugInterface.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/Debugger/RSO.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/Debugger/RSO.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/DSPAccelerator.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/DSPAccelerator.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/DSPAnalyzer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/DSPAnalyzer.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/DSPAssembler.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/DSPAssembler.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/DSPCaptureLogger.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/DSPCaptureLogger.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/DSPCodeUtil.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/DSPCodeUtil.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/DSPCommon.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/DSPCore.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/DSPCore.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/DSPDisassembler.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/DSPDisassembler.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/DSPHWInterface.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/DSPHWInterface.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/DSPMemoryMap.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/DSPMemoryMap.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/DSPStacks.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/DSPStacks.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/DSPTables.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/DSPTables.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/LabelMap.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/LabelMap.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/Interpreter/DSPIntArithmetic.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/Interpreter/DSPIntBranch.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/Interpreter/DSPIntCCUtil.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/Interpreter/DSPIntCCUtil.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/Interpreter/DSPInterpreter.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/Interpreter/DSPInterpreter.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/Interpreter/DSPIntExtOps.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/Interpreter/DSPIntExtOps.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/Interpreter/DSPIntLoadStore.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/Interpreter/DSPIntMisc.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/Interpreter/DSPIntMultiplier.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/Interpreter/DSPIntTables.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/Interpreter/DSPIntTables.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/Interpreter/DSPIntUtil.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/DSP/Jit/DSPEmitterBase.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/DSP/Jit/DSPEmitterBase.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/FifoPlayer/FifoAnalyzer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/FifoPlayer/FifoAnalyzer.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/FifoPlayer/FifoDataFile.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/FifoPlayer/FifoDataFile.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/FifoPlayer/FifoPlaybackAnalyzer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/FifoPlayer/FifoPlaybackAnalyzer.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/FifoPlayer/FifoPlayer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/FifoPlayer/FifoPlayer.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/FifoPlayer/FifoRecordAnalyzer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/FifoPlayer/FifoRecordAnalyzer.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/FifoPlayer/FifoRecorder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/FifoPlayer/FifoRecorder.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HLE/HLE.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HLE/HLE.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HLE/HLE_Misc.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HLE/HLE_Misc.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HLE/HLE_OS.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HLE/HLE_OS.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HLE/HLE_VarArgs.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HLE/HLE_VarArgs.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/AddressSpace.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/AddressSpace.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/AudioInterface.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/AudioInterface.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/CPU.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/CPU.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DSP.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DSP.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DSPHLE/UCodes/AX.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DSPHLE/UCodes/AX.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DSPHLE/UCodes/AXStructs.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DSPHLE/UCodes/AXVoice.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DSPHLE/UCodes/AXWii.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DSPHLE/UCodes/AXWii.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DSPHLE/UCodes/CARD.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DSPHLE/UCodes/CARD.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DSPHLE/UCodes/GBA.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DSPHLE/UCodes/GBA.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DSPHLE/UCodes/INIT.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DSPHLE/UCodes/INIT.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DSPHLE/UCodes/ROM.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DSPHLE/UCodes/ROM.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DSPHLE/UCodes/UCodes.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DSPHLE/UCodes/UCodes.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DSPHLE/UCodes/Zelda.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DSPHLE/UCodes/Zelda.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DSPHLE/MailHandler.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DSPHLE/MailHandler.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DSPHLE/DSPHLE.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DSPHLE/DSPHLE.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DSPLLE/DSPDebugInterface.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DSPLLE/DSPDebugInterface.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DSPLLE/DSPHost.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DSPLLE/DSPSymbols.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DSPLLE/DSPSymbols.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DSPLLE/DSPLLEGlobals.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DSPLLE/DSPLLEGlobals.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DSPLLE/DSPLLE.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DSPLLE/DSPLLE.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DVD/DVDInterface.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DVD/DVDInterface.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DVD/DVDMath.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DVD/DVDMath.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DVD/DVDThread.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DVD/DVDThread.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/DVD/FileMonitor.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/DVD/FileMonitor.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/EXI/EXI.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/EXI/EXI.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/EXI/EXI_Channel.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/EXI/EXI_Channel.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/EXI/EXI_Device.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/EXI/EXI_Device.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/EXI/EXI_DeviceAD16.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/EXI/EXI_DeviceAD16.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/EXI/EXI_DeviceAGP.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/EXI/EXI_DeviceAGP.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/EXI/EXI_DeviceDummy.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/EXI/EXI_DeviceDummy.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/EXI/EXI_DeviceEthernet.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/EXI/EXI_DeviceEthernet.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/EXI/EXI_DeviceGecko.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/EXI/EXI_DeviceGecko.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/EXI/EXI_DeviceIPL.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/EXI/EXI_DeviceIPL.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/EXI/EXI_DeviceMemoryCard.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/EXI/EXI_DeviceMemoryCard.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/EXI/EXI_DeviceMic.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/EXI/EXI_DeviceMic.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/GCKeyboard.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/GCKeyboard.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/GCKeyboardEmu.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/GCKeyboardEmu.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/GCMemcard/GCIFile.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/GCMemcard/GCIFile.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/GCMemcard/GCMemcard.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/GCMemcard/GCMemcard.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/GCMemcard/GCMemcardDirectory.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/GCMemcard/GCMemcardDirectory.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/GCMemcard/GCMemcardRaw.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/GCMemcard/GCMemcardRaw.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/GCPad.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/GCPad.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/GCPadEmu.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/GCPadEmu.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/GPFifo.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/GPFifo.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/HW.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/HW.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/Memmap.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/Memmap.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/MemoryInterface.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/MemoryInterface.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/MMIO.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/MMIO.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/ProcessorInterface.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/ProcessorInterface.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/SI/SI.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/SI/SI.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/SI/SI_Device.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/SI/SI_Device.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/SI/SI_DeviceDanceMat.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/SI/SI_DeviceDanceMat.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/SI/SI_DeviceGBA.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/SI/SI_DeviceGBA.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/SI/SI_DeviceGCAdapter.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/SI/SI_DeviceGCAdapter.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/SI/SI_DeviceGCController.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/SI/SI_DeviceGCController.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/SI/SI_DeviceGCSteeringWheel.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/SI/SI_DeviceGCSteeringWheel.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/SI/SI_DeviceKeyboard.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/SI/SI_DeviceKeyboard.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/SI/SI_DeviceNull.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/SI/SI_DeviceNull.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/Sram.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/Sram.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/StreamADPCM.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/StreamADPCM.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/SystemTimers.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/SystemTimers.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/VideoInterface.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/VideoInterface.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WII_IPC.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WII_IPC.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/Wiimote.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/Wiimote.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteCommon/DataReport.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteCommon/DataReport.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteCommon/WiimoteConstants.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteCommon/WiimoteHid.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteCommon/WiimoteReport.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Camera.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Camera.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Dynamics.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Dynamics.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/EmuSubroutines.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Encryption.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Encryption.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/ExtensionPort.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/ExtensionPort.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/I2CBus.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/I2CBus.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/MotionPlus.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/MotionPlus.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Speaker.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Speaker.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/WiimoteEmu.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/WiimoteEmu.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Extension/Classic.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Extension/Classic.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Extension/DrawsomeTablet.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Extension/DrawsomeTablet.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Extension/Drums.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Extension/Drums.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Extension/Extension.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Extension/Extension.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Extension/Nunchuk.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Extension/Nunchuk.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Extension/Guitar.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Extension/Guitar.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Extension/TaTaCon.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Extension/TaTaCon.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Extension/Turntable.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Extension/Turntable.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Extension/UDrawTablet.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteEmu/Extension/UDrawTablet.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteReal/WiimoteReal.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiimoteReal/WiimoteReal.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiiSave.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiiSave.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/HW/WiiSaveStructs.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/Device.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/Device.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/DeviceStub.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/DeviceStub.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/DolphinDevice.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/DolphinDevice.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/IOS.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/IOS.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/IOSC.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/IOSC.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/MIOS.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/MIOS.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/VersionInfo.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/VersionInfo.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/DI/DI.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/DI/DI.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/ES/ES.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/ES/ES.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/ES/Formats.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/ES/Formats.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/ES/Identity.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/ES/NandUtils.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/ES/TitleContents.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/ES/TitleInformation.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/ES/TitleManagement.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/ES/Views.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/FS/FileSystem.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/FS/FileSystem.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/FS/FileSystemProxy.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/FS/FileSystemProxy.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/FS/HostBackend/File.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/FS/HostBackend/FS.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/FS/HostBackend/FS.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/Network/ICMP.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/Network/ICMPLin.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/Network/MACUtils.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/Network/MACUtils.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/Network/Socket.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/Network/Socket.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/Network/SSL.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/Network/SSL.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/Network/IP/Top.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/Network/IP/Top.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/Network/KD/NetKDRequest.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/Network/KD/NetKDRequest.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/Network/KD/NetKDTime.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/Network/KD/NetKDTime.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/Network/KD/NWC24Config.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/Network/KD/NWC24Config.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/Network/NCD/WiiNetConfig.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/Network/NCD/WiiNetConfig.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/Network/NCD/Manage.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/Network/NCD/Manage.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/Network/WD/Command.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/Network/WD/Command.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/SDIO/SDIOSlot0.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/SDIO/SDIOSlot0.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/STM/STM.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/STM/STM.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/USB/Common.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/USB/Common.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/USB/Host.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/USB/Host.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/USB/OH0/OH0.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/USB/OH0/OH0.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/USB/OH0/OH0Device.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/USB/OH0/OH0Device.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/USB/USB_HID/HIDv4.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/USB/USB_HID/HIDv4.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/USB/USB_HID/HIDv5.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/USB/USB_HID/HIDv5.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/USB/USB_VEN/VEN.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/USB/USB_VEN/VEN.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/USB/USBV0.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/USB/USBV0.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/USB/USBV4.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/USB/USBV4.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/USB/USBV5.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/USB/USBV5.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/USB/USB_KBD.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/USB/USB_KBD.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/USB/Bluetooth/BTBase.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/USB/Bluetooth/BTBase.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/USB/Bluetooth/BTEmu.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/USB/Bluetooth/BTEmu.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/USB/Bluetooth/BTStub.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/USB/Bluetooth/BTStub.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/USB/Bluetooth/hci.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/USB/Bluetooth/l2cap.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/USB/Bluetooth/WiimoteDevice.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/USB/Bluetooth/WiimoteDevice.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/USB/Bluetooth/WiimoteHIDAttr.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/USB/Bluetooth/WiimoteHIDAttr.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/WFS/WFSSRV.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/WFS/WFSSRV.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/IOS/WFS/WFSI.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/IOS/WFS/WFSI.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/BreakPoints.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/BreakPoints.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/ConditionRegister.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/ConditionRegister.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitInterface.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/JitInterface.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/MMU.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/MMU.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/PowerPC.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/PowerPC.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/PPCAnalyst.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/PPCAnalyst.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/PPCCache.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/PPCCache.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/PPCSymbolDB.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/PPCSymbolDB.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/PPCTables.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/PPCTables.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/Profiler.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/CachedInterpreter/CachedInterpreter.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/CachedInterpreter/CachedInterpreter.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/CachedInterpreter/InterpreterBlockCache.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/CachedInterpreter/InterpreterBlockCache.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitCommon/JitAsmCommon.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/JitCommon/JitAsmCommon.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitCommon/JitBase.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/JitCommon/JitBase.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitCommon/JitCache.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/JitCommon/JitCache.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/SignatureDB/CSVSignatureDB.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/SignatureDB/CSVSignatureDB.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/SignatureDB/DSYSignatureDB.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/SignatureDB/DSYSignatureDB.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/SignatureDB/MEGASignatureDB.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/SignatureDB/MEGASignatureDB.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/SignatureDB/SignatureDB.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/SignatureDB/SignatureDB.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/Interpreter/ExceptionUtils.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/Interpreter/Interpreter_Branch.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/Interpreter/Interpreter.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/Interpreter/Interpreter.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/Interpreter/Interpreter_FloatingPoint.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "Source/Core/Core/PowerPC/Interpreter/Interpreter_FPUtils.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/Interpreter/Interpreter_Integer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/Interpreter/Interpreter_LoadStore.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/Interpreter/Interpreter_LoadStorePaired.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/Interpreter/Interpreter_Paired.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/Interpreter/Interpreter_SystemRegisters.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/Interpreter/Interpreter_Tables.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 62,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitArm64/Jit.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 62,
+			"path" : "Source/Core/Core/PowerPC/JitArm64/Jit.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 62,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitArm64/JitAsm.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 62,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitArm64/JitArm64Cache.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 62,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitArm64/JitArm64_BackPatch.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 62,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitArm64/JitArm64_Branch.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 62,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitArm64/JitArm64_FloatingPoint.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 62,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitArm64/JitArm64_Integer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 62,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitArm64/JitArm64_LoadStore.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 62,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitArm64/JitArm64_LoadStoreFloating.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 62,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitArm64/JitArm64_LoadStorePaired.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 62,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitArm64/JitArm64_Paired.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 62,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitArm64/JitArm64_RegCache.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 62,
+			"path" : "Source/Core/Core/PowerPC/JitArm64/JitArm64_RegCache.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 62,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitArm64/JitArm64_SystemRegisters.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 62,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitArm64/Jit_Util.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 62,
+			"path" : "Source/Core/Core/PowerPC/JitArm64/Jit_Util.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 62,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/PowerPC/JitArm64/JitArm64_Tables.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 62,
+			"path" : "Source/Core/Core/PowerPC/JitArmCommon/BackPatch.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 63,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/EXI/BBA-TAP/TAP_Unix.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 64,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/HW/WiimoteReal/IOAndroid.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 64,
+			"path" : "Source/Core/Core/HW/WiimoteReal/IOAndroid.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 65,
+			"compileGroupIndex" : 0,
+			"path" : "Source/Core/Core/MemoryWatcher.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 65,
+			"path" : "Source/Core/Core/MemoryWatcher.h",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "STATIC_LIBRARY"
+}

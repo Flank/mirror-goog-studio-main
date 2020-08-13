@@ -30,26 +30,12 @@ import com.google.common.collect.ImmutableMap
 
 // This file contains utilities for converting Gradle model types (from builder-model) into project model types.
 
-class GradleModelConverter(
-    val project: IdeAndroidProject,
-    val cache: ModelCache = ModelCache()
-) {
+class GradleModelConverter(val project: IdeAndroidProject) {
 
   /**
-     * Converts the given [IdeLibrary] into a [Library]. Returns null if the given library is badly formed.
-     */
-    fun convert(library: IdeLibrary): Library? =
-        compute(library) {
-            convertLibrary(library)
-        }
-
-    private fun <T, V> compute(key: T, lambda: T.() -> V): V =
-        computeWithContext(Unit to key, lambda)
-
-    private fun <P, T, V> computeWithContext(key: Pair<P, T>, lambda: T.() -> V): V =
-    // Wrap the keys in another object, since the Ide* classes may also use builder model types
-    // as keys for deduping conversions in this cache and we don't want any false positives.
-        cache.computeIfAbsent(key) { key.second.lambda() }
+   * Converts the given [IdeLibrary] into a [Library]. Returns null if the given library is badly formed.
+   */
+  fun convert(library: IdeLibrary): Library = convertLibrary(library)
 }
 
 fun classFieldsToDynamicResourceValues(classFields: Map<String, IdeClassField>): Map<String, DynamicResourceValue> {
@@ -67,17 +53,17 @@ fun classFieldsToDynamicResourceValues(classFields: Map<String, IdeClassField>):
  * Converts a builder-model [IdeLibrary] into a [Library]. Returns null
  * if the input is invalid.
  */
-fun convertLibrary(builderModelLibrary: IdeLibrary): Library? =
-    with(builderModelLibrary) {
-        when (type) {
-            IdeLibrary.LibraryType.LIBRARY_ANDROID -> ExternalLibrary(
-                address = artifactAddress,
-                location = artifact.toPathString(),
-                manifestFile = PathString(manifest),
-                classJars = listOf(PathString(jarFile)),
-                dependencyJars = localJars.map(::PathString),
-                resFolder = RecursiveResourceFolder(PathString(resFolder)),
-                symbolFile = PathString(symbolFile),
+fun convertLibrary(builderModelLibrary: IdeLibrary): Library =
+  with(builderModelLibrary) {
+    when (type) {
+      IdeLibrary.LibraryType.LIBRARY_ANDROID -> ExternalLibrary(
+        address = artifactAddress,
+        location = artifact.toPathString(),
+        manifestFile = PathString(manifest),
+        classJars = listOf(PathString(jarFile)),
+        dependencyJars = localJars.map(::PathString),
+        resFolder = RecursiveResourceFolder(PathString(resFolder)),
+        symbolFile = PathString(symbolFile),
                 resApkFile = resStaticLibrary?.let(::PathString)
             )
             IdeLibrary.LibraryType.LIBRARY_JAVA -> ExternalLibrary(
@@ -86,14 +72,12 @@ fun convertLibrary(builderModelLibrary: IdeLibrary): Library? =
             )
             IdeLibrary.LibraryType.LIBRARY_MODULE -> {
                 val path = projectPath
-                if (path == null)
-                    null
+                if (path == null) error("LIBRARY_MODULE cannot have null projectPath")
                 else ProjectLibrary(
                     address = artifactAddress,
                     projectName = path,
                     variant = variant ?: ""
                 )
             }
-            else -> null
         }
     }

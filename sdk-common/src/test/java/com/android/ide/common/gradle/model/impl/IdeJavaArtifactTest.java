@@ -22,29 +22,24 @@ import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.verifyU
 import com.android.builder.model.JavaArtifact;
 import com.android.ide.common.gradle.model.IdeJavaArtifact;
 import com.android.ide.common.gradle.model.stubs.JavaArtifactStub;
-import com.android.ide.common.repository.GradleVersion;
 import org.junit.Before;
 import org.junit.Test;
 
 /** Tests for {@link IdeJavaArtifact}. */
 public class IdeJavaArtifactTest {
     private ModelCache myModelCache;
-    private GradleVersion myGradleVersion;
     private IdeDependenciesFactory myDependenciesFactory;
 
     @Before
     public void setUp() throws Exception {
         myModelCache = new ModelCache();
-        myGradleVersion = GradleVersion.parse("3.2");
         myDependenciesFactory = new IdeDependenciesFactory();
     }
 
     @Test
     public void constructor() throws Throwable {
         JavaArtifact original = new JavaArtifactStub();
-        IdeJavaArtifact copy =
-          ModelCache.javaArtifactFrom(
-                  original, myModelCache, myDependenciesFactory);
+        IdeJavaArtifact copy = myModelCache.javaArtifactFrom(original, myDependenciesFactory);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

@@ -15,23 +15,16 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.JavaArtifact
-import com.android.builder.model.ProductFlavor
-import com.android.builder.model.TestedTargetVariant
-import com.android.builder.model.Variant
 import com.android.ide.common.gradle.model.IdeAndroidArtifact
 import com.android.ide.common.gradle.model.IdeBaseArtifact
 import com.android.ide.common.gradle.model.IdeJavaArtifact
 import com.android.ide.common.gradle.model.IdeProductFlavor
 import com.android.ide.common.gradle.model.IdeTestedTargetVariant
 import com.android.ide.common.gradle.model.IdeVariant
-import com.android.ide.common.repository.GradleVersion
 import com.google.common.collect.ImmutableList
 import java.io.Serializable
 import java.util.Objects
 
-/** Creates a deep copy of a [Variant].  */
 class IdeVariantImpl(
   override val name: String,
   override val displayName: String,
@@ -115,54 +108,5 @@ class IdeVariantImpl(
             "extraAndroidArtifacts=$extraAndroidArtifacts, extraJavaArtifacts=$extraJavaArtifacts, buildType='$buildType', " +
             "productFlavors=$productFlavors, mergedFlavor=$mergedFlavor, testedTargetVariants=$testedTargetVariants, " +
             "instantAppCompatible=$instantAppCompatible, desugaredMethods=$desugaredMethods}")
-  }
-
-  companion object {
-    // Increase the value when adding/removing fields or when changing the
-    // serialization/deserialization mechanism.
-    private const val serialVersionUID = 4L
-    private fun getTestedTargetVariants(variant: Variant, modelCache: ModelCache): List<IdeTestedTargetVariantImpl> {
-      return try {
-        IdeModel.copy(variant.testedTargetVariants, modelCache) { targetVariant: TestedTargetVariant ->
-          IdeTestedTargetVariantImpl(targetVariant.targetProjectPath, targetVariant.targetVariant)
-        }
-      }
-      catch (e: UnsupportedOperationException) {
-        emptyList()
-      }
-    }
-
-    @JvmStatic
-    fun createFrom(
-      variant: Variant,
-                   modelCache: ModelCache,
-                   dependenciesFactory: IdeDependenciesFactory,
-                   modelVersion: GradleVersion?
-    ): IdeVariantImpl =
-      IdeVariantImpl(
-        name = variant.name,
-        displayName = variant.displayName,
-        mainArtifact = modelCache.computeIfAbsent(variant.mainArtifact) { artifact: AndroidArtifact ->
-          ModelCache.androidArtifactFrom(artifact, modelCache,
-                                         dependenciesFactory, modelVersion)
-        },
-        extraAndroidArtifacts = IdeModel.copy(variant.extraAndroidArtifacts, modelCache) { artifact: AndroidArtifact ->
-          ModelCache.androidArtifactFrom(artifact, modelCache,
-                                         dependenciesFactory, modelVersion)
-        },
-        extraJavaArtifacts = IdeModel.copy(variant.extraJavaArtifacts, modelCache) { artifact: JavaArtifact ->
-          ModelCache.javaArtifactFrom(artifact, modelCache, dependenciesFactory)
-        },
-        buildType = variant.buildType,
-        productFlavors = ImmutableList.copyOf(variant.productFlavors),
-        mergedFlavor = modelCache.computeIfAbsent(variant.mergedFlavor) { flavor: ProductFlavor ->
-          ModelCache.productFlavorFrom(flavor, modelCache)
-        },
-        testedTargetVariants = getTestedTargetVariants(variant, modelCache),
-        instantAppCompatible = (modelVersion != null &&
-                                modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) &&
-                                variant.isInstantAppCompatible),
-        desugaredMethods = ImmutableList.copyOf(IdeModel.copyNewPropertyNonNull({ variant.desugaredMethods }, emptyList()))
-      )
   }
 }

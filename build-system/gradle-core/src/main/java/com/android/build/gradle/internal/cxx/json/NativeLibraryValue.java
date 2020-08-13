@@ -19,12 +19,14 @@ package com.android.build.gradle.internal.cxx.json;
 import com.android.annotations.Nullable;
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Value type to be used with Gson.
  */
 public class NativeLibraryValue {
-    @Nullable public String buildCommand;
+    @Deprecated @Nullable public String buildCommand;
+    @Nullable public List<String> buildCommandComponents;
     @Nullable public String buildType;
     @Nullable public String toolchain;
     @Nullable public String groupName;

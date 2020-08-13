@@ -15,10 +15,8 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.ClassField
 import com.android.builder.model.CodeShrinker
 import com.android.builder.model.SigningConfig
-import com.android.builder.model.TestOptions
 import java.io.File
 import java.io.Serializable
 
@@ -41,7 +39,7 @@ interface IdeAndroidArtifact : Serializable, IdeBaseArtifact {
    */
   val isSigned: Boolean
 
-  val generatedResourceFolders: List<File>
+  val generatedResourceFolders: Collection<File>
 
   /**
    * Map of generated res values where the key is the res name. This method is deprecated and will

@@ -424,6 +424,42 @@ public class TypoDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testExclamation() {
+        // Test for 1 instead of ! warning
+        lint().files(
+                        xml(
+                                "res/values/strings.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <string name=\"simple\">\n"
+                                        + "    This is a test1\n"
+                                        + "    and so is this!!111\n"
+                                        + "    This is no1.\n"
+                                        + "    This is no1 a problem. "
+                                        + "    </string>\n"
+                                        + "</resources>\n"))
+                .run()
+                .expect(
+                        ""
+                                + "res/values/strings.xml:3: Warning: Did you mean \"test!\" instead of \"test1\" ? [Typos]\n"
+                                + "    This is a test1\n"
+                                + "              ^\n"
+                                + "res/values/strings.xml:4: Warning: Did you mean \"this!!!!!\" instead of \"this!!111\" ? [Typos]\n"
+                                + "    and so is this!!111\n"
+                                + "              ^\n"
+                                + "0 errors, 2 warnings")
+                .expectFixDiffs(
+                        ""
+                                + "Fix for res/values/strings.xml line 3: Replace with \"test!\":\n"
+                                + "@@ -3 +3\n"
+                                + "-     This is a test1\n"
+                                + "+     This is a test!\n"
+                                + "Fix for res/values/strings.xml line 4: Replace with \"this!!!!!\":\n"
+                                + "@@ -4 +4\n"
+                                + "-     and so is this!!111\n"
+                                + "+     and so is this!!!!!");
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile typos1 =
             xml(

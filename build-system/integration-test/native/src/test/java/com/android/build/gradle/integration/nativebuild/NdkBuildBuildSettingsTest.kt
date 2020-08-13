@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.AssumeUtil
 import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
@@ -41,6 +42,8 @@ class NdkBuildBuildSettingsTest {
         .fromTestApp(HelloWorldJniApp.builder().build())
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .addFile(HelloWorldJniApp.androidMkC("src/main/jni"))
+        // TODO(b/161169301): Support v2 model with ndk-build
+        .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=false")
         .create()
 
     @Before

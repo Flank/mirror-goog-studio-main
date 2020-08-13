@@ -30,4 +30,9 @@ public class Looper {
     public static Looper myLooper() {
         return mInstance;
     }
+
+    @NonNull
+    public static Looper getMainLooper() {
+        return mInstance;
+    }
 }

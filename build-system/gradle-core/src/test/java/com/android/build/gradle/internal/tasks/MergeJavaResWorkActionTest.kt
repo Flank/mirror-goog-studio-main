@@ -20,9 +20,13 @@ import com.android.build.api.transform.QualifiedContent.ContentType
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.gradle.internal.dsl.PackagingOptions
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
+import com.android.build.gradle.internal.packaging.defaultExcludes
+import com.android.build.gradle.internal.packaging.defaultMerges
 import com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.builder.merge.DuplicateRelativeFileException
 import com.android.builder.packaging.JarFlinger
 import com.android.ide.common.resources.FileStatus
@@ -34,6 +38,7 @@ import com.android.utils.FileUtils
 import com.android.zipflinger.BytesSource
 import com.android.zipflinger.ZipArchive
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.provider.Property
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -65,7 +70,6 @@ class MergeJavaResWorkActionTest {
         }
 
         val outputFile = File(tmpDir.root, "out.jar")
-        val packagingOptions = PackagingOptions()
         val incrementalStateFile = File(tmpDir.root, "merge-state")
         val cacheDir = File(tmpDir.root, "cacheDir")
         object : MergeJavaResWorkAction() {
@@ -80,8 +84,18 @@ class MergeJavaResWorkActionTest {
                     override val outputFile =
                         FakeObjectFactory.factory.fileProperty().also { it.set(outputFile) }
                     override val outputDirectory = FakeObjectFactory.factory.directoryProperty()
-                    override val packagingOptions =
-                        FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
+                    override val packagingOptions: Property<SerializablePackagingOptions> =
+                        FakeGradleProperty(null)
+                    override val excludes =
+                        FakeObjectFactory.factory.setProperty(String::class.java).also {
+                            it.set(defaultExcludes)
+                        }
+                    override val pickFirsts =
+                        FakeObjectFactory.factory.setProperty(String::class.java)
+                    override val merges =
+                        FakeObjectFactory.factory.setProperty(String::class.java).also {
+                            it.set(defaultMerges)
+                        }
                     override val incrementalStateFile =
                         FakeObjectFactory.factory.fileProperty().also {
                             it.set(incrementalStateFile)
@@ -100,6 +114,9 @@ class MergeJavaResWorkActionTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(
+                        FakeNoOpAnalyticsService()
+                    )
                 }
             }
         }.execute()
@@ -148,7 +165,6 @@ class MergeJavaResWorkActionTest {
         FileUtils.createFile(File(dir, "from_dir.no_compress"), "foo".repeat(100))
 
         val outputFile = File(tmpDir.root, "out.jar")
-        val packagingOptions = PackagingOptions()
         val incrementalStateFile = File(tmpDir.root, "merge-state")
         val cacheDir = File(tmpDir.root, "cacheDir")
         object : MergeJavaResWorkAction() {
@@ -163,8 +179,18 @@ class MergeJavaResWorkActionTest {
                     override val outputFile =
                         FakeObjectFactory.factory.fileProperty().also { it.set(outputFile) }
                     override val outputDirectory = FakeObjectFactory.factory.directoryProperty()
-                    override val packagingOptions =
-                        FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
+                    override val packagingOptions: Property<SerializablePackagingOptions> =
+                        FakeGradleProperty(null)
+                    override val excludes =
+                        FakeObjectFactory.factory.setProperty(String::class.java).also {
+                            it.set(defaultExcludes)
+                        }
+                    override val pickFirsts =
+                        FakeObjectFactory.factory.setProperty(String::class.java)
+                    override val merges =
+                        FakeObjectFactory.factory.setProperty(String::class.java).also {
+                            it.set(defaultMerges)
+                        }
                     override val incrementalStateFile =
                         FakeObjectFactory.factory.fileProperty().also {
                             it.set(incrementalStateFile)
@@ -185,6 +211,7 @@ class MergeJavaResWorkActionTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -231,6 +258,11 @@ class MergeJavaResWorkActionTest {
                         FakeObjectFactory.factory.directoryProperty().also { it.set(outputDir) }
                     override val packagingOptions =
                         FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
+                    override val excludes =
+                        FakeObjectFactory.factory.setProperty(String::class.java)
+                    override val pickFirsts =
+                        FakeObjectFactory.factory.setProperty(String::class.java)
+                    override val merges = FakeObjectFactory.factory.setProperty(String::class.java)
                     override val incrementalStateFile =
                         FakeObjectFactory.factory.fileProperty().also {
                             it.set(incrementalStateFile)
@@ -249,6 +281,7 @@ class MergeJavaResWorkActionTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -271,7 +304,6 @@ class MergeJavaResWorkActionTest {
         }
 
         val outputFile = File(tmpDir.root, "out.jar")
-        val packagingOptions = PackagingOptions()
         val incrementalStateFile = File(tmpDir.root, "merge-state")
         val cacheDir = File(tmpDir.root, "cacheDir")
 
@@ -290,8 +322,18 @@ class MergeJavaResWorkActionTest {
                     override val outputFile =
                         FakeObjectFactory.factory.fileProperty().also { it.set(outputFile) }
                     override val outputDirectory = FakeObjectFactory.factory.directoryProperty()
-                    override val packagingOptions =
-                        FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
+                    override val packagingOptions: Property<SerializablePackagingOptions> =
+                        FakeGradleProperty(null)
+                    override val excludes =
+                        FakeObjectFactory.factory.setProperty(String::class.java).also {
+                            it.set(defaultExcludes)
+                        }
+                    override val pickFirsts =
+                        FakeObjectFactory.factory.setProperty(String::class.java)
+                    override val merges =
+                        FakeObjectFactory.factory.setProperty(String::class.java).also {
+                            it.set(defaultMerges)
+                        }
                     override val incrementalStateFile =
                         FakeObjectFactory.factory.fileProperty().also {
                             it.set(incrementalStateFile)
@@ -310,6 +352,7 @@ class MergeJavaResWorkActionTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -340,8 +383,18 @@ class MergeJavaResWorkActionTest {
                     override val outputFile =
                         FakeObjectFactory.factory.fileProperty().also { it.set(outputFile) }
                     override val outputDirectory = FakeObjectFactory.factory.directoryProperty()
-                    override val packagingOptions =
-                        FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
+                    override val packagingOptions: Property<SerializablePackagingOptions> =
+                        FakeGradleProperty(null)
+                    override val excludes =
+                        FakeObjectFactory.factory.setProperty(String::class.java).also {
+                            it.set(defaultExcludes)
+                        }
+                    override val pickFirsts =
+                        FakeObjectFactory.factory.setProperty(String::class.java)
+                    override val merges =
+                        FakeObjectFactory.factory.setProperty(String::class.java).also {
+                            it.set(defaultMerges)
+                        }
                     override val incrementalStateFile =
                         FakeObjectFactory.factory.fileProperty().also {
                             it.set(incrementalStateFile)
@@ -360,6 +413,7 @@ class MergeJavaResWorkActionTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -400,6 +454,11 @@ class MergeJavaResWorkActionTest {
                         FakeObjectFactory.factory.directoryProperty().also { it.set(outputDir) }
                     override val packagingOptions =
                         FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
+                    override val excludes =
+                        FakeObjectFactory.factory.setProperty(String::class.java)
+                    override val pickFirsts =
+                        FakeObjectFactory.factory.setProperty(String::class.java)
+                    override val merges = FakeObjectFactory.factory.setProperty(String::class.java)
                     override val incrementalStateFile =
                         FakeObjectFactory.factory.fileProperty().also {
                             it.set(incrementalStateFile)
@@ -418,6 +477,7 @@ class MergeJavaResWorkActionTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -448,6 +508,11 @@ class MergeJavaResWorkActionTest {
                         FakeObjectFactory.factory.directoryProperty().also { it.set(outputDir) }
                     override val packagingOptions =
                         FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
+                    override val excludes =
+                        FakeObjectFactory.factory.setProperty(String::class.java)
+                    override val pickFirsts =
+                        FakeObjectFactory.factory.setProperty(String::class.java)
+                    override val merges = FakeObjectFactory.factory.setProperty(String::class.java)
                     override val incrementalStateFile =
                         FakeObjectFactory.factory.fileProperty().also {
                             it.set(incrementalStateFile)
@@ -466,6 +531,7 @@ class MergeJavaResWorkActionTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }.execute()
@@ -486,7 +552,6 @@ class MergeJavaResWorkActionTest {
         ZFile(jarFile2).use { it.add("duplicate", ByteArrayInputStream(ByteArray(0))) }
 
         val outputFile = File(tmpDir.root, "out.jar")
-        val packagingOptions = PackagingOptions()
         val incrementalStateFile = File(tmpDir.root, "merge-state")
         val cacheDir = File(tmpDir.root, "cacheDir")
         val workAction = object : MergeJavaResWorkAction() {
@@ -501,8 +566,18 @@ class MergeJavaResWorkActionTest {
                     override val outputFile =
                         FakeObjectFactory.factory.fileProperty().also { it.set(outputFile) }
                     override val outputDirectory = FakeObjectFactory.factory.directoryProperty()
-                    override val packagingOptions =
-                        FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
+                    override val packagingOptions: Property<SerializablePackagingOptions> =
+                        FakeGradleProperty(null)
+                    override val excludes =
+                        FakeObjectFactory.factory.setProperty(String::class.java).also {
+                            it.set(defaultExcludes)
+                        }
+                    override val pickFirsts =
+                        FakeObjectFactory.factory.setProperty(String::class.java)
+                    override val merges =
+                        FakeObjectFactory.factory.setProperty(String::class.java).also {
+                            it.set(defaultMerges)
+                        }
                     override val incrementalStateFile =
                         FakeObjectFactory.factory.fileProperty().also {
                             it.set(incrementalStateFile)
@@ -521,6 +596,7 @@ class MergeJavaResWorkActionTest {
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
                 }
             }
         }

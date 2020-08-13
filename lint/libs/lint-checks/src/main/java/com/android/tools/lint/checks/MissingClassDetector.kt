@@ -63,6 +63,7 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.getInternalName
 import com.android.utils.SdkUtils.endsWith
+import com.intellij.psi.CommonClassNames
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.util.PsiUtil
@@ -301,6 +302,22 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
                 checkExpectedParent(context, evaluator, nameNode, cls, CLASS_V4_FRAGMENT.newName())
                 return
             }
+
+            // Safety check: make sure we can actually resolve the super classes; if not, we
+            // can have false positives. This can happen when you extend Kotlin classes in
+            // a different module with a source dependency (e.g. in Gradle with checkDependencies
+            // true) since those source files aren't fed to the top down analyzer. See b/158128960.
+            var curr = cls.superClass ?: return
+            while (true) {
+                val qualifiedName = curr.qualifiedName
+                if (qualifiedName == expectedParent) {
+                    return
+                } else if (qualifiedName == CommonClassNames.JAVA_LANG_OBJECT) {
+                    break
+                }
+                curr = curr.superClass ?: return
+            }
+
             val message =
                 if (expectedParent.contains("Fragment")) {
                     "`${cls.name}` must be a fragment"

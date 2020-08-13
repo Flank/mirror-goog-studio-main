@@ -99,9 +99,11 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             assertThat(rewritten.cxxBuildFolder.path).contains("some other build root folder")
             assertThat(rewritten.variant.module.cmake!!.cmakeExe.path
                 .replace('\\', '/')).isEqualTo("my/path/to/cmake")
-            assertThat(rewritten.variant.module.cmakeToolchainFile.path
-                .replace('\\', '/')).isEqualTo("my/path/to/toolchain")
-            assertThat(rewritten.getBuildCommandArguments()).isEqualTo("-j 100")
+            assertThat(
+                rewritten.variant.module.cmakeToolchainFile.path
+                    .replace('\\', '/')
+            ).isEqualTo("my/path/to/toolchain")
+            assertThat(rewritten.getBuildCommandArguments()).containsExactly("-j", "100").inOrder()
         }
     }
 

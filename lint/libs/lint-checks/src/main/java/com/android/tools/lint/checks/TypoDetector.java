@@ -198,6 +198,9 @@ public class TypoDetector extends ResourceXmlDetector {
                     index++;
                     break;
                 } else if (!Character.isLetter(c) && c != '_') {
+                    if ((c == '1' || c == '!') && index > begin + 1) {
+                        checkForExclamation(context, node, text, index, begin);
+                    }
                     break;
                 } else if (text.charAt(index) >= 0x80) {
                     // Switch to UTF-8 handling for this string
@@ -231,6 +234,52 @@ public class TypoDetector extends ResourceXmlDetector {
             lastWordBegin = begin;
             lastWordEnd = end;
             index = end + 1;
+        }
+    }
+
+    private void checkForExclamation(
+            XmlContext context, Node node, String text, int index, int begin) {
+        // Peek ahead: if we find punctuation or lower case letter don't flag it
+        int i = index + 1;
+        boolean problem = true;
+        boolean found1 = text.charAt(index) == '1';
+        int end = index + 1;
+        while (i < text.length()) {
+            char ch = text.charAt(i);
+            if (ch == '\n') {
+                break;
+            } else if (ch == '1') {
+                // Allow repeated 1's
+                found1 = true;
+            } else if (ch == '!') {
+                // Allow repeated 1's or !'s
+            } else if (!Character.isWhitespace(ch)) {
+                if (Character.isLowerCase(ch) || Character.isDigit(ch)) {
+                    problem = false;
+                } else if (ch == ',' || ch == '.' || ch == ':' || ch == ';') {
+                    problem = false;
+                }
+                break;
+            }
+            i++;
+            end++;
+        }
+        if (problem && found1) {
+            String actual = text.substring(begin, end);
+            String intended = actual.replace('1', '!');
+            LintFix fix =
+                    fix().name("Replace with \"" + intended + "\"")
+                            .replace()
+                            .text(actual)
+                            .with(intended)
+                            .range(context.getLocation(node))
+                            .build();
+            context.report(
+                    ISSUE,
+                    node,
+                    context.getLocation(node, begin, index),
+                    "Did you mean \"" + intended + "\" instead of \"" + actual + "\" ?",
+                    fix);
         }
     }
 

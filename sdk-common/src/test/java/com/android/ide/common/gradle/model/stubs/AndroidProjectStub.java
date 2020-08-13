@@ -60,7 +60,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     private final boolean myLibrary;
     private final int myProjectType;
     private final boolean myBaseSplit;
-    @NonNull private final AndroidGradlePluginProjectFlagsStub myFlags;
+    @NonNull private final AndroidGradlePluginProjectFlags myFlags;
     @NonNull private final Collection<VariantBuildInformation> myVariantsBuildInformation;
 
     public AndroidProjectStub(@NonNull String modelVersion) {
@@ -132,7 +132,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
             boolean library,
             int projectType,
             boolean baseSplit,
-            @NonNull AndroidGradlePluginProjectFlagsStub flags,
+            @NonNull AndroidGradlePluginProjectFlags flags,
             @NonNull Collection<VariantBuildInformation> variantsBuildInformation) {
         myModelVersion = modelVersion;
         myName = name;

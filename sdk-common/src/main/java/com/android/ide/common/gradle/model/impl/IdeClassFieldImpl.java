@@ -72,18 +72,6 @@ public final class IdeClassFieldImpl implements IdeClassField, Serializable {
     }
 
     @Override
-    @NonNull
-    public String getDocumentation() {
-        throw new UnusedModelMethodException("getDocumentation");
-    }
-
-    @Override
-    @NonNull
-    public Set<String> getAnnotations() {
-        throw new UnusedModelMethodException("getAnnotations");
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;

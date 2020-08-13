@@ -29,7 +29,9 @@ const std::string STATE_UNINTERRUPTIBLE = std::string("D");
 const std::string STATE_UNINTERRUPTIBLE_WAKEKILL = std::string("DK");
 const std::string STATE_WAKEKILL = std::string("K");
 const std::string STATE_WAKING = std::string("W");
-const std::string STATE_TASK_DEAD = std::string("x");
+// Both maps to Task DEAD states, depends on the kernel version.
+const std::string STATE_TASK_DEAD_1 = std::string("x");
+const std::string STATE_TASK_DEAD_2 = std::string("I");
 const std::string STATE_EXIT_DEAD = std::string("X");
 const std::string STATE_ZOMBIE = std::string("Z");
 
@@ -118,7 +120,8 @@ void SchedulingRequestHandler::PopulateEvents(SchedulingEventsParameters params,
             SchedulingEventsResult::SchedulingEvent::WAKE_KILL);
       } else if (STATE_WAKING.compare(state) == 0) {
         sched_proto->set_state(SchedulingEventsResult::SchedulingEvent::WAKING);
-      } else if (STATE_TASK_DEAD.compare(state) == 0 ||
+      } else if (STATE_TASK_DEAD_1.compare(state) == 0 ||
+                 STATE_TASK_DEAD_2.compare(state) == 0 ||
                  STATE_EXIT_DEAD.compare(state) == 0 ||
                  STATE_ZOMBIE.compare(state) == 0) {
         sched_proto->set_state(SchedulingEventsResult::SchedulingEvent::DEAD);

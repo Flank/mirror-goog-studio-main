@@ -209,8 +209,8 @@ public class NdkSampleTest {
                     .join(Files.readLines(variantBuildOutputFile, Charsets.UTF_8));
 
             builder.setCommands(
-                    "echo build command",
-                    "echo clean command",
+                    ImmutableList.of("echo", "build", "command"),
+                    ImmutableList.of("echo", "clean", "command"),
                     variantName,
                     variantBuildOutputText);
 

@@ -42,7 +42,7 @@ public class IdeLintOptionsTest {
     @Test
     public void serialization() throws Exception {
         IdeLintOptions lintOptions =
-                IdeLintOptionsImpl.createFrom(new LintOptionsStub(), myModelVersion);
+                myModelCache.lintOptionsFrom(new LintOptionsStub(), myModelVersion);
         byte[] bytes = serialize(lintOptions);
         Object o = deserialize(bytes);
         assertEquals(lintOptions, o);
@@ -51,12 +51,11 @@ public class IdeLintOptionsTest {
     @Test
     public void constructor() throws Throwable {
         LintOptions original = new LintOptionsStub();
-        IdeLintOptions copy = IdeLintOptionsImpl.createFrom(original, myModelVersion);
+        IdeLintOptions copy = myModelCache.lintOptionsFrom(original, myModelVersion);
         assertThat(copy.getBaselineFile()).isEqualTo(original.getBaselineFile());
         assertThat(copy.getLintConfig()).isEqualTo(original.getLintConfig());
         assertThat(copy.getSeverityOverrides()).isEqualTo(original.getSeverityOverrides());
         assertThat(copy.isCheckTestSources()).isEqualTo(original.isCheckTestSources());
         assertThat(copy.isCheckDependencies()).isEqualTo(original.isCheckDependencies());
-        verifyUsageOfImmutableCollections(copy);
     }
 }

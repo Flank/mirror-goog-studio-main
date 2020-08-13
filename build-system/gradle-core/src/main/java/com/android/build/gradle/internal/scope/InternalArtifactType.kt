@@ -133,6 +133,15 @@ InternalArtifactType<T : FileSystemLocation>(
     object CONNECTED_ANDROID_TEST_ADDITIONAL_OUTPUT: InternalArtifactType<Directory>(DIRECTORY, Category.OUTPUTS)
     // Additional test output data from the device provider tasks.
     object DEVICE_PROVIDER_ANDROID_TEST_ADDITIONAL_OUTPUT: InternalArtifactType<Directory>(DIRECTORY, Category.OUTPUTS)
+    // A folder with project classes instrumented with ASM visitors registered via
+    // variantProperties.transformClassesWith. Internal folder file structure reflects the hierarchy
+    // of namespaces
+    // This is a temporary artifact until we have a transformable project classes artifact
+    object ASM_INSTRUMENTED_PROJECT_CLASSES : InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // A folder with project jars instrumented with ASM visitors registered via
+    // variantProperties.transformClassesWith
+    // This is a temporary artifact until we have a transformable project classes artifact
+    object ASM_INSTRUMENTED_PROJECT_JARS : InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     // --- android res ---
     // output of the resource merger ready for aapt.
@@ -201,6 +210,8 @@ InternalArtifactType<T : FileSystemLocation>(
     object MERGED_ML_MODELS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // native libs merged from module(s)
     object MERGED_NATIVE_LIBS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // native libs used by profilers
+    object PROFILERS_NATIVE_LIBS: InternalArtifactType<Directory>(DIRECTORY)
     // native libs stripped of debug symbols
     object STRIPPED_NATIVE_LIBS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // debug metadata extracted from native libs, saved as files with *.so.dbg extension

@@ -142,10 +142,10 @@ class CmakeLocatorTest {
      */
     private fun dslVersionNumberTooLowTestCase(cmakeVersion: String) {
         val threeSix = fakeLocalPackageOf("cmake;3.6.4111459", "3.6.4111459")
-        val threeTen = fakeLocalPackageOf("cmake;3.10.2.4988404", "3.10.2")
+        val defaultCmake = fakeLocalPackageOf("cmake;$DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION", DEFAULT_CMAKE_VERSION)
         val encounter = findCmakePath(
             cmakeVersionFromDsl = cmakeVersion,
-            repositoryPackages = { listOf(threeTen, threeSix) })
+            repositoryPackages = { listOf(defaultCmake, threeSix) })
         assertThat(encounter.warnings).hasSize(0)
         assertThat(encounter.errors.single()).isEqualTo(
             "CMake version '" + cmakeVersion.removeSuffix("+") + "' is too low. Use 3.7.0 or higher."
@@ -181,10 +181,10 @@ class CmakeLocatorTest {
     private fun dslVersionTooFewPartsTestCase(cmakeVersion: String) {
         val cmakeVersionWithoutPlus = cmakeVersion.removeSuffix("+")
         val threeSix = fakeLocalPackageOf("cmake;3.6.4111459", "3.6.4111459")
-        val threeTen = fakeLocalPackageOf("cmake;3.10.2.4988404", "3.10.2")
+        val defaultCmake = fakeLocalPackageOf("cmake;$DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION", DEFAULT_CMAKE_VERSION)
         val encounter = findCmakePath(
             cmakeVersionFromDsl = cmakeVersion,
-            repositoryPackages = { listOf(threeTen, threeSix) }
+            repositoryPackages = { listOf(defaultCmake, threeSix) }
         )
         assertThat(encounter.warnings).hasSize(0)
         assertThat(encounter.errors.single()).isEqualTo(
@@ -737,36 +737,36 @@ class CmakeLocatorTest {
 
     @Test
     fun `get default version`() {
-        assertThat(CmakeDslVersionInfo(null).effectiveRequestVersion).isEqualTo(defaultCmakeVersion)
+        assertThat(CmakeVersionRequirements(null).effectiveRequestVersion).isEqualTo(defaultCmakeVersion)
     }
 
     @Test
     fun `get specific version`() {
-        assertThat(CmakeDslVersionInfo("3.19.2").effectiveRequestVersion)
+        assertThat(CmakeVersionRequirements("3.19.2").effectiveRequestVersion)
             .isEqualTo(Revision.parseRevision("3.19.2"))
     }
 
     @Test
     fun `get specific version +`() {
-        assertThat(CmakeDslVersionInfo("3.19.2+").effectiveRequestVersion)
+        assertThat(CmakeVersionRequirements("3.19.2+").effectiveRequestVersion)
             .isEqualTo(Revision.parseRevision("3.19.2"))
     }
 
     @Test
     fun `get fork version`() {
-        val version = CmakeDslVersionInfo("3.6.0").effectiveRequestVersion
+        val version = CmakeVersionRequirements("3.6.0").effectiveRequestVersion
         assertThat(version.isCmakeForkVersion()).isTrue()
     }
 
     @Test
     fun `get fork version +`() {
-        val version = CmakeDslVersionInfo("3.6.0+").effectiveRequestVersion
+        val version = CmakeVersionRequirements("3.6.0+").effectiveRequestVersion
         assertThat(version.isCmakeForkVersion()).isTrue()
     }
 
     @Test
     fun `get version too low`() {
-        val version = CmakeDslVersionInfo("3.5.0+").effectiveRequestVersion
+        val version = CmakeVersionRequirements("3.5.0+").effectiveRequestVersion
         assertThat(version.isCmakeForkVersion()).isFalse()
     }
 }

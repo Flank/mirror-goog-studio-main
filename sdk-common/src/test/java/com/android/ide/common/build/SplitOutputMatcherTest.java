@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.builder.testing.api.DeviceConfigProvider;
+import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -36,7 +37,7 @@ public class SplitOutputMatcherTest extends TestCase {
 
     /** Helper to run InstallHelper.computeMatchingOutput with variable ABI list. */
     private static List<File> computeBestOutput(
-            @NonNull List<OutputFile> outputs, @NonNull String... deviceAbis) {
+            @NonNull List<IdeAndroidArtifactOutput> outputs, @NonNull String... deviceAbis) {
         DeviceConfigProvider deviceConfigProvider = Mockito.mock(DeviceConfigProvider.class);
         when(deviceConfigProvider.getAbis()).thenReturn(Arrays.asList(deviceAbis));
         return SplitOutputMatcher.computeBestOutputs(
@@ -44,7 +45,7 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     private static List<File> computeBestOutput(
-            @NonNull List<OutputFile> outputs,
+            @NonNull List<IdeAndroidArtifactOutput> outputs,
             @NonNull Set<String> deviceAbis,
             @NonNull String... variantAbiFilters) {
         DeviceConfigProvider deviceConfigProvider = Mockito.mock(DeviceConfigProvider.class);
@@ -53,10 +54,8 @@ public class SplitOutputMatcherTest extends TestCase {
                 deviceConfigProvider, outputs, Arrays.asList(variantAbiFilters));
     }
 
-    /**
-     * Fake implementation of FilteredOutput
-     */
-    private static final class FakeSplitOutput implements OutputFile {
+    /** Fake implementation of FilteredOutput */
+    private static final class FakeSplitOutput implements IdeAndroidArtifactOutput {
         private final String abiFilter;
         private final File file;
         private final int versionCode;
@@ -74,37 +73,9 @@ public class SplitOutputMatcherTest extends TestCase {
             this.versionCode = versionCode;
         }
 
-        @NonNull
-        @Override
-        public OutputFile getMainOutputFile() {
-            return this;
-        }
-
-        @NonNull
-        @Override
-        public Collection<? extends OutputFile> getOutputs() {
-            return ImmutableList.of(this);
-        }
-
         @Override
         public int getVersionCode() {
             return versionCode;
-        }
-
-        @NonNull
-        @Override
-        public String getOutputType() {
-            return OutputFile.FULL_SPLIT;
-        }
-
-        @NonNull
-        @Override
-        public Collection<String> getFilterTypes() {
-            ImmutableList.Builder<String> splitTypeBuilder = ImmutableList.builder();
-            if (abiFilter != null) {
-                splitTypeBuilder.add(OutputFile.ABI);
-            }
-            return splitTypeBuilder.build();
         }
 
         @NonNull
@@ -158,8 +129,8 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     public void testSingleOutput() {
-        OutputFile match;
-        List<OutputFile> list = new ArrayList<>();
+        IdeAndroidArtifactOutput match;
+        List<IdeAndroidArtifactOutput> list = new ArrayList<>();
 
         list.add(match = getUniversalOutput(1));
 
@@ -170,8 +141,8 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     public void testAbiOnlyWithMatch() {
-        OutputFile match;
-        List<OutputFile> list = new ArrayList<>();
+        IdeAndroidArtifactOutput match;
+        List<IdeAndroidArtifactOutput> list = new ArrayList<>();
 
         list.add(getUniversalOutput(1));
         list.add(match = getAbiOutput("foo", 2));
@@ -184,8 +155,8 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     public void testAbiOnlyWithMultiMatch() {
-        OutputFile match;
-        List<OutputFile> list = new ArrayList<>();
+        IdeAndroidArtifactOutput match;
+        List<IdeAndroidArtifactOutput> list = new ArrayList<>();
 
         // test where the versionCode match the abi order
         list.add(getUniversalOutput(1));
@@ -200,8 +171,8 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     public void testAbiPreference() {
-        OutputFile match;
-        List<OutputFile> list = new ArrayList<>();
+        IdeAndroidArtifactOutput match;
+        List<IdeAndroidArtifactOutput> list = new ArrayList<>();
 
         // test where the versionCode match the abi order
         list.add(getUniversalOutput(1));
@@ -217,8 +188,8 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     public void testAbiPreferenceForUniveralApk() {
-        OutputFile match;
-        List<OutputFile> list = new ArrayList<>();
+        IdeAndroidArtifactOutput match;
+        List<IdeAndroidArtifactOutput> list = new ArrayList<>();
 
         // test where the versionCode match the abi order
         list.add(match = getUniversalOutput(1));
@@ -234,8 +205,8 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     public void testAbiOnlyWithMultiMatch2() {
-        OutputFile match;
-        List<OutputFile> list = new ArrayList<>();
+        IdeAndroidArtifactOutput match;
+        List<IdeAndroidArtifactOutput> list = new ArrayList<>();
 
         // test where the versionCode does not match the abi order
         list.add(getUniversalOutput(1));
@@ -250,8 +221,8 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     public void testAbiOnlyWithUniversalMatch() {
-        OutputFile match;
-        List<OutputFile> list = new ArrayList<>();
+        IdeAndroidArtifactOutput match;
+        List<IdeAndroidArtifactOutput> list = new ArrayList<>();
 
         list.add(match = getUniversalOutput(1));
         list.add(getAbiOutput("foo", 2));
@@ -264,7 +235,7 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     public void testAbiOnlyWithNoMatch() {
-        List<OutputFile> list = new ArrayList<>();
+        List<IdeAndroidArtifactOutput> list = new ArrayList<>();
 
         list.add(getAbiOutput("foo", 1));
         list.add(getAbiOutput("bar", 2));
@@ -275,8 +246,8 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     public void testMultiFilterWithMatch() {
-        OutputFile match;
-        List<OutputFile> list = new ArrayList<>();
+        IdeAndroidArtifactOutput match;
+        List<IdeAndroidArtifactOutput> list = new ArrayList<>();
 
         list.add(getUniversalOutput(1));
         list.add(getOutput("zzz", 2));
@@ -290,8 +261,8 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     public void testMultiFilterWithUniversalMatch() {
-        OutputFile match;
-        List<OutputFile> list = new ArrayList<>();
+        IdeAndroidArtifactOutput match;
+        List<IdeAndroidArtifactOutput> list = new ArrayList<>();
 
         list.add(match = getUniversalOutput(4));
         list.add(getOutput("zzz", 3));
@@ -305,8 +276,8 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     public void testMultiFilterWithNoMatch() {
-        OutputFile match;
-        List<OutputFile> list = new ArrayList<>();
+        IdeAndroidArtifactOutput match;
+        List<IdeAndroidArtifactOutput> list = new ArrayList<>();
 
         list.add(match = getOutput("zzz", 1));
         list.add(getOutput("bar", 2));
@@ -319,8 +290,8 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     public void testVariantLevelAbiFilter() {
-        OutputFile match;
-        List<OutputFile> list = new ArrayList<>();
+        IdeAndroidArtifactOutput match;
+        List<IdeAndroidArtifactOutput> list = new ArrayList<>();
 
         list.add(match = getUniversalOutput(1));
         List<File> result = computeBestOutput(list, Sets.newHashSet("bar", "foo"), "foo", "zzz");
@@ -330,7 +301,7 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     public void testWrongVariantLevelAbiFilter() {
-        List<OutputFile> list = new ArrayList<>();
+        List<IdeAndroidArtifactOutput> list = new ArrayList<>();
 
         list.add(getUniversalOutput(1));
 
@@ -339,20 +310,20 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(0, result.size());
     }
 
-
-    private static OutputFile getUniversalOutput(int versionCode) {
+    private static IdeAndroidArtifactOutput getUniversalOutput(int versionCode) {
         return new FakeSplitOutput(null, null, versionCode);
     }
 
-    private static OutputFile getAbiOutput(String filter, int versionCode) {
+    private static IdeAndroidArtifactOutput getAbiOutput(String filter, int versionCode) {
         return new FakeSplitOutput(filter, versionCode);
     }
 
-    private static OutputFile getAbiOutput(String filter, int versionCode, String file) {
+    private static IdeAndroidArtifactOutput getAbiOutput(
+            String filter, int versionCode, String file) {
         return new FakeSplitOutput(filter, new File(file), versionCode);
     }
 
-    private static OutputFile getOutput(String abiFilter, int versionCode) {
+    private static IdeAndroidArtifactOutput getOutput(String abiFilter, int versionCode) {
         return new FakeSplitOutput(abiFilter, versionCode);
     }
 }

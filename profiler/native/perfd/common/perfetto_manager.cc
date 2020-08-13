@@ -104,7 +104,7 @@ perfetto::protos::TraceConfig PerfettoManager::BuildHeapprofdConfig(
   auto* buffer = config.add_buffers();
   // Set an arbitrary buffer size that is not unreasonable to request, and
   // allows us a reasonable size  to not overflow.
-  buffer->set_size_kb(8192);
+  buffer->set_size_kb(1024 * 128);
   auto* source = config.add_data_sources();
   auto* data_config = source->mutable_config();
   data_config->set_name("android.heapprofd");
@@ -114,6 +114,12 @@ perfetto::protos::TraceConfig PerfettoManager::BuildHeapprofdConfig(
   heap_config->set_shmem_size_bytes(shared_memory_buffer_bytes);
   heap_config->mutable_continuous_dump_config()->set_dump_interval_ms(
       continuous_dump_interval_ms);
+  // Record allocations from all heaps (including custom).
+  heap_config->set_all_heaps(true);
+  // If heapprofd cannot keep up with the rate of samples, the target process
+  // will stall the malloc until heapprofd has caught up. Without this flag, it
+  // will end the profile early.
+  heap_config->set_block_client(true);
   return config;
 }
 
@@ -141,6 +147,10 @@ perfetto::protos::TraceConfig PerfettoManager::BuildFtraceConfig(
   // needs to do work and they are signaled when the driver is done.
   ftrace_config->add_ftrace_events("fence/signaled");
   ftrace_config->add_ftrace_events("fence/fence_wait_start");
+
+  // Enable CPU frequency events
+  ftrace_config->add_ftrace_events("power/cpu_frequency");
+  ftrace_config->add_ftrace_events("power/cpu_idle");
 
   // Enable task tracking
   // This enables us to capture events/metadata that helps to track

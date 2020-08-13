@@ -19,6 +19,7 @@ package com.android.tools.lint.checks
 import com.android.SdkConstants
 import com.android.SdkConstants.CLASS_CONTENTPROVIDER
 import com.android.SdkConstants.CLASS_CONTEXT
+import com.android.SdkConstants.CLASS_RESOURCES
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
@@ -37,7 +38,7 @@ import com.intellij.psi.PsiLocalVariable
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiResourceVariable
 import com.intellij.psi.PsiVariable
-import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.PsiTreeUtil.getParentOfType
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UDoWhileExpression
@@ -94,12 +95,26 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             RAW_QUERY_WITH_FACTORY,
 
             // SharedPreferences check
-            EDIT
+            EDIT,
+
+            // Animation
+            ANIMATE,
+            OF_INT,
+            OF_ARGB,
+            OF_FLOAT,
+            OF_OBJECT,
+            OF_PROPERTY_VALUES_HOLDER
         )
     }
 
     override fun getApplicableConstructorTypes(): List<String>? {
-        return listOf(SURFACE_TEXTURE_CLS, SURFACE_CLS)
+        return listOf(
+            SURFACE_TEXTURE_CLS,
+            SURFACE_CLS,
+            VALUE_ANIMATOR_CLS,
+            OBJECT_ANIMATOR_CLS,
+            ANIMATOR_SET_CLS
+        )
     }
 
     override fun visitMethodCall(
@@ -110,6 +125,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         when (method.name) {
             BEGIN_TRANSACTION -> checkTransactionCommits(context, node, method)
             EDIT -> checkEditorApplied(context, node, method)
+            ANIMATE -> checkRecycled(context, node, VIEW_PROPERTY_ANIMATOR_CLS, START)
             else -> checkResourceRecycled(context, node, method)
         }
     }
@@ -120,7 +136,11 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         constructor: PsiMethod
     ) {
         val type = constructor.containingClass?.qualifiedName ?: return
-        checkRecycled(context, node, type, RELEASE)
+        if (type == SURFACE_TEXTURE_CLS || type == SURFACE_CLS) {
+            checkRecycled(context, node, type, RELEASE)
+        } else {
+            checkRecycled(context, node, type, START)
+        }
     }
 
     private fun checkResourceRecycled(
@@ -129,101 +149,84 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         method: PsiMethod
     ) {
         val name = method.name
+
         // Recycle detector
         val containingClass = method.containingClass ?: return
         val evaluator = context.evaluator
-        if ((OBTAIN == name || OBTAIN_NO_HISTORY == name) && evaluator.extendsClass(
-            containingClass,
-            MOTION_EVENT_CLS,
-            false
-        )
-        ) {
-            checkRecycled(context, node, MOTION_EVENT_CLS, RECYCLE)
-        } else if (OBTAIN == name && evaluator.extendsClass(containingClass, PARCEL_CLS, false)) {
-            checkRecycled(context, node, PARCEL_CLS, RECYCLE)
-        } else if (OBTAIN == name && evaluator.extendsClass(
-            containingClass,
-            VELOCITY_TRACKER_CLS,
-            false
-        )
-        ) {
-            checkRecycled(context, node, VELOCITY_TRACKER_CLS, RECYCLE)
-        } else if ((
-            OBTAIN_STYLED_ATTRIBUTES == name ||
-                OBTAIN_ATTRIBUTES == name ||
-                OBTAIN_TYPED_ARRAY == name
-            ) && (
-                evaluator.extendsClass(
-                    containingClass,
-                    CLASS_CONTEXT,
-                    false
-                ) || evaluator.extendsClass(
-                    containingClass, SdkConstants.CLASS_RESOURCES, false
-                )
-                )
-        ) {
-            val returnType = method.returnType
-            if (returnType is PsiClassType) {
-                val cls = returnType.resolve()
-                if (cls != null && SdkConstants.CLS_TYPED_ARRAY == cls.qualifiedName) {
-                    checkRecycled(context, node, SdkConstants.CLS_TYPED_ARRAY, RECYCLE)
+
+        when (name) {
+            OBTAIN, OBTAIN_NO_HISTORY ->
+                when {
+                    evaluator.extendsClass(containingClass, MOTION_EVENT_CLS, false) ->
+                        checkRecycled(context, node, MOTION_EVENT_CLS, RECYCLE)
+                    evaluator.extendsClass(containingClass, PARCEL_CLS, false) ->
+                        checkRecycled(context, node, PARCEL_CLS, RECYCLE)
+                    evaluator.extendsClass(containingClass, VELOCITY_TRACKER_CLS, false) ->
+                        checkRecycled(context, node, VELOCITY_TRACKER_CLS, RECYCLE)
                 }
-            }
-        } else if (ACQUIRE_CPC == name && evaluator.extendsClass(
-            containingClass,
-            CONTENT_RESOLVER_CLS,
-            false
-        )
-        ) {
-            checkRecycled(context, node, CONTENT_PROVIDER_CLIENT_CLS, RELEASE)
-        } else if ((
-            QUERY == name ||
-                RAW_QUERY == name ||
-                QUERY_WITH_FACTORY == name ||
-                RAW_QUERY_WITH_FACTORY == name
-            ) && (
-                evaluator.extendsClass(
-                    containingClass,
-                    SQLITE_DATABASE_CLS,
-                    false
-                ) ||
+
+            OBTAIN_STYLED_ATTRIBUTES,
+            OBTAIN_ATTRIBUTES,
+            OBTAIN_TYPED_ARRAY ->
+                if (evaluator.extendsClass(containingClass, CLASS_CONTEXT, false) ||
+                    evaluator.extendsClass(containingClass, CLASS_RESOURCES, false)
+                ) {
+                    val returnType = method.returnType
+                    if (returnType is PsiClassType) {
+                        val cls = returnType.resolve()
+                        if (cls != null && SdkConstants.CLS_TYPED_ARRAY == cls.qualifiedName) {
+                            checkRecycled(context, node, SdkConstants.CLS_TYPED_ARRAY, RECYCLE)
+                        }
+                    }
+                }
+            ACQUIRE_CPC ->
+                if (evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false))
+                    checkRecycled(context, node, CONTENT_PROVIDER_CLIENT_CLS, RELEASE)
+            QUERY, RAW_QUERY, QUERY_WITH_FACTORY, RAW_QUERY_WITH_FACTORY ->
+                if (evaluator.extendsClass(containingClass, SQLITE_DATABASE_CLS, false) ||
                     evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false) ||
                     evaluator.extendsClass(containingClass, CLASS_CONTENTPROVIDER, false) ||
                     evaluator.extendsClass(
                         containingClass, CONTENT_PROVIDER_CLIENT_CLS, false
                     )
-                )
-        ) {
-            // Other potential cursors-returning methods that should be tracked:
-            //    android.app.DownloadManager#query
-            //    android.content.ContentProviderClient#query
-            //    android.content.ContentResolver#query
-            //    android.database.sqlite.SQLiteQueryBuilder#query
-            //    android.provider.Browser#getAllBookmarks
-            //    android.provider.Browser#getAllVisitedUrls
-            //    android.provider.DocumentsProvider#queryChildDocuments
-            //    android.provider.DocumentsProvider#qqueryDocument
-            //    android.provider.DocumentsProvider#queryRecentDocuments
-            //    android.provider.DocumentsProvider#queryRoots
-            //    android.provider.DocumentsProvider#querySearchDocuments
-            //    android.provider.MediaStore$Images$Media#query
-            //    android.widget.FilterQueryProvider#runQuery
+                ) {
+                    // Other potential cursors-returning methods that should be tracked:
+                    //    android.app.DownloadManager#query
+                    //    android.content.ContentProviderClient#query
+                    //    android.content.ContentResolver#query
+                    //    android.database.sqlite.SQLiteQueryBuilder#query
+                    //    android.provider.Browser#getAllBookmarks
+                    //    android.provider.Browser#getAllVisitedUrls
+                    //    android.provider.DocumentsProvider#queryChildDocuments
+                    //    android.provider.DocumentsProvider#qqueryDocument
+                    //    android.provider.DocumentsProvider#queryRecentDocuments
+                    //    android.provider.DocumentsProvider#queryRoots
+                    //    android.provider.DocumentsProvider#querySearchDocuments
+                    //    android.provider.MediaStore$Images$Media#query
+                    //    android.widget.FilterQueryProvider#runQuery
 
-            // If it's in a try-with-resources clause, don't flag it: these
-            // will be cleaned up automatically
-            var curr: UElement? = node
-            while (curr != null) {
-                val psi = curr.sourcePsi
-                if (psi != null) {
-                    if (PsiTreeUtil.getParentOfType(psi, PsiResourceVariable::class.java) != null) {
-                        return
+                    // If it's in a try-with-resources clause, don't flag it: these
+                    // will be cleaned up automatically
+                    var curr: UElement? = node
+                    while (curr != null) {
+                        val psi = curr.sourcePsi
+                        if (psi != null) {
+                            if (getParentOfType(psi, PsiResourceVariable::class.java) != null) {
+                                return
+                            }
+                            break
+                        }
+                        curr = curr.uastParent
                     }
-                    break
-                }
-                curr = curr.uastParent
-            }
 
-            checkRecycled(context, node, CURSOR_CLS, CLOSE)
+                    checkRecycled(context, node, CURSOR_CLS, CLOSE)
+                }
+
+            OF_INT, OF_ARGB, OF_FLOAT, OF_OBJECT, OF_PROPERTY_VALUES_HOLDER -> {
+                // ObjectAnimator, ValueAnimator, AnimatorSet
+                val type = containingClass.qualifiedName ?: return
+                checkRecycled(context, node, type, START)
+            }
         }
     }
 
@@ -321,6 +324,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                     "This `%1\$s` should be recycled after use with `#recycle()`",
                     className
                 )
+            } else if (ANIMATE == recycleName || START == recycleName) {
+                "This animation should be started with `#start()`"
             } else {
                 String.format(
                     "This `%1\$s` should be freed up after use with `#%2\$s()`",
@@ -489,7 +494,11 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                 return
             }
 
-            val boundVariable = getVariableElement(node, true, true)
+            val boundVariable = getVariableElement(
+                node,
+                allowChainedCalls = true,
+                allowFields = true
+            )
             if (isEditorCommittedInChainedCalls(context, node)) {
                 return
             }
@@ -999,6 +1008,15 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         )
 
         // Target method names
+
+        private const val OF_INT = "ofInt"
+        private const val OF_ARGB = "ofArgb"
+        private const val OF_FLOAT = "ofFloat"
+        private const val OF_OBJECT = "ofObject"
+        private const val OF_PROPERTY_VALUES_HOLDER = "ofPropertyValuesHolder"
+        private const val ANIMATE = "animate"
+        private const val START = "start"
+
         private const val RECYCLE = "recycle"
         private const val RELEASE = "release"
         private const val OBTAIN = "obtain"
@@ -1030,6 +1048,10 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         private const val FRAGMENT_MANAGER_V4_CLS = "android.support.v4.app.FragmentManager"
         private const val FRAGMENT_TRANSACTION_CLS = "android.app.FragmentTransaction"
         private const val FRAGMENT_TRANSACTION_V4_CLS = "android.support.v4.app.FragmentTransaction"
+        private const val VALUE_ANIMATOR_CLS = "android.animation.ValueAnimator"
+        private const val OBJECT_ANIMATOR_CLS = "android.animation.ObjectAnimator"
+        private const val ANIMATOR_SET_CLS = "android.animation.AnimatorSet"
+        private const val VIEW_PROPERTY_ANIMATOR_CLS = "android.view.ViewPropertyAnimator"
 
         const val SURFACE_CLS = "android.view.Surface"
         const val SURFACE_TEXTURE_CLS = "android.graphics.SurfaceTexture"

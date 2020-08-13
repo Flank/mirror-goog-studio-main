@@ -105,9 +105,7 @@ public class FixUnbundledRules {
             // package.
             if (p.getName().equals("tools/base/build-system/integration-test")
                     || p.getName().equals("tools/base/deploy/installer")
-                    || p.getName()
-                            .equals(
-                                    "tools/vendor/google3/blaze/java/com/google/devtools/intellij/blaze/plugin/aswb")
+                    || p.getName().startsWith("tools/vendor/google3/")
                     || p.getName().startsWith("tools/external")
                     || p.getName().startsWith("external")) {
                 continue;

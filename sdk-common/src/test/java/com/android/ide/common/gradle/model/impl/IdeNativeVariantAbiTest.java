@@ -19,7 +19,6 @@ import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.*;
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertEquals;
 
-import com.android.builder.model.NativeVariantAbi;
 import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeVariantAbiImpl;
 import com.android.ide.common.gradle.model.stubs.NativeVariantAbiStub;
 import com.android.testutils.Serialization;
@@ -44,18 +43,10 @@ public class IdeNativeVariantAbiTest {
     @Test
     public void serialization() throws Exception {
         IdeNativeVariantAbiImpl nativeVariantAbi =
-                new IdeNativeVariantAbiImpl(new NativeVariantAbiStub(), myModelCache);
+                myModelCache.nativeVariantAbiFrom(new NativeVariantAbiStub());
         byte[] bytes = Serialization.serialize(nativeVariantAbi);
         Object o = Serialization.deserialize(bytes);
         assertEquals(nativeVariantAbi, o);
-    }
-
-    @Test
-    public void constructor() throws Throwable {
-        NativeVariantAbi original = new NativeVariantAbiStub();
-        IdeNativeVariantAbiImpl copy = new IdeNativeVariantAbiImpl(original, myModelCache);
-        assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
     }
 
     @Test

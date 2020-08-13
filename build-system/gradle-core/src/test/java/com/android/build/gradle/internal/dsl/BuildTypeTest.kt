@@ -71,7 +71,8 @@ class BuildTypeTest {
             dslServices.newInstance(BuildType::class.java, "original", dslServices),
             listOf(
                 // Extensions are not copied as AGP doesn't manage them
-                "getExtensions"
+                "getExtensions",
+                "isZipAlignEnabled\$annotations"
             ),
             { original: BuildType ->
                 val copy = dslServices.newInstance(BuildType::class.java, original.name, dslServices)

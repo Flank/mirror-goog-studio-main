@@ -16,7 +16,11 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_BUILD_TYPE
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_FLAGS
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_C_FLAGS
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_FIND_ROOT_PATH
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_TOOLCHAIN_FILE
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument
 import com.android.build.gradle.internal.cxx.configure.getCmakeProperty
 import com.android.build.gradle.internal.cxx.configure.getGenerator
@@ -31,9 +35,18 @@ import com.android.build.gradle.internal.cxx.hashing.toBase36
 import com.android.build.gradle.internal.cxx.hashing.update
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.replaceWith
-import com.android.build.gradle.internal.cxx.settings.Macro.*
-import com.android.build.gradle.internal.cxx.settings.PropertyValue.*
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_BUILD_ROOT
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CMAKE_TOOLCHAIN
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CONFIGURATION_HASH
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CPP_FLAGS
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_C_FLAGS
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_DEFAULT_BUILD_TYPE
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_FULL_CONFIGURATION_HASH
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PREFAB_PATH
+import com.android.build.gradle.internal.cxx.settings.PropertyValue.StringPropertyValue
 import com.android.build.gradle.tasks.NativeBuildSystem
+import com.android.utils.tokenizeCommandLineToEscaped
 import java.io.File
 import java.security.MessageDigest
 
@@ -284,8 +297,9 @@ fun CxxAbiModel.getFinalCmakeCommandLineArguments() : List<CommandLineArgument> 
 * Returns the Ninja build commands from CMakeSettings.json.
 * Returns an empty string if it does not exist.
 */
-fun CxxAbiModel.getBuildCommandArguments() : String {
-    return cmake?.effectiveConfiguration?.buildCommandArgs ?: ""
+fun CxxAbiModel.getBuildCommandArguments(): List<String> {
+    return cmake?.effectiveConfiguration?.buildCommandArgs?.tokenizeCommandLineToEscaped()
+        ?: emptyList()
 }
 
 /**

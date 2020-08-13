@@ -1985,6 +1985,99 @@ class CleanupDetectorTest : AbstractCheckTest() {
         ).run().expectInlinedMessages(true)
     }
 
+    fun testAnimation() {
+        // 36991569: Lint warning for animation created but not .start()ed
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.animation.AnimatorSet
+                import android.animation.ObjectAnimator
+                import android.animation.ValueAnimator
+                import android.view.View
+                import android.view.ViewPropertyAnimator
+                import android.widget.TextView
+
+                fun viewAnimator(view: View) {
+                    view.animate().translationX(100.0f) // ERROR
+                    view.animate().translationX(100.0f).start(); // OK
+                }
+
+                fun viewAnimatorOk(view: View): ViewPropertyAnimator {
+                    val animator = view.animate() // OK
+                    animator.start()
+                    return view.animate().translationY(5f) // OK
+                }
+
+                fun animator(textView: TextView) {
+                    // Kotlin style
+                    ValueAnimator.ofFloat(0f, 100f).apply { // ERROR
+                        duration = 1000
+                        //start()
+                    }
+                    // Java style
+                    val animation = ValueAnimator.ofFloat(0f, 100f)  // ERROR
+                    animation.setDuration(1000)
+                    //animation.start()
+
+                    val objectAnimator = ObjectAnimator.ofFloat(textView, "translationX", 100f)  // ERROR
+                    objectAnimator.setDuration(1000);
+                    //objectAnimator.start();
+
+                    val animatorSet = AnimatorSet()  // ERROR
+                    //animatorSet.start();
+                }
+
+                fun animatorOk(textView: TextView) {
+                    // Kotlin style
+                    ValueAnimator.ofFloat(0f, 100f).apply {
+                        duration = 1000
+                        start()
+                    }
+                    // Java style
+                    val animation = ValueAnimator.ofFloat(0f, 100f)
+                    animation.setDuration(1000)
+                    animation.start()
+
+                    val objectAnimator = ObjectAnimator.ofFloat(textView, "translationX", 100f); // OK
+                    objectAnimator.setDuration(1000);
+                    objectAnimator.start();
+
+                    // Note that if you pass something into an AnimatorSet then it's no longer required
+                    // to be .started()
+                    val bouncer = AnimatorSet() // OK
+                    val fadeAnim = ObjectAnimator.ofFloat(textView, "alpha", 1f, 0f).apply { // OK
+                        duration = 250
+                    }
+                    AnimatorSet().apply {
+                        play(bouncer).before(fadeAnim)
+                        start()
+                    }
+                }
+                """
+            ).indented()
+        ).run().expect(
+            "" +
+                "src/test/pkg/test.kt:11: Warning: This animation should be started with #start() [Recycle]\n" +
+                "    view.animate().translationX(100.0f) // ERROR\n" +
+                "         ~~~~~~~\n" +
+                "src/test/pkg/test.kt:23: Warning: This animation should be started with #start() [Recycle]\n" +
+                "    ValueAnimator.ofFloat(0f, 100f).apply { // ERROR\n" +
+                "                  ~~~~~~~\n" +
+                "src/test/pkg/test.kt:28: Warning: This animation should be started with #start() [Recycle]\n" +
+                "    val animation = ValueAnimator.ofFloat(0f, 100f)  // ERROR\n" +
+                "                                  ~~~~~~~\n" +
+                "src/test/pkg/test.kt:32: Warning: This animation should be started with #start() [Recycle]\n" +
+                "    val objectAnimator = ObjectAnimator.ofFloat(textView, \"translationX\", 100f)  // ERROR\n" +
+                "                                        ~~~~~~~\n" +
+                "src/test/pkg/test.kt:36: Warning: This animation should be started with #start() [Recycle]\n" +
+                "    val animatorSet = AnimatorSet()  // ERROR\n" +
+                "                      ~~~~~~~~~~~\n" +
+                "0 errors, 5 warnings"
+        )
+    }
+
     private val dialogFragment = java(
         """
         package android.support.v4.app;

@@ -21,6 +21,8 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * General purpose parser for android_build_gradle.json file. This parser is streaming so that the
@@ -49,11 +51,11 @@ public class AndroidBuildGradleJsonStreamingParser implements Closeable {
                 case "buildFiles":
                     parseBuildFiles();
                     break;
-                case "cleanCommands":
-                    parseCleanCommands();
+                case "cleanCommandsComponents":
+                    parseCleanCommandsComponents();
                     break;
-                case "buildTargetsCommand":
-                    parseBuildTargetsCommand();
+                case "buildTargetsCommandComponents":
+                    parseBuildTargetsCommandComponents();
                     break;
                 case "cFileExtensions":
                     parseCFileExtensions();
@@ -144,8 +146,8 @@ public class AndroidBuildGradleJsonStreamingParser implements Closeable {
                 case "artifactName":
                     visitor.visitLibraryArtifactName(reader.nextString());
                     break;
-                case "buildCommand":
-                    visitor.visitLibraryBuildCommand(reader.nextString());
+                case "buildCommandComponents":
+                    visitor.visitLibraryBuildCommandComponents(readStringArray());
                     break;
                 case "buildType":
                     visitor.visitLibraryBuildType(reader.nextString());
@@ -266,18 +268,26 @@ public class AndroidBuildGradleJsonStreamingParser implements Closeable {
         reader.endArray();
     }
 
-    private void parseCleanCommands() throws IOException {
+    private void parseCleanCommandsComponents() throws IOException {
         reader.beginArray();
         while (reader.hasNext()) {
-            String value = reader.nextString();
-            visitor.visitCleanCommands(value);
+            visitor.visitCleanCommandsComponents(readStringArray());
         }
         reader.endArray();
     }
 
-    private void parseBuildTargetsCommand() throws IOException {
-        String value = reader.nextString();
-        visitor.visitBuildTargetsCommand(value);
+    private void parseBuildTargetsCommandComponents() throws IOException {
+        visitor.visitBuildTargetsCommandComponents(readStringArray());
+    }
+
+    private List<String> readStringArray() throws IOException {
+        ArrayList<String> strings = new ArrayList<>();
+        reader.beginArray();
+        while (reader.hasNext()) {
+            strings.add(reader.nextString());
+        }
+        reader.endArray();
+        return strings;
     }
 
     private void parseCFileExtensions() throws IOException {

@@ -62,7 +62,7 @@ public class IdeSourceProviderTest {
                                 getJniLibsDirectories());
                     }
                 };
-        IdeSourceProvider sourceProvider = IdeSourceProviderImpl.createFrom(original);
+        IdeSourceProvider sourceProvider = myModelCache.sourceProviderFrom(original);
         assertThat(sourceProvider.getShadersDirectories()).isEmpty();
     }
 }

@@ -583,7 +583,7 @@ public class GradleModelMocker {
         IdeApiVersion targetSdkVersion = defaultFlavor.getTargetSdkVersion();
         Integer versionCode = defaultFlavor.getVersionCode();
         String versionName = defaultFlavor.getVersionName();
-        Map<String, Object> manifestPlaceholders =
+        Map<String, String> manifestPlaceholders =
                 new HashMap<>(defaultFlavor.getManifestPlaceholders());
         Map<String, IdeClassField> resValues = new HashMap<>(defaultFlavor.getResValues());
         Collection<String> resourceConfigurations =
@@ -1223,7 +1223,7 @@ public class GradleModelMocker {
             // Example:
             // android.defaultConfig.manifestPlaceholders [
             // localApplicationId:'com.example.manifest_merger_example']
-            Map<String, Object> manifestPlaceholders;
+            Map<String, String> manifestPlaceholders;
             if (context.startsWith("android.buildTypes.")) {
                 String name = context.substring("android.buildTypes.".length());
                 IdeBuildType buildType = getBuildType(name, false);
@@ -1329,8 +1329,6 @@ public class GradleModelMocker {
             when(field.getName()).thenReturn(fieldName);
             when(field.getType()).thenReturn(type);
             when(field.getValue()).thenReturn(value);
-            when(field.getDocumentation()).thenReturn("");
-            when(field.getAnnotations()).thenReturn(Collections.emptySet());
             resValues.put(fieldName, field);
         } else if (context.startsWith("android.splits.")
                 && context.indexOf('.', "android.splits.".length()) == -1) {
@@ -1744,10 +1742,8 @@ public class GradleModelMocker {
         IdeAndroidArtifactOutput artifactOutput = mock(IdeAndroidArtifactOutput.class);
 
         if (filterType.isEmpty()) {
-            when(artifactOutput.getFilterTypes()).thenReturn(Collections.emptyList());
             when(artifactOutput.getFilters()).thenReturn(Collections.emptyList());
         } else {
-            when(artifactOutput.getFilterTypes()).thenReturn(Collections.singletonList(filterType));
             List<FilterData> filters = Lists.newArrayList();
             FilterData filter = mock(FilterData.class);
             when(filter.getFilterType()).thenReturn(filterType);

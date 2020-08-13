@@ -15,6 +15,32 @@
  */
 package com.android.ide.common.gradle.model.ndk.v1
 
-import com.android.builder.model.NativeVariantAbi
+import java.io.File
 
-interface IdeNativeVariantAbi : NativeVariantAbi
+interface IdeNativeVariantAbi {
+  /** Returns a collection of files that affect the build. */
+  val buildFiles: Collection<File>
+
+  /** Returns a collection of native artifacts. */
+  val artifacts: Collection<IdeNativeArtifact>
+
+  /** Returns a collection of toolchains. */
+  val toolChains: Collection<IdeNativeToolchain>
+
+  /** Returns a collection of all compile settings. */
+  val settings: Collection<IdeNativeSettings>
+
+  /**
+   * Return a map of file extension to each file type.
+   *
+   *
+   * The key is the file extension, the value is either "c" or "c++".
+   */
+  val fileExtensions: Map<String, String>
+
+  /** Returns the variant name. */
+  val variantName: String
+
+  /** Returns the abi. */
+  val abi: String
+}

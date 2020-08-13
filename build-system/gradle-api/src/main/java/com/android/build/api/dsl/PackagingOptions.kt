@@ -20,6 +20,9 @@ import org.gradle.api.Incubating
 
 @Incubating
 interface PackagingOptions {
+    // TODO (Issue 149770867) - deprecate and then remove these top-level excludes, pickFirsts,
+    // merges, and doNotStrip properties once the corresponding properties in jniLibs and resources
+    // are working.
     /** The list of excluded paths.*/
     val excludes: MutableSet<String>
 
@@ -66,4 +69,22 @@ interface PackagingOptions {
      * @param pattern the pattern, as packaged in the APK
      */
     fun doNotStrip(pattern: String)
+
+    /** PackagingOptions for dex */
+    val dex: DexPackagingOptions
+
+    /** PackagingOptions for dex */
+    fun dex(action: DexPackagingOptions.() -> Unit)
+
+    /** PackagingOptions for jniLibs */
+    val jniLibs: JniLibsPackagingOptions
+
+    /** PackagingOptions for jniLibs */
+    fun jniLibs(action: JniLibsPackagingOptions.() -> Unit)
+
+    /** PackagingOptions for java resources */
+    val resources: ResourcesPackagingOptions
+
+    /** PackagingOptions for java resources */
+    fun resources(action: ResourcesPackagingOptions.() -> Unit)
 }

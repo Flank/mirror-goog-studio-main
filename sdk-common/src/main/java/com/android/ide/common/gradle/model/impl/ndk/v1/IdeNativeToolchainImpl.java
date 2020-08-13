@@ -17,13 +17,11 @@ package com.android.ide.common.gradle.model.impl.ndk.v1;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.NativeToolchain;
 import com.android.ide.common.gradle.model.ndk.v1.IdeNativeToolchain;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Objects;
 
-/** Creates a deep copy of a {@link NativeToolchain}. */
 public final class IdeNativeToolchainImpl implements IdeNativeToolchain, Serializable {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
     private static final long serialVersionUID = 2L;
@@ -43,10 +41,13 @@ public final class IdeNativeToolchainImpl implements IdeNativeToolchain, Seriali
         myHashCode = 0;
     }
 
-    public IdeNativeToolchainImpl(@NonNull NativeToolchain toolchain) {
-        myName = toolchain.getName();
-        myCCompilerExecutable = toolchain.getCCompilerExecutable();
-        myCppCompilerExecutable = toolchain.getCppCompilerExecutable();
+    public IdeNativeToolchainImpl(
+            @NonNull String name,
+            @Nullable File cCompilerExecutable,
+            @Nullable File cppCompilerExecutable) {
+        myName = name;
+        myCCompilerExecutable = cCompilerExecutable;
+        myCppCompilerExecutable = cppCompilerExecutable;
 
         myHashCode = calculateHashCode();
     }

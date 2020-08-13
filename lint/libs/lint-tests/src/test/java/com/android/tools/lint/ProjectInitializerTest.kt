@@ -463,15 +463,16 @@ class ProjectInitializerTest {
             """
             <project incomplete="true">
             <sdk dir='${TestUtils.getSdk()}'/>
-            <root dir="$projectDir" />
+            <root dir="$projectDir"/>
             <module name="M" android="true" library="true">
-                <manifest file="AndroidManifest.xml" />
-                <src file="C.java" />
-                <src file="src/test/pkg/InterfaceMethodTest.java" />
+                <manifest file="$projectDir/AndroidManifest.xml" />
+                <src file="$projectDir/C.java" />
+                <src file="$projectDir/src/test/pkg/InterfaceMethodTest.java" />
             </module>
             </project>
             """.trimIndent()
-        val descriptorFile = File(root, "project.xml")
+        val descriptorFile = File(root, "out1/out2/out3/project.xml")
+        descriptorFile.parentFile?.mkdirs()
         Files.asCharSink(descriptorFile, Charsets.UTF_8).write(descriptor)
 
         MainTest.checkDriver(

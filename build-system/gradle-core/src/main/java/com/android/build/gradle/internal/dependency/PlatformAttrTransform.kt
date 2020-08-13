@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.dependency
 
-import com.android.build.gradle.internal.tasks.recordArtifactTransformSpan
-import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType
 import com.google.common.collect.Lists
 import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.InputArtifact
@@ -43,31 +41,27 @@ abstract class PlatformAttrTransform : TransformAction<GenericTransformParameter
     abstract val primaryInput: Provider<FileSystemLocation>
 
     override fun transform(outputs: TransformOutputs) {
-        recordArtifactTransformSpan(
-            parameters.projectName.get(),
-            GradleTransformExecutionType.PLATFORM_ATTR_ARTIFACT_TRANSFORM) {
+        //TODO(b/162813654) record transform execution span
+        val outputFile = outputs.file("R.txt")
 
-            val outputFile = outputs.file("R.txt")
+        val attributes = ZipFile(primaryInput.get().asFile).use { zip ->
+            // return from let{} is passed as return for use{}
+            zip.getEntry("android/R\$attr.class")?.let {
+                val stream = zip.getInputStream(it)!! // this method does not return null.
 
-            val attributes = ZipFile(primaryInput.get().asFile).use { zip ->
-                // return from let{} is passed as return for use{}
-                zip.getEntry("android/R\$attr.class")?.let {
-                    val stream = zip.getInputStream(it)!! // this method does not return null.
+                val customClassVisitor = CustomClassVisitor()
+                ClassReader(stream).accept(customClassVisitor, 0)
 
-                    val customClassVisitor = CustomClassVisitor()
-                    ClassReader(stream).accept(customClassVisitor, 0)
-
-                    customClassVisitor.attributes
-                }
+                customClassVisitor.attributes
             }
+        }
 
-            if (attributes == null || attributes.isEmpty()) {
-                error("Missing attr resources in android.jar, the file might be corrupted: $primaryInput")
-            } else {
-                FileWriter(outputFile).use { writer ->
-                    for ((name, value) in attributes) {
-                        writer.write("int attr $name 0x${String.format("%08x", value)}\n")
-                    }
+        if (attributes == null || attributes.isEmpty()) {
+            error("Missing attr resources in android.jar, the file might be corrupted: $primaryInput")
+        } else {
+            FileWriter(outputFile).use { writer ->
+                for ((name, value) in attributes) {
+                    writer.write("int attr $name 0x${String.format("%08x", value)}\n")
                 }
             }
         }

@@ -62,6 +62,7 @@ public class AndroidArtifacts {
     private static final String TYPE_DEX = "android-dex";
     private static final String TYPE_DEX_AND_KEEP_RULES = "android-dex-and-keep-rules";
     private static final String TYPE_KEEP_RULES = "android-keep-rules";
+    private static final String TYPE_ASM_INSTRUMENTED_JARS = "android-asm-instrumented-jars";
     private static final String TYPE_JAVA_RES = "android-java-res";
     private static final String TYPE_SHARED_JAVA_RES = "android-shared-java-res";
     private static final String TYPE_MANIFEST = "android-manifest";
@@ -295,6 +296,9 @@ public class AndroidArtifacts {
         DEX_AND_KEEP_RULES(TYPE_DEX_AND_KEEP_RULES),
         // a file named keep_rules for shrinking desugar lib
         KEEP_RULES(TYPE_KEEP_RULES),
+
+        // Dependencies jars that are instrumented by the registered asm class visitors
+        ASM_INSTRUMENTED_JARS(TYPE_ASM_INSTRUMENTED_JARS),
 
         // A list of enumerated runtime classes by module,
         // used to reduce IO in checking for duplicates

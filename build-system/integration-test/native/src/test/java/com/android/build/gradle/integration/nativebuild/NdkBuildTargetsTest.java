@@ -21,10 +21,10 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.NativeBuildSystem;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
@@ -49,6 +49,9 @@ public class NdkBuildTargetsTest {
                     .addFile(HelloWorldJniApp.libraryCpp("src/main/cpp/library1", "library1.cpp"))
                     .addFile(HelloWorldJniApp.libraryCpp("src/main/cpp/library2", "library2.cpp"))
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+                    // TODO(b/161169301): Support v2 model with ndk-build
+                    .addGradleProperties(
+                            BooleanOption.ENABLE_V2_NATIVE_MODEL.getPropertyName() + "=false")
                     .create();
 
     @Before

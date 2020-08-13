@@ -1,0 +1,52 @@
+{
+  "buildFiles": [
+    "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/runtimeFiles_are_included_even_if_not_built_yet_model___3_17_0_/project/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/bazel-out/darwin-fastbuild/bin/tools/base/build-system/integration-test/native/CmakeBasicProjectTest.runfiles/__main__/prebuilts/studio/sdk/darwin/cmake/3.17.0/bin/ninja",
+      "-C",
+      "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/runtimeFiles_are_included_even_if_not_built_yet_model___3_17_0_/project/.cxx/cmake/debug/x86_64",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/bazel-out/darwin-fastbuild/bin/tools/base/build-system/integration-test/native/CmakeBasicProjectTest.runfiles/__main__/prebuilts/studio/sdk/darwin/cmake/3.17.0/bin/ninja",
+    "-C",
+    "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/runtimeFiles_are_included_even_if_not_built_yet_model___3_17_0_/project/.cxx/cmake/debug/x86_64",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "bar::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "bar",
+      "output": "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/runtimeFiles_are_included_even_if_not_built_yet_model___3_17_0_/project/build/intermediates/cmake/debug/obj/x86_64/libbar.so",
+      "runtimeFiles": [
+        "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/runtimeFiles_are_included_even_if_not_built_yet_model___3_17_0_/project/build/intermediates/cmake/debug/obj/x86_64/libfoo.so"
+      ]
+    },
+    "baz::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "baz",
+      "output": "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/runtimeFiles_are_included_even_if_not_built_yet_model___3_17_0_/project/libbaz.a"
+    },
+    "foo::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "foo",
+      "output": "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/runtimeFiles_are_included_even_if_not_built_yet_model___3_17_0_/project/build/intermediates/cmake/debug/obj/x86_64/libfoo.so"
+    }
+  },
+  "toolchains": {
+    "toolchain": {
+      "cCompilerExecutable": "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang",
+      "cppCompilerExecutable": "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++"
+    }
+  },
+  "cFileExtensions": [],
+  "cppFileExtensions": [
+    "cpp"
+  ]
+}

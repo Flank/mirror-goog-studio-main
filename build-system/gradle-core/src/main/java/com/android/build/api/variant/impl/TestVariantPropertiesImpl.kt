@@ -17,6 +17,8 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.analytics.AnalyticsEnabledTestVariantProperties
+import com.android.build.api.component.analytics.AnalyticsEnabledVariantProperties
 import com.android.build.api.component.impl.ConsumableCreationConfigImpl
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.TestVariantProperties
@@ -29,11 +31,13 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.dexing.DexingType
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
@@ -128,6 +132,9 @@ open class TestVariantPropertiesImpl @Inject constructor(
 
     override val shouldPackageDesugarLibDex: Boolean = variantScope.isCoreLibraryDesugaringEnabled
 
+    override val shouldPackageProfilerDependencies: Boolean = false
+    override val advancedProfilingTransforms: List<String> = emptyList()
+
     // ---------------------------------------------------------------------------------------------
     // Private stuff
     // ---------------------------------------------------------------------------------------------
@@ -152,4 +159,14 @@ open class TestVariantPropertiesImpl @Inject constructor(
 
     override val needsMainDexListForBundle: Boolean
         get() = false
+
+    override fun createUserVisibleVariantPropertiesObject(
+        projectServices: ProjectServices,
+        stats: GradleBuildVariant.Builder
+    ): AnalyticsEnabledVariantProperties =
+        projectServices.objectFactory.newInstance(
+            AnalyticsEnabledTestVariantProperties::class.java,
+            this,
+            stats
+        )
 }

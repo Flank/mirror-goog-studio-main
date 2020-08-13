@@ -1135,7 +1135,6 @@ class LintModelSerializationTest {
             .hasContents("Fake Android manifest")
     }
 
-
     @Test
     fun testLintModelSerializationManifest() {
         val temp = temporaryFolder.newFolder()
@@ -1163,7 +1162,8 @@ class LintModelSerializationTest {
                   <variant name="debug"/>
                 </lint-module>"""
             )
-        val debugXml = """<variant
+        val debugXml =
+            """<variant
                     name="debug"
                     minSdkVersion="5"
                     targetSdkVersion="16"

@@ -16,6 +16,7 @@
 
 package com.android.tools.agent.layoutinspector;
 
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,6 +32,7 @@ import com.android.tools.agent.layoutinspector.property.Property;
 import com.android.tools.agent.layoutinspector.property.ValueType;
 import com.android.tools.agent.layoutinspector.property.ViewNode;
 import com.android.tools.agent.layoutinspector.property.ViewTypeTree;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +41,6 @@ import java.util.Set;
 /** Services for writing the properties of a View into a PropertyEvent protobuf. */
 class Properties {
     private final StringTable mStringTable = new StringTable();
-    private final Object parameterSync = new Object();
     private Map<Long, List<NodeParameterWrapper>> mComposeParameters;
 
     Properties() {
@@ -48,9 +49,7 @@ class Properties {
 
     /** Keep track of the latest parameters found in the compose section. */
     void setComposeParameters(@NonNull Map<Long, List<NodeParameterWrapper>> parameters) {
-        synchronized (parameterSync) {
-            mComposeParameters = parameters;
-        }
+        mComposeParameters = parameters;
     }
 
     /**
@@ -58,18 +57,33 @@ class Properties {
      *
      * @param viewId the id of the view or compose node to send the properties/parameters for.
      */
-    void handleGetProperties(long viewId) {
-        List<NodeParameterWrapper> parameters;
-        synchronized (parameterSync) {
-            parameters = mComposeParameters.get(viewId);
-        }
+    void handleGetProperties(long viewId, int generation) {
+        Map<Long, List<NodeParameterWrapper>> tempThreadSafe = mComposeParameters;
+        List<NodeParameterWrapper> parameters = tempThreadSafe.get(viewId);
         if (parameters != null) {
-            sendComposeParameters(viewId, parameters);
+            sendComposeParameters(viewId, parameters, generation);
             return;
         }
         View view = findViewById(viewId);
         if (view != null) {
-            sendViewAttributes(view);
+            sendViewAttributes(view, generation);
+        }
+    }
+
+    /** Send the properties of all views. */
+    void saveAllViewProperties(@NonNull List<View> rootViews, int generation) {
+        List<View> views = findAllViews(rootViews);
+        for (View view : views) {
+            sendViewAttributes(view, generation);
+        }
+    }
+
+    /** Send the parameters of all compose nodes. */
+    void saveAllComposeParameters(int generation) {
+        Map<Long, List<NodeParameterWrapper>> parameters = mComposeParameters;
+        mComposeParameters = Collections.emptyMap();
+        for (Map.Entry<Long, List<NodeParameterWrapper>> entry : parameters.entrySet()) {
+            sendComposeParameters(entry.getKey(), entry.getValue(), generation);
         }
     }
 
@@ -112,14 +126,63 @@ class Properties {
         return null;
     }
 
+    @NonNull
+    private List<View> findAllViews(@NonNull List<View> roots) {
+        if (roots.isEmpty()) {
+            return roots;
+        }
+        List<View> views = new ArrayList<>();
+        Runnable collectAllViewsOnUIThread =
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            for (View root : roots) {
+                                collectChildren(root, views);
+                            }
+                        } finally {
+                            synchronized (this) {
+                                notify();
+                            }
+                        }
+                    }
+                };
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            collectAllViewsOnUIThread.run();
+        } else {
+            //noinspection SynchronizationOnLocalVariableOrMethodParameter
+            synchronized (collectAllViewsOnUIThread) {
+                roots.get(0).post(collectAllViewsOnUIThread);
+                try {
+                    collectAllViewsOnUIThread.wait();
+                } catch (InterruptedException ignored) {
+                }
+            }
+        }
+        return views;
+    }
+
+    // NotThreadSafe
+    private static void collectChildren(@NonNull View view, @NonNull List<View> list) {
+        list.add(view);
+        if (!(view instanceof ViewGroup)) {
+            return;
+        }
+        ViewGroup group = (ViewGroup) view;
+        int count = group.getChildCount();
+        for (int index = 0; index < count; index++) {
+            collectChildren(group.getChildAt(index), list);
+        }
+    }
+
     private void sendComposeParameters(
-            long viewId, @NonNull List<NodeParameterWrapper> parameters) {
+            long viewId, @NonNull List<NodeParameterWrapper> parameters, int generation) {
         mStringTable.clear();
         long event = allocatePropertyEvent();
         try {
             writeParameters(parameters, event, 0);
             writeStringTable(event);
-            sendPropertyEvent(event, viewId);
+            sendPropertyEvent(event, viewId, generation);
         } catch (Throwable ex) {
             LayoutInspectorService.sendErrorMessage(ex);
         } finally {
@@ -128,7 +191,7 @@ class Properties {
         }
     }
 
-    private void sendViewAttributes(View view) {
+    private void sendViewAttributes(View view, int generation) {
         if (view instanceof WebView) {
             // A WebView requires all property access to happen on the UI thread:
 
@@ -137,22 +200,22 @@ class Properties {
                     new Runnable() {
                         @Override
                         public void run() {
-                            handlePropertyEvent(view);
+                            handlePropertyEvent(view, generation);
                         }
                     });
         } else {
             // All other views can use a non UI thread:
-            handlePropertyEvent(view);
+            handlePropertyEvent(view, generation);
         }
     }
 
-    private void handlePropertyEvent(@NonNull View view) {
+    private void handlePropertyEvent(@NonNull View view, int generation) {
         mStringTable.clear();
         long event = allocatePropertyEvent();
         try {
             writeProperties(view, event);
             writeStringTable(event);
-            sendPropertyEvent(event, view.getUniqueDrawingId());
+            sendPropertyEvent(event, view.getUniqueDrawingId(), generation);
         } catch (Throwable ex) {
             LayoutInspectorService.sendErrorMessage(ex);
         } finally {
@@ -415,7 +478,7 @@ class Properties {
     private native void freePropertyEvent(long event);
 
     /** Sends a property event to Android Studio */
-    private native void sendPropertyEvent(long event, long viewId);
+    private native void sendPropertyEvent(long event, long viewId, int generation);
 
     /** Adds a string entry into the event protobuf. */
     private native void addString(long event, int id, @NonNull String str);

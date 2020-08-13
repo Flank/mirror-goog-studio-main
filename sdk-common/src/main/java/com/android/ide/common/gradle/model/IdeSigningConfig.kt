@@ -35,25 +35,4 @@ interface IdeSigningConfig {
 
     /** The key alias name. */
     val keyAlias: String?
-
-    /** The key password. */
-    val keyPassword: String?
-
-    /** The store type. */
-    val storeType: String?
-
-    /** Signing using JAR Signature Scheme (aka v1 signing) is enabled. */
-    @Deprecated("This property is deprecated")
-    val isV1SigningEnabled: Boolean
-
-    /** Signing using APK Signature Scheme v2 (aka v2 signing) is enabled. */
-    @Deprecated("This property is deprecated")
-    val isV2SigningEnabled: Boolean
-
-    /**
-     * Whether the config is fully configured for signing.
-     *
-     * i.e. all the required information are present.
-     */
-    val isSigningReady: Boolean
 }

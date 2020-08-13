@@ -16,9 +16,6 @@
 package com.android.build.api.variant
 
 import com.android.build.api.component.ComponentProperties
-import com.android.build.api.instrumentation.AsmClassVisitorFactory
-import com.android.build.api.instrumentation.InstrumentationParameters
-import com.android.build.api.instrumentation.InstrumentationScope
 import org.gradle.api.Incubating
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
@@ -84,4 +81,14 @@ interface VariantProperties : ComponentProperties {
      * @return the [MapProperty] with keys as [String]
      */
     val manifestPlaceholders: MapProperty<String, String>
+
+    /**
+     * Variant's packagingOptions, initialized by the corresponding global DSL element.
+     */
+    val packagingOptions: PackagingOptions
+
+    /**
+     * Variant's packagingOptions, initialized by the corresponding global DSL element.
+     */
+    fun packagingOptions(action: PackagingOptions.() -> Unit)
 }

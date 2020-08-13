@@ -19,12 +19,12 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
-import com.android.builder.profile.ProcessProfileWriter
 import com.android.utils.FileUtils
 import com.google.common.base.Joiner
 import com.google.gson.GsonBuilder
@@ -245,9 +245,10 @@ fun readAnnotationProcessorsFromJsonFile(
 fun recordAnnotationProcessorsForAnalytics(
     processors: Map<String, Boolean>,
     projectPath: String,
-    variantName: String
+    variantName: String,
+    analyticService: AnalyticsService
 ) {
-    val variant = ProcessProfileWriter.getOrCreateVariant(projectPath, variantName)
+    val variant = analyticService.getVariantBuilder(projectPath, variantName)
     for (processor in processors.entries) {
         val builder = AnnotationProcessorInfo.newBuilder()
         builder.spec = processor.key

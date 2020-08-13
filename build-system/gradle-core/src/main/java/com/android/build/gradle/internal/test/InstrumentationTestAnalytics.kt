@@ -21,42 +21,45 @@ package com.android.build.gradle.internal.test
 import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.builder.model.TestOptions
 import com.android.Version
-import com.android.builder.profile.ProcessProfileWriter
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.tools.analytics.CommonMetricsData
 import com.android.tools.analytics.recordTestLibrary
 import com.google.wireless.android.sdk.stats.AndroidStudioEvent
 import com.google.wireless.android.sdk.stats.TestLibraries
 import com.google.wireless.android.sdk.stats.TestRun
 import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 
 fun recordOkTestRun(
     dependencies: ArtifactCollection,
     execution: TestOptions.Execution,
     coverageEnabled: Boolean,
-    testCount: Int
+    testCount: Int,
+    analyticsService: AnalyticsService
 ) {
     recordTestRun(
         dependencies = dependencies,
         execution = execution,
         coverageEnabled = coverageEnabled,
         testCount = testCount,
-        infrastructureCrashed = false
+        infrastructureCrashed = false,
+        analyticsService = analyticsService
     )
 }
 
 fun recordCrashedTestRun(
     dependencies: ArtifactCollection,
     execution: TestOptions.Execution,
-    coverageEnabled: Boolean
+    coverageEnabled: Boolean,
+    analyticsService: AnalyticsService
 ) {
     recordTestRun(
         dependencies = dependencies,
         execution = execution,
         coverageEnabled = coverageEnabled,
         testCount = 0,
-        infrastructureCrashed = true
+        infrastructureCrashed = true,
+        analyticsService = analyticsService
     )
 }
 
@@ -65,7 +68,8 @@ private fun recordTestRun(
     execution: TestOptions.Execution,
     coverageEnabled: Boolean,
     testCount: Int,
-    infrastructureCrashed: Boolean
+    infrastructureCrashed: Boolean,
+    analyticsService: AnalyticsService
 ) {
     val run = TestRun.newBuilder().apply {
         testInvocationType = TestRun.TestInvocationType.GRADLE_TEST
@@ -78,7 +82,7 @@ private fun recordTestRun(
         testExecution = AnalyticsUtil.toProto(execution)
     }.build()
 
-    ProcessProfileWriter.get().recordEvent(
+    analyticsService.recordEvent(
         AndroidStudioEvent.newBuilder().apply {
             category = AndroidStudioEvent.EventCategory.TESTS
             kind = AndroidStudioEvent.EventKind.TEST_RUN
