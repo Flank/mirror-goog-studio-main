@@ -59,16 +59,18 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build_bundletool",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/1.0.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/1.1.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
     runtime_deps = [
         ":com.android.tools.build_aapt2-proto",
         ":com.google.auto.value_auto-value-annotations",
+        ":com.google.dagger_dagger",
         ":com.google.errorprone_error_prone_annotations",
         ":com.google.guava_guava",
         ":com.google.protobuf_protobuf-java",
         ":com.google.protobuf_protobuf-java-util",
+        ":javax.inject_javax.inject",
     ],
 )
 
@@ -188,6 +190,14 @@ maven_java_library(
         ":com.google.protobuf_protobuf-java",
         ":org.json_json",
     ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "com.google.dagger_dagger",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/dagger/dagger/2.28.3:jar",
+    visibility = ["//visibility:public"],
+    exports = [":javax.inject_javax.inject"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
