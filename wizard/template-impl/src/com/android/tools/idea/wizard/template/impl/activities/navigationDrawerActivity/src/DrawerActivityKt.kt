@@ -15,17 +15,32 @@
  */
 package com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.src
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
+import com.android.tools.idea.wizard.template.underscoreToLowerCamelCase
 
 fun drawerActivityKt(
   packageName: String,
   activityClass: String,
+  appBarLayoutName: String,
   layoutName: String,
   menuName: String,
   navHostFragmentId: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layoutName)}.inflate(layoutInflater)
+     setContentView(binding.root)
+  """ else "setContentView(R.layout.$layoutName)"
+  val appBarMainBinding = underscoreToLowerCamelCase(appBarLayoutName)
+  return """
 package ${escapeKotlinIdentifier(packageName)}
 import android.os.Bundle
 import android.view.Menu
@@ -40,24 +55,34 @@ import androidx.navigation.ui.setupWithNavController
 import ${getMaterialComponentName("android.support.v4.widget.DrawerLayout", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.widget.Toolbar", useAndroidX)}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
 
 class ${activityClass} : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
+${renderIf(isViewBindingSupported) {"""
+    private lateinit var binding: ${layoutToViewBindingClass(layoutName)}
+"""}}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.${layoutName})
-        val toolbar: Toolbar = findViewById(R.id.toolbar)
-        setSupportActionBar(toolbar)
+        ${contentViewBlock}
+        setSupportActionBar(${findViewById(
+          Language.Kotlin, 
+          isViewBindingSupported, 
+          id = "toolbar",
+          bindingName = "binding.${appBarMainBinding}")})
 
-        val fab: FloatingActionButton = findViewById(R.id.fab)
-        fab.setOnClickListener { view ->
+        ${findViewById(
+          Language.Kotlin, 
+          isViewBindingSupported, 
+          id = "fab", 
+          bindingName = "binding.${appBarMainBinding}")}.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }
-        val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
-        val navView: NavigationView = findViewById(R.id.nav_view)
+        val drawerLayout: DrawerLayout = ${findViewById(Language.Kotlin, isViewBindingSupported, id = "drawer_layout")}
+        val navView: NavigationView = ${findViewById(Language.Kotlin, isViewBindingSupported, id = "nav_view")}
         val navController = findNavController(R.id.${navHostFragmentId})
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
@@ -79,3 +104,4 @@ class ${activityClass} : AppCompatActivity() {
     }
 }
 """
+}

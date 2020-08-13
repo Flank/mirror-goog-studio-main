@@ -106,9 +106,31 @@ fun RecipeExecutor.generateNavigationDrawer(
     generateSimpleMenu(packageName, activityClass, resOut, menuName)
   }
 
-  saveFragmentAndViewModel(resOut, srcOut, language, packageName, "home", useAndroidX)
-  saveFragmentAndViewModel(resOut, srcOut, language, packageName, "gallery", useAndroidX)
-  saveFragmentAndViewModel(resOut, srcOut, language, packageName, "slideshow", useAndroidX)
+  val isViewBindingSupported = data.viewBindingSupport.isViewBindingSupported()
+  saveFragmentAndViewModel(
+    resOut = resOut,
+    srcOut = srcOut,
+    language = language,
+    packageName = packageName,
+    fragmentPrefix = "home",
+    useAndroidX = useAndroidX,
+    isViewBindingSupported = isViewBindingSupported)
+  saveFragmentAndViewModel(
+    resOut = resOut,
+    srcOut = srcOut,
+    language = language,
+    packageName = packageName,
+    fragmentPrefix = "gallery",
+    useAndroidX = useAndroidX,
+    isViewBindingSupported = isViewBindingSupported)
+  saveFragmentAndViewModel(
+    resOut = resOut,
+    srcOut = srcOut,
+    language = language,
+    packageName = packageName,
+    fragmentPrefix = "slideshow",
+    useAndroidX = useAndroidX,
+    isViewBindingSupported = isViewBindingSupported)
   if (language == Language.Kotlin) {
     requireJavaVersion("1.8", true)
   }
@@ -145,19 +167,23 @@ fun RecipeExecutor.generateNavigationDrawer(
       drawerActivityKt(
         packageName = packageName,
         activityClass = activityClass,
+        appBarLayoutName = appBarLayoutName,
         layoutName = layoutName,
         menuName = menuName,
         navHostFragmentId = navHostFragmentId,
-        useAndroidX = useAndroidX
+        useAndroidX = useAndroidX,
+        isViewBindingSupported = isViewBindingSupported
       )
     else
       drawerActivityJava(
         packageName = packageName,
         activityClass = activityClass,
+        appBarLayoutName = appBarLayoutName,
         layoutName = layoutName,
         menuName = menuName,
         navHostFragmentId = navHostFragmentId,
-        useAndroidX = useAndroidX
+        useAndroidX = useAndroidX,
+        isViewBindingSupported = isViewBindingSupported
       ),
     srcOut.resolve("${activityClass}.${language.extension}")
   )

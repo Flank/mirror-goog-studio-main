@@ -21,6 +21,17 @@ import com.android.tools.idea.wizard.template.renderIf
 import com.android.tools.idea.wizard.template.underscoreToCamelCase
 import com.android.tools.idea.wizard.template.underscoreToLowerCamelCase
 
+/**
+ * Replaces the findViewById call with the equivalent of view binding.
+ *
+ * @param language the language of the template that calls findViewById
+ * @param isViewBindingSupported indicates if the caller supports view binding
+ * @param id String representation of the id
+ * @param bindingName name of the variable of the view binding class.
+ *        E.g. used in a form of ${bidingName}.${id}. "binding" is used as a default value
+ * @param className name of the class if the obtained view needs explicit cast
+ * @param parentView name of the parent view if exists. Usually called from a class that doesn't have findViewById method. E.g. Fragment
+ */
 fun findViewById(
   language: Language,
   isViewBindingSupported: Boolean,

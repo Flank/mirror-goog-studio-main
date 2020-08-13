@@ -92,7 +92,7 @@ ${renderIf(isViewBindingSupported) {"""
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ${contentViewBlock}
-        setSupportActionBar(${findViewById(Language.Kotlin, isViewBindingSupported, id = "toolbar", bindingName = "binding")})
+        setSupportActionBar(${findViewById(Language.Kotlin, isViewBindingSupported, id = "toolbar")})
 
         val navController = findNavController(R.id.${navHostFragmentId})
         appBarConfiguration = AppBarConfiguration(navController.graph)
@@ -102,7 +102,6 @@ ${renderIf(isViewBindingSupported) {"""
           Language.Kotlin,
           isViewBindingSupported = isViewBindingSupported,
           id = "fab",
-          bindingName = "binding",
           className = "FloatingActionButton")}.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()

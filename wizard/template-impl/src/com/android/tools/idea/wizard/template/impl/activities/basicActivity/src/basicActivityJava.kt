@@ -101,7 +101,7 @@ ${renderIf(isViewBindingSupported) {"""
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         $contentViewBlock
-        setSupportActionBar(${findViewById(Language.Java, isViewBindingSupported, id = "toolbar", bindingName = "binding")});
+        setSupportActionBar(${findViewById(Language.Java, isViewBindingSupported, id = "toolbar")});
 
         NavController navController = Navigation.findNavController(this, R.id.${navHostFragmentId});
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
@@ -110,8 +110,7 @@ ${renderIf(isViewBindingSupported) {"""
         ${findViewById(
           Language.Java,
           isViewBindingSupported = isViewBindingSupported,
-          id = "fab",
-          bindingName = "binding")}.setOnClickListener(new View.OnClickListener() {
+          id = "fab")}.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)

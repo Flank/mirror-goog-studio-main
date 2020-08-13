@@ -73,7 +73,6 @@ ${renderIf(isViewBindingSupported) {"""
             Language.Kotlin,
             isViewBindingSupported,
             id = "button_second",
-            bindingName = "binding",
             className = "Button",
             parentView = "view")}.setOnClickListener {
             findNavController().navigate(R.id.action_${secondFragmentClass}_to_${firstFragmentClass})

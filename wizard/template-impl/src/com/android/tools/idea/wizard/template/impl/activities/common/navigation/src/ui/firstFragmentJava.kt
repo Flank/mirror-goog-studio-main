@@ -15,18 +15,31 @@
  */
 package com.android.tools.idea.wizard.template.impl.activities.common.navigation.src.ui
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
 
 fun firstFragmentJava(
   packageName: String,
   firstFragmentClass: String,
   navFragmentPrefix: String,
   navViewModelClass: String,
-  useAndroidX: Boolean
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
 ): String {
   val viewModelInitializationBlock = if (useAndroidX) "new ViewModelProvider(this).get(${navViewModelClass}.class);"
   else "new ViewModelProvider(this, new ViewModelProvider.NewInstanceFactory()).get(${navViewModelClass}.class);"
+
+  val layoutName = "fragment_${navFragmentPrefix}"
+  val onCreateViewBlock = if (isViewBindingSupported) """
+    binding = ${layoutToViewBindingClass(layoutName)}.inflate(inflater, container, false);
+    View root = binding.getRoot();
+  """
+  else "View root = inflater.inflate(R.layout.$layoutName, container, false);"
 
   return """
 package ${packageName}.ui.${navFragmentPrefix};
@@ -42,17 +55,25 @@ import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX
 import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)};
 import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)};
 import ${packageName}.R;
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
 
 public class ${firstFragmentClass} extends Fragment {
 
     private ${navViewModelClass} ${navFragmentPrefix}ViewModel;
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(layoutName)} binding;
+"""}}
 
     public View onCreateView(@NonNull LayoutInflater inflater,
             ViewGroup container, Bundle savedInstanceState) {
         ${navFragmentPrefix}ViewModel =
                 $viewModelInitializationBlock
-        View root = inflater.inflate(R.layout.fragment_${navFragmentPrefix}, container, false);
-        final TextView textView = root.findViewById(R.id.text_${navFragmentPrefix});
+        $onCreateViewBlock
+        final TextView textView = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "text_${navFragmentPrefix}",
+          parentView = "root")};
         ${navFragmentPrefix}ViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
@@ -61,6 +82,14 @@ public class ${firstFragmentClass} extends Fragment {
         });
         return root;
     }
+
+${renderIf(isViewBindingSupported) {"""
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+"""}}
 }
 """
 }

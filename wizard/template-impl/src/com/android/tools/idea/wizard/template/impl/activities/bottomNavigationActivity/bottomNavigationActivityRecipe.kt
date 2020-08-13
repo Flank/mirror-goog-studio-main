@@ -68,9 +68,31 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   )
 
   val language = projectData.language
-  saveFragmentAndViewModel(resOut, srcOut, language, packageName, "home", useAndroidX)
-  saveFragmentAndViewModel(resOut, srcOut, language, packageName, "dashboard", useAndroidX)
-  saveFragmentAndViewModel(resOut, srcOut, language, packageName, "notifications", useAndroidX)
+  val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()
+  saveFragmentAndViewModel(
+    resOut = resOut,
+    srcOut = srcOut,
+    language = language,
+    packageName = packageName,
+    fragmentPrefix = "home",
+    useAndroidX = useAndroidX,
+    isViewBindingSupported = isViewBindingSupported)
+  saveFragmentAndViewModel(
+    resOut = resOut,
+    srcOut = srcOut,
+    language = language,
+    packageName = packageName,
+    fragmentPrefix = "dashboard",
+    useAndroidX = useAndroidX,
+    isViewBindingSupported = isViewBindingSupported)
+  saveFragmentAndViewModel(
+    resOut = resOut,
+    srcOut = srcOut,
+    language = language,
+    packageName = packageName,
+    fragmentPrefix = "notifications",
+    useAndroidX = useAndroidX,
+    isViewBindingSupported = isViewBindingSupported)
   navigationDependencies(generateKotlin, useAndroidX, moduleData.apis.appCompatVersion)
   if (generateKotlin) {
     requireJavaVersion("1.8", true)
@@ -95,14 +117,16 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
       layoutName = layoutName,
       navHostFragmentId = navHostFragmentId,
       packageName = packageName,
-      useAndroidX = useAndroidX
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported
     )
     Language.Kotlin -> mainActivityKt(
       activityClass = activityClass,
       layoutName = layoutName,
       navHostFragmentId = navHostFragmentId,
       packageName = packageName,
-      useAndroidX = useAndroidX
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported
     )
   }
 

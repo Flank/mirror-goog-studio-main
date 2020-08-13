@@ -68,7 +68,6 @@ ${renderIf(isViewBindingSupported) {"""
           Language.Java,
           isViewBindingSupported,
           id = "button_first",
-          bindingName = "binding",
           parentView = "view")}.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
