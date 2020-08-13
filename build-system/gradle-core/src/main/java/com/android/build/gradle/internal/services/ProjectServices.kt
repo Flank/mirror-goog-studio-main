@@ -50,6 +50,7 @@ class ProjectServices constructor(
     val projectOptions: ProjectOptions,
     val buildServiceRegistry: BuildServiceRegistry,
     private val aapt2FromMaven: Aapt2FromMaven? = null,
+    private val maxWorkerCount: Int,
     val fileResolver: (Any) -> File
 ) {
     fun initializeAapt2Input(aapt2Input: Aapt2Input) {
@@ -59,5 +60,7 @@ class ProjectServices constructor(
         aapt2Input.binaryDirectory.disallowChanges()
         aapt2Input.version.setDisallowChanges(aapt2FromMaven?.version)
         aapt2Input.useJvmResourceCompiler.setDisallowChanges(projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER])
+        aapt2Input.maxWorkerCount.setDisallowChanges(maxWorkerCount)
+        aapt2Input.maxAapt2Daemons.setDisallowChanges(computeMaxAapt2Daemons(projectOptions))
     }
 }

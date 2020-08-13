@@ -179,6 +179,14 @@ interface Aapt2Input {
 
     @get:Input
     val useJvmResourceCompiler: Property<Boolean>
+
+    /** The max worker count from Gradle, for bucketing in-process resource compilation for workers */
+    @get:Internal
+    val maxWorkerCount: Property<Int>
+
+    /** The max number of AAPT2 daemons, used for bucketing `aapt2 compile` calls for workers */
+    @get:Internal
+    val maxAapt2Daemons: Property<Int>
 }
 
 @Deprecated("Instead use Aapt2Input.use inside a ProfileAwareWorkAction")

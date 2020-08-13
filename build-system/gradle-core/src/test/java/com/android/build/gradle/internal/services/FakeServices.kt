@@ -62,6 +62,7 @@ fun createProjectServices(
         projectOptions,
         buildServiceRegistry,
         aapt2FromMaven = Aapt2FromMaven(objectFactory.fileCollection().from(TestUtils.getAapt2().parent), "test-aapt2"),
+        maxWorkerCount = 1,
         fileResolver = fileResolver
     )
 

@@ -187,7 +187,6 @@ public abstract class MergeResources extends ResourceAwareTask {
         }
 
         return new WorkerExecutorResourceCompilationService(
-                mergeResourcesTask.parallelism,
                 mergeResourcesTask.getProjectName(),
                 mergeResourcesTask.getPath(),
                 mergeResourcesTask.getWorkerExecutor(),
@@ -212,8 +211,6 @@ public abstract class MergeResources extends ResourceAwareTask {
     public abstract DirectoryProperty getDataBindingLayoutInfoOutFolder();
 
     private SyncOptions.ErrorFormatMode errorFormatMode;
-    private final int parallelism =
-            getProject().getGradle().getStartParameter().getMaxWorkerCount();
 
     @Internal
     public abstract Property<String> getAaptEnv();

@@ -34,7 +34,6 @@ import java.io.File
 
 /** Resource compilation service built on top of a Aapt2Daemon and Gradle Worker Executors. */
 class WorkerExecutorResourceCompilationService(
-    private val maxWorkersCount: Int,
     private val projectName: String,
     private val taskOwner: String,
     private val workerExecutor: WorkerExecutor,
@@ -70,6 +69,7 @@ class WorkerExecutorResourceCompilationService(
         if (requests.isEmpty()) {
             return
         }
+        val maxWorkersCount = aapt2Input.maxWorkerCount.get()
         if (aapt2Input.useJvmResourceCompiler.get()) {
             // First remove all values files to be consumed by the kotlin compiler.
             val valuesRequests = requests.filter {
@@ -95,7 +95,7 @@ class WorkerExecutorResourceCompilationService(
         // between workers. Files of the same type will be distributed equally between the workers.
         // Large files of the same type will also be distributed equally between the workers.
         requests.sortWith(compareBy({ getExtension(it.inputFile) }, { it.inputFile.length() }))
-        val buckets = minOf(requests.size, 8) // Max 8 buckets
+        val buckets = minOf(requests.size, aapt2Input.maxAapt2Daemons.get())
 
         for (bucket in 0 until buckets) {
             val bucketRequests = requests.filterIndexed { i, _ ->
