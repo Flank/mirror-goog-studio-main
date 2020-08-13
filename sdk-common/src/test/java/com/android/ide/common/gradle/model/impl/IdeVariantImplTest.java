@@ -26,12 +26,12 @@ import org.junit.Test;
 
 /** Tests for {@link com.android.ide.common.gradle.model.impl.IdeVariantImpl}. */
 public class IdeVariantImplTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
     private GradleVersion myGradleVersion;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
         myGradleVersion = GradleVersion.parse("3.2");
     }
 

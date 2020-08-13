@@ -32,7 +32,7 @@ import org.junit.Test
  */
 class GradleModelConverterUtilTest {
 
-    val modelCache = ModelCache()
+    val modelCache = ModelCache.createForTesting()
 
     @Test
     fun testClassFieldsToDynamicResourceValues() {

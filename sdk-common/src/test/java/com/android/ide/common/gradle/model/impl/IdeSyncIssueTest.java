@@ -25,11 +25,18 @@ import com.android.builder.model.SyncIssue;
 import com.android.ide.common.gradle.model.stubs.SyncIssueStub;
 import com.android.testutils.Serialization;
 import java.io.Serializable;
+import org.junit.Before;
 import org.junit.Test;
 
 /** Tests for {@link IdeSyncIssueImpl}. */
 public class IdeSyncIssueTest {
 
+    private ModelCacheTesting myModelCache;
+
+    @Before
+    public void setUp() throws Exception {
+        myModelCache = ModelCache.createForTesting();
+    }
     @Test
     public void serializable() {
         assertThat(IdeSyncIssueImpl.class).isAssignableTo(Serializable.class);
@@ -37,8 +44,7 @@ public class IdeSyncIssueTest {
 
     @Test
     public void serialization() throws Exception {
-        ModelCache modelCache = new ModelCache();
-        IdeSyncIssueImpl syncIssue = modelCache.syncIssueFrom(new SyncIssueStub());
+        IdeSyncIssueImpl syncIssue = myModelCache.syncIssueFrom(new SyncIssueStub());
         byte[] bytes = Serialization.serialize(syncIssue);
         Object o = Serialization.deserialize(bytes);
         assertEquals(syncIssue, o);
@@ -46,9 +52,8 @@ public class IdeSyncIssueTest {
 
     @Test
     public void constructor() throws Throwable {
-        ModelCache modelCache = new ModelCache();
         SyncIssue original = new SyncIssueStub();
-        IdeSyncIssueImpl copy = modelCache.syncIssueFrom(original);
+        IdeSyncIssueImpl copy = myModelCache.syncIssueFrom(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

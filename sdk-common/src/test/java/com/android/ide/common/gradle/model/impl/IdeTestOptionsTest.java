@@ -27,11 +27,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class IdeTestOptionsTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
     }
 
     @Test

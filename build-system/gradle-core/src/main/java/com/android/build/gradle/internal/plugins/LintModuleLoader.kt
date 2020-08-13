@@ -68,7 +68,7 @@ class LintModuleLoader(
             return try {
                 val model = modelBuilder.buildAll(modelName, project) as AndroidProject
                 // Sync issues are not used in lint.
-                ModelCache().androidProjectFrom(
+                ModelCache.create().androidProjectFrom(
                     model,
                     model.variants,
                     emptyList(),

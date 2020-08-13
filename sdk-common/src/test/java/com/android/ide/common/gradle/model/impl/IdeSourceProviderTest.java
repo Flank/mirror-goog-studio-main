@@ -29,11 +29,11 @@ import org.junit.Test;
 
 /** Tests for {@link com.android.ide.common.gradle.model.impl.IdeSourceProviderImpl}. */
 public class IdeSourceProviderTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
     }
 
     @Test

@@ -37,11 +37,11 @@ import org.junit.Test;
 
 /** Tests for {@link IdeAndroidProjectImpl}. */
 public class IdeAndroidProjectImplTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
     }
 
     @Test
@@ -220,26 +220,24 @@ public class IdeAndroidProjectImplTest {
 
     @Test
     public void defaultVariantHeuristicTest_allVariantsRemoved() {
-        assertThat(myModelCache.getDefaultVariant(ImmutableList.of())).isNull();
+        assertThat(ModelCacheKt.getDefaultVariant(ImmutableList.of())).isNull();
     }
 
     @Test
     public void defaultVariantHeuristicTest_picksDebug() {
-        assertThat(myModelCache.getDefaultVariant(ImmutableList.of("a", "z", "debug", "release")))
+      assertThat(ModelCacheKt.getDefaultVariant(ImmutableList.of("a", "z", "debug", "release")))
                 .isEqualTo("debug");
     }
 
     @Test
     public void defaultVariantHeuristicTest_picksDebugWithFlavors() {
-        assertThat(
-                        myModelCache.getDefaultVariant(
-                                ImmutableList.of("aRelease", "bRelease", "bDebug", "cDebug")))
+      assertThat(ModelCacheKt.getDefaultVariant(ImmutableList.of("aRelease", "bRelease", "bDebug", "cDebug")))
                 .isEqualTo("bDebug");
     }
 
     @Test
     public void defaultVariantHeuristicTest_alphabeticalFallback() {
-        assertThat(myModelCache.getDefaultVariant(ImmutableList.of("a", "b"))).isEqualTo("a");
+        assertThat(ModelCacheKt.getDefaultVariant(ImmutableList.of("a", "b"))).isEqualTo("a");
     }
 
     @Test

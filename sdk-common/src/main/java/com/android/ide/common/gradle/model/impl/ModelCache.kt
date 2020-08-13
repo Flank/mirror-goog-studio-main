@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:Suppress("DEPRECATION")
+
 package com.android.ide.common.gradle.model.impl
 
 import com.android.SdkConstants
@@ -77,6 +79,7 @@ import com.android.ide.common.gradle.model.IdeVariant
 import com.android.ide.common.gradle.model.IdeVariantBuildInformation
 import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions
 import com.android.ide.common.gradle.model.IdeViewBindingOptions
+import com.android.ide.common.gradle.model.impl.ModelCache.Companion.LOCAL_AARS
 import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeAndroidProjectImpl
 import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeArtifactImpl
 import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeFileImpl
@@ -100,7 +103,100 @@ import com.google.common.collect.Iterables
 import java.io.File
 import java.util.HashMap
 
-class ModelCache {
+interface ModelCache {
+  /**
+   * Stores the [buildFolder] path for the given [moduleGradlePath] and [buildId].
+   */
+  fun addBuildFolderPath(buildId: String, moduleGradlePath: String, buildFolder: File)
+
+  /**
+   * Set the build identifier of root project.
+   */
+  fun setRootBuildId(rootBuildId: String)
+
+  fun androidProjectFrom(
+    project: AndroidProject,
+    variants: Collection<Variant>,
+    cachedVariants: Collection<IdeVariant>,
+    syncIssues: Collection<SyncIssue>
+  ): IdeAndroidProjectImpl
+
+  fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl
+  fun syncIssueFrom(issue: SyncIssue): IdeSyncIssueImpl
+
+  fun nativeModuleFrom(nativeModule: NativeModule): IdeNativeModuleImpl
+  fun nativeVariantAbiFrom(variantAbi: NativeVariantAbi): IdeNativeVariantAbiImpl
+  fun nativeAndroidProjectFrom(project: NativeAndroidProject): IdeNativeAndroidProjectImpl
+
+  companion object {
+    const val LOCAL_AARS = "__local_aars__"
+
+    @JvmStatic
+    fun create(): ModelCache = ModelCacheImpl.create()
+
+    @JvmStatic
+    @VisibleForTesting
+    fun createForTesting(): ModelCacheTesting = ModelCacheImpl.createForTesting()
+
+    @JvmStatic
+    inline fun <T> safeGet(original: () -> T, default: T): T = try {
+      original()
+    }
+    catch (ignored: UnsupportedOperationException) {
+      default
+    }
+  }
+}
+
+@VisibleForTesting
+interface ModelCacheTesting : ModelCache {
+
+  fun aaptOptionsFrom(original: AaptOptions): IdeAaptOptionsImpl
+  fun androidArtifactFrom(artifact: AndroidArtifact, agpVersion: GradleVersion?): IdeAndroidArtifactImpl
+
+  fun apiVersionFrom(version: ApiVersion): IdeApiVersionImpl
+  fun buildTypeContainerFrom(container: BuildTypeContainer): IdeBuildTypeContainerImpl
+  fun buildTypeFrom(buildType: BuildType): IdeBuildTypeImpl
+  fun classFieldFrom(classField: ClassField): IdeClassFieldImpl
+  fun filterDataFrom(data: FilterData): IdeFilterDataImpl
+  fun javaArtifactFrom(artifact: JavaArtifact): IdeJavaArtifactImpl
+  fun javaCompileOptionsFrom(options: JavaCompileOptions): IdeJavaCompileOptionsImpl
+  fun productFlavorContainerFrom(container: ProductFlavorContainer): IdeProductFlavorContainerImpl
+  fun productFlavorFrom(flavor: ProductFlavor): IdeProductFlavorImpl
+  fun signingConfigFrom(config: SigningConfig): IdeSigningConfigImpl
+  fun sourceProviderContainerFrom(container: SourceProviderContainer): IdeSourceProviderContainerImpl
+  fun testedTargetVariantFrom(variant: TestedTargetVariant): IdeTestedTargetVariantImpl
+  fun testOptionsFrom(testOptions: TestOptions): IdeTestOptionsImpl
+  fun vectorDrawablesOptionsFrom(options: VectorDrawablesOptions): IdeVectorDrawablesOptionsImpl
+  fun viewBindingOptionsFrom(model: ViewBindingOptions): IdeViewBindingOptionsImpl
+  fun variantFrom(variant: Variant, modelVersion: GradleVersion?): IdeVariantImpl
+  fun sourceProviderFrom(provider: SourceProvider): IdeSourceProviderImpl
+  fun lintOptionsFrom(options: LintOptions, modelVersion: GradleVersion?): IdeLintOptionsImpl
+  fun nativeToolchainFrom(toolchain: NativeToolchain): IdeNativeToolchainImpl
+  fun nativeArtifactFrom(artifact: NativeArtifact): IdeNativeArtifactImpl
+  fun nativeFileFrom(file: NativeFile): IdeNativeFileImpl
+  fun nativeSettingsFrom(settings: NativeSettings): IdeNativeSettingsImpl
+  fun androidGradlePluginProjectFlagsFrom(flags: AndroidGradlePluginProjectFlags): IdeAndroidGradlePluginProjectFlagsImpl
+  fun dependenciesFrom(artifact: BaseArtifact): IdeDependencies
+
+  fun libraryFrom(javaLibrary: JavaLibrary): IdeLibrary
+  fun libraryFrom(projectPath: String, artifactAddress: String, buildId: String?): IdeLibrary
+  fun computeAddress(library: Library): String
+
+  fun isLocalAarModule(androidLibrary: AndroidLibrary): Boolean
+
+  fun mavenCoordinatesFrom(coordinates: MavenCoordinates): IdeMavenCoordinatesImpl
+}
+
+private class ModelCacheImpl: ModelCache, ModelCacheTesting {
+  companion object {
+    @JvmStatic
+    fun create(): ModelCache = ModelCacheImpl()
+
+    @JvmStatic
+    fun createForTesting(): ModelCacheTesting = ModelCacheImpl()
+  }
+
   private val strings: MutableMap<String, String> = HashMap()
   private val buildFolderPaths = BuildFolderPaths()
   private val androidLibraryCores = mutableMapOf<IdeAndroidLibraryCore, IdeAndroidLibraryCore>()
@@ -110,22 +206,22 @@ class ModelCache {
   /**
    * Stores the [buildFolder] path for the given [moduleGradlePath] and [buildId].
    */
-  fun addBuildFolderPath(buildId: String, moduleGradlePath: String, buildFolder: File) {
+  override fun addBuildFolderPath(buildId: String, moduleGradlePath: String, buildFolder: File) {
     buildFolderPaths.addBuildFolderMapping(buildId, moduleGradlePath, buildFolder)
   }
 
   /**
    * Set the build identifier of root project.
    */
-  fun setRootBuildId(rootBuildId: String) {
+  override fun setRootBuildId(rootBuildId: String) {
     buildFolderPaths.setRootBuildId(rootBuildId)
   }
 
-  fun androidProjectFrom(
-          project: AndroidProject,
-          variants: Collection<Variant>,
-          cachedVariants: Collection<IdeVariant>,
-          syncIssues: Collection<SyncIssue>
+  override fun androidProjectFrom(
+    project: AndroidProject,
+    variants: Collection<Variant>,
+    cachedVariants: Collection<IdeVariant>,
+    syncIssues: Collection<SyncIssue>
   ): IdeAndroidProjectImpl {
     // Old plugin versions do not return model version.
     val parsedModelVersion = GradleVersion.tryParse(project.modelVersion)
@@ -202,9 +298,9 @@ class ModelCache {
       agpFlags)
   }
 
-  private fun createVariantBuildInformation(
-    project: AndroidProject,
-    agpVersion: GradleVersion?
+  fun createVariantBuildInformation(
+          project: AndroidProject,
+          agpVersion: GradleVersion?
   ): Collection<IdeVariantBuildInformation> {
     return if (agpVersion != null && agpVersion.compareIgnoringQualifiers("4.1.0") >= 0) {
       // make deep copy of VariantBuildInformation.
@@ -214,9 +310,9 @@ class ModelCache {
     // VariantBuildInformation is not available.
   }
 
-  private fun computeVariantNames(variants: Collection<IdeVariant>): List<String> = variants.map(IdeVariant::name)
+  fun computeVariantNames(variants: Collection<IdeVariant>): List<String> = variants.map(IdeVariant::name)
 
-  private fun getProjectType(project: AndroidProject, modelVersion: GradleVersion?): Int {
+  fun getProjectType(project: AndroidProject, modelVersion: GradleVersion?): Int {
     if (modelVersion != null && modelVersion.isAtLeast(2, 3, 0)) {
       return project.projectType
     }
@@ -224,34 +320,11 @@ class ModelCache {
     return if (project.isLibrary) IdeAndroidProject.PROJECT_TYPE_LIBRARY else IdeAndroidProject.PROJECT_TYPE_APP
   }
 
-  /** For older AGP versions pick a variant name based on a heuristic  */
-  @VisibleForTesting
-  fun getDefaultVariant(variantNames: Collection<String>): String? {
-    // Corner case of variant filter accidentally removing all variants.
-    if (variantNames.isEmpty()) {
-      return null
-    }
-
-    // Favor the debug variant
-    if (variantNames.contains("debug")) {
-      return "debug"
-    }
-    // Otherwise the first alphabetically that has debug as a build type.
-    val sortedNames = ImmutableSortedSet.copyOf(variantNames)
-    for (variantName in sortedNames) {
-      if (variantName.endsWith("Debug")) {
-        return variantName
-      }
-    }
-    // Otherwise fall back to the first alphabetically
-    return sortedNames.first()
-  }
-
-  fun aaptOptionsFrom(original: AaptOptions): IdeAaptOptionsImpl {
+  override fun aaptOptionsFrom(original: AaptOptions): IdeAaptOptionsImpl {
     return IdeAaptOptionsImpl(convertNamespacing(copyNewProperty({ original.namespacing }, AaptOptions.Namespacing.DISABLED)))
   }
 
-  private fun convertNamespacing(namespacing: AaptOptions.Namespacing): IdeAaptOptions.Namespacing {
+  fun convertNamespacing(namespacing: AaptOptions.Namespacing): IdeAaptOptions.Namespacing {
     return when (namespacing) {
       AaptOptions.Namespacing.DISABLED -> IdeAaptOptions.Namespacing.DISABLED
       AaptOptions.Namespacing.REQUIRED -> IdeAaptOptions.Namespacing.REQUIRED
@@ -259,9 +332,9 @@ class ModelCache {
     }
   }
 
-  private fun copyOutputs(
-    artifact: AndroidArtifact,
-    agpVersion: GradleVersion?
+  fun copyOutputs(
+          artifact: AndroidArtifact,
+          agpVersion: GradleVersion?
   ): List<IdeAndroidArtifactOutput> {
     // getOutputs is deprecated in AGP 4.0.0.
     if (agpVersion != null && agpVersion.compareIgnoringQualifiers("4.0.0") >= 0) {
@@ -270,9 +343,9 @@ class ModelCache {
     return copy(artifact::getOutputs, ::androidArtifactOutputFrom)
   }
 
-  fun androidArtifactFrom(
-    artifact: AndroidArtifact,
-    agpVersion: GradleVersion?
+  override fun androidArtifactFrom(
+          artifact: AndroidArtifact,
+          agpVersion: GradleVersion?
   ): IdeAndroidArtifactImpl {
     return IdeAndroidArtifactImpl(
       artifact.name,
@@ -293,7 +366,7 @@ class ModelCache {
       copy(artifact::getGeneratedResourceFolders, ::deduplicateFile).distinct(),
       artifact.signingConfigName,
       ImmutableSet.copyOf( // In AGP 4.0 and below abiFilters was nullable, normalize null to empty set.
-                    artifact.abiFilters.orEmpty()),
+        artifact.abiFilters.orEmpty()),
       artifact.isSigned,
       copy(artifact::getAdditionalRuntimeApks, ::deduplicateFile),
       copyNewModel(artifact::getTestOptions, ::testOptionsFrom),
@@ -306,7 +379,7 @@ class ModelCache {
     )
   }
 
-  fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl {
+  override fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl {
     return IdeAndroidArtifactOutputImpl(
       copyFilters(output),
       output.versionCode,
@@ -314,11 +387,11 @@ class ModelCache {
     )
   }
 
-  fun apiVersionFrom(version: ApiVersion): IdeApiVersionImpl {
+  override fun apiVersionFrom(version: ApiVersion): IdeApiVersionImpl {
     return IdeApiVersionImpl(version.apiString, version.codename, version.apiLevel)
   }
 
-  fun buildTypeContainerFrom(container: BuildTypeContainer): IdeBuildTypeContainerImpl {
+  override fun buildTypeContainerFrom(container: BuildTypeContainer): IdeBuildTypeContainerImpl {
     return IdeBuildTypeContainerImpl(
       copyModel(container.buildType, ::buildTypeFrom),
       copyModel(container.sourceProvider, ::sourceProviderFrom),
@@ -326,7 +399,7 @@ class ModelCache {
     )
   }
 
-  fun buildTypeFrom(buildType: BuildType): IdeBuildTypeImpl {
+  override fun buildTypeFrom(buildType: BuildType): IdeBuildTypeImpl {
     return IdeBuildTypeImpl(
       buildType.name,
       copy(buildType::resValues, ::classFieldFrom),
@@ -352,15 +425,15 @@ class ModelCache {
     )
   }
 
-  fun classFieldFrom(classField: ClassField): IdeClassFieldImpl {
+  override fun classFieldFrom(classField: ClassField): IdeClassFieldImpl {
     return IdeClassFieldImpl(classField.name, classField.type, classField.value)
   }
 
-  fun filterDataFrom(data: FilterData): IdeFilterDataImpl {
+  override fun filterDataFrom(data: FilterData): IdeFilterDataImpl {
     return IdeFilterDataImpl(data.identifier, data.filterType)
   }
 
-  fun javaArtifactFrom(artifact: JavaArtifact): IdeJavaArtifactImpl {
+  override fun javaArtifactFrom(artifact: JavaArtifact): IdeJavaArtifactImpl {
     return IdeJavaArtifactImpl(
       artifact.name,
       artifact.compileTaskName,
@@ -378,7 +451,7 @@ class ModelCache {
     )
   }
 
-  fun javaCompileOptionsFrom(options: JavaCompileOptions): IdeJavaCompileOptionsImpl {
+  override fun javaCompileOptionsFrom(options: JavaCompileOptions): IdeJavaCompileOptionsImpl {
     return IdeJavaCompileOptionsImpl(
       options.encoding,
       options.sourceCompatibility,
@@ -386,7 +459,7 @@ class ModelCache {
       copyNewProperty({ options.isCoreLibraryDesugaringEnabled }, false))
   }
 
-  fun productFlavorContainerFrom(
+  override fun productFlavorContainerFrom(
     container: ProductFlavorContainer): IdeProductFlavorContainerImpl {
     return IdeProductFlavorContainerImpl(
       copyModel(container.productFlavor, ::productFlavorFrom),
@@ -395,7 +468,7 @@ class ModelCache {
     )
   }
 
-  private fun copyVectorDrawables(flavor: ProductFlavor): IdeVectorDrawablesOptions? {
+  fun copyVectorDrawables(flavor: ProductFlavor): IdeVectorDrawablesOptions? {
     val vectorDrawables: VectorDrawablesOptions = try {
       flavor.vectorDrawables
     }
@@ -405,7 +478,7 @@ class ModelCache {
     return copyModel(vectorDrawables, ::vectorDrawablesOptionsFrom)
   }
 
-  fun productFlavorFrom(flavor: ProductFlavor): IdeProductFlavorImpl {
+  override fun productFlavorFrom(flavor: ProductFlavor): IdeProductFlavorImpl {
     return IdeProductFlavorImpl(
             flavor.name,
             copy(flavor::resValues, ::classFieldFrom),
@@ -440,7 +513,7 @@ class ModelCache {
     )
   }
 
-  fun signingConfigFrom(config: SigningConfig): IdeSigningConfigImpl {
+  override fun signingConfigFrom(config: SigningConfig): IdeSigningConfigImpl {
     return IdeSigningConfigImpl(
       config.getName(),
       config.storeFile,
@@ -450,14 +523,14 @@ class ModelCache {
     )
   }
 
-  fun sourceProviderContainerFrom(container: SourceProviderContainer): IdeSourceProviderContainerImpl {
+  override fun sourceProviderContainerFrom(container: SourceProviderContainer): IdeSourceProviderContainerImpl {
     return IdeSourceProviderContainerImpl(
       container.artifactName,
       copyModel(container.sourceProvider, ::sourceProviderFrom)
     )
   }
 
-  fun syncIssueFrom(issue: SyncIssue): IdeSyncIssueImpl {
+  override fun syncIssueFrom(issue: SyncIssue): IdeSyncIssueImpl {
 
     return IdeSyncIssueImpl(
       issue.message,
@@ -468,7 +541,7 @@ class ModelCache {
     )
   }
 
-  fun testedTargetVariantFrom(variant: TestedTargetVariant): IdeTestedTargetVariantImpl {
+  override fun testedTargetVariantFrom(variant: TestedTargetVariant): IdeTestedTargetVariantImpl {
     return IdeTestedTargetVariantImpl(variant.targetProjectPath, variant.targetVariant)
   }
 
@@ -482,19 +555,19 @@ class ModelCache {
     }
   }
 
-  fun testOptionsFrom(testOptions: TestOptions): IdeTestOptionsImpl {
+  override fun testOptionsFrom(testOptions: TestOptions): IdeTestOptionsImpl {
     return IdeTestOptionsImpl(testOptions.animationsDisabled, convertExecution(testOptions.execution))
   }
 
-  fun vectorDrawablesOptionsFrom(options: VectorDrawablesOptions): IdeVectorDrawablesOptionsImpl {
+  override fun vectorDrawablesOptionsFrom(options: VectorDrawablesOptions): IdeVectorDrawablesOptionsImpl {
     return IdeVectorDrawablesOptionsImpl(options.useSupportLibrary)
   }
 
-  fun viewBindingOptionsFrom(model: ViewBindingOptions): IdeViewBindingOptionsImpl {
+  override fun viewBindingOptionsFrom(model: ViewBindingOptions): IdeViewBindingOptionsImpl {
     return IdeViewBindingOptionsImpl(enabled = model.isEnabled)
   }
 
-  fun variantFrom(
+  override fun variantFrom(
     variant: Variant,
     modelVersion: GradleVersion?
   ): IdeVariantImpl =
@@ -514,7 +587,7 @@ class ModelCache {
             desugaredMethods = copy(variant::getDesugaredMethods, ::deduplicateString)
     )
 
-  private fun getTestedTargetVariants(variant: Variant): List<IdeTestedTargetVariantImpl> {
+  fun getTestedTargetVariants(variant: Variant): List<IdeTestedTargetVariantImpl> {
     return try {
       copy(variant::getTestedTargetVariants) { targetVariant: TestedTargetVariant ->
         IdeTestedTargetVariantImpl(targetVariant.targetProjectPath, targetVariant.targetVariant)
@@ -535,7 +608,7 @@ class ModelCache {
     apkFromBundleTaskOutputListingFile = model.apkFromBundleTaskOutputListingFile
   )
 
-  fun sourceProviderFrom(provider: SourceProvider): IdeSourceProviderImpl {
+  override fun sourceProviderFrom(provider: SourceProvider): IdeSourceProviderImpl {
     val folder: File? = provider.manifestFile.parentFile
 
     fun File.makeRelativeAndDeduplicate(): String = (if (folder != null) relativeToOrSelf(folder) else this).path.deduplicate()
@@ -559,7 +632,7 @@ class ModelCache {
     )
   }
 
-  fun lintOptionsFrom(options: LintOptions, modelVersion: GradleVersion?): IdeLintOptionsImpl = IdeLintOptionsImpl(
+  override fun lintOptionsFrom(options: LintOptions, modelVersion: GradleVersion?): IdeLintOptionsImpl = IdeLintOptionsImpl(
     baselineFile = if (modelVersion != null && modelVersion.isAtLeast(2, 3, 0, "beta", 2, true))
       options.baselineFile
     else
@@ -598,7 +671,7 @@ class ModelCache {
     includeInBundle = model.includeInBundle
   )
 
-  fun nativeAndroidProjectFrom(project: NativeAndroidProject): IdeNativeAndroidProjectImpl {
+  override fun nativeAndroidProjectFrom(project: NativeAndroidProject): IdeNativeAndroidProjectImpl {
     return IdeNativeAndroidProjectImpl(
             project.modelVersion,
             project.apiVersion,
@@ -614,7 +687,7 @@ class ModelCache {
     )
   }
 
-  fun nativeToolchainFrom(toolchain: NativeToolchain): IdeNativeToolchainImpl {
+  override fun nativeToolchainFrom(toolchain: NativeToolchain): IdeNativeToolchainImpl {
     return IdeNativeToolchainImpl(
             toolchain.name,
             toolchain.cCompilerExecutable,
@@ -628,7 +701,7 @@ class ModelCache {
       copy(variantInfo::getBuildRootFolderMap, ::deduplicateFile))
   }
 
-  fun nativeArtifactFrom(artifact: NativeArtifact): IdeNativeArtifactImpl {
+  override fun nativeArtifactFrom(artifact: NativeArtifact): IdeNativeArtifactImpl {
     return IdeNativeArtifactImpl(
             artifact.name,
             artifact.toolChain,
@@ -641,18 +714,18 @@ class ModelCache {
     )
   }
 
-  fun nativeFileFrom(file: NativeFile): IdeNativeFileImpl {
+  override fun nativeFileFrom(file: NativeFile): IdeNativeFileImpl {
     return IdeNativeFileImpl(file.filePath, file.settingsName, file.workingDirectory)
   }
 
-  fun nativeSettingsFrom(settings: NativeSettings): IdeNativeSettingsImpl {
+  override fun nativeSettingsFrom(settings: NativeSettings): IdeNativeSettingsImpl {
     return IdeNativeSettingsImpl(
-            settings.name,
-            copy(settings::getCompilerFlags, ::deduplicateString)
+      settings.name,
+      copy(settings::getCompilerFlags, ::deduplicateString)
     )
   }
 
-  fun nativeVariantAbiFrom(variantAbi: NativeVariantAbi): IdeNativeVariantAbiImpl {
+  override fun nativeVariantAbiFrom(variantAbi: NativeVariantAbi): IdeNativeVariantAbiImpl {
     return IdeNativeVariantAbiImpl(
       copy(variantAbi::getBuildFiles, ::deduplicateFile),
       copy(variantAbi::getArtifacts, ::nativeArtifactFrom),
@@ -664,7 +737,7 @@ class ModelCache {
     )
   }
 
-  fun nativeModuleFrom(nativeModule: NativeModule): IdeNativeModuleImpl {
+  override fun nativeModuleFrom(nativeModule: NativeModule): IdeNativeModuleImpl {
     return IdeNativeModuleImpl(
       nativeModule.name,
       copy(nativeModule::variants, ::nativeVariantFrom),
@@ -696,8 +769,8 @@ class ModelCache {
     )
   }
 
-  fun androidGradlePluginProjectFlagsFrom(flags: AndroidGradlePluginProjectFlags): IdeAndroidGradlePluginProjectFlagsImpl =
-          IdeAndroidGradlePluginProjectFlagsImpl(flags.booleanFlagMap)
+  override fun androidGradlePluginProjectFlagsFrom(flags: AndroidGradlePluginProjectFlags): IdeAndroidGradlePluginProjectFlagsImpl =
+    IdeAndroidGradlePluginProjectFlagsImpl(flags.booleanFlagMap)
 
   fun copyFilters(output: VariantOutput): Collection<FilterData> {
     return copy(
@@ -715,14 +788,13 @@ class ModelCache {
   /**
    * Create [IdeDependencies] from [BaseArtifact].
    */
-  fun dependenciesFrom(artifact: BaseArtifact): IdeDependencies {
+  override fun dependenciesFrom(artifact: BaseArtifact): IdeDependencies {
     return createFromDependencies(artifact.dependencies)
   }
 
 
   /**
    * @param androidLibrary Instance of [AndroidLibrary] returned by android plugin.
-   * @param moduleBuildDirs Instance of [BuildFolderPaths] that contains map from project
    * path to build directory for all modules.
    * @return Instance of [Library] based on dependency type.
    */
@@ -766,7 +838,7 @@ class ModelCache {
    * @param javaLibrary Instance of [JavaLibrary] returned by android plugin.
    * @return Instance of [Library] based on dependency type.
    */
-  fun libraryFrom(javaLibrary: JavaLibrary): IdeLibrary {
+  override fun libraryFrom(javaLibrary: JavaLibrary): IdeLibrary {
     val project = copyNewProperty(javaLibrary::getProject)
     return if (project != null) {
       // Java modules don't have variant.
@@ -782,7 +854,7 @@ class ModelCache {
     }
   }
 
-  private fun createIdeModuleLibrary(library: AndroidLibrary, artifactAddress: String): IdeLibrary {
+  fun createIdeModuleLibrary(library: AndroidLibrary, artifactAddress: String): IdeLibrary {
     val core = IdeModuleLibraryCore(
             artifactAddress = artifactAddress,
             buildId = copyNewProperty(library::getBuildId),
@@ -795,7 +867,7 @@ class ModelCache {
     return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided)
   }
 
-  private fun createIdeModuleLibrary(library: JavaLibrary, artifactAddress: String): IdeLibrary {
+  fun createIdeModuleLibrary(library: JavaLibrary, artifactAddress: String): IdeLibrary {
     val core = IdeModuleLibraryCore(
             artifactAddress = artifactAddress,
             buildId = copyNewProperty(library::getBuildId),
@@ -808,16 +880,12 @@ class ModelCache {
     return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided)
   }
 
-  fun libraryFrom(projectPath: String, artifactAddress: String, buildId: String?): IdeLibrary {
+  override fun libraryFrom(projectPath: String, artifactAddress: String, buildId: String?): IdeLibrary {
     val core = IdeModuleLibraryCore(projectPath, artifactAddress, buildId)
     return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided = false)
   }
 
-  companion object {
-    const val LOCAL_AARS = "__local_aars__"
-  }
-
-  private fun getSymbolFilePath(androidLibrary: AndroidLibrary): String {
+  fun getSymbolFilePath(androidLibrary: AndroidLibrary): String {
     return try {
       androidLibrary.symbolFile.path
     }
@@ -830,7 +898,7 @@ class ModelCache {
    * @param library Instance of level 1 Library.
    * @return The artifact address that can be used as unique identifier in global library map.
    */
-  fun computeAddress(library: Library): String {
+  override fun computeAddress(library: Library): String {
     // If the library is an android module dependency, use projectId:projectPath::variant as unique identifier.
     // MavenCoordinates cannot be used because it doesn't contain variant information, which results
     // in the same MavenCoordinates for different variants of the same module.
@@ -871,7 +939,7 @@ class ModelCache {
   }
 
   /** Indicates whether the given library is a module wrapping an AAR file.  */
-  fun isLocalAarModule(androidLibrary: AndroidLibrary): Boolean {
+  override fun isLocalAarModule(androidLibrary: AndroidLibrary): Boolean {
     val projectPath = androidLibrary.project ?: return false
     val buildFolderPath = buildFolderPaths.findBuildFolderPath(
       projectPath,
@@ -882,9 +950,10 @@ class ModelCache {
             && !FileUtils.isFileInDirectory(androidLibrary.bundle, buildFolderPath))
   }
 
-  private fun computeResolvedCoordinate(library: Library): IdeMavenCoordinatesImpl {
+  fun computeResolvedCoordinate(library: Library): IdeMavenCoordinatesImpl {
     // Although getResolvedCoordinates is annotated with @NonNull, it can return null for plugin 1.5,
     // when the library dependency is from local jar.
+    @Suppress("SENSELESS_COMPARISON")
     return if (library.resolvedCoordinates != null) {
       mavenCoordinatesFrom(library.resolvedCoordinates)
     }
@@ -902,7 +971,7 @@ class ModelCache {
 
 
   /** Call this method on level 1 Dependencies model.  */
-  private fun createFromDependencies(dependencies: Dependencies): IdeDependencies {
+  fun createFromDependencies(dependencies: Dependencies): IdeDependencies {
     val worker = Worker(dependencies)
     return worker.createInstance()
   }
@@ -1006,6 +1075,7 @@ class ModelCache {
       val moduleDependencies = ImmutableList.builder<IdeLibrary?>()
       for (address in artifactAddresses) {
         val library = librariesById[address]!!
+        @Suppress("REDUNDANT_ELSE_IN_WHEN")
         when (library.type) {
           IdeLibrary.LibraryType.LIBRARY_ANDROID -> androidLibraries.add(library)
           IdeLibrary.LibraryType.LIBRARY_JAVA -> javaLibraries.add(library)
@@ -1020,41 +1090,6 @@ class ModelCache {
               ImmutableList.copyOf(runtimeOnlyJars))
     }
   }
-
-  inline fun <K, V> copy(original: () -> Collection<K>, mapper: (K) -> V): List<V> =
-          try {
-            original()
-          }
-          catch (ignored: UnsupportedOperationException) {
-            listOf<K>()
-          }.map(mapper)
-
-  inline fun <K, V> copy(original: () -> Set<K>, mapper: (K) -> V): Set<V> =
-    try {
-      original()
-    }
-    catch (ignored: UnsupportedOperationException) {
-      setOf<K>()
-    }
-      .map(mapper)
-      .toSet()
-
-  @JvmName("copyNullableCollection")
-  inline fun <K, V> copy(original: () -> Collection<K>?, mapper: (K) -> V): List<V>? =
-    try {
-      original()
-    }
-    catch (ignored: UnsupportedOperationException) {
-      null
-    }?.map(mapper)
-
-  inline fun <K, V, R> copy(original: () -> Map<K, V>, mapper: (V) -> R): Map<K, R> =
-    try {
-      original()
-    }
-    catch (ignored: UnsupportedOperationException) {
-      mapOf<K, V>()
-    }.mapValues { (_, v) -> mapper(v) }
 
     fun <T> copyNewPropertyWithDefault(propertyInvoker: () -> T, defaultValue: () -> T): T {
       return try {
@@ -1095,6 +1130,7 @@ class ModelCache {
      * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
      *       Please use function references or anonymous functions which seeds type inference.
      **/
+    @Suppress("UNUSED_PARAMETER")
     inline fun <T : Collection<*>> copyNewProperty(propertyInvoker: () -> T, defaultValue: T): Unit = error(
       "Cannot be called. Use copy() method.")
 
@@ -1102,6 +1138,7 @@ class ModelCache {
      * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
      *       Please use function references or anonymous functions which seeds type inference.
      **/
+    @Suppress("UNUSED_PARAMETER")
     inline fun <T : Map<*, *>> copyNewProperty(propertyInvoker: () -> T, defaultValue: T): Unit = error(
       "Cannot be called. Use copy() method.")
 
@@ -1110,6 +1147,7 @@ class ModelCache {
      *       Please use function references or anonymous functions which seeds type inference.
      **/
     @JvmName("impossibleCopyNewCollectionProperty")
+    @Suppress("UNUSED_PARAMETER")
     inline fun <T : Collection<*>?> copyNewProperty(propertyInvoker: () -> T): Unit = error("Cannot be called. Use copy() method.")
 
     /**
@@ -1117,9 +1155,10 @@ class ModelCache {
      *       Please use function references or anonymous functions which seeds type inference.
      **/
     @JvmName("impossibleCopyNewMapProperty")
+    @Suppress("UNUSED_PARAMETER")
     inline fun <T : Map<*, *>?> copyNewProperty(propertyInvoker: () -> T): Unit = error("Cannot be called. Use copy() method.")
 
-    fun mavenCoordinatesFrom(coordinates: MavenCoordinates): IdeMavenCoordinatesImpl {
+    override fun mavenCoordinatesFrom(coordinates: MavenCoordinates): IdeMavenCoordinatesImpl {
       return IdeMavenCoordinatesImpl(
         coordinates.groupId,
         coordinates.artifactId,
@@ -1129,9 +1168,23 @@ class ModelCache {
       )
     }
 
-    fun mavenCoordinatesFrom(localJar: File): IdeMavenCoordinatesImpl {
-      return IdeMavenCoordinatesImpl(LOCAL_AARS, localJar.path, "unspecified", "jar", null)
-    }
+  fun mavenCoordinatesFrom(localJar: File): IdeMavenCoordinatesImpl {
+    return IdeMavenCoordinatesImpl(LOCAL_AARS, localJar.path, "unspecified", "jar", null)
+  }
+
+
+  private inline fun <K, V> copy(original: () -> Collection<K>, mapper: (K) -> V): List<V> =
+          ModelCache.safeGet(original, listOf()).map(mapper)
+
+  private inline fun <K, V> copy(original: () -> Set<K>, mapper: (K) -> V): Set<V> =
+          ModelCache.safeGet(original, setOf()).map(mapper).toSet()
+
+  @JvmName("copyNullableCollection")
+  private inline fun <K, V> copy(original: () -> Collection<K>?, mapper: (K) -> V): List<V>? =
+          ModelCache.safeGet(original, null)?.map(mapper)
+
+  private inline fun <K, V, R> copy(original: () -> Map<K, V>, mapper: (V) -> R): Map<K, R> =
+          ModelCache.safeGet(original, mapOf()).mapValues { (_, v) -> mapper(v) }
 
   inline fun <K : Any, V> copyModel(key: K, mappingFunction: (K) -> V): V = mappingFunction(key)
 
@@ -1139,8 +1192,8 @@ class ModelCache {
   inline fun <K : Any, V> copyModel(key: K?, mappingFunction: (K) -> V): V? = key?.let(mappingFunction)
 
   inline fun <K, V : Any> copyNewModel(
-    getter: () -> K?,
-    mapper: (K) -> V
+          getter: () -> K?,
+          mapper: (K) -> V
   ): V? {
     return try {
       val key: K? = getter()
@@ -1156,5 +1209,27 @@ class ModelCache {
   fun String.deduplicate() = deduplicateString(this)
 }
 
-private fun <T> MutableMap<T, T>.internCore(core: T): T = getOrPut(core) { core }
+/** For older AGP versions pick a variant name based on a heuristic  */
+@VisibleForTesting
+fun getDefaultVariant(variantNames: Collection<String>): String? {
+  // Corner case of variant filter accidentally removing all variants.
+  if (variantNames.isEmpty()) {
+    return null
+  }
 
+  // Favor the debug variant
+  if (variantNames.contains("debug")) {
+    return "debug"
+  }
+  // Otherwise the first alphabetically that has debug as a build type.
+  val sortedNames = ImmutableSortedSet.copyOf(variantNames)
+  for (variantName in sortedNames) {
+    if (variantName.endsWith("Debug")) {
+      return variantName
+    }
+  }
+  // Otherwise fall back to the first alphabetically
+  return sortedNames.first()
+}
+
+private fun <T> MutableMap<T, T>.internCore(core: T): T = getOrPut(core) { core }

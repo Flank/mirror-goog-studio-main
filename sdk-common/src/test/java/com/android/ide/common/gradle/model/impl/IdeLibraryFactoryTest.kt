@@ -31,11 +31,11 @@ import java.io.File
 
 /** Tests for [IdeLibraryFactory].  */
 class IdeLibraryFactoryTest {
-  lateinit var modelCache: ModelCache
+  lateinit var modelCache: ModelCacheTesting
 
   @Before
   fun setUp() {
-    modelCache = ModelCache();
+    modelCache = ModelCache.createForTesting();
   }
 
   @Test

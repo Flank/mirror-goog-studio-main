@@ -19,7 +19,6 @@ import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.*;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
-import com.android.builder.model.ClassField;
 import com.android.ide.common.gradle.model.stubs.ClassFieldStub;
 import com.android.testutils.Serialization;
 import java.io.Serializable;
@@ -28,11 +27,11 @@ import org.junit.Test;
 
 /** Tests for {@link IdeClassFieldImpl}. */
 public class IdeClassFieldTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
     }
 
     @Test
@@ -42,8 +41,7 @@ public class IdeClassFieldTest {
 
     @Test
     public void serialization() throws Exception {
-        ModelCache modelCache = new ModelCache();
-        IdeClassFieldImpl classField = modelCache.classFieldFrom(new ClassFieldStub());
+        IdeClassFieldImpl classField = myModelCache.classFieldFrom(new ClassFieldStub());
         byte[] bytes = Serialization.serialize(classField);
         Object o = Serialization.deserialize(bytes);
         assertEquals(classField, o);

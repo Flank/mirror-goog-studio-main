@@ -27,11 +27,11 @@ import org.junit.Test;
 
 /** Tests for {@link IdeAndroidArtifactOutputImpl}. */
 public class IdeAndroidArtifactOutputTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
     }
 
     @Test

@@ -32,12 +32,12 @@ import org.junit.Test;
 
 /** Tests for {@link IdeAndroidArtifactImpl}. */
 public class IdeAndroidArtifactImplTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
     private GradleVersion myGradleVersion;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
         myGradleVersion = GradleVersion.parse("3.2");
     }
 
