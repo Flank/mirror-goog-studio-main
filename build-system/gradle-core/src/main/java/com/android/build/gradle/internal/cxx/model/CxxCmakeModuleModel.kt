@@ -36,4 +36,9 @@ interface CxxCmakeModuleModel {
      *   ex, /path/to/ninja/ninja.exe
      */
     val ninjaExe: File?
+
+    /**
+     * When set, prefer to use CMake's file API over CMake server when possible.
+     */
+    val isPreferCmakeFileApiEnabled: Boolean
 }

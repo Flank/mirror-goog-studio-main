@@ -43,6 +43,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.BooleanOption.BUILD_ONLY_TARGET_ABI
 import com.android.build.gradle.options.BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION
 import com.android.build.gradle.options.BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE
+import com.android.build.gradle.options.BooleanOption.PREFER_CMAKE_FILE_API
 import com.android.build.gradle.options.BooleanOption.ENABLE_PROFILE_JSON
 import com.android.build.gradle.options.BooleanOption.ENABLE_V2_NATIVE_MODEL
 import com.android.build.gradle.options.StringOption
@@ -102,7 +103,8 @@ data class CxxConfigurationModel(
     val implicitBuildTargetSet: Set<String>,
     val variantName: String,
     val nativeVariantConfig: NativeBuildSystemVariantConfig,
-    val isV2NativeModelEnabled: Boolean
+    val isV2NativeModelEnabled: Boolean,
+    val isPreferCmakeFileApiEnabled: Boolean
 )
 
 /**
@@ -131,7 +133,7 @@ data class CxxConfigurationModel(
             The build staging directory you specified ('${buildStagingDirectory.absolutePath}')
             is a subdirectory of your project's temporary build directory (
             '${buildFolder.absolutePath}'). Files in this directory do not persist through clean
-            builds. It is recommended to either use the default build staging directory 
+            builds. It is recommended to either use the default build staging directory
             ('$defaultCxxFolder'), or specify a path outside the temporary build directory.
             """.trimIndent())
             buildStagingDirectory
@@ -319,7 +321,8 @@ fun tryCreateCxxConfigurationModel(
         nativeVariantConfig = createNativeBuildSystemVariantConfig(
             buildSystem, componentProperties.variantDslInfo
         ),
-        isV2NativeModelEnabled = option(ENABLE_V2_NATIVE_MODEL)
+        isV2NativeModelEnabled = option(ENABLE_V2_NATIVE_MODEL),
+        isPreferCmakeFileApiEnabled = option(PREFER_CMAKE_FILE_API)
     )
 }
 

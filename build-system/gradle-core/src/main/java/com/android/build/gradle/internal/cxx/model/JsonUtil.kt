@@ -200,14 +200,16 @@ private fun CxxModuleModel.toData() = CxxModuleModelData(
 data class CxxCmakeModuleModelData(
     override val cmakeExe: File,
     override val minimumCmakeVersion: Revision,
-    override val ninjaExe: File?
+    override val ninjaExe: File?,
+    override val isPreferCmakeFileApiEnabled: Boolean
 ) : CxxCmakeModuleModel
 
 private fun CxxCmakeModuleModel.toData() =
     CxxCmakeModuleModelData(
         cmakeExe = cmakeExe,
         minimumCmakeVersion = minimumCmakeVersion,
-        ninjaExe = ninjaExe
+        ninjaExe = ninjaExe,
+        isPreferCmakeFileApiEnabled = isPreferCmakeFileApiEnabled
     )
 
 /**

@@ -116,6 +116,7 @@ fun createCxxModuleModel(
                         override val ninjaExe by lazy {
                             join(cmakeFolder, "bin", "ninja$exe").takeIf { it.exists() }
                         }
+                        override val isPreferCmakeFileApiEnabled = configurationModel.isPreferCmakeFileApiEnabled
                     }
 
                 } else {

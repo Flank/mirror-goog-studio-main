@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
@@ -364,6 +363,8 @@ open class BasicModuleModelMock {
                 .`when`(projectOptions).get(StringOption.IDE_BUILD_TARGET_ABI)
             doReturn(false)
                 .`when`(projectOptions).get(BooleanOption.ENABLE_V2_NATIVE_MODEL)
+            doReturn(false)
+                .`when`(projectOptions).get(BooleanOption.PREFER_CMAKE_FILE_API)
 
             doReturn(defaultCmakeVersion.toString()).`when`(cmake).version
             doReturn(listOf(Abi.X86)).`when`(ndkInstallStatus.getOrThrow()).supportedAbis
