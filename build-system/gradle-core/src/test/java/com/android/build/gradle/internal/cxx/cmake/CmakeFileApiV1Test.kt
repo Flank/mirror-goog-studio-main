@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.cxx.cmake
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.writeNativeBuildConfigValueToJsonFile
 import com.android.testutils.TestUtils
 import com.google.common.truth.Truth
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -261,6 +262,7 @@ class CmakeFileApiV1Test {
         """.trimIndent())
     }
 
+    @Ignore("Broken on mac: b/163815365")
     @Test
     fun runtimeFilesExtractModelData() {
         val replyFolder = prepareReplyFolder("runtimefiles")
