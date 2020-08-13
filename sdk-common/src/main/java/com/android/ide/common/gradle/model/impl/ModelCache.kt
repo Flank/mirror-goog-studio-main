@@ -132,11 +132,11 @@ interface ModelCache {
     const val LOCAL_AARS = "__local_aars__"
 
     @JvmStatic
-    fun create(): ModelCache = ModelCacheImpl.create()
+    fun create(): ModelCache = modelCacheImpl()
 
     @JvmStatic
     @VisibleForTesting
-    fun createForTesting(): ModelCacheTesting = ModelCacheImpl.createForTesting()
+    fun createForTesting(): ModelCacheTesting = modelCacheImpl()
 
     @JvmStatic
     inline fun <T> safeGet(original: () -> T, default: T): T = try {
@@ -150,10 +150,8 @@ interface ModelCache {
 
 @VisibleForTesting
 interface ModelCacheTesting : ModelCache {
-
   fun aaptOptionsFrom(original: AaptOptions): IdeAaptOptionsImpl
   fun androidArtifactFrom(artifact: AndroidArtifact, agpVersion: GradleVersion?): IdeAndroidArtifactImpl
-
   fun apiVersionFrom(version: ApiVersion): IdeApiVersionImpl
   fun buildTypeContainerFrom(container: BuildTypeContainer): IdeBuildTypeContainerImpl
   fun buildTypeFrom(buildType: BuildType): IdeBuildTypeImpl
@@ -178,51 +176,807 @@ interface ModelCacheTesting : ModelCache {
   fun nativeSettingsFrom(settings: NativeSettings): IdeNativeSettingsImpl
   fun androidGradlePluginProjectFlagsFrom(flags: AndroidGradlePluginProjectFlags): IdeAndroidGradlePluginProjectFlagsImpl
   fun dependenciesFrom(artifact: BaseArtifact): IdeDependencies
-
   fun libraryFrom(javaLibrary: JavaLibrary): IdeLibrary
   fun libraryFrom(projectPath: String, artifactAddress: String, buildId: String?): IdeLibrary
   fun computeAddress(library: Library): String
-
   fun isLocalAarModule(androidLibrary: AndroidLibrary): Boolean
-
   fun mavenCoordinatesFrom(coordinates: MavenCoordinates): IdeMavenCoordinatesImpl
 }
 
-private class ModelCacheImpl: ModelCache, ModelCacheTesting {
-  companion object {
-    @JvmStatic
-    fun create(): ModelCache = ModelCacheImpl()
+private fun modelCacheImpl(): ModelCacheTesting {
 
-    @JvmStatic
-    fun createForTesting(): ModelCacheTesting = ModelCacheImpl()
-  }
+  val strings: MutableMap<String, String> = HashMap()
+  val buildFolderPaths = BuildFolderPaths()
+  val androidLibraryCores = mutableMapOf<IdeAndroidLibraryCore, IdeAndroidLibraryCore>()
+  val javaLibraryCores = mutableMapOf<IdeJavaLibraryCore, IdeJavaLibraryCore>()
+  val moduleLibraryCores = mutableMapOf<IdeModuleLibraryCore, IdeModuleLibraryCore>()
 
-  private val strings: MutableMap<String, String> = HashMap()
-  private val buildFolderPaths = BuildFolderPaths()
-  private val androidLibraryCores = mutableMapOf<IdeAndroidLibraryCore, IdeAndroidLibraryCore>()
-  private val javaLibraryCores = mutableMapOf<IdeJavaLibraryCore, IdeJavaLibraryCore>()
-  private val moduleLibraryCores = mutableMapOf<IdeModuleLibraryCore, IdeModuleLibraryCore>()
+  fun deduplicateString(s: String): String = strings.putIfAbsent(s, s) ?: s
+  fun String.deduplicate() = deduplicateString(this)
+  fun deduplicateFile(f: File): File = File(f.path.deduplicate())
 
   /**
    * Stores the [buildFolder] path for the given [moduleGradlePath] and [buildId].
    */
-  override fun addBuildFolderPath(buildId: String, moduleGradlePath: String, buildFolder: File) {
+  fun addBuildFolderPath(buildId: String, moduleGradlePath: String, buildFolder: File) {
     buildFolderPaths.addBuildFolderMapping(buildId, moduleGradlePath, buildFolder)
   }
 
   /**
    * Set the build identifier of root project.
    */
-  override fun setRootBuildId(rootBuildId: String) {
+  fun setRootBuildId(rootBuildId: String) {
     buildFolderPaths.setRootBuildId(rootBuildId)
   }
 
-  override fun androidProjectFrom(
+  fun sourceProviderFrom(provider: SourceProvider): IdeSourceProviderImpl {
+    val folder: File? = provider.manifestFile.parentFile
+
+    fun File.makeRelativeAndDeduplicate(): String = (if (folder != null) relativeToOrSelf(folder) else this).path.deduplicate()
+    fun Collection<File>.makeRelativeAndDeduplicate(): Collection<String> = map { it.makeRelativeAndDeduplicate() }
+
+    return IdeSourceProviderImpl(
+      myName = provider.name,
+      myFolder = folder,
+      myManifestFile = provider.manifestFile.makeRelativeAndDeduplicate(),
+      myJavaDirectories = provider.javaDirectories.makeRelativeAndDeduplicate(),
+      myResourcesDirectories = provider.resourcesDirectories.makeRelativeAndDeduplicate(),
+      myAidlDirectories = provider.aidlDirectories.makeRelativeAndDeduplicate(),
+      myRenderscriptDirectories = provider.renderscriptDirectories.makeRelativeAndDeduplicate(),
+      myCDirectories = provider.cDirectories.makeRelativeAndDeduplicate(),
+      myCppDirectories = provider.cppDirectories.makeRelativeAndDeduplicate(),
+      myResDirectories = provider.resDirectories.makeRelativeAndDeduplicate(),
+      myAssetsDirectories = provider.assetsDirectories.makeRelativeAndDeduplicate(),
+      myJniLibsDirectories = provider.jniLibsDirectories.makeRelativeAndDeduplicate(),
+      myShadersDirectories = copy(provider::getShadersDirectories, mapper = { it }).makeRelativeAndDeduplicate(),
+      myMlModelsDirectories = copy(provider::getMlModelsDirectories, mapper = { it }).makeRelativeAndDeduplicate()
+    )
+  }
+
+  fun classFieldFrom(classField: ClassField): IdeClassFieldImpl {
+    return IdeClassFieldImpl(classField.name, classField.type, classField.value)
+  }
+
+  fun vectorDrawablesOptionsFrom(options: VectorDrawablesOptions): IdeVectorDrawablesOptionsImpl {
+    return IdeVectorDrawablesOptionsImpl(options.useSupportLibrary)
+  }
+
+  fun copyVectorDrawables(flavor: ProductFlavor): IdeVectorDrawablesOptions? {
+    val vectorDrawables: VectorDrawablesOptions = try {
+      flavor.vectorDrawables
+    }
+    catch (e: UnsupportedOperationException) {
+      return null
+    }
+    return copyModel(vectorDrawables, ::vectorDrawablesOptionsFrom)
+  }
+
+  fun apiVersionFrom(version: ApiVersion): IdeApiVersionImpl {
+    return IdeApiVersionImpl(version.apiString, version.codename, version.apiLevel)
+  }
+
+  fun signingConfigFrom(config: SigningConfig): IdeSigningConfigImpl {
+    return IdeSigningConfigImpl(
+      config.getName(),
+      config.storeFile,
+      config.storePassword,
+      config.keyAlias,
+      copyNewProperty(config::isV1SigningEnabled)
+    )
+  }
+
+  fun productFlavorFrom(flavor: ProductFlavor): IdeProductFlavorImpl {
+    return IdeProductFlavorImpl(
+      flavor.name,
+      copy(flavor::resValues, ::classFieldFrom),
+      ImmutableList.copyOf(flavor.proguardFiles),
+      ImmutableList.copyOf(flavor.consumerProguardFiles),
+      // AGP may return internal Groovy GString implementation as a value in
+      // manifestPlaceholders
+      // map. It cannot be serialized
+      // with IDEA's external system serialization. We convert values to String to
+      // make them
+      // usable as they are converted to String by
+      // the manifest merger anyway.
+      ImmutableMap.copyOf(flavor.manifestPlaceholders.entries.associate { it.key to it.value.toString() }),
+      flavor.applicationIdSuffix,
+      copyNewProperty(flavor::versionNameSuffix),
+      copyNewProperty(flavor::multiDexEnabled),
+      ImmutableMap.copyOf(flavor.testInstrumentationRunnerArguments),
+      ImmutableList.copyOf(flavor.resourceConfigurations),
+      copyVectorDrawables(flavor),
+      flavor.dimension,
+      flavor.applicationId,
+      flavor.versionCode,
+      flavor.versionName,
+      copyModel(flavor.minSdkVersion, ::apiVersionFrom),
+      copyModel(flavor.targetSdkVersion, ::apiVersionFrom),
+      flavor.maxSdkVersion,
+      flavor.testApplicationId,
+      flavor.testInstrumentationRunner,
+      flavor.testFunctionalTest,
+      flavor.testHandleProfiling,
+      copyModel(flavor.signingConfig, ::signingConfigFrom)
+    )
+  }
+
+  fun sourceProviderContainerFrom(container: SourceProviderContainer): IdeSourceProviderContainerImpl {
+    return IdeSourceProviderContainerImpl(
+      container.artifactName,
+      copyModel(container.sourceProvider, ::sourceProviderFrom)
+    )
+  }
+
+  fun productFlavorContainerFrom(
+    container: ProductFlavorContainer): IdeProductFlavorContainerImpl {
+    return IdeProductFlavorContainerImpl(
+      copyModel(container.productFlavor, ::productFlavorFrom),
+      copyModel(container.sourceProvider, ::sourceProviderFrom),
+      copy(container::getExtraSourceProviders, ::sourceProviderContainerFrom)
+    )
+  }
+
+  fun syncIssueFrom(issue: SyncIssue): IdeSyncIssueImpl {
+    return IdeSyncIssueImpl(
+      issue.message,
+      copy(fun(): List<String>? = issue.multiLineMessage?.filterNotNull(), ::deduplicateString),
+      issue.data,
+      issue.severity,
+      issue.type
+    )
+  }
+
+  fun buildTypeFrom(buildType: BuildType): IdeBuildTypeImpl {
+    return IdeBuildTypeImpl(
+      buildType.name,
+      copy(buildType::resValues, ::classFieldFrom),
+      ImmutableList.copyOf(buildType.proguardFiles),
+      ImmutableList.copyOf(buildType.consumerProguardFiles),
+      // AGP may return internal Groovy GString implementation as a value in
+      // manifestPlaceholders
+      // map. It cannot be serialized
+      // with IDEA's external system serialization. We convert values to String to
+      // make them
+      // usable as they are converted to String by
+      // the manifest merger anyway.
+      ImmutableMap.copyOf(buildType.manifestPlaceholders.entries.associate { it.key to it.value.toString() }),
+      buildType.applicationIdSuffix,
+      copyNewProperty(buildType::versionNameSuffix),
+      copyNewProperty(buildType::multiDexEnabled),
+      buildType.isDebuggable,
+      buildType.isJniDebuggable,
+      buildType.isRenderscriptDebuggable,
+      buildType.renderscriptOptimLevel,
+      buildType.isMinifyEnabled,
+      buildType.isZipAlignEnabled
+    )
+  }
+
+  fun buildTypeContainerFrom(container: BuildTypeContainer): IdeBuildTypeContainerImpl {
+    return IdeBuildTypeContainerImpl(
+      copyModel(container.buildType, ::buildTypeFrom),
+      copyModel(container.sourceProvider, ::sourceProviderFrom),
+      copy(container::getExtraSourceProviders, ::sourceProviderContainerFrom)
+    )
+  }
+
+  /** Indicates whether the given library is a module wrapping an AAR file.  */
+  fun isLocalAarModule(androidLibrary: AndroidLibrary): Boolean {
+    val projectPath = androidLibrary.project ?: return false
+    val buildFolderPath = buildFolderPaths.findBuildFolderPath(
+      projectPath,
+      copyNewProperty(androidLibrary::getBuildId)
+    )
+    // If the aar bundle is inside of build directory, then it's a regular library module dependency, otherwise it's a wrapped aar module.
+    return (buildFolderPath != null
+            && !FileUtils.isFileInDirectory(androidLibrary.bundle, buildFolderPath))
+  }
+
+  fun createIdeModuleLibrary(library: AndroidLibrary, artifactAddress: String): IdeLibrary {
+    val core = IdeModuleLibraryCore(
+      artifactAddress = artifactAddress,
+      buildId = copyNewProperty(library::getBuildId),
+      projectPath = copyNewProperty(library::getProject),
+      variant = copyNewProperty(library::getProjectVariant),
+      folder = copyNewProperty(library::getFolder),
+      lintJar = copyNewProperty(library::getLintJar)?.path
+    )
+    val isProvided = copyNewProperty(library::isProvided, false)
+    return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided)
+  }
+
+  fun createIdeModuleLibrary(library: JavaLibrary, artifactAddress: String): IdeLibrary {
+    val core = IdeModuleLibraryCore(
+      artifactAddress = artifactAddress,
+      buildId = copyNewProperty(library::getBuildId),
+      projectPath = copyNewProperty(library::getProject),
+      variant = null,
+      folder = null,
+      lintJar = null
+    )
+    val isProvided = copyNewProperty(library::isProvided, false)
+    return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided)
+  }
+
+  fun mavenCoordinatesFrom(coordinates: MavenCoordinates): IdeMavenCoordinatesImpl {
+    return IdeMavenCoordinatesImpl(
+      coordinates.groupId,
+      coordinates.artifactId,
+      coordinates.version,
+      coordinates.packaging,
+      coordinates.classifier
+    )
+  }
+
+  fun mavenCoordinatesFrom(localJar: File): IdeMavenCoordinatesImpl {
+    return IdeMavenCoordinatesImpl(LOCAL_AARS, localJar.path, "unspecified", "jar", null)
+  }
+
+
+  fun computeResolvedCoordinate(library: Library): IdeMavenCoordinatesImpl {
+    // Although getResolvedCoordinates is annotated with @NonNull, it can return null for plugin 1.5,
+    // when the library dependency is from local jar.
+    @Suppress("SENSELESS_COMPARISON")
+    return if (library.resolvedCoordinates != null) {
+      mavenCoordinatesFrom(library.resolvedCoordinates)
+    }
+    else {
+      val jarFile: File =
+        if (library is JavaLibrary) {
+          library.jarFile
+        }
+        else {
+          (library as AndroidLibrary).bundle
+        }
+      mavenCoordinatesFrom(jarFile)
+    }
+  }
+
+  /**
+   * @param projectIdentifier Instance of ProjectIdentifier.
+   * @return The artifact address that can be used as unique identifier in global library map.
+   */
+  fun computeAddress(projectIdentifier: Dependencies.ProjectIdentifier): String {
+    return projectIdentifier.buildId + "@@" + projectIdentifier.projectPath
+  }
+
+  /**
+   * @param library Instance of level 1 Library.
+   * @return The artifact address that can be used as unique identifier in global library map.
+   */
+  fun computeAddress(library: Library): String {
+    // If the library is an android module dependency, use projectId:projectPath::variant as unique identifier.
+    // MavenCoordinates cannot be used because it doesn't contain variant information, which results
+    // in the same MavenCoordinates for different variants of the same module.
+    try {
+      if (library.project != null && library is AndroidLibrary) {
+        return ((copyNewProperty(library::getBuildId)).orEmpty()
+                + library.getProject()
+                + "::"
+                + library.projectVariant)
+      }
+    }
+    catch (ex: UnsupportedOperationException) {
+      // getProject() isn't available for pre-2.0 plugins. Proceed with MavenCoordinates.
+      // Anyway pre-2.0 plugins don't have variant information for module dependency.
+    }
+    val coordinate: IdeMavenCoordinates = computeResolvedCoordinate(library)
+    var artifactId = coordinate.artifactId
+    if (artifactId.startsWith(":")) {
+      artifactId = artifactId.substring(1)
+    }
+    artifactId = artifactId.replace(':', '.')
+    var address = coordinate.groupId + ":" + artifactId + ":" + coordinate.version
+    val classifier = coordinate.classifier
+    if (classifier != null) {
+      address = "$address:$classifier"
+    }
+    val packaging = coordinate.packaging
+    address = "$address@$packaging"
+    return address
+  }
+
+  /**
+   * @param androidLibrary Instance of [AndroidLibrary] returned by android plugin.
+   * path to build directory for all modules.
+   * @return Instance of [Library] based on dependency type.
+   */
+  fun libraryFrom(androidLibrary: AndroidLibrary): IdeLibrary {
+    // If the dependency is a sub-module that wraps local aar, it should be considered as external dependency, i.e. type LIBRARY_ANDROID.
+    // In AndroidLibrary, getProject() of such dependency returns non-null project name, but they should be converted to IdeLevel2AndroidLibrary.
+    // Identify such case with the location of aar bundle.
+    // If the aar bundle is inside of build directory of sub-module, then it's regular library module dependency, otherwise it's a wrapped aar module.
+    return if (androidLibrary.project != null && !isLocalAarModule(androidLibrary)) {
+      createIdeModuleLibrary(androidLibrary, computeAddress(androidLibrary))
+    }
+    else {
+      val core = IdeAndroidLibraryCore.create(
+        artifactAddress = computeAddress(androidLibrary),
+        folder = androidLibrary.folder,
+        manifest = androidLibrary.manifest.path,
+        jarFile = androidLibrary.jarFile.path,
+        compileJarFile = (copyNewProperty(androidLibrary::getCompileJarFile) ?: androidLibrary.jarFile).path,
+        resFolder = androidLibrary.resFolder.path,
+        resStaticLibrary = copyNewProperty(androidLibrary::getResStaticLibrary),
+        assetsFolder = androidLibrary.assetsFolder.path,
+        localJars = androidLibrary.localJars.map { it.path },
+        jniFolder = androidLibrary.jniFolder.path,
+        aidlFolder = androidLibrary.aidlFolder.path,
+        renderscriptFolder = androidLibrary.renderscriptFolder.path,
+        proguardRules = androidLibrary.proguardRules.path,
+        lintJar = androidLibrary.lintJar.path,
+        externalAnnotations = androidLibrary.externalAnnotations.path,
+        publicResources = androidLibrary.publicResources.path,
+        artifact = androidLibrary.bundle,
+        symbolFile = getSymbolFilePath(androidLibrary),
+        deduplicate = { strings.getOrPut(this) { this } }
+      )
+      val isProvided = copyNewProperty(androidLibrary::isProvided, false)
+      IdeAndroidLibrary(androidLibraryCores.internCore(core), isProvided)
+    }
+  }
+
+  /**
+   * @param javaLibrary Instance of [JavaLibrary] returned by android plugin.
+   * @return Instance of [Library] based on dependency type.
+   */
+  fun libraryFrom(javaLibrary: JavaLibrary): IdeLibrary {
+    val project = copyNewProperty(javaLibrary::getProject)
+    return if (project != null) {
+      // Java modules don't have variant.
+      createIdeModuleLibrary(javaLibrary, computeAddress(javaLibrary))
+    }
+    else {
+      val core = IdeJavaLibraryCore(
+              artifactAddress = computeAddress(javaLibrary),
+              artifact = javaLibrary.jarFile
+      )
+      val isProvided = copyNewProperty(javaLibrary::isProvided, false)
+      IdeJavaLibrary(javaLibraryCores.internCore(core), isProvided)
+    }
+  }
+
+  fun libraryFrom(projectPath: String, artifactAddress: String, buildId: String?): IdeLibrary {
+    val core = IdeModuleLibraryCore(projectPath, artifactAddress, buildId)
+    return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided = false)
+  }
+
+  /** Call this method on level 1 Dependencies model.  */
+  fun createFromDependencies(dependencies: Dependencies): IdeDependencies {
+    // Map from unique artifact address to level2 library instance. The library instances are
+    // supposed to be shared by all artifacts. When creating IdeLevel2Dependencies, check if current library is available in this map,
+    // if it's available, don't create new one, simple add reference to it. If it's not available, create new instance and save
+    // to this map, so it can be reused the next time when the same library is added.
+    val librariesById = mutableMapOf<String, IdeLibrary>()
+
+    fun createModuleLibrary(
+      visited: MutableSet<String>,
+      projectPath: String,
+      artifactAddress: String,
+      buildId: String?
+    ) {
+      if (!visited.contains(artifactAddress)) {
+        visited.add(artifactAddress)
+        librariesById.computeIfAbsent(artifactAddress) { libraryFrom(projectPath, artifactAddress, buildId) }
+      }
+    }
+
+    fun populateModuleDependencies(dependencies: Dependencies, visited: MutableSet<String>) {
+      try {
+        for (identifier in dependencies.javaModules) {
+          createModuleLibrary(
+            visited,
+            identifier.projectPath,
+            computeAddress(identifier),
+            identifier.buildId)
+        }
+      }
+      catch (ignored: UnsupportedOperationException) {
+        // Dependencies::getJavaModules is available for AGP 3.1+. Use
+        // Dependencies::getProjects for the old plugins.
+        for (projectPath in dependencies.projects) {
+          createModuleLibrary(visited, projectPath, projectPath, null)
+        }
+      }
+    }
+
+    fun getJavaDependencies(androidLibrary: AndroidLibrary): Collection<JavaLibrary> {
+      return try {
+        androidLibrary.javaDependencies
+      }
+      catch (e: UnsupportedOperationException) {
+        emptyList()
+      }
+    }
+
+    fun populateJavaLibraries(
+      javaLibraries: Collection<JavaLibrary>,
+      visited: MutableSet<String>) {
+      for (javaLibrary in javaLibraries) {
+        val address = computeAddress(javaLibrary)
+        if (!visited.contains(address)) {
+          visited.add(address)
+          librariesById.computeIfAbsent(address) { libraryFrom(javaLibrary) }
+          populateJavaLibraries(javaLibrary.dependencies, visited)
+        }
+      }
+    }
+
+    fun populateAndroidLibraries(
+      androidLibraries: Collection<AndroidLibrary>,
+      visited: MutableSet<String>
+    ) {
+      for (androidLibrary in androidLibraries) {
+        val address = computeAddress(androidLibrary)
+        if (!visited.contains(address)) {
+          visited.add(address)
+          librariesById.computeIfAbsent(address) { libraryFrom(androidLibrary) }
+          populateAndroidLibraries(androidLibrary.libraryDependencies, visited)
+          populateJavaLibraries(getJavaDependencies(androidLibrary), visited)
+        }
+      }
+    }
+
+    fun createInstance(
+      artifactAddresses: Collection<String>,
+      runtimeOnlyJars: Collection<File>
+    ): IdeDependencies {
+      val androidLibraries = ImmutableList.builder<IdeLibrary?>()
+      val javaLibraries = ImmutableList.builder<IdeLibrary?>()
+      val moduleDependencies = ImmutableList.builder<IdeLibrary?>()
+      for (address in artifactAddresses) {
+        val library = librariesById[address]!!
+        @Suppress("REDUNDANT_ELSE_IN_WHEN")
+        when (library.type) {
+          IdeLibrary.LibraryType.LIBRARY_ANDROID -> androidLibraries.add(library)
+          IdeLibrary.LibraryType.LIBRARY_JAVA -> javaLibraries.add(library)
+          IdeLibrary.LibraryType.LIBRARY_MODULE -> moduleDependencies.add(library)
+          else -> throw UnsupportedOperationException("Unknown library type " + library.type)
+        }
+      }
+      return IdeDependenciesImpl(
+        androidLibraries.build(),
+        javaLibraries.build(),
+        moduleDependencies.build(),
+        ImmutableList.copyOf(runtimeOnlyJars))
+    }
+
+    fun createInstance(): IdeDependencies {
+      val visited = mutableSetOf<String>()
+      populateAndroidLibraries(dependencies.libraries, visited)
+      populateJavaLibraries(dependencies.javaLibraries, visited)
+      populateModuleDependencies(dependencies, visited)
+      val jars: Collection<File> = try {
+        dependencies.runtimeOnlyClasses
+      }
+      catch (e: UnsupportedOperationException) {
+        // Gradle older than 3.4.
+        emptyList()
+      }
+      return createInstance(visited, jars)
+    }
+
+    return createInstance()
+  }
+
+  /**
+   * Create [IdeDependencies] from [BaseArtifact].
+   */
+  fun dependenciesFrom(artifact: BaseArtifact): IdeDependencies {
+    return createFromDependencies(artifact.dependencies)
+  }
+
+  fun filterDataFrom(data: FilterData): IdeFilterDataImpl {
+    return IdeFilterDataImpl(data.identifier, data.filterType)
+  }
+
+  fun copyFilters(output: VariantOutput): Collection<FilterData> {
+    return copy(
+      fun(): Collection<FilterData> =
+        try {
+          output.filters
+        }
+        catch (ignored: UnsupportedOperationException) {
+          output.outputs.flatMap(OutputFile::getFilters)
+        },
+      ::filterDataFrom
+    )
+  }
+
+  fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl {
+    return IdeAndroidArtifactOutputImpl(
+      copyFilters(output),
+      output.versionCode,
+      copyNewProperty({ output.outputFile }, output.mainOutputFile.outputFile)
+    )
+  }
+
+  fun copyOutputs(
+    artifact: AndroidArtifact,
+    agpVersion: GradleVersion?
+  ): List<IdeAndroidArtifactOutput> {
+    // getOutputs is deprecated in AGP 4.0.0.
+    if (agpVersion != null && agpVersion.compareIgnoringQualifiers("4.0.0") >= 0) {
+      return emptyList()
+    }
+    return copy(artifact::getOutputs, ::androidArtifactOutputFrom)
+  }
+
+  fun testOptionsFrom(testOptions: TestOptions): IdeTestOptionsImpl {
+    return IdeTestOptionsImpl(testOptions.animationsDisabled, convertExecution(testOptions.execution))
+  }
+
+  fun androidArtifactFrom(
+    artifact: AndroidArtifact,
+    agpVersion: GradleVersion?
+  ): IdeAndroidArtifactImpl {
+    return IdeAndroidArtifactImpl(
+      artifact.name,
+      artifact.compileTaskName,
+      artifact.assembleTaskName,
+      copyNewProperty({ artifact.assembleTaskOutputListingFile }, ""),
+      artifact.classesFolder,
+      copyNewProperty(artifact::getJavaResourcesFolder),
+      copyNewPropertyWithDefault(artifact::getIdeSetupTaskNames, defaultValue = { setOf(artifact.sourceGenTaskName) }).toList(),
+      copy(artifact::getGeneratedSourceFolders, ::deduplicateFile).distinct(), // The source model can contain duplicates.
+      copyNewModel(artifact::getVariantSourceProvider, ::sourceProviderFrom),
+      copyNewModel(artifact::getMultiFlavorSourceProvider, ::sourceProviderFrom),
+      copy(artifact::getAdditionalClassesFolders, ::deduplicateFile),
+      dependenciesFrom(artifact),
+      copyOutputs(artifact, agpVersion),
+      artifact.applicationId,
+      artifact.sourceGenTaskName,
+      copy(artifact::getGeneratedResourceFolders, ::deduplicateFile).distinct(),
+      artifact.signingConfigName,
+      ImmutableSet.copyOf( // In AGP 4.0 and below abiFilters was nullable, normalize null to empty set.
+        artifact.abiFilters.orEmpty()),
+      artifact.isSigned,
+      copy(artifact::getAdditionalRuntimeApks, ::deduplicateFile),
+      copyNewModel(artifact::getTestOptions, ::testOptionsFrom),
+      copyNewModel(artifact::getInstrumentedTestTaskName, ::deduplicateString),
+      copyNewModel(artifact::getBundleTaskName, ::deduplicateString),
+      copyNewModel(artifact::getBundleTaskOutputListingFile, ::deduplicateString),
+      copyNewModel(artifact::getApkFromBundleTaskName, ::deduplicateString),
+      copyNewModel(artifact::getApkFromBundleTaskOutputListingFile, ::deduplicateString),
+      copyNewProperty(artifact::getCodeShrinker)
+    )
+  }
+
+  fun javaArtifactFrom(artifact: JavaArtifact): IdeJavaArtifactImpl {
+    return IdeJavaArtifactImpl(
+      artifact.name,
+      artifact.compileTaskName,
+      artifact.assembleTaskName,
+      copyNewProperty({ artifact.assembleTaskOutputListingFile }, ""),
+      artifact.classesFolder,
+      copyNewProperty(artifact::getJavaResourcesFolder),
+      copy(artifact::getIdeSetupTaskNames, ::deduplicateString).toList(),
+      copy(artifact::getGeneratedSourceFolders, ::deduplicateFile).distinct(),
+      copyNewModel(artifact::getVariantSourceProvider, ::sourceProviderFrom),
+      copyNewModel(artifact::getMultiFlavorSourceProvider, ::sourceProviderFrom),
+      copy(artifact::getAdditionalClassesFolders, ::deduplicateFile),
+      dependenciesFrom(artifact),
+      copyNewProperty(artifact::getMockablePlatformJar)
+    )
+  }
+
+  fun getTestedTargetVariants(variant: Variant): List<IdeTestedTargetVariantImpl> {
+    return try {
+      copy(variant::getTestedTargetVariants) { targetVariant: TestedTargetVariant ->
+        IdeTestedTargetVariantImpl(targetVariant.targetProjectPath, targetVariant.targetVariant)
+      }
+    }
+    catch (e: UnsupportedOperationException) {
+      emptyList()
+    }
+  }
+
+  fun variantFrom(
+    variant: Variant,
+    modelVersion: GradleVersion?
+  ): IdeVariantImpl =
+    IdeVariantImpl(
+      name = variant.name,
+      displayName = variant.displayName,
+      mainArtifact = copyModel(variant.mainArtifact) { androidArtifactFrom(it, modelVersion) },
+      extraAndroidArtifacts = copy(variant::getExtraAndroidArtifacts) { androidArtifactFrom(it, modelVersion) },
+      extraJavaArtifacts = copy(variant::getExtraJavaArtifacts) { javaArtifactFrom(it) },
+      buildType = variant.buildType,
+      productFlavors = ImmutableList.copyOf(variant.productFlavors),
+      mergedFlavor = copyModel(variant.mergedFlavor, ::productFlavorFrom),
+      testedTargetVariants = getTestedTargetVariants(variant),
+      instantAppCompatible = (modelVersion != null &&
+                              modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) &&
+                              variant.isInstantAppCompatible),
+      desugaredMethods = copy(variant::getDesugaredMethods, ::deduplicateString)
+    )
+
+  fun nativeAbiFrom(nativeAbi: NativeAbi): IdeNativeAbiImpl {
+    return IdeNativeAbiImpl(
+      nativeAbi.name,
+      nativeAbi.sourceFlagsFile,
+      nativeAbi.symbolFolderIndexFile,
+      nativeAbi.buildFileIndexFile
+    )
+  }
+
+  fun nativeVariantFrom(nativeVariant: NativeVariant): IdeNativeVariantImpl {
+    return IdeNativeVariantImpl(
+      nativeVariant.name,
+      copy(nativeVariant::abis, ::nativeAbiFrom)
+    )
+  }
+
+  fun nativeFileFrom(file: NativeFile): IdeNativeFileImpl {
+    return IdeNativeFileImpl(file.filePath, file.settingsName, file.workingDirectory)
+  }
+
+  fun nativeArtifactFrom(artifact: NativeArtifact): IdeNativeArtifactImpl {
+    return IdeNativeArtifactImpl(
+      artifact.name,
+      artifact.toolChain,
+      artifact.groupName,
+      copy(artifact::getSourceFiles, ::nativeFileFrom),
+      copy(artifact::getExportedHeaders, ::deduplicateFile),
+      copyNewProperty(artifact::getAbi, ""),
+      copyNewProperty(artifact::getTargetName, ""),
+      artifact.outputFile
+    )
+  }
+
+  fun nativeToolchainFrom(toolchain: NativeToolchain): IdeNativeToolchainImpl {
+    return IdeNativeToolchainImpl(
+      toolchain.name,
+      toolchain.cCompilerExecutable,
+      toolchain.cppCompilerExecutable
+    )
+  }
+
+  fun nativeVariantFrom(variantInfo: NativeVariantInfo): IdeNativeVariantInfoImpl {
+    return IdeNativeVariantInfoImpl(
+      copy(variantInfo::getAbiNames, ::deduplicateString),
+      copy(variantInfo::getBuildRootFolderMap, ::deduplicateFile))
+  }
+
+  fun nativeSettingsFrom(settings: NativeSettings): IdeNativeSettingsImpl {
+    return IdeNativeSettingsImpl(
+      settings.name,
+      copy(settings::getCompilerFlags, ::deduplicateString)
+    )
+  }
+
+  fun nativeAndroidProjectFrom(project: NativeAndroidProject): IdeNativeAndroidProjectImpl {
+    return IdeNativeAndroidProjectImpl(
+      project.modelVersion,
+      project.apiVersion,
+      project.name,
+      copy(project::getBuildFiles, ::deduplicateFile),
+      copy(project::getVariantInfos, ::nativeVariantFrom),
+      copy(project::getArtifacts, ::nativeArtifactFrom),
+      copy(project::getToolChains, ::nativeToolchainFrom),
+      copy(project::getSettings, ::nativeSettingsFrom),
+      copy(project::getFileExtensions, ::deduplicateString),
+      copyNewProperty(project::getDefaultNdkVersion, ""),
+      copy(project::getBuildSystems, ::deduplicateString)
+    )
+  }
+
+  fun nativeVariantAbiFrom(variantAbi: NativeVariantAbi): IdeNativeVariantAbiImpl {
+    return IdeNativeVariantAbiImpl(
+      copy(variantAbi::getBuildFiles, ::deduplicateFile),
+      copy(variantAbi::getArtifacts, ::nativeArtifactFrom),
+      copy(variantAbi::getToolChains, ::nativeToolchainFrom),
+      copy(variantAbi::getSettings, ::nativeSettingsFrom),
+      copy(variantAbi::getFileExtensions, ::deduplicateString),
+      variantAbi.variantName,
+      variantAbi.abi
+    )
+  }
+
+  fun nativeModuleFrom(nativeModule: NativeModule): IdeNativeModuleImpl {
+    return IdeNativeModuleImpl(
+      nativeModule.name,
+      copy(nativeModule::variants, ::nativeVariantFrom),
+      when (nativeModule.nativeBuildSystem) {
+        com.android.builder.model.v2.models.ndk.NativeBuildSystem.NDK_BUILD -> NativeBuildSystem.NDK_BUILD
+        com.android.builder.model.v2.models.ndk.NativeBuildSystem.CMAKE -> NativeBuildSystem.CMAKE
+        // No forward compatibility. Old Studio cannot open projects with newer AGP.
+        else -> error("Unknown native build system: ${nativeModule.nativeBuildSystem}")
+      },
+      nativeModule.ndkVersion,
+      nativeModule.defaultNdkVersion,
+      nativeModule.externalNativeBuildFile
+    )
+  }
+
+  fun lintOptionsFrom(options: LintOptions, modelVersion: GradleVersion?): IdeLintOptionsImpl = IdeLintOptionsImpl(
+    baselineFile = if (modelVersion != null && modelVersion.isAtLeast(2, 3, 0, "beta", 2, true))
+      options.baselineFile
+    else
+      null,
+    lintConfig = copyNewProperty(options::getLintConfig),
+    severityOverrides = options.severityOverrides?.let { ImmutableMap.copyOf(it) },
+    isCheckTestSources = modelVersion != null &&
+                         modelVersion.isAtLeast(2, 4, 0) &&
+                         options.isCheckTestSources,
+    isCheckDependencies = copyNewProperty({ options.isCheckDependencies }, false),
+    disable = copy(options::getDisable, ::deduplicateString),
+    enable = copy(options::getEnable, ::deduplicateString),
+    check = options.check?.let { ImmutableSet.copyOf(it) },
+    isAbortOnError = copyNewProperty({ options.isAbortOnError }, true),
+    isAbsolutePaths = copyNewProperty({ options.isAbsolutePaths }, true),
+    isNoLines = copyNewProperty({ options.isNoLines }, false),
+    isQuiet = copyNewProperty({ options.isQuiet }, false),
+    isCheckAllWarnings = copyNewProperty({ options.isCheckAllWarnings }, false),
+    isIgnoreWarnings = copyNewProperty({ options.isIgnoreWarnings }, false),
+    isWarningsAsErrors = copyNewProperty({ options.isWarningsAsErrors }, false),
+    isIgnoreTestSources = copyNewProperty({ options.isIgnoreTestSources }, false),
+    isCheckGeneratedSources = copyNewProperty({ options.isCheckGeneratedSources }, false),
+    isExplainIssues = copyNewProperty({ options.isExplainIssues }, true),
+    isShowAll = copyNewProperty({ options.isShowAll }, false),
+    textReport = copyNewProperty({ options.textReport }, false),
+    textOutput = copyNewProperty(options::getTextOutput),
+    htmlReport = copyNewProperty({ options.htmlReport }, true),
+    htmlOutput = copyNewProperty(options::getHtmlOutput),
+    xmlReport = copyNewProperty({ options.xmlReport }, true),
+    xmlOutput = copyNewProperty(options::getXmlOutput),
+    isCheckReleaseBuilds = copyNewProperty({ options.isCheckReleaseBuilds }, true)
+  )
+
+  fun javaCompileOptionsFrom(options: JavaCompileOptions): IdeJavaCompileOptionsImpl {
+    return IdeJavaCompileOptionsImpl(
+      options.encoding,
+      options.sourceCompatibility,
+      options.targetCompatibility,
+      copyNewProperty({ options.isCoreLibraryDesugaringEnabled }, false))
+  }
+
+  fun aaptOptionsFrom(original: AaptOptions): IdeAaptOptionsImpl {
+    return IdeAaptOptionsImpl(convertNamespacing(copyNewProperty({ original.namespacing }, AaptOptions.Namespacing.DISABLED)))
+  }
+
+  fun ideVariantBuildInformationFrom(model: VariantBuildInformation): IdeVariantBuildInformation = IdeVariantBuildInformationImpl(
+    variantName = model.variantName,
+    assembleTaskName = model.assembleTaskName,
+    assembleTaskOutputListingFile = model.assembleTaskOutputListingFile,
+    bundleTaskName = model.bundleTaskName,
+    bundleTaskOutputListingFile = model.bundleTaskOutputListingFile,
+    apkFromBundleTaskName = model.apkFromBundleTaskName,
+    apkFromBundleTaskOutputListingFile = model.apkFromBundleTaskOutputListingFile
+  )
+
+  fun createVariantBuildInformation(
+    project: AndroidProject,
+    agpVersion: GradleVersion?
+  ): Collection<IdeVariantBuildInformation> {
+    return if (agpVersion != null && agpVersion.compareIgnoringQualifiers("4.1.0") >= 0) {
+      // make deep copy of VariantBuildInformation.
+      project.variantsBuildInformation.map(::ideVariantBuildInformationFrom)
+    }
+    else emptyList()
+    // VariantBuildInformation is not available.
+  }
+
+  fun viewBindingOptionsFrom(model: ViewBindingOptions): IdeViewBindingOptionsImpl {
+    return IdeViewBindingOptionsImpl(enabled = model.isEnabled)
+  }
+
+  fun dependenciesInfoFrom(model: DependenciesInfo) = IdeDependenciesInfoImpl(
+    includeInApk = model.includeInApk,
+    includeInBundle = model.includeInBundle
+  )
+
+  fun androidGradlePluginProjectFlagsFrom(flags: AndroidGradlePluginProjectFlags): IdeAndroidGradlePluginProjectFlagsImpl =
+    IdeAndroidGradlePluginProjectFlagsImpl(flags.booleanFlagMap)
+
+  fun androidProjectFrom(
     project: AndroidProject,
     variants: Collection<Variant>,
     cachedVariants: Collection<IdeVariant>,
     syncIssues: Collection<SyncIssue>
   ): IdeAndroidProjectImpl {
+    fun computeVariantNames(variants: Collection<IdeVariant>): List<String> = variants.map(IdeVariant::name)
+
     // Old plugin versions do not return model version.
     val parsedModelVersion = GradleVersion.tryParse(project.modelVersion)
 
@@ -233,8 +987,8 @@ private class ModelCacheImpl: ModelCache, ModelCacheTesting {
     val variantNames = variants.map { it.name }.toSet()
     val variantsCopy: Collection<IdeVariant> = ImmutableList.copyOf(
       Iterables.concat<IdeVariant>(
-              variants.map { variant: Variant -> variantFrom(variant, parsedModelVersion) },
-              cachedVariants.filter { !variantNames.contains(it.name) }
+        variants.map { variant: Variant -> variantFrom(variant, parsedModelVersion) },
+        cachedVariants.filter { !variantNames.contains(it.name) }
       ))
     val variantNamesCopy: Collection<String> =
       copyNewPropertyWithDefault(
@@ -298,919 +1052,212 @@ private class ModelCacheImpl: ModelCache, ModelCacheTesting {
       agpFlags)
   }
 
-  fun createVariantBuildInformation(
-          project: AndroidProject,
-          agpVersion: GradleVersion?
-  ): Collection<IdeVariantBuildInformation> {
-    return if (agpVersion != null && agpVersion.compareIgnoringQualifiers("4.1.0") >= 0) {
-      // make deep copy of VariantBuildInformation.
-      project.variantsBuildInformation.map(::ideVariantBuildInformationFrom)
-    }
-    else emptyList()
-    // VariantBuildInformation is not available.
-  }
-
-  fun computeVariantNames(variants: Collection<IdeVariant>): List<String> = variants.map(IdeVariant::name)
-
-  fun getProjectType(project: AndroidProject, modelVersion: GradleVersion?): Int {
-    if (modelVersion != null && modelVersion.isAtLeast(2, 3, 0)) {
-      return project.projectType
-    }
-    // Support for old Android Gradle Plugins must be maintained.
-    return if (project.isLibrary) IdeAndroidProject.PROJECT_TYPE_LIBRARY else IdeAndroidProject.PROJECT_TYPE_APP
-  }
-
-  override fun aaptOptionsFrom(original: AaptOptions): IdeAaptOptionsImpl {
-    return IdeAaptOptionsImpl(convertNamespacing(copyNewProperty({ original.namespacing }, AaptOptions.Namespacing.DISABLED)))
-  }
-
-  fun convertNamespacing(namespacing: AaptOptions.Namespacing): IdeAaptOptions.Namespacing {
-    return when (namespacing) {
-      AaptOptions.Namespacing.DISABLED -> IdeAaptOptions.Namespacing.DISABLED
-      AaptOptions.Namespacing.REQUIRED -> IdeAaptOptions.Namespacing.REQUIRED
-      else -> throw IllegalStateException("Unknown namespacing option: $namespacing")
-    }
-  }
-
-  fun copyOutputs(
-          artifact: AndroidArtifact,
-          agpVersion: GradleVersion?
-  ): List<IdeAndroidArtifactOutput> {
-    // getOutputs is deprecated in AGP 4.0.0.
-    if (agpVersion != null && agpVersion.compareIgnoringQualifiers("4.0.0") >= 0) {
-      return emptyList()
-    }
-    return copy(artifact::getOutputs, ::androidArtifactOutputFrom)
-  }
-
-  override fun androidArtifactFrom(
-          artifact: AndroidArtifact,
-          agpVersion: GradleVersion?
-  ): IdeAndroidArtifactImpl {
-    return IdeAndroidArtifactImpl(
-      artifact.name,
-      artifact.compileTaskName,
-      artifact.assembleTaskName,
-      copyNewProperty({ artifact.assembleTaskOutputListingFile }, ""),
-      artifact.classesFolder,
-      copyNewProperty(artifact::getJavaResourcesFolder),
-      copyNewPropertyWithDefault(artifact::getIdeSetupTaskNames, defaultValue = { setOf(artifact.sourceGenTaskName) }).toList(),
-      copy(artifact::getGeneratedSourceFolders, ::deduplicateFile).distinct(), // The source model can contain duplicates.
-      copyNewModel(artifact::getVariantSourceProvider, ::sourceProviderFrom),
-      copyNewModel(artifact::getMultiFlavorSourceProvider, ::sourceProviderFrom),
-      copy(artifact::getAdditionalClassesFolders, ::deduplicateFile),
-      dependenciesFrom(artifact),
-      copyOutputs(artifact, agpVersion),
-      artifact.applicationId,
-      artifact.sourceGenTaskName,
-      copy(artifact::getGeneratedResourceFolders, ::deduplicateFile).distinct(),
-      artifact.signingConfigName,
-      ImmutableSet.copyOf( // In AGP 4.0 and below abiFilters was nullable, normalize null to empty set.
-        artifact.abiFilters.orEmpty()),
-      artifact.isSigned,
-      copy(artifact::getAdditionalRuntimeApks, ::deduplicateFile),
-      copyNewModel(artifact::getTestOptions, ::testOptionsFrom),
-      copyNewModel(artifact::getInstrumentedTestTaskName, ::deduplicateString),
-      copyNewModel(artifact::getBundleTaskName, ::deduplicateString),
-      copyNewModel(artifact::getBundleTaskOutputListingFile, ::deduplicateString),
-      copyNewModel(artifact::getApkFromBundleTaskName, ::deduplicateString),
-      copyNewModel(artifact::getApkFromBundleTaskOutputListingFile, ::deduplicateString),
-      copyNewProperty(artifact::getCodeShrinker)
-    )
-  }
-
-  override fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl {
-    return IdeAndroidArtifactOutputImpl(
-      copyFilters(output),
-      output.versionCode,
-      copyNewProperty({ output.outputFile }, output.mainOutputFile.outputFile)
-    )
-  }
-
-  override fun apiVersionFrom(version: ApiVersion): IdeApiVersionImpl {
-    return IdeApiVersionImpl(version.apiString, version.codename, version.apiLevel)
-  }
-
-  override fun buildTypeContainerFrom(container: BuildTypeContainer): IdeBuildTypeContainerImpl {
-    return IdeBuildTypeContainerImpl(
-      copyModel(container.buildType, ::buildTypeFrom),
-      copyModel(container.sourceProvider, ::sourceProviderFrom),
-      copy(container::getExtraSourceProviders, ::sourceProviderContainerFrom)
-    )
-  }
-
-  override fun buildTypeFrom(buildType: BuildType): IdeBuildTypeImpl {
-    return IdeBuildTypeImpl(
-      buildType.name,
-      copy(buildType::resValues, ::classFieldFrom),
-      ImmutableList.copyOf(buildType.proguardFiles),
-      ImmutableList.copyOf(buildType.consumerProguardFiles),
-      // AGP may return internal Groovy GString implementation as a value in
-      // manifestPlaceholders
-      // map. It cannot be serialized
-      // with IDEA's external system serialization. We convert values to String to
-      // make them
-      // usable as they are converted to String by
-      // the manifest merger anyway.
-      ImmutableMap.copyOf(buildType.manifestPlaceholders.entries.associate { it.key to it.value.toString() }),
-      buildType.applicationIdSuffix,
-      copyNewProperty(buildType::versionNameSuffix),
-      copyNewProperty(buildType::multiDexEnabled),
-      buildType.isDebuggable,
-      buildType.isJniDebuggable,
-      buildType.isRenderscriptDebuggable,
-      buildType.renderscriptOptimLevel,
-      buildType.isMinifyEnabled,
-      buildType.isZipAlignEnabled
-    )
-  }
-
-  override fun classFieldFrom(classField: ClassField): IdeClassFieldImpl {
-    return IdeClassFieldImpl(classField.name, classField.type, classField.value)
-  }
-
-  override fun filterDataFrom(data: FilterData): IdeFilterDataImpl {
-    return IdeFilterDataImpl(data.identifier, data.filterType)
-  }
-
-  override fun javaArtifactFrom(artifact: JavaArtifact): IdeJavaArtifactImpl {
-    return IdeJavaArtifactImpl(
-      artifact.name,
-      artifact.compileTaskName,
-      artifact.assembleTaskName,
-      copyNewProperty({ artifact.assembleTaskOutputListingFile }, ""),
-      artifact.classesFolder,
-      copyNewProperty(artifact::getJavaResourcesFolder),
-      copy(artifact::getIdeSetupTaskNames, ::deduplicateString).toList(),
-      copy(artifact::getGeneratedSourceFolders, ::deduplicateFile).distinct(),
-      copyNewModel(artifact::getVariantSourceProvider, ::sourceProviderFrom),
-      copyNewModel(artifact::getMultiFlavorSourceProvider, ::sourceProviderFrom),
-      copy(artifact::getAdditionalClassesFolders, ::deduplicateFile),
-      dependenciesFrom(artifact),
-      copyNewProperty(artifact::getMockablePlatformJar)
-    )
-  }
-
-  override fun javaCompileOptionsFrom(options: JavaCompileOptions): IdeJavaCompileOptionsImpl {
-    return IdeJavaCompileOptionsImpl(
-      options.encoding,
-      options.sourceCompatibility,
-      options.targetCompatibility,
-      copyNewProperty({ options.isCoreLibraryDesugaringEnabled }, false))
-  }
-
-  override fun productFlavorContainerFrom(
-    container: ProductFlavorContainer): IdeProductFlavorContainerImpl {
-    return IdeProductFlavorContainerImpl(
-      copyModel(container.productFlavor, ::productFlavorFrom),
-      copyModel(container.sourceProvider, ::sourceProviderFrom),
-      copy(container::getExtraSourceProviders, ::sourceProviderContainerFrom)
-    )
-  }
-
-  fun copyVectorDrawables(flavor: ProductFlavor): IdeVectorDrawablesOptions? {
-    val vectorDrawables: VectorDrawablesOptions = try {
-      flavor.vectorDrawables
-    }
-    catch (e: UnsupportedOperationException) {
-      return null
-    }
-    return copyModel(vectorDrawables, ::vectorDrawablesOptionsFrom)
-  }
-
-  override fun productFlavorFrom(flavor: ProductFlavor): IdeProductFlavorImpl {
-    return IdeProductFlavorImpl(
-            flavor.name,
-            copy(flavor::resValues, ::classFieldFrom),
-            ImmutableList.copyOf(flavor.proguardFiles),
-            ImmutableList.copyOf(flavor.consumerProguardFiles),
-      // AGP may return internal Groovy GString implementation as a value in
-      // manifestPlaceholders
-      // map. It cannot be serialized
-      // with IDEA's external system serialization. We convert values to String to
-      // make them
-      // usable as they are converted to String by
-      // the manifest merger anyway.
-            ImmutableMap.copyOf(flavor.manifestPlaceholders.entries.associate { it.key to it.value.toString() }),
-            flavor.applicationIdSuffix,
-            copyNewProperty(flavor::versionNameSuffix),
-            copyNewProperty(flavor::multiDexEnabled),
-            ImmutableMap.copyOf(flavor.testInstrumentationRunnerArguments),
-            ImmutableList.copyOf(flavor.resourceConfigurations),
-            copyVectorDrawables(flavor),
-            flavor.dimension,
-            flavor.applicationId,
-            flavor.versionCode,
-            flavor.versionName,
-            copyModel(flavor.minSdkVersion, ::apiVersionFrom),
-            copyModel(flavor.targetSdkVersion, ::apiVersionFrom),
-            flavor.maxSdkVersion,
-            flavor.testApplicationId,
-            flavor.testInstrumentationRunner,
-            flavor.testFunctionalTest,
-            flavor.testHandleProfiling,
-            copyModel(flavor.signingConfig, ::signingConfigFrom)
-    )
-  }
-
-  override fun signingConfigFrom(config: SigningConfig): IdeSigningConfigImpl {
-    return IdeSigningConfigImpl(
-      config.getName(),
-      config.storeFile,
-      config.storePassword,
-      config.keyAlias,
-      copyNewProperty(config::isV1SigningEnabled)
-    )
-  }
-
-  override fun sourceProviderContainerFrom(container: SourceProviderContainer): IdeSourceProviderContainerImpl {
-    return IdeSourceProviderContainerImpl(
-      container.artifactName,
-      copyModel(container.sourceProvider, ::sourceProviderFrom)
-    )
-  }
-
-  override fun syncIssueFrom(issue: SyncIssue): IdeSyncIssueImpl {
-
-    return IdeSyncIssueImpl(
-      issue.message,
-      copy(fun(): List<String>? = issue.multiLineMessage?.filterNotNull(), ::deduplicateString),
-      issue.data,
-      issue.severity,
-      issue.type
-    )
-  }
-
-  override fun testedTargetVariantFrom(variant: TestedTargetVariant): IdeTestedTargetVariantImpl {
+  fun testedTargetVariantFrom(variant: TestedTargetVariant): IdeTestedTargetVariantImpl {
     return IdeTestedTargetVariantImpl(variant.targetProjectPath, variant.targetVariant)
   }
 
-  fun convertExecution(execution: TestOptions.Execution?): IdeTestOptions.Execution? {
-    return if (execution == null) null
-    else when (execution) {
-      TestOptions.Execution.HOST -> IdeTestOptions.Execution.HOST
-      TestOptions.Execution.ANDROID_TEST_ORCHESTRATOR -> IdeTestOptions.Execution.ANDROID_TEST_ORCHESTRATOR
-      TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR -> IdeTestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR
-      else -> throw IllegalStateException("Unknown execution option: $execution")
-    }
+  return object : ModelCache, ModelCacheTesting {
+    override fun aaptOptionsFrom(original: AaptOptions): IdeAaptOptionsImpl = aaptOptionsFrom(original)
+    override fun androidArtifactFrom(artifact: AndroidArtifact, agpVersion: GradleVersion?): IdeAndroidArtifactImpl =
+      androidArtifactFrom(artifact, agpVersion)
+
+    override fun apiVersionFrom(version: ApiVersion): IdeApiVersionImpl = apiVersionFrom(version)
+    override fun buildTypeContainerFrom(container: BuildTypeContainer): IdeBuildTypeContainerImpl = buildTypeContainerFrom(container)
+    override fun buildTypeFrom(buildType: BuildType): IdeBuildTypeImpl = buildTypeFrom(buildType)
+    override fun classFieldFrom(classField: ClassField): IdeClassFieldImpl = classFieldFrom(classField)
+    override fun filterDataFrom(data: FilterData): IdeFilterDataImpl = filterDataFrom(data)
+    override fun javaArtifactFrom(artifact: JavaArtifact): IdeJavaArtifactImpl = javaArtifactFrom(artifact)
+    override fun javaCompileOptionsFrom(options: JavaCompileOptions): IdeJavaCompileOptionsImpl = javaCompileOptionsFrom(options)
+    override fun productFlavorContainerFrom(container: ProductFlavorContainer): IdeProductFlavorContainerImpl =
+      productFlavorContainerFrom(container)
+
+    override fun productFlavorFrom(flavor: ProductFlavor): IdeProductFlavorImpl = productFlavorFrom(flavor)
+    override fun signingConfigFrom(config: SigningConfig): IdeSigningConfigImpl = signingConfigFrom(config)
+    override fun sourceProviderContainerFrom(container: SourceProviderContainer): IdeSourceProviderContainerImpl =
+      sourceProviderContainerFrom(container)
+
+    override fun testedTargetVariantFrom(variant: TestedTargetVariant): IdeTestedTargetVariantImpl = testedTargetVariantFrom(variant)
+    override fun testOptionsFrom(testOptions: TestOptions): IdeTestOptionsImpl = testOptionsFrom(testOptions)
+    override fun vectorDrawablesOptionsFrom(options: VectorDrawablesOptions): IdeVectorDrawablesOptionsImpl =
+      vectorDrawablesOptionsFrom(options)
+
+    override fun viewBindingOptionsFrom(model: ViewBindingOptions): IdeViewBindingOptionsImpl = viewBindingOptionsFrom(model)
+    override fun variantFrom(variant: Variant, modelVersion: GradleVersion?): IdeVariantImpl = variantFrom(variant, modelVersion)
+    override fun sourceProviderFrom(provider: SourceProvider): IdeSourceProviderImpl = sourceProviderFrom(provider)
+    override fun lintOptionsFrom(options: LintOptions, modelVersion: GradleVersion?): IdeLintOptionsImpl =
+      lintOptionsFrom(options, modelVersion)
+
+    override fun nativeToolchainFrom(toolchain: NativeToolchain): IdeNativeToolchainImpl = nativeToolchainFrom(toolchain)
+    override fun nativeArtifactFrom(artifact: NativeArtifact): IdeNativeArtifactImpl = nativeArtifactFrom(artifact)
+    override fun nativeFileFrom(file: NativeFile): IdeNativeFileImpl = nativeFileFrom(file)
+    override fun nativeSettingsFrom(settings: NativeSettings): IdeNativeSettingsImpl = nativeSettingsFrom(settings)
+    override fun androidGradlePluginProjectFlagsFrom(flags: AndroidGradlePluginProjectFlags): IdeAndroidGradlePluginProjectFlagsImpl =
+      androidGradlePluginProjectFlagsFrom(flags)
+
+    override fun dependenciesFrom(artifact: BaseArtifact): IdeDependencies = dependenciesFrom(artifact)
+    override fun libraryFrom(javaLibrary: JavaLibrary): IdeLibrary = libraryFrom(javaLibrary)
+    override fun libraryFrom(projectPath: String, artifactAddress: String, buildId: String?): IdeLibrary =
+      libraryFrom(projectPath, artifactAddress, buildId)
+
+    override fun computeAddress(library: Library): String = computeAddress(library)
+    override fun isLocalAarModule(androidLibrary: AndroidLibrary): Boolean = isLocalAarModule(androidLibrary)
+    override fun mavenCoordinatesFrom(coordinates: MavenCoordinates): IdeMavenCoordinatesImpl = mavenCoordinatesFrom(coordinates)
+    override fun addBuildFolderPath(buildId: String, moduleGradlePath: String, buildFolder: File) =
+      addBuildFolderPath(buildId, moduleGradlePath, buildFolder)
+
+    override fun setRootBuildId(rootBuildId: String) = setRootBuildId(rootBuildId)
+    override fun androidProjectFrom(
+      project: AndroidProject,
+      variants: Collection<Variant>,
+      cachedVariants: Collection<IdeVariant>,
+      syncIssues: Collection<SyncIssue>
+    ): IdeAndroidProjectImpl = androidProjectFrom(project, variants, cachedVariants, syncIssues)
+
+    override fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl = androidArtifactOutputFrom(output)
+    override fun syncIssueFrom(issue: SyncIssue): IdeSyncIssueImpl = syncIssueFrom(issue)
+    override fun nativeModuleFrom(nativeModule: NativeModule): IdeNativeModuleImpl = nativeModuleFrom(nativeModule)
+    override fun nativeVariantAbiFrom(variantAbi: NativeVariantAbi): IdeNativeVariantAbiImpl = nativeVariantAbiFrom(variantAbi)
+    override fun nativeAndroidProjectFrom(project: NativeAndroidProject): IdeNativeAndroidProjectImpl = nativeAndroidProjectFrom(project)
   }
-
-  override fun testOptionsFrom(testOptions: TestOptions): IdeTestOptionsImpl {
-    return IdeTestOptionsImpl(testOptions.animationsDisabled, convertExecution(testOptions.execution))
-  }
-
-  override fun vectorDrawablesOptionsFrom(options: VectorDrawablesOptions): IdeVectorDrawablesOptionsImpl {
-    return IdeVectorDrawablesOptionsImpl(options.useSupportLibrary)
-  }
-
-  override fun viewBindingOptionsFrom(model: ViewBindingOptions): IdeViewBindingOptionsImpl {
-    return IdeViewBindingOptionsImpl(enabled = model.isEnabled)
-  }
-
-  override fun variantFrom(
-    variant: Variant,
-    modelVersion: GradleVersion?
-  ): IdeVariantImpl =
-    IdeVariantImpl(
-            name = variant.name,
-            displayName = variant.displayName,
-            mainArtifact = copyModel(variant.mainArtifact) { androidArtifactFrom(it, modelVersion) },
-            extraAndroidArtifacts = copy(variant::getExtraAndroidArtifacts) { androidArtifactFrom(it, modelVersion) },
-            extraJavaArtifacts = copy(variant::getExtraJavaArtifacts) { javaArtifactFrom(it) },
-            buildType = variant.buildType,
-            productFlavors = ImmutableList.copyOf(variant.productFlavors),
-            mergedFlavor = copyModel(variant.mergedFlavor, ::productFlavorFrom),
-            testedTargetVariants = getTestedTargetVariants(variant),
-            instantAppCompatible = (modelVersion != null &&
-                                    modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) &&
-                                    variant.isInstantAppCompatible),
-            desugaredMethods = copy(variant::getDesugaredMethods, ::deduplicateString)
-    )
-
-  fun getTestedTargetVariants(variant: Variant): List<IdeTestedTargetVariantImpl> {
-    return try {
-      copy(variant::getTestedTargetVariants) { targetVariant: TestedTargetVariant ->
-        IdeTestedTargetVariantImpl(targetVariant.targetProjectPath, targetVariant.targetVariant)
-      }
-    }
-    catch (e: UnsupportedOperationException) {
-      emptyList()
-    }
-  }
-
-  fun ideVariantBuildInformationFrom(model: VariantBuildInformation): IdeVariantBuildInformation = IdeVariantBuildInformationImpl(
-    variantName = model.variantName,
-    assembleTaskName = model.assembleTaskName,
-    assembleTaskOutputListingFile = model.assembleTaskOutputListingFile,
-    bundleTaskName = model.bundleTaskName,
-    bundleTaskOutputListingFile = model.bundleTaskOutputListingFile,
-    apkFromBundleTaskName = model.apkFromBundleTaskName,
-    apkFromBundleTaskOutputListingFile = model.apkFromBundleTaskOutputListingFile
-  )
-
-  override fun sourceProviderFrom(provider: SourceProvider): IdeSourceProviderImpl {
-    val folder: File? = provider.manifestFile.parentFile
-
-    fun File.makeRelativeAndDeduplicate(): String = (if (folder != null) relativeToOrSelf(folder) else this).path.deduplicate()
-    fun Collection<File>.makeRelativeAndDeduplicate(): Collection<String> = map { it.makeRelativeAndDeduplicate() }
-
-    return IdeSourceProviderImpl(
-      myName = provider.name,
-      myFolder = folder,
-      myManifestFile = provider.manifestFile.makeRelativeAndDeduplicate(),
-      myJavaDirectories = provider.javaDirectories.makeRelativeAndDeduplicate(),
-      myResourcesDirectories = provider.resourcesDirectories.makeRelativeAndDeduplicate(),
-      myAidlDirectories = provider.aidlDirectories.makeRelativeAndDeduplicate(),
-      myRenderscriptDirectories = provider.renderscriptDirectories.makeRelativeAndDeduplicate(),
-      myCDirectories = provider.cDirectories.makeRelativeAndDeduplicate(),
-      myCppDirectories = provider.cppDirectories.makeRelativeAndDeduplicate(),
-      myResDirectories = provider.resDirectories.makeRelativeAndDeduplicate(),
-      myAssetsDirectories = provider.assetsDirectories.makeRelativeAndDeduplicate(),
-      myJniLibsDirectories = provider.jniLibsDirectories.makeRelativeAndDeduplicate(),
-      myShadersDirectories = copy(provider::getShadersDirectories, mapper = { it }).makeRelativeAndDeduplicate(),
-      myMlModelsDirectories = copy(provider::getMlModelsDirectories, mapper = { it }).makeRelativeAndDeduplicate()
-    )
-  }
-
-  override fun lintOptionsFrom(options: LintOptions, modelVersion: GradleVersion?): IdeLintOptionsImpl = IdeLintOptionsImpl(
-    baselineFile = if (modelVersion != null && modelVersion.isAtLeast(2, 3, 0, "beta", 2, true))
-      options.baselineFile
-    else
-      null,
-    lintConfig = copyNewProperty(options::getLintConfig),
-    severityOverrides = options.severityOverrides?.let { ImmutableMap.copyOf(it) },
-    isCheckTestSources = modelVersion != null &&
-                         modelVersion.isAtLeast(2, 4, 0) &&
-                         options.isCheckTestSources,
-    isCheckDependencies = copyNewProperty({ options.isCheckDependencies }, false),
-    disable = copy(options::getDisable, ::deduplicateString),
-    enable = copy(options::getEnable, ::deduplicateString),
-    check = options.check?.let { ImmutableSet.copyOf(it) },
-    isAbortOnError = copyNewProperty({ options.isAbortOnError }, true),
-    isAbsolutePaths = copyNewProperty({ options.isAbsolutePaths }, true),
-    isNoLines = copyNewProperty({ options.isNoLines }, false),
-    isQuiet = copyNewProperty({ options.isQuiet }, false),
-    isCheckAllWarnings = copyNewProperty({ options.isCheckAllWarnings }, false),
-    isIgnoreWarnings = copyNewProperty({ options.isIgnoreWarnings }, false),
-    isWarningsAsErrors = copyNewProperty({ options.isWarningsAsErrors }, false),
-    isIgnoreTestSources = copyNewProperty({ options.isIgnoreTestSources }, false),
-    isCheckGeneratedSources = copyNewProperty({ options.isCheckGeneratedSources }, false),
-    isExplainIssues = copyNewProperty({ options.isExplainIssues }, true),
-    isShowAll = copyNewProperty({ options.isShowAll }, false),
-    textReport = copyNewProperty({ options.textReport }, false),
-    textOutput = copyNewProperty(options::getTextOutput),
-    htmlReport = copyNewProperty({ options.htmlReport }, true),
-    htmlOutput = copyNewProperty(options::getHtmlOutput),
-    xmlReport = copyNewProperty({ options.xmlReport }, true),
-    xmlOutput = copyNewProperty(options::getXmlOutput),
-    isCheckReleaseBuilds = copyNewProperty({ options.isCheckReleaseBuilds }, true)
-  )
-
-  fun dependenciesInfoFrom(model: DependenciesInfo) = IdeDependenciesInfoImpl(
-    includeInApk = model.includeInApk,
-    includeInBundle = model.includeInBundle
-  )
-
-  override fun nativeAndroidProjectFrom(project: NativeAndroidProject): IdeNativeAndroidProjectImpl {
-    return IdeNativeAndroidProjectImpl(
-            project.modelVersion,
-            project.apiVersion,
-            project.name,
-            copy(project::getBuildFiles, ::deduplicateFile),
-            copy(project::getVariantInfos, ::nativeVariantFrom),
-            copy(project::getArtifacts, ::nativeArtifactFrom),
-            copy(project::getToolChains, ::nativeToolchainFrom),
-            copy(project::getSettings, ::nativeSettingsFrom),
-            copy(project::getFileExtensions, ::deduplicateString),
-            copyNewProperty(project::getDefaultNdkVersion, ""),
-            copy(project::getBuildSystems, ::deduplicateString)
-    )
-  }
-
-  override fun nativeToolchainFrom(toolchain: NativeToolchain): IdeNativeToolchainImpl {
-    return IdeNativeToolchainImpl(
-            toolchain.name,
-            toolchain.cCompilerExecutable,
-            toolchain.cppCompilerExecutable
-    )
-  }
-
-  fun nativeVariantFrom(variantInfo: NativeVariantInfo): IdeNativeVariantInfoImpl {
-    return IdeNativeVariantInfoImpl(
-      copy(variantInfo::getAbiNames, ::deduplicateString),
-      copy(variantInfo::getBuildRootFolderMap, ::deduplicateFile))
-  }
-
-  override fun nativeArtifactFrom(artifact: NativeArtifact): IdeNativeArtifactImpl {
-    return IdeNativeArtifactImpl(
-            artifact.name,
-            artifact.toolChain,
-            artifact.groupName,
-            copy(artifact::getSourceFiles, ::nativeFileFrom),
-            copy(artifact::getExportedHeaders, ::deduplicateFile),
-            copyNewProperty(artifact::getAbi, ""),
-            copyNewProperty(artifact::getTargetName, ""),
-            artifact.outputFile
-    )
-  }
-
-  override fun nativeFileFrom(file: NativeFile): IdeNativeFileImpl {
-    return IdeNativeFileImpl(file.filePath, file.settingsName, file.workingDirectory)
-  }
-
-  override fun nativeSettingsFrom(settings: NativeSettings): IdeNativeSettingsImpl {
-    return IdeNativeSettingsImpl(
-      settings.name,
-      copy(settings::getCompilerFlags, ::deduplicateString)
-    )
-  }
-
-  override fun nativeVariantAbiFrom(variantAbi: NativeVariantAbi): IdeNativeVariantAbiImpl {
-    return IdeNativeVariantAbiImpl(
-      copy(variantAbi::getBuildFiles, ::deduplicateFile),
-      copy(variantAbi::getArtifacts, ::nativeArtifactFrom),
-      copy(variantAbi::getToolChains, ::nativeToolchainFrom),
-      copy(variantAbi::getSettings, ::nativeSettingsFrom),
-      copy(variantAbi::getFileExtensions, ::deduplicateString),
-      variantAbi.variantName,
-      variantAbi.abi
-    )
-  }
-
-  override fun nativeModuleFrom(nativeModule: NativeModule): IdeNativeModuleImpl {
-    return IdeNativeModuleImpl(
-      nativeModule.name,
-      copy(nativeModule::variants, ::nativeVariantFrom),
-      when (nativeModule.nativeBuildSystem) {
-        com.android.builder.model.v2.models.ndk.NativeBuildSystem.NDK_BUILD -> NativeBuildSystem.NDK_BUILD
-        com.android.builder.model.v2.models.ndk.NativeBuildSystem.CMAKE -> NativeBuildSystem.CMAKE
-        // No forward compatibility. Old Studio cannot open projects with newer AGP.
-        else -> error("Unknown native build system: ${nativeModule.nativeBuildSystem}")
-      },
-      nativeModule.ndkVersion,
-      nativeModule.defaultNdkVersion,
-      nativeModule.externalNativeBuildFile
-    )
-  }
-
-  fun nativeVariantFrom(nativeVariant: NativeVariant): IdeNativeVariantImpl {
-    return IdeNativeVariantImpl(
-      nativeVariant.name,
-      copy(nativeVariant::abis, ::nativeAbiFrom)
-    )
-  }
-
-  fun nativeAbiFrom(nativeAbi: NativeAbi): IdeNativeAbiImpl {
-    return IdeNativeAbiImpl(
-            nativeAbi.name,
-            nativeAbi.sourceFlagsFile,
-            nativeAbi.symbolFolderIndexFile,
-            nativeAbi.buildFileIndexFile
-    )
-  }
-
-  override fun androidGradlePluginProjectFlagsFrom(flags: AndroidGradlePluginProjectFlags): IdeAndroidGradlePluginProjectFlagsImpl =
-    IdeAndroidGradlePluginProjectFlagsImpl(flags.booleanFlagMap)
-
-  fun copyFilters(output: VariantOutput): Collection<FilterData> {
-    return copy(
-      fun(): Collection<FilterData> =
-        try {
-          output.filters
-        }
-        catch (ignored: UnsupportedOperationException) {
-          output.outputs.flatMap(OutputFile::getFilters)
-        },
-      ::filterDataFrom
-    )
-  }
-
-  /**
-   * Create [IdeDependencies] from [BaseArtifact].
-   */
-  override fun dependenciesFrom(artifact: BaseArtifact): IdeDependencies {
-    return createFromDependencies(artifact.dependencies)
-  }
-
-
-  /**
-   * @param androidLibrary Instance of [AndroidLibrary] returned by android plugin.
-   * path to build directory for all modules.
-   * @return Instance of [Library] based on dependency type.
-   */
-  fun libraryFrom(androidLibrary: AndroidLibrary): IdeLibrary {
-    // If the dependency is a sub-module that wraps local aar, it should be considered as external dependency, i.e. type LIBRARY_ANDROID.
-    // In AndroidLibrary, getProject() of such dependency returns non-null project name, but they should be converted to IdeLevel2AndroidLibrary.
-    // Identify such case with the location of aar bundle.
-    // If the aar bundle is inside of build directory of sub-module, then it's regular library module dependency, otherwise it's a wrapped aar module.
-    return if (androidLibrary.project != null && !isLocalAarModule(androidLibrary)) {
-      createIdeModuleLibrary(androidLibrary, computeAddress(androidLibrary))
-    }
-    else {
-      val core = IdeAndroidLibraryCore.create(
-              artifactAddress = computeAddress(androidLibrary),
-              folder = androidLibrary.folder,
-              manifest = androidLibrary.manifest.path,
-              jarFile = androidLibrary.jarFile.path,
-              compileJarFile = (copyNewProperty(androidLibrary::getCompileJarFile) ?: androidLibrary.jarFile).path,
-              resFolder = androidLibrary.resFolder.path,
-              resStaticLibrary = copyNewProperty(androidLibrary::getResStaticLibrary),
-              assetsFolder = androidLibrary.assetsFolder.path,
-              localJars = androidLibrary.localJars.map { it.path },
-              jniFolder = androidLibrary.jniFolder.path,
-              aidlFolder = androidLibrary.aidlFolder.path,
-              renderscriptFolder = androidLibrary.renderscriptFolder.path,
-              proguardRules = androidLibrary.proguardRules.path,
-              lintJar = androidLibrary.lintJar.path,
-              externalAnnotations = androidLibrary.externalAnnotations.path,
-              publicResources = androidLibrary.publicResources.path,
-              artifact = androidLibrary.bundle,
-              symbolFile = getSymbolFilePath(
-                      androidLibrary),
-              deduplicate = { strings.getOrPut(this) { this } }
-      )
-      val isProvided = copyNewProperty(androidLibrary::isProvided, false)
-      IdeAndroidLibrary(androidLibraryCores.internCore(core), isProvided)
-    }
-  }
-
-  /**
-   * @param javaLibrary Instance of [JavaLibrary] returned by android plugin.
-   * @return Instance of [Library] based on dependency type.
-   */
-  override fun libraryFrom(javaLibrary: JavaLibrary): IdeLibrary {
-    val project = copyNewProperty(javaLibrary::getProject)
-    return if (project != null) {
-      // Java modules don't have variant.
-      createIdeModuleLibrary(javaLibrary, computeAddress(javaLibrary))
-    }
-    else {
-      val core = IdeJavaLibraryCore(
-              artifactAddress = computeAddress(javaLibrary),
-              artifact = javaLibrary.jarFile
-      )
-      val isProvided = copyNewProperty(javaLibrary::isProvided, false)
-      IdeJavaLibrary(javaLibraryCores.internCore(core), isProvided)
-    }
-  }
-
-  fun createIdeModuleLibrary(library: AndroidLibrary, artifactAddress: String): IdeLibrary {
-    val core = IdeModuleLibraryCore(
-            artifactAddress = artifactAddress,
-            buildId = copyNewProperty(library::getBuildId),
-            projectPath = copyNewProperty(library::getProject),
-            variant = copyNewProperty(library::getProjectVariant),
-            folder = copyNewProperty(library::getFolder),
-            lintJar = copyNewProperty(library::getLintJar)?.path
-    )
-    val isProvided = copyNewProperty(library::isProvided, false)
-    return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided)
-  }
-
-  fun createIdeModuleLibrary(library: JavaLibrary, artifactAddress: String): IdeLibrary {
-    val core = IdeModuleLibraryCore(
-            artifactAddress = artifactAddress,
-            buildId = copyNewProperty(library::getBuildId),
-            projectPath = copyNewProperty(library::getProject),
-            variant = null,
-            folder = null,
-            lintJar = null
-    )
-    val isProvided = copyNewProperty(library::isProvided, false)
-    return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided)
-  }
-
-  override fun libraryFrom(projectPath: String, artifactAddress: String, buildId: String?): IdeLibrary {
-    val core = IdeModuleLibraryCore(projectPath, artifactAddress, buildId)
-    return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided = false)
-  }
-
-  fun getSymbolFilePath(androidLibrary: AndroidLibrary): String {
-    return try {
-      androidLibrary.symbolFile.path
-    }
-    catch (e: UnsupportedOperationException) {
-      File(androidLibrary.folder, SdkConstants.FN_RESOURCE_TEXT).path
-    }
-  }
-
-  /**
-   * @param library Instance of level 1 Library.
-   * @return The artifact address that can be used as unique identifier in global library map.
-   */
-  override fun computeAddress(library: Library): String {
-    // If the library is an android module dependency, use projectId:projectPath::variant as unique identifier.
-    // MavenCoordinates cannot be used because it doesn't contain variant information, which results
-    // in the same MavenCoordinates for different variants of the same module.
-    try {
-      if (library.project != null && library is AndroidLibrary) {
-        return ((copyNewProperty(library::getBuildId)).orEmpty()
-                + library.getProject()
-                + "::"
-                + library.projectVariant)
-      }
-    }
-    catch (ex: UnsupportedOperationException) {
-      // getProject() isn't available for pre-2.0 plugins. Proceed with MavenCoordinates.
-      // Anyway pre-2.0 plugins don't have variant information for module dependency.
-    }
-    val coordinate: IdeMavenCoordinates = computeResolvedCoordinate(library)
-    var artifactId = coordinate.artifactId
-    if (artifactId.startsWith(":")) {
-      artifactId = artifactId.substring(1)
-    }
-    artifactId = artifactId.replace(':', '.')
-    var address = coordinate.groupId + ":" + artifactId + ":" + coordinate.version
-    val classifier = coordinate.classifier
-    if (classifier != null) {
-      address = "$address:$classifier"
-    }
-    val packaging = coordinate.packaging
-    address = "$address@$packaging"
-    return address
-  }
-
-  /**
-   * @param projectIdentifier Instance of ProjectIdentifier.
-   * @return The artifact address that can be used as unique identifier in global library map.
-   */
-  fun computeAddress(projectIdentifier: Dependencies.ProjectIdentifier): String {
-    return projectIdentifier.buildId + "@@" + projectIdentifier.projectPath
-  }
-
-  /** Indicates whether the given library is a module wrapping an AAR file.  */
-  override fun isLocalAarModule(androidLibrary: AndroidLibrary): Boolean {
-    val projectPath = androidLibrary.project ?: return false
-    val buildFolderPath = buildFolderPaths.findBuildFolderPath(
-      projectPath,
-      copyNewProperty(androidLibrary::getBuildId)
-    )
-    // If the aar bundle is inside of build directory, then it's a regular library module dependency, otherwise it's a wrapped aar module.
-    return (buildFolderPath != null
-            && !FileUtils.isFileInDirectory(androidLibrary.bundle, buildFolderPath))
-  }
-
-  fun computeResolvedCoordinate(library: Library): IdeMavenCoordinatesImpl {
-    // Although getResolvedCoordinates is annotated with @NonNull, it can return null for plugin 1.5,
-    // when the library dependency is from local jar.
-    @Suppress("SENSELESS_COMPARISON")
-    return if (library.resolvedCoordinates != null) {
-      mavenCoordinatesFrom(library.resolvedCoordinates)
-    }
-    else {
-      val jarFile: File =
-              if (library is JavaLibrary) {
-                library.jarFile
-              }
-              else {
-                (library as AndroidLibrary).bundle
-              }
-      mavenCoordinatesFrom(jarFile)
-    }
-  }
-
-
-  /** Call this method on level 1 Dependencies model.  */
-  fun createFromDependencies(dependencies: Dependencies): IdeDependencies {
-    val worker = Worker(dependencies)
-    return worker.createInstance()
-  }
-
-  private inner class Worker(private val dependencies: Dependencies) {
-    // Map from unique artifact address to level2 library instance. The library instances are
-    // supposed to be shared by all artifacts. When creating IdeLevel2Dependencies, check if current library is available in this map,
-    // if it's available, don't create new one, simple add reference to it. If it's not available, create new instance and save
-    // to this map, so it can be reused the next time when the same library is added.
-    private val librariesById = mutableMapOf<String, IdeLibrary>()
-
-    fun createInstance(): IdeDependencies {
-      val visited = mutableSetOf<String>()
-      populateAndroidLibraries(dependencies.libraries, visited)
-      populateJavaLibraries(dependencies.javaLibraries, visited)
-      populateModuleDependencies(dependencies, visited)
-      val jars: Collection<File> = try {
-        dependencies.runtimeOnlyClasses
-      }
-      catch (e: UnsupportedOperationException) {
-        // Gradle older than 3.4.
-        emptyList()
-      }
-      return createInstance(visited, jars)
-    }
-
-    private fun populateModuleDependencies(dependencies: Dependencies, visited: MutableSet<String>) {
-      try {
-        for (identifier in dependencies.javaModules) {
-          createModuleLibrary(
-                  visited,
-                  identifier.projectPath,
-                  computeAddress(identifier),
-                  identifier.buildId)
-        }
-      }
-      catch (ignored: UnsupportedOperationException) {
-        // Dependencies::getJavaModules is available for AGP 3.1+. Use
-        // Dependencies::getProjects for the old plugins.
-        for (projectPath in dependencies.projects) {
-          createModuleLibrary(visited, projectPath, projectPath, null)
-        }
-      }
-    }
-
-    private fun createModuleLibrary(
-            visited: MutableSet<String>,
-            projectPath: String,
-            artifactAddress: String,
-            buildId: String?
-    ) {
-      if (!visited.contains(artifactAddress)) {
-        visited.add(artifactAddress)
-        librariesById.computeIfAbsent(artifactAddress) { libraryFrom(projectPath, artifactAddress, buildId) }
-      }
-    }
-
-    private fun populateAndroidLibraries(
-            androidLibraries: Collection<AndroidLibrary>,
-            visited: MutableSet<String>
-    ) {
-      for (androidLibrary in androidLibraries) {
-        val address = computeAddress(androidLibrary)
-        if (!visited.contains(address)) {
-          visited.add(address)
-          librariesById.computeIfAbsent(address) { libraryFrom(androidLibrary) }
-          populateAndroidLibraries(androidLibrary.libraryDependencies, visited)
-          populateJavaLibraries(getJavaDependencies(androidLibrary), visited)
-        }
-      }
-    }
-
-    private fun getJavaDependencies(androidLibrary: AndroidLibrary): Collection<JavaLibrary> {
-      return try {
-        androidLibrary.javaDependencies
-      }
-      catch (e: UnsupportedOperationException) {
-        emptyList()
-      }
-    }
-
-    private fun populateJavaLibraries(
-            javaLibraries: Collection<JavaLibrary>,
-            visited: MutableSet<String>) {
-      for (javaLibrary in javaLibraries) {
-        val address = computeAddress(javaLibrary)
-        if (!visited.contains(address)) {
-          visited.add(address)
-          librariesById.computeIfAbsent(address) { libraryFrom(javaLibrary) }
-          populateJavaLibraries(javaLibrary.dependencies, visited)
-        }
-      }
-    }
-
-    private fun createInstance(
-            artifactAddresses: Collection<String>,
-            runtimeOnlyJars: Collection<File>
-    ): IdeDependencies {
-      val androidLibraries = ImmutableList.builder<IdeLibrary?>()
-      val javaLibraries = ImmutableList.builder<IdeLibrary?>()
-      val moduleDependencies = ImmutableList.builder<IdeLibrary?>()
-      for (address in artifactAddresses) {
-        val library = librariesById[address]!!
-        @Suppress("REDUNDANT_ELSE_IN_WHEN")
-        when (library.type) {
-          IdeLibrary.LibraryType.LIBRARY_ANDROID -> androidLibraries.add(library)
-          IdeLibrary.LibraryType.LIBRARY_JAVA -> javaLibraries.add(library)
-          IdeLibrary.LibraryType.LIBRARY_MODULE -> moduleDependencies.add(library)
-          else -> throw UnsupportedOperationException("Unknown library type " + library.type)
-        }
-      }
-      return IdeDependenciesImpl(
-              androidLibraries.build(),
-              javaLibraries.build(),
-              moduleDependencies.build(),
-              ImmutableList.copyOf(runtimeOnlyJars))
-    }
-  }
-
-    fun <T> copyNewPropertyWithDefault(propertyInvoker: () -> T, defaultValue: () -> T): T {
-      return try {
-        propertyInvoker()
-      }
-      catch (ignored: UnsupportedOperationException) {
-        defaultValue()
-      }
-    }
-
-    /**
-     * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
-     *       Please use function references or anonymous functions which seeds type inference.
-     **/
-    inline fun <T : Any> copyNewProperty(propertyInvoker: () -> T, defaultValue: T): T {
-      return try {
-        propertyInvoker()
-      }
-      catch (ignored: UnsupportedOperationException) {
-        defaultValue
-      }
-    }
-
-    /**
-     * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
-     *       Please use function references or anonymous functions which seeds type inference.
-     **/
-    inline fun <T : Any?> copyNewProperty(propertyInvoker: () -> T?): T? {
-      return try {
-        propertyInvoker()
-      }
-      catch (ignored: UnsupportedOperationException) {
-        null
-      }
-    }
-
-    /**
-     * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
-     *       Please use function references or anonymous functions which seeds type inference.
-     **/
-    @Suppress("UNUSED_PARAMETER")
-    inline fun <T : Collection<*>> copyNewProperty(propertyInvoker: () -> T, defaultValue: T): Unit = error(
-      "Cannot be called. Use copy() method.")
-
-    /**
-     * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
-     *       Please use function references or anonymous functions which seeds type inference.
-     **/
-    @Suppress("UNUSED_PARAMETER")
-    inline fun <T : Map<*, *>> copyNewProperty(propertyInvoker: () -> T, defaultValue: T): Unit = error(
-      "Cannot be called. Use copy() method.")
-
-    /**
-     * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
-     *       Please use function references or anonymous functions which seeds type inference.
-     **/
-    @JvmName("impossibleCopyNewCollectionProperty")
-    @Suppress("UNUSED_PARAMETER")
-    inline fun <T : Collection<*>?> copyNewProperty(propertyInvoker: () -> T): Unit = error("Cannot be called. Use copy() method.")
-
-    /**
-     * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
-     *       Please use function references or anonymous functions which seeds type inference.
-     **/
-    @JvmName("impossibleCopyNewMapProperty")
-    @Suppress("UNUSED_PARAMETER")
-    inline fun <T : Map<*, *>?> copyNewProperty(propertyInvoker: () -> T): Unit = error("Cannot be called. Use copy() method.")
-
-    override fun mavenCoordinatesFrom(coordinates: MavenCoordinates): IdeMavenCoordinatesImpl {
-      return IdeMavenCoordinatesImpl(
-        coordinates.groupId,
-        coordinates.artifactId,
-        coordinates.version,
-        coordinates.packaging,
-        coordinates.classifier
-      )
-    }
-
-  fun mavenCoordinatesFrom(localJar: File): IdeMavenCoordinatesImpl {
-    return IdeMavenCoordinatesImpl(LOCAL_AARS, localJar.path, "unspecified", "jar", null)
-  }
-
-
-  private inline fun <K, V> copy(original: () -> Collection<K>, mapper: (K) -> V): List<V> =
-          ModelCache.safeGet(original, listOf()).map(mapper)
-
-  private inline fun <K, V> copy(original: () -> Set<K>, mapper: (K) -> V): Set<V> =
-          ModelCache.safeGet(original, setOf()).map(mapper).toSet()
-
-  @JvmName("copyNullableCollection")
-  private inline fun <K, V> copy(original: () -> Collection<K>?, mapper: (K) -> V): List<V>? =
-          ModelCache.safeGet(original, null)?.map(mapper)
-
-  private inline fun <K, V, R> copy(original: () -> Map<K, V>, mapper: (V) -> R): Map<K, R> =
-          ModelCache.safeGet(original, mapOf()).mapValues { (_, v) -> mapper(v) }
-
-  inline fun <K : Any, V> copyModel(key: K, mappingFunction: (K) -> V): V = mappingFunction(key)
-
-  @JvmName("copyModelNullable")
-  inline fun <K : Any, V> copyModel(key: K?, mappingFunction: (K) -> V): V? = key?.let(mappingFunction)
-
-  inline fun <K, V : Any> copyNewModel(
-          getter: () -> K?,
-          mapper: (K) -> V
-  ): V? {
-    return try {
-      val key: K? = getter()
-      if (key != null) mapper(key) else null
-    }
-    catch (ignored: UnsupportedOperationException) {
-      null
-    }
-  }
-
-  fun deduplicateString(s: String): String = strings.putIfAbsent(s, s) ?: s
-  fun deduplicateFile(f: File): File = File(f.path.deduplicate())
-  fun String.deduplicate() = deduplicateString(this)
 }
 
-/** For older AGP versions pick a variant name based on a heuristic  */
+private inline fun <K : Any, V> copyModel(key: K, mappingFunction: (K) -> V): V = mappingFunction(key)
+
+@JvmName("copyModelNullable")
+private inline fun <K : Any, V> copyModel(key: K?, mappingFunction: (K) -> V): V? = key?.let(mappingFunction)
+
+private inline fun <K, V : Any> copyNewModel(
+  getter: () -> K?,
+  mapper: (K) -> V
+): V? {
+  return try {
+    val key: K? = getter()
+    if (key != null) mapper(key) else null
+  }
+  catch (ignored: UnsupportedOperationException) {
+    null
+  }
+}
+
+/**
+ * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
+ *       Please use function references or anonymous functions which seeds type inference.
+ **/
+@Suppress("unused", "UNUSED_PARAMETER")
+private inline fun <T : Collection<*>> copyNewProperty(propertyInvoker: () -> T, defaultValue: T): Unit = error(
+  "Cannot be called. Use copy() method.")
+
+/**
+ * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
+ *       Please use function references or anonymous functions which seeds type inference.
+ **/
+@Suppress("unused", "UNUSED_PARAMETER")
+private inline fun <T : Map<*, *>> copyNewProperty(propertyInvoker: () -> T, defaultValue: T): Unit = error(
+  "Cannot be called. Use copy() method.")
+
+/**
+ * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
+ *       Please use function references or anonymous functions which seeds type inference.
+ **/
+@JvmName("impossibleCopyNewCollectionProperty")
+@Suppress("unused", "UNUSED_PARAMETER")
+private inline fun <T : Collection<*>?> copyNewProperty(propertyInvoker: () -> T): Unit = error("Cannot be called. Use copy() method.")
+
+/**
+ * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
+ *       Please use function references or anonymous functions which seeds type inference.
+ **/
+@JvmName("impossibleCopyNewMapProperty")
+@Suppress("unused", "UNUSED_PARAMETER")
+private inline fun <T : Map<*, *>?> copyNewProperty(propertyInvoker: () -> T): Unit = error("Cannot be called. Use copy() method.")
+
+/**
+ * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
+ *       Please use function references or anonymous functions which seeds type inference.
+ **/
+private inline fun <T : Any> copyNewProperty(propertyInvoker: () -> T, defaultValue: T): T {
+  return try {
+    propertyInvoker()
+  }
+  catch (ignored: UnsupportedOperationException) {
+    defaultValue
+  }
+}
+
+/**
+ * NOTE: Multiple overloads are intentionally ambiguous to prevent lambdas from being used directly.
+ *       Please use function references or anonymous functions which seeds type inference.
+ **/
+private inline fun <T : Any?> copyNewProperty(propertyInvoker: () -> T?): T? {
+  return try {
+    propertyInvoker()
+  }
+  catch (ignored: UnsupportedOperationException) {
+    null
+  }
+}
+
+private inline fun <K, V> copy(original: () -> Collection<K>, mapper: (K) -> V): List<V> =
+  ModelCache.safeGet(original, listOf()).map(mapper)
+
+private inline fun <K, V> copy(original: () -> Set<K>, mapper: (K) -> V): Set<V> =
+  ModelCache.safeGet(original, setOf()).map(mapper).toSet()
+
+@JvmName("copyNullableCollection")
+private inline fun <K, V> copy(original: () -> Collection<K>?, mapper: (K) -> V): List<V>? =
+  ModelCache.safeGet(original, null)?.map(mapper)
+
+private inline fun <K, V, R> copy(original: () -> Map<K, V>, mapper: (V) -> R): Map<K, R> =
+  ModelCache.safeGet(original, mapOf()).mapValues { (_, v) -> mapper(v) }
+
+private inline fun <T> copyNewPropertyWithDefault(propertyInvoker: () -> T, defaultValue: () -> T): T {
+  return try {
+    propertyInvoker()
+  }
+  catch (ignored: UnsupportedOperationException) {
+    defaultValue()
+  }
+}
+
+private fun <T> MutableMap<T, T>.internCore(core: T): T = getOrPut(core) { core }
+
+private fun getSymbolFilePath(androidLibrary: AndroidLibrary): String {
+  return try {
+    androidLibrary.symbolFile.path
+  }
+  catch (e: UnsupportedOperationException) {
+    File(androidLibrary.folder, SdkConstants.FN_RESOURCE_TEXT).path
+  }
+}
+
+private fun convertExecution(execution: TestOptions.Execution?): IdeTestOptions.Execution? {
+  return if (execution == null) null
+  else when (execution) {
+    TestOptions.Execution.HOST -> IdeTestOptions.Execution.HOST
+    TestOptions.Execution.ANDROID_TEST_ORCHESTRATOR -> IdeTestOptions.Execution.ANDROID_TEST_ORCHESTRATOR
+    TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR -> IdeTestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR
+    else -> throw IllegalStateException("Unknown execution option: $execution")
+  }
+}
+
+private fun convertNamespacing(namespacing: AaptOptions.Namespacing): IdeAaptOptions.Namespacing {
+  return when (namespacing) {
+    AaptOptions.Namespacing.DISABLED -> IdeAaptOptions.Namespacing.DISABLED
+    AaptOptions.Namespacing.REQUIRED -> IdeAaptOptions.Namespacing.REQUIRED
+    else -> throw IllegalStateException("Unknown namespacing option: $namespacing")
+  }
+}
+
+private fun getProjectType(project: AndroidProject, modelVersion: GradleVersion?): Int {
+  if (modelVersion != null && modelVersion.isAtLeast(2, 3, 0)) {
+    return project.projectType
+  }
+  // Support for old Android Gradle Plugins must be maintained.
+  return if (project.isLibrary) IdeAndroidProject.PROJECT_TYPE_LIBRARY else IdeAndroidProject.PROJECT_TYPE_APP
+}
+
 @VisibleForTesting
+/** For older AGP versions pick a variant name based on a heuristic  */
 fun getDefaultVariant(variantNames: Collection<String>): String? {
   // Corner case of variant filter accidentally removing all variants.
   if (variantNames.isEmpty()) {
@@ -1231,5 +1278,3 @@ fun getDefaultVariant(variantNames: Collection<String>): String? {
   // Otherwise fall back to the first alphabetically
   return sortedNames.first()
 }
-
-private fun <T> MutableMap<T, T>.internCore(core: T): T = getOrPut(core) { core }
