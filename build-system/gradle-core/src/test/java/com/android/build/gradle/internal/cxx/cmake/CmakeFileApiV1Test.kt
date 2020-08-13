@@ -40,6 +40,45 @@ class CmakeFileApiV1Test {
     }
 
     @Test
+    fun prefabPublish() {
+        val replyFolder = prepareReplyFolder("prefab-publish")
+        val sources = mutableListOf<CmakeFileApiSourceFile>()
+        val config =
+                readCmakeFileApiReply(replyFolder) {
+                    sources.add(it)
+                }
+        val library =
+                config.libraries!!.values
+                        .map { it.output!!.toString().replace("\\", "/") }
+                        .single { it.endsWith(".a") }
+
+        Truth.assertThat(library).endsWith(".cxx/cmake/debug/x86/libfoo_static.a")
+    }
+
+    @Test
+    fun prefabExtractModelData() {
+        val replyFolder = prepareReplyFolder("prefab")
+        val sources = mutableListOf<CmakeFileApiSourceFile>()
+        val config =
+                readCmakeFileApiReply(replyFolder) {
+                    sources.add(it)
+                }
+        val runtimeFiles = config.libraries!!.values
+                .flatMap { it.runtimeFiles!!.toList() }
+                .map { it.path.replace("\\", "/") }
+                .distinct()
+                .sorted()
+                .joinToString("\n")
+
+        Truth.assertThat(runtimeFiles).isEqualTo("""
+            /{PREFAB}/jetified-curl/prefab/modules/curl/libs/android.x86_64/libcurl.so
+            /{PREFAB}/jetified-jsoncpp/prefab/modules/jsoncpp/libs/android.x86_64/libjsoncpp.so
+            /{PREFAB}/jetified-openssl/prefab/modules/crypto/libs/android.x86_64/libcrypto.so
+            /{PREFAB}/jetified-openssl/prefab/modules/ssl/libs/android.x86_64/libssl.so
+        """.trimIndent())
+    }
+
+    @Test
     fun simpleExtractModelData() {
         val replyFolder = prepareReplyFolder("simple")
         val sources = mutableListOf<CmakeFileApiSourceFile>()
@@ -139,42 +178,42 @@ class CmakeFileApiV1Test {
                 .joinToString("\n")
 
         Truth.assertThat(symbolFoldersIndexContent).isEqualTo("""
-            /{PROJECT}/Binaries
-            /{PROJECT}/Binaries/Tests
-            /{PROJECT}/Externals/FreeSurround
-            /{PROJECT}/Externals/LZO
-            /{PROJECT}/Externals/SFML
-            /{PROJECT}/Externals/bzip2
-            /{PROJECT}/Externals/cpp-optparse
-            /{PROJECT}/Externals/cubeb
-            /{PROJECT}/Externals/cubeb/CMakeFiles/speex.dir/./src/speex
-            /{PROJECT}/Externals/curl/lib
-            /{PROJECT}/Externals/enet
-            /{PROJECT}/Externals/fmt
-            /{PROJECT}/Externals/glslang
-            /{PROJECT}/Externals/gtest
-            /{PROJECT}/Externals/imgui
-            /{PROJECT}/Externals/libiconv-1.14
-            /{PROJECT}/Externals/liblzma
-            /{PROJECT}/Externals/libpng
-            /{PROJECT}/Externals/mbedtls/library
-            /{PROJECT}/Externals/minizip
-            /{PROJECT}/Externals/pugixml
-            /{PROJECT}/Externals/soundtouch
-            /{PROJECT}/Externals/xxhash
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Binaries
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Binaries/Tests
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/FreeSurround
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/LZO
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/SFML
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/bzip2
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/cpp-optparse
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/cubeb
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/cubeb/CMakeFiles/speex.dir/src/speex
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/curl/lib
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/enet
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/fmt
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/glslang
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/gtest
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/imgui
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/libiconv-1.14
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/liblzma
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/libpng
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/mbedtls/library
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/minizip
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/pugixml
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/soundtouch
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Externals/xxhash
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Source/Core/AudioCommon
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Source/Core/Common
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Source/Core/Core
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Source/Core/DiscIO
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Source/Core/InputCommon
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Source/Core/UICommon
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Source/Core/VideoBackends/Null
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Source/Core/VideoBackends/OGL
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Source/Core/VideoBackends/Software
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Source/Core/VideoBackends/Vulkan
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Source/Core/VideoCommon
+            /{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Source/UnitTests/CMakeFiles/unittests_stubhost.dir
             /{PROJECT}/Source/Android/app/build/intermediates/cmake/debug/obj/arm64-v8a
-            /{PROJECT}/Source/Core/AudioCommon
-            /{PROJECT}/Source/Core/Common
-            /{PROJECT}/Source/Core/Core
-            /{PROJECT}/Source/Core/DiscIO
-            /{PROJECT}/Source/Core/InputCommon
-            /{PROJECT}/Source/Core/UICommon
-            /{PROJECT}/Source/Core/VideoBackends/Null
-            /{PROJECT}/Source/Core/VideoBackends/OGL
-            /{PROJECT}/Source/Core/VideoBackends/Software
-            /{PROJECT}/Source/Core/VideoBackends/Vulkan
-            /{PROJECT}/Source/Core/VideoCommon
-            /{PROJECT}/Source/UnitTests/CMakeFiles/unittests_stubhost.dir/.
         """.trimIndent())
 
         val buildFilesIndexContent = config.buildFiles!!

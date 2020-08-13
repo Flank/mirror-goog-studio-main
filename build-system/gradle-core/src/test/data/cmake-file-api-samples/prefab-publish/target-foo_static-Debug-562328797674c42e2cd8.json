@@ -1,0 +1,95 @@
+{
+	"archive" : {},
+	"artifacts" :
+	[
+		{
+			"path" : "libfoo_static.a"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" :
+	{
+		"commands" :
+		[
+			"add_library",
+			"target_include_directories"
+		],
+		"files" :
+		[
+			"CMakeLists.txt"
+		],
+		"nodes" :
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 4,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 5,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" :
+	[
+		{
+			"compileCommandFragments" :
+			[
+				{
+					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O0 -fno-limit-debug-info  -fPIC"
+				}
+			],
+			"includes" :
+			[
+				{
+					"backtrace" : 2,
+					"path" : "/{ROOT}/prefabPublishing/foo/src/main/cpp/include"
+				}
+			],
+			"language" : "CXX",
+			"sourceIndexes" :
+			[
+				0
+			],
+			"sysroot" :
+			{
+				"path" : "/{NDK}/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+			}
+		}
+	],
+	"id" : "foo_static::@6890427a1f51a3e7e1df",
+	"name" : "foo_static",
+	"nameOnDisk" : "libfoo_static.a",
+	"paths" :
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sourceGroups" :
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" :
+			[
+				0
+			]
+		}
+	],
+	"sources" :
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "foo.cpp",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "STATIC_LIBRARY"
+}

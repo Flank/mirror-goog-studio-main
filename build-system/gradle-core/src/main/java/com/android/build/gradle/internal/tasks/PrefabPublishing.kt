@@ -312,7 +312,12 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
         // JSON file here only exposes the variant we're building, so we don't need to determine
         // what CMake build variant is used here. We also want to copy the libraries for every
         // ABI that's supported by this library, so no need to filter by ABI.
-        val matchingLibs = config.libraries.filterKeys { it.startsWith("$moduleName-") }.values
+        val matchingLibs = config
+                .libraries
+                .filterKeys {
+                    it.startsWith("$moduleName-") ||
+                    it.startsWith("$moduleName::")
+                }.values
         if (matchingLibs.isEmpty()) {
             errorln("No libraries found for $moduleName")
         }

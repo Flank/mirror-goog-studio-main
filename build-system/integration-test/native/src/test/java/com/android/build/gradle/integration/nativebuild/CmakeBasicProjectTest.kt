@@ -38,13 +38,11 @@ import com.android.builder.model.NativeArtifact
 import com.android.builder.model.NativeVariantAbi
 import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.builder.profile.ChromeTracingProfileConverter
-import com.android.testutils.TestUtils
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils.join
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Lists
 import com.google.common.truth.Truth
-import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -54,7 +52,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.util.zip.GZIPInputStream
-import kotlin.test.fail
 
 /** Assemble tests for Cmake.  */
 @RunWith(Parameterized::class)
@@ -223,7 +220,12 @@ class CmakeBasicProjectTest(
         assertThat(json).isFile()
 
         val config = AndroidBuildGradleJsons.getNativeBuildMiniConfig(json, null)
-        val library = config.libraries["bar-Debug-x86_64"] ?: fail()
+        val library = config
+                .libraries
+                .asSequence()
+                .filter { it.key.contains("bar") }
+                .single()
+                .value
         assertThat(library.runtimeFiles).containsExactly(fooPath)
     }
 

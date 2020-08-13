@@ -122,7 +122,6 @@ class CmakeSysrootTest(private val useV2NativeModel: Boolean) {
                             "${settings.compilerFlags}"
                 ).isTrue()
             }
-            assertThat(nativeProject.artifacts.first()!!.sourceFiles.size).isEqualTo(1)
         }
     }
 }

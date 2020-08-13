@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.model.readAsFileIndex
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.cxx.configure.BAKING_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_FLAGS
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_C_FLAGS
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
@@ -45,7 +46,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 @RunWith(Parameterized::class)
-class CmakeSettingsTest(cmakeVersionInDsl: String, private val useV2NativeModel: Boolean) {
+class CmakeSettingsTest(private val cmakeVersionInDsl: String, private val useV2NativeModel: Boolean) {
 
     @Rule
     @JvmField
@@ -56,7 +57,6 @@ class CmakeSettingsTest(cmakeVersionInDsl: String, private val useV2NativeModel:
         // TODO(159233213) Turn to ON when release configuration is cacheable
         // TODO(159998570) Figure out flakiness before turning to WARN or ON
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-        .setCmakeVersion(cmakeVersionInDsl)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=$useV2NativeModel")
         .create()
@@ -66,10 +66,11 @@ class CmakeSettingsTest(cmakeVersionInDsl: String, private val useV2NativeModel:
         @Parameterized.Parameters(name = "version={0} useV2NativeModel={1}")
         @JvmStatic
         fun data() = arrayOf(
-            arrayOf("3.6.0-x", false),
+            // CMakeSettings.json doesn't work with fork CMake version 3.6.0
             arrayOf(DEFAULT_CMAKE_VERSION, false),
-            arrayOf("3.6.0-x", true),
-            arrayOf(DEFAULT_CMAKE_VERSION, true)
+            arrayOf(BAKING_CMAKE_VERSION, false),
+            arrayOf(DEFAULT_CMAKE_VERSION, true),
+            arrayOf(BAKING_CMAKE_VERSION, true)
         )
     }
 
@@ -114,6 +115,7 @@ class CmakeSettingsTest(cmakeVersionInDsl: String, private val useV2NativeModel:
                     externalNativeBuild {
                       cmake {
                         path "CMakeLists.txt"
+                        version "$cmakeVersionInDsl"
                       }
                     }
                     buildTypes {

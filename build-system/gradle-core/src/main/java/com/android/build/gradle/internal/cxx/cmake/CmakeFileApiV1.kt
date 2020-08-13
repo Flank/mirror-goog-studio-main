@@ -15,12 +15,7 @@
  */
 package com.android.build.gradle.internal.cxx.cmake
 
-import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.Artifacts
-import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.CompileGroups
-import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.Dependencies
-import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.Source
-import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.SourceGroups
-import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.Type
+import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.*
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValue
@@ -119,7 +114,6 @@ fun readCmakeFileApiReply(
             }
             .distinct()
             .sorted()
-    config.buildTargetsCommandComponents = listOf(ninja, "-C", rootBuildFolder.path, "{LIST_OF_TARGETS_TO_BUILD}")
     config.cleanCommandsComponents = listOf(listOf(ninja, "-C", rootBuildFolder.path, "clean"))
 
     // This is a compound function that collects symbols directories and also
@@ -127,12 +121,12 @@ fun readCmakeFileApiReply(
     // because the information for both comes from the same target json file and
     // we only want to scan it once since it can be large.
     val targetIdToOutputs = mutableMapOf<String, MutableSet<String>>()
-    val targetIdToDependencies = mutableMapOf<String, List<String>>()
     var compileGroups : List<TargetCompileGroupData>? = null
     var sourceGroups : List<String>? = null
     val targetIdToNativeLibraryValue = mutableMapOf<String, NativeLibraryValue>()
     val languageToExtensionMap = mutableMapOf<String, MutableSet<String>>()
     val codeModel = index.getIndexObject("codemodel", replyFolder, CmakeFileApiCodeModelDataV2::class.java)!!
+    val targetIdToLink = mutableMapOf<String, Link>()
 
     val targetDataFiles = codeModel.configurations
         .flatMap { it.targets }
@@ -152,13 +146,16 @@ fun readCmakeFileApiReply(
                             targetIdToOutputs.computeIfAbsent(item.targetId) { mutableSetOf() }
                                     .addAll(
                                             item.artifacts.map { artifact ->
-                                                rootSourceFolder.resolve(artifact).path
+                                                File(cmakeFiles.paths.build)
+                                                        .resolve(artifact)
+                                                        .normalize()
+                                                        .path
                                             }
                                     )
                         }
                         is CompileGroups -> compileGroups = item.compileGroups
-                        is Dependencies -> targetIdToDependencies[item.targetId] = item.dependencyIds
                         is SourceGroups -> sourceGroups = item.sourceGroups
+                        is Link -> targetIdToLink[item.targetId] = item
                         is Source -> {
                             val sourceGroup = sourceGroups!![item.sourceGroupIndex]
                             if (sourceGroup == "Source Files" || sourceGroup == "Header Files") {
@@ -208,15 +205,28 @@ fun readCmakeFileApiReply(
                     .output = outputs.map(::File).firstOrNull()
     }
 
-    // Populate NativeLibraryValues@runtimeFiles
-    targetIdToDependencies.forEach { (id, dependencies) ->
+    // Populate NativeLibraryValues#runtimeFiles
+    targetIdToLink.forEach { (id, link) ->
         targetIdToNativeLibraryValue
-                .computeIfAbsent(id) { NativeLibraryValue() }
-                .runtimeFiles = dependencies
-                    .flatMap { targetIdToOutputs[it]?.toList() ?: listOf() }
-                    .distinct()
-                    .filter { it.endsWith(".so") }
-                    .map(::File)
+            .computeIfAbsent(id) { NativeLibraryValue() }
+                .runtimeFiles =
+                    link.compileCommandFragments
+                        .filter {
+                            // Just 'libraries' role
+                            it.role == "libraries" &&
+                            // Ignore '-llog', etc
+                            !it.fragment.startsWith("-l") &&
+                            // Ignore *.a and *.o
+                            !it.fragment.endsWith(".a") && !it.fragment.endsWith(".o") &&
+                            // Ignore libraries under sysroot
+                            !it.fragment.startsWith(link.sysroot)
+                        }
+                        .map {
+                            File(cmakeFiles.paths.build)
+                                    .resolve(it.fragment)
+                                    .normalize()
+                        }
+                        .toList()
     }
 
     config.libraries = targetIdToNativeLibraryValue
@@ -243,10 +253,8 @@ fun inferToolExeFromExistingTool(existingTool:String, newTool:String) : File {
     val existing = File(existingTool)
     val binFolder = existing.parentFile
     val extension = existing.extension
-    val result =
-            if (extension.isEmpty()) binFolder.resolve("$newTool")
-            else binFolder.resolve("$newTool.$extension")
-    return result
+    return if (extension.isEmpty()) binFolder.resolve(newTool)
+        else binFolder.resolve("$newTool.$extension")
 }
 
 private class TargetDataStream(
@@ -263,6 +271,7 @@ private class TargetDataStream(
                                 targetId,
                                 readSingleStringObjectList("path")))
                         "compileGroups" -> yield(CompileGroups(readCompileGroups()))
+                        "link" -> yield(readLink())
                         "dependencies" -> yield(Dependencies(targetId,
                                 readSingleStringObjectList("id")))
                         "sourceGroups" -> yield(SourceGroups(
@@ -325,6 +334,52 @@ private class TargetDataStream(
         }
         reader.endArray()
     }.toList()
+
+    private fun readLink() : Link {
+        reader.beginObject()
+        lateinit var commandFragments : List<CommandFragmentData>
+        lateinit var language : String
+        lateinit var sysroot : String
+        while (reader.hasNext()) {
+            when(reader.nextName()) {
+                "commandFragments" -> commandFragments = readCommandFragments()
+                "language" -> language = reader.nextString()
+                "sysroot" -> sysroot = readSingleStringObject("path")
+                else -> reader.skipValue()
+            }
+        }
+        reader.endObject()
+        return Link(targetId, commandFragments, language, sysroot)
+    }
+
+    private fun readCommandFragments() : List<CommandFragmentData> = sequence {
+        reader.beginArray()
+        while (reader.hasNext()) {
+            when (reader.peek()) {
+                JsonToken.BEGIN_OBJECT -> yield(readCommandFragment())
+                else -> reader.skipValue()
+            }
+        }
+        reader.endArray()
+    }.toList()
+
+    private fun readCommandFragment() : CommandFragmentData {
+        reader.beginObject()
+
+        lateinit var role: String
+        lateinit var fragment: String
+        while (reader.hasNext()) {
+            when(reader.nextName()) {
+                "role" -> role = reader.nextString()
+                "fragment" -> fragment = reader.nextString()
+                else -> reader.skipValue()
+            }
+        }
+        reader.endObject()
+        return CommandFragmentData(
+                role = role,
+                fragment = fragment)
+    }
 
     private fun readCompileGroup() : TargetCompileGroupData {
         reader.beginObject()

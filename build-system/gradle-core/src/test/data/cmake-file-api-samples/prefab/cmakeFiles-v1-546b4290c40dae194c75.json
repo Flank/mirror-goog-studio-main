@@ -1,0 +1,267 @@
+{
+	"inputs" :
+	[
+		{
+			"path" : "CMakeLists.txt"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeDetermineSystem.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646/build/cmake/android.toolchain.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646/build/cmake/platforms.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/Platform/Android-Determine.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeSystem.cmake.in"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/tests/PrefabTest/dependencies_are_copied_to_the_APK_build_system___CMAKE_/prefabApp/app/.cxx/cmake/debug/x86_64/CMakeFiles/3.18.1-g7d599d4/CMakeSystem.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646/build/cmake/android.toolchain.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeSystemSpecificInitialize.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/Platform/Android-Initialize.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeDetermineCXXCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeDetermineCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/Platform/Android-Determine-CXX.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/Platform/Android/Determine-Compiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeFindBinUtils.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/Compiler/Clang-FindBinUtils.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeCXXCompiler.cmake.in"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/tests/PrefabTest/dependencies_are_copied_to_the_APK_build_system___CMAKE_/prefabApp/app/.cxx/cmake/debug/x86_64/CMakeFiles/3.18.1-g7d599d4/CMakeCXXCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeSystemSpecificInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeGenericSystem.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeInitializeConfigs.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/Platform/Android.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/Platform/Linux.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/Platform/UnixPaths.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeCXXInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeLanguageInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/Compiler/Clang-CXX.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/Compiler/Clang.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/Compiler/GNU.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/Internal/CMakeCheckCompilerFlag.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/Platform/Android-Clang-CXX.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/Platform/Android-Clang.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeCommonLanguageInclude.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeTestCXXCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeTestCompilerCommon.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeDetermineCompilerABI.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeParseImplicitIncludeInfo.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeParseImplicitLinkInfo.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeTestCompilerCommon.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeCXXCompilerABI.cpp"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeDetermineCompileFeatures.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/Internal/FeatureTesting.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/{SDK}/cmake/3.18.1/share/cmake-3.18/Modules/CMakeCXXCompiler.cmake.in"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/tests/PrefabTest/dependencies_are_copied_to_the_APK_build_system___CMAKE_/prefabApp/app/.cxx/cmake/debug/x86_64/CMakeFiles/3.18.1-g7d599d4/CMakeCXXCompiler.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/tests/PrefabTest/dependencies_are_copied_to_the_APK_build_system___CMAKE_/prefabApp/app/.cxx/cmake/debug/prefab/x86_64/prefab/lib/x86_64-linux-android/cmake/curl/curl-config-version.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/tests/PrefabTest/dependencies_are_copied_to_the_APK_build_system___CMAKE_/prefabApp/app/.cxx/cmake/debug/prefab/x86_64/prefab/lib/x86_64-linux-android/cmake/curl/curl-config.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/tests/PrefabTest/dependencies_are_copied_to_the_APK_build_system___CMAKE_/prefabApp/app/.cxx/cmake/debug/prefab/x86_64/prefab/lib/x86_64-linux-android/cmake/openssl/openssl-config-version.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/tests/PrefabTest/dependencies_are_copied_to_the_APK_build_system___CMAKE_/prefabApp/app/.cxx/cmake/debug/prefab/x86_64/prefab/lib/x86_64-linux-android/cmake/openssl/openssl-config.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/tests/PrefabTest/dependencies_are_copied_to_the_APK_build_system___CMAKE_/prefabApp/app/.cxx/cmake/debug/prefab/x86_64/prefab/lib/x86_64-linux-android/cmake/jsoncpp/jsoncpp-config-version.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/tests/PrefabTest/dependencies_are_copied_to_the_APK_build_system___CMAKE_/prefabApp/app/.cxx/cmake/debug/prefab/x86_64/prefab/lib/x86_64-linux-android/cmake/jsoncpp/jsoncpp-config.cmake"
+		}
+	],
+	"kind" : "cmakeFiles",
+	"paths" :
+	{
+		"build" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/tests/PrefabTest/dependencies_are_copied_to_the_APK_build_system___CMAKE_/prefabApp/app/.cxx/cmake/debug/x86_64",
+		"source" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/tests/PrefabTest/dependencies_are_copied_to_the_APK_build_system___CMAKE_/prefabApp/app/src/main/cpp"
+	},
+	"version" :
+	{
+		"major" : 1,
+		"minor" : 0
+	}
+}

@@ -127,8 +127,6 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     requireExplicitLogger()
                     try {
                         buildForOneConfiguration(ops, forceGeneration, abi)
-                    } catch (e: IOException) {
-                        errorln("exception while building Json %s", e.message!!)
                     } catch (e: GradleException) {
                         errorln("exception while building Json %s", e.message!!)
                     } catch (e: ProcessException) {
@@ -334,6 +332,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     // Write the ProcessInfo to a file, this has all the flags used to generate the
                     // JSON. If any of these change later the JSON will be regenerated.
                     infoln("write command file %s", abi.buildCommandFile.absolutePath)
+                    abi.buildCommandFile.parentFile.mkdirs()
                     Files.write(
                         abi.buildCommandFile.toPath(),
                         currentBuildCommand.toByteArray(Charsets.UTF_8)

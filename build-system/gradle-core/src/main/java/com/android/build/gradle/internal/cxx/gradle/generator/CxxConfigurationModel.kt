@@ -49,11 +49,11 @@ import com.android.build.gradle.options.BooleanOption.ENABLE_V2_NATIVE_MODEL
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.StringOption.IDE_BUILD_TARGET_ABI
 import com.android.build.gradle.options.StringOption.PROFILE_OUTPUT_DIR
+import com.android.build.gradle.tasks.*
 import com.android.build.gradle.tasks.CmakeAndroidNinjaExternalNativeJsonGenerator
+import com.android.build.gradle.tasks.CmakeQueryMetadataGenerator
 import com.android.build.gradle.tasks.CmakeServerExternalNativeJsonGenerator
-import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.build.gradle.tasks.NdkBuildExternalNativeJsonGenerator
-import com.android.build.gradle.tasks.getPrefabFromMaven
 import com.android.builder.profile.ChromeTracingProfileConverter
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
@@ -414,7 +414,14 @@ fun createCxxMetadataGenerator(
                             + ". Try 3.7.0 or later."
                 )
             }
-            CmakeServerExternalNativeJsonGenerator(variant, abis, variantBuilder)
+
+            val isPreCmakeFileApiVersion = cmakeRevision.major == 3 && cmakeRevision.minor < 15
+            if (isPreCmakeFileApiVersion ||
+                !configurationModel.isV2NativeModelEnabled ||
+                !configurationModel.isPreferCmakeFileApiEnabled) {
+                return CmakeServerExternalNativeJsonGenerator(variant, abis, variantBuilder)
+            }
+            return CmakeQueryMetadataGenerator(variant, abis, variantBuilder)
         }
     }
 }

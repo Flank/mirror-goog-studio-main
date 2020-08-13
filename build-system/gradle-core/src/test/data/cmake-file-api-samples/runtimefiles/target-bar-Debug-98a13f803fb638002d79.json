@@ -84,7 +84,7 @@
 			},
 			{
 				"backtrace" : 2,
-				"fragment" : "../../../../build/intermediates/cmake/debug/obj/x86_64/libfoo.so",
+				"fragment" : "/{PROJECT}/build/intermediates/cmake/debug/obj/x86_64/libfoo.so",
 				"role" : "libraries"
 			},
 			{
