@@ -46,9 +46,4 @@ public class IdeClassFieldTest {
         Object o = Serialization.deserialize(bytes);
         assertEquals(classField, o);
     }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeClassFieldImpl.class).verify();
-    }
 }

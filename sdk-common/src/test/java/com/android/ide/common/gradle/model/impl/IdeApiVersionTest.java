@@ -54,9 +54,4 @@ public class IdeApiVersionTest {
         IdeModelTestUtils.assertEqualsOrSimilar(original, copy);
         IdeModelTestUtils.verifyUsageOfImmutableCollections(copy);
     }
-
-    @Test
-    public void equalsAndHashCode() {
-        IdeModelTestUtils.createEqualsVerifier(IdeApiVersionImpl.class).verify();
-    }
 }

@@ -54,9 +54,4 @@ public class IdeTestOptionsTest {
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeTestOptionsImpl.class).verify();
-    }
 }

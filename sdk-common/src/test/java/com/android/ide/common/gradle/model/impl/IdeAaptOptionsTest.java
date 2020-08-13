@@ -46,9 +46,4 @@ public class IdeAaptOptionsTest {
         Object o = Serialization.deserialize(bytes);
         assertEquals(aaptOptions, o);
     }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeClassFieldImpl.class).verify();
-    }
 }

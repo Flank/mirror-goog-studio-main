@@ -98,12 +98,4 @@ public class IdeAndroidArtifactImplTest {
         assertThat(original.getAbiFilters()).isNull();
         assertThat(copy.getAbiFilters()).isEmpty();
     }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeAndroidArtifactImpl.class)
-                .withRedefinedSuperclass()
-                .withIgnoredFields("hashCode")
-                .verify();
-    }
 }

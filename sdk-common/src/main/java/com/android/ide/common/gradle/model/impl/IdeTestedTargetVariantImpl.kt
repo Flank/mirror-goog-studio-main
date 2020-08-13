@@ -15,9 +15,10 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.ide.common.gradle.model.IdeViewBindingOptions
+import com.android.ide.common.gradle.model.IdeTestedTargetVariant
 import java.io.Serializable
 
-data class IdeViewBindingOptionsImpl(
-  override val enabled: Boolean
-) : IdeViewBindingOptions, Serializable
+data class IdeTestedTargetVariantImpl(
+  override val targetProjectPath: String,
+  override val targetVariant: String
+) : IdeTestedTargetVariant, Serializable

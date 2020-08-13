@@ -47,9 +47,4 @@ public class IdeSourceProviderContainerTest {
         Object o = Serialization.deserialize(bytes);
         assertEquals(classField, o);
     }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeSourceProviderContainerImpl.class).verify();
-    }
 }

@@ -15,9 +15,11 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.ide.common.gradle.model.IdeViewBindingOptions
+import com.android.ide.common.gradle.model.IdeClassField
 import java.io.Serializable
 
-data class IdeViewBindingOptionsImpl(
-  override val enabled: Boolean
-) : IdeViewBindingOptions, Serializable
+data class IdeClassFieldImpl(
+  override val type: String,
+  override val name: String,
+  override val value: String
+) : IdeClassField, Serializable

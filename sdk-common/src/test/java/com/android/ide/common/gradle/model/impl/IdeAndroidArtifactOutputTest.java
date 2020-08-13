@@ -47,11 +47,4 @@ public class IdeAndroidArtifactOutputTest {
         Object o = Serialization.deserialize(bytes);
         assertEquals(output, o);
     }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeAndroidArtifactOutputImpl.class)
-                .withIgnoredFields("myHashCode")
-                .verify();
-    }
 }

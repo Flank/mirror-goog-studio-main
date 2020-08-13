@@ -15,9 +15,14 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.ide.common.gradle.model.IdeViewBindingOptions
+import com.android.ide.common.gradle.model.IdeProductFlavor
+import com.android.ide.common.gradle.model.IdeProductFlavorContainer
+import com.android.ide.common.gradle.model.IdeSourceProvider
+import com.android.ide.common.gradle.model.IdeSourceProviderContainer
 import java.io.Serializable
 
-data class IdeViewBindingOptionsImpl(
-  override val enabled: Boolean
-) : IdeViewBindingOptions, Serializable
+data class IdeProductFlavorContainerImpl(
+  override val productFlavor: IdeProductFlavor,
+  override val sourceProvider: IdeSourceProvider,
+  override val extraSourceProviders: Collection<IdeSourceProviderContainer>
+) : IdeProductFlavorContainer, Serializable

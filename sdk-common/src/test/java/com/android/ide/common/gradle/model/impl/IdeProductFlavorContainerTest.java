@@ -48,9 +48,4 @@ public class IdeProductFlavorContainerTest {
         Object o = deserialize(bytes);
         assertEquals(container, o);
     }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeProductFlavorContainerImpl.class).verify();
-    }
 }

@@ -57,9 +57,4 @@ public class IdeSyncIssueTest {
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeSyncIssueImpl.class).verify();
-    }
 }

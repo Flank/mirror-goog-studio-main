@@ -20,23 +20,7 @@ import com.android.ide.common.gradle.model.ndk.v1.IdeNativeVariantInfo
 import java.io.File
 import java.io.Serializable
 
-class IdeNativeVariantInfoImpl(
+data class IdeNativeVariantInfoImpl(
     override val abiNames : List<String>,
     override val buildRootFolderMap : Map<String, File>
-) : IdeNativeVariantInfo, Serializable {
-    override fun equals(o: Any?): Boolean {
-        if (this === o) {
-            return true
-        }
-        val stub = o as? IdeNativeVariantInfo ?: return false
-        return (abiNames == stub.abiNames) && (buildRootFolderMap == stub.buildRootFolderMap)
-    }
-
-    override fun hashCode(): Int {
-        return abiNames.hashCode() + buildRootFolderMap.hashCode()
-    }
-
-    override fun toString(): String {
-        return "abiNames=$abiNames buildRootFolders=$buildRootFolderMap"
-    }
-}
+) : IdeNativeVariantInfo, Serializable

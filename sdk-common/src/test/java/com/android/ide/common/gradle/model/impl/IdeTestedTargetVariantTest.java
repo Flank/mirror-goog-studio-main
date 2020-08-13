@@ -56,9 +56,4 @@ public class IdeTestedTargetVariantTest {
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeTestedTargetVariantImpl.class).verify();
-    }
 }

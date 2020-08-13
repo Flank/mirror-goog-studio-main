@@ -95,12 +95,4 @@ public class IdeProductFlavorTest {
         IdeProductFlavorImpl copy = myModelCache.productFlavorFrom(original);
         assertThat(copy.getVectorDrawables()).isNull();
     }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeProductFlavorImpl.class)
-                .withRedefinedSuperclass()
-                .withIgnoredFields("hashCode")
-                .verify();
-    }
 }

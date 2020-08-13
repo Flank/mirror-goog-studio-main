@@ -54,9 +54,4 @@ public class IdeFilterDataTest {
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeFilterDataImpl.class).verify();
-    }
 }

@@ -234,11 +234,15 @@ private fun modelCacheImpl(): ModelCacheTesting {
   }
 
   fun classFieldFrom(classField: ClassField): IdeClassFieldImpl {
-    return IdeClassFieldImpl(classField.name, classField.type, classField.value)
+    return IdeClassFieldImpl(
+      name = classField.name,
+      type = classField.type,
+      value = classField.value
+    )
   }
 
   fun vectorDrawablesOptionsFrom(options: VectorDrawablesOptions): IdeVectorDrawablesOptionsImpl {
-    return IdeVectorDrawablesOptionsImpl(options.useSupportLibrary)
+    return IdeVectorDrawablesOptionsImpl(useSupportLibrary = options.useSupportLibrary)
   }
 
   fun copyVectorDrawables(flavor: ProductFlavor): IdeVectorDrawablesOptions? {
@@ -252,25 +256,24 @@ private fun modelCacheImpl(): ModelCacheTesting {
   }
 
   fun apiVersionFrom(version: ApiVersion): IdeApiVersionImpl {
-    return IdeApiVersionImpl(version.apiString, version.codename, version.apiLevel)
+    return IdeApiVersionImpl(apiLevel = version.apiLevel, codename = version.codename, apiString = version.apiString)
   }
 
   fun signingConfigFrom(config: SigningConfig): IdeSigningConfigImpl {
     return IdeSigningConfigImpl(
-      config.getName(),
-      config.storeFile,
-      config.storePassword,
-      config.keyAlias,
-      copyNewProperty(config::isV1SigningEnabled)
+      name = config.getName(),
+      storeFile = config.storeFile,
+      storePassword = config.storePassword,
+      keyAlias = config.keyAlias
     )
   }
 
   fun productFlavorFrom(flavor: ProductFlavor): IdeProductFlavorImpl {
     return IdeProductFlavorImpl(
-      flavor.name,
-      copy(flavor::resValues, ::classFieldFrom),
-      ImmutableList.copyOf(flavor.proguardFiles),
-      ImmutableList.copyOf(flavor.consumerProguardFiles),
+      name = flavor.name,
+      resValues = copy(flavor::resValues, ::classFieldFrom),
+      proguardFiles = ImmutableList.copyOf(flavor.proguardFiles),
+      consumerProguardFiles = ImmutableList.copyOf(flavor.consumerProguardFiles),
       // AGP may return internal Groovy GString implementation as a value in
       // manifestPlaceholders
       // map. It cannot be serialized
@@ -278,60 +281,59 @@ private fun modelCacheImpl(): ModelCacheTesting {
       // make them
       // usable as they are converted to String by
       // the manifest merger anyway.
-      ImmutableMap.copyOf(flavor.manifestPlaceholders.entries.associate { it.key to it.value.toString() }),
-      flavor.applicationIdSuffix,
-      copyNewProperty(flavor::versionNameSuffix),
-      copyNewProperty(flavor::multiDexEnabled),
-      ImmutableMap.copyOf(flavor.testInstrumentationRunnerArguments),
-      ImmutableList.copyOf(flavor.resourceConfigurations),
-      copyVectorDrawables(flavor),
-      flavor.dimension,
-      flavor.applicationId,
-      flavor.versionCode,
-      flavor.versionName,
-      copyModel(flavor.minSdkVersion, ::apiVersionFrom),
-      copyModel(flavor.targetSdkVersion, ::apiVersionFrom),
-      flavor.maxSdkVersion,
-      flavor.testApplicationId,
-      flavor.testInstrumentationRunner,
-      flavor.testFunctionalTest,
-      flavor.testHandleProfiling,
-      copyModel(flavor.signingConfig, ::signingConfigFrom)
+      manifestPlaceholders = ImmutableMap.copyOf(flavor.manifestPlaceholders.entries.associate { it.key to it.value.toString() }),
+      applicationIdSuffix = flavor.applicationIdSuffix,
+      versionNameSuffix = copyNewProperty(flavor::versionNameSuffix),
+      multiDexEnabled = copyNewProperty(flavor::multiDexEnabled),
+      testInstrumentationRunnerArguments = ImmutableMap.copyOf(flavor.testInstrumentationRunnerArguments),
+      resourceConfigurations = ImmutableList.copyOf(flavor.resourceConfigurations),
+      vectorDrawables = copyVectorDrawables(flavor),
+      dimension = flavor.dimension,
+      applicationId = flavor.applicationId,
+      versionCode = flavor.versionCode,
+      versionName = flavor.versionName,
+      minSdkVersion = copyModel(flavor.minSdkVersion, ::apiVersionFrom),
+      targetSdkVersion = copyModel(flavor.targetSdkVersion, ::apiVersionFrom),
+      maxSdkVersion = flavor.maxSdkVersion,
+      testApplicationId = flavor.testApplicationId,
+      testInstrumentationRunner = flavor.testInstrumentationRunner,
+      testFunctionalTest = flavor.testFunctionalTest,
+      testHandleProfiling = flavor.testHandleProfiling
     )
   }
 
   fun sourceProviderContainerFrom(container: SourceProviderContainer): IdeSourceProviderContainerImpl {
     return IdeSourceProviderContainerImpl(
-      container.artifactName,
-      copyModel(container.sourceProvider, ::sourceProviderFrom)
+      artifactName = container.artifactName,
+      sourceProvider = copyModel(container.sourceProvider, ::sourceProviderFrom)
     )
   }
 
   fun productFlavorContainerFrom(
     container: ProductFlavorContainer): IdeProductFlavorContainerImpl {
     return IdeProductFlavorContainerImpl(
-      copyModel(container.productFlavor, ::productFlavorFrom),
-      copyModel(container.sourceProvider, ::sourceProviderFrom),
-      copy(container::getExtraSourceProviders, ::sourceProviderContainerFrom)
+      productFlavor = copyModel(container.productFlavor, ::productFlavorFrom),
+      sourceProvider = copyModel(container.sourceProvider, ::sourceProviderFrom),
+      extraSourceProviders = copy(container::getExtraSourceProviders, ::sourceProviderContainerFrom)
     )
   }
 
   fun syncIssueFrom(issue: SyncIssue): IdeSyncIssueImpl {
     return IdeSyncIssueImpl(
-      issue.message,
-      copy(fun(): List<String>? = issue.multiLineMessage?.filterNotNull(), ::deduplicateString),
-      issue.data,
-      issue.severity,
-      issue.type
+      message = issue.message,
+      multiLineMessage = copy(fun(): List<String>? = issue.multiLineMessage?.filterNotNull(), ::deduplicateString),
+      severity = issue.severity,
+      type = issue.type,
+      data = issue.data
     )
   }
 
   fun buildTypeFrom(buildType: BuildType): IdeBuildTypeImpl {
     return IdeBuildTypeImpl(
-      buildType.name,
-      copy(buildType::resValues, ::classFieldFrom),
-      ImmutableList.copyOf(buildType.proguardFiles),
-      ImmutableList.copyOf(buildType.consumerProguardFiles),
+      name = buildType.name,
+      resValues = copy(buildType::resValues, ::classFieldFrom),
+      proguardFiles = ImmutableList.copyOf(buildType.proguardFiles),
+      consumerProguardFiles = ImmutableList.copyOf(buildType.consumerProguardFiles),
       // AGP may return internal Groovy GString implementation as a value in
       // manifestPlaceholders
       // map. It cannot be serialized
@@ -339,24 +341,24 @@ private fun modelCacheImpl(): ModelCacheTesting {
       // make them
       // usable as they are converted to String by
       // the manifest merger anyway.
-      ImmutableMap.copyOf(buildType.manifestPlaceholders.entries.associate { it.key to it.value.toString() }),
-      buildType.applicationIdSuffix,
-      copyNewProperty(buildType::versionNameSuffix),
-      copyNewProperty(buildType::multiDexEnabled),
-      buildType.isDebuggable,
-      buildType.isJniDebuggable,
-      buildType.isRenderscriptDebuggable,
-      buildType.renderscriptOptimLevel,
-      buildType.isMinifyEnabled,
-      buildType.isZipAlignEnabled
+      manifestPlaceholders = ImmutableMap.copyOf(buildType.manifestPlaceholders.entries.associate { it.key to it.value.toString() }),
+      applicationIdSuffix = buildType.applicationIdSuffix,
+      versionNameSuffix = copyNewProperty(buildType::versionNameSuffix),
+      multiDexEnabled = copyNewProperty(buildType::multiDexEnabled),
+      isDebuggable = buildType.isDebuggable,
+      isJniDebuggable = buildType.isJniDebuggable,
+      isRenderscriptDebuggable = buildType.isRenderscriptDebuggable,
+      renderscriptOptimLevel = buildType.renderscriptOptimLevel,
+      isMinifyEnabled = buildType.isMinifyEnabled,
+      isZipAlignEnabled = buildType.isZipAlignEnabled
     )
   }
 
   fun buildTypeContainerFrom(container: BuildTypeContainer): IdeBuildTypeContainerImpl {
     return IdeBuildTypeContainerImpl(
-      copyModel(container.buildType, ::buildTypeFrom),
-      copyModel(container.sourceProvider, ::sourceProviderFrom),
-      copy(container::getExtraSourceProviders, ::sourceProviderContainerFrom)
+      buildType = copyModel(container.buildType, ::buildTypeFrom),
+      sourceProvider = copyModel(container.sourceProvider, ::sourceProviderFrom),
+      extraSourceProviders = copy(container::getExtraSourceProviders, ::sourceProviderContainerFrom)
     )
   }
 
@@ -400,16 +402,22 @@ private fun modelCacheImpl(): ModelCacheTesting {
 
   fun mavenCoordinatesFrom(coordinates: MavenCoordinates): IdeMavenCoordinatesImpl {
     return IdeMavenCoordinatesImpl(
-      coordinates.groupId,
-      coordinates.artifactId,
-      coordinates.version,
-      coordinates.packaging,
-      coordinates.classifier
+      groupId = coordinates.groupId,
+      artifactId = coordinates.artifactId,
+      version = coordinates.version,
+      packaging = coordinates.packaging,
+      classifier = coordinates.classifier
     )
   }
 
   fun mavenCoordinatesFrom(localJar: File): IdeMavenCoordinatesImpl {
-    return IdeMavenCoordinatesImpl(LOCAL_AARS, localJar.path, "unspecified", "jar", null)
+    return IdeMavenCoordinatesImpl(
+      groupId = LOCAL_AARS,
+      artifactId = localJar.path,
+      version = "unspecified",
+      packaging = "jar",
+      classifier = null
+    )
   }
 
 
@@ -621,9 +629,9 @@ private fun modelCacheImpl(): ModelCacheTesting {
       artifactAddresses: Collection<String>,
       runtimeOnlyJars: Collection<File>
     ): IdeDependencies {
-      val androidLibraries = ImmutableList.builder<IdeLibrary?>()
-      val javaLibraries = ImmutableList.builder<IdeLibrary?>()
-      val moduleDependencies = ImmutableList.builder<IdeLibrary?>()
+      val androidLibraries = ImmutableList.builder<IdeLibrary>()
+      val javaLibraries = ImmutableList.builder<IdeLibrary>()
+      val moduleDependencies = ImmutableList.builder<IdeLibrary>()
       for (address in artifactAddresses) {
         val library = librariesById[address]!!
         @Suppress("REDUNDANT_ELSE_IN_WHEN")
@@ -635,10 +643,10 @@ private fun modelCacheImpl(): ModelCacheTesting {
         }
       }
       return IdeDependenciesImpl(
-        androidLibraries.build(),
-        javaLibraries.build(),
-        moduleDependencies.build(),
-        ImmutableList.copyOf(runtimeOnlyJars))
+        androidLibraries = androidLibraries.build(),
+        javaLibraries = javaLibraries.build(),
+        moduleDependencies = moduleDependencies.build(),
+        runtimeOnlyClasses = ImmutableList.copyOf(runtimeOnlyJars))
     }
 
     fun createInstance(): IdeDependencies {
@@ -667,7 +675,7 @@ private fun modelCacheImpl(): ModelCacheTesting {
   }
 
   fun filterDataFrom(data: FilterData): IdeFilterDataImpl {
-    return IdeFilterDataImpl(data.identifier, data.filterType)
+    return IdeFilterDataImpl(_identifier = data.identifier, _filterType = data.filterType)
   }
 
   fun copyFilters(output: VariantOutput): Collection<FilterData> {
@@ -685,9 +693,9 @@ private fun modelCacheImpl(): ModelCacheTesting {
 
   fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl {
     return IdeAndroidArtifactOutputImpl(
-      copyFilters(output),
-      output.versionCode,
-      copyNewProperty({ output.outputFile }, output.mainOutputFile.outputFile)
+      filters = copyFilters(output),
+      versionCode = output.versionCode,
+      outputFile = copyNewProperty({ output.outputFile }, output.mainOutputFile.outputFile)
     )
   }
 
@@ -703,7 +711,10 @@ private fun modelCacheImpl(): ModelCacheTesting {
   }
 
   fun testOptionsFrom(testOptions: TestOptions): IdeTestOptionsImpl {
-    return IdeTestOptionsImpl(testOptions.animationsDisabled, convertExecution(testOptions.execution))
+    return IdeTestOptionsImpl(
+      animationsDisabled = testOptions.animationsDisabled,
+      execution = convertExecution(testOptions.execution)
+    )
   }
 
   fun androidArtifactFrom(
@@ -711,59 +722,64 @@ private fun modelCacheImpl(): ModelCacheTesting {
     agpVersion: GradleVersion?
   ): IdeAndroidArtifactImpl {
     return IdeAndroidArtifactImpl(
-      artifact.name,
-      artifact.compileTaskName,
-      artifact.assembleTaskName,
-      copyNewProperty({ artifact.assembleTaskOutputListingFile }, ""),
-      artifact.classesFolder,
-      copyNewProperty(artifact::getJavaResourcesFolder),
-      copyNewPropertyWithDefault(artifact::getIdeSetupTaskNames, defaultValue = { setOf(artifact.sourceGenTaskName) }).toList(),
-      copy(artifact::getGeneratedSourceFolders, ::deduplicateFile).distinct(), // The source model can contain duplicates.
-      copyNewModel(artifact::getVariantSourceProvider, ::sourceProviderFrom),
-      copyNewModel(artifact::getMultiFlavorSourceProvider, ::sourceProviderFrom),
-      copy(artifact::getAdditionalClassesFolders, ::deduplicateFile),
-      dependenciesFrom(artifact),
-      copyOutputs(artifact, agpVersion),
-      artifact.applicationId,
-      artifact.sourceGenTaskName,
-      copy(artifact::getGeneratedResourceFolders, ::deduplicateFile).distinct(),
-      artifact.signingConfigName,
-      ImmutableSet.copyOf( // In AGP 4.0 and below abiFilters was nullable, normalize null to empty set.
+      name = artifact.name,
+      compileTaskName = artifact.compileTaskName,
+      assembleTaskName = artifact.assembleTaskName,
+      assembleTaskOutputListingFile = copyNewProperty({ artifact.assembleTaskOutputListingFile }, ""),
+      classesFolder = artifact.classesFolder,
+      javaResourcesFolder = copyNewProperty(artifact::getJavaResourcesFolder),
+      ideSetupTaskNames = copyNewPropertyWithDefault(artifact::getIdeSetupTaskNames,
+                                                     defaultValue = { setOf(artifact.sourceGenTaskName) }).toList(),
+      mutableGeneratedSourceFolders = copy(artifact::getGeneratedSourceFolders,
+                                           ::deduplicateFile).distinct().toMutableList(), // The source model can contain duplicates.
+      variantSourceProvider = copyNewModel(artifact::getVariantSourceProvider, ::sourceProviderFrom),
+      multiFlavorSourceProvider = copyNewModel(artifact::getMultiFlavorSourceProvider, ::sourceProviderFrom),
+      additionalClassesFolders = copy(artifact::getAdditionalClassesFolders, ::deduplicateFile).toList(),
+      level2Dependencies = dependenciesFrom(artifact),
+      outputs = copyOutputs(artifact, agpVersion),
+      applicationId = artifact.applicationId,
+      generatedResourceFolders = copy(artifact::getGeneratedResourceFolders, ::deduplicateFile).distinct(),
+      signingConfigName = artifact.signingConfigName,
+      abiFilters = ImmutableSet.copyOf( // In AGP 4.0 and below abiFilters was nullable, normalize null to empty set.
         artifact.abiFilters.orEmpty()),
-      artifact.isSigned,
-      copy(artifact::getAdditionalRuntimeApks, ::deduplicateFile),
-      copyNewModel(artifact::getTestOptions, ::testOptionsFrom),
-      copyNewModel(artifact::getInstrumentedTestTaskName, ::deduplicateString),
-      copyNewModel(artifact::getBundleTaskName, ::deduplicateString),
-      copyNewModel(artifact::getBundleTaskOutputListingFile, ::deduplicateString),
-      copyNewModel(artifact::getApkFromBundleTaskName, ::deduplicateString),
-      copyNewModel(artifact::getApkFromBundleTaskOutputListingFile, ::deduplicateString),
-      copyNewProperty(artifact::getCodeShrinker)
+      isSigned = artifact.isSigned,
+      additionalRuntimeApks = copy(artifact::getAdditionalRuntimeApks, ::deduplicateFile),
+      testOptions = copyNewModel(artifact::getTestOptions, ::testOptionsFrom),
+      bundleTaskName = copyNewModel(artifact::getBundleTaskName, ::deduplicateString),
+      bundleTaskOutputListingFile = copyNewModel(artifact::getBundleTaskOutputListingFile, ::deduplicateString),
+      apkFromBundleTaskName = copyNewModel(artifact::getApkFromBundleTaskName, ::deduplicateString),
+      apkFromBundleTaskOutputListingFile = copyNewModel(artifact::getApkFromBundleTaskOutputListingFile, ::deduplicateString),
+      codeShrinker = copyNewProperty(artifact::getCodeShrinker),
+      isTestArtifact = artifact.name == AndroidProject.ARTIFACT_ANDROID_TEST
     )
   }
 
   fun javaArtifactFrom(artifact: JavaArtifact): IdeJavaArtifactImpl {
     return IdeJavaArtifactImpl(
-      artifact.name,
-      artifact.compileTaskName,
-      artifact.assembleTaskName,
-      copyNewProperty({ artifact.assembleTaskOutputListingFile }, ""),
-      artifact.classesFolder,
-      copyNewProperty(artifact::getJavaResourcesFolder),
-      copy(artifact::getIdeSetupTaskNames, ::deduplicateString).toList(),
-      copy(artifact::getGeneratedSourceFolders, ::deduplicateFile).distinct(),
-      copyNewModel(artifact::getVariantSourceProvider, ::sourceProviderFrom),
-      copyNewModel(artifact::getMultiFlavorSourceProvider, ::sourceProviderFrom),
-      copy(artifact::getAdditionalClassesFolders, ::deduplicateFile),
-      dependenciesFrom(artifact),
-      copyNewProperty(artifact::getMockablePlatformJar)
+      name = artifact.name,
+      compileTaskName = artifact.compileTaskName,
+      assembleTaskName = artifact.assembleTaskName,
+      assembleTaskOutputListingFile = copyNewProperty({ artifact.assembleTaskOutputListingFile }, ""),
+      classesFolder = artifact.classesFolder,
+      javaResourcesFolder = copyNewProperty(artifact::getJavaResourcesFolder),
+      ideSetupTaskNames = copy(artifact::getIdeSetupTaskNames, ::deduplicateString).toList(),
+      mutableGeneratedSourceFolders = copy(artifact::getGeneratedSourceFolders, ::deduplicateFile).distinct().toMutableList(),
+      variantSourceProvider = copyNewModel(artifact::getVariantSourceProvider, ::sourceProviderFrom),
+      multiFlavorSourceProvider = copyNewModel(artifact::getMultiFlavorSourceProvider, ::sourceProviderFrom),
+      additionalClassesFolders = copy(artifact::getAdditionalClassesFolders, ::deduplicateFile).toList(),
+      level2Dependencies = dependenciesFrom(artifact),
+      mockablePlatformJar = copyNewProperty(artifact::getMockablePlatformJar),
+      isTestArtifact = artifact.name == AndroidProject.ARTIFACT_UNIT_TEST
     )
   }
 
   fun getTestedTargetVariants(variant: Variant): List<IdeTestedTargetVariantImpl> {
     return try {
       copy(variant::getTestedTargetVariants) { targetVariant: TestedTargetVariant ->
-        IdeTestedTargetVariantImpl(targetVariant.targetProjectPath, targetVariant.targetVariant)
+        IdeTestedTargetVariantImpl(
+          targetProjectPath = targetVariant.targetProjectPath,
+          targetVariant = targetVariant.targetVariant
+        )
       }
     }
     catch (e: UnsupportedOperationException) {
@@ -787,23 +803,22 @@ private fun modelCacheImpl(): ModelCacheTesting {
       testedTargetVariants = getTestedTargetVariants(variant),
       instantAppCompatible = (modelVersion != null &&
                               modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) &&
-                              variant.isInstantAppCompatible),
-      desugaredMethods = copy(variant::getDesugaredMethods, ::deduplicateString)
+                              variant.isInstantAppCompatible)
     )
 
   fun nativeAbiFrom(nativeAbi: NativeAbi): IdeNativeAbiImpl {
     return IdeNativeAbiImpl(
-      nativeAbi.name,
-      nativeAbi.sourceFlagsFile,
-      nativeAbi.symbolFolderIndexFile,
-      nativeAbi.buildFileIndexFile
+      name = nativeAbi.name,
+      sourceFlagsFile = nativeAbi.sourceFlagsFile,
+      symbolFolderIndexFile = nativeAbi.symbolFolderIndexFile,
+      buildFileIndexFile = nativeAbi.buildFileIndexFile
     )
   }
 
   fun nativeVariantFrom(nativeVariant: NativeVariant): IdeNativeVariantImpl {
     return IdeNativeVariantImpl(
-      nativeVariant.name,
-      copy(nativeVariant::abis, ::nativeAbiFrom)
+      name = nativeVariant.name,
+      abis = copy(nativeVariant::abis, ::nativeAbiFrom)
     )
   }
 
@@ -834,8 +849,9 @@ private fun modelCacheImpl(): ModelCacheTesting {
 
   fun nativeVariantFrom(variantInfo: NativeVariantInfo): IdeNativeVariantInfoImpl {
     return IdeNativeVariantInfoImpl(
-      copy(variantInfo::getAbiNames, ::deduplicateString),
-      copy(variantInfo::getBuildRootFolderMap, ::deduplicateFile))
+      abiNames = copy(variantInfo::getAbiNames, ::deduplicateString),
+      buildRootFolderMap = copy(variantInfo::getBuildRootFolderMap, ::deduplicateFile)
+    )
   }
 
   fun nativeSettingsFrom(settings: NativeSettings): IdeNativeSettingsImpl {
@@ -875,17 +891,17 @@ private fun modelCacheImpl(): ModelCacheTesting {
 
   fun nativeModuleFrom(nativeModule: NativeModule): IdeNativeModuleImpl {
     return IdeNativeModuleImpl(
-      nativeModule.name,
-      copy(nativeModule::variants, ::nativeVariantFrom),
-      when (nativeModule.nativeBuildSystem) {
+      name = nativeModule.name,
+      variants = copy(nativeModule::variants, ::nativeVariantFrom),
+      nativeBuildSystem = when (nativeModule.nativeBuildSystem) {
         com.android.builder.model.v2.models.ndk.NativeBuildSystem.NDK_BUILD -> NativeBuildSystem.NDK_BUILD
         com.android.builder.model.v2.models.ndk.NativeBuildSystem.CMAKE -> NativeBuildSystem.CMAKE
         // No forward compatibility. Old Studio cannot open projects with newer AGP.
         else -> error("Unknown native build system: ${nativeModule.nativeBuildSystem}")
       },
-      nativeModule.ndkVersion,
-      nativeModule.defaultNdkVersion,
-      nativeModule.externalNativeBuildFile
+      ndkVersion = nativeModule.ndkVersion,
+      defaultNdkVersion = nativeModule.defaultNdkVersion,
+      externalNativeBuildFile = nativeModule.externalNativeBuildFile
     )
   }
 
@@ -925,14 +941,16 @@ private fun modelCacheImpl(): ModelCacheTesting {
 
   fun javaCompileOptionsFrom(options: JavaCompileOptions): IdeJavaCompileOptionsImpl {
     return IdeJavaCompileOptionsImpl(
-      options.encoding,
-      options.sourceCompatibility,
-      options.targetCompatibility,
-      copyNewProperty({ options.isCoreLibraryDesugaringEnabled }, false))
+      encoding = options.encoding,
+      sourceCompatibility = options.sourceCompatibility,
+      targetCompatibility = options.targetCompatibility,
+      isCoreLibraryDesugaringEnabled = copyNewProperty({ options.isCoreLibraryDesugaringEnabled }, false))
   }
 
   fun aaptOptionsFrom(original: AaptOptions): IdeAaptOptionsImpl {
-    return IdeAaptOptionsImpl(convertNamespacing(copyNewProperty({ original.namespacing }, AaptOptions.Namespacing.DISABLED)))
+    return IdeAaptOptionsImpl(
+      namespacing = convertNamespacing(copyNewProperty({ original.namespacing }, AaptOptions.Namespacing.DISABLED))
+    )
   }
 
   fun ideVariantBuildInformationFrom(model: VariantBuildInformation): IdeVariantBuildInformation = IdeVariantBuildInformationImpl(
@@ -1018,42 +1036,40 @@ private fun modelCacheImpl(): ModelCacheTesting {
       IdeAndroidGradlePluginProjectFlagsImpl()
     )
     return IdeAndroidProjectImpl(
-      project.modelVersion,
-      project.name,
-      defaultConfigCopy,
-      buildTypesCopy,
-      productFlavorCopy,
-      syncIssuesCopy,
-      variantsCopy,
-      variantNamesCopy,
-      defaultVariantCopy,
-      flavorDimensionCopy,
-      project.compileTarget,
-      bootClasspathCopy,
-      nativeToolchainsCopy,
-      signingConfigsCopy,
-      lintOptionsCopy,
-      lintRuleJarsCopy,
-      javaCompileOptionsCopy,
-      aaptOptionsCopy,
-      project.buildFolder,
-      dynamicFeaturesCopy,
-      variantBuildInformation,
-      viewBindingOptionsCopy,
-      dependenciesInfoCopy,
-      buildToolsVersionCopy,
-      ndkVersionCopy,
-      project.resourcePrefix,
-      groupId,
-      copyNewProperty(project::getPluginGeneration) != null,
-      project.apiVersion,
-      getProjectType(project, parsedModelVersion),
-      isBaseSplit,
-      agpFlags)
+      modelVersion = project.modelVersion,
+      name = project.name,
+      defaultConfig = defaultConfigCopy,
+      buildTypes = buildTypesCopy,
+      productFlavors = productFlavorCopy,
+      syncIssues = syncIssuesCopy,
+      variants = variantsCopy,
+      variantNames = variantNamesCopy,
+      defaultVariant = defaultVariantCopy,
+      flavorDimensions = flavorDimensionCopy,
+      compileTarget = project.compileTarget,
+      bootClasspath = bootClasspathCopy,
+      signingConfigs = signingConfigsCopy,
+      lintOptions = lintOptionsCopy,
+      lintRuleJars = lintRuleJarsCopy,
+      javaCompileOptions = javaCompileOptionsCopy,
+      aaptOptions = aaptOptionsCopy,
+      buildFolder = project.buildFolder,
+      dynamicFeatures = dynamicFeaturesCopy,
+      variantsBuildInformation = variantBuildInformation,
+      viewBindingOptions = viewBindingOptionsCopy,
+      dependenciesInfo = dependenciesInfoCopy,
+      buildToolsVersion = buildToolsVersionCopy,
+      ndkVersion = ndkVersionCopy,
+      resourcePrefix = project.resourcePrefix,
+      groupId = groupId,
+      apiVersion = project.apiVersion,
+      projectType = getProjectType(project, parsedModelVersion),
+      isBaseSplit = isBaseSplit,
+      agpFlags = agpFlags)
   }
 
   fun testedTargetVariantFrom(variant: TestedTargetVariant): IdeTestedTargetVariantImpl {
-    return IdeTestedTargetVariantImpl(variant.targetProjectPath, variant.targetVariant)
+    return IdeTestedTargetVariantImpl(targetProjectPath = variant.targetProjectPath, targetVariant = variant.targetVariant)
   }
 
   return object : ModelCache, ModelCacheTesting {

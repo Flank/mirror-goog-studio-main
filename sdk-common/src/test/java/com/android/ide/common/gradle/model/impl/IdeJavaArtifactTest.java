@@ -39,14 +39,5 @@ public class IdeJavaArtifactTest {
         JavaArtifact original = new JavaArtifactStub();
         IdeJavaArtifact copy = myModelCache.javaArtifactFrom(original);
         assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeJavaArtifactImpl.class)
-                .withRedefinedSuperclass()
-                .withIgnoredFields("hashCode")
-                .verify();
     }
 }

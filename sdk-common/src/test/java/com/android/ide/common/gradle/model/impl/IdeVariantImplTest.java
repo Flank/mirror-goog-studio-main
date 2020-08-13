@@ -40,9 +40,4 @@ public class IdeVariantImplTest {
         Variant original = new VariantStub();
         IdeVariant copy = myModelCache.variantFrom(original, myGradleVersion);
     }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeVariantImpl.class, "hashCode").verify();
-    }
 }

@@ -47,9 +47,4 @@ public class IdeBuildTypeContainerTest {
         Object o = Serialization.deserialize(bytes);
         assertEquals(buildType, o);
     }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeBuildTypeContainerImpl.class).verify();
-    }
 }

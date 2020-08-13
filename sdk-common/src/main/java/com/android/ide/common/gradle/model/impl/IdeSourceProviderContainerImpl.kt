@@ -15,9 +15,11 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.ide.common.gradle.model.IdeViewBindingOptions
+import com.android.ide.common.gradle.model.IdeSourceProvider
+import com.android.ide.common.gradle.model.IdeSourceProviderContainer
 import java.io.Serializable
 
-data class IdeViewBindingOptionsImpl(
-  override val enabled: Boolean
-) : IdeViewBindingOptions, Serializable
+data class IdeSourceProviderContainerImpl(
+  override val artifactName: String,
+  override val sourceProvider: IdeSourceProvider
+) : IdeSourceProviderContainer, Serializable

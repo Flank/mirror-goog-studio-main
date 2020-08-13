@@ -15,9 +15,10 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.ide.common.gradle.model.IdeViewBindingOptions
+import com.android.ide.common.gradle.model.IdeTestOptions
 import java.io.Serializable
 
-data class IdeViewBindingOptionsImpl(
-  override val enabled: Boolean
-) : IdeViewBindingOptions, Serializable
+data class IdeTestOptionsImpl(
+  override val animationsDisabled: Boolean,
+  override val execution: IdeTestOptions.Execution?
+) : IdeTestOptions, Serializable

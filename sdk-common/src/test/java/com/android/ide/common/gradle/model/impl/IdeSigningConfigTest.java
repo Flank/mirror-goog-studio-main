@@ -47,9 +47,4 @@ public class IdeSigningConfigTest {
         Object o = Serialization.deserialize(bytes);
         assertEquals(signingConfig, o);
     }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeSigningConfigImpl.class).verify();
-    }
 }

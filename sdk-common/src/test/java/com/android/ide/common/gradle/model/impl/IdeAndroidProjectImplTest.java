@@ -239,9 +239,4 @@ public class IdeAndroidProjectImplTest {
     public void defaultVariantHeuristicTest_alphabeticalFallback() {
         assertThat(ModelCacheKt.getDefaultVariant(ImmutableList.of("a", "b"))).isEqualTo("a");
     }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeAndroidProjectImpl.class).verify();
-    }
 }

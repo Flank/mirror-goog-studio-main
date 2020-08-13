@@ -15,9 +15,12 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.ide.common.gradle.model.IdeViewBindingOptions
-import java.io.Serializable
+import com.android.ide.common.gradle.model.IdeMavenCoordinates
 
-data class IdeViewBindingOptionsImpl(
-  override val enabled: Boolean
-) : IdeViewBindingOptions, Serializable
+data class IdeMavenCoordinatesImpl(
+  override val groupId: String,
+  override val artifactId: String,
+  override val version: String,
+  override val packaging: String,
+  override val classifier: String?
+) : IdeMavenCoordinates

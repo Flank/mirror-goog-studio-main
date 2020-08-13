@@ -15,9 +15,13 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.ide.common.gradle.model.IdeViewBindingOptions
+import com.android.ide.common.gradle.model.IdeSyncIssue
 import java.io.Serializable
 
-data class IdeViewBindingOptionsImpl(
-  override val enabled: Boolean
-) : IdeViewBindingOptions, Serializable
+data class IdeSyncIssueImpl(
+  override val severity: Int,
+  override val type: Int,
+  override val data: String?,
+  override val message: String,
+  override val multiLineMessage: List<String>?
+) : IdeSyncIssue, Serializable

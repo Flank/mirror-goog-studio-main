@@ -15,9 +15,7 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.ide.common.gradle.model.IdeViewBindingOptions
+import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions
 import java.io.Serializable
 
-data class IdeViewBindingOptionsImpl(
-  override val enabled: Boolean
-) : IdeViewBindingOptions, Serializable
+data class IdeVectorDrawablesOptionsImpl(override val useSupportLibrary: Boolean?) : IdeVectorDrawablesOptions, Serializable

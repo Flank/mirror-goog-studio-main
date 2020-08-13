@@ -47,9 +47,4 @@ public class IdeVectorDrawablesOptionsTest {
         Object o = Serialization.deserialize(bytes);
         assertEquals(options, o);
     }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeVectorDrawablesOptionsImpl.class).verify();
-    }
 }

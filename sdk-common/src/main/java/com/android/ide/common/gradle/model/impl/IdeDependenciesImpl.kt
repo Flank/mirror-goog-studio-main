@@ -13,21 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.gradle.model.impl;
+package com.android.ide.common.gradle.model.impl
 
-import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.createEqualsVerifier;
+import com.android.ide.common.gradle.model.IdeDependencies
+import com.android.ide.common.gradle.model.IdeLibrary
+import java.io.File
+import java.io.Serializable
 
-import org.junit.Test;
-
-/** Tests for {@link IdeBaseConfigImpl}. */
-public class IdeBaseConfigTest {
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeBaseConfigImpl.class, "hashCode")
-                .withRedefinedSubclass(IdeBuildTypeImpl.class)
-                .verify();
-        createEqualsVerifier(IdeBaseConfigImpl.class, "hashCode")
-                .withRedefinedSubclass(IdeProductFlavorImpl.class)
-                .verify();
-    }
-}
+data class IdeDependenciesImpl(
+  override val androidLibraries: Collection<IdeLibrary>,
+  override val javaLibraries: Collection<IdeLibrary>,
+  override val moduleDependencies: Collection<IdeLibrary>,
+  override val runtimeOnlyClasses: Collection<File>
+) : IdeDependencies, Serializable

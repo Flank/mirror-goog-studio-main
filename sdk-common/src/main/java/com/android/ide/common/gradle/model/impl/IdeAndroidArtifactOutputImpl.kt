@@ -15,9 +15,13 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.ide.common.gradle.model.IdeViewBindingOptions
+import com.android.build.FilterData
+import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput
+import java.io.File
 import java.io.Serializable
 
-data class IdeViewBindingOptionsImpl(
-  override val enabled: Boolean
-) : IdeViewBindingOptions, Serializable
+data class IdeAndroidArtifactOutputImpl(
+  override val filters: Collection<FilterData>,
+  override val versionCode: Int,
+  override val outputFile: File
+) : IdeAndroidArtifactOutput, Serializable
