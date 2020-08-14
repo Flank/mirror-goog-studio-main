@@ -62,6 +62,7 @@ readonly invocation_id="$(uuidgen)"
   --profile="${DIST_DIR:-/tmp}/profile-${BUILD_NUMBER}.json.gz" \
   --runs_per_test=//tools/base/bazel:iml_to_build_consistency_test@2 \
   -- \
+  //tools/adt/idea/studio:android-studio \
   //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar \
   //tools/base/profiler/native/trace_processor_daemon \
   $(< "${script_dir}/targets")
