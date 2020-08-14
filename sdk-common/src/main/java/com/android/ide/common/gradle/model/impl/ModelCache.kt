@@ -90,7 +90,6 @@ import com.android.ide.common.gradle.model.impl.ndk.v1.IdeNativeVariantInfoImpl
 import com.android.ide.common.gradle.model.impl.ndk.v2.IdeNativeAbiImpl
 import com.android.ide.common.gradle.model.impl.ndk.v2.IdeNativeModuleImpl
 import com.android.ide.common.gradle.model.impl.ndk.v2.IdeNativeVariantImpl
-import com.android.ide.common.gradle.model.ndk.v1.IdeNativeToolchain
 import com.android.ide.common.gradle.model.ndk.v2.NativeBuildSystem
 import com.android.ide.common.repository.GradleVersion
 import com.android.utils.FileUtils
@@ -707,7 +706,12 @@ private fun modelCacheImpl(): ModelCacheTesting {
     if (agpVersion != null && agpVersion.compareIgnoringQualifiers("4.0.0") >= 0) {
       return emptyList()
     }
-    return copy(artifact::getOutputs, ::androidArtifactOutputFrom)
+    return try {
+      copy(artifact::getOutputs, ::androidArtifactOutputFrom)
+    } catch (_: RuntimeException) {
+      // Handle "Invalid main APK outputs".
+      emptyList()
+    }
   }
 
   fun testOptionsFrom(testOptions: TestOptions): IdeTestOptionsImpl {
@@ -1015,7 +1019,6 @@ private fun modelCacheImpl(): ModelCacheTesting {
     val defaultVariantCopy = copyNewPropertyWithDefault({ project.defaultVariant }, { getDefaultVariant(variantNamesCopy) })
     val flavorDimensionCopy: Collection<String> = copy(project::getFlavorDimensions, ::deduplicateString)
     val bootClasspathCopy: Collection<String> = ImmutableList.copyOf(project.bootClasspath)
-    val nativeToolchainsCopy: Collection<IdeNativeToolchain> = copy(project::getNativeToolchains, ::nativeToolchainFrom)
     val signingConfigsCopy: Collection<IdeSigningConfig> = copy(project::getSigningConfigs, ::signingConfigFrom)
     val lintOptionsCopy: IdeLintOptions = copyModel(project.lintOptions, { lintOptionsFrom(it, parsedModelVersion) })
     val javaCompileOptionsCopy = copyModel(project.javaCompileOptions, ::javaCompileOptionsFrom)
