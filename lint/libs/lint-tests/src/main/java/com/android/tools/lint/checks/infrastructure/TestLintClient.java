@@ -26,6 +26,7 @@ import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
 import static com.android.tools.lint.checks.infrastructure.KotlinClasspathKt.findKotlinStdlibPath;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -517,7 +518,7 @@ public class TestLintClient extends LintCliClient {
             assertTrue(isProjectDirectory(projectDir));
             Project project = createProject(projectDir, projectDir);
             project.addFile(incrementalCheck);
-            List<Project> projects = Collections.singletonList(project);
+            List<Project> projects = singletonList(project);
             request.setProjects(projects);
         }
 
@@ -1415,7 +1416,11 @@ public class TestLintClient extends LintCliClient {
             if (mocker != null) {
                 LintModelModule module =
                         new LintModelFactory()
-                                .create(mocker.getProject(), mocker.getProjectDir(), true);
+                                .create(
+                                        mocker.getProject(),
+                                        mocker.getVariants(),
+                                        mocker.getProjectDir(),
+                                        true);
                 cachedLintVariant = null;
                 for (LintModelVariant variant : module.getVariants()) {
                     if (variant.getOldVariant() == mocker.getVariant()) {
@@ -1543,11 +1548,11 @@ public class TestLintClient extends LintCliClient {
                     if (generatedSourceFolders.isEmpty()) {
                         File generated = new File(dir, "generated");
                         if (generated.isDirectory()) {
-                            generatedSourceFolders = Collections.singletonList(generated);
+                            generatedSourceFolders = singletonList(generated);
                         } else {
                             generated = new File(dir, FD_GEN_SOURCES);
                             if (generated.isDirectory()) {
-                                generatedSourceFolders = Collections.singletonList(generated);
+                                generatedSourceFolders = singletonList(generated);
                             }
                         }
                     }

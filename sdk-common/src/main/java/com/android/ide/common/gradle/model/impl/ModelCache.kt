@@ -75,7 +75,6 @@ import com.android.ide.common.gradle.model.IdeProductFlavorContainer
 import com.android.ide.common.gradle.model.IdeSigningConfig
 import com.android.ide.common.gradle.model.IdeSyncIssue
 import com.android.ide.common.gradle.model.IdeTestOptions
-import com.android.ide.common.gradle.model.IdeVariant
 import com.android.ide.common.gradle.model.IdeVariantBuildInformation
 import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions
 import com.android.ide.common.gradle.model.IdeViewBindingOptions
@@ -98,7 +97,6 @@ import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.ImmutableSortedSet
-import com.google.common.collect.Iterables
 import java.io.File
 import java.util.HashMap
 
@@ -113,13 +111,8 @@ interface ModelCache {
    */
   fun setRootBuildId(rootBuildId: String)
 
-  fun androidProjectFrom(
-    project: AndroidProject,
-    variants: Collection<Variant>,
-    cachedVariants: Collection<IdeVariant>,
-    syncIssues: Collection<SyncIssue>
-  ): IdeAndroidProjectImpl
-
+  fun variantFrom(variant: Variant, modelVersion: GradleVersion?): IdeVariantImpl
+  fun androidProjectFrom(project: AndroidProject, variants: Collection<String>, syncIssues: Collection<SyncIssue>): IdeAndroidProjectImpl
   fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl
   fun syncIssueFrom(issue: SyncIssue): IdeSyncIssueImpl
 
@@ -166,7 +159,6 @@ interface ModelCacheTesting : ModelCache {
   fun testOptionsFrom(testOptions: TestOptions): IdeTestOptionsImpl
   fun vectorDrawablesOptionsFrom(options: VectorDrawablesOptions): IdeVectorDrawablesOptionsImpl
   fun viewBindingOptionsFrom(model: ViewBindingOptions): IdeViewBindingOptionsImpl
-  fun variantFrom(variant: Variant, modelVersion: GradleVersion?): IdeVariantImpl
   fun sourceProviderFrom(provider: SourceProvider): IdeSourceProviderImpl
   fun lintOptionsFrom(options: LintOptions, modelVersion: GradleVersion?): IdeLintOptionsImpl
   fun nativeToolchainFrom(toolchain: NativeToolchain): IdeNativeToolchainImpl
@@ -993,12 +985,9 @@ private fun modelCacheImpl(): ModelCacheTesting {
 
   fun androidProjectFrom(
     project: AndroidProject,
-    variants: Collection<Variant>,
-    cachedVariants: Collection<IdeVariant>,
+    fetchedVariantNames: Collection<String>,
     syncIssues: Collection<SyncIssue>
   ): IdeAndroidProjectImpl {
-    fun computeVariantNames(variants: Collection<IdeVariant>): List<String> = variants.map(IdeVariant::name)
-
     // Old plugin versions do not return model version.
     val parsedModelVersion = GradleVersion.tryParse(project.modelVersion)
 
@@ -1006,16 +995,11 @@ private fun modelCacheImpl(): ModelCacheTesting {
     val buildTypesCopy: Collection<IdeBuildTypeContainer> = copy(project::getBuildTypes, ::buildTypeContainerFrom)
     val productFlavorCopy: Collection<IdeProductFlavorContainer> = copy(project::getProductFlavors, ::productFlavorContainerFrom)
     val syncIssuesCopy: Collection<IdeSyncIssue> = syncIssues.map(::syncIssueFrom)
-    val variantNames = variants.map { it.name }.toSet()
-    val variantsCopy: Collection<IdeVariant> = ImmutableList.copyOf(
-      Iterables.concat<IdeVariant>(
-        variants.map { variant: Variant -> variantFrom(variant, parsedModelVersion) },
-        cachedVariants.filter { !variantNames.contains(it.name) }
-      ))
     val variantNamesCopy: Collection<String> =
       copyNewPropertyWithDefault(
-        { ImmutableList.copyOf(project.variantNames) },
-        { computeVariantNames(variantsCopy) })
+        propertyInvoker = { ImmutableList.copyOf(project.variantNames) },
+        defaultValue = { copy(fun(): Collection<String> = fetchedVariantNames, ::deduplicateString) }
+      )
     val defaultVariantCopy = copyNewPropertyWithDefault({ project.defaultVariant }, { getDefaultVariant(variantNamesCopy) })
     val flavorDimensionCopy: Collection<String> = copy(project::getFlavorDimensions, ::deduplicateString)
     val bootClasspathCopy: Collection<String> = ImmutableList.copyOf(project.bootClasspath)
@@ -1045,7 +1029,6 @@ private fun modelCacheImpl(): ModelCacheTesting {
       buildTypes = buildTypesCopy,
       productFlavors = productFlavorCopy,
       syncIssues = syncIssuesCopy,
-      variants = variantsCopy,
       variantNames = variantNamesCopy,
       defaultVariant = defaultVariantCopy,
       flavorDimensions = flavorDimensionCopy,
@@ -1101,7 +1084,6 @@ private fun modelCacheImpl(): ModelCacheTesting {
       vectorDrawablesOptionsFrom(options)
 
     override fun viewBindingOptionsFrom(model: ViewBindingOptions): IdeViewBindingOptionsImpl = viewBindingOptionsFrom(model)
-    override fun variantFrom(variant: Variant, modelVersion: GradleVersion?): IdeVariantImpl = variantFrom(variant, modelVersion)
     override fun sourceProviderFrom(provider: SourceProvider): IdeSourceProviderImpl = sourceProviderFrom(provider)
     override fun lintOptionsFrom(options: LintOptions, modelVersion: GradleVersion?): IdeLintOptionsImpl =
       lintOptionsFrom(options, modelVersion)
@@ -1125,12 +1107,12 @@ private fun modelCacheImpl(): ModelCacheTesting {
       addBuildFolderPath(buildId, moduleGradlePath, buildFolder)
 
     override fun setRootBuildId(rootBuildId: String) = setRootBuildId(rootBuildId)
+    override fun variantFrom(variant: Variant, modelVersion: GradleVersion?): IdeVariantImpl = variantFrom(variant, modelVersion)
     override fun androidProjectFrom(
       project: AndroidProject,
-      variants: Collection<Variant>,
-      cachedVariants: Collection<IdeVariant>,
+      variants: Collection<String>,
       syncIssues: Collection<SyncIssue>
-    ): IdeAndroidProjectImpl = androidProjectFrom(project, variants, cachedVariants, syncIssues)
+    ): IdeAndroidProjectImpl = androidProjectFrom(project, variants, syncIssues)
 
     override fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl = androidArtifactOutputFrom(output)
     override fun syncIssueFrom(issue: SyncIssue): IdeSyncIssueImpl = syncIssueFrom(issue)

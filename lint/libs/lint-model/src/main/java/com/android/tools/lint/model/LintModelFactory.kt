@@ -76,7 +76,7 @@ class LintModelFactory : LintModelModuleLoader {
      * to be used anyway there's no benefit in the additional overhead
      * of lazy lookup.
      */
-    fun create(project: IdeAndroidProject, dir: File, deep: Boolean = true): LintModelModule {
+    fun create(project: IdeAndroidProject, variants: Collection<IdeVariant>, dir: File, deep: Boolean = true): LintModelModule {
         val cached = project.getClientProperty(CACHE_KEY) as? LintModelModule
         if (cached != null) {
             return cached
@@ -106,7 +106,7 @@ class LintModelFactory : LintModelModuleLoader {
                 oldProject = project
             )
 
-            for (variant in project.variants) {
+            for (variant in variants) {
                 variantList.add(getVariant(module, project, variant))
             }
 
@@ -115,6 +115,7 @@ class LintModelFactory : LintModelModuleLoader {
             LazyLintModelModule(
                 loader = this,
                 project = project,
+                projectVariants = variants,
                 dir = dir,
                 gradleVersion = gradleVersion
             )
@@ -712,6 +713,7 @@ class LintModelFactory : LintModelModuleLoader {
     inner class LazyLintModelModule(
         override val loader: LintModelModuleLoader,
         private val project: IdeAndroidProject,
+        private val projectVariants: Collection<IdeVariant>,
         override val dir: File,
         override val gradleVersion: GradleVersion?
     ) : LintModelModule {
@@ -753,7 +755,7 @@ class LintModelFactory : LintModelModuleLoader {
             // looked up variants from the [variantMap] and also populating that map
             // for latest retrieval
             get() = _variants
-                ?: project.variants.map { variant ->
+                ?: projectVariants.map { variant ->
                     // (Not just using findVariant since that searches linearly
                     // through variant list to match by name)
                     variantMap[variant.name]
@@ -768,7 +770,7 @@ class LintModelFactory : LintModelModuleLoader {
         private val variantMap = mutableMapOf<String, LintModelVariant>()
 
         override fun findVariant(name: String): LintModelVariant? = variantMap[name] ?: run {
-            val buildVariant = project.variants.firstOrNull { it.name == name }
+            val buildVariant = projectVariants.firstOrNull { it.name == name }
             buildVariant?.let {
                 LazyLintModelVariant(this, project, it, libraryResolver)
             }?.also {
@@ -777,7 +779,7 @@ class LintModelFactory : LintModelModuleLoader {
         }
 
         override fun defaultVariant(): LintModelVariant? {
-            return project.variants.firstOrNull()?.let { findVariant(it.name) }
+            return projectVariants.firstOrNull()?.let { findVariant(it.name) }
         }
     }
 

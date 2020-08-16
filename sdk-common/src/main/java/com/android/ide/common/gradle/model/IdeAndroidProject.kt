@@ -18,7 +18,6 @@ package com.android.ide.common.gradle.model
 import com.android.builder.model.AndroidProject
 import java.io.File
 import java.io.Serializable
-import java.util.function.Consumer
 
 interface IdeAndroidProject : Serializable {
   /**
@@ -80,17 +79,6 @@ interface IdeAndroidProject : Serializable {
    * @return a list of product flavor containers.
    */
   val productFlavors: Collection<IdeProductFlavorContainer>
-
-  /**
-   * Returns a list of all the variants.
-   *
-   *
-   * This does not include test variant. Test variants are additional artifacts in their
-   * respective variant info.
-   *
-   * @return a list of the variants.
-   */
-  val variants: Collection<IdeVariant>
 
   /**
    * Returns a list of all the variant names.

@@ -25,7 +25,6 @@ import com.android.ide.common.gradle.model.IdeLintOptions
 import com.android.ide.common.gradle.model.IdeProductFlavorContainer
 import com.android.ide.common.gradle.model.IdeSigningConfig
 import com.android.ide.common.gradle.model.IdeSyncIssue
-import com.android.ide.common.gradle.model.IdeVariant
 import com.android.ide.common.gradle.model.IdeVariantBuildInformation
 import com.android.ide.common.gradle.model.IdeViewBindingOptions
 import java.io.File
@@ -40,7 +39,6 @@ data class IdeAndroidProjectImpl(
   override val defaultConfig: IdeProductFlavorContainer,
   override val buildTypes: Collection<IdeBuildTypeContainer>,
   override val productFlavors: Collection<IdeProductFlavorContainer>,
-  override val variants: Collection<IdeVariant>,
   override val variantNames: Collection<String>,
   override val defaultVariant: String?,
   override val flavorDimensions: Collection<String>,
