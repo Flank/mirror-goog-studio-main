@@ -79,8 +79,7 @@ class LintModuleLoader(
                 // Sync issues are not used in lint.
                 val androidProject = ModelCache.create().androidProjectFrom(
                     model,
-                    variants.map { it.name },
-                    emptyList()
+                    variants.map { it.name }
                 )
                 androidProject to variants
             } finally {

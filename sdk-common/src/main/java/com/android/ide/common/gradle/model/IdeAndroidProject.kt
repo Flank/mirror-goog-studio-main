@@ -134,13 +134,6 @@ interface IdeAndroidProject : Serializable {
   /** Returns the lint options.  */
   val lintOptions: IdeLintOptions
 
-  /**
-   * Returns issues found during sync. The returned list gets populated only if the system
-   * property [AndroidProject.PROPERTY_BUILD_MODEL_ONLY] has been
-   * set to `true`.
-   */
-  val syncIssues: Collection<IdeSyncIssue>
-
   /** Returns the compile options for Java code.  */
   val javaCompileOptions: IdeJavaCompileOptions
 

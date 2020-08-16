@@ -91,8 +91,7 @@ public class IdeAndroidProjectImplTest {
                         original,
                         original.getVariants().stream()
                                 .map(it -> it.getName())
-                                .collect(Collectors.toList()),
-                        Collections.emptyList());
+                                .collect(Collectors.toList()));
         assertThat(androidProject.getBuildToolsVersion()).isNull();
     }
 
@@ -104,8 +103,7 @@ public class IdeAndroidProjectImplTest {
                         original,
                         original.getVariants().stream()
                                 .map(it -> it.getName())
-                                .collect(Collectors.toList()),
-                        Collections.emptyList());
+                                .collect(Collectors.toList()));
     }
 
     @Test
@@ -115,7 +113,7 @@ public class IdeAndroidProjectImplTest {
         Variant variant = new VariantStub();
         IdeAndroidProjectImpl copy =
                 myModelCache.androidProjectFrom(
-                        original, singletonList(variant.getName()), Collections.emptyList());
+                        original, singletonList(variant.getName()));
 
         original.getVariants().add(variant);
     }
@@ -178,8 +176,7 @@ public class IdeAndroidProjectImplTest {
                         original,
                         original.getVariants().stream()
                                 .map(it -> it.getName())
-                                .collect(Collectors.toList()),
-                        Collections.emptyList());
+                                .collect(Collectors.toList()));
         assertThat(androidProject.getDefaultVariant()).isEqualTo("betaDebug");
     }
 
@@ -197,8 +194,7 @@ public class IdeAndroidProjectImplTest {
                         original,
                         original.getVariants().stream()
                                 .map(it -> it.getName())
-                                .collect(Collectors.toList()),
-                        Collections.emptyList());
+                                .collect(Collectors.toList()));
         assertThat(androidProject.getDefaultVariant()).isEqualTo("release");
     }
 

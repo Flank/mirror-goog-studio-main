@@ -112,9 +112,8 @@ interface ModelCache {
   fun setRootBuildId(rootBuildId: String)
 
   fun variantFrom(variant: Variant, modelVersion: GradleVersion?): IdeVariantImpl
-  fun androidProjectFrom(project: AndroidProject, variants: Collection<String>, syncIssues: Collection<SyncIssue>): IdeAndroidProjectImpl
+  fun androidProjectFrom(project: AndroidProject, variants: Collection<String>): IdeAndroidProjectImpl
   fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl
-  fun syncIssueFrom(issue: SyncIssue): IdeSyncIssueImpl
 
   fun nativeModuleFrom(nativeModule: NativeModule): IdeNativeModuleImpl
   fun nativeVariantAbiFrom(variantAbi: NativeVariantAbi): IdeNativeVariantAbiImpl
@@ -306,16 +305,6 @@ private fun modelCacheImpl(): ModelCacheTesting {
       productFlavor = copyModel(container.productFlavor, ::productFlavorFrom),
       sourceProvider = copyModel(container.sourceProvider, ::sourceProviderFrom),
       extraSourceProviders = copy(container::getExtraSourceProviders, ::sourceProviderContainerFrom)
-    )
-  }
-
-  fun syncIssueFrom(issue: SyncIssue): IdeSyncIssueImpl {
-    return IdeSyncIssueImpl(
-      message = issue.message,
-      multiLineMessage = copy(fun(): List<String>? = issue.multiLineMessage?.filterNotNull(), ::deduplicateString),
-      severity = issue.severity,
-      type = issue.type,
-      data = issue.data
     )
   }
 
@@ -985,8 +974,7 @@ private fun modelCacheImpl(): ModelCacheTesting {
 
   fun androidProjectFrom(
     project: AndroidProject,
-    fetchedVariantNames: Collection<String>,
-    syncIssues: Collection<SyncIssue>
+    fetchedVariantNames: Collection<String>
   ): IdeAndroidProjectImpl {
     // Old plugin versions do not return model version.
     val parsedModelVersion = GradleVersion.tryParse(project.modelVersion)
@@ -994,7 +982,6 @@ private fun modelCacheImpl(): ModelCacheTesting {
     val defaultConfigCopy: IdeProductFlavorContainer = copyModel(project.defaultConfig, ::productFlavorContainerFrom)
     val buildTypesCopy: Collection<IdeBuildTypeContainer> = copy(project::getBuildTypes, ::buildTypeContainerFrom)
     val productFlavorCopy: Collection<IdeProductFlavorContainer> = copy(project::getProductFlavors, ::productFlavorContainerFrom)
-    val syncIssuesCopy: Collection<IdeSyncIssue> = syncIssues.map(::syncIssueFrom)
     val variantNamesCopy: Collection<String> =
       copyNewPropertyWithDefault(
         propertyInvoker = { ImmutableList.copyOf(project.variantNames) },
@@ -1028,7 +1015,6 @@ private fun modelCacheImpl(): ModelCacheTesting {
       defaultConfig = defaultConfigCopy,
       buildTypes = buildTypesCopy,
       productFlavors = productFlavorCopy,
-      syncIssues = syncIssuesCopy,
       variantNames = variantNamesCopy,
       defaultVariant = defaultVariantCopy,
       flavorDimensions = flavorDimensionCopy,
@@ -1110,12 +1096,10 @@ private fun modelCacheImpl(): ModelCacheTesting {
     override fun variantFrom(variant: Variant, modelVersion: GradleVersion?): IdeVariantImpl = variantFrom(variant, modelVersion)
     override fun androidProjectFrom(
       project: AndroidProject,
-      variants: Collection<String>,
-      syncIssues: Collection<SyncIssue>
-    ): IdeAndroidProjectImpl = androidProjectFrom(project, variants, syncIssues)
+      variants: Collection<String>
+    ): IdeAndroidProjectImpl = androidProjectFrom(project, variants)
 
     override fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl = androidArtifactOutputFrom(output)
-    override fun syncIssueFrom(issue: SyncIssue): IdeSyncIssueImpl = syncIssueFrom(issue)
     override fun nativeModuleFrom(nativeModule: NativeModule): IdeNativeModuleImpl = nativeModuleFrom(nativeModule)
     override fun nativeVariantAbiFrom(variantAbi: NativeVariantAbi): IdeNativeVariantAbiImpl = nativeVariantAbiFrom(variantAbi)
     override fun nativeAndroidProjectFrom(project: NativeAndroidProject): IdeNativeAndroidProjectImpl = nativeAndroidProjectFrom(project)

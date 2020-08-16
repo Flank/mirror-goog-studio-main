@@ -24,7 +24,6 @@ import com.android.ide.common.gradle.model.IdeJavaCompileOptions
 import com.android.ide.common.gradle.model.IdeLintOptions
 import com.android.ide.common.gradle.model.IdeProductFlavorContainer
 import com.android.ide.common.gradle.model.IdeSigningConfig
-import com.android.ide.common.gradle.model.IdeSyncIssue
 import com.android.ide.common.gradle.model.IdeVariantBuildInformation
 import com.android.ide.common.gradle.model.IdeViewBindingOptions
 import java.io.File
@@ -47,7 +46,6 @@ data class IdeAndroidProjectImpl(
   override val signingConfigs: Collection<IdeSigningConfig>,
   override val aaptOptions: IdeAaptOptions,
   override val lintOptions: IdeLintOptions,
-  override val syncIssues: Collection<IdeSyncIssue>,
   override val javaCompileOptions: IdeJavaCompileOptions,
   override val buildFolder: File,
   override val resourcePrefix: String?,
