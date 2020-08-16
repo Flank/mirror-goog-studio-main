@@ -29,6 +29,10 @@ public class Apk implements Serializable {
     public final String path;
     public final String packageName;
 
+    // If this APK contains native libraries, this list specifies the target ABI of the included
+    // libraries. If the APK contains no native libraries, this list is empty.
+    public final List<String> libraryAbis;
+
     // If this APK contains instrumentation, this list specifies the other packages that the APK is
     // intended to instrument. The code in the APK will run in these packages' processes. This is
     // most common in the form of an instrumented unit test run from studio.
@@ -44,6 +48,7 @@ public class Apk implements Serializable {
             String checksum,
             String path,
             String packageName,
+            List<String> libraryAbis,
             List<String> targetPackages,
             List<String> isolatedServices,
             Map<String, ApkEntry> apkEntries) {
@@ -51,6 +56,7 @@ public class Apk implements Serializable {
         this.checksum = checksum;
         this.path = path;
         this.packageName = packageName;
+        this.libraryAbis = libraryAbis;
         this.targetPackages = targetPackages;
         this.isolatedServices = isolatedServices;
         this.apkEntries = apkEntries;
@@ -65,6 +71,7 @@ public class Apk implements Serializable {
         private String checksum;
         private String path;
         private String packageName;
+        private ImmutableList.Builder<String> libraryAbis;
         private List<String> targetPackages;
         private List<String> isolatedServices;
         private ImmutableMap.Builder<String, ApkEntry> apkEntries;
@@ -74,6 +81,7 @@ public class Apk implements Serializable {
             this.checksum = "";
             this.path = "";
             this.packageName = "";
+            this.libraryAbis = ImmutableList.builder();
             this.targetPackages = null;
             this.isolatedServices = null;
             this.apkEntries = ImmutableMap.builder();
@@ -109,6 +117,11 @@ public class Apk implements Serializable {
             return this;
         }
 
+        public Builder addLibraryAbi(String abi) {
+            this.libraryAbis.add(abi);
+            return this;
+        }
+
         @VisibleForTesting
         public Builder addApkEntry(String name, long checksum) {
             this.apkEntries.put(name, new ApkEntry(name, checksum, null));
@@ -129,6 +142,7 @@ public class Apk implements Serializable {
                             checksum,
                             path,
                             packageName,
+                            libraryAbis.build(),
                             targetPackages,
                             isolatedServices,
                             apkEntries.build());

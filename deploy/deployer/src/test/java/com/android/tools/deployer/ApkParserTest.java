@@ -18,6 +18,7 @@ package com.android.tools.deployer;
 
 import static com.android.tools.deployer.ApkTestUtils.assertApkEntryEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.android.testutils.TestUtils;
 import com.android.tools.deployer.model.Apk;
@@ -135,6 +136,18 @@ public class ApkParserTest {
         assertEquals("com.example.android.basicgesturedetect.test", apk.packageName);
         assertEquals(1, apk.targetPackages.size());
         assertEquals("com.example.android.basicgesturedetect", apk.targetPackages.get(0));
+    }
+
+    @Test
+    public void testGetApkNativeLibs() throws Exception {
+        File file = TestUtils.getWorkspaceFile(BASE + "native_libs.apk");
+        Apk apk = new ApkParser().parsePaths(ImmutableList.of(file.getPath())).get(0);
+        assertEquals(4, apk.libraryAbis.size());
+
+        String[] allExpected = new String[] {"x86", "x86_64", "armeabi-v7a", "arm64-v8a"};
+        for (String expected : allExpected) {
+            assertTrue(apk.libraryAbis.contains(expected));
+        }
     }
 
     @Test
