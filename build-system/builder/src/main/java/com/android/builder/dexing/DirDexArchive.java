@@ -16,16 +16,18 @@
 
 package com.android.builder.dexing;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.utils.PathUtils;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
+import java.util.Locale;
 
 /**
  * Directory representing a dex archive. All dex entries, {@link DexArchiveEntry}, are stored under
@@ -58,9 +60,14 @@ final class DirDexArchive implements DexArchive {
 
     @Override
     @NonNull
-    public List<DexArchiveEntry> getSortedDexArchiveEntries(Function<String, Boolean> filter)
-            throws IOException {
-        List<Path> dexFiles = DexUtilsKt.getSortedDexFilesInDir(rootDir, filter::apply);
+    public List<DexArchiveEntry> getSortedDexArchiveEntries() {
+        List<Path> dexFiles =
+                DexUtilsKt.getSortedFilesInDir(
+                        rootDir,
+                        relativePath ->
+                                relativePath
+                                        .toLowerCase(Locale.ENGLISH)
+                                        .endsWith(SdkConstants.DOT_DEX));
         List<DexArchiveEntry> dexArchiveEntries = new ArrayList<>(dexFiles.size());
         for (Path dexFile : dexFiles) {
             dexArchiveEntries.add(createEntry(dexFile));
@@ -73,8 +80,13 @@ final class DirDexArchive implements DexArchive {
         // do nothing
     }
 
-    private DexArchiveEntry createEntry(@NonNull Path dexFile) throws IOException {
-        byte[] content = Files.readAllBytes(dexFile);
+    private DexArchiveEntry createEntry(@NonNull Path dexFile) {
+        byte[] content;
+        try {
+            content = Files.readAllBytes(dexFile);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
         Path relativePath = getRootPath().relativize(dexFile);
 
         return new DexArchiveEntry(content, PathUtils.toSystemIndependentPath(relativePath), this);

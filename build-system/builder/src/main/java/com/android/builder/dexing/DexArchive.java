@@ -21,7 +21,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.function.Function;
 
 /**
  * Interface describing the DEX archive. It contains one DEX file per .class file that was processed
@@ -64,17 +63,5 @@ public interface DexArchive extends Closeable {
      * <p>The dex archive entries are sorted to ensure deterministic order.
      */
     @NonNull
-    default List<DexArchiveEntry> getSortedDexArchiveEntries() throws IOException {
-        return getSortedDexArchiveEntries(relativePath -> true);
-    }
-
-    /**
-     * Returns all dex archive entries in this dex archive whose relative paths to the dex archive's
-     * root satisfy the given filter.
-     *
-     * <p>The dex archive entries are sorted to ensure deterministic order.
-     */
-    @NonNull
-    List<DexArchiveEntry> getSortedDexArchiveEntries(Function<String, Boolean> filter)
-            throws IOException;
+    List<DexArchiveEntry> getSortedDexArchiveEntries();
 }

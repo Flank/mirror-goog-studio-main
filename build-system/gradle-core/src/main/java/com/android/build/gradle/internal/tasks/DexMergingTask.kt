@@ -17,10 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.tasks.DexMergingAction.MERGE_PROJECT
-import com.android.build.gradle.internal.tasks.DexMergingAction.MERGE_EXTERNAL_LIBS
-import com.android.build.gradle.internal.tasks.DexMergingAction.MERGE_ALL
-import com.android.build.gradle.internal.tasks.DexMergingAction.MERGE_LIBRARY_PROJECTS
 import com.android.build.api.transform.TransformException
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.LoggerWrapper
@@ -33,6 +29,10 @@ import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
+import com.android.build.gradle.internal.tasks.DexMergingAction.MERGE_ALL
+import com.android.build.gradle.internal.tasks.DexMergingAction.MERGE_EXTERNAL_LIBS
+import com.android.build.gradle.internal.tasks.DexMergingAction.MERGE_LIBRARY_PROJECTS
+import com.android.build.gradle.internal.tasks.DexMergingAction.MERGE_PROJECT
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.transforms.DexMergerTransformCallable
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -41,13 +41,16 @@ import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.DexArchiveEntry
-import com.android.builder.dexing.DexArchiveEntryBucket
+import com.android.builder.dexing.DexEntry
+import com.android.builder.dexing.DexEntryBucket
 import com.android.builder.dexing.DexMergerTool
-import com.android.builder.dexing.DexMergerTool.DX
 import com.android.builder.dexing.DexMergerTool.D8
+import com.android.builder.dexing.DexMergerTool.DX
 import com.android.builder.dexing.DexingType
-import com.android.builder.dexing.DexingType.NATIVE_MULTIDEX
 import com.android.builder.dexing.DexingType.LEGACY_MULTIDEX
+import com.android.builder.dexing.DexingType.NATIVE_MULTIDEX
+import com.android.builder.dexing.getSortedFilesInDir
+import com.android.builder.dexing.getSortedRelativePathsInJar
 import com.android.builder.dexing.isJarFile
 import com.android.ide.common.blame.Message
 import com.android.ide.common.blame.ParsingProcessOutputHandler
@@ -514,10 +517,10 @@ abstract class DexMergingTaskDelegate : ProfileAwareWorkAction<DexMergingTaskDel
     override fun run() {
         @Suppress("UnstableApiUsage")
         with(parameters) {
+            val buckets = splitIntoBuckets(dexDirsOrJars.get(), numberOfBuckets.get())
+
             val workQueue = workerExecutor.noIsolation()
             for (bucketNumber in 0 until numberOfBuckets.get()) {
-                val bucket =
-                    DexArchiveEntryBucket(dexDirsOrJars.get(), numberOfBuckets.get(), bucketNumber)
                 val outputDirForBucket = if (numberOfBuckets.get() == 1) {
                     outputDir.get().asFile
                 } else {
@@ -534,10 +537,105 @@ abstract class DexMergingTaskDelegate : ProfileAwareWorkAction<DexMergingTaskDel
                         // behavior of this task in the past). Alternatively, we can skip using an
                         // executor service, but we'll need to monitor the performance impact.
                         useForkJoinPool = numberOfBuckets.get() == 1,
-                        dexArchiveEntryBucket = bucket,
+                        dexEntryBucket = buckets[bucketNumber],
                         dexDirsOrJarsUsedOnlyByDx = dexDirsOrJars.get(),
                         outputDirForBucket = outputDirForBucket
                     )
+                }
+            }
+        }
+    }
+
+    companion object {
+
+        private fun splitIntoBuckets(
+            dexDirsOrJars: List<File>,
+            numberOfBuckets: Int
+        ): List<DexEntryBucket> {
+            val bucketToEntriesMap = mutableMapOf<Int, MutableList<DexEntry>>()
+            for (bucketNumber in 0 until numberOfBuckets) {
+                bucketToEntriesMap[bucketNumber] = mutableListOf()
+            }
+
+            val isDexFile: (relativePath: String) -> Boolean =
+                { it.endsWith(SdkConstants.DOT_DEX, ignoreCase = true) }
+            dexDirsOrJars.forEach { dexDirOrJar ->
+                val dexEntryRelativePaths = if (dexDirOrJar.isDirectory) {
+                    getSortedFilesInDir(dexDirOrJar.toPath(), isDexFile).map {
+                        dexDirOrJar.toPath().relativize(it).toString()
+                    }
+                } else {
+                    getSortedRelativePathsInJar(dexDirOrJar, isDexFile)
+                }
+                dexEntryRelativePaths.forEach { relativePath ->
+                    val dexEntry = DexEntry(dexDirOrJar, relativePath)
+                    val bucketNumber = getBucketNumber(relativePath, numberOfBuckets)
+                    bucketToEntriesMap[bucketNumber]!!.add(dexEntry)
+                }
+            }
+
+            val dexEntryBuckets = mutableListOf<DexEntryBucket>()
+            for (bucketNumber in 0 until numberOfBuckets) {
+                dexEntryBuckets.add(DexEntryBucket(bucketToEntriesMap[bucketNumber]!!.toList()))
+            }
+            return dexEntryBuckets.toList()
+        }
+
+        /**
+         * Returns the bucket number for a dex file or jar entry having the given relative path.
+         *
+         * Note that classes of the same package must be put in the same bucket, so that they can be
+         * put in the same merged dex file by D8 (the merged dex files of the buckets are then
+         * copied to the APK by another task without further merging).
+         *   - This requirement is documented in a comment in the "Instant Run implementation"
+         *     design doc (but not Instant Run specific): "there was a verifier error in preN where
+         *     the virtual machine would fail to verify classes from the same package that are split
+         *     in 2 dex files".
+         *   - It is also a requirement from D8 until bug 158159959 is fixed.
+         */
+        @VisibleForTesting
+        fun getBucketNumber(relativePath: String, numberOfBuckets: Int): Int {
+            check(!File(relativePath).isAbsolute) {
+                "Expected relative path but found absolute path: $relativePath"
+            }
+            check(relativePath.endsWith(SdkConstants.DOT_DEX, ignoreCase = true)) {
+                "Expected .dex file but found: $relativePath"
+            }
+
+            val packagePath = File(relativePath).parent
+            return if (packagePath.isNullOrEmpty()) {
+                //  - This means that the dex file was produced in dex-indexed mode (e.g.,
+                // `<jar-or-dir>/classes.dex`). (It's also possible that the class contained in the
+                // dex file does not have a package name, e.g. `<jar-or-dir>/Foo.dex`, but this case
+                // is not common and is not a correctness issue given the bucket assignment logic
+                // below.)
+                //  - We assume that the classes in indexed dex files don't share package names with
+                // those in other dex files. Therefore, we put these dex files in a dedicated bucket
+                // (bucket 0).
+                //  - Note that the above assumption doesn't hold true for the indexed dex files
+                // containing R classes, but it is probably okay for R classes to be put in a
+                // separate bucket.
+                0
+            } else {
+                //  - This means that the dex file was produced in dex-per-class mode (e.g.,
+                // `com/example/Foo.dex`). (It's also possible that the dex file was produced in
+                // dex-indexed mode and was put in a subdirectory, e.g.
+                // `<jar-or-dir>/subdir/classes.dex`, but this case is not common and is not a
+                // correctness issue given the bucket assignment logic below).
+                //  - We will spread these dex files among the buckets, except bucket 0, which is
+                // dedicated for indexed dex files (unless there is only 1 bucket). The reason is
+                // that indexed dex files usually don't change, and dex-per-class dex files can
+                // change frequently, so in an incremental build, we don't want a change in a
+                // dex-per-class dex file to trigger re-merging the bucket for indexed dex files,
+                // which is likely the biggest bucket.
+                when (numberOfBuckets) {
+                    1 -> 0
+                    else -> {
+                        // Normalize the path so that it is stable across filesystems. (For jar
+                        // entries, the paths are already normalized.)
+                        val normalizedPackagePath = File(packagePath).invariantSeparatorsPath
+                        return abs(normalizedPackagePath.hashCode()) % (numberOfBuckets - 1) + 1
+                    }
                 }
             }
         }
@@ -551,20 +649,20 @@ abstract class DexMergingWorkAction : ProfileAwareWorkAction<DexMergingWorkActio
 
         abstract val sharedParams: Property<DexMergingTask.SharedParams>
         abstract val useForkJoinPool: Property<Boolean>
-        abstract val dexArchiveEntryBucket: Property<DexArchiveEntryBucket>
+        abstract val dexEntryBucket: Property<DexEntryBucket>
         abstract val dexDirsOrJarsUsedOnlyByDx: ListProperty<File>
         abstract val outputDirForBucket: DirectoryProperty
 
         fun initialize(
             sharedParams: Property<DexMergingTask.SharedParams>,
             useForkJoinPool: Boolean,
-            dexArchiveEntryBucket: DexArchiveEntryBucket,
+            dexEntryBucket: DexEntryBucket,
             dexDirsOrJarsUsedOnlyByDx: List<File>,
             outputDirForBucket: File
         ) {
             this.sharedParams.set(sharedParams)
             this.useForkJoinPool.set(useForkJoinPool)
-            this.dexArchiveEntryBucket.set(dexArchiveEntryBucket)
+            this.dexEntryBucket.set(dexEntryBucket)
             this.dexDirsOrJarsUsedOnlyByDx.set(dexDirsOrJarsUsedOnlyByDx)
             this.outputDirForBucket.set(outputDirForBucket)
         }
@@ -572,8 +670,7 @@ abstract class DexMergingWorkAction : ProfileAwareWorkAction<DexMergingWorkActio
 
     @Suppress("UnstableApiUsage")
     override fun run() {
-        val dexArchiveEntries =
-            parameters.dexArchiveEntryBucket.get().getDexArchiveEntries(::getBucketNumber)
+        val dexArchiveEntries = parameters.dexEntryBucket.get().getDexEntriesWithContents()
         if (dexArchiveEntries.isEmpty()) {
             return
         }
@@ -639,68 +736,6 @@ abstract class DexMergingWorkAction : ProfileAwareWorkAction<DexMergingWorkActio
                 try {
                     outputHandler.handleOutput(processOutput)
                 } catch (ignored: ProcessException) {
-                }
-            }
-        }
-    }
-
-    companion object {
-
-        /**
-         * Returns the bucket number for a dex file or jar entry having the given relative path.
-         *
-         * Note that classes of the same package must be put in the same bucket, so that they can be
-         * put in the same merged dex file by D8 (the merged dex files of the buckets are then
-         * copied to the APK by another task without further merging).
-         *   - This requirement is documented in a comment in the "Instant Run implementation"
-         *     design doc (but not Instant Run specific): "there was a verifier error in preN where
-         *     the virtual machine would fail to verify classes from the same package that are split
-         *     in 2 dex files".
-         *   - It is also a requirement from D8 until bug 158159959 is fixed.
-         */
-        @VisibleForTesting
-        fun getBucketNumber(relativePath: String, numberOfBuckets: Int): Int {
-            check(!File(relativePath).isAbsolute) {
-                "Expected relative path but found absolute path: $relativePath"
-            }
-            check(relativePath.endsWith(SdkConstants.DOT_DEX, ignoreCase = true)) {
-                "Expected .dex file but found: $relativePath"
-            }
-
-            val packagePath = File(relativePath).parent
-            return if (packagePath.isNullOrEmpty()) {
-                //  - This means that the dex file was produced in dex-indexed mode (e.g.,
-                // `<jar-or-dir>/classes.dex`). (It's also possible that the class contained in the
-                // dex file does not have a package name, e.g. `<jar-or-dir>/Foo.dex`, but this case
-                // is not common and is not a correctness issue given the bucket assignment logic
-                // below.)
-                //  - We assume that the classes in indexed dex files don't share package names with
-                // those in other dex files. Therefore, we put these dex files in a dedicated bucket
-                // (bucket 0).
-                //  - Note that the above assumption doesn't hold true for the indexed dex files
-                // containing R classes, but it is probably okay for R classes to be put in a
-                // separate bucket.
-                0
-            } else {
-                //  - This means that the dex file was produced in dex-per-class mode (e.g.,
-                // `com/example/Foo.dex`). (It's also possible that the dex file was produced in
-                // dex-indexed mode and was put in a subdirectory, e.g.
-                // `<jar-or-dir>/subdir/classes.dex`, but this case is not common and is not a
-                // correctness issue given the bucket assignment logic below).
-                //  - We will spread these dex files among the buckets, except bucket 0, which is
-                // dedicated for indexed dex files (unless there is only 1 bucket). The reason is
-                // that indexed dex files usually don't change, and dex-per-class dex files can
-                // change frequently, so in an incremental build, we don't want a change in a
-                // dex-per-class dex file to trigger re-merging the bucket for indexed dex files,
-                // which is likely the biggest bucket.
-                when (numberOfBuckets) {
-                    1 -> 0
-                    else -> {
-                        // Normalize the path so that it is stable across filesystems. (For jar
-                        // entries, the paths are already normalized.)
-                        val normalizedPackagePath = File(packagePath).invariantSeparatorsPath
-                        return abs(normalizedPackagePath.hashCode()) % (numberOfBuckets - 1) + 1
-                    }
                 }
             }
         }

@@ -32,7 +32,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils.searchAnd
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType.DEX
 import com.android.build.gradle.internal.scope.getOutputDir
-import com.android.build.gradle.internal.tasks.DexMergingWorkAction
+import com.android.build.gradle.internal.tasks.DexMergingTaskDelegate
 import com.android.build.gradle.options.IntegerOption
 import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
@@ -183,7 +183,7 @@ class IncrementalDexMergingTest {
 
             // Check that only the relevant bucket is reprocessed
             val bucketWithChangedClass =
-                    DexMergingWorkAction.getBucketNumber("$changedClass.dex", NUMBER_OF_BUCKETS)
+                    DexMergingTaskDelegate.getBucketNumber("$changedClass.dex", NUMBER_OF_BUCKETS)
             val dexFiles = FileUtils.getAllFiles(mergedDexDir)
             val dexFileWithChangedClass =
                     mergedDexDir.resolve(bucketWithChangedClass.toString()).resolve("classes.dex")

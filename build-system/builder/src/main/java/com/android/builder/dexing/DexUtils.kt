@@ -31,16 +31,16 @@ import kotlin.streams.toList
 val isJarFile: (File) -> Boolean = { it.extension.equals(SdkConstants.EXT_JAR, ignoreCase = true) }
 
 /**
- * Returns a sorted list of dex files in the given directory whose relative paths satisfy the given
+ * Returns a sorted list of files in the given directory whose relative paths satisfy the given
  * filter.
  */
-fun getSortedDexFilesInDir(dir: Path, filter: (relativePath: String) -> Boolean): List<Path> {
+fun getSortedFilesInDir(
+    dir: Path,
+    filter: (relativePath: String) -> Boolean = { true }
+): List<Path> {
     return Files.walk(dir).use { files ->
         files
-            .filter {
-                it.toString().endsWith(SdkConstants.DOT_DEX, ignoreCase = true)
-                        && filter(dir.relativize(it).toString())
-            }
+            .filter { file -> filter(dir.relativize(file).toString()) }
             .toList()
             .sortedWith(
                 Comparator { left, right ->
@@ -56,28 +56,41 @@ fun getSortedDexFilesInDir(dir: Path, filter: (relativePath: String) -> Boolean)
 }
 
 /**
- * Returns a sorted map of dex entries in the given jar whose relative paths satisfy the given
- * filter. Each entry in the map maps the relative path of a dex entry to its byte contents.
+ * Returns a sorted list of the relative paths of the entries in the given jar where the relative
+ * paths satisfy the given filter.
+ */
+fun getSortedRelativePathsInJar(
+    jar: File,
+    filter: (relativePath: String) -> Boolean = { true }
+): List<String> {
+    return ZipFile(jar).use { zipFile ->
+        zipFile.entries()
+            .toList()
+            .filter { entry -> filter(entry.name) }
+            .map { entry -> entry.name }
+            .sorted()
+    }
+}
+
+/**
+ * Returns a sorted map of the entries in the given jar whose relative paths satisfy the given
+ * filter. Each entry in the map maps the relative path of a jar entry to its byte contents.
  *
  * The given jar must not have duplicate entries.
  */
-fun getSortedDexEntriesInJar(
-    jar: Path,
-    filter: (relativePath: String) -> Boolean
+fun getSortedRelativePathsInJarWithContents(
+    jar: File,
+    filter: (relativePath: String) -> Boolean = { true }
 ): SortedMap<String, ByteArray> {
-    return ZipFile(jar.toFile()).use { zipFile ->
+    return ZipFile(jar).use { zipFile ->
         zipFile.entries()
             .toList()
-            .filter { entry ->
-                entry.name.endsWith(SdkConstants.DOT_DEX, ignoreCase = true)
-                        && filter(entry.name)
-            }
-            .map {
-                it.name to zipFile.getInputStream(it).buffered().use { stream ->
+            .filter { entry -> filter(entry.name) }
+            .map { entry ->
+                entry.name to zipFile.getInputStream(entry).buffered().use { stream ->
                     stream.readBytes()
                 }
             }.toMap()
             .toSortedMap()
     }
 }
-
