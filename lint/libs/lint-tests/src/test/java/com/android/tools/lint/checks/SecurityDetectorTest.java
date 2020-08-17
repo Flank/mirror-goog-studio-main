@@ -929,6 +929,33 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testManifestMerger() {
+        // Regression test for
+        // 163364847: ExportedContentProvider doesn't handle tools:node="remove"
+        lint().files(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "          package=\"test.pkg\">\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
+                                        + "        android:label=\"@string/app_name\"\n"
+                                        + "        android:roundIcon=\"@mipmap/ic_launcher_round\"\n"
+                                        + "        android:supportsRtl=\"true\"\n"
+                                        + "        android:theme=\"@style/AppTheme\">\n"
+                                        + "        <provider\n"
+                                        + "            android:name=\"test.pkg.LibContentProvider\"\n"
+                                        + "            tools:node=\"remove\" />\n"
+                                        + "    </application>\n"
+                                        + "</manifest>\n"))
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mStrings =
             xml(

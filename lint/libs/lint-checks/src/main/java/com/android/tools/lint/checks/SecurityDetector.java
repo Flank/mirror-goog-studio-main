@@ -33,6 +33,7 @@ import static com.android.SdkConstants.TAG_PATH_PERMISSION;
 import static com.android.SdkConstants.TAG_PROVIDER;
 import static com.android.SdkConstants.TAG_RECEIVER;
 import static com.android.SdkConstants.TAG_SERVICE;
+import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.tools.lint.detector.api.Lint.getMethodName;
 import static com.android.tools.lint.detector.api.LintFix.TODO;
@@ -408,6 +409,12 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
                         }
 
                         if (SliceDetector.Companion.isSliceProvider(element)) {
+                            return;
+                        }
+
+                        // 163364847: Don't flag provider elements that are there to remove
+                        // merged provider from library
+                        if ("remove".equals(element.getAttributeNS(TOOLS_URI, "node"))) {
                             return;
                         }
 
