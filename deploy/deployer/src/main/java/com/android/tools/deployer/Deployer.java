@@ -86,6 +86,7 @@ public class Deployer {
         EXTRACT_APK_ENTRIES,
         COLLECT_SWAP_DATA,
         OPTIMISTIC_SWAP,
+        OPTIMISTIC_INSTALL,
 
         // New DDMLib
         GET_PIDS,
@@ -111,14 +112,36 @@ public class Deployer {
     }
 
     /**
-     * Installs the given apks. This method will register the APKs in the database for subsequent
-     * swaps
+     * Persists the content of the provide APKs on the device. If the operation succeeds, the dex
+     * files from the APKs are stored in the dex database.
+     *
+     * <p>The implementation of the persistence depends on target device API level and the values of
+     * the passed-in flags useOptimisticSwap and useOptimisticInstall.
+     *
+     * <p>When installing on a device with an API level < 30 (pre-R), or if the useOptimisticSwap
+     * flag is set to false, a standard install is performed.
+     *
+     * <p>If useOptimisticSwap is true, but useOptimisticInstall is false, a standard delta install
+     * is performed, and the currently cached deployment information for the application/target
+     * device is dropped.
+     *
+     * <p>If both flags are true, an optimistic install is attempted. If the optimistic install
+     * fails for any reason, the deployment falls back to the pre-R install path.
+     *
+     * <p>Setting useOptimisticInstall to true should never impact the success of this method;
+     * failures from optimistic installations are recorded in metrics but not thrown up to the top
+     * level.
      */
     public Result install(
             String packageName, List<String> apks, InstallOptions options, InstallMode installMode)
             throws DeployerException {
-        Result result = new Result();
         try (Trace ignored = Trace.begin("install")) {
+            if (supportsNewPipeline()) {
+                installMode =
+                        installMode == InstallMode.DELTA ? InstallMode.DELTA_NO_SKIP : installMode;
+                return maybeOptimisticInstall(packageName, apks, options, installMode);
+            }
+
             ApkInstaller apkInstaller = new ApkInstaller(adb, service, installer, logger);
 
             // Inputs
@@ -128,43 +151,69 @@ public class Deployer {
             Task<List<Apk>> apkList =
                     runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, paths);
 
-            if (supportsNewPipeline()) {
-                installMode =
-                        installMode == InstallMode.DELTA ? InstallMode.DELTA_NO_SKIP : installMode;
-                result.skippedInstall =
-                        !apkInstaller.install(
-                                packageName,
-                                apks,
-                                options,
-                                installMode,
-                                metrics.getDeployMetrics());
-
-                Task<String> appId =
-                        runner.create(
-                                Tasks.PARSE_APP_IDS, ApplicationDumper::getPackageName, apkList);
-                runner.create(
-                        Tasks.DEPLOY_CACHE_STORE,
-                        deployCache::invalidate,
-                        runner.create(adb.getSerial()),
-                        appId);
-            } else {
-                result.skippedInstall =
-                        !apkInstaller.install(
-                                packageName,
-                                apks,
-                                options,
-                                installMode,
-                                metrics.getDeployMetrics());
-            }
+            Result result = new Result();
+            result.skippedInstall =
+                    !apkInstaller.install(
+                            packageName, apks, options, installMode, metrics.getDeployMetrics());
 
             CachedDexSplitter splitter = new CachedDexSplitter(dexDb, new D8DexSplitter());
-
-            // Update the database
             runner.create(Tasks.CACHE, splitter::cache, apkList);
-
             runner.runAsync();
             return result;
         }
+    }
+
+    private Result maybeOptimisticInstall(
+            String pkgName,
+            List<String> paths,
+            InstallOptions installOptions,
+            InstallMode installMode)
+            throws DeployerException {
+        Task<String> packageName = runner.create(pkgName);
+        Task<String> deviceSerial = runner.create(adb.getSerial());
+        Task<List<Apk>> apks =
+                runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, runner.create(paths));
+
+        boolean installSuccess = false;
+        if (options.useOptimisticInstall) {
+            OptimisticApkInstaller apkInstaller =
+                    new OptimisticApkInstaller(installer, adb, deployCache, metrics);
+            Task<OverlayId> overlayId =
+                    runner.create(
+                            Tasks.OPTIMISTIC_INSTALL, apkInstaller::install, packageName, apks);
+
+            installSuccess = runner.run().isSuccess();
+            if (installSuccess) {
+                runner.create(
+                        Tasks.DEPLOY_CACHE_STORE,
+                        deployCache::store,
+                        deviceSerial,
+                        packageName,
+                        apks,
+                        overlayId);
+            }
+        }
+
+        // This needs to happen no matter which path we're on, so create the task now.
+        CachedDexSplitter splitter = new CachedDexSplitter(dexDb, new D8DexSplitter());
+        runner.create(Tasks.CACHE, splitter::cache, apks);
+
+        Result deployResult = new Result();
+        if (!installSuccess) {
+            ApkInstaller apkInstaller = new ApkInstaller(adb, service, installer, logger);
+            deployResult.skippedInstall =
+                    !apkInstaller.install(
+                            pkgName,
+                            paths,
+                            installOptions,
+                            installMode,
+                            metrics.getDeployMetrics());
+            runner.create(
+                    Tasks.DEPLOY_CACHE_STORE, deployCache::invalidate, deviceSerial, packageName);
+        }
+
+        runner.runAsync();
+        return deployResult;
     }
 
     public Result codeSwap(List<String> apks, Map<Integer, ClassRedefiner> debuggerRedefiners)

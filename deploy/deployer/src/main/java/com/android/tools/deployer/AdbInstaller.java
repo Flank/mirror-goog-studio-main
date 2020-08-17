@@ -131,6 +131,17 @@ public class AdbInstaller implements Installer {
     }
 
     @Override
+    public Deploy.OverlayInstallResponse overlayInstall(Deploy.OverlayInstallRequest request)
+            throws IOException {
+        String[] cmd = buildCmd(new String[] {"overlayinstall"});
+        ByteArrayInputStream inputStream = wrap(request);
+        Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
+        Deploy.OverlayInstallResponse response = installerResponse.getOverlayInstallResponse();
+        logger.verbose("installer overlayinstall: " + response.getStatus().toString());
+        return response;
+    }
+
+    @Override
     public Deploy.OverlayIdPushResponse verifyOverlayId(String packageName, String oid)
             throws IOException {
         // Doing a overylayid push with both new and old OID as the argument effectively verifies

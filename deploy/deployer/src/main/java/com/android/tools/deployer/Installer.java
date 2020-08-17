@@ -31,6 +31,9 @@ public interface Installer {
 
     Deploy.DeltaInstallResponse deltaInstall(Deploy.InstallInfo info) throws IOException;
 
+    Deploy.OverlayInstallResponse overlayInstall(Deploy.OverlayInstallRequest request)
+            throws IOException;
+
     /**
      * Verify the App's current OverlayID. The app's OverlayID will not be change should it differs.
      */

@@ -35,6 +35,10 @@ public class ApkEntryExtractor {
     // Used to restrict the APK entries that are extracted base on each entry's name.
     private final Predicate<String> filter;
 
+    public ApkEntryExtractor() {
+        this.filter = t -> true;
+    }
+
     public ApkEntryExtractor(Predicate<String> filter) {
         this.filter = filter;
     }

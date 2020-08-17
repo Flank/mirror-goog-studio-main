@@ -258,6 +258,9 @@ public class DeployerException extends Exception {
                 "Reinstall and restart app",
                 ResolutionAction.RUN_APP),
 
+        UNSUPPORTED_ARCH(
+                "The target device's architecture is not supported", "", "", ResolutionAction.NONE),
+
         UNKNOWN_JVMTI_ERROR("Invalid error code %s", "", "Retry", ResolutionAction.RETRY),
 
         JDWP_REDEFINE_CLASSES_EXCEPTION(
@@ -492,6 +495,10 @@ public class DeployerException extends Exception {
         return new DeployerException(Error.DUMP_MIXED_ARCH, NO_ARGS, reason);
     }
 
+    public static DeployerException unsupportedArch() {
+        return new DeployerException(Error.UNSUPPORTED_ARCH, NO_ARGS, NO_ARGS);
+    }
+
     public static DeployerException parseFailed(String reason) {
         return new DeployerException(Error.PARSE_FAILED, NO_ARGS, reason);
     }
@@ -500,7 +507,7 @@ public class DeployerException extends Exception {
         return new DeployerException(Error.PREINSTALL_FAILED, NO_ARGS, reason);
     }
 
-    public static DeployerException installFailed(InstallStatus code, String reason) {
+    public static DeployerException installFailed(Enum<?> code, String reason) {
         String suffix = code != InstallStatus.UNKNOWN_ERROR ? ": " + code.name() : ".";
         return new DeployerException(Error.INSTALL_FAILED, code, new String[] {suffix}, reason);
     }
