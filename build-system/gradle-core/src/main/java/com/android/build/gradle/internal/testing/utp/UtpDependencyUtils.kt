@@ -25,7 +25,7 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 
 private const val NITROGEN_MAVEN_GROUP_ID = "com.google.testing.platform"
-private const val NITROGEN_DEFAULT_VERSION = "0.0.1-dev"
+private const val NITROGEN_DEFAULT_VERSION = "0.0.2-dev"
 
 /**
  * Available Unified Test Platform dependencies.

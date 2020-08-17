@@ -40,7 +40,7 @@ import com.google.testing.platform.proto.api.core.ExtensionProto
 import com.google.testing.platform.proto.api.core.LabelProto
 import com.google.testing.platform.proto.api.core.PathProto
 import com.google.testing.platform.proto.api.core.TestArtifactProto
-import com.google.testing.platform.server.proto.ServerConfigProto
+import com.google.testing.platform.proto.api.service.ServerConfigProto
 import java.io.File
 
 // This is an arbitrary string. This ID is used to lookup test results from UTP.
