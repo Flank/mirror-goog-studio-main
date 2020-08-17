@@ -469,10 +469,22 @@ coverage_report(
     ],
 )
 
+# Coverage report for "Pair Devices over Wi-Fi" (aka Wireless ADB)
+coverage_report(
+    name = "adb-wireless",
+    srcpath_include = [
+        "tools/adt/idea/android-adb/src/com/android/tools/idea/adb/wireless",
+    ],
+    tests = [
+        "//tools/adt/idea/android-adb:intellij.android.adb.tests_tests",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     # keep sorted
     reports = [
+        "adb-wireless",
         "all",
         "android-apk",
         "app-inspection",
