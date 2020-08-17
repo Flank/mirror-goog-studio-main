@@ -16,7 +16,7 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.PackagingOptions
+import com.android.build.api.variant.LibraryPackagingOptions
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
@@ -57,7 +57,7 @@ class AnalyticsEnabledLibraryVariantPropertiesTest {
 
     @Test
     fun getPackagingOptions() {
-        val packagingOptions = Mockito.mock(PackagingOptions::class.java)
+        val packagingOptions = Mockito.mock(LibraryPackagingOptions::class.java)
         Mockito.`when`(delegate.packagingOptions).thenReturn(packagingOptions)
         Truth.assertThat(proxy.packagingOptions).isEqualTo(packagingOptions)
 
@@ -72,7 +72,7 @@ class AnalyticsEnabledLibraryVariantPropertiesTest {
     @Test
     fun packagingOptionsAction() {
         @Suppress("UNCHECKED_CAST")
-        val action = Mockito.mock(Function1::class.java) as PackagingOptions.() -> Unit
+        val action = Mockito.mock(Function1::class.java) as LibraryPackagingOptions.() -> Unit
         proxy.packagingOptions(action)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)

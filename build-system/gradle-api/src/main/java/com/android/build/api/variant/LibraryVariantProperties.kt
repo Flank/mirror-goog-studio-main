@@ -32,5 +32,10 @@ interface LibraryVariantProperties : VariantProperties {
     /**
      * Variant's packagingOptions, initialized by the corresponding global DSL element.
      */
-    fun packagingOptions(action: PackagingOptions.() -> Unit)
+    override val packagingOptions: LibraryPackagingOptions
+
+    /**
+     * Variant's packagingOptions, initialized by the corresponding global DSL element.
+     */
+    fun packagingOptions(action: LibraryPackagingOptions.() -> Unit)
 }

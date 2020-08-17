@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.build.api.dsl
+package com.android.build.api.variant
 
 import org.gradle.api.Incubating
 
-/** Packaging options for Dex (Android Dalvik Executable) files */
+/**
+ * Defines a library variant's packaging options.
+ */
 @Incubating
-interface DexPackagingOptions {
-    /**
-     * Whether to use the legacy convention of compressing all dex files in the APK. If null, dex
-     * files will be uncompressed when minSdk >= 28.
-     */
-    var legacyPackaging: Boolean?
+interface LibraryPackagingOptions : PackagingOptions {
+
+    /** PackagingOptions for native libraries. Initialized from the corresponding DSL. */
+    fun jniLibs(action: JniLibsPackagingOptions.() -> Unit)
 }

@@ -123,7 +123,8 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     override val packagingOptions: ApkPackagingOptions by lazy {
         ApkPackagingOptionsImpl(
             globalScope.extension.packagingOptions,
-            variantPropertiesApiServices
+            variantPropertiesApiServices,
+            minSdkVersion.apiLevel
         )
     }
 

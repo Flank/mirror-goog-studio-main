@@ -16,7 +16,7 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.PackagingOptions
+import com.android.build.api.variant.LibraryPackagingOptions
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -38,7 +38,14 @@ open class AnalyticsEnabledLibraryVariantProperties @Inject constructor(
             return delegate.applicationId
         }
 
-    override fun packagingOptions(action: PackagingOptions.() -> Unit) {
+    override val packagingOptions: LibraryPackagingOptions
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
+            return delegate.packagingOptions
+        }
+
+    override fun packagingOptions(action: LibraryPackagingOptions.() -> Unit) {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
         delegate.packagingOptions(action)

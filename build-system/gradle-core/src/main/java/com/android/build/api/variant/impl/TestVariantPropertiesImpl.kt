@@ -113,7 +113,11 @@ open class TestVariantPropertiesImpl @Inject constructor(
         internalServices.nullablePropertyOf(String::class.java, variantDslInfo.testLabel)
 
     override val packagingOptions: ApkPackagingOptions by lazy {
-        ApkPackagingOptionsImpl(globalScope.extension.packagingOptions, internalServices)
+        ApkPackagingOptionsImpl(
+            globalScope.extension.packagingOptions,
+            internalServices,
+            minSdkVersion.apiLevel
+        )
     }
 
     override fun packagingOptions(action: ApkPackagingOptions.() -> Unit) {

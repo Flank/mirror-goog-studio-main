@@ -444,6 +444,7 @@ com.android.build.api.dsl.DeviceGroup implements org.gradle.api.Named
 com.android.build.api.dsl.DeviceGroup.getTargetDevices: org.gradle.api.DomainObjectSet<com.android.build.api.dsl.Device> ()
 com.android.build.api.dsl.DexPackagingOptions
 com.android.build.api.dsl.DexPackagingOptions.getLegacyPackaging: java.lang.Boolean ()
+com.android.build.api.dsl.DexPackagingOptions.setLegacyPackaging: void (java.lang.Boolean)
 com.android.build.api.dsl.DynamicDelivery
 com.android.build.api.dsl.DynamicDelivery.getDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.dsl.DynamicDelivery.getInstantDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
@@ -503,6 +504,7 @@ com.android.build.api.dsl.JniLibsPackagingOptions.getExcludes: java.util.Set<jav
 com.android.build.api.dsl.JniLibsPackagingOptions.getKeepDebugSymbols: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.JniLibsPackagingOptions.getLegacyPackaging: java.lang.Boolean ()
 com.android.build.api.dsl.JniLibsPackagingOptions.getPickFirsts: java.util.Set<java.lang.String> ()
+com.android.build.api.dsl.JniLibsPackagingOptions.setLegacyPackaging: void (java.lang.Boolean)
 com.android.build.api.dsl.LibraryBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.LibraryVariantDimension
 com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.LibraryBuildFeatures.getAndroidResources: java.lang.Boolean ()
@@ -809,6 +811,7 @@ com.android.build.api.variant.AndroidVersion.<init>: com.android.build.api.varia
 com.android.build.api.variant.AndroidVersion.getApiLevel: int ()
 com.android.build.api.variant.AndroidVersion.getCodename: java.lang.String ()
 com.android.build.api.variant.ApkPackagingOptions implements com.android.build.api.variant.PackagingOptions
+com.android.build.api.variant.ApkPackagingOptions.jniLibs: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.JniLibsApkPackagingOptions, kotlin.Unit>)
 com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.ApplicationVariant.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
 com.android.build.api.variant.ApplicationVariant.getDebuggable: boolean ()
@@ -876,11 +879,21 @@ com.android.build.api.variant.FilterConfiguration.getFilterType: com.android.bui
 com.android.build.api.variant.FilterConfiguration.getIdentifier: java.lang.String ()
 com.android.build.api.variant.FilterConfiguration.hashCode: int ()
 com.android.build.api.variant.FilterConfiguration.toString: java.lang.String ()
+com.android.build.api.variant.JniLibsApkPackagingOptions implements com.android.build.api.variant.JniLibsPackagingOptions
+com.android.build.api.variant.JniLibsApkPackagingOptions.getLegacyPackaging: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.JniLibsPackagingOptions
+com.android.build.api.variant.JniLibsPackagingOptions.getExcludes: org.gradle.api.provider.SetProperty<java.lang.String> ()
+com.android.build.api.variant.JniLibsPackagingOptions.getKeepDebugSymbols: org.gradle.api.provider.SetProperty<java.lang.String> ()
+com.android.build.api.variant.JniLibsPackagingOptions.getPickFirsts: org.gradle.api.provider.SetProperty<java.lang.String> ()
+com.android.build.api.variant.LibraryPackagingOptions implements com.android.build.api.variant.PackagingOptions
+com.android.build.api.variant.LibraryPackagingOptions.jniLibs: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.JniLibsPackagingOptions, kotlin.Unit>)
 com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.LibraryVariantProperties implements com.android.build.api.variant.VariantProperties
 com.android.build.api.variant.LibraryVariantProperties.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
-com.android.build.api.variant.LibraryVariantProperties.packagingOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.PackagingOptions, kotlin.Unit>)
+com.android.build.api.variant.LibraryVariantProperties.getPackagingOptions: com.android.build.api.variant.LibraryPackagingOptions ()
+com.android.build.api.variant.LibraryVariantProperties.packagingOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.LibraryPackagingOptions, kotlin.Unit>)
 com.android.build.api.variant.PackagingOptions
+com.android.build.api.variant.PackagingOptions.getJniLibs: com.android.build.api.variant.JniLibsPackagingOptions ()
 com.android.build.api.variant.PackagingOptions.getResources: com.android.build.api.variant.ResourcesPackagingOptions ()
 com.android.build.api.variant.PackagingOptions.resources: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.ResourcesPackagingOptions, kotlin.Unit>)
 com.android.build.api.variant.ResourcesPackagingOptions

@@ -16,22 +16,20 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.variant.PackagingOptions
-import com.android.build.api.variant.ResourcesPackagingOptions
+import com.android.build.api.variant.JniLibsApkPackagingOptions
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.sdklib.AndroidVersion.VersionCodes.M
 
-open class PackagingOptionsImpl(
+class JniLibsApkPackagingOptionsImpl(
     dslPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions,
-    variantPropertiesApiServices: VariantPropertiesApiServices
-) : PackagingOptions {
+    variantPropertiesApiServices: VariantPropertiesApiServices,
+    minSdk: Int
+) : JniLibsPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices),
+    JniLibsApkPackagingOptions {
 
-    override val jniLibs =
-        JniLibsPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
-
-    override val resources =
-        ResourcesPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
-
-    override fun resources(action: ResourcesPackagingOptions.() -> Unit) {
-        action.invoke(resources)
-    }
+    override val legacyPackaging =
+        variantPropertiesApiServices.propertyOf(
+            Boolean::class.java,
+            dslPackagingOptions.jniLibs.legacyPackaging ?: (minSdk < M)
+        )
 }

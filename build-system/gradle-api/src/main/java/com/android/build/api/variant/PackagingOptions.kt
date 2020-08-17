@@ -24,6 +24,9 @@ import org.gradle.api.Incubating
 @Incubating
 interface PackagingOptions {
 
+    /** PackagingOptions for native libraries. Initialized from the corresponding DSL. */
+    val jniLibs: JniLibsPackagingOptions
+
     /** PackagingOptions for java resources. Initialized from the corresponding DSL. */
     val resources: ResourcesPackagingOptions
 
