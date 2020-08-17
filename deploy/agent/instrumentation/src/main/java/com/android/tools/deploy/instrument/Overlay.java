@@ -15,7 +15,6 @@
  */
 package com.android.tools.deploy.instrument;
 
-import android.util.Log;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -26,65 +25,83 @@ import java.util.ArrayList;
 import java.util.List;
 
 class Overlay {
-    private static final String TAG = "studio.deploy";
     private static final String OVERLAY_PATH_FORMAT = "/data/data/%s/code_cache/.overlay/";
 
     private final Path overlayPath;
-    private final Path resourceTablePath;
-    private final Path libraryPath;
 
     public Overlay(String packageName) {
         String pathString = String.format(OVERLAY_PATH_FORMAT, packageName);
         overlayPath = Paths.get(pathString);
-        resourceTablePath = Paths.get(pathString, "resources.arsc");
-        libraryPath = Paths.get(pathString, "lib");
     }
 
     public Path getOverlayRoot() {
         return overlayPath;
     }
 
-    public List<File> getDexFiles() {
+    public List<File> getApkDirs() throws IOException {
+        ArrayList<File> apkDirs = new ArrayList<>();
+        if (!overlayPathExists()) {
+            return apkDirs;
+        }
+
+        // Exploded APKs are directories with an APK file extension that contain the contents
+        // of the original non-exploded APK at the same paths as the original.
+        try (DirectoryStream<Path> dir = Files.newDirectoryStream(overlayPath, "*.apk")) {
+            for (Path path : dir) {
+                final File apk = path.toFile();
+                if (apk.isDirectory()) {
+                    apkDirs.add(apk);
+                }
+            }
+        }
+        return apkDirs;
+    }
+
+    public List<File> getDexFiles() throws IOException {
         ArrayList<File> dexFiles = new ArrayList<>();
+        if (!overlayPathExists()) {
+            return dexFiles;
+        }
+
+        // Ensure that swapped dex take precedence over installed dex by adding them to the class
+        // path first. Swapped dex are currently stored in the top-level overlay directory.
         try (DirectoryStream<Path> dir = Files.newDirectoryStream(overlayPath, "*.dex")) {
             for (Path dex : dir) {
                 dexFiles.add(dex.toFile());
             }
-        } catch (IOException io) {
-            Log.e(TAG, "Could not enumerate overlay dex files", io);
+        }
+
+        for (File apk : getApkDirs()) {
+            try (DirectoryStream<Path> dir = Files.newDirectoryStream(apk.toPath(), "*.dex")) {
+                for (Path dex : dir) {
+                    dexFiles.add(dex.toFile());
+                }
+            }
         }
         return dexFiles;
     }
 
-    public List<File> getResourceDirs() {
-        ArrayList<File> resDirs = new ArrayList<>();
-        try (DirectoryStream<Path> dir = Files.newDirectoryStream(overlayPath, "*.apk")) {
-            for (Path apk : dir) {
-                resDirs.add(apk.toFile());
-            }
-        } catch (IOException io) {
-            Log.e(TAG, "Could not enumerate overlay res dirs", io);
-        }
-        return resDirs;
-    }
-
-    public List<File> getNativeLibraryDirs() {
+    public List<File> getNativeLibraryDirs() throws IOException {
         ArrayList<File> nativeLibraryDirs = new ArrayList<>();
-
-        if (!Files.exists(libraryPath)) {
+        if (!overlayPathExists()) {
             return nativeLibraryDirs;
         }
 
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(libraryPath)) {
-            for (Path entry : stream) {
-                if (Files.isDirectory(entry)) {
-                    nativeLibraryDirs.add(entry.toFile());
+        for (File apk : getApkDirs()) {
+            Path libPath = apk.toPath().resolve("lib");
+            if (!Files.exists(libPath)) {
+                continue;
+            }
+            try (DirectoryStream<Path> dir = Files.newDirectoryStream(libPath)) {
+                for (Path abi : dir) {
+                    nativeLibraryDirs.add(abi.toFile());
                 }
             }
-        } catch (IOException io) {
-            Log.e(TAG, "Could not enumerate overlay library files", io);
         }
-
         return nativeLibraryDirs;
+    }
+
+    private boolean overlayPathExists() {
+        return overlayPath.toFile().exists();
     }
 }

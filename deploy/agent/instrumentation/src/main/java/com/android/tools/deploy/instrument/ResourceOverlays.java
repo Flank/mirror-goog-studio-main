@@ -75,8 +75,8 @@ public final class ResourceOverlays {
         Overlay overlay = new Overlay(getPackageName(activityThread));
 
         List<Object> providers = new ArrayList<>();
-        for (File resDir : overlay.getResourceDirs()) {
-            Arg path = arg(resDir.getAbsolutePath());
+        for (File apkDir : overlay.getApkDirs()) {
+            Arg path = arg(apkDir.getAbsolutePath());
             Arg assets = arg(null, assetsProviderClass);
             providers.add(call(resourcesProviderClass, "loadFromDirectory", path, assets));
         }
