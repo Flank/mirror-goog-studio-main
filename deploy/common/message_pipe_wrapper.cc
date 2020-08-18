@@ -22,9 +22,18 @@
 #include "tools/base/deploy/common/size_buffer.h"
 #include "tools/base/deploy/common/utils.h"
 
+namespace {
+const std::array<unsigned char, 8> MAGIC_NUMBER = {0xAC, 0xA5, 0xAC, 0xA5,
+                                                   0xAC, 0xA5, 0xAC, 0xA5};
+}
+
 namespace deploy {
 
 bool MessagePipeWrapper::Write(const std::string& message) const {
+  if (!WriteBytes(MAGIC_NUMBER.data(), MAGIC_NUMBER.size())) {
+    return false;
+  }
+
   SizeBuffer size_bytes = SizeToBuffer(message.size());
   if (!WriteBytes(size_bytes.data(), size_bytes.size())) {
     return false;
@@ -38,6 +47,12 @@ bool MessagePipeWrapper::Write(const std::string& message) const {
 }
 
 bool MessagePipeWrapper::Read(std::string* message) const {
+  std::array<unsigned char, 8> header;
+  header.fill(0);
+  if (!ReadBytes(header.data(), header.size()) || header != MAGIC_NUMBER) {
+    return false;
+  }
+
   SizeBuffer size_bytes;
   size_bytes.fill(0);
 

@@ -63,6 +63,17 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
 
     protected final String artFlag;
 
+    private static final byte[] MAGIC_NUMBER = {
+        (byte) 0xAC,
+        (byte) 0xA5,
+        (byte) 0xAC,
+        (byte) 0xA5,
+        (byte) 0xAC,
+        (byte) 0xA5,
+        (byte) 0xAC,
+        (byte) 0xA5
+    };
+
     public AgentBasedClassRedefinerTestBase(String artFlag) {
         this.artFlag = artFlag;
     }
@@ -191,8 +202,9 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
 
         private void sendMessage(byte[] message) throws IOException {
             byte[] size =
-                    ByteBuffer.allocate(4)
+                    ByteBuffer.allocate(MAGIC_NUMBER.length + Integer.BYTES)
                             .order(ByteOrder.LITTLE_ENDIAN)
+                            .put(MAGIC_NUMBER)
                             .putInt(message.length)
                             .array();
 
@@ -226,9 +238,17 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
         protected Deploy.InstallServerResponse getServerResponse()
                 throws IOException, InvalidProtocolBufferException {
             InputStream stdout = server.getInputStream();
-            byte[] sizeBytes = new byte[4];
+
+            byte[] magicBytes = new byte[MAGIC_NUMBER.length];
 
             int offset = 0;
+            while (offset < magicBytes.length) {
+                offset += stdout.read(magicBytes, offset, magicBytes.length - offset);
+            }
+
+            byte[] sizeBytes = new byte[Integer.BYTES];
+
+            offset = 0;
             while (offset < sizeBytes.length) {
                 offset += stdout.read(sizeBytes, offset, sizeBytes.length - offset);
             }

@@ -53,6 +53,18 @@ public class AdbInstaller implements Installer {
     private final Collection<DeployMetric> metrics;
     private final ILogger logger;
 
+    // MessagePipeWrapper magic number; should be kept in sync with message_pipe_wrapper.cc
+    private static final byte[] MAGIC_NUMBER = {
+        (byte) 0xAC,
+        (byte) 0xA5,
+        (byte) 0xAC,
+        (byte) 0xA5,
+        (byte) 0xAC,
+        (byte) 0xA5,
+        (byte) 0xAC,
+        (byte) 0xA5
+    };
+
     private enum OnFail {
         RETRY,
         DO_NO_RETRY
@@ -234,6 +246,7 @@ public class AdbInstaller implements Installer {
             TimeUnit timeUnit)
             throws IOException {
         byte[] output = adb.shell(cmd, inputStream, timeOut, timeUnit);
+        System.out.println("LEN: " + output.length);
         Deploy.InstallerResponse response = unwrap(output, Deploy.InstallerResponse.parser());
 
         // Handle the case where the executable is not present on the device. In this case, the
@@ -344,17 +357,21 @@ public class AdbInstaller implements Installer {
         if (b == null) {
             return null;
         }
-        if (b.length < Integer.BYTES) {
+        if (b.length < MAGIC_NUMBER.length + Integer.BYTES) {
             return null;
         }
         ByteBuffer buffer = ByteBuffer.wrap(b).order(ByteOrder.LITTLE_ENDIAN);
+        byte[] magicNumber = new byte[MAGIC_NUMBER.length];
+        buffer.get(magicNumber);
+        if (!Arrays.equals(magicNumber, MAGIC_NUMBER)) {
+            return null;
+        }
         int size = buffer.getInt();
         if (size != buffer.remaining()) {
             return null;
         }
         try {
-            CodedInputStream cis =
-                    CodedInputStream.newInstance(b, Integer.BYTES, b.length - Integer.BYTES);
+            CodedInputStream cis = CodedInputStream.newInstance(buffer);
             return parser.parseFrom(cis);
         } catch (IOException e) {
             // All in-memory buffers, should not happen
@@ -363,16 +380,18 @@ public class AdbInstaller implements Installer {
     }
 
     private ByteArrayInputStream wrap(MessageLite message) {
+        int headerSize = MAGIC_NUMBER.length + Integer.BYTES;
         int size = message.getSerializedSize();
-        byte[] buffer = new byte[Integer.BYTES + size];
+        byte[] buffer = new byte[headerSize + size];
 
         // Write size in the buffer.
-        ByteBuffer sizeWritter = ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN);
-        sizeWritter.putInt(size);
+        ByteBuffer headerWriter = ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN);
+        headerWriter.put(MAGIC_NUMBER);
+        headerWriter.putInt(size);
 
         // Write protobuffer payload in the buffer.
         try {
-            CodedOutputStream cos = CodedOutputStream.newInstance(buffer, Integer.BYTES, size);
+            CodedOutputStream cos = CodedOutputStream.newInstance(buffer, headerSize, size);
             message.writeTo(cos);
         } catch (IOException e) {
             // In memory buffers, should not happen
