@@ -223,19 +223,19 @@ abstract class CommonExtensionImpl<
     }
 
     override fun onVariants(action: Action<VariantT>) {
-        variantOperations.actions.add(action)
+        variantOperations.addAction(action)
     }
 
     override fun onVariants(action: VariantT.() -> Unit) {
-        variantOperations.actions.add(Action { action.invoke(it) } )
+        variantOperations.addAction(Action { action.invoke(it) } )
     }
 
     override fun onVariantProperties(action: Action<VariantPropertiesT>) {
-        variantPropertiesOperations.actions.add(action)
+        variantPropertiesOperations.addAction(action)
     }
 
     override fun onVariantProperties(action: (VariantPropertiesT) -> Unit) {
-        variantPropertiesOperations.actions.add(Action { action.invoke(it) })
+        variantPropertiesOperations.addAction(Action { action.invoke(it) })
     }
 
     override fun executeVariantOperations(variant: VariantT) {

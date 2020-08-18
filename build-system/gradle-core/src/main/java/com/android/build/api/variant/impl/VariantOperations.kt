@@ -20,6 +20,7 @@ import com.android.build.api.component.ActionableComponentObject
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.FilteredComponentAction
 import org.gradle.api.Action
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Contains a list of registered [Action] on an instance of [VariantObjectT] plus services like
@@ -29,7 +30,21 @@ import org.gradle.api.Action
  * [com.android.build.api.variant.VariantProperties]
  */
 class VariantOperations<VariantObjectT> where VariantObjectT: ActionableComponentObject, VariantObjectT: ComponentIdentity {
-    val actions = mutableListOf<Action<VariantObjectT>>()
+    private val actions = mutableListOf<Action<VariantObjectT>>()
+    private val actionsExecuted = AtomicBoolean(false)
+
+    @Throws(RuntimeException::class)
+    fun addAction(action: Action<VariantObjectT>) {
+        if (actionsExecuted.get()) {
+            throw RuntimeException("""
+                It is too late to add actions as the callbacks already executed.
+                Did you try to call onVariants or onVariantProperties from the old variant API 
+                'applicationVariants' for instance ? you should always call onVariants or 
+                onVariantProperties directly from the android DSL block. 
+                """)
+        }
+        actions.add(action)
+    }
 
     fun addFilteredAction(action: FilteredComponentAction<out VariantObjectT>) {
         @Suppress("UNCHECKED_CAST")
@@ -42,6 +57,7 @@ class VariantOperations<VariantObjectT> where VariantObjectT: ActionableComponen
     }
 
     fun executeActions(variant: VariantObjectT) {
+        actionsExecuted.set(true)
         actions.forEach { action -> action.execute(variant) }
     }
 }

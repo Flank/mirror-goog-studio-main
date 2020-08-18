@@ -237,4 +237,71 @@ android.onVariantProperties {
             )
         }
     }
+
+    @Test
+    fun onVariantActionAddedFromOldVariantApiBlock() {
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+apply from: "../commonHeader.gradle"
+buildscript { apply from: "../commonBuildScript.gradle" }
+
+apply from: "../commonLocalRepo.gradle"
+
+apply plugin: 'com.android.application'
+
+android {
+    defaultConfig.minSdkVersion 14
+    compileSdkVersion 29
+}
+
+android {
+    applicationVariants.all {
+        onVariants {
+            System.out.println("This should not execute !")
+        }
+    }
+}
+""")
+        val result = project.executor().expectFailure().run("clean", "assembleDebug")
+        result.stderr.use {
+            ScannerSubject.assertThat(it).contains(
+                "It is too late to add actions as the callbacks already executed."
+            )
+        }
+    }
+
+    @Test
+    fun onVariantPropertiesActionAddedFromOldVariantApiBlock() {
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+apply from: "../commonHeader.gradle"
+buildscript { apply from: "../commonBuildScript.gradle" }
+
+apply from: "../commonLocalRepo.gradle"
+
+apply plugin: 'com.android.application'
+
+android {
+    defaultConfig.minSdkVersion 14
+    compileSdkVersion 29
+}
+
+android {
+    applicationVariants.all {
+        onVariantProperties {
+            System.out.println("This should not execute !")
+        }
+    }
+}
+""")
+        val result = project.executor().expectFailure().run("clean", "assembleDebug")
+        result.stderr.use {
+            ScannerSubject.assertThat(it).contains(
+                "It is too late to add actions as the callbacks already executed."
+            )
+        }
+    }
+
 }
