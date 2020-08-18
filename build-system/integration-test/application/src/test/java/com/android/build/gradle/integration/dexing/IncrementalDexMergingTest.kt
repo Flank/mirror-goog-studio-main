@@ -26,7 +26,6 @@ import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProj
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
 import com.android.build.gradle.integration.common.utils.ChangeType.CHANGED
 import com.android.build.gradle.integration.common.utils.ChangeType.UNCHANGED
-import com.android.build.gradle.integration.common.utils.ChangeType.CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS
 import com.android.build.gradle.integration.common.utils.IncrementalTestHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils.searchAndReplace
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
@@ -179,9 +178,9 @@ class IncrementalDexMergingTest {
 
         val checkSubproject = { changedClass: String, mergedDexDir: File ->
             // Check that dex files are put into buckets
-            assertThat(mergedDexDir.listFiles()!!.size).isEqualTo(NUMBER_OF_BUCKETS)
+            assertThat(mergedDexDir.listFiles()).hasLength(NUMBER_OF_BUCKETS)
 
-            // Check that only the relevant bucket is reprocessed
+            // Check that only the impacted bucket(s) are re-merged
             val bucketWithChangedClass =
                     DexMergingTaskDelegate.getBucketNumber("$changedClass.dex", NUMBER_OF_BUCKETS)
             val dexFiles = FileUtils.getAllFiles(mergedDexDir)
@@ -190,11 +189,7 @@ class IncrementalDexMergingTest {
             val dexFilesWithoutChangedClass = dexFiles.filter { it != dexFileWithChangedClass }
             testHelper.assertFileChanges(
                     mapOf(dexFileWithChangedClass to CHANGED) +
-                            dexFilesWithoutChangedClass.map {
-                                // TODO(132615300) Update to UNCHANGED once dex merging is made
-                                //  incremental
-                                it to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS
-                            }
+                            dexFilesWithoutChangedClass.map { it to UNCHANGED }
             )
 
             // Also check that classes of the same package are put in the same bucket/merged dex

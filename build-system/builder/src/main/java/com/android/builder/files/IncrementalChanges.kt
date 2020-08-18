@@ -44,7 +44,7 @@ data class SerializableInputChanges(
 }
 
 class SerializableFileChanges(
-    private val fileChanges: List<SerializableChange>
+    val fileChanges: List<SerializableChange>
 ) : Serializable {
 
     private val fileStatusMap by lazy {
