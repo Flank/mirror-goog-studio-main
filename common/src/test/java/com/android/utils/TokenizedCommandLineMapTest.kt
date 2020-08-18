@@ -60,7 +60,7 @@ internal class TokenizedCommandLineMapTest {
         }
         val original =
             "/usr/local/google/home/jomof/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android -fno-limit-debug-info  -fPIC   -o CMakeFiles/native-lib.dir/src/main/cpp/native-lib.cpp.o -c /usr/local/google/home/jomof/projects/MyApplication22/app/src/main/cpp/native-lib.cpp"
-        val expected = "--target=aarch64-none-linux-android -fno-limit-debug-info -fPIC"
+        val expected = "--target=aarch64-none-linux-android -fno-limit-debug-info -fPIC -c"
         val actual = map.computeIfAbsent(
             original,
             "/usr/local/google/home/jomof/projects/MyApplication22/app/src/main/cpp/native-lib.cpp"

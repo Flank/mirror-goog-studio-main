@@ -418,9 +418,13 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     tokens.removeTokenGroup(flag, 0)
                 }
             }
-        val compileCommandsJsonReader =
-            compileCommandsJsonFile.takeIf { it.exists() }?.reader(StandardCharsets.UTF_8) ?: return
-        JsonReader(compileCommandsJsonReader).use { reader ->
+        if (!compileCommandsJsonFile.exists()
+            || (compileCommandsJsonBinFile.exists()
+                    && compileCommandsJsonBinFile.lastModified() >= compileCommandsJsonFile.lastModified())
+        ) {
+            return
+        }
+        JsonReader(compileCommandsJsonFile.reader(StandardCharsets.UTF_8)).use { reader ->
             CompileCommandsEncoder(compileCommandsJsonBinFile).use { encoder ->
                 reader.beginArray()
                 while (reader.hasNext()) {
