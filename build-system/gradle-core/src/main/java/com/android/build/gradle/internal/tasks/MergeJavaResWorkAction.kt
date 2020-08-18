@@ -23,7 +23,6 @@ import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
 import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.packaging.ParsedPackagingOptions
-import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.builder.files.KeyedFileCache
 import com.android.builder.merge.IncrementalFileMergerInput
@@ -78,23 +77,16 @@ abstract class MergeJavaResWorkAction : ProfileAwareWorkAction<MergeJavaResWorkA
                 contentMap
             )
 
-        val parsedPackagingOptions =
-            if (parameters.packagingOptions.isPresent) {
-                ParsedPackagingOptions(parameters.packagingOptions.get())
-            } else {
-                ParsedPackagingOptions(
-                    parameters.excludes.get(),
-                    parameters.pickFirsts.get(),
-                    parameters.merges.get()
-                )
-            }
-
         val mergeJavaResDelegate =
             MergeJavaResourcesDelegate(
                 inputs,
                 output,
                 contentMap,
-                parsedPackagingOptions,
+                ParsedPackagingOptions(
+                    parameters.excludes.get(),
+                    parameters.pickFirsts.get(),
+                    parameters.merges.get()
+                ),
                 contentType,
                 parameters.incrementalStateFile.asFile.get(),
                 isIncremental,
@@ -111,7 +103,6 @@ abstract class MergeJavaResWorkAction : ProfileAwareWorkAction<MergeJavaResWorkA
         abstract val featureJavaRes: ConfigurableFileCollection
         abstract val outputFile: RegularFileProperty
         abstract val outputDirectory: DirectoryProperty
-        abstract val packagingOptions: Property<SerializablePackagingOptions>
         abstract val incrementalStateFile: RegularFileProperty
         abstract val incremental: Property<Boolean>
         abstract val cacheDir: DirectoryProperty

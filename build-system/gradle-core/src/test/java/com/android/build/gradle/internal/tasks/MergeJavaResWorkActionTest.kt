@@ -18,11 +18,9 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.transform.QualifiedContent.ContentType
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
-import com.android.build.gradle.internal.dsl.PackagingOptions
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
-import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.packaging.defaultExcludes
 import com.android.build.gradle.internal.packaging.defaultMerges
 import com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS
@@ -84,8 +82,6 @@ class MergeJavaResWorkActionTest {
                     override val outputFile =
                         FakeObjectFactory.factory.fileProperty().also { it.set(outputFile) }
                     override val outputDirectory = FakeObjectFactory.factory.directoryProperty()
-                    override val packagingOptions: Property<SerializablePackagingOptions> =
-                        FakeGradleProperty(null)
                     override val excludes =
                         FakeObjectFactory.factory.setProperty(String::class.java).also {
                             it.set(defaultExcludes)
@@ -179,8 +175,6 @@ class MergeJavaResWorkActionTest {
                     override val outputFile =
                         FakeObjectFactory.factory.fileProperty().also { it.set(outputFile) }
                     override val outputDirectory = FakeObjectFactory.factory.directoryProperty()
-                    override val packagingOptions: Property<SerializablePackagingOptions> =
-                        FakeGradleProperty(null)
                     override val excludes =
                         FakeObjectFactory.factory.setProperty(String::class.java).also {
                             it.set(defaultExcludes)
@@ -240,8 +234,8 @@ class MergeJavaResWorkActionTest {
         FileUtils.createFile(File(dir2, "x86/exclude.so"), "exclude me")
 
         val outputDir = File(tmpDir.root, "out")
-        // edit packagingOptions to exclude exclude.so
-        val packagingOptions = PackagingOptions().also { it.exclude("**/exclude.so") }
+        // exclude "**/exclude.so"
+        val excludes: Set<String> = setOf("**/exclude.so")
         val incrementalStateFile = File(tmpDir.root, "merge-state")
         val cacheDir = File(tmpDir.root, "cacheDir")
         object : MergeJavaResWorkAction() {
@@ -256,10 +250,10 @@ class MergeJavaResWorkActionTest {
                     override val outputFile = FakeObjectFactory.factory.fileProperty()
                     override val outputDirectory =
                         FakeObjectFactory.factory.directoryProperty().also { it.set(outputDir) }
-                    override val packagingOptions =
-                        FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
                     override val excludes =
-                        FakeObjectFactory.factory.setProperty(String::class.java)
+                        FakeObjectFactory.factory.setProperty(String::class.java).also {
+                            it.set(excludes)
+                        }
                     override val pickFirsts =
                         FakeObjectFactory.factory.setProperty(String::class.java)
                     override val merges = FakeObjectFactory.factory.setProperty(String::class.java)
@@ -322,8 +316,6 @@ class MergeJavaResWorkActionTest {
                     override val outputFile =
                         FakeObjectFactory.factory.fileProperty().also { it.set(outputFile) }
                     override val outputDirectory = FakeObjectFactory.factory.directoryProperty()
-                    override val packagingOptions: Property<SerializablePackagingOptions> =
-                        FakeGradleProperty(null)
                     override val excludes =
                         FakeObjectFactory.factory.setProperty(String::class.java).also {
                             it.set(defaultExcludes)
@@ -383,8 +375,6 @@ class MergeJavaResWorkActionTest {
                     override val outputFile =
                         FakeObjectFactory.factory.fileProperty().also { it.set(outputFile) }
                     override val outputDirectory = FakeObjectFactory.factory.directoryProperty()
-                    override val packagingOptions: Property<SerializablePackagingOptions> =
-                        FakeGradleProperty(null)
                     override val excludes =
                         FakeObjectFactory.factory.setProperty(String::class.java).also {
                             it.set(defaultExcludes)
@@ -433,7 +423,6 @@ class MergeJavaResWorkActionTest {
         FileUtils.createFile(File(dir, "x86/foo.so"), "foo")
 
         val outputDir = File(tmpDir.root, "out")
-        val packagingOptions = PackagingOptions()
         val incrementalStateFile = File(tmpDir.root, "merge-state")
         val cacheDir = File(tmpDir.root, "cacheDir")
 
@@ -452,8 +441,6 @@ class MergeJavaResWorkActionTest {
                     override val outputFile = FakeObjectFactory.factory.fileProperty()
                     override val outputDirectory =
                         FakeObjectFactory.factory.directoryProperty().also { it.set(outputDir) }
-                    override val packagingOptions =
-                        FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
                     override val excludes =
                         FakeObjectFactory.factory.setProperty(String::class.java)
                     override val pickFirsts =
@@ -506,8 +493,6 @@ class MergeJavaResWorkActionTest {
                     override val outputFile = FakeObjectFactory.factory.fileProperty()
                     override val outputDirectory =
                         FakeObjectFactory.factory.directoryProperty().also { it.set(outputDir) }
-                    override val packagingOptions =
-                        FakeGradleProperty(SerializablePackagingOptions(packagingOptions))
                     override val excludes =
                         FakeObjectFactory.factory.setProperty(String::class.java)
                     override val pickFirsts =
@@ -566,8 +551,6 @@ class MergeJavaResWorkActionTest {
                     override val outputFile =
                         FakeObjectFactory.factory.fileProperty().also { it.set(outputFile) }
                     override val outputDirectory = FakeObjectFactory.factory.directoryProperty()
-                    override val packagingOptions: Property<SerializablePackagingOptions> =
-                        FakeGradleProperty(null)
                     override val excludes =
                         FakeObjectFactory.factory.setProperty(String::class.java).also {
                             it.set(defaultExcludes)
