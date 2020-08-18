@@ -29,6 +29,7 @@ import java.nio.ByteOrder;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -512,7 +513,11 @@ public final class AdbHelper {
             // talk to a specific device
             setDevice(adbChan, device);
 
-            byte[] request = formAdbRequest(adbService.name().toLowerCase() + ":" + command); //$NON-NLS-1$
+            byte[] request =
+                    formAdbRequest(
+                            adbService.name().toLowerCase(Locale.US)
+                                    + ":"
+                                    + command); //$NON-NLS-1$
             write(adbChan, request);
 
             AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
