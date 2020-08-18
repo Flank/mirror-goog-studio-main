@@ -44,7 +44,7 @@ fun RecipeExecutor.composeActivityRecipe(
   addMaterialDependency(true) // useAndroidX should be always true for Compose
 
   val composeVersionVarName = getDependencyVarName("androidx.compose.ui:ui", "compose_version")
-  setExtVar(composeVersionVarName, "0.1.0-dev16")
+  setExtVar(composeVersionVarName, "1.0.0-alpha01")
 
   addDependency(mavenCoordinate = "androidx.compose.ui:ui:\${$composeVersionVarName}")
   addDependency(mavenCoordinate = "androidx.compose.material:material:\${$composeVersionVarName}")
