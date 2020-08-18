@@ -41,9 +41,9 @@ class BuildConfigApiTests: VariantApiBaseTest(TestType.Script) {
                 ${testingElements.addCommonAndroidBuildLogic()}
 
                 onVariantProperties {
-                    addBuildConfigField("FloatValue", "1f", "Float Value")
-                    addBuildConfigField("LongValue", "1L", "Long Value")
-                    addBuildConfigField("VariantName", "${'$'}{name}", "Variant Name")
+                    addBuildConfigField("FloatValue", "\"1f\"", "Float Value")
+                    addBuildConfigField("LongValue", "\"1L\"", "Long Value")
+                    addBuildConfigField("VariantName", "\"${'$'}{name}\"", "Variant Name")
                 }
             }
                 """.trimIndent()
@@ -128,7 +128,7 @@ The added field is used in the MainActivity.kt file.
                     buildConfigFields.put("GitVersion", gitVersionProvider.map {  task ->
                         BuildConfigField(
                             "String",
-                            task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8), 
+                            "\"{task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8)}\"", 
                             "Git Version")
                     })
                 }

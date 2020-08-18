@@ -381,30 +381,21 @@ open class VariantDslInfoImpl internal constructor(
         // want the higher priority one to be last.
         val suffixes = mutableListOf<String>()
         defaultConfig.applicationIdSuffix?.let {
-            suffixes.add(it.prependDot())
+            suffixes.add(it)
         }
 
-        suffixes.addAll(productFlavorList.mapNotNull { it.applicationIdSuffix?.prependDot() })
+        suffixes.addAll(productFlavorList.mapNotNull { it.applicationIdSuffix })
 
         // then we add the build type after.
         buildTypeObj.applicationIdSuffix?.let {
-            suffixes.add(it.prependDot())
+            suffixes.add(it)
         }
-
-        return if (suffixes.isNotEmpty()) {
-            suffixes.joinToString(separator = "")
+        val nonEmptySuffixes = suffixes.filter { it.isNotEmpty() }
+        return if (nonEmptySuffixes.isNotEmpty()) {
+            ".${nonEmptySuffixes.joinToString(separator = ".", transform = { it.removePrefix(".") })}"
         } else {
             ""
         }
-    }
-
-    /**
-     * Returns the same string with a '.' at the start unless there is already one.
-     */
-    private fun String.prependDot(): String = if (this[0] == '.') {
-        this
-    } else {
-        ".$this"
     }
 
     override val versionName: Provider<String?>
