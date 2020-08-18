@@ -14,36 +14,51 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.connected.application
 
-import com.android.build.gradle.integration.common.fixture.Adb
 import com.android.build.gradle.integration.common.fixture.DESUGAR_DEPENDENCY_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.testutils.apk.AndroidArchive
-import com.android.testutils.apk.Dex
-import com.android.testutils.truth.DexClassSubject
+import com.android.build.gradle.integration.connected.utils.getEmulator
 import com.android.utils.FileUtils
-import org.junit.Assume
+import com.google.common.io.Resources
 import org.junit.Before
+import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import kotlin.test.fail
+import java.nio.file.Files
 
+/** Connected test for core library desugaring API conversion. */
 @RunWith(FilterableParameterized::class)
-class CoreLibraryDesugarConversionTest(val minSdkVersion: Int) {
+class CoreLibraryDesugarConversionConnectedTest(minSdkVersion: Int) {
+
+    companion object {
+        @ClassRule
+        @JvmField
+        val emulator = getEmulator()
+
+        @Parameterized.Parameters(name = "minSdkVersion_{0}")
+        @JvmStatic
+        fun params() = listOf(21, 24)
+
+        private const val DESUGAR_DEPENDENCY =
+            "com.android.tools:desugar_jdk_libs:$DESUGAR_DEPENDENCY_VERSION"
+        private const val STORE_FILE_NAME = "keystore.jks"
+        private const val STORE_PASSWORD = "store_password"
+        private const val ALIAS_NAME = "alias_name"
+        private const val KEY_PASSWORD = "key_password"
+    }
 
     @get:Rule
-    val project = GradleTestProject.builder()
-        .fromTestApp(HelloWorldApp.forPluginWithMinSdkVersion("com.android.application", minSdkVersion))
-        .create()
-
-    @get:Rule
-    var adb = Adb()
+    val project =
+        GradleTestProject.builder()
+            .fromTestApp(
+                HelloWorldApp.forPluginWithMinSdkVersion("com.android.application", minSdkVersion)
+            ).create()
 
     @Before
     fun setUp() {
@@ -124,36 +139,51 @@ class CoreLibraryDesugarConversionTest(val minSdkVersion: Int) {
             """.trimIndent())
     }
 
-    //TODO(bingran) remove once we enable connected tests in presubmit/postsubmit
     @Test
-    fun testBytecodeOfFunctionWithDesugaredLibraryParam() {
-        project.executor().run("clean", "assembleDebug")
-        val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
-        val programClass = "Lcom/example/helloworld/HelloWorld;"
-        val dex = getDexWithSpecificClass(programClass, apk.allDexes)
-            ?: fail("Failed to find the dex with class name $programClass")
-        DexClassSubject.assertThat(dex.classes[programClass])
-            .hasMethodThatInvokes("getTime", "Lj$/time/TimeConversions;->convert(Lj$/time/ZoneId;)Ljava/time/ZoneId;")
-        // Consumer and IntUnaryOperator are desugared up to 23 so conversion doesn't exist for 24 and above
-        Assume.assumeTrue(minSdkVersion < 24)
-        DexClassSubject.assertThat(dex.classes[programClass])
-            .hasMethodThatInvokes("getNumbers", "Lj\$/\$r8\$wrapper\$java\$util\$function\$IntUnaryOperator$-WRP;->convert(Lj$/util/function/IntUnaryOperator;)Ljava/util/function/IntUnaryOperator;")
-        DexClassSubject.assertThat(dex.classes[programClass])
-            .hasMethodThatInvokes("onGetDirectActions", "Lj\$/\$r8\$wrapper\$java\$util\$function\$Consumer$-V-WRP;->convert(Ljava/util/function/Consumer;)Lj$/util/function/Consumer;")
+    fun testFunctionWithDesugaredLibraryParam() {
+        // check non-minified debug build (d8 without keep rules)
+        project.executor().run("connectedDebugAndroidTest")
+
+        // check minified debug build (r8 with keep rules)
+        project.buildFile.appendText("\n\nandroid.buildTypes.debug.minifyEnabled = true\n\n")
+        TestFileUtils.searchAndReplace(
+            FileUtils.join(project.mainSrcDir, "com/example/helloworld/HelloWorld.java"),
+            "// onCreate",
+            "getNumbers(); getTime();"
+        )
+        project.executor().run("connectedDebugAndroidTest")
+
+        // check non-minified release build (d8 with keep rules)
+        setupKeyStore()
+        project.buildFile.appendText("\n\nandroid.testBuildType \"release\"\n\n")
+        project.executor().run("connectedReleaseAndroidTest")
     }
 
-    private fun getDexWithSpecificClass(className: String, dexes: Collection<Dex>) : Dex? =
-        dexes.find {
-            AndroidArchive.checkValidClassName(className)
-            it.classes.keys.contains(className)
-        }
+    private fun setupKeyStore() {
+        val keystoreFile = project.file(STORE_FILE_NAME)
+        val keystoreContents =
+            Resources.toByteArray(
+                Resources.getResource(
+                    CoreLibraryDesugarConversionConnectedTest::class.java,
+                    "rsa_keystore.jks"
+                )
+            )
+        Files.write(keystoreFile.toPath(), keystoreContents)
+        project.buildFile.appendText("""
 
-    companion object {
-        @Parameterized.Parameters(name = "minSdkVersion_{0}")
-        @JvmStatic
-        fun params() = listOf(21, 24)
-
-        private const val DESUGAR_DEPENDENCY
-                = "com.android.tools:desugar_jdk_libs:$DESUGAR_DEPENDENCY_VERSION"
+            android {
+                signingConfigs {
+                    release {
+                        storeFile file("$STORE_FILE_NAME")
+                        storePassword "$STORE_PASSWORD"
+                        keyAlias "$ALIAS_NAME"
+                        keyPassword "$KEY_PASSWORD"
+                    }
+                }
+                buildTypes {
+                    release.signingConfig signingConfigs.release
+                }
+            }
+        """.trimIndent())
     }
 }
