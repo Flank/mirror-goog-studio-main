@@ -145,8 +145,7 @@ public class DeviceManagerTest {
                         "Pixel 3a XL",
                         "Pixel 4",
                         "Pixel 4 XL",
-                        "Pixel 4a",
-                        "Polestar 2");
+                        "Pixel 4a");
 
         assertThat(dm.getDevice("Nexus One", "Google").getDisplayName()).isEqualTo("Nexus One");
 
@@ -200,8 +199,7 @@ public class DeviceManagerTest {
                         "Pixel 3a XL",
                         "Pixel 4",
                         "Pixel 4 XL",
-                        "Pixel 4a",
-                        "Polestar 2");
+                        "Pixel 4a");
     }
 
     @Test
@@ -303,8 +301,7 @@ public class DeviceManagerTest {
                         "Pixel 3a XL",
                         "Pixel 4",
                         "Pixel 4 XL",
-                        "Pixel 4a",
-                        "Polestar 2");
+                        "Pixel 4a");
 
         assertThat(listDisplayNames(dm2.getDevices(DeviceManager.ALL_DEVICES)))
                 .containsExactly(
@@ -357,8 +354,7 @@ public class DeviceManagerTest {
                         "Pixel 3a XL",
                         "Pixel 4",
                         "Pixel 4 XL",
-                        "Pixel 4a",
-                        "Polestar 2");
+                        "Pixel 4a");
     }
 
     @Test
@@ -449,8 +445,7 @@ public class DeviceManagerTest {
                         "Pixel 3a XL",
                         "Pixel 4",
                         "Pixel 4 XL",
-                        "Pixel 4a",
-                        "Polestar 2");
+                        "Pixel 4a");
 
         assertThat(listDisplayNames(dm.getDevices(DeviceManager.ALL_DEVICES)))
                 .containsExactly(
@@ -503,8 +498,7 @@ public class DeviceManagerTest {
                         "Pixel 3a XL",
                         "Pixel 4",
                         "Pixel 4 XL",
-                        "Pixel 4a",
-                        "Polestar 2");
+                        "Pixel 4a");
     }
 
     @Test
