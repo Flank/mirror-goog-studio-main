@@ -92,6 +92,17 @@ TEST_F(MessagePipeWrapperTest, HandleManyMessages) {
   }
 }
 
+TEST_F(MessagePipeWrapperTest, HandleTimeout) {
+  int pipe_fds[2];
+  EXPECT_EQ(0, pipe(pipe_fds));
+
+  MessagePipeWrapper read(pipe_fds[0]);
+  MessagePipeWrapper write(pipe_fds[1]);
+
+  std::string received;
+  EXPECT_FALSE(read.Read(500, &received));
+}
+
 TEST_F(MessagePipeWrapperTest, TestPoll) {
   int pipe_fds[2];
 

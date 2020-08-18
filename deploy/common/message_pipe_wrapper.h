@@ -57,6 +57,10 @@ class MessagePipeWrapper {
   // completes or an error occurs.
   bool Read(std::string* message) const;
 
+  // Reads a message from the specified file descriptor. Blocks until the read
+  // completes, an error occurs, or the timeout elapses.
+  bool Read(int timeout_ms, std::string* message);
+
   // Closes the fd.
   void Close();
 

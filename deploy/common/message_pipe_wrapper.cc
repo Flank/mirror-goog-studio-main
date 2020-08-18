@@ -69,6 +69,16 @@ bool MessagePipeWrapper::Read(std::string* message) const {
   return true;
 }
 
+bool MessagePipeWrapper::Read(int timeout_ms, std::string* message) {
+  // TODO: Fix this when we fix MessagePipeWrapper to not take a vector.
+  auto ready = MessagePipeWrapper::Poll({this}, timeout_ms);
+  if (ready.size() == 0) {
+    return false;
+  }
+
+  return Read(message);
+}
+
 void MessagePipeWrapper::Close() {
   if (fd_ != -1) {
     close(fd_);
