@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.android.resources.Density;
 import com.android.utils.FileUtils;
 import com.android.utils.NullLogger;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.truth.Truth;
 import java.io.File;
@@ -400,7 +401,7 @@ public class VectorDrawableRendererTest {
         writeToFile(input28, VECTOR_WITH_GRADIENT);
         writeToFile(input29, VECTOR_WITH_GRADIENT);
 
-        ImmutableSet.Builder<File> result = ImmutableSet.builder();
+        ImmutableList.Builder<File> result = ImmutableList.builder();
         result.addAll(mRenderer.getFilesToBeGenerated(input))
                 .addAll(mRenderer.getFilesToBeGenerated(input21))
                 .addAll(mRenderer.getFilesToBeGenerated(input22))
@@ -409,19 +410,57 @@ public class VectorDrawableRendererTest {
                 .addAll(mRenderer.getFilesToBeGenerated(input29));
 
         assertEquals(
-                ImmutableSet.of(
+                ImmutableList.of(
                         FileUtils.join(mOutput, "drawable-hdpi/icon.png"),
                         FileUtils.join(mOutput, "drawable-mdpi/icon.png"),
                         FileUtils.join(mOutput, "drawable-ldpi/icon.png"),
-                        FileUtils.join(mOutput, "drawable-anydpi-v24/icon.xml"),
                         FileUtils.join(mOutput, "drawable-hdpi-v21/icon.png"),
                         FileUtils.join(mOutput, "drawable-mdpi-v21/icon.png"),
                         FileUtils.join(mOutput, "drawable-ldpi-v21/icon.png"),
                         FileUtils.join(mOutput, "drawable-hdpi-v22/icon.png"),
                         FileUtils.join(mOutput, "drawable-mdpi-v22/icon.png"),
                         FileUtils.join(mOutput, "drawable-ldpi-v22/icon.png"),
+                        FileUtils.join(mOutput, "drawable-anydpi-v24/icon.xml"),
                         FileUtils.join(mOutput, "drawable-anydpi-v28/icon.xml"),
                         FileUtils.join(mOutput, "drawable-anydpi-v29/icon.xml")),
+                result.build());
+    }
+
+    @Test
+    public void multipleGradientVersionsAndQualifiers() throws Exception {
+        File drawable = new File(mRes, "drawable-port");
+        File input = new File(drawable, "icon.xml");
+
+        File drawable21 = new File(mRes, "drawable-port-v21");
+        File input21 = new File(drawable21, "icon.xml");
+
+        File drawable24 = new File(mRes, "drawable-port-v24");
+        File input24 = new File(drawable24, "icon.xml");
+
+        File drawable29 = new File(mRes, "drawable-port-v29");
+        File input29 = new File(drawable29, "icon.xml");
+
+        writeToFile(input, VECTOR_WITH_GRADIENT);
+        writeToFile(input21, VECTOR_WITH_GRADIENT);
+        writeToFile(input24, VECTOR_WITH_GRADIENT);
+        writeToFile(input29, VECTOR_WITH_GRADIENT);
+
+        ImmutableList.Builder<File> result = ImmutableList.builder();
+        result.addAll(mRenderer.getFilesToBeGenerated(input))
+                .addAll(mRenderer.getFilesToBeGenerated(input21))
+                .addAll(mRenderer.getFilesToBeGenerated(input24))
+                .addAll(mRenderer.getFilesToBeGenerated(input29));
+
+        assertEquals(
+                ImmutableList.of(
+                        FileUtils.join(mOutput, "drawable-port-hdpi/icon.png"),
+                        FileUtils.join(mOutput, "drawable-port-mdpi/icon.png"),
+                        FileUtils.join(mOutput, "drawable-port-ldpi/icon.png"),
+                        FileUtils.join(mOutput, "drawable-port-hdpi-v21/icon.png"),
+                        FileUtils.join(mOutput, "drawable-port-mdpi-v21/icon.png"),
+                        FileUtils.join(mOutput, "drawable-port-ldpi-v21/icon.png"),
+                        FileUtils.join(mOutput, "drawable-port-anydpi-v24/icon.xml"),
+                        FileUtils.join(mOutput, "drawable-port-anydpi-v29/icon.xml")),
                 result.build());
     }
 
