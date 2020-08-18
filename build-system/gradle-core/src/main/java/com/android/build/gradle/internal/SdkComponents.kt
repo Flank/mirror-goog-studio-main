@@ -55,8 +55,8 @@ import javax.inject.Inject
  * components should declare it as input.
  */
 abstract class SdkComponentsBuildService @Inject constructor(
-    objectFactory: ObjectFactory,
-    providerFactory: ProviderFactory
+    private val objectFactory: ObjectFactory,
+    private val providerFactory: ProviderFactory
 ) :
     BuildService<SdkComponentsBuildService.Parameters>, AutoCloseable {
 
@@ -202,6 +202,11 @@ abstract class SdkComponentsBuildService @Inject constructor(
                 parameters.projectRootDir.get().asFile,
                 parameters.issueReporter.get()
             )
+        })
+
+    fun sdkImageDirectoryProvider(imageHash: String): Provider<Directory> =
+        objectFactory.directoryProperty().fileProvider(providerFactory.provider {
+            sdkHandler.installSystemImage(imageHash)
         })
 
     val ndkDirectoryProvider: Provider<Directory> =
