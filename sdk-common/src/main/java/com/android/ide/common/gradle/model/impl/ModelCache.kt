@@ -51,7 +51,6 @@ import com.android.builder.model.ProductFlavorContainer
 import com.android.builder.model.SigningConfig
 import com.android.builder.model.SourceProvider
 import com.android.builder.model.SourceProviderContainer
-import com.android.builder.model.SyncIssue
 import com.android.builder.model.TestOptions
 import com.android.builder.model.TestedTargetVariant
 import com.android.builder.model.Variant
@@ -73,7 +72,6 @@ import com.android.ide.common.gradle.model.IdeLintOptions
 import com.android.ide.common.gradle.model.IdeMavenCoordinates
 import com.android.ide.common.gradle.model.IdeProductFlavorContainer
 import com.android.ide.common.gradle.model.IdeSigningConfig
-import com.android.ide.common.gradle.model.IdeSyncIssue
 import com.android.ide.common.gradle.model.IdeTestOptions
 import com.android.ide.common.gradle.model.IdeVariantBuildInformation
 import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions
@@ -987,7 +985,6 @@ private fun modelCacheImpl(): ModelCacheTesting {
         propertyInvoker = { ImmutableList.copyOf(project.variantNames) },
         defaultValue = { copy(fun(): Collection<String> = fetchedVariantNames, ::deduplicateString) }
       )
-    val defaultVariantCopy = copyNewPropertyWithDefault({ project.defaultVariant }, { getDefaultVariant(variantNamesCopy) })
     val flavorDimensionCopy: Collection<String> = copy(project::getFlavorDimensions, ::deduplicateString)
     val bootClasspathCopy: Collection<String> = ImmutableList.copyOf(project.bootClasspath)
     val signingConfigsCopy: Collection<IdeSigningConfig> = copy(project::getSigningConfigs, ::signingConfigFrom)
@@ -1016,7 +1013,6 @@ private fun modelCacheImpl(): ModelCacheTesting {
       buildTypes = buildTypesCopy,
       productFlavors = productFlavorCopy,
       variantNames = variantNamesCopy,
-      defaultVariant = defaultVariantCopy,
       flavorDimensions = flavorDimensionCopy,
       compileTarget = project.compileTarget,
       bootClasspath = bootClasspathCopy,

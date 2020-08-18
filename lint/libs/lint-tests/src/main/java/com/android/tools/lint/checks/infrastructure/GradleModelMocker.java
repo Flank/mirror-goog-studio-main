@@ -548,7 +548,6 @@ public class GradleModelMocker {
             when(artifact.getVariantSourceProvider()).thenReturn(variantSourceSet);
         }
         setVariantName(defaultVariantName);
-        when(project.getDefaultVariant()).thenReturn(defaultVariantName);
 
         when(artifact.getName()).thenReturn(ARTIFACT_NAME_MAIN);
         when(testArtifact.getName()).thenReturn(ARTIFACT_NAME_UNIT_TEST);
