@@ -16,17 +16,13 @@
 package com.android.ide.common.gradle.model.impl;
 
 import static com.google.common.truth.Truth.assertThat;
-import static java.util.Collections.singletonList;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.stubs.AndroidProjectStub;
-import com.android.ide.common.gradle.model.stubs.VariantStub;
 import com.google.common.collect.ImmutableList;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -83,36 +79,14 @@ public class IdeAndroidProjectImplTest {
                                 getViewBindingOptions());
                     }
                 };
-        IdeAndroidProject androidProject =
-                myModelCache.androidProjectFrom(
-                        original,
-                        original.getVariants().stream()
-                                .map(it -> it.getName())
-                                .collect(Collectors.toList()));
+        IdeAndroidProject androidProject = myModelCache.androidProjectFrom(original);
         assertThat(androidProject.getBuildToolsVersion()).isNull();
     }
 
     @Test
     public void constructor() throws Throwable {
         AndroidProject original = new AndroidProjectStub("2.4.0");
-        IdeAndroidProjectImpl copy =
-                myModelCache.androidProjectFrom(
-                        original,
-                        original.getVariants().stream()
-                                .map(it -> it.getName())
-                                .collect(Collectors.toList()));
-    }
-
-    @Test
-    public void constructorWithVariant() throws Throwable {
-        AndroidProject original = new AndroidProjectStub("2.4.0");
-        original.getVariants().clear();
-        Variant variant = new VariantStub();
-        IdeAndroidProjectImpl copy =
-                myModelCache.androidProjectFrom(
-                        original, singletonList(variant.getName()));
-
-        original.getVariants().add(variant);
+        IdeAndroidProjectImpl copy = myModelCache.androidProjectFrom(original);
     }
 
     @Test

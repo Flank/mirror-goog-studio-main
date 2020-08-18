@@ -110,7 +110,7 @@ interface ModelCache {
   fun setRootBuildId(rootBuildId: String)
 
   fun variantFrom(variant: Variant, modelVersion: GradleVersion?): IdeVariantImpl
-  fun androidProjectFrom(project: AndroidProject, variants: Collection<String>): IdeAndroidProjectImpl
+  fun androidProjectFrom(project: AndroidProject): IdeAndroidProjectImpl
   fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl
 
   fun nativeModuleFrom(nativeModule: NativeModule): IdeNativeModuleImpl
@@ -970,21 +970,14 @@ private fun modelCacheImpl(): ModelCacheTesting {
   fun androidGradlePluginProjectFlagsFrom(flags: AndroidGradlePluginProjectFlags): IdeAndroidGradlePluginProjectFlagsImpl =
     IdeAndroidGradlePluginProjectFlagsImpl(flags.booleanFlagMap)
 
-  fun androidProjectFrom(
-    project: AndroidProject,
-    fetchedVariantNames: Collection<String>
-  ): IdeAndroidProjectImpl {
+  fun androidProjectFrom(project: AndroidProject): IdeAndroidProjectImpl {
     // Old plugin versions do not return model version.
     val parsedModelVersion = GradleVersion.tryParse(project.modelVersion)
 
     val defaultConfigCopy: IdeProductFlavorContainer = copyModel(project.defaultConfig, ::productFlavorContainerFrom)
     val buildTypesCopy: Collection<IdeBuildTypeContainer> = copy(project::getBuildTypes, ::buildTypeContainerFrom)
     val productFlavorCopy: Collection<IdeProductFlavorContainer> = copy(project::getProductFlavors, ::productFlavorContainerFrom)
-    val variantNamesCopy: Collection<String> =
-      copyNewPropertyWithDefault(
-        propertyInvoker = { ImmutableList.copyOf(project.variantNames) },
-        defaultValue = { copy(fun(): Collection<String> = fetchedVariantNames, ::deduplicateString) }
-      )
+    val variantNamesCopy: Collection<String> = copy(project::getVariantNames, ::deduplicateString)
     val flavorDimensionCopy: Collection<String> = copy(project::getFlavorDimensions, ::deduplicateString)
     val bootClasspathCopy: Collection<String> = ImmutableList.copyOf(project.bootClasspath)
     val signingConfigsCopy: Collection<IdeSigningConfig> = copy(project::getSigningConfigs, ::signingConfigFrom)
@@ -1090,11 +1083,7 @@ private fun modelCacheImpl(): ModelCacheTesting {
 
     override fun setRootBuildId(rootBuildId: String) = setRootBuildId(rootBuildId)
     override fun variantFrom(variant: Variant, modelVersion: GradleVersion?): IdeVariantImpl = variantFrom(variant, modelVersion)
-    override fun androidProjectFrom(
-      project: AndroidProject,
-      variants: Collection<String>
-    ): IdeAndroidProjectImpl = androidProjectFrom(project, variants)
-
+    override fun androidProjectFrom(project: AndroidProject): IdeAndroidProjectImpl = androidProjectFrom(project)
     override fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl = androidArtifactOutputFrom(output)
     override fun nativeModuleFrom(nativeModule: NativeModule): IdeNativeModuleImpl = nativeModuleFrom(nativeModule)
     override fun nativeVariantAbiFrom(variantAbi: NativeVariantAbi): IdeNativeVariantAbiImpl = nativeVariantAbiFrom(variantAbi)

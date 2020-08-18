@@ -77,10 +77,7 @@ class LintModuleLoader(
                     )
                 }
                 // Sync issues are not used in lint.
-                val androidProject = ModelCache.create().androidProjectFrom(
-                    model,
-                    variants.map { it.name }
-                )
+                val androidProject = ModelCache.create().androidProjectFrom(model)
                 androidProject to variants
             } finally {
                 ext[AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED] = null
