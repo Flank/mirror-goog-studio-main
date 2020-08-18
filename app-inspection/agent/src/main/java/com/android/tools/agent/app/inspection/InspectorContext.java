@@ -33,8 +33,6 @@ import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
 final class InspectorContext {
-    private static final String MAIN_THREAD_NAME = "main";
-
     private final String mInspectorId;
     private Inspector mInspector;
     /**
@@ -69,11 +67,11 @@ final class InspectorContext {
     // TODO: shouldn't know nativePtr
     @SuppressWarnings("rawtypes")
     public String initializeInspector(String dexPath, long nativePtr) {
-        ClassLoader mainClassLoader = mainThreadClassLoader();
+        ClassLoader mainClassLoader = ClassLoaderUtils.mainThreadClassLoader();
         if (mainClassLoader == null) {
             return "Failed to find a main thread";
         }
-        String optimizedDir = System.getProperty("java.io.tmpdir");
+        String optimizedDir = ClassLoaderUtils.optimizedDirectory;
 
         try {
             ClassLoader classLoader =
@@ -127,27 +125,6 @@ final class InspectorContext {
             mInspector.onDispose();
         } catch (Throwable ignored) {
         }
-    }
-
-    /**
-     * Iterates through threads presented in the app and looks for a thread with name "main". It can
-     * return {@code null} in case if thread with a name "main" is missing.
-     */
-    private static ClassLoader mainThreadClassLoader() {
-        ThreadGroup group = Thread.currentThread().getThreadGroup();
-
-        while (group.getParent() != null) {
-            group = group.getParent();
-        }
-
-        Thread[] threads = new Thread[100];
-        group.enumerate(threads);
-        for (Thread thread : threads) {
-            if (thread != null && thread.getName().equals(MAIN_THREAD_NAME)) {
-                return thread.getContextClassLoader();
-            }
-        }
-        return null;
     }
 
     public interface CrashListener {

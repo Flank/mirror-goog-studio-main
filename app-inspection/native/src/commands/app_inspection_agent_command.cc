@@ -57,12 +57,23 @@ void AppInspectionAgentCommand::RegisterAppInspectionCommandHandler(
           jstring project = jni_env->NewStringUTF(
               create_inspector.launch_metadata().launched_by_name().c_str());
           jboolean force = create_inspector.launch_metadata().force();
+          jstring version_file_name =
+              jni_env->NewStringUTF(create_inspector.launch_metadata()
+                                        .version_params()
+                                        .version_file_name()
+                                        .c_str());
+          jstring min_version =
+              jni_env->NewStringUTF(create_inspector.launch_metadata()
+                                        .version_params()
+                                        .min_version()
+                                        .c_str());
           jmethodID create_inspector_method = jni_env->GetMethodID(
               service_class, "createInspector",
-              "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZI)V");
+              "(Ljava/lang/String;Ljava/lang/String;Ljava/"
+              "lang/String;Ljava/lang/String;Ljava/lang/String;ZI)V");
           jni_env->CallVoidMethod(service, create_inspector_method,
-                                  inspector_id, dex_path, project, force,
-                                  command_id);
+                                  inspector_id, dex_path, version_file_name,
+                                  min_version, project, force, command_id);
         } else if (app_command.has_dispose_inspector_command()) {
           auto& dispose_inspector = app_command.dispose_inspector_command();
           jmethodID dispose_inspector_method = jni_env->GetMethodID(

@@ -22,8 +22,14 @@ import static com.android.tools.agent.app.inspection.NativeTransport.*;
 import androidx.inspection.ArtToolInterface;
 import androidx.inspection.ArtToolInterface.EntryHook;
 import androidx.inspection.ArtToolInterface.ExitHook;
+import com.android.tools.agent.app.inspection.version.VersionChecker;
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
@@ -93,11 +99,19 @@ public class AppInspectionService {
      * @param inspectorId the unique id of the inspector being launched
      * @param dexPath the path to the .dex file of the inspector
      * @param projectName the name of the studio project that is trying to launch the inspector
+     * @param versionFileName the full name of the version file located in the APK's META-INF
+     * @param minVersion the minimum version of the library this inspector is compatible with
      * @param force if true, create the inspector even if one is already running
      * @param commandId unique id of this command in the context of app inspection service
      */
     public void createInspector(
-            String inspectorId, String dexPath, String projectName, boolean force, int commandId) {
+            String inspectorId,
+            String dexPath,
+            String versionFileName,
+            String minVersion,
+            String projectName,
+            boolean force,
+            int commandId) {
         if (inspectorId == null) {
             sendCreateInspectorResponseError(commandId, INSPECTOR_ID_MISSING_ERROR);
             return;
@@ -116,6 +130,10 @@ public class AppInspectionService {
             }
 
             doDispose(inspectorId);
+        }
+
+        if (!doCheckVersion(commandId, versionFileName, minVersion)) {
+            return;
         }
 
         if (!new File(dexPath).exists()) {
@@ -181,6 +199,36 @@ public class AppInspectionService {
         if (inspector != null) {
             inspector.disposeInspector();
         }
+    }
+
+    /**
+     * Checks whether the inspector we are trying to create is compatible with the library.
+     *
+     * <p>This will compare the provided minVersion with the version string located in the version
+     * file in the APK's META-INF directory.
+     *
+     * <p>Note, this method will send the appropriate response to the command if the check failed in
+     * any way. In other words, callers don't need to send a response if this method returns false.
+     *
+     * @param commandId the id of the command
+     * @param versionFileName the full name of the version file located in APK's META-INF
+     * @param minVersion minimum version this inspector is compatible with
+     * @return true if check passed. false if check failed for any reason.
+     */
+    private boolean doCheckVersion(int commandId, String versionFileName, String minVersion) {
+        VersionChecker.Result versionResult =
+                VersionChecker.checkVersion(versionFileName, minVersion);
+        if (versionResult.status == VersionChecker.Result.Status.INCOMPATIBLE) {
+            sendCreateInspectorResponseVersionIncompatible(commandId, versionResult.message);
+            return false;
+        } else if (versionResult.status == VersionChecker.Result.Status.NOT_FOUND) {
+            sendCreateInspectorResponseLibraryMissing(commandId, versionResult.message);
+            return false;
+        } else if (versionResult.status == VersionChecker.Result.Status.ERROR) {
+            sendCreateInspectorResponseError(commandId, versionResult.message);
+            return false;
+        }
+        return true;
     }
 
     private static String createLabel(Class origin, String method) {

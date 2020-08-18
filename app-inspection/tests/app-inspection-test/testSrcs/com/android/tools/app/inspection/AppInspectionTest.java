@@ -17,8 +17,7 @@
 package com.android.tools.app.inspection;
 
 import static com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status.ERROR;
-import static com.android.tools.app.inspection.AppInspection.CreateInspectorResponse.Status.GENERIC_SERVICE_ERROR;
-import static com.android.tools.app.inspection.AppInspection.CreateInspectorResponse.Status.SUCCESS;
+import static com.android.tools.app.inspection.AppInspection.CreateInspectorResponse.Status.*;
 import static com.google.common.truth.Truth.assertThat;
 
 import androidx.annotation.NonNull;
@@ -764,6 +763,77 @@ public final class AppInspectionTest {
                         + "CommandCallback#reply for command with ID "
                         + noReplyCommand
                         + " was never called");
+    }
+
+    @Test
+    public void createInspectorWithIncompatibleVersion() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        AppInspectionResponse response =
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(
+                                "test.inspector",
+                                onDevicePath,
+                                "test.project",
+                                "test.library_test.version",
+                                "3.0.0",
+                                false));
+        assertThat(response.getStatus()).isEqualTo(ERROR);
+        assertThat(response.getCreateInspectorResponse().getStatus())
+                .isEqualTo(AppInspection.CreateInspectorResponse.Status.VERSION_INCOMPATIBLE);
+    }
+
+    @Test
+    public void createInspectorWithInvalidVersionInput() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        AppInspectionResponse response =
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(
+                                "test.inspector",
+                                onDevicePath,
+                                "test.project",
+                                "test.library_test.version",
+                                "3.a",
+                                false));
+        assertThat(response.getStatus()).isEqualTo(ERROR);
+        assertThat(response.getErrorMessage())
+                .isEqualTo("Failed to parse provided min version 3.a");
+        assertThat(response.getCreateInspectorResponse().getStatus())
+                .isEqualTo(GENERIC_SERVICE_ERROR);
+    }
+
+    @Test
+    public void createInspectorWithNonExistentVersionFile() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        AppInspectionResponse response =
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(
+                                "test.inspector",
+                                onDevicePath,
+                                "test.project",
+                                "non-existent.version",
+                                "1.0.0",
+                                false));
+        assertThat(response.getStatus()).isEqualTo(ERROR);
+        assertThat(response.getErrorMessage()).startsWith("Failed to find version file");
+        assertThat(response.getCreateInspectorResponse().getStatus()).isEqualTo(LIBRARY_MISSING);
+    }
+
+    @Test
+    public void createInspectorWithInvalidVersionFile() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        AppInspectionResponse response =
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(
+                                "test.inspector",
+                                onDevicePath,
+                                "test.project",
+                                "test.invalid_test.version",
+                                "1.0.0",
+                                false));
+        assertThat(response.getStatus()).isEqualTo(ERROR);
+        assertThat(response.getErrorMessage()).startsWith("Failed to parse version string");
+        assertThat(response.getCreateInspectorResponse().getStatus())
+                .isEqualTo(VERSION_INCOMPATIBLE);
     }
 
     @NonNull
