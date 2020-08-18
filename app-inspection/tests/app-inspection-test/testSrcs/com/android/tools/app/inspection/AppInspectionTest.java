@@ -789,19 +789,31 @@ public final class AppInspectionTest {
     }
 
     @NonNull
-    private static AppInspectionCommand createInspector(String inspectorId, String dexPath) {
+    private AppInspectionCommand createInspector(String inspectorId, String dexPath) {
         return createInspector(inspectorId, dexPath, "test.project");
     }
 
     @NonNull
-    private static AppInspectionCommand createInspector(
+    private AppInspectionCommand createInspector(
             String inspectorId, String dexPath, String project) {
         return createInspector(inspectorId, dexPath, project, false);
     }
 
     @NonNull
+    private AppInspectionCommand createInspector(
+            String inspectorId, String dexPath, String project, Boolean force) {
+        return createInspector(
+                inspectorId, dexPath, project, "test.library_test.version", "0.0.1", force);
+    }
+
+    @NonNull
     private static AppInspectionCommand createInspector(
-            String inspectorId, String dexPath, String project, boolean force) {
+            String inspectorId,
+            String dexPath,
+            String project,
+            String versionFile,
+            String minVersion,
+            boolean force) {
 
         return AppInspectionCommand.newBuilder()
                 .setInspectorId(inspectorId)
@@ -812,6 +824,11 @@ public final class AppInspectionTest {
                                         LaunchMetadata.newBuilder()
                                                 .setLaunchedByName(project)
                                                 .setForce(force)
+                                                .setVersionParams(
+                                                        AppInspection.VersionParams.newBuilder()
+                                                                .setVersionFileName(versionFile)
+                                                                .setMinVersion(minVersion)
+                                                                .build())
                                                 .build())
                                 .build())
                 .build();
