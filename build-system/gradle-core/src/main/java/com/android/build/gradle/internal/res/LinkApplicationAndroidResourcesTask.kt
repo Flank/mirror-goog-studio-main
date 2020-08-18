@@ -751,7 +751,15 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             var proguardOutputFile: File? = null
             var mainDexListProguardOutputFile: File? = null
             if (params.generateCode) {
-                packageForR = params.packageName
+                packageForR = if (params.variantType.isForTesting) {
+                    // Workaround for b/162244493: Use application ID in the test variant to match
+                    // previous behaviour.
+                    // TODO(b/162244493): migrate everything to use the actual package name in
+                    //  AGP 5.0.
+                    params.applicationId
+                } else {
+                    params.packageName
+                }
 
                 // we have to clean the source folder output in case the package name changed.
                 srcOut = params.sourceOutputDir
@@ -849,7 +857,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 ) {
                     SymbolIo.writeSymbolListWithPackageName(
                         params.textSymbolOutputFile!!.toPath(),
-                        File(manifestFile).toPath(),
+                        packageForR,
                         params.symbolsWithPackageNameOutputFile.toPath()
                     )
                 }
