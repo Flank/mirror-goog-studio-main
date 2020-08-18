@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.cxx.configure.JsonGenerationInvalidatio
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.gradle.generator.NativeAndroidProjectBuilder
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
-import com.android.build.gradle.internal.cxx.json.CompileCommandFlagListInterner
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.logging.PassThroughPrefixingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment.Companion.requireExplicitLogger
@@ -48,9 +47,11 @@ import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils
+import com.android.utils.TokenizedCommandLineMap
 import com.android.utils.cxx.CompileCommandsEncoder
-import com.android.utils.cxx.stripArgsForIde
-import com.android.utils.tokenizeCommandLineToEscaped
+import com.android.utils.cxx.STRIP_FLAGS_WITHOUT_ARG
+import com.android.utils.cxx.STRIP_FLAGS_WITH_ARG
+import com.android.utils.cxx.STRIP_FLAGS_WITH_IMMEDIATE_ARG
 import com.google.common.base.Charsets
 import com.google.common.collect.Lists
 import com.google.gson.Gson
@@ -404,7 +405,19 @@ abstract class ExternalNativeJsonGenerator internal constructor(
     }
 
     private fun CxxAbiModel.generateCompileCommandsJsonBin() {
-        val interner = CompileCommandFlagListInterner()
+        val interner =
+            TokenizedCommandLineMap<Pair<String, List<String>>>(raw = false) { tokens, sourceFile ->
+                tokens.removeTokenGroup(sourceFile, 0)
+                for (flag in STRIP_FLAGS_WITH_ARG) {
+                    tokens.removeTokenGroup(flag, 1)
+                }
+                for (flag in STRIP_FLAGS_WITH_IMMEDIATE_ARG) {
+                    tokens.removeTokenGroup(flag, 0, matchPrefix = true)
+                }
+                for (flag in STRIP_FLAGS_WITHOUT_ARG) {
+                    tokens.removeTokenGroup(flag, 0)
+                }
+            }
         val compileCommandsJsonReader =
             compileCommandsJsonFile.takeIf { it.exists() }?.reader(StandardCharsets.UTF_8) ?: return
         JsonReader(compileCommandsJsonReader).use { reader ->
@@ -425,9 +438,10 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                         }
                     }
                     reader.endObject()
-                    val args = interner.internFlags(command)
-                    val compiler = args[0]
-                    val flags = stripArgsForIde(sourceFile, args.subList(1, args.size))
+                    val (compiler, flags) = interner.computeIfAbsent(command, sourceFile) {
+                        val tokenList = it.toTokenList()
+                        tokenList[0] to tokenList.subList(1, tokenList.size)
+                    }
                     encoder.writeCompileCommand(
                         File(sourceFile),
                         File(compiler),
@@ -436,7 +450,6 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     )
                 }
                 reader.endArray()
-
             }
         }
     }

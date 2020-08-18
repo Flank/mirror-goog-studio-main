@@ -471,7 +471,7 @@ fun stripArgsForIde(
 // passed to Android Studio.
 
 /** These are flags that should be stripped and have a following argument. */
-private val STRIP_FLAGS_WITH_ARG =
+val STRIP_FLAGS_WITH_ARG =
     listOf(
         "-o",
         "--output",
@@ -481,7 +481,7 @@ private val STRIP_FLAGS_WITH_ARG =
     )
 
 /** These are flags that have arguments immediate following them. */
-private val STRIP_FLAGS_WITH_IMMEDIATE_ARG = listOf(
+val STRIP_FLAGS_WITH_IMMEDIATE_ARG = listOf(
     "--output=",
     "-MF",
     "-MT",
@@ -489,7 +489,7 @@ private val STRIP_FLAGS_WITH_IMMEDIATE_ARG = listOf(
 )
 
 /** These are flags that should be stripped and don't have a following argument. */
-private val STRIP_FLAGS_WITHOUT_ARG: List<String> =
+val STRIP_FLAGS_WITHOUT_ARG: List<String> =
     listOf( // Skip -M* flags because these govern the creation of .d files in gcc. We don't want
         // spurious files dropped by Cidr. See see b.android.com/215555 and
         // b.android.com/213429

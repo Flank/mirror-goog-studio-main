@@ -300,7 +300,9 @@ class NativeAndroidProjectBuilder {
         }
 
         private fun getSettingsName(flags: String): String {
-            val tokens = builder.interner.internFlags(flags)
+            // Note: this code will go away with V1 sync. So we won't pass the proper source name
+            // here
+            val tokens = builder.interner.internFlags(flags, "placeholder")
             var setting = builder.settingsMap[tokens]
             if (setting == null) {
                 // Settings needs to be unique so that AndroidStudio can combine settings

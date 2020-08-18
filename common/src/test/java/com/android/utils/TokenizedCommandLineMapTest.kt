@@ -19,8 +19,6 @@ package com.android.utils
 import com.android.SdkConstants
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import java.lang.Integer.max
-import java.lang.Integer.min
 
 internal class TokenizedCommandLineMapTest {
     @Suppress("unused")
@@ -28,13 +26,13 @@ internal class TokenizedCommandLineMapTest {
 
     @Test
     fun computeIfAbsent() {
-        val map = TokenizedCommandLineMap<String>(raw = false) { tokens ->
+        val map = TokenizedCommandLineMap<String>(raw = false) { tokens, sourceFile ->
             tokens.removeNth(0)
-            tokens.removeTokenGroup("-c", 1)
+            tokens.removeTokenGroup(sourceFile, 0)
             tokens.removeTokenGroup("-o", 1)
         }
         fun check(commandLine: String, expected: String) {
-            val result = map.computeIfAbsent(commandLine) { tokens ->
+            val result = map.computeIfAbsent(commandLine, "blah") { tokens ->
                 tokens.toString()
             }
             assertThat(result).isEqualTo(expected)
@@ -47,22 +45,26 @@ internal class TokenizedCommandLineMapTest {
     fun forceCollision() {
         val map = TokenizedCommandLineMap<String>(raw = false)
         map.hashFunction = { 1 } // A hash function that always returns one
-        map.computeIfAbsent("abc def") { "Hello" }
-        map.computeIfAbsent("wxyz") { "Goodbye" }
-        map.computeIfAbsent("abc def") { "Hello" }
+        map.computeIfAbsent("abc def", "blah") { "Hello" }
+        map.computeIfAbsent("wxyz", "blah") { "Goodbye" }
+        map.computeIfAbsent("abc def", "blah") { "Hello" }
         assertThat(map.size()).isEqualTo(2)
     }
 
     @Test
     fun reproCaseFromCompilationDatabaseIndexer() {
-        val map = TokenizedCommandLineMap<String>(raw = true) { tokens ->
+        val map = TokenizedCommandLineMap<String>(raw = true) { tokens, sourceFile ->
             tokens.removeNth(0) // Remove the path to clang.exe
-            tokens.removeTokenGroup("-c", 1) // Remove -c and one following token
+            tokens.removeTokenGroup(sourceFile, 0)
             tokens.removeTokenGroup("-o", 1) // Remove -o and one following token
         }
-        val original = "/usr/local/google/home/jomof/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android -fno-limit-debug-info  -fPIC   -o CMakeFiles/native-lib.dir/src/main/cpp/native-lib.cpp.o -c /usr/local/google/home/jomof/projects/MyApplication22/app/src/main/cpp/native-lib.cpp"
+        val original =
+            "/usr/local/google/home/jomof/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android -fno-limit-debug-info  -fPIC   -o CMakeFiles/native-lib.dir/src/main/cpp/native-lib.cpp.o -c /usr/local/google/home/jomof/projects/MyApplication22/app/src/main/cpp/native-lib.cpp"
         val expected = "--target=aarch64-none-linux-android -fno-limit-debug-info -fPIC"
-        val actual = map.computeIfAbsent(original) { it.toString() }
+        val actual = map.computeIfAbsent(
+            original,
+            "/usr/local/google/home/jomof/projects/MyApplication22/app/src/main/cpp/native-lib.cpp"
+        ) { it.toString() }
         assertThat(actual).isEqualTo(expected)
     }
 
@@ -76,9 +78,9 @@ internal class TokenizedCommandLineMapTest {
      */
     @Test
     fun highlyRedundantMapThroughput() {
-        val map = TokenizedCommandLineMap<List<String>>(raw = false) { tokens ->
+        val map = TokenizedCommandLineMap<List<String>>(raw = false) { tokens, sourceFile ->
             tokens.removeNth(0)
-            tokens.removeTokenGroup("-c", 1)
+            tokens.removeTokenGroup(sourceFile, 0)
             tokens.removeTokenGroup("-o", 1)
         }
         val smallCommandLine = "clang.exe -c my-file.cpp -o -my-file.o -DFLAG"
@@ -98,12 +100,12 @@ internal class TokenizedCommandLineMapTest {
         }
         charsProcessed = 0
         time("Small command-line") {
-            map.computeIfAbsent(smallCommandLine) { it.toTokenList() }
+            map.computeIfAbsent(smallCommandLine, "my-file.cpp") { it.toTokenList() }
             charsProcessed += smallCommandLine.length
         }
         charsProcessed = 0
         time("Large command-line") {
-            map.computeIfAbsent(largeCommandLine) { it.toTokenList() }
+            map.computeIfAbsent(largeCommandLine, "my-file.cpp") { it.toTokenList() }
             charsProcessed += largeCommandLine.length
         }
 
