@@ -43,32 +43,44 @@ class ClassBucket(val bucketGroup: ClassBucketGroup, val bucketNumber: Int) :
             classFiles = Stream.concat(
                 classFiles,
                 classFileInput.entries { rootPath, relativePath ->
-                    isMemberOfBucket(rootPath.toFile(), relativePath)
+                    getBucketNumber(
+                        relativePath,
+                        bucketGroup.numOfBuckets,
+                        bucketGroup is JarBucketGroup
+                    ) == bucketNumber
                             && filter(rootPath.toFile(), relativePath)
                 })
         }
         return classFiles
     }
 
-    /**
-     * Returns `true` if the given class file located by a `rootPath` and a `relativePath` can be a
-     * member of this bucket. The class file may or may not exist.
-     */
-    private fun isMemberOfBucket(rootPath: File, relativePath: String): Boolean {
-        check(rootPath in bucketGroup.getRoots().toSet()) {
-            "Unexpected rootPath: $rootPath"
-        }
-        check(!File(relativePath).isAbsolute) { "Unexpected absolute path: $relativePath" }
-        check(ClassFileInput.CLASS_MATCHER.test(relativePath)) {
-            "Unexpected non-class file: $relativePath"
+    /** Returns the bucket number for a class file or jar entry having the given relative path. */
+    private fun getBucketNumber(
+        relativePath: String,
+        numberOfBuckets: Int,
+        isJarFile: Boolean
+    ): Int {
+        check(!File(relativePath).isAbsolute) {
+            "Expected relative path but found absolute path: $relativePath"
         }
 
-        return if (bucketGroup is JarBucketGroup) {
-            abs(relativePath.hashCode()) % bucketGroup.numOfBuckets == bucketNumber
+        val pathOfPackageOrClass = if (isJarFile) {
+            // For an input jar, each bucket has a separate output jar. We group classes of the same
+            // package into the same bucket, so that their corresponding dex files are put in the
+            // same output jar. This is not required, but it makes the downstream DexMergingTask
+            // more efficient (see `getBucketNumber` in DexMergingTask).
+            File(relativePath).parent ?: ""
         } else {
-            val packagePath = File(relativePath).parent ?: ""
-            abs(packagePath.hashCode()) % bucketGroup.numOfBuckets == bucketNumber
+            // For an input directory, all buckets share the same output directory, so grouping
+            // classes by package has no effect on the output. We use relative paths instead to
+            // distribute classes into buckets more evenly.
+            relativePath
         }
+        // Normalize the path so that it is stable across filesystems. (For jar entries, the paths
+        // are already normalized.)
+        val normalizedPath = File(pathOfPackageOrClass).invariantSeparatorsPath
+
+        return abs(normalizedPath.hashCode()) % numberOfBuckets
     }
 
     companion object {

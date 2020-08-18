@@ -288,7 +288,8 @@ class DexArchiveBuilderDelegateTest(
     }
 
     /**
-     * Check bucket number is based on package name for directory input or entry name for jar input.
+     * Check bucket number is based on relative path for directory input or package name for jar
+     * input.
      *
      * When java api desugaring is enabled in release build, d8 is dexing in DexIndexed mode only
      * and the dex archive output location is determined by bucket number. The bucket number
@@ -296,7 +297,7 @@ class DexArchiveBuilderDelegateTest(
      * across machines.
      */
     @Test
-    fun testConsistentBucketing() {
+    fun testBucketingStrategy() {
         Assume.assumeTrue(dexerTool == DexerTool.D8)
 
         val outputKeepRule = tmpDir.root.toPath().resolve("outputKeepRule")
@@ -304,10 +305,10 @@ class DexArchiveBuilderDelegateTest(
         val numberOfBuckets = 3
 
         val dirInput1 = tmpDir.root.toPath().resolve("dir_input1")
-        dirWithEmptyClasses(dirInput1, ImmutableList.of("$PACKAGE/Animal"))
+        dirWithEmptyClasses(dirInput1, ImmutableList.of("$PACKAGE/Cat"))
 
         val jarInput1 = tmpDir.root.toPath().resolve("input1.jar")
-        jarWithEmptyClasses(jarInput1, ImmutableList.of("$PACKAGE/Boy"))
+        jarWithEmptyClasses(jarInput1, ImmutableList.of("$PACKAGE/Dog"))
 
         getDelegate(
             projectClasses = setOf(dirInput1.toFile(), jarInput1.toFile()),
@@ -323,10 +324,10 @@ class DexArchiveBuilderDelegateTest(
         FileUtils.cleanOutputDir(outputKeepRule.toFile())
 
         val dirInput2 = tmpDir.root.toPath().resolve("dir_input2")
-        dirWithEmptyClasses(dirInput2, ImmutableList.of("$PACKAGE/Account"))
+        dirWithEmptyClasses(dirInput2, ImmutableList.of("$PACKAGE/Dog"))
 
         val jarInput2 = tmpDir.root.toPath().resolve("input2.jar")
-        jarWithEmptyClasses(jarInput2, ImmutableList.of("$PACKAGE/Boy"))
+        jarWithEmptyClasses(jarInput2, ImmutableList.of("$PACKAGE/Cat"))
 
         getDelegate(
             projectClasses = setOf(dirInput2.toFile(), jarInput2.toFile()),
@@ -335,8 +336,16 @@ class DexArchiveBuilderDelegateTest(
             numberOfBuckets = numberOfBuckets
         ).doProcess()
 
+        // Check that dir bucket location can change as the relative paths of the input classes are
+        // different.
+        val newDirBucket = findOutputBucketForDirInput(numberOfBuckets)
         assertThat(FileUtils.find(out.resolve(dirBucket).toFile(), Pattern.compile(".*\\.dex")))
-            .hasSize(1)
+            .hasSize(0)
+        assertThat(FileUtils.find(out.resolve(newDirBucket).toFile(), Pattern.compile(".*\\.dex")))
+                .hasSize(1)
+
+        // Check that jar bucket location does not change as the package names of the input classes
+        // are the same.
         assertThat(FileUtils.find(out.toFile(), Pattern.compile(".*_$jarBucket\\.jar")))
             .hasSize(1)
     }

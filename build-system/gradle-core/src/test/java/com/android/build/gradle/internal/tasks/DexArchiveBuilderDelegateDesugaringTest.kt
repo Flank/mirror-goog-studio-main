@@ -69,6 +69,35 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
     private var desugarGraphDir: Path? = null
     private lateinit var workerExecutor: WorkerExecutor
 
+    /** The files to track changes. */
+    private lateinit var filesToTrackChanges: Set<File>
+
+    /** The stored timestamps of the tracked files. */
+    private lateinit var fileTimestamps: Map<File, Long>
+
+    /** Sets the files to track changes. */
+    private fun setFilesToTrackChanges(files: Set<File>) {
+        filesToTrackChanges = files
+    }
+
+    /** Starts tracking files by storing their timestamps. */
+    private fun startTrackingFiles() {
+        fileTimestamps = filesToTrackChanges.map { file ->
+            check(file.exists()) { "File ${file.path} does not exist." }
+            check(!file.isDirectory) { "File ${file.path} is a directory." }
+            file to file.lastModified()
+        }.toMap()
+    }
+
+    /** Returns the files whose timestamps have changed. */
+    private fun getChangedFiles(): Set<File> {
+        return filesToTrackChanges.filter { file ->
+            check(file.exists()) { "File ${file.path} does not exist." }
+            check(!file.isDirectory) { "File ${file.path} is a directory." }
+            file.lastModified() != checkNotNull(fileTimestamps[file])
+        }.toSet()
+    }
+
     @Before
     fun setUp() {
         out = tmpDir.root.toPath().resolve("out")
@@ -123,7 +152,7 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
 
     internal object InvokesDefault {
         @JvmStatic
-        fun main(args: Array<String>) {
+        fun main() {
             ImplementsWithDefault().foo()
         }
     }
@@ -184,11 +213,8 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             inputJarHashes = inputJarHashes
         ).doProcess()
 
-        var catDex = getDex(Cat::class.java)
-        var animalDex = getDex(Animal::class.java)
-        val catTimestamp = catDex.lastModified()
-        val animalTimestamp = animalDex.lastModified()
-
+        setFilesToTrackChanges(getDexFiles(Cat::class.java, Animal::class.java))
+        startTrackingFiles()
         TestUtils.waitForFileSystemTick()
 
         getDelegate(
@@ -199,10 +225,7 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             inputJarHashes = inputJarHashes
         ).doProcess()
 
-        catDex = getDex(Cat::class.java)
-        animalDex = getDex(Animal::class.java)
-        assertThat(catTimestamp).isLessThan(catDex.lastModified())
-        assertThat(animalTimestamp).isEqualTo(animalDex.lastModified())
+        assertThat(getChangedFiles()).containsExactlyElementsIn(getDexFiles(Cat::class.java))
     }
 
     @Test
@@ -226,11 +249,25 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             inputJarHashes = inputJarHashes
         ).doProcess()
 
-        var tigerDex = getDex(Tiger::class.java)
-        var carbonFormDex = getDex(CarbonForm::class.java)
-        val tigerTimestamp = tigerDex.lastModified()
-        val carbonFormTimestamp = carbonFormDex.lastModified()
+        setFilesToTrackChanges(
+                getDexFiles(Tiger::class.java, Cat::class.java, Animal::class.java,
+                        CarbonForm::class.java, Toy::class.java))
 
+        // Change direct supertype
+        startTrackingFiles()
+        TestUtils.waitForFileSystemTick()
+        getDelegate(
+                projectClasses = setOf(input.toFile()),
+                projectChanges = getChanges(input, ChangeType.MODIFIED, Cat::class.java),
+                projectOutput = out.toFile(),
+                isIncremental = true,
+                inputJarHashes = inputJarHashes
+        ).doProcess()
+        assertThat(getChangedFiles()).containsExactlyElementsIn(
+                getDexFiles(Tiger::class.java, Cat::class.java))
+
+        // Change indirect supertype
+        startTrackingFiles()
         TestUtils.waitForFileSystemTick()
         getDelegate(
             projectClasses = setOf(input.toFile()),
@@ -239,24 +276,28 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             isIncremental = true,
             inputJarHashes = inputJarHashes
         ).doProcess()
+        assertThat(getChangedFiles()).containsExactlyElementsIn(
+                getDexFiles(Tiger::class.java, Cat::class.java, Animal::class.java))
 
-        tigerDex = getDex(Tiger::class.java)
-        carbonFormDex = getDex(CarbonForm::class.java)
-        assertThat(tigerTimestamp).isLessThan(tigerDex.lastModified())
-        assertThat(carbonFormTimestamp).isEqualTo(carbonFormDex.lastModified())
-
+        // Change a type that the direct supertype depends on but not through inheritance
+        startTrackingFiles()
         TestUtils.waitForFileSystemTick()
         getDelegate(
-            projectClasses = setOf(input.toFile()),
-            projectChanges = getChanges(input, ChangeType.MODIFIED, Cat::class.java),
-            projectOutput = out.toFile(),
-            isIncremental = true,
-            inputJarHashes = inputJarHashes
+                projectClasses = setOf(input.toFile()),
+                projectChanges = getChanges(input, ChangeType.MODIFIED, Toy::class.java),
+                projectOutput = out.toFile(),
+                isIncremental = true,
+                inputJarHashes = inputJarHashes
         ).doProcess()
-        tigerDex = getDex(Tiger::class.java)
-        carbonFormDex = getDex(CarbonForm::class.java)
-        assertThat(tigerTimestamp).isLessThan(tigerDex.lastModified())
-        assertThat(carbonFormTimestamp).isEqualTo(carbonFormDex.lastModified())
+        if (withIncrementalDexingTaskV2) {
+            // The dependency graph produced by D8 saves us from re-dexing Tiger unnecessarily,
+            // see bug 167562221#comment13.
+            assertThat(getChangedFiles()).containsExactlyElementsIn(
+                    getDexFiles(Cat::class.java, Toy::class.java))
+        } else {
+            assertThat(getChangedFiles()).containsExactlyElementsIn(
+                    getDexFiles(Tiger::class.java, Cat::class.java, Toy::class.java))
+        }
     }
 
     @Test
@@ -325,8 +366,8 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             inputJarHashes =  inputJarHashes
         ).doProcess()
 
-        val catTimestamp = getDex(Cat::class.java).lastModified()
-        val toyTimestamp = getDex(Toy::class.java).lastModified()
+        setFilesToTrackChanges(getDexFiles(Cat::class.java, Toy::class.java))
+        startTrackingFiles()
         TestUtils.waitForFileSystemTick()
 
         getDelegate(
@@ -342,8 +383,7 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             inputJarHashes =  inputJarHashes
         ).doProcess()
 
-        assertThat(catTimestamp).isLessThan(getDex(Cat::class.java).lastModified())
-        assertThat(toyTimestamp).isEqualTo(getDex(Toy::class.java).lastModified())
+        assertThat(getChangedFiles()).containsExactlyElementsIn(getDexFiles(Cat::class.java))
     }
 
     @Test
@@ -443,7 +483,7 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             emptySet()
         }
 
-
+        @Suppress("UnstableApiUsage")
         return DexArchiveBuilderTaskDelegate(
             isIncremental = isIncremental,
             projectClasses = projectClasses,
@@ -490,6 +530,10 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             analyticsService = FakeObjectFactory.factory.property(AnalyticsService::class.java)
                 .value(FakeNoOpAnalyticsService())
         )
+    }
+
+    private fun getDexFiles(vararg clazz: Class<*>): Set<File> {
+        return clazz.toList().map { getDex(it) }.toSet()
     }
 
     private fun getDex(clazz: Class<*>): File {
