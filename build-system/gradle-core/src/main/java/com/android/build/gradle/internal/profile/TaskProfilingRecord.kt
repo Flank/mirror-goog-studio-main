@@ -46,7 +46,6 @@ open class TaskProfilingRecord
     private val workerRecordList: MutableMap<String, WorkerProfilingRecord> = mutableMapOf()
     private var startTime = Instant.MIN
     private var endTime = Instant.MIN
-    private var closeTime = Instant.MIN
     internal val status = AtomicReference(Status.RUNNING)
 
     // taskSpan is modified by addSpan() and passed to the writer in writeTaskSpan, we need to make
@@ -71,14 +70,8 @@ open class TaskProfilingRecord
         AWAIT,
 
         /**
-         * Task invoked [com.android.ide.common.workers.WorkerExecutorFacade.close] method and has
-         * yielded back control to Gradle to possibly schedule other tasks on the same module.
-         */
-        CLOSED,
-
-        /**
-         * Gradle notified the [org.gradle.api.execution.TaskExecutionListener.afterExecute] that
-         * the associated task is finished.
+         * Gradle invoked the [org.gradle.tooling.events.OperationCompletionListener.onFinish]
+         * method when the associated task is finished.
          */
         FINISHED,
 
@@ -90,11 +83,6 @@ open class TaskProfilingRecord
 
     fun setTaskWaiting() {
         status.set(Status.AWAIT)
-    }
-
-    fun setTaskClosed() {
-        status.set(Status.CLOSED)
-        closeTime = clock.instant()
     }
 
     open fun addWorker(key: String) {
@@ -138,11 +126,6 @@ open class TaskProfilingRecord
         workerRecord.fillSpanRecord(workerSpan)
 
         resourceManager.writeRecord(projectPath, variant, workerSpan, listOf())
-
-        // if all of our workers are done, we should record that as our completion time.
-        if (status.get() == Status.CLOSED && allWorkersFinished()) {
-            endTime = clock.instant()
-        }
     }
 
     @Synchronized
@@ -167,20 +150,10 @@ open class TaskProfilingRecord
         .map { it.waitTime() }
         .min() ?: Duration.ZERO
 
-    fun lastWorkerCompletionTime(): Instant = workerRecordList.values.asSequence()
-        .filter { it.isFinished() }
-        .map { it.endTime }
-        .max() ?: Instant.MIN
-
     /**
      * Calculate the task duration time.
      */
-    fun duration(): Duration =
-        Duration.between(
-            startTime,
-            if (lastWorkerCompletionTime().isAfter(endTime)) lastWorkerCompletionTime()
-            else endTime
-        )
+    fun duration(): Duration = Duration.between(startTime, endTime)
 
     @Synchronized
     fun addSpan(builder: GradleBuildProfileSpan.Builder) {
@@ -194,9 +167,7 @@ open class TaskProfilingRecord
 
     fun setTaskEndTime(endTime: Long) {
         status.set(Status.FINISHED)
-        if (this.endTime == Instant.MIN) {
-            this.endTime = Instant.ofEpochMilli(endTime)
-        }
+        this.endTime = Instant.ofEpochMilli(endTime)
     }
 
     companion object {
