@@ -140,3 +140,14 @@ enum class ViewBindingSupport {
 
   fun isViewBindingSupported(): Boolean = this == SUPPORTED_3_6 || this == SUPPORTED_4_0_MORE
 }
+
+enum class CppStandardType(val compilerFlag: String) {
+  `Toolchain Default`(""),
+  `C++11`("-std=c++11"),
+  `C++14`("-std=c++14"),
+  `C++17`("-std=c++17");
+
+  override fun toString(): String {
+    return compilerFlag
+  }
+}

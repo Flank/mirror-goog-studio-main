@@ -15,20 +15,19 @@
  */
 package com.android.tools.idea.wizard.template.impl.activities.cppEmptyActivity
 
+import com.android.tools.idea.wizard.template.DEFAULT_CMAKE_VERSION
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.PackageName
 import com.android.tools.idea.wizard.template.RecipeExecutor
+import com.android.tools.idea.wizard.template.cMakeListsTxt
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
 import com.android.tools.idea.wizard.template.impl.activities.common.generateSimpleLayout
 import com.android.tools.idea.wizard.template.impl.activities.cppEmptyActivity.src.cppEmptyActivityJava
 import com.android.tools.idea.wizard.template.impl.activities.cppEmptyActivity.src.cppEmptyActivityKt
-import com.android.tools.idea.wizard.template.impl.activities.cppEmptyActivity.src.main.cpp.cMakeListsTxt
 import com.android.tools.idea.wizard.template.impl.activities.cppEmptyActivity.src.nativeLibCpp
-
-private const val CPP_VERSION = "3.10.2"
 
 fun RecipeExecutor.generateCppEmptyActivity(
   moduleData: ModuleTemplateData,
@@ -43,7 +42,7 @@ fun RecipeExecutor.generateCppEmptyActivity(
   val ktOrJavaExt = projectData.language.extension
 
   addDependency("com.android.support:appcompat-v7:${moduleData.apis.appCompatVersion}.+")
-  setCppOptions(cppFlags = cppFlags, cppPath = "src/main/cpp/CMakeLists.txt", cppVersion = CPP_VERSION)
+  setCppOptions(cppFlags = cppFlags, cppPath = "src/main/cpp/CMakeLists.txt", cppVersion = DEFAULT_CMAKE_VERSION)
 
   generateManifest(
     moduleData , activityClass, "", packageName, isLauncher, false,
@@ -77,8 +76,9 @@ fun RecipeExecutor.generateCppEmptyActivity(
   save(simpleActivity, simpleActivityPath)
 
   val nativeSrcOut = moduleData.rootDir.resolve("src/main/cpp")
-  save(nativeLibCpp(packageName, activityClass), nativeSrcOut.resolve("native-lib.cpp"))
-  save(cMakeListsTxt(packageName), nativeSrcOut.resolve("CMakeLists.txt"))
+  val nativeLibCpp = "native-lib.cpp"
+  save(nativeLibCpp(packageName, activityClass), nativeSrcOut.resolve(nativeLibCpp))
+  save(cMakeListsTxt(nativeLibCpp, packageName.split('.').last()), nativeSrcOut.resolve("CMakeLists.txt"))
 
   open(simpleActivityPath)
 }

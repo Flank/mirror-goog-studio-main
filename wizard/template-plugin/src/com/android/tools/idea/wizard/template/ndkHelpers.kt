@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,25 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template.impl.activities.cppEmptyActivity.src.main.cpp
+package com.android.tools.idea.wizard.template
 
-/**
- * Convert a package name like com.example.myapplication to myapplication.
- */
-private fun lastSegmentOfPackageName(packageName: String): String =
-  packageName.split('.').last()
+val DEFAULT_CMAKE_VERSION = "3.10.2"
 
-fun cMakeListsTxt(packageName : String) = """
+fun cMakeListsTxt(nativeSourceName: String, libraryName: String) = """
 # For more information about using CMake with Android Studio, read the
 # documentation: https://d.android.com/studio/projects/add-native-code.html
 
 # Sets the minimum version of CMake required to build the native library.
 
-cmake_minimum_required(VERSION 3.10.2)
+cmake_minimum_required(VERSION $DEFAULT_CMAKE_VERSION)
 
 # Declares and names the project.
 
-project("${lastSegmentOfPackageName(packageName)}")
+project("$libraryName")
 
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
@@ -45,7 +41,7 @@ add_library( # Sets the name of the library.
              SHARED
 
              # Provides a relative path to your source file(s).
-             native-lib.cpp )
+             $nativeSourceName )
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
@@ -71,3 +67,4 @@ target_link_libraries( # Specifies the target library.
                        # included in the NDK.
                        ${'$'}{log-lib} )
 """
+

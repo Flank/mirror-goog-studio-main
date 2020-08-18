@@ -22,6 +22,7 @@ import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
 import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
 import com.android.tools.idea.wizard.template.Constraint.UNIQUE
+import com.android.tools.idea.wizard.template.CppStandardType
 import com.android.tools.idea.wizard.template.EnumWidget
 import com.android.tools.idea.wizard.template.FormFactor
 import com.android.tools.idea.wizard.template.LabelWidget
@@ -41,17 +42,6 @@ import com.android.tools.idea.wizard.template.layoutToActivity
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import java.io.File
-
-enum class CppStandardType(val compilerFlag: String) {
-  `Toolchain Default`(""),
-  `C++11`("-std=c++11"),
-  `C++14`("-std=c++14"),
-  `C++17`("-std=c++17");
-
-  override fun toString(): String {
-    return compilerFlag
-  }
-}
 
 const val DOCUMENTATION_URL = "https://developer.android.com/ndk/guides/cpp-support.html"
 
