@@ -406,7 +406,8 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             val thisGroup = thisCoordinates?.groupId
             val methodGroup = methodCoordinates?.groupId
             if (thisGroup != methodGroup && methodGroup != null) {
-                val where = "from within the same library group (groupId=$methodGroup)"
+                val thisGroupDisplayText = thisGroup ?: "<unknown>"
+                val where = "from within the same library group (referenced groupId=`$methodGroup` from groupId=`$thisGroupDisplayText`)"
                 reportRestriction(
                     where, containingClass, member, context,
                     node, isClassAnnotation

@@ -135,13 +135,13 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         )
         lint().projects(project).run().expect(
             """
-            src/main/java/test/pkg/TestLibrary.java:10: Error: Library.privateMethod can only be called from within the same library group (groupId=my.group.id) [RestrictedApi]
+            src/main/java/test/pkg/TestLibrary.java:10: Error: Library.privateMethod can only be called from within the same library group (referenced groupId=my.group.id from groupId=<unknown>) [RestrictedApi]
                     Library.privateMethod(); // ERROR
                             ~~~~~~~~~~~~~
-            src/main/java/test/pkg/TestLibrary.java:11: Error: PrivateClass can only be called from within the same library group (groupId=my.group.id) [RestrictedApi]
+            src/main/java/test/pkg/TestLibrary.java:11: Error: PrivateClass can only be called from within the same library group (referenced groupId=my.group.id from groupId=<unknown>) [RestrictedApi]
                     PrivateClass.method(); // ERROR
                     ~~~~~~~~~~~~
-            src/main/java/test/pkg/TestLibrary.java:12: Error: InternalClass.method can only be called from within the same library group (groupId=my.group.id) [RestrictedApi]
+            src/main/java/test/pkg/TestLibrary.java:12: Error: InternalClass.method can only be called from within the same library group (referenced groupId=my.group.id from groupId=<unknown>) [RestrictedApi]
                     InternalClass.method(); // ERROR
                                   ~~~~~~
             3 errors, 0 warnings
@@ -341,16 +341,16 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         )
         lint().projects(project).run().expect(
             """
-            src/main/java/test/pkg/Inheriting2.java:6: Error: PrivateClass.method can only be called from within the same library group (groupId=my.group.id) [RestrictedApi]
+            src/main/java/test/pkg/Inheriting2.java:6: Error: PrivateClass.method can only be called from within the same library group (referenced groupId=my.group.id from groupId=<unknown>) [RestrictedApi]
                     method(); // ERROR - not overridden, pointing into library
                     ~~~~~~
-            src/main/java/test/pkg/TestLibrary1.java:5: Error: PrivateClass can only be accessed from within the same library group (groupId=my.group.id) [RestrictedApi]
+            src/main/java/test/pkg/TestLibrary1.java:5: Error: PrivateClass can only be accessed from within the same library group (referenced groupId=my.group.id from groupId=<unknown>) [RestrictedApi]
             public class TestLibrary1 extends PrivateClass {
                                               ~~~~~~~~~~~~
-            src/main/java/test/pkg/TestLibrary1.java:8: Error: PrivateClass.method can only be called from within the same library group (groupId=my.group.id) [RestrictedApi]
+            src/main/java/test/pkg/TestLibrary1.java:8: Error: PrivateClass.method can only be called from within the same library group (referenced groupId=my.group.id from groupId=<unknown>) [RestrictedApi]
                     super.method(); // ERROR
                           ~~~~~~
-            src/main/java/test/pkg/TestLibrary2.java:5: Error: PrivateClass can only be accessed from within the same library group (groupId=my.group.id) [RestrictedApi]
+            src/main/java/test/pkg/TestLibrary2.java:5: Error: PrivateClass can only be accessed from within the same library group (referenced groupId=my.group.id from groupId=<unknown>) [RestrictedApi]
             public class TestLibrary2 extends PrivateClass {
                                               ~~~~~~~~~~~~
             4 errors, 0 warnings
@@ -1961,23 +1961,23 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-            src/main/kotlin/com/example/myapplication/test.kt:9: Error: LibraryCode.method3 can only be called from within the same library group (groupId=test.pkg.library) [RestrictedApi]
-                LibraryCode.method3()
-                            ~~~~~~~
-            src/main/kotlin/com/example/myapplication/test.kt:10: Error: LibraryCode.method4 can only be called from within the same library group prefix (referenced groupId=test.pkg.library with prefix test.pkg from groupId=other.app) [RestrictedApi]
-                LibraryCode.method4()
-                            ~~~~~~~
-            src/main/kotlin/com/example/myapplication/test.kt:13: Error: LibraryCode.FIELD3 can only be accessed from within the same library group (groupId=test.pkg.library) [RestrictedApi]
-                val f3 = LibraryCode.FIELD3
-                                     ~~~~~~
-            src/main/kotlin/com/example/myapplication/test.kt:14: Error: LibraryCode.FIELD4 can only be accessed from within the same library group prefix (referenced groupId=test.pkg.library with prefix test.pkg from groupId=other.app) [RestrictedApi]
-                val f4 = LibraryCode.FIELD4
-                                     ~~~~~~
-            src/main/kotlin/com/example/myapplication/test.kt:15: Error: DotlessCode.method can only be called from within the same library group prefix (referenced groupId=dotless with prefix "" from groupId=other.app) [RestrictedApi]
-                DotlessCode.method()
-                            ~~~~~~
-            5 errors, 0 warnings
-            """
+                src/main/kotlin/com/example/myapplication/test.kt:9: Error: LibraryCode.method3 can only be called from within the same library group (referenced groupId=test.pkg.library from groupId=other.app) [RestrictedApi]
+                    LibraryCode.method3()
+                                ~~~~~~~
+                src/main/kotlin/com/example/myapplication/test.kt:10: Error: LibraryCode.method4 can only be called from within the same library group prefix (referenced groupId=test.pkg.library with prefix test.pkg from groupId=other.app) [RestrictedApi]
+                    LibraryCode.method4()
+                                ~~~~~~~
+                src/main/kotlin/com/example/myapplication/test.kt:13: Error: LibraryCode.FIELD3 can only be accessed from within the same library group (referenced groupId=test.pkg.library from groupId=other.app) [RestrictedApi]
+                    val f3 = LibraryCode.FIELD3
+                                         ~~~~~~
+                src/main/kotlin/com/example/myapplication/test.kt:14: Error: LibraryCode.FIELD4 can only be accessed from within the same library group prefix (referenced groupId=test.pkg.library with prefix test.pkg from groupId=other.app) [RestrictedApi]
+                    val f4 = LibraryCode.FIELD4
+                                         ~~~~~~
+                src/main/kotlin/com/example/myapplication/test.kt:15: Error: DotlessCode.method can only be called from within the same library group prefix (referenced groupId=dotless with prefix "" from groupId=other.app) [RestrictedApi]
+                    DotlessCode.method()
+                                ~~~~~~
+                5 errors, 0 warnings
+                """
             )
 
         // Make sure project directories are laid out correctly

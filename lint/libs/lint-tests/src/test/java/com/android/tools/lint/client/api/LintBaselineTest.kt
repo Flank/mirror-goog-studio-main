@@ -21,6 +21,7 @@ import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.ManifestDetector
 import com.android.tools.lint.checks.PxUsageDetector
 import com.android.tools.lint.checks.RangeDetector
+import com.android.tools.lint.checks.RestrictToDetector
 import com.android.tools.lint.checks.ScopedStorageDetector
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.client.api.LintBaseline.Companion.isSamePathSuffix
@@ -279,6 +280,32 @@ There are quickfixes to automatically extract this hardcoded string into a resou
                 PxUsageDetector.SMALL_SP_ISSUE,
                 "Avoid using sizes smaller than 12sp: 11sp",
                 "Avoid using sizes smaller than 11sp: 11sp"
+            )
+        )
+    }
+
+    @Test
+    fun tolerateRestrictToChanges() {
+        val baseline = LintBaseline(null, File(""))
+        assertTrue(
+            baseline.sameMessage(
+                RestrictToDetector.RESTRICTED,
+                "LibraryCode.method3 can only be called from within the same library group (referenced groupId=test.pkg.library from groupId=other.app)",
+                "LibraryCode.method3 can only be called from within the same library group (groupId=test.pkg.library)"
+            )
+        )
+        assertTrue(
+            baseline.sameMessage(
+                RestrictToDetector.RESTRICTED,
+                "LibraryCode.method3 can only be called from within the same library group (referenced groupId=test.pkg.library from groupId=other.app)",
+                "LibraryCode.method3 can only be called from within the same library group"
+            )
+        )
+        assertFalse(
+            baseline.sameMessage(
+                RestrictToDetector.RESTRICTED,
+                "LibraryCode.FIELD3 can only be called from within the same library group (referenced groupId=test.pkg.library from groupId=other.app)",
+                "LibraryCode.method3 can only be called from within the same library group (groupId=test.pkg.library)"
             )
         )
     }

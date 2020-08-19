@@ -326,6 +326,15 @@ class LintBaseline(
                 val s = "Use of REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
                 old.startsWith(s) && new.startsWith(s)
             }
+            "RestrictedApi" -> {
+                val index1 = old.indexOf('(')
+                val index2 = new.indexOf('(')
+                if (index1 != -1) {
+                    index1 == index2 && old.regionMatches(0, new, 0, index1)
+                } else {
+                    stringsEquivalent(old, new)
+                }
+            }
             // Sometimes we just append (or remove trailing period in error messages, now
             // flagged by lint)
             else -> stringsEquivalent(old, new)
