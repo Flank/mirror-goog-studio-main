@@ -40,7 +40,7 @@ final class DirectoryBasedClassFileInput implements ClassFileInput {
     @NonNull
     public Stream<ClassFileEntry> entries(BiPredicate<Path, String> filter) throws IOException {
         return Files.walk(rootPath)
-                .filter(p -> CLASS_MATCHER.test(p.toString()))
+                .filter(p -> CLASS_MATCHER.test(rootPath.relativize(p).toString()))
                 .filter(p -> filter.test(rootPath, rootPath.relativize(p).toString()))
                 .map(this::createEntryFromPath);
     }
