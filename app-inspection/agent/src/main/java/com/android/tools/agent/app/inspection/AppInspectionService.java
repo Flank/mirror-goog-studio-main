@@ -54,6 +54,9 @@ public class AppInspectionService {
     private final Map<String, List<HookInfo<EntryHook>>> mEntryTransforms =
             new ConcurrentHashMap<>();
 
+    private static final String INSPECTOR_ID_MISSING_ERROR =
+            "Argument inspectorId must not be null";
+
     // TODO: b/159250979
     // Special work around to support overloads and exit hooks
     // currently our labels (keys in mExitTransforms)
@@ -95,13 +98,14 @@ public class AppInspectionService {
      */
     public void createInspector(
             String inspectorId, String dexPath, String projectName, boolean force, int commandId) {
-        if (failNull("inspectorId", inspectorId, commandId)) {
+        if (inspectorId == null) {
+            sendCreateInspectorResponseError(commandId, INSPECTOR_ID_MISSING_ERROR);
             return;
         }
         if (mInspectorBridges.containsKey(inspectorId)) {
             if (!force) {
                 String alreadyLaunchedProjectName = mInspectorBridges.get(inspectorId).getProject();
-                sendServiceResponseError(
+                sendCreateInspectorResponseError(
                         commandId,
                         "Inspector with the given id "
                                 + inspectorId
@@ -111,11 +115,12 @@ public class AppInspectionService {
                 return;
             }
 
-            disposeInspector(inspectorId, commandId);
+            doDispose(inspectorId);
         }
 
         if (!new File(dexPath).exists()) {
-            sendServiceResponseError(commandId, "Failed to find a file with path: " + dexPath);
+            sendCreateInspectorResponseError(
+                    commandId, "Failed to find a file with path: " + dexPath);
             return;
         }
 
@@ -127,33 +132,35 @@ public class AppInspectionService {
                 (error) -> {
                     if (error != null) {
                         mInspectorBridges.remove(inspectorId);
-                        sendServiceResponseError(commandId, error);
+                        sendCreateInspectorResponseError(commandId, error);
                     } else {
-                        sendServiceResponseSuccess(commandId);
+                        sendCreateInspectorResponseSuccess(commandId);
                     }
                 });
     }
 
     public void disposeInspector(String inspectorId, int commandId) {
-        if (failNull("inspectorId", inspectorId, commandId)) {
+        if (inspectorId == null) {
+            sendDisposeInspectorResponseError(commandId, INSPECTOR_ID_MISSING_ERROR);
             return;
         }
         if (!mInspectorBridges.containsKey(inspectorId)) {
-            sendServiceResponseError(
+            sendDisposeInspectorResponseError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
             return;
         }
         doDispose(inspectorId);
-        sendServiceResponseSuccess(commandId);
+        sendDisposeInspectorResponseSuccess(commandId);
     }
 
     public void sendCommand(String inspectorId, int commandId, byte[] rawCommand) {
-        if (failNull("inspectorId", inspectorId, commandId)) {
+        if (inspectorId == null) {
+            sendRawResponseError(commandId, INSPECTOR_ID_MISSING_ERROR);
             return;
         }
         InspectorBridge bridge = mInspectorBridges.get(inspectorId);
         if (bridge == null) {
-            sendServiceResponseError(
+            sendRawResponseError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
             return;
         }
@@ -174,14 +181,6 @@ public class AppInspectionService {
         if (inspector != null) {
             inspector.disposeInspector();
         }
-    }
-
-    private boolean failNull(String name, Object value, int commandId) {
-        boolean result = value == null;
-        if (result) {
-            sendServiceResponseError(commandId, "Argument " + name + " must not be null");
-        }
-        return result;
     }
 
     private static String createLabel(Class origin, String method) {

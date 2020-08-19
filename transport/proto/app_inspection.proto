@@ -48,6 +48,16 @@ message CreateInspectorCommand {
   LaunchMetadata launch_metadata = 2;
 }
 
+message VersionParams {
+  // The full name of the version file in the APK's META-INF folder.
+  string version_file_name = 1;
+  // The minimum version of the library this inspector is compatible with.
+  //
+  // Format is the same as what Gradle uses, e.g. 1.2.3-alpha04
+  // See also: https://docs.gradle.org/current/userguide/single_versions.html
+  string min_version = 2;
+}
+
 // Metadata about the launch of an inspector.
 message LaunchMetadata {
   // Name of the entity that sent this launch command. Ex: Name of the Android
@@ -55,6 +65,8 @@ message LaunchMetadata {
   string launched_by_name = 1;
   // If true, force launching the inspector, even if one is already running.
   bool force = 2;
+
+  VersionParams version_params = 3;
 }
 
 // A command to dispose the inspector.
@@ -87,8 +99,9 @@ message AppInspectionResponse {
   // Additional info if command failed.
   string error_message = 3;
   oneof union {
-    ServiceResponse service_response = 4;
-    RawResponse raw_response = 5;
+    CreateInspectorResponse create_inspector_response = 4;
+    DisposeInspectorResponse dispose_inspector_response = 5;
+    RawResponse raw_response = 6;
   }
 }
 
@@ -103,8 +116,26 @@ message AppInspectionEvent {
   }
 }
 
-// Response sent in reply for all of the "...InspectorCommand" commands.
-message ServiceResponse {}
+// Response to CreateInspectorCommand.
+message CreateInspectorResponse {
+  // This specifies the cause of the error when response status is |ERROR|.
+  enum Status {
+    SUCCESS = 0;
+    // Generic error encountered in AppInspectionService. Encapsulates failures
+    // that do not necessitate a separate type in this enum.
+    GENERIC_SERVICE_ERROR = 1;
+    // The targeted library does not meet the version requirements of this
+    // inspector.
+    VERSION_INCOMPATIBLE = 2;
+    // The targeted library is not found in the app.
+    LIBRARY_MISSING = 3;
+  }
+  Status status = 1;
+}
+
+// Response to DisposeInspectorCommand.
+message DisposeInspectorResponse {
+}
 
 // Opaque response from an inspector.
 message RawResponse {

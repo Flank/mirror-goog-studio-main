@@ -22,7 +22,6 @@
 using app_inspection::AppInspectionCommand;
 using app_inspection::CreateInspectorCommand;
 using app_inspection::DisposeInspectorCommand;
-using app_inspection::ServiceResponse;
 using profiler::Agent;
 using profiler::proto::Command;
 

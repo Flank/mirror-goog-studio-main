@@ -18,9 +18,19 @@ package com.android.tools.agent.app.inspection;
 
 /* JNI utilities for sending AppInspections messages across the underlying transport pipeline. */
 class NativeTransport {
-    public static native void sendServiceResponseError(int commandId, String errorMessage);
+    public static native void sendCreateInspectorResponseSuccess(int commandId);
 
-    public static native void sendServiceResponseSuccess(int commandId);
+    public static native void sendCreateInspectorResponseError(int commandId, String errorMessage);
+
+    public static native void sendCreateInspectorResponseVersionIncompatible(
+            int commandId, String errorMessage);
+
+    public static native void sendCreateInspectorResponseLibraryMissing(
+            int commandId, String errorMessage);
+
+    public static native void sendDisposeInspectorResponseSuccess(int commandId);
+
+    public static native void sendDisposeInspectorResponseError(int commandId, String errorMessage);
 
     public static native void sendRawResponseSuccess(
             int commandId, byte[] responseData, int length);

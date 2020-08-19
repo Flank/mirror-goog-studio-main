@@ -23,6 +23,7 @@
 
 using app_inspection::AppInspectionEvent;
 using app_inspection::AppInspectionResponse;
+using app_inspection::CreateInspectorResponse;
 using profiler::Log;
 
 namespace app_inspection {
@@ -51,26 +52,46 @@ void EnqueueAppInspectionResponse(
       }});
 }
 
-void EnqueueAppInspectionServiceResponse(JNIEnv *env, int32_t command_id,
-                                         AppInspectionResponse::Status status,
-                                         jstring error_message) {
+void EnqueueAppInspectionDisposeInspectorResponse(
+    JNIEnv *env, int32_t command_id, AppInspectionResponse::Status status,
+    jstring error_message) {
   EnqueueAppInspectionResponse(env, command_id, status, error_message,
                                [](AppInspectionResponse *response) {
-                                 response->mutable_service_response();
+                                 response->mutable_dispose_inspector_response();
                                });
+}
+
+void EnqueueAppInspectionCreateInspectorResponse(
+    JNIEnv *env, int32_t command_id, AppInspectionResponse::Status status,
+    jstring error_message, CreateInspectorResponse::Status create_status) {
+  EnqueueAppInspectionResponse(
+      env, command_id, status, error_message,
+      [create_status](AppInspectionResponse *response) {
+        auto *create_inspector_response =
+            response->mutable_create_inspector_response();
+        create_inspector_response->set_status(create_status);
+      });
 }
 
 void EnqueueAppInspectionRawResponse(JNIEnv *env, int32_t command_id,
                                      AppInspectionResponse::Status status,
                                      jbyteArray response_data, int32_t length,
                                      jstring error_message) {
-  profiler::JByteArrayWrapper data(env, response_data, length);
-  EnqueueAppInspectionResponse(env, command_id, status, error_message,
-                               [data](AppInspectionResponse *response) {
-                                 auto *raw_response =
-                                     response->mutable_raw_response();
-                                 raw_response->set_content(data.get());
-                               });
+  if (status == AppInspectionResponse::SUCCESS) {
+    profiler::JByteArrayWrapper data(env, response_data, length);
+    EnqueueAppInspectionResponse(env, command_id, status, error_message,
+                                 [data](AppInspectionResponse *response) {
+                                   auto *raw_response =
+                                       response->mutable_raw_response();
+                                   raw_response->set_content(data.get());
+                                 });
+  } else {
+    EnqueueAppInspectionResponse(env, command_id, status, error_message,
+                                 [](AppInspectionResponse *response) {
+                                   auto *raw_response =
+                                       response->mutable_raw_response();
+                                 });
+  }
 }
 
 void EnqueueAppInspectionEvent(
@@ -191,17 +212,49 @@ void AddExitTransformation(JNIEnv *env, jlong nativePtr, jclass origin_class,
 
 extern "C" {
 JNIEXPORT void JNICALL
-Java_com_android_tools_agent_app_inspection_NativeTransport_sendServiceResponseError(
-    JNIEnv *env, jobject obj, jint command_id, jstring error_message) {
-  app_inspection::EnqueueAppInspectionServiceResponse(
-      env, command_id, AppInspectionResponse::ERROR, error_message);
+Java_com_android_tools_agent_app_inspection_NativeTransport_sendCreateInspectorResponseSuccess(
+    JNIEnv *env, jobject obj, jint command_id) {
+  app_inspection::EnqueueAppInspectionCreateInspectorResponse(
+      env, command_id, AppInspectionResponse::SUCCESS, nullptr,
+      CreateInspectorResponse::SUCCESS);
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_agent_app_inspection_NativeTransport_sendServiceResponseSuccess(
+Java_com_android_tools_agent_app_inspection_NativeTransport_sendCreateInspectorResponseError(
+    JNIEnv *env, jobject obj, jint command_id, jstring error_message) {
+  app_inspection::EnqueueAppInspectionCreateInspectorResponse(
+      env, command_id, AppInspectionResponse::ERROR, error_message,
+      CreateInspectorResponse::GENERIC_SERVICE_ERROR);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_agent_app_inspection_NativeTransport_sendCreateInspectorResponseVersionIncompatible(
+    JNIEnv *env, jobject obj, jint command_id, jstring error_message) {
+  app_inspection::EnqueueAppInspectionCreateInspectorResponse(
+      env, command_id, AppInspectionResponse::ERROR, error_message,
+      CreateInspectorResponse::VERSION_INCOMPATIBLE);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_agent_app_inspection_NativeTransport_sendCreateInspectorResponseLibraryMissing(
+    JNIEnv *env, jobject obj, jint command_id, jstring error_message) {
+  app_inspection::EnqueueAppInspectionCreateInspectorResponse(
+      env, command_id, AppInspectionResponse::ERROR, error_message,
+      CreateInspectorResponse::LIBRARY_MISSING);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_agent_app_inspection_NativeTransport_sendDisposeInspectorResponseSuccess(
     JNIEnv *env, jobject obj, jint command_id) {
-  app_inspection::EnqueueAppInspectionServiceResponse(
+  app_inspection::EnqueueAppInspectionDisposeInspectorResponse(
       env, command_id, AppInspectionResponse::SUCCESS, nullptr);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_agent_app_inspection_NativeTransport_sendDisposeInspectorResponseError(
+    JNIEnv *env, jobject obj, jint command_id, jstring error_message) {
+  app_inspection::EnqueueAppInspectionDisposeInspectorResponse(
+      env, command_id, AppInspectionResponse::ERROR, error_message);
 }
 
 JNIEXPORT void JNICALL
