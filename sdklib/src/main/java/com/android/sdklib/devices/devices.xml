@@ -96,15 +96,15 @@
         <d:hardware>
             <d:screen>
                 <d:screen-size>normal</d:screen-size>
-                <d:diagonal-length>7.3</d:diagonal-length>
-                <d:pixel-density>420dpi</d:pixel-density>
+                <d:diagonal-length>7.59</d:diagonal-length>
+                <d:pixel-density>xxhdpi</d:pixel-density>
                 <d:screen-ratio>notlong</d:screen-ratio>
                 <d:dimensions>
-                    <d:x-dimension>1536</d:x-dimension>
-                    <d:y-dimension>2152</d:y-dimension>
+                    <d:x-dimension>1768</d:x-dimension>
+                    <d:y-dimension>2208</d:y-dimension>
                 </d:dimensions>
-                <d:xdpi>442</d:xdpi>
-                <d:ydpi>443</d:ydpi>
+                <d:xdpi>445</d:xdpi>
+                <d:ydpi>445</d:ydpi>
                 <d:touch>
                     <d:multitouch>jazz-hands</d:multitouch>
                     <d:mechanism>finger</d:mechanism>
@@ -113,8 +113,8 @@
                 <d:foldable-region>
                   <d:x-folded-offset>0</d:x-folded-offset>
                   <d:y-folded-offset>0</d:y-folded-offset>
-                  <d:x-folded-dimension>720</d:x-folded-dimension>
-                  <d:y-folded-dimension>1680</d:y-folded-dimension>
+                  <d:x-folded-dimension>884</d:x-folded-dimension>
+                  <d:y-folded-dimension>2208</d:y-folded-dimension>
                 </d:foldable-region>
             </d:screen>
             <d:networking>
