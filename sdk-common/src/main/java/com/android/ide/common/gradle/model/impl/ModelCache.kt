@@ -99,16 +99,6 @@ import java.io.File
 import java.util.HashMap
 
 interface ModelCache {
-  /**
-   * Stores the [buildFolder] path for the given [moduleGradlePath] and [buildId].
-   */
-  fun addBuildFolderPath(buildId: String, moduleGradlePath: String, buildFolder: File)
-
-  /**
-   * Set the build identifier of root project.
-   */
-  fun setRootBuildId(rootBuildId: String)
-
   fun variantFrom(variant: Variant, modelVersion: GradleVersion?): IdeVariantImpl
   fun androidProjectFrom(project: AndroidProject): IdeAndroidProjectImpl
   fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl
@@ -121,11 +111,18 @@ interface ModelCache {
     const val LOCAL_AARS = "__local_aars__"
 
     @JvmStatic
-    fun create(): ModelCache = modelCacheImpl()
+    fun create(buildFolderPaths: BuildFolderPaths): ModelCache = modelCacheImpl(buildFolderPaths)
+
+    @JvmStatic
+    fun create(): ModelCache = modelCacheImpl(BuildFolderPaths())
 
     @JvmStatic
     @VisibleForTesting
-    fun createForTesting(): ModelCacheTesting = modelCacheImpl()
+    fun createForTesting(buildFolderPaths: BuildFolderPaths): ModelCacheTesting = modelCacheImpl(buildFolderPaths)
+
+    @JvmStatic
+    @VisibleForTesting
+    fun createForTesting(): ModelCacheTesting = modelCacheImpl(BuildFolderPaths())
 
     @JvmStatic
     inline fun <T> safeGet(original: () -> T, default: T): T = try {
@@ -171,10 +168,9 @@ interface ModelCacheTesting : ModelCache {
   fun mavenCoordinatesFrom(coordinates: MavenCoordinates): IdeMavenCoordinatesImpl
 }
 
-private fun modelCacheImpl(): ModelCacheTesting {
+private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTesting {
 
   val strings: MutableMap<String, String> = HashMap()
-  val buildFolderPaths = BuildFolderPaths()
   val androidLibraryCores = mutableMapOf<IdeAndroidLibraryCore, IdeAndroidLibraryCore>()
   val javaLibraryCores = mutableMapOf<IdeJavaLibraryCore, IdeJavaLibraryCore>()
   val moduleLibraryCores = mutableMapOf<IdeModuleLibraryCore, IdeModuleLibraryCore>()
@@ -182,20 +178,6 @@ private fun modelCacheImpl(): ModelCacheTesting {
   fun deduplicateString(s: String): String = strings.putIfAbsent(s, s) ?: s
   fun String.deduplicate() = deduplicateString(this)
   fun deduplicateFile(f: File): File = File(f.path.deduplicate())
-
-  /**
-   * Stores the [buildFolder] path for the given [moduleGradlePath] and [buildId].
-   */
-  fun addBuildFolderPath(buildId: String, moduleGradlePath: String, buildFolder: File) {
-    buildFolderPaths.addBuildFolderMapping(buildId, moduleGradlePath, buildFolder)
-  }
-
-  /**
-   * Set the build identifier of root project.
-   */
-  fun setRootBuildId(rootBuildId: String) {
-    buildFolderPaths.setRootBuildId(rootBuildId)
-  }
 
   fun sourceProviderFrom(provider: SourceProvider): IdeSourceProviderImpl {
     val folder: File? = provider.manifestFile.parentFile
@@ -1078,10 +1060,7 @@ private fun modelCacheImpl(): ModelCacheTesting {
     override fun computeAddress(library: Library): String = computeAddress(library)
     override fun isLocalAarModule(androidLibrary: AndroidLibrary): Boolean = isLocalAarModule(androidLibrary)
     override fun mavenCoordinatesFrom(coordinates: MavenCoordinates): IdeMavenCoordinatesImpl = mavenCoordinatesFrom(coordinates)
-    override fun addBuildFolderPath(buildId: String, moduleGradlePath: String, buildFolder: File) =
-      addBuildFolderPath(buildId, moduleGradlePath, buildFolder)
 
-    override fun setRootBuildId(rootBuildId: String) = setRootBuildId(rootBuildId)
     override fun variantFrom(variant: Variant, modelVersion: GradleVersion?): IdeVariantImpl = variantFrom(variant, modelVersion)
     override fun androidProjectFrom(project: AndroidProject): IdeAndroidProjectImpl = androidProjectFrom(project)
     override fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl = androidArtifactOutputFrom(output)

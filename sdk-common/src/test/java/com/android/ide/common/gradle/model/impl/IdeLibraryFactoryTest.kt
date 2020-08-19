@@ -139,13 +139,15 @@ class IdeLibraryFactoryTest {
         return null
       }
     }
-    modelCache.setRootBuildId("project")
-    modelCache.addBuildFolderPath(
+    val buildFoldersPath = BuildFolderPaths()
+    buildFoldersPath.setRootBuildId("project")
+    buildFoldersPath.addBuildFolderMapping(
       "project", ":aarModule", File("/ProjectRoot/aarModule/build/")
     )
-    modelCache.addBuildFolderPath(
+    buildFoldersPath.addBuildFolderMapping(
       "project", ":androidLib", File("/ProjectRoot/androidLib/build/")
     )
+    val modelCache = ModelCache.createForTesting(buildFoldersPath)
     Assert.assertTrue(modelCache.isLocalAarModule(localAarLibrary))
     Assert.assertFalse(modelCache.isLocalAarModule(moduleLibrary))
     Assert.assertFalse(modelCache.isLocalAarModule(externalLibrary))
@@ -215,19 +217,21 @@ class IdeLibraryFactoryTest {
         return null
       }
     }
-    modelCache.setRootBuildId("Project")
-    modelCache.addBuildFolderPath(
+    val buildFolderPaths = BuildFolderPaths()
+    buildFolderPaths.setRootBuildId("Project")
+    buildFolderPaths.addBuildFolderMapping(
       "Project", ":aarModule", File("/Project/aarModule/build/")
     )
-    modelCache.addBuildFolderPath(
+    buildFolderPaths.addBuildFolderMapping(
       "Project", ":androidLib", File("/Project/androidLib/build/")
     )
-    modelCache.addBuildFolderPath(
+    buildFolderPaths.addBuildFolderMapping(
       "Project1", ":aarModule", File("/Project1/aarModule/build/")
     )
-    modelCache.addBuildFolderPath(
+    buildFolderPaths.addBuildFolderMapping(
       "Project1", ":androidLib", File("/Project1/androidLib/build/")
     )
+    val modelCache = ModelCache.createForTesting(buildFolderPaths)
     Assert.assertTrue(modelCache.isLocalAarModule(localAarLibraryInRootProject))
     Assert.assertTrue(modelCache.isLocalAarModule(localAarLibraryInProject1))
     Assert.assertFalse(modelCache.isLocalAarModule(moduleLibraryInRootProject))
