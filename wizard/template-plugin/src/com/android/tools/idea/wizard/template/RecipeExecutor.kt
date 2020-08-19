@@ -145,6 +145,11 @@ interface RecipeExecutor {
   fun setCppOptions(cppFlags: String, cppPath: String, cppVersion: String)
 
   /**
+   * Enables the use of the Kotlin IR compiler.
+   */
+  fun setUseKotlinIrCompiler()
+
+  /**
    * Sets sourceCompatibility and targetCompatibility in compileOptions and (if needed) jvmTarget in kotlinOptions.
    */
   fun requireJavaVersion(version: String, kotlinSupport: Boolean = false)
