@@ -35,14 +35,16 @@ class ClassesDataCache: Closeable {
         Files.readAttributes(file.toPath(), BasicFileAttributes::class.java).fileKey()
             ?: file.canonicalPath
 
-    @Synchronized
     fun getSourceCaches(sources: Set<File>): List<ClassesDataSourceCache> {
-        return sources.map { sourceFile ->
-            sourcesCacheMap.computeIfAbsent(getSourceFileKey(sourceFile)) {
-                if (sourceFile.name.endsWith(SdkConstants.DOT_JAR)) {
-                    JarCache(sourceFile)
-                } else {
-                    DirCache(sourceFile)
+        val requested = sources.filter(File::exists).associateBy { getSourceFileKey(it) }
+        synchronized(this) {
+            return requested.map { (key, sourceFile) ->
+                sourcesCacheMap.computeIfAbsent(key) {
+                    if (sourceFile.name.endsWith(SdkConstants.DOT_JAR)) {
+                        JarCache(sourceFile)
+                    } else {
+                        DirCache(sourceFile)
+                    }
                 }
             }
         }
