@@ -31,13 +31,13 @@ import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.io.ByteStreams
 import com.google.common.truth.Truth.assertThat
-import java.io.File
-import java.nio.file.Files
-import kotlin.streams.toList
 import org.junit.Rule
 import org.junit.Test
+import java.io.File
+import java.nio.file.Files
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import kotlin.streams.toList
 
 class ShrinkResourcesNewShrinkerTest {
     @get:Rule
@@ -68,6 +68,7 @@ class ShrinkResourcesNewShrinkerTest {
         project.executor()
             .with(OptionalBooleanOption.ENABLE_R8, useR8)
             .with(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER, true)
+            .with(BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS, false)
             .run("clean", "assembleDebug", "assembleRelease")
 
         val debugApk = project.getApk(DEBUG)
@@ -137,18 +138,19 @@ class ShrinkResourcesNewShrinkerTest {
             "res/menu/unused12.xml",
             "res/raw/keep.xml"
         )
+
         assertThat(
-            diffFiles(
-                debugApk.file.toFile(),
-                releaseApk.file.toFile(),
-                setOf("META-INF/CERT.RSA", "META-INF/CERT.SF", "META-INF/MANIFEST.MF")
-            )
+                diffFiles(
+                        debugApk.file.toFile(),
+                        releaseApk.file.toFile(),
+                        setOf("META-INF/CERT.RSA", "META-INF/CERT.SF", "META-INF/MANIFEST.MF")
+                )
         ).containsExactlyElementsIn(
-            replacedFiles + listOf(
-                "AndroidManifest.xml",
-                "resources.arsc",
-                "classes.dex"
-            )
+                replacedFiles + listOf(
+                        "AndroidManifest.xml",
+                        "resources.arsc",
+                        "classes.dex"
+                )
         )
 
         assertThat(diffFiles(project.getOriginalResources(), project.getShrunkResources()))
@@ -173,7 +175,8 @@ class ShrinkResourcesNewShrinkerTest {
             it.containsFileWithContent("res/xml/my_xml.xml", TINY_PROTO_CONVERTED_TO_BINARY_XML)
         }
         // Check that zip entities have proper methods.
-        assertThat(getZipPaths(project.getSubproject("webview").getShrunkBinaryResources()))
+        assertThat(getZipPathsWithMethod(
+                project.getSubproject("webview").getShrunkBinaryResources()))
             .containsExactly(
                 "  stored  resources.arsc",
                 "deflated  AndroidManifest.xml",
@@ -236,7 +239,34 @@ class ShrinkResourcesNewShrinkerTest {
 
         val releaseApk = project.getSubproject("webview").getApk(RELEASE).file.toFile()
 
-        assertThat(getZipPaths(releaseApk))
+        val expectedOptimizeApkContents = listOf(
+                "classes.dex",
+                "resources.arsc",
+                "AndroidManifest.xml",
+                "res/w0.html",
+                "res/o1.css",
+                "res/lT.html",
+                "res/cG.xml",
+                "res/h1.png",
+                "res/3O.png",
+                "res/n9.xml",
+                "res/OJ.xml",
+                "res/-D",
+                "res/8G.xml",
+                "res/sH.xml",
+                "res/VT.html",
+                "res/TF.xml",
+                "res/5P.html",
+                "res/lu.png",
+                "res/6f.js"
+        )
+
+        // As AAPT optimize shortens file paths including shrunk resource file names,
+        // the shrunk apk must include the obfuscated files.
+        val optimizeApkFileNames = getZipPaths(releaseApk)
+        assertThat(optimizeApkFileNames).containsExactlyElementsIn(expectedOptimizeApkContents)
+
+        assertThat(getZipPathsWithMethod(releaseApk))
             .containsAtLeast(
                 "deflated  AndroidManifest.xml",
                 "  stored  resources.arsc",
@@ -438,19 +468,19 @@ class ShrinkResourcesNewShrinkerTest {
             }
         }
 
-    private fun getZipPaths(zipFile: File) =
+    private fun getZipPaths(zipFile: File, transform: (path: ZipEntry) -> String = { it.name }) =
         ZipFile(zipFile).use { zip ->
-            zip.stream()
-                .map {
-                    val method = when (it.method) {
-                        ZipEntry.STORED -> "  stored"
-                        ZipEntry.DEFLATED -> "deflated"
-                        else -> " unknown"
-                    }
-                    "$method  ${it.name}"
-                }
-                .toList()
+            zip.stream().map(transform).toList()
         }
+
+    private fun getZipPathsWithMethod(zipFile: File) = getZipPaths(zipFile) {
+        val method = when (it.method) {
+            ZipEntry.STORED -> "  stored"
+            ZipEntry.DEFLATED -> "deflated"
+            else -> " unknown"
+        }
+        "$method  ${it.name}"
+    }
 
     private fun getZipEntriesWithContent(zipFile: File, content: ByteArray) =
         ZipFile(zipFile).use { zip ->
