@@ -246,7 +246,6 @@ public class AdbInstaller implements Installer {
             TimeUnit timeUnit)
             throws IOException {
         byte[] output = adb.shell(cmd, inputStream, timeOut, timeUnit);
-        System.out.println("LEN: " + output.length);
         Deploy.InstallerResponse response = unwrap(output, Deploy.InstallerResponse.parser());
 
         // Handle the case where the executable is not present on the device. In this case, the
