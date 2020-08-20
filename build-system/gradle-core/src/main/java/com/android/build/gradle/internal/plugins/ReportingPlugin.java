@@ -75,6 +75,7 @@ class ReportingPlugin implements org.gradle.api.Plugin<Project> {
                         projectOptions,
                         project.getGradle().getSharedServices(),
                         null,
+                        project.getGradle().getStartParameter().getMaxWorkerCount(),
                         project::file);
 
         DslServices dslServices =

@@ -21,8 +21,14 @@ import static com.android.tools.app.inspection.AppInspection.AppInspectionRespon
 import static com.google.common.truth.Truth.assertThat;
 
 import androidx.annotation.NonNull;
-import com.android.tools.app.inspection.AppInspection.*;
+import com.android.tools.app.inspection.AppInspection.AppInspectionCommand;
+import com.android.tools.app.inspection.AppInspection.AppInspectionEvent;
+import com.android.tools.app.inspection.AppInspection.AppInspectionResponse;
 import com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status;
+import com.android.tools.app.inspection.AppInspection.CreateInspectorCommand;
+import com.android.tools.app.inspection.AppInspection.DisposeInspectorCommand;
+import com.android.tools.app.inspection.AppInspection.LaunchMetadata;
+import com.android.tools.app.inspection.AppInspection.RawCommand;
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.fakeandroid.ProcessRunner;
 import com.android.tools.idea.protobuf.ByteString;
@@ -37,6 +43,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import test.inspector.api.NoReplyInspectorApi;
 import test.inspector.api.TestExecutorsApi;
 import test.inspector.api.TestInspectorApi;
 import test.inspector.api.TodoInspectorApi;
@@ -723,6 +730,39 @@ public final class AppInspectionTest {
                 inspectorId,
                 "Inspector " + inspectorId + " crashed due to: This is an inspector exception.");
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_DISPOSED);
+    }
+
+    @Test
+    public void ifInspectorFailsToReplyToCommandCallbackItCrashes() throws Exception {
+        String inspectorId = "test.no.reply.inspector";
+        assertResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(inspectorId, injectInspectorDex())),
+                SUCCESS);
+        int noReplyCommand =
+                appInspectionRule.sendCommand(
+                        rawCommandInspector(
+                                inspectorId,
+                                NoReplyInspectorApi.Command.LOG_AND_NO_REPLY.toByteArray()));
+        appInspectionRule.assertInput("Command received");
+        AppInspectionResponse gcResponse =
+                appInspectionRule.sendCommandAndGetResponse(
+                        rawCommandInspector(
+                                inspectorId, NoReplyInspectorApi.Command.RUN_GC.toByteArray()));
+        appInspectionRule.assertInput("Garbage collected");
+
+        AppInspection.AppInspectionEvent crashEvent = appInspectionRule.consumeCollectedEvent();
+        assertThat(appInspectionRule.hasEventToCollect()).isFalse();
+
+        assertCrashEvent(
+                crashEvent,
+                inspectorId,
+                "Inspector "
+                        + inspectorId
+                        + " crashed due to: "
+                        + "CommandCallback#reply for command with ID "
+                        + noReplyCommand
+                        + " was never called");
     }
 
     @NonNull

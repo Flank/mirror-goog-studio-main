@@ -32,7 +32,8 @@ import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState
 import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState.Companion.fromJson
 import com.android.build.gradle.internal.cxx.model.buildCommandFile
 import com.android.build.gradle.internal.cxx.model.buildFileIndexFile
-import com.android.build.gradle.internal.cxx.model.buildOutputFile
+import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
+import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
 import com.android.build.gradle.internal.cxx.model.modelOutputFile
@@ -46,6 +47,11 @@ import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils
+import com.android.utils.TokenizedCommandLineMap
+import com.android.utils.cxx.CompileCommandsEncoder
+import com.android.utils.cxx.STRIP_FLAGS_WITHOUT_ARG
+import com.android.utils.cxx.STRIP_FLAGS_WITH_ARG
+import com.android.utils.cxx.STRIP_FLAGS_WITH_IMMEDIATE_ARG
 import com.google.common.base.Charsets
 import com.google.common.collect.Lists
 import com.google.gson.Gson
@@ -121,13 +127,11 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     requireExplicitLogger()
                     try {
                         buildForOneConfiguration(ops, forceGeneration, abi)
-                    } catch (e: IOException) {
-                        errorln("exception while building Json %s", e.message!!)
                     } catch (e: GradleException) {
                         errorln("exception while building Json %s", e.message!!)
                     } catch (e: ProcessException) {
-                        errorln("executing external native build for %s %s",
-                            variant.module.buildSystem.tag, variant.module.makeFile)
+                        errorln("error when building with %s using %s: %s",
+                            variant.module.buildSystem.tag, variant.module.makeFile, e.message!!)
                     }
                 }
             )
@@ -299,16 +303,9 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     }
 
                     infoln("executing %s %s", variant.module.buildSystem.tag, processBuilder)
-                    val buildOutput = executeProcess(ops, abi)
+                    executeProcess(ops, abi)
                     infoln("done executing %s", variant.module.buildSystem.tag)
 
-                    // Write the captured process output to a file for diagnostic purposes.
-                    infoln("write build output %s", abi.buildOutputFile.absolutePath)
-                    Files.write(
-                        abi.buildOutputFile.toPath(),
-                        buildOutput.toByteArray(Charsets.UTF_8)
-                    )
-                    processBuildOutput(buildOutput, abi)
                     if (!abi.jsonFile.exists()) {
                         throw GradleException(
                             String.format(
@@ -335,6 +332,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     // Write the ProcessInfo to a file, this has all the flags used to generate the
                     // JSON. If any of these change later the JSON will be regenerated.
                     infoln("write command file %s", abi.buildCommandFile.absolutePath)
+                    abi.buildCommandFile.parentFile.mkdirs()
                     Files.write(
                         abi.buildCommandFile.toPath(),
                         currentBuildCommand.toByteArray(Charsets.UTF_8)
@@ -355,6 +353,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                 }
                 abi.generateSymbolFolderIndexFile()
                 abi.generateBuildFilesIndex(variantBuilder)
+                abi.generateCompileCommandsJsonBin()
                 infoln("JSON generation completed without problems")
             } catch (e: GradleException) {
                 variantStats.outcome = GenerationOutcome.FAILED
@@ -404,21 +403,67 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         )
     }
 
-    /**
-     * Derived class implements this method to post-process build output. NdkPlatform-build uses
-     * this to capture and analyze the compile and link commands that were written to stdout.
-     */
-    @Throws(IOException::class)
-    abstract fun processBuildOutput(buildOutput: String, abiConfig: CxxAbiModel)
+    private fun CxxAbiModel.generateCompileCommandsJsonBin() {
+        val interner =
+            TokenizedCommandLineMap<Pair<String, List<String>>>(raw = false) { tokens, sourceFile ->
+                tokens.removeTokenGroup(sourceFile, 0)
+                for (flag in STRIP_FLAGS_WITH_ARG) {
+                    tokens.removeTokenGroup(flag, 1)
+                }
+                for (flag in STRIP_FLAGS_WITH_IMMEDIATE_ARG) {
+                    tokens.removeTokenGroup(flag, 0, matchPrefix = true)
+                }
+                for (flag in STRIP_FLAGS_WITHOUT_ARG) {
+                    tokens.removeTokenGroup(flag, 0)
+                }
+            }
+        if (!compileCommandsJsonFile.exists()
+            || (compileCommandsJsonBinFile.exists()
+                    && compileCommandsJsonBinFile.lastModified() >= compileCommandsJsonFile.lastModified())
+        ) {
+            return
+        }
+        JsonReader(compileCommandsJsonFile.reader(StandardCharsets.UTF_8)).use { reader ->
+            CompileCommandsEncoder(compileCommandsJsonBinFile).use { encoder ->
+                reader.beginArray()
+                while (reader.hasNext()) {
+                    reader.beginObject()
+                    lateinit var directory: String
+                    lateinit var command: String
+                    lateinit var sourceFile: String
+                    while (reader.hasNext()) {
+                        when (reader.nextName()) {
+                            "directory" -> directory = reader.nextString()
+                            "command" -> command = reader.nextString()
+                            "file" -> sourceFile = reader.nextString()
+                            // swallow other optional fields
+                            else -> reader.skipValue()
+                        }
+                    }
+                    reader.endObject()
+                    val (compiler, flags) = interner.computeIfAbsent(command, sourceFile) {
+                        val tokenList = it.toTokenList()
+                        tokenList[0] to tokenList.subList(1, tokenList.size)
+                    }
+                    encoder.writeCompileCommand(
+                        File(sourceFile),
+                        File(compiler),
+                        flags,
+                        File(directory)
+                    )
+                }
+                reader.endArray()
+            }
+        }
+    }
+
     abstract fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder
 
     /**
      * Executes the JSON generation process. Return the combination of STDIO and STDERR from running
      * the process.
-     *
-     * @return Returns the combination of STDIO and STDERR from running the process.
      */
-    abstract fun executeProcess(ops: ExecOperations, abi: CxxAbiModel): String
+    abstract fun executeProcess(ops: ExecOperations, abi: CxxAbiModel)
 
     companion object {
         /**

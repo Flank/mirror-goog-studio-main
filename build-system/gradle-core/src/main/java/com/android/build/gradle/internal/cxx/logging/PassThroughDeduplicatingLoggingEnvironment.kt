@@ -50,6 +50,11 @@ open class PassThroughDeduplicatingLoggingEnvironment : ThreadLoggingEnvironment
     val warnings get() = messages.filter { it.level == LoggingLevel.WARN }.map { it.toString() }
 
     /**
+     * The lifecycle messages that have been seen so far.
+     */
+    val lifecycles get() = messages.filter { it.level == LoggingLevel.LIFECYCLE }.map { it.toString() }
+
+    /**
      * The infos that have been seen so far.
      */
     val infos get() = messages.filter { it.level == LoggingLevel.INFO }.map { it.toString() }

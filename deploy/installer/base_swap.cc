@@ -49,7 +49,7 @@ void BaseSwapCommand::Run(proto::InstallerResponse* response) {
   proto::SwapResponse* swap_response = response->mutable_swap_response();
 
   if (!ExtractBinaries(workspace_.GetTmpFolder(),
-                       {kAgent, kAgentAlt, kAgentServer, kInstallServer})) {
+                       {kAgent, kAgentAlt, kInstallServer})) {
     swap_response->set_status(proto::SwapResponse::SETUP_FAILED);
     ErrEvent("Extracting binaries failed");
     return;
@@ -75,10 +75,10 @@ void BaseSwapCommand::Run(proto::InstallerResponse* response) {
   ProcessResponse(swap_response);
 }
 
-void BaseSwapCommand::Swap(const proto::SwapRequest& request,
-                           proto::SwapResponse* response) {
+void BaseSwapCommand::Swap(const proto::SwapRequest& swap_request,
+                           proto::SwapResponse* swap_response) {
   Phase p("Swap");
-  if (response->status() != proto::SwapResponse::UNKNOWN) {
+  if (swap_response->status() != proto::SwapResponse::UNKNOWN) {
     return;
   }
 
@@ -88,44 +88,48 @@ void BaseSwapCommand::Swap(const proto::SwapRequest& request,
   // Don't bother with the server if we have no work to do.
   if (process_ids_.empty() && extra_agents_count_ == 0) {
     LogEvent("No PIDs needs to be swapped");
-    response->set_status(proto::SwapResponse::OK);
+    swap_response->set_status(proto::SwapResponse::OK);
     return;
   }
 
-  // Start the server and wait for it to begin listening for connections.
-  int read_fd, write_fd, agent_server_pid, status;
-  if (!StartAgentServer(process_ids_.size() + extra_agents_count_,
-                        &agent_server_pid, &read_fd, &write_fd)) {
-    if (isUserDebug()) {
-      response->set_status(proto::SwapResponse::START_SERVER_FAILED_USERDEBUG);
-    } else {
-      response->set_status(proto::SwapResponse::START_SERVER_FAILED);
-    }
-
-    EndPhase();
+  // Request for the install-server to open a socket and begin listening for
+  // agents to connect. Agents connect shortly after they are attached (below).
+  proto::SwapResponse::Status status = ListenForAgents();
+  if (status != proto::SwapResponse::OK) {
+    swap_response->set_status(status);
     return;
   }
-
-  ProtoPipe server_input(write_fd);
-  ProtoPipe server_output(read_fd);
 
   if (!AttachAgents()) {
-    waitpid(agent_server_pid, &status, 0);
-    response->set_status(proto::SwapResponse::AGENT_ATTACH_FAILED);
+    swap_response->set_status(proto::SwapResponse::AGENT_ATTACH_FAILED);
     return;
   }
 
-  if (!server_input.Write(request)) {
-    waitpid(agent_server_pid, &status, 0);
-    response->set_status(proto::SwapResponse::WRITE_TO_SERVER_FAILED);
+  // Request for the install-server to accept a connection for each agent
+  // attached. The install-server will forward the specified swap request to
+  // every agent, then return an aggregate list of each agent's response.
+  proto::InstallServerRequest server_request;
+  server_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
+
+  auto send_request = server_request.mutable_send_request();
+  send_request->set_agent_count(process_ids_.size() + extra_agents_count_);
+  *send_request->mutable_swap_request() = swap_request;
+
+  if (!client_->Write(server_request)) {
+    swap_response->set_status(proto::SwapResponse::WRITE_TO_SERVER_FAILED);
     return;
   }
 
-  std::unordered_map<int, proto::AgentSwapResponse> agent_responses;
-  proto::AgentSwapResponse agent_response;
-  while (server_output.Read(-1, &agent_response)) {
-    agent_responses[agent_response.pid()] = agent_response;
+  proto::InstallServerResponse server_response;
+  if (!client_->Read(&server_response) ||
+      server_response.status() !=
+          proto::InstallServerResponse::REQUEST_COMPLETED) {
+    swap_response->set_status(proto::SwapResponse::READ_FROM_SERVER_FAILED);
+    return;
+  }
 
+  const auto& agent_server_response = server_response.send_response();
+  for (const auto& agent_response : agent_server_response.agent_responses()) {
     // Convert proto events to events.
     for (int i = 0; i < agent_response.events_size(); i++) {
       const proto::Event& event = agent_response.events(i);
@@ -133,20 +137,16 @@ void BaseSwapCommand::Swap(const proto::SwapRequest& request,
     }
 
     if (agent_response.status() != proto::AgentSwapResponse::OK) {
-      auto failed_agent = response->add_failed_agents();
+      auto failed_agent = swap_response->add_failed_agents();
       *failed_agent = agent_response;
     }
   }
 
-  // Cleanup zombie agent-server status from the kernel.
-  waitpid(agent_server_pid, &status, 0);
-
-  int expected = process_ids_.size() + extra_agents_count_;
-  if (agent_responses.size() == expected) {
-    if (response->failed_agents_size() == 0) {
-      response->set_status(proto::SwapResponse::OK);
+  if (agent_server_response.status() == proto::SendAgentMessageResponse::OK) {
+    if (swap_response->failed_agents_size() == 0) {
+      swap_response->set_status(proto::SwapResponse::OK);
     } else {
-      response->set_status(proto::SwapResponse::AGENT_ERROR);
+      swap_response->set_status(proto::SwapResponse::AGENT_ERROR);
     }
     return;
   }
@@ -156,29 +156,29 @@ void BaseSwapCommand::Swap(const proto::SwapRequest& request,
   if (cmd.GetProcessInfo(package_name_, &records)) {
     for (auto& record : records) {
       if (record.crashing) {
-        response->set_status(proto::SwapResponse::PROCESS_CRASHING);
-        response->set_extra(record.process_name);
+        swap_response->set_status(proto::SwapResponse::PROCESS_CRASHING);
+        swap_response->set_extra(record.process_name);
         return;
       }
 
       if (record.not_responding) {
-        response->set_status(proto::SwapResponse::PROCESS_NOT_RESPONDING);
-        response->set_extra(record.process_name);
+        swap_response->set_status(proto::SwapResponse::PROCESS_NOT_RESPONDING);
+        swap_response->set_extra(record.process_name);
         return;
       }
     }
   }
 
-  for (int pid : request.process_ids()) {
+  for (int pid : swap_request.process_ids()) {
     const std::string pid_string = to_string(pid);
     if (IO::access("/proc/" + pid_string, F_OK) != 0) {
-      response->set_status(proto::SwapResponse::PROCESS_TERMINATED);
-      response->set_extra(pid_string);
+      swap_response->set_status(proto::SwapResponse::PROCESS_TERMINATED);
+      swap_response->set_extra(pid_string);
       return;
     }
   }
 
-  response->set_status(proto::SwapResponse::MISSING_AGENT_RESPONSES);
+  swap_response->set_status(proto::SwapResponse::MISSING_AGENT_RESPONSES);
 }
 
 void BaseSwapCommand::FilterProcessIds(std::vector<int>* process_ids) {
@@ -203,50 +203,31 @@ void BaseSwapCommand::FilterProcessIds(std::vector<int>* process_ids) {
   }
 }
 
-bool BaseSwapCommand::StartAgentServer(int agent_count, int* server_pid,
-                                       int* read_fd, int* write_fd) const {
-  Phase("StartAgentServer");
-  int sync_pipe[2];
-  if (pipe(sync_pipe) != 0) {
-    ErrEvent("Could not create sync pipe");
-    return false;
+proto::SwapResponse::Status BaseSwapCommand::ListenForAgents() const {
+  Phase("ListenForAgents");
+  proto::InstallServerRequest server_request;
+  server_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
+
+  auto socket_request = server_request.mutable_socket_request();
+  socket_request->set_socket_name(Socket::kDefaultAddress);
+
+  if (!client_->Write(server_request)) {
+    return proto::SwapResponse::WRITE_TO_SERVER_FAILED;
   }
 
-  const int sync_read_fd = sync_pipe[0];
-  const int sync_write_fd = sync_pipe[1];
-
-  // The server doesn't know about the read end of the pipe, so set it to
-  // close-on-exec. Not a big deal if this fails, but we should still log.
-  if (fcntl(sync_read_fd, F_SETFD, FD_CLOEXEC) == -1) {
-    LogEvent("Could not set sync pipe read end to close-on-exec");
+  proto::InstallServerResponse server_response;
+  if (!client_->Read(&server_response)) {
+    return proto::SwapResponse::READ_FROM_SERVER_FAILED;
   }
 
-  std::vector<std::string> parameters;
-  parameters.push_back(to_string(agent_count));
-  parameters.push_back(Socket::kDefaultAddress);
-
-  // Pass the write end of the sync pipe to the server. The server will close
-  // the pipe to indicate that it is ready to receive connections.
-  parameters.push_back(to_string(sync_write_fd));
-
-  int err_fd = -1;
-  RunasExecutor run_as(package_name_, workspace_.GetExecutor());
-  bool success = run_as.ForkAndExec(agent_server_path_, parameters, write_fd,
-                                    read_fd, &err_fd, server_pid);
-  close(sync_write_fd);
-  close(err_fd);
-
-  if (success) {
-    // This branch is only possible in the parent process; we only reach this
-    // conditional in the child if success is false (the server failed to run).
-    char unused;
-    if (read(sync_read_fd, &unused, 1) != 0) {
-      ErrEvent("Unexpected response received on sync pipe");
-    }
+  if (server_response.status() !=
+          proto::InstallServerResponse::REQUEST_COMPLETED ||
+      server_response.socket_response().status() !=
+          proto::OpenAgentSocketResponse::OK) {
+    return proto::SwapResponse::READY_FOR_AGENTS_NOT_RECEIVED;
   }
 
-  close(sync_read_fd);
-  return success;
+  return proto::SwapResponse::OK;
 }
 
 bool BaseSwapCommand::AttachAgents() const {

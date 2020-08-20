@@ -81,25 +81,42 @@ class TokenizedCommandLineTest {
 
     @Test
     fun tokenMatches() {
-        fun checkMatches(commandLine: String, matchString: String, offset: Int) {
+        fun checkMatches(
+            commandLine: String,
+            matchString: String,
+            offset: Int,
+            matchPrefix: Boolean
+        ) {
             val tokens = TokenizedCommandLine(commandLine, true, SdkConstants.PLATFORM_WINDOWS)
-            assertThat(tokens.tokenMatches(matchString, offset))
+            assertThat(tokens.tokenMatches(matchString, offset, matchPrefix))
                 .named("'$matchString' in '$commandLine' at $offset")
                 .isTrue()
         }
-        fun checkDoesntMatch(commandLine: String, matchString: String, offset: Int) {
+
+        fun checkDoesntMatch(
+            commandLine: String,
+            matchString: String,
+            offset: Int,
+            matchPrefix: Boolean
+        ) {
             val tokens = TokenizedCommandLine(commandLine, true, SdkConstants.PLATFORM_WINDOWS)
-            assertThat(tokens.tokenMatches(matchString, offset))
+            assertThat(tokens.tokenMatches(matchString, offset, matchPrefix))
                 .named("'$matchString' in '$commandLine' at $offset")
                 .isFalse()
         }
 
-        checkMatches("-c", "-c", 1)
-        checkDoesntMatch("-cat", "-c", 1)
-        checkDoesntMatch("-c", "-cat", 1)
-        checkDoesntMatch("-car", "-cat", 1)
-        checkDoesntMatch("", "-cat", 1)
-        checkDoesntMatch("-c", "-x", 4)
+        checkMatches("-c", "-c", 1, matchPrefix = false)
+        checkDoesntMatch("-cat", "-c", 1, matchPrefix = false)
+        checkDoesntMatch("-c", "-cat", 1, matchPrefix = false)
+        checkDoesntMatch("-car", "-cat", 1, matchPrefix = false)
+        checkDoesntMatch("", "-cat", 1, matchPrefix = false)
+        checkDoesntMatch("-c", "-x", 4, matchPrefix = false)
+        checkMatches("--output=blah", "--output=", 1, matchPrefix = true)
+        checkMatches("-cat", "-c", 1, matchPrefix = true)
+        checkDoesntMatch("-c", "-cat", 1, matchPrefix = true)
+        checkDoesntMatch("-car", "-cat", 1, matchPrefix = true)
+        checkDoesntMatch("", "-cat", 1, matchPrefix = true)
+        checkDoesntMatch("-c", "-x", 4, matchPrefix = true)
     }
 
     @Test

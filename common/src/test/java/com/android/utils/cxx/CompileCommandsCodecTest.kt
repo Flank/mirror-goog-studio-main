@@ -29,9 +29,9 @@ class CompileCommandsCodecTest {
     @Test
     fun singleFile() {
         val folder = tempFolder.newFolder()
-        val out = File(folder, "compile_commands.bin")
+        val out = File(folder, "compile_commands.json.bin")
         val sourceFile = File("my/source/file.cpp")
-        val compiler = "clang.exe"
+        val compiler = File("clang.exe")
         val flags = listOf("-a", "-b")
         val workingDirectory = File("my/working/directory")
         CompileCommandsEncoder(out).use { encoder ->
@@ -60,10 +60,10 @@ class CompileCommandsCodecTest {
     @Test
     fun checkInterning() {
         val folder = tempFolder.newFolder()
-        val out = File(folder, "compile_commands.bin")
+        val out = File(folder, "compile_commands.json.bin")
         val sourceFile1 = File("my/source/file-1.cpp")
         val sourceFile2 = File("my/source/file-2.cpp")
-        val compiler = "clang.exe"
+        val compiler = File("clang.exe")
         val flags = listOf("-a", "-b")
         val workingDirectory = File("my/working/directory")
         CompileCommandsEncoder(out).use { encoder ->
@@ -82,7 +82,7 @@ class CompileCommandsCodecTest {
         }
 
         var count = 0
-        var lastCompiler = ""
+        lateinit var lastCompiler: File
         var lastFlags = listOf("")
         var lastWorkingDirectory = File("")
         streamCompileCommands(out) {
@@ -120,13 +120,13 @@ class CompileCommandsCodecTest {
     @Test
     fun stress() {
         val folder = tempFolder.newFolder()
-        val out = File(folder, "compile_commands.bin")
+        val out = File(folder, "compile_commands.json.bin")
         val fileCount = 100000
         CompileCommandsEncoder(out).use { encoder ->
             repeat(fileCount) { i ->
                 encoder.writeCompileCommand(
                         sourceFile = File("source-$i.cpp"),
-                        compiler = "compiler-$i",
+                        compiler = File("compiler-$i"),
                         flags = listOf("flags-$i"),
                         workingDirectory = File("working-dir-$i")
                 )
@@ -136,7 +136,7 @@ class CompileCommandsCodecTest {
         var streamedFileCount = 0
         streamCompileCommands(out) { sourceFile,compiler,flags,workingDirectory ->
             assertThat(sourceFile.path).isEqualTo("source-$streamedFileCount.cpp")
-            assertThat(compiler).isEqualTo("compiler-$streamedFileCount")
+            assertThat(compiler.path).isEqualTo("compiler-$streamedFileCount")
             assertThat(flags).isEqualTo(listOf("flags-$streamedFileCount"))
             assertThat(workingDirectory.path).isEqualTo("working-dir-$streamedFileCount")
             ++streamedFileCount
@@ -147,14 +147,112 @@ class CompileCommandsCodecTest {
     @Test
     fun readInvalidFile() {
         val folder = tempFolder.newFolder()
-        val out = File(folder, "compile_commands.bin")
+        val out = File(folder, "compile_commands.json.bin")
         out.writeText("This is an invalid file")
         try {
             streamCompileCommands(out) { _, _, _, _ -> }
-        } catch (e: Exception) {
+        }
+        catch (e: Exception) {
             assertThat(e.message).endsWith("is not a valid C/C++ Build Metadata file")
             return
         }
         error("Expected an exception")
+    }
+
+    @Test
+    fun testStripArgsForIde() {
+        assertThat(stripArgsForIde("", listOf("-abc", "-def", "foo", "bar")))
+            .containsExactly("-abc", "-def", "foo", "bar").inOrder()
+
+        assertThat(
+            stripArgsForIde(
+                "path/to/source",
+                listOf("-abc", "-def", "foo", "bar", "path/to/source")
+            )
+        ).containsExactly("-abc", "-def", "foo", "bar").inOrder()
+
+        assertThat(stripArgsForIde("", listOf("-abc", "-def", "foo", "bar", "-o", "blah")))
+            .containsExactly("-abc", "-def", "foo", "bar").inOrder()
+        assertThat(stripArgsForIde("", listOf("-abc", "-def", "foo", "bar", "-o", "blah.o")))
+            .containsExactly("-abc", "-def", "foo", "bar").inOrder()
+        assertThat(stripArgsForIde("", listOf("-abc", "-def", "foo", "bar", "--output", "blah.o")))
+            .containsExactly("-abc", "-def", "foo", "bar").inOrder()
+        assertThat(stripArgsForIde("", listOf("-abc", "-def", "foo", "bar", "--output=blah.o")))
+            .containsExactly("-abc", "-def", "foo", "bar").inOrder()
+        assertThat(stripArgsForIde("", listOf("-abc", "-def", "foo", "bar", "-MFblah")))
+            .containsExactly("-abc", "-def", "foo", "bar").inOrder()
+        assertThat(stripArgsForIde("", listOf("-abc", "-def", "foo", "bar", "-MF", "blah")))
+            .containsExactly("-abc", "-def", "foo", "bar").inOrder()
+        assertThat(
+            stripArgsForIde(
+                "",
+                listOf("-abc", "-def", "foo", "bar", "-M", "-MM", "-MD", "-MG", "-MP", "-MMD", "-c")
+            )
+        ).containsExactly("-abc", "-def", "foo", "bar").inOrder()
+    }
+
+    @Test
+    fun testStripArgsForIde_realData() {
+        assertThat(stripArgsForIde(
+          "src/main/cpp/native-lib.cpp",
+          listOf(
+            "-MMD",
+            "-MP",
+            "-MF",
+            "app/src/main/cpp/native-lib.o.d",
+            "-target",
+            "i686-none-linux-android16",
+            "-fdata-sections",
+            "-ffunction-sections",
+            "-fstack-protector-strong",
+            "-funwind-tables",
+            "-no-canonical-prefixes",
+            "--sysroot",
+            "/usr/local/google/home/tgeng/Android/Sdk/ndk/21.2.6472646/toolchains/llvm/prebuilt/linux-x86_64/sysroot",
+            "-g",
+            "-Wno-invalid-command-line-argument",
+            "-Wno-unused-command-line-argument",
+            "-D_FORTIFY_SOURCE=2",
+            "-fno-exceptions",
+            "-fno-rtti",
+            "-fPIC",
+            "-O0",
+            "-UNDEBUG",
+            "-fno-limit-debug-info",
+            "-I/usr/local/google/home/tgeng/x/test-projects/NativeHeader2/app",
+            "-DANDROID",
+            "-Wformat",
+            "-Werror=format-security",
+            "-mstackrealign",
+            "-c",
+            "src/main/cpp/native-lib.cpp",
+            "-o",
+            "app/src/main/cpp/native-lib.o")))
+          .containsExactly(
+            "-target",
+            "i686-none-linux-android16",
+            "-fdata-sections",
+            "-ffunction-sections",
+            "-fstack-protector-strong",
+            "-funwind-tables",
+            "-no-canonical-prefixes",
+            "--sysroot",
+            "/usr/local/google/home/tgeng/Android/Sdk/ndk/21.2.6472646/toolchains/llvm/prebuilt/linux-x86_64/sysroot",
+            "-g",
+            "-Wno-invalid-command-line-argument",
+            "-Wno-unused-command-line-argument",
+            "-D_FORTIFY_SOURCE=2",
+            "-fno-exceptions",
+            "-fno-rtti",
+            "-fPIC",
+            "-O0",
+            "-UNDEBUG",
+            "-fno-limit-debug-info",
+            "-I/usr/local/google/home/tgeng/x/test-projects/NativeHeader2/app",
+            "-DANDROID",
+            "-Wformat",
+            "-Werror=format-security",
+              "-mstackrealign"
+          ).inOrder()
     }
 }

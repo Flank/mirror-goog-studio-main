@@ -40,46 +40,60 @@ import org.gradle.api.tasks.TaskProvider
 import java.util.concurrent.atomic.AtomicReference
 
 class OutOperationRequestImpl<TaskT: Task, FileTypeT: FileSystemLocation>(
-    val artifacts: ArtifactsImpl,
+    override val artifacts: ArtifactsImpl,
     val taskProvider: TaskProvider<TaskT>,
     val with: (TaskT) -> FileSystemLocationProperty<FileTypeT>
-) : OutOperationRequest<FileTypeT> {
+) : OutOperationRequest<FileTypeT>, ArtifactOperationRequest {
 
     override fun <ArtifactTypeT> toAppendTo(type: ArtifactTypeT)
             where ArtifactTypeT : MultipleArtifact<FileTypeT>,
-                  ArtifactTypeT : Artifact.Appendable =
+                  ArtifactTypeT : Artifact.Appendable {
+        closeRequest()
         toAppend(artifacts, taskProvider, with, type)
+    }
 
     override fun <ArtifactTypeT> toCreate(type: ArtifactTypeT)
             where ArtifactTypeT : SingleArtifact<FileTypeT>,
-                  ArtifactTypeT : Artifact.Replaceable =
+                  ArtifactTypeT : Artifact.Replaceable {
+        closeRequest()
         toCreate(artifacts, taskProvider, with, type)
+    }
+
+    override val description: String
+        get() = "Task ${taskProvider.name} was wired with an output but neither toAppend or toCreate " +
+            "methods were invoked."
 }
 
 class InAndOutFileOperationRequestImpl<TaskT: Task>(
-    val artifacts: ArtifactsImpl,
+    override val artifacts: ArtifactsImpl,
     val taskProvider: TaskProvider<TaskT>,
     val from: (TaskT) -> RegularFileProperty,
     val into: (TaskT) -> RegularFileProperty
-): InAndOutFileOperationRequest {
+): InAndOutFileOperationRequest, ArtifactOperationRequest {
 
     override fun <ArtifactTypeT> toTransform(type: ArtifactTypeT)
             where ArtifactTypeT : SingleArtifact<RegularFile>,
-                  ArtifactTypeT : Artifact.Transformable =
+                  ArtifactTypeT : Artifact.Transformable {
+        closeRequest()
         toTransform(artifacts, taskProvider, from, into, type)
+    }
 
+    override val description: String
+        get() = "Task ${taskProvider.name} was wired with an Input and an Output but " +
+            "toTransform method was never invoked"
 }
 
 class CombiningOperationRequestImpl<TaskT: Task, FileTypeT: FileSystemLocation>(
     val objects: ObjectFactory,
-    val artifacts: ArtifactsImpl,
+    override val artifacts: ArtifactsImpl,
     val taskProvider: TaskProvider<TaskT>,
     val from: (TaskT) -> ListProperty<FileTypeT>,
     val into: (TaskT) -> FileSystemLocationProperty<FileTypeT>
-): CombiningOperationRequest<FileTypeT> {
+): CombiningOperationRequest<FileTypeT>, ArtifactOperationRequest {
     override fun <ArtifactTypeT> toTransform(type: ArtifactTypeT)
             where ArtifactTypeT : MultipleArtifact<FileTypeT>,
                   ArtifactTypeT : Artifact.Transformable {
+        closeRequest()
         val artifactContainer = artifacts.getArtifactContainer(type)
         val newList = objects.listProperty(type.kind.dataType().java)
         val currentProviders= artifactContainer.transform(taskProvider.flatMap { newList })
@@ -89,19 +103,25 @@ class CombiningOperationRequestImpl<TaskT: Task, FileTypeT: FileSystemLocation>(
             from(it).set(currentProviders)
         }
     }
+
+    override val description: String
+        get() = "Task ${taskProvider.name} was wired to combine multiple inputs into an output but " +
+                "toTransform method was never invoked"
 }
 
 class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
-    val artifacts: ArtifactsImpl,
+    override val artifacts: ArtifactsImpl,
     val taskProvider: TaskProvider<TaskT>,
     val from: (TaskT) -> DirectoryProperty,
     val into: (TaskT) -> DirectoryProperty
-): InAndOutDirectoryOperationRequest<TaskT> {
+): InAndOutDirectoryOperationRequest<TaskT>, ArtifactOperationRequest {
 
     override fun <ArtifactTypeT> toTransform(type: ArtifactTypeT)
             where ArtifactTypeT : SingleArtifact<Directory>,
-                  ArtifactTypeT : Artifact.Transformable =
+                  ArtifactTypeT : Artifact.Transformable {
+        closeRequest()
         toTransform(artifacts, taskProvider, from, into, type)
+    }
 
     override fun <ArtifactTypeT> toTransformMany(
         type: ArtifactTypeT
@@ -109,6 +129,7 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
             where ArtifactTypeT : SingleArtifact<Directory>,
                   ArtifactTypeT : Artifact.ContainsMany {
 
+        closeRequest()
         val artifactContainer = artifacts.getArtifactContainer(type)
         val currentProvider =  artifactContainer.transform(taskProvider.flatMap { into(it) })
         val builtArtifactsReference = AtomicReference<BuiltArtifactsImpl>()
@@ -139,6 +160,7 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
             ArtifactTypeT : Artifact.ContainsMany,
             ArtifactTypeU : SingleArtifact<Directory>,
             ArtifactTypeU : Artifact.ContainsMany {
+        closeRequest()
         val initialProvider = artifacts.setInitialProvider(taskProvider, into)
         if (atLocation != null) {
             initialProvider.atLocation(atLocation)
@@ -171,6 +193,10 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
             outputLocation = outputLocation
         )
     }
+
+    override val description: String
+        get() = "Task ${taskProvider.name} was wired with an Input and an Output but " +
+            "toTransform or toTransformMany methods were never invoked"
 
     companion object {
 

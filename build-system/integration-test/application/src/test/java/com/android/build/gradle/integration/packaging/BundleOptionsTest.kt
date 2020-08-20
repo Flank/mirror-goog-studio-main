@@ -40,6 +40,7 @@ class BundleOptionsTest {
                 .appendToBuild("android.defaultConfig.versionCode 1")
                 .withFile("src/main/assets/textures#tcf_atc/texture.dat", byteArrayOf(0x3))
                 .withFile("src/main/assets/textures#tcf_etc1/texture.dat", byteArrayOf(0x4))
+                .withFile("src/main/assets/textures/texture.dat", byteArrayOf(0x5))
                 .withFile("src/main/jniLibs/armeabi/abi.so", byteArrayOf(0xA))
                 .withFile("src/main/jniLibs/x86/abi.so", byteArrayOf(0x8, 0x6))
                 .withFile("src/main/res/raw-hdpi/density", byteArrayOf(0x1))

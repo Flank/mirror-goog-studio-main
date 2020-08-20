@@ -15,11 +15,10 @@
  */
 package com.android.ide.common.gradle.model.impl;
 
-import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.*;
+import static com.android.ide.common.gradle.model.impl.IdeModelTestUtils.createEqualsVerifier;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
-import com.android.builder.model.SigningConfig;
 import com.android.ide.common.gradle.model.stubs.SigningConfigStub;
 import com.android.testutils.Serialization;
 import java.io.Serializable;
@@ -28,11 +27,11 @@ import org.junit.Test;
 
 /** Tests for {@link IdeSigningConfigImpl}. */
 public class IdeSigningConfigTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
     }
 
     @Test
@@ -47,10 +46,5 @@ public class IdeSigningConfigTest {
         byte[] bytes = Serialization.serialize(signingConfig);
         Object o = Serialization.deserialize(bytes);
         assertEquals(signingConfig, o);
-    }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeSigningConfigImpl.class).verify();
     }
 }

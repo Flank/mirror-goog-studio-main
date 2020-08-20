@@ -25,6 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,6 +61,11 @@ public class AdbClient {
             this.reason = reason;
             this.metrics = metrics;
         }
+    }
+
+    public SocketChannel rawExec(String executable, String[] parameters)
+            throws AdbCommandRejectedException, IOException, TimeoutException {
+        return device.rawExec(executable, parameters);
     }
 
     /** Executes the given command with no stdin and returns stdout as a byte[] */

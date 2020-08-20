@@ -1,14 +1,14 @@
 {
-	"artifacts" : 
+	"artifacts" :
 	[
 		{
 			"path" : "Externals/cubeb/CMakeFiles/speex.dir/./src/speex/resample.c.o"
 		}
 	],
 	"backtrace" : 1,
-	"backtraceGraph" : 
+	"backtraceGraph" :
 	{
-		"commands" : 
+		"commands" :
 		[
 			"add_library",
 			"add_compile_options",
@@ -17,13 +17,13 @@
 			"target_compile_definitions",
 			"include_directories"
 		],
-		"files" : 
+		"files" :
 		[
 			"Externals/cubeb/CMakeLists.txt",
 			"CMake/CheckAndAddFlag.cmake",
 			"CMakeLists.txt"
 		],
-		"nodes" : 
+		"nodes" :
 		[
 			{
 				"file" : 0
@@ -351,10 +351,10 @@
 			}
 		]
 	},
-	"compileGroups" : 
+	"compileGroups" :
 	[
 		{
-			"compileCommandFragments" : 
+			"compileCommandFragments" :
 			[
 				{
 					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -Wall -Wextra -Wno-unused-parameter -O2 -g -DNDEBUG -fPIC -fvisibility=hidden  "
@@ -427,7 +427,7 @@
 					"fragment" : "-std=gnu99"
 				}
 			],
-			"defines" : 
+			"defines" :
 			[
 				{
 					"backtrace" : 35,
@@ -490,58 +490,58 @@
 					"define" : "_M_ARM_64=1"
 				}
 			],
-			"includes" : 
+			"includes" :
 			[
 				{
 					"backtrace" : 50,
-					"path" : "/Users/jomof/projects/dolphin/Source/Core"
+					"path" : "/{PROJECT}/Source/Core"
 				},
 				{
 					"backtrace" : 51,
-					"path" : "/Users/jomof/projects/dolphin/Source/Android"
+					"path" : "/{PROJECT}/Source/Android"
 				},
 				{
 					"backtrace" : 52,
-					"path" : "/Users/jomof/projects/dolphin/Externals/enet/include"
+					"path" : "/{PROJECT}/Externals/enet/include"
 				},
 				{
 					"backtrace" : 53,
-					"path" : "/Users/jomof/projects/dolphin/External/minizip"
+					"path" : "/{PROJECT}/External/minizip"
 				},
 				{
 					"backtrace" : 54,
-					"path" : "/Users/jomof/projects/dolphin/Externals/soundtouch"
+					"path" : "/{PROJECT}/Externals/soundtouch"
 				}
 			],
 			"language" : "C",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				0
 			],
-			"sysroot" : 
+			"sysroot" :
 			{
-				"path" : "/Users/jomof/Library/Android/sdk/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+				"path" : "/{SDK}/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
 			}
 		}
 	],
 	"id" : "speex::@6ea19969518fdc86ca9a",
 	"name" : "speex",
-	"paths" : 
+	"paths" :
 	{
 		"build" : "Externals/cubeb",
 		"source" : "Externals/cubeb"
 	},
-	"sourceGroups" : 
+	"sourceGroups" :
 	[
 		{
 			"name" : "Source Files",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				0
 			]
 		}
 	],
-	"sources" : 
+	"sources" :
 	[
 		{
 			"backtrace" : 1,

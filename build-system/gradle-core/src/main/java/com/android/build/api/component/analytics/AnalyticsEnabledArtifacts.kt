@@ -21,7 +21,10 @@ import com.android.build.api.artifact.Artifacts
 import com.android.build.api.artifact.MultipleArtifactType
 import com.android.build.api.artifact.TaskBasedOperation
 import com.android.build.api.variant.BuiltArtifactsLoader
+import com.android.build.gradle.internal.profile.AnalyticsUtil
+import com.android.tools.build.gradle.internal.profile.VariantApiArtifactType
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
+import com.google.wireless.android.sdk.stats.ArtifactAccess
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Task
 import org.gradle.api.file.FileSystemLocation
@@ -45,12 +48,20 @@ open class AnalyticsEnabledArtifacts @Inject constructor(
     override fun <FileTypeT : FileSystemLocation> get(type: ArtifactType<FileTypeT>): Provider<FileTypeT> {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.GET_ARTIFACT_VALUE
+        stats.variantApiAccessBuilder.addArtifactAccessBuilder().also {
+            it.inputArtifactType = AnalyticsUtil.getVariantApiArtifactType(type.javaClass).number
+            it.type = ArtifactAccess.AccessType.GET
+        }
         return delegate.get(type)
     }
 
     override fun <FileTypeT : FileSystemLocation> getAll(type: MultipleArtifactType<FileTypeT>): Provider<List<FileTypeT>> {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.GET_ALL_ARTIFACTS_VALUE
+        stats.variantApiAccessBuilder.addArtifactAccessBuilder().also {
+            it.inputArtifactType = AnalyticsUtil.getVariantApiArtifactType(type.javaClass).number
+            it.type = ArtifactAccess.AccessType.GET_ALL
+        }
         return delegate.getAll(type)
     }
 

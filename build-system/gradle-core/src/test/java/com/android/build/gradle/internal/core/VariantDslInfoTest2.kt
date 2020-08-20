@@ -17,9 +17,12 @@
 package com.android.build.gradle.internal.core
 
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.variant.impl.GradleProperty
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
+import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.manifest.ManifestData
 import com.android.build.gradle.internal.manifest.ManifestDataProvider
 import com.android.build.gradle.internal.services.DslServices
@@ -31,7 +34,10 @@ import com.android.build.gradle.internal.variant.Container
 import com.android.build.gradle.internal.variant.ContainerImpl
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantTypeImpl
+import com.android.builder.dexing.DexingType
 import com.android.testutils.AbstractBuildGivenBuildExpectTest
+import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Provider
 import org.junit.Rule
 import org.junit.Test
@@ -257,6 +263,8 @@ class VariantDslInfoTest2 :
                 minSdkVersion(20)
                 multiDexEnabled = true
             }
+
+            dexingType = DexingType.LEGACY_MULTIDEX
         }
 
         expect {
@@ -274,7 +282,7 @@ class VariantDslInfoTest2 :
         // provide a custom convert action to only call VariantDslInfo.instrumentationRunner
         // as it's not normally called for non-test variant type.
         convertToResult {
-            instrumentationRunner = it.instrumentationRunner.orNull
+            instrumentationRunner = it.getInstrumentationRunner(DexingType.NATIVE_MULTIDEX).orNull
         }
 
         exceptionRule.expect(RuntimeException::class.java)
@@ -600,6 +608,7 @@ class VariantDslInfoTest2 :
     private val projectServices = createProjectServices()
     private val services = createVariantPropertiesApiServices(projectServices)
     private val dslServices: DslServices = createDslServices(projectServices)
+    private val buildDirectory: DirectoryProperty = Mockito.mock(DirectoryProperty::class.java)
 
     override fun instantiateGiven() = GivenData(dslServices)
     override fun instantiateResult() = ResultData()
@@ -617,7 +626,8 @@ class VariantDslInfoTest2 :
             testedVariantImpl = null,
             dataProvider = DirectManifestDataProvider(given.manifestData, projectServices),
             dslServices = dslServices,
-            services = services
+            services = services,
+            buildDirectory = buildDirectory
         )
 
         return instantiateResult().also {
@@ -628,7 +638,7 @@ class VariantDslInfoTest2 :
                 it.versionName = variantDslInfo.versionName.orNull
                 // only query these if this is not a test.
                 if (given.variantType.isForTesting) {
-                    it.instrumentationRunner = variantDslInfo.instrumentationRunner.orNull
+                    it.instrumentationRunner = variantDslInfo.getInstrumentationRunner(given.dexingType).orNull
                     it.handleProfiling = variantDslInfo.handleProfiling.get()
                     it.functionalTest = variantDslInfo.functionalTest.get()
                 }
@@ -669,6 +679,8 @@ class VariantDslInfoTest2 :
 
         /** Variant type for the test */
         var variantType = VariantTypeImpl.BASE_APK
+
+        var dexingType = DexingType.NATIVE_MULTIDEX
 
         /** default Config values */
         val defaultConfig: DefaultConfig = DefaultConfig(BuilderConstants.MAIN, dslServices)

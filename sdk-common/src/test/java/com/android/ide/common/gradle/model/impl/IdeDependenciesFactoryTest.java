@@ -39,11 +39,11 @@ import org.junit.Test;
 
 /** Tests for {@link com.android.ide.common.gradle.model.impl.IdeDependenciesFactory}. */
 public class IdeDependenciesFactoryTest {
-    private IdeDependenciesFactory myDependenciesFactory;
+    private ModelCacheTesting myModelCache;
 
     @Before
     public void setUp() throws Exception {
-        myDependenciesFactory = new IdeDependenciesFactory();
+        myModelCache = ModelCache.createForTesting();
     }
 
     @Test
@@ -130,7 +130,7 @@ public class IdeDependenciesFactoryTest {
                     }
                 };
 
-        IdeDependencies level2Dependencies = myDependenciesFactory.create(baseArtifactStub);
+        IdeDependencies level2Dependencies = myModelCache.dependenciesFrom(baseArtifactStub);
 
         assertThat(level2Dependencies.getAndroidLibraries()).hasSize(0);
 
@@ -173,7 +173,7 @@ public class IdeDependenciesFactoryTest {
                     }
                 };
 
-        IdeDependencies level2Dependencies = myDependenciesFactory.create(baseArtifactStub);
+        IdeDependencies level2Dependencies = myModelCache.dependenciesFrom(baseArtifactStub);
 
         assertThat(
                         level2Dependencies.getJavaLibraries().stream()

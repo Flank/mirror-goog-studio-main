@@ -185,9 +185,10 @@ interface VariantDslInfo {
      * Returns the instrumentationRunner to use to test this variant, or if the variant is a test,
      * the one to use to test the tested variant.
      *
+     * @param dexingType the selected dexing type for this variant.
      * @return the instrumentation test runner name
      */
-    val instrumentationRunner: Provider<String>
+    fun getInstrumentationRunner(dexingType: DexingType): Provider<String>
 
     /**
      * Returns the instrumentationRunner arguments to use to test this variant, or if the variant is
@@ -305,14 +306,14 @@ interface VariantDslInfo {
     val manifestPlaceholders: Map<String, String>
 
     // Only require specific multidex opt-in for legacy multidex.
-    val isMultiDexEnabled: Boolean
+    val isMultiDexEnabled: Boolean?
 
     val multiDexKeepFile: File?
 
     val multiDexKeepProguard: File?
 
     // dynamic features can always be build in native multidex mode
-    val dexingType: DexingType
+    val dexingType: DexingType?
 
     /** Returns the renderscript support mode.  */
     val renderscriptSupportModeEnabled: Boolean
@@ -327,12 +328,10 @@ interface VariantDslInfo {
     val isBundled: Boolean
 
     /**
-     * Returns the minimum SDK version for this variant, potentially overridden by a property passed
-     * by the IDE.
-     *
-     * @see .getMinSdkVersion
+     * Returns if the property passed by the IDE is set, the minimum SDK version or
+     * null if not.
      */
-    val minSdkVersionWithTargetDeviceApi: AndroidVersion
+    val minSdkVersionFromIDE: Int?
 
     val ndkConfig: MergedNdkConfig
 
@@ -351,7 +350,7 @@ interface VariantDslInfo {
 
     val javaCompileOptions: JavaCompileOptions
 
-    fun createPostProcessingOptions(buildDirectory: DirectoryProperty) : PostProcessingOptions
+    fun getPostProcessingOptions(): PostProcessingOptions
 
     val defaultGlslcArgs: List<String>
 

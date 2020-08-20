@@ -183,12 +183,12 @@ public class CmakeStlMatrixTest {
                                     + "          > abis:\n"
                                     + "             * NativeAbi:\n"
                                     + "                * name                  = \"armeabi-v7a\"\n"
-                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json{!}\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json.bin{!}\n"
                                     + "                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/symbol_folder_index.txt{!}\n"
                                     + "                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/build_file_index.txt{!}\n"
                                     + "             * NativeAbi:\n"
                                     + "                * name                  = \"x86_64\"\n"
-                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json{!}\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{!}\n"
                                     + "                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{!}\n"
                                     + "                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{!}\n"
                                     + "          < abis\n"
@@ -197,12 +197,12 @@ public class CmakeStlMatrixTest {
                                     + "          > abis:\n"
                                     + "             * NativeAbi:\n"
                                     + "                * name                  = \"armeabi-v7a\"\n"
-                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json{!}\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json.bin{!}\n"
                                     + "                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/armeabi-v7a/symbol_folder_index.txt{!}\n"
                                     + "                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/armeabi-v7a/build_file_index.txt{!}\n"
                                     + "             * NativeAbi:\n"
                                     + "                * name                  = \"x86_64\"\n"
-                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json{!}\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json.bin{!}\n"
                                     + "                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{!}\n"
                                     + "                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{!}\n"
                                     + "          < abis\n"
@@ -211,8 +211,7 @@ public class CmakeStlMatrixTest {
                                     + "    - ndkVersion              = \"{DEFAULT_NDK_VERSION}\"\n"
                                     + "    - defaultNdkVersion       = \"{DEFAULT_NDK_VERSION}\"\n"
                                     + "    - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}\n"
-                                    + "< NativeModule"
-                    );
+                                    + "< NativeModule");
         } else {
             project.model()
                     .fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
@@ -262,12 +261,12 @@ public class CmakeStlMatrixTest {
                                     + "          > abis:\n"
                                     + "             * NativeAbi:\n"
                                     + "                * name                  = \"armeabi-v7a\"\n"
-                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json{F}\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json.bin{F}\n"
                                     + "                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/symbol_folder_index.txt{F}\n"
                                     + "                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/build_file_index.txt{F}\n"
                                     + "             * NativeAbi:\n"
                                     + "                * name                  = \"x86_64\"\n"
-                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json{F}\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{F}\n"
                                     + "                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{F}\n"
                                     + "                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{F}\n"
                                     + "          < abis\n"
@@ -276,12 +275,12 @@ public class CmakeStlMatrixTest {
                                     + "          > abis:\n"
                                     + "             * NativeAbi:\n"
                                     + "                * name                  = \"armeabi-v7a\"\n"
-                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json{F}\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json.bin{F}\n"
                                     + "                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/armeabi-v7a/symbol_folder_index.txt{F}\n"
                                     + "                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/armeabi-v7a/build_file_index.txt{F}\n"
                                     + "             * NativeAbi:\n"
                                     + "                * name                  = \"x86_64\"\n"
-                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json{F}\n"
+                                    + "                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json.bin{F}\n"
                                     + "                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{F}\n"
                                     + "                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{F}\n"
                                     + "          < abis\n"
@@ -290,8 +289,7 @@ public class CmakeStlMatrixTest {
                                     + "    - ndkVersion              = \"{DEFAULT_NDK_VERSION}\"\n"
                                     + "    - defaultNdkVersion       = \"{DEFAULT_NDK_VERSION}\"\n"
                                     + "    - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}\n"
-                                    + "< NativeModule"
-                    );
+                                    + "< NativeModule");
 
             nativeModule = result.getContainer().getSingleModel();
             for (NativeVariant variant : nativeModule.getVariants()) {

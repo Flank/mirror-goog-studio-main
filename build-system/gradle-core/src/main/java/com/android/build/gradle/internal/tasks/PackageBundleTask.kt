@@ -193,6 +193,18 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                         .setNegate(!it)
                 )
             }
+            parameters.bundleOptions.get().enableDeviceTier?.let {
+                splitsConfig.addSplitDimension(
+                    Config.SplitDimension.newBuilder()
+                        .setValue(Config.SplitDimension.Value.DEVICE_TIER)
+                        .setSuffixStripping(
+                            Config.SuffixStripping.newBuilder()
+                                .setEnabled(true)
+                                .setDefaultSuffix(parameters.bundleOptions.get().defaultDeviceTier?: "")
+                        )
+                        .setNegate(!it)
+                )
+            }
 
             val uncompressNativeLibrariesConfig = Config.UncompressNativeLibraries.newBuilder()
                 .setEnabled(parameters.bundleFlags.get().enableUncompressedNativeLibs)
@@ -308,7 +320,13 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         val enableTexture: Boolean?,
         @get:Input
         @get:Optional
-        val textureDefaultFormat: String?
+        val textureDefaultFormat: String?,
+        @get:Input
+        @get:Optional
+        val enableDeviceTier: Boolean?,
+        @get:Input
+        @get:Optional
+        val defaultDeviceTier: String?
     ) : Serializable
 
     data class BundleFlags(
@@ -415,7 +433,9 @@ private fun com.android.build.gradle.internal.dsl.BundleOptions.convert() =
         enableDensity = density.enableSplit,
         enableLanguage = language.enableSplit,
         enableTexture = texture.enableSplit,
-        textureDefaultFormat = texture.defaultFormat
+        textureDefaultFormat = texture.defaultFormat,
+        enableDeviceTier = deviceTier.enableSplit,
+        defaultDeviceTier = deviceTier.defaultTier
     )
 
 /**

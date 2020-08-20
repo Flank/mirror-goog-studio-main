@@ -56,6 +56,8 @@ enum class IntegerOption(
      */
     DEXING_READ_BUFFER_SIZE("android.dexingReadBuffer.size", ApiStage.Experimental),
     DEXING_WRITE_BUFFER_SIZE("android.dexingWriteBuffer.size", ApiStage.Experimental),
+
+    /** Number of buckets used by `DexArchiveBuilderTask` and `DexMergingTask`. */
     DEXING_NUMBER_OF_BUCKETS("android.dexingNumberOfBuckets", ApiStage.Experimental),
 
     /**

@@ -67,7 +67,7 @@ class CmakeSettingsSharedBuildTest(cmakeVersionInDsl: String, useV2NativeModel: 
             arrayOf("3.6.0", false),
             arrayOf(DEFAULT_CMAKE_VERSION, false)
             // TODO(b/134757616): Support V2 models. Currently since the build folder is shared,
-            // concurrently executing V2 sync fails since all compile_commands.json are generated
+            // concurrently executing V2 sync fails since all compile_commands.json.bin are generated
             // in the same location.
         )
     }

@@ -44,8 +44,7 @@ class FlowAnalyzer {
      */
     @NonNull
     static ListMultimap<String, List<BuildStepInfo>> analyze(
-            @NonNull String commands, @NonNull OsFileConventions policy) {
-        List<BuildStepInfo> commandSummaries = CommandClassifier.classify(commands, policy);
+            @NonNull List<BuildStepInfo> commandSummaries) {
 
         // For each filename, record the last command that created it.
         Map<String, Integer> outputToCommand = new HashMap<>();
@@ -58,7 +57,7 @@ class FlowAnalyzer {
 
         for (int i = 0; i < commandSummaries.size(); ++i) {
             BuildStepInfo current = commandSummaries.get(i);
-            if (current.inputsAreSourceFiles()) {
+            if (current.getInputsAreSourceFiles()) {
                 if (current.getInputs().size() != 1) {
                     throw new RuntimeException(
                             String.format(
@@ -81,7 +80,7 @@ class FlowAnalyzer {
                     commandOutputsConsumed.get(inputCommandIndex).add(input);
                     continue;
                 }
-                if (current.inputsAreSourceFiles()) {
+                if (current.getInputsAreSourceFiles()) {
                     terminals.add(current);
                 }
             }
@@ -99,7 +98,7 @@ class FlowAnalyzer {
             BuildStepInfo current = commandSummaries.get(i);
             Set<String> outputsConsumed = commandOutputsConsumed.get(i);
             for (String output : current.getOutputs()) {
-                if (!outputsConsumed.contains(output) || !current.inputsAreSourceFiles()) {
+                if (!outputsConsumed.contains(output) || !current.getInputsAreSourceFiles()) {
                     // Sort the inputs
                     List<BuildStepInfo> ordered = new ArrayList<>();
                     ordered.addAll(outputToTerminals.get(i));

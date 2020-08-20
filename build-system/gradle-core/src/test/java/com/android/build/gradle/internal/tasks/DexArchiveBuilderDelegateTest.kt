@@ -244,6 +244,25 @@ class DexArchiveBuilderDelegateTest(
     }
 
     @Test
+    fun testMultiReleaseDir() {
+        val input = tmpDir.root.resolve("classes").also {
+            it.resolve("test").mkdirs()
+            it.resolve("test/A.class").writeBytes(TestClassesGenerator.emptyClass("test", "A"))
+            it.resolve("META-INF/9/test/").mkdirs()
+            it.resolve("META-INF/9/test/C.class").writeBytes(TestClassesGenerator.emptyClass("test", "C"))
+            it.resolve("module-info.class").writeBytes("should be ignored".toByteArray())
+        }
+
+        getDelegate(
+                projectClasses = setOf(input),
+                projectOutput = out.toFile()
+        ).doProcess()
+
+        assertThat(FileUtils.find(out.toFile(), "A.dex").orNull()).isFile()
+        assertThat(FileUtils.find(out.toFile(), "C.dex").orNull()).isNull()
+    }
+
+    @Test
     fun testJarNameDoesNotImpactOutput() {
         val inputJar1 = tmpDir.root.toPath().resolve("input_1.jar")
         jarWithEmptyClasses(

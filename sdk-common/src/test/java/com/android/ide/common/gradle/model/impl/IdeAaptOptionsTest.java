@@ -27,11 +27,11 @@ import org.junit.Test;
 
 /** Tests for {@link IdeAaptOptionsImpl}. */
 public class IdeAaptOptionsTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
     }
 
     @Test
@@ -45,10 +45,5 @@ public class IdeAaptOptionsTest {
         byte[] bytes = Serialization.serialize(aaptOptions);
         Object o = Serialization.deserialize(bytes);
         assertEquals(aaptOptions, o);
-    }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeClassFieldImpl.class).verify();
     }
 }

@@ -1,0 +1,68 @@
+{
+	"configurations" :
+	[
+		{
+			"directories" :
+			[
+				{
+					"build" : ".",
+					"minimumCMakeVersion" :
+					{
+						"string" : "3.6.0"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" :
+					[
+						0,
+						1
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" :
+			[
+				{
+					"directoryIndexes" :
+					[
+						0
+					],
+					"name" : "foo",
+					"targetIndexes" :
+					[
+						0,
+						1
+					]
+				}
+			],
+			"targets" :
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "foo::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-foo-Debug-eba7c367b2d22b5a7288.json",
+					"name" : "foo",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "foo_static::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-foo_static-Debug-562328797674c42e2cd8.json",
+					"name" : "foo_static",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" :
+	{
+		"build" : "/{ROOT}/prefabPublishing/foo/.cxx/cmake/debug/x86",
+		"source" : "/{ROOT}/prefabPublishing/foo/src/main/cpp"
+	},
+	"version" :
+	{
+		"major" : 2,
+		"minor" : 1
+	}
+}

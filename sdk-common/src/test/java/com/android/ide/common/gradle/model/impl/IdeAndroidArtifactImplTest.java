@@ -32,15 +32,13 @@ import org.junit.Test;
 
 /** Tests for {@link IdeAndroidArtifactImpl}. */
 public class IdeAndroidArtifactImplTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
     private GradleVersion myGradleVersion;
-    private IdeDependenciesFactory myDependenciesFactory;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
         myGradleVersion = GradleVersion.parse("3.2");
-        myDependenciesFactory = new IdeDependenciesFactory();
     }
 
     @Test
@@ -79,8 +77,7 @@ public class IdeAndroidArtifactImplTest {
                                 isSigned());
                     }
                 };
-        IdeAndroidArtifact artifact =
-                myModelCache.androidArtifactFrom(original, myDependenciesFactory, myGradleVersion);
+        IdeAndroidArtifact artifact = myModelCache.androidArtifactFrom(original, myGradleVersion);
     }
 
     /**
@@ -97,17 +94,8 @@ public class IdeAndroidArtifactImplTest {
                         return null;
                     }
                 };
-        IdeAndroidArtifactImpl copy =
-                myModelCache.androidArtifactFrom(original, myDependenciesFactory, myGradleVersion);
+        IdeAndroidArtifactImpl copy = myModelCache.androidArtifactFrom(original, myGradleVersion);
         assertThat(original.getAbiFilters()).isNull();
         assertThat(copy.getAbiFilters()).isEmpty();
-    }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeAndroidArtifactImpl.class)
-                .withRedefinedSuperclass()
-                .withIgnoredFields("hashCode")
-                .verify();
     }
 }

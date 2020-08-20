@@ -38,6 +38,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
+import java.util.Collections
 
 /**
  * Implementation of the [Artifacts] Variant API interface.
@@ -56,6 +57,7 @@ class ArtifactsImpl(
     private val storageProvider = StorageProviderImpl()
     private val objects= project.objects
     private val buildDirectory = project.layout.buildDirectory
+    private val outstandingRequests = Collections.synchronizedList(ArrayList<ArtifactOperationRequest>())
 
     override fun getBuiltArtifactsLoader(): BuiltArtifactsLoader {
         return BuiltArtifactsLoaderImpl()
@@ -79,7 +81,9 @@ class ArtifactsImpl(
             = getArtifactContainer(type).get()
 
     override fun <TaskT : Task> use(taskProvider: TaskProvider<TaskT>): TaskBasedOperationImpl<TaskT> {
-        return TaskBasedOperationImpl(objects, this, taskProvider)
+        return TaskBasedOperationImpl(objects, this, taskProvider).also {
+            outstandingRequests.add(it)
+        }
     }
 
     // End of public API implementation, start of private AGP services.
@@ -233,6 +237,24 @@ class ArtifactsImpl(
      * The returned file collection is final but its content can change.
      */
     fun getAllClasses(): FileCollection = allClasses
+
+    fun addRequest(request: ArtifactOperationRequest) {
+        outstandingRequests.add(request)
+    }
+
+    fun closeRequest(request: ArtifactOperationRequest) {
+        outstandingRequests.remove(request)
+    }
+
+    fun ensureAllOperationsAreSatisfied() {
+        if (outstandingRequests.isEmpty()) return
+        throw RuntimeException(outstandingRequests.joinToString(
+            separator = "\n\t",
+            prefix = "The following Variant API operations are incomplete :\n",
+            transform = ArtifactOperationRequest::description,
+            postfix = "\nMake sure to correctly chain all calls."
+        ))
+    }
 }
 
 

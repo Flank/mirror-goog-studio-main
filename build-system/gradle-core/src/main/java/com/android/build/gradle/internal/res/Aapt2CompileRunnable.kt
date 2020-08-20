@@ -18,9 +18,8 @@ package com.android.build.gradle.internal.res
 
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
-import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
-import com.android.build.gradle.internal.services.useAaptDaemon
-import com.android.build.gradle.options.SyncOptions
+import com.android.build.gradle.internal.services.Aapt2Input
+import com.android.build.gradle.internal.services.getLeasingAapt2
 import com.android.builder.internal.aapt.v2.Aapt2Exception
 import com.android.ide.common.resources.CompileResourceRequest
 import org.gradle.api.logging.Logging
@@ -31,41 +30,39 @@ abstract class Aapt2CompileRunnable : ProfileAwareWorkAction<Aapt2CompileRunnabl
 
     override fun run() {
         runAapt2Compile(
-            parameters.aapt2ServiceKey.get(),
+            parameters.aapt2Input.get(),
             parameters.requests.get(),
-            parameters.errorFormatMode.get(),
             parameters.enableBlame.getOrElse(false)
         )
     }
 
     abstract class Params : ProfileAwareWorkAction.Parameters() {
-        abstract val aapt2ServiceKey: Property<Aapt2DaemonServiceKey>
+        abstract val aapt2Input: Property<Aapt2Input>
         abstract val requests: ListProperty<CompileResourceRequest>
-        abstract val errorFormatMode: Property<SyncOptions.ErrorFormatMode>
         abstract val enableBlame: Property<Boolean>
     }
 }
 
 fun runAapt2Compile(
-    aapt2ServiceKey: Aapt2DaemonServiceKey,
+    aapt2Input: Aapt2Input,
     requests: List<CompileResourceRequest>,
-    errorFormatMode: SyncOptions.ErrorFormatMode,
     enableBlame: Boolean
 ) {
     val logger = Logging.getLogger(Aapt2CompileRunnable::class.java)
-    useAaptDaemon(aapt2ServiceKey) { daemon ->
-        requests.forEach { request ->
-            try {
-                daemon.compile(request, LoggerWrapper(logger))
-            } catch (exception: Aapt2Exception) {
-                throw rewriteCompileException(
-                    exception,
-                    request,
-                    errorFormatMode,
-                    enableBlame,
-                    logger
-                )
-            }
+    val loggerWrapper = LoggerWrapper(logger)
+    val daemon = aapt2Input.getLeasingAapt2()
+    val errorFormatMode = aapt2Input.buildService.get().parameters.errorFormatMode.get()
+    requests.forEach { request ->
+        try {
+            daemon.compile(request, loggerWrapper)
+        } catch (exception: Aapt2Exception) {
+            throw rewriteCompileException(
+                exception,
+                request,
+                errorFormatMode,
+                enableBlame,
+                logger
+            )
         }
     }
 }

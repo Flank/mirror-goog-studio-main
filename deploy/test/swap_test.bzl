@@ -13,6 +13,7 @@ def swap_test(name, srcs):
             ":swapped_dex",
             "//tools/base/deploy/agent/native:agent_server",
             "//tools/base/deploy/agent/native:libswap.so",
+            "//tools/base/deploy/installer:install-server",
             "//tools/base/deploy/test/data/apk1:apk",
             "//tools/base/deploy/test/data/apk2:apk",
         ],
@@ -26,8 +27,8 @@ def swap_test(name, srcs):
             # JVMTI Agent for the host.
             "-Dswap.agent.location=$(location //tools/base/deploy/agent/native:libswap.so)",
 
-            # Agent server for communcation with the agent.
-            "-Dswap.server.location=$(location //tools/base/deploy/agent/native:agent_server)",
+            # Install server for communcation with the agent.
+            "-Dinstall.server.location=$(location //tools/base/deploy/installer:install-server)",
 
             # APKs for testing the DexArchiveComparator
             "-Dapk1.location=$(location //tools/base/deploy/test/data/apk1:apk)",

@@ -17,28 +17,7 @@ package com.android.ide.common.gradle.model.impl
 
 import com.android.ide.common.gradle.model.IdeViewBindingOptions
 import java.io.Serializable
-import java.util.Objects
 
-class IdeViewBindingOptionsImpl(
+data class IdeViewBindingOptionsImpl(
   override val enabled: Boolean
-) : IdeViewBindingOptions, Serializable {
-
-  val hashCode: Int = calculateHashCode()
-
-  // Used for serialization by the IDE.
-  constructor() : this(enabled = false)
-
-  override fun equals(other: Any?): Boolean {
-    if (this === other) return true
-
-    if (other !is IdeViewBindingOptionsImpl) return false
-
-    return Objects.equals(enabled, other.enabled)
-  }
-
-  override fun hashCode(): Int = hashCode
-
-  override fun toString(): String = "IdeViewBindingOptions{enabled=$enabled}"
-
-  private fun calculateHashCode() : Int = Objects.hash(enabled)
-}
+) : IdeViewBindingOptions, Serializable

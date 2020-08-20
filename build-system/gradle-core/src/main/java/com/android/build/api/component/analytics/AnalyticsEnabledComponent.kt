@@ -26,7 +26,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
  */
 abstract class AnalyticsEnabledComponent<PropertiesT : ComponentProperties>(
     open val delegate: Component<PropertiesT>,
-    val stats: GradleBuildVariant.Builder
+    protected val stats: GradleBuildVariant.Builder
 ) : Component<PropertiesT> {
 
     override var enabled: Boolean

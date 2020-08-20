@@ -27,11 +27,11 @@ import org.junit.Test;
 
 /** Tests for {@link IdeBuildTypeContainerImpl}. */
 public class IdeBuildTypeContainerTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
     }
 
     @Test
@@ -46,10 +46,5 @@ public class IdeBuildTypeContainerTest {
         byte[] bytes = Serialization.serialize(buildType);
         Object o = Serialization.deserialize(bytes);
         assertEquals(buildType, o);
-    }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeBuildTypeContainerImpl.class).verify();
     }
 }

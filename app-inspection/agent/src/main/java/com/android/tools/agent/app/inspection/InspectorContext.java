@@ -23,12 +23,14 @@ import androidx.inspection.InspectorEnvironment;
 import androidx.inspection.InspectorExecutors;
 import androidx.inspection.InspectorFactory;
 import dalvik.system.DexClassLoader;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 final class InspectorContext {
     private static final String MAIN_THREAD_NAME = "main";
@@ -42,18 +44,22 @@ final class InspectorContext {
     private final String mProjectName;
 
     // it keeps reference only to pending commands.
-    private final ConcurrentHashMap<Integer, CommandCallbackImpl> mIdToCommandCallback =
-            new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer, WeakReference<CommandCallbackImpl>>
+            mIdToCommandCallback = new ConcurrentHashMap<>();
 
     private final InspectorExecutors mExecutors;
+
+    private final Consumer<Throwable> mCrashConsumer;
 
     InspectorContext(
             @NonNull String inspectorId,
             @NonNull String project,
-            @NonNull InspectorExecutors executors) {
+            @NonNull InspectorExecutors executors,
+            Consumer<Throwable> crashConsumer) {
         mInspectorId = inspectorId;
         mProjectName = project;
         mExecutors = executors;
+        mCrashConsumer = crashConsumer;
     }
 
     public String getProject() {
@@ -99,14 +105,17 @@ final class InspectorContext {
 
     public void sendCommand(int commandId, byte[] rawCommand) {
         CommandCallbackImpl callback = new CommandCallbackImpl(commandId);
-        mIdToCommandCallback.put(commandId, callback);
+        mIdToCommandCallback.put(commandId, new WeakReference<>(callback));
         mInspector.onReceiveCommand(rawCommand, callback);
     }
 
     public void cancelCommand(int cancelledCommandId) {
-        CommandCallbackImpl callback = mIdToCommandCallback.get(cancelledCommandId);
-        if (callback != null) {
-            callback.cancelCommand();
+        WeakReference<CommandCallbackImpl> reference = mIdToCommandCallback.get(cancelledCommandId);
+        if (reference != null) {
+            CommandCallbackImpl callback = reference.get();
+            if (callback != null) {
+                callback.cancelCommand();
+            }
         }
     }
 
@@ -197,6 +206,20 @@ final class InspectorContext {
                 for (Pair<Executor, Runnable> p : listeners) {
                     p.first.execute(p.second);
                 }
+            }
+        }
+
+        @Override
+        protected void finalize() {
+            if (mStatus == Status.PENDING) {
+                // Don't actually throw the exception, or that will cancel the finalize process
+                // Instead, just inform the consumer, who will handle sending off the crash event
+                // and disposing the current inspector.
+                mCrashConsumer.accept(
+                        new Exception(
+                                "CommandCallback#reply for command with ID "
+                                        + mCommandId
+                                        + " was never called"));
             }
         }
     }

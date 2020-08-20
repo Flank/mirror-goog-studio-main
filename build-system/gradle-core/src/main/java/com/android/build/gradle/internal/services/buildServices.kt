@@ -27,14 +27,16 @@ import java.util.UUID
 /** Registers and configures the build service with the specified type. */
 abstract class ServiceRegistrationAction<ServiceT, ParamsT>(
     protected val project: Project,
-    private val buildServiceClass: Class<ServiceT>
+    private val buildServiceClass: Class<ServiceT>,
+    private val maxParalleUsages: Int? = null
 ) where ServiceT : BuildService<ParamsT>, ParamsT : BuildServiceParameters {
     fun execute(): Provider<ServiceT> {
         return project.gradle.sharedServices.registerIfAbsent(
             getBuildServiceName(buildServiceClass),
             buildServiceClass
-        ) {
-            it.parameters?.let { params -> configure(params) }
+        ) { buildServiceSpec ->
+            buildServiceSpec.parameters?.let { params -> configure(params) }
+            maxParalleUsages?.let { buildServiceSpec.maxParallelUsages.set(it) }
         }
     }
 

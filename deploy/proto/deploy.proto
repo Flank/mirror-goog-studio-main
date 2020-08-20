@@ -73,6 +73,39 @@ message OverlaySwapRequest {
   bool always_update_overlay = 13;
 }
 
+message OverlayInstallRequest {
+  string package_name = 1;
+  Arch arch = 2;
+
+  string overlay_id = 3;
+  string expected_overlay_id = 4;
+
+  repeated OverlayFile overlay_files = 5;
+  repeated string deleted_files = 6;
+}
+
+message OverlayInstallResponse {
+  enum Status {
+    UNKNOWN = 0;
+    OK = 1;
+    SETUP_FAILED = 2;
+    START_SERVER_FAILED = 3;
+    WRITE_TO_SERVER_FAILED = 4;
+    READ_FROM_SERVER_FAILED = 5;
+    OVERLAY_ID_MISMATCH = 6;
+    OVERLAY_UPDATE_FAILED = 7;
+    START_SERVER_FAILED_USERDEBUG = 8;
+  }
+
+  Status status = 1;
+
+  // Additional data to help display a better error message in studio
+  string extra = 2;
+
+  // Error logs retrieved from the device.
+  repeated AgentExceptionLog agent_logs = 3;
+}
+
 message OverlayIdPush {
   string package_name = 1;
   string prev_oid = 2;
@@ -209,6 +242,7 @@ message SwapResponse {
     OVERLAY_UPDATE_FAILED = 17;           // The overlay update failed to complete
     SWAP_FAILED_BUT_OVERLAY_UPDATED = 18; // Swap failed, but overlay was updated
     START_SERVER_FAILED_USERDEBUG = 19;   // Could not start the server
+    READY_FOR_AGENTS_NOT_RECEIVED = 20;   // Did not receive the OK to attach agents
   }
 
   Status status = 1;
@@ -243,6 +277,7 @@ message InstallerResponse {
     DeltaPreinstallResponse deltapreinstall_response = 5;
     DeltaInstallResponse deltainstall_response = 6;
     OverlayIdPushResponse overlayidpush_response = 7;
+    OverlayInstallResponse overlay_install_response = 8;
   }
 }
 
@@ -391,6 +426,39 @@ message OverlayUpdateResponse {
   string error_message = 2;
 }
 
+message OpenAgentSocketRequest {
+  string socket_name = 1;
+}
+
+message OpenAgentSocketResponse {
+  enum Status {
+    UNKNOWN = 0;
+    OK = 1;
+    BIND_SOCKET_FAILED = 2;
+  }
+
+  Status status = 1;
+}
+
+message SendAgentMessageRequest {
+  int32 agent_count = 1;
+  SwapRequest swap_request = 2;
+}
+
+message SendAgentMessageResponse {
+  enum Status {
+    UNKNOWN = 0;
+    OK = 1;
+    AGENT_ACCEPT_FAILED = 2;
+    WRITE_TO_AGENT_FAILED = 3;
+    READ_FROM_AGENT_FAILED = 4;
+    UNPARSEABLE_AGENT_RESPONSE = 5;
+  }
+
+  Status status = 1;
+  repeated AgentSwapResponse agent_responses = 2;
+}
+
 message OverlayIdPushResponse {
   enum Status {
     UNKNOWN = 0;
@@ -413,6 +481,8 @@ message InstallServerRequest {
     CheckSetupRequest check_request = 2;
     OverlayUpdateRequest overlay_request = 3;
     GetAgentExceptionLogRequest log_request = 4;
+    OpenAgentSocketRequest socket_request = 5;
+    SendAgentMessageRequest send_request = 6;
   }
 }
 
@@ -434,5 +504,7 @@ message InstallServerResponse {
     CheckSetupResponse check_response = 3;
     OverlayUpdateResponse overlay_response = 4;
     GetAgentExceptionLogResponse log_response = 5;
+    OpenAgentSocketResponse socket_response = 6;
+    SendAgentMessageResponse send_response = 7;
   }
 }

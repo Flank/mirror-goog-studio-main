@@ -100,6 +100,7 @@ def calculate_jar_name_for_sdk_package(path):
     fail("Unknown path mapping for jar " + path)
 
 sdk_jar_prefix_to_zip_location = {
+    "prebuilts/r8/": "",
     "prebuilts/tools/common/m2/repository/": "external/",
     "prebuilts/tools/common/": "external/",
     "tools/external/": "external/",

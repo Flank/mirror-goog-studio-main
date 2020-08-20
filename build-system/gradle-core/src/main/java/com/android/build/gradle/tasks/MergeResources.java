@@ -38,8 +38,6 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.services.Aapt2Daemon;
-import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey;
 import com.android.build.gradle.internal.services.Aapt2Input;
 import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService;
 import com.android.build.gradle.internal.services.BuildServicesKt;
@@ -170,15 +168,11 @@ public abstract class MergeResources extends ResourceAwareTask {
     @Nested
     public abstract Aapt2Input getAapt2();
 
-    private boolean useJvmResourceCompiler;
-
     @NonNull
     private static ResourceCompilationService getResourceProcessor(
             @NonNull MergeResources mergeResourcesTask,
-            SyncOptions.ErrorFormatMode errorFormatMode,
             ImmutableSet<Flag> flags,
             boolean processResources,
-            boolean useJvmResourceCompiler,
             Aapt2Input aapt2Input) {
         // If we received the flag for removing namespaces we need to use the namespace remover to
         // process the resources.
@@ -192,14 +186,12 @@ public abstract class MergeResources extends ResourceAwareTask {
             return CopyToOutputDirectoryResourceCompilationService.INSTANCE;
         }
 
-        Aapt2DaemonServiceKey aapt2ServiceKey = Aapt2Daemon.registerAaptService(aapt2Input);
-
         return new WorkerExecutorResourceCompilationService(
-                mergeResourcesTask.parallelism,
-                mergeResourcesTask,
-                aapt2ServiceKey,
-                errorFormatMode,
-                useJvmResourceCompiler);
+                mergeResourcesTask.getProjectName(),
+                mergeResourcesTask.getPath(),
+                mergeResourcesTask.getWorkerExecutor(),
+                mergeResourcesTask.getAnalyticsService(),
+                aapt2Input);
     }
 
     @Override
@@ -219,8 +211,6 @@ public abstract class MergeResources extends ResourceAwareTask {
     public abstract DirectoryProperty getDataBindingLayoutInfoOutFolder();
 
     private SyncOptions.ErrorFormatMode errorFormatMode;
-    private final int parallelism =
-            getProject().getGradle().getStartParameter().getMaxWorkerCount();
 
     @Internal
     public abstract Property<String> getAaptEnv();
@@ -256,10 +246,8 @@ public abstract class MergeResources extends ResourceAwareTask {
                 ResourceCompilationService resourceCompiler =
                         getResourceProcessor(
                                 this,
-                                errorFormatMode,
                                 flags,
                                 processResources,
-                                useJvmResourceCompiler,
                                 getAapt2())) {
 
             SingleFileProcessor dataBindingLayoutProcessor = maybeCreateLayoutProcessor();
@@ -427,10 +415,8 @@ public abstract class MergeResources extends ResourceAwareTask {
                     ResourceCompilationService resourceCompiler =
                             getResourceProcessor(
                                     this,
-                                    errorFormatMode,
                                     flags,
                                     processResources,
-                                    useJvmResourceCompiler,
                                     getAapt2())) {
 
                 SingleFileProcessor dataBindingLayoutProcessor = maybeCreateLayoutProcessor();
@@ -764,11 +750,6 @@ public abstract class MergeResources extends ResourceAwareTask {
         return flags.stream().map(Enum::name).sorted().collect(Collectors.joining(","));
     }
 
-    @Input
-    public boolean isJvmResourceCompilerEnabled() {
-        return useJvmResourceCompiler;
-    }
-
     public static class CreationAction
             extends VariantTaskCreationAction<MergeResources, ComponentCreationConfig> {
         @NonNull private final TaskManager.MergeType mergeType;
@@ -918,7 +899,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             task.precompileDependenciesResources =
                     mergeType.equals(MERGE)
                             && !isLibrary
-                            && variantScope.isPrecompileDependenciesResourcesEnabled();
+                            && creationConfig.isPrecompileDependenciesResourcesEnabled();
 
             task.getResourceDirsOutsideRootProjectDir()
                     .set(
@@ -943,11 +924,6 @@ public abstract class MergeResources extends ResourceAwareTask {
                             processResources ? PathSensitivity.ABSOLUTE : PathSensitivity.RELATIVE)
                     .withPropertyName("rawLocalResources");
 
-            task.useJvmResourceCompiler =
-                    creationConfig
-                            .getServices()
-                            .getProjectOptions()
-                            .get(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER);
             HasConfigurableValuesKt.setDisallowChanges(
                     task.getAapt2ThreadPoolBuildService(),
                     BuildServicesKt.getBuildService(

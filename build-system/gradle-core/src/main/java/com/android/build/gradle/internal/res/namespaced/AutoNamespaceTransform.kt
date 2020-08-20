@@ -143,8 +143,6 @@ abstract class AutoNamespaceTransform : TransformAction<AutoNamespaceParameters>
         val compiledPublicXmlDir = tempDir.resolve("compiled_public_xml")
             .also { Files.createDirectory(it) }
         val requestList = ArrayList<CompileResourceRequest>()
-        val aapt2ServiceKey: Aapt2DaemonServiceKey =
-            parameters.aapt2.registerAaptService()
 
         // Read the symbol tables from this AAR and the dependencies to enable the namespaced
         // rewriter to resolve symbols.
@@ -240,7 +238,7 @@ abstract class AutoNamespaceTransform : TransformAction<AutoNamespaceParameters>
         // TODO: Performance: This is single threaded (but multiple AARs could be being
         //       auto-namespaced in parallel), investigate whether it can be improved.
         // TODO(b/152323103) errorFormatMode should be implicit
-        runAapt2Compile(aapt2ServiceKey, requestList, parameters.aapt2.getErrorFormatMode(), false)
+        runAapt2Compile(parameters.aapt2, requestList, false)
 
         linkAndroidResources(
             manifestFile,
@@ -248,7 +246,6 @@ abstract class AutoNamespaceTransform : TransformAction<AutoNamespaceParameters>
             compiledPublicXmlDir,
             staticLibApk,
             aaptIntermediateDir,
-            aapt2ServiceKey,
             outputAar
         )
 
@@ -261,7 +258,6 @@ abstract class AutoNamespaceTransform : TransformAction<AutoNamespaceParameters>
         compiledPublicXmlDir: Path,
         staticLibApk: Path,
         aaptIntermediateDir: Path,
-        aapt2ServiceKey: Aapt2DaemonServiceKey,
         outputAar: ZipOutputStream
     ) {
         if (!Files.isRegularFile(manifestFile)) {
@@ -285,6 +281,7 @@ abstract class AutoNamespaceTransform : TransformAction<AutoNamespaceParameters>
         )
 
         // TODO(b/152323103) this should be implicit
+        val aapt2ServiceKey: Aapt2DaemonServiceKey = parameters.aapt2.registerAaptService()
         runAapt2Link(aapt2ServiceKey, request, parameters.aapt2.getErrorFormatMode())
 
         outputAar.putNextEntry(ZipEntry(SdkConstants.FN_RESOURCE_STATIC_LIBRARY))

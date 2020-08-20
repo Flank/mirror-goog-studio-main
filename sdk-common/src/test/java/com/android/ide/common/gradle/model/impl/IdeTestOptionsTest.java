@@ -27,11 +27,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class IdeTestOptionsTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
     }
 
     @Test
@@ -53,10 +53,5 @@ public class IdeTestOptionsTest {
         IdeTestOptionsImpl copy = myModelCache.testOptionsFrom(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeTestOptionsImpl.class).verify();
     }
 }

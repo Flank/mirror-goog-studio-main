@@ -40,9 +40,10 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
+import com.android.build.gradle.internal.services.SymbolTableBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.services.getErrorFormatMode
-import com.android.build.gradle.internal.services.use
+import com.android.build.gradle.internal.services.getLeasingAapt2
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.utils.fromDisallowChanges
@@ -87,6 +88,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.tooling.BuildException
+import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
 import java.util.ArrayList
@@ -234,6 +236,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:Nested
     abstract val aapt2: Aapt2Input
 
+    @get:Internal
+    abstract val symbolTableBuildService: Property<SymbolTableBuildService>
+
     // Not an input as it is only used to rewrite exception and doesn't affect task output
     private lateinit var manifestMergeBlameFile: Provider<RegularFile>
 
@@ -256,7 +261,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     }
 
     fun doFullTaskAction(inputStableIdsFile: File?) {
-        workerExecutor.noIsolation().submit(Action::class.java) { parameters ->
+        workerExecutor.noIsolation().submit(TaskAction::class.java) { parameters ->
             parameters.initializeFromAndroidVariantTask(this)
 
             parameters.mainDexListProguardOutputFile.set(mainDexListProguardOutputFile)
@@ -270,6 +275,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
             parameters.androidJarInput.set(androidJarInput)
             parameters.aapt2.set(aapt2)
+            parameters.symbolTableBuildService.set(symbolTableBuildService)
 
             parameters.aaptOptions.set(AaptOptions(noCompress.orNull, aaptAdditionalParameters.orNull))
             parameters.applicationId.set(applicationId)
@@ -302,7 +308,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         }
     }
 
-    abstract class Parameters : ProfileAwareWorkAction.Parameters() {
+    abstract class TaskWorkActionParameters : ProfileAwareWorkAction.Parameters() {
 
         abstract val mainDexListProguardOutputFile: RegularFileProperty
         abstract val outputStableIdsFile: RegularFileProperty
@@ -315,6 +321,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
         @get:Nested abstract val androidJarInput: Property<AndroidJarInput>
         @get:Nested abstract val aapt2: Property<Aapt2Input>
+        abstract val symbolTableBuildService: Property<SymbolTableBuildService>
         abstract val aaptOptions: Property<AaptOptions>
         abstract val applicationId: Property<String>
         abstract val buildTargetDensity: Property<String?>
@@ -345,56 +352,49 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         abstract val variantType: Property<VariantType>
     }
 
-    abstract class Action : ProfileAwareWorkAction<Parameters>() {
+    abstract class TaskAction : ProfileAwareWorkAction<TaskWorkActionParameters>() {
+
+        @get:Inject
+        abstract val workerExecutor: WorkerExecutor
+
         override fun run() {
             val manifestBuiltArtifacts = BuiltArtifactsLoaderImpl().load(parameters.manifestFiles)
                 ?: throw RuntimeException("Cannot load processed manifest files, please file a bug.")
             // 'Incremental' runs should only preserve the stable IDs file.
             FileUtils.deleteDirectoryContents(parameters.resPackageOutputDirectory.get().asFile)
 
-            parameters.aapt2.get().use(parameters) { processor ->
-                val variantOutputsList = parameters.variantOutputs.get()
-                val unprocessedOutputs = variantOutputsList.toMutableList()
-                val mainOutput = chooseOutput(variantOutputsList)
-
-                unprocessedOutputs.remove(mainOutput)
+            val variantOutputsList: List<VariantOutputImpl.SerializedForm> = parameters.variantOutputs.get()
+            val mainOutput = chooseOutput(variantOutputsList)
 
 
+            invokeAaptForSplit(
+                    mainOutput,
+                    manifestBuiltArtifacts.getBuiltArtifact(mainOutput.variantOutputConfiguration)
+                        ?: throw RuntimeException("Cannot find built manifest for $mainOutput"),
+                    true,
+                    parameters.aapt2.get().getLeasingAapt2(),
+                    parameters.inputStableIdsFile.orNull?.asFile, parameters
+            )
 
-                processor.submit(parameters.analyticsService.get()) { aapt2 ->
-                    invokeAaptForSplit(
-                            mainOutput,
-                            manifestBuiltArtifacts.getBuiltArtifact(mainOutput.variantOutputConfiguration)
-                                ?: throw RuntimeException("Cannot find built manifest for $mainOutput"),
-                            true,
-                            aapt2,
-                            parameters.inputStableIdsFile.orNull?.asFile, parameters
-                    )
-                }
+            if (parameters.canHaveSplits.get()) {
+                // This must happen after the main split is done, since the output of the main
+                // split is used by the full splits.
+                val workQueue = workerExecutor.noIsolation()
+                val unprocessedOutputs = variantOutputsList.minus(mainOutput)
+                for (variantOutput in unprocessedOutputs) {
 
+                    val manifestOutput: BuiltArtifactImpl =
+                        manifestBuiltArtifacts.getBuiltArtifact(variantOutput.variantOutputConfiguration)
+                            ?: throw RuntimeException("Cannot find build manifest for $variantOutput")
 
-                if (parameters.canHaveSplits.get()) {
-                    // If there are remaining splits to be processed we await for the main split to
-                    // finish since the output of the main split is used by the full splits below.
-                    processor.await()
-
-                    for (variantOutput in unprocessedOutputs) {
-                        // If we're supporting stable IDs we need to make sure the splits get exactly
-                        // the same IDs as the main one.
-                        processor.submit(parameters.analyticsService.get()) { aapt2 ->
-                            invokeAaptForSplit(
-                                variantOutput,
-                                manifestBuiltArtifacts.getBuiltArtifact(variantOutput.variantOutputConfiguration)
-                                    ?: throw RuntimeException("Cannot find build manifest for $variantOutput"),
-                                false,
-                                aapt2,
-                                if (parameters.useStableIds.get()) parameters.outputStableIdsFile.get().asFile else null,
-                             parameters)
-                        }
+                    workQueue.submit(InvokeAaptForSplitAction::class.java) { splitParameters ->
+                        splitParameters.initializeFromProfileAwareWorkAction(this.parameters)
+                        splitParameters.globalParameters.set(parameters)
+                        splitParameters.variantOutput.set(variantOutput)
+                        splitParameters.manifestOutput.set(manifestOutput)
                     }
                 }
             }
-
         }
         private fun chooseOutput(variantOutputs: List<VariantOutputImpl.SerializedForm>): VariantOutputImpl.SerializedForm =
             variantOutputs.firstOrNull { variantOutput ->
@@ -403,6 +403,28 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 ) == null
             } ?: throw RuntimeException("No non-density apk found")
 
+    }
+
+
+    abstract class InvokeAaptForSplitAction : ProfileAwareWorkAction<InvokeAaptForSplitAction.Parameters>() {
+        abstract class Parameters: ProfileAwareWorkAction.Parameters() {
+            abstract val globalParameters: Property<TaskWorkActionParameters>
+            abstract val variantOutput: Property<VariantOutputImpl.SerializedForm>
+            abstract val manifestOutput: Property<BuiltArtifactImpl>
+        }
+
+        override fun run() {
+            // If we're supporting stable IDs we need to make sure the splits get exactly
+            // the same IDs as the main one.
+            val globalParameters = parameters.globalParameters.get()
+            invokeAaptForSplit(
+                parameters.variantOutput.get(),
+                parameters.manifestOutput.get(),
+                false,
+                globalParameters.aapt2.get().getLeasingAapt2(),
+                if (globalParameters.useStableIds.get()) globalParameters.outputStableIdsFile.get().asFile else null,
+                globalParameters)
+        }
     }
 
     abstract class BaseCreationAction(
@@ -536,6 +558,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
             creationConfig.services.initializeAapt2Input(task.aapt2)
+            task.symbolTableBuildService.set(getBuildService(creationConfig.services.buildServiceRegistry))
             task.androidJarInput.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
@@ -742,7 +765,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             generateRClass: Boolean,
             aapt2: Aapt2,
             stableIdsInputFile: File?,
-            parameters: Parameters) {
+            parameters: TaskWorkActionParameters) {
 
             val featurePackagesBuilder = ImmutableList.builder<File>()
             for (featurePackage in parameters.featureResourcePackages.files) {
@@ -773,7 +796,16 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             var proguardOutputFile: File? = null
             var mainDexListProguardOutputFile: File? = null
             if (generateRClass) {
-                packageForR = parameters.packageName.get()
+                packageForR = if (parameters.variantType.get().isForTesting) {
+                    // Workaround for b/162244493: Use application ID in the test variant to match
+                    // previous behaviour.
+                    // TODO(b/162244493): migrate everything to use the actual package name in
+                    //  AGP 5.0.
+                    parameters.applicationId.get()
+                } else {
+                    parameters.packageName.get()
+                }
+
 
                 // we have to clean the source folder output in case the package name changed.
                 srcOut = parameters.sourceOutputDirectory.orNull?.asFile
@@ -845,7 +877,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         aaptConfig = configBuilder.build(),
                         rJar = if(generateRClass) parameters.rClassOutputJar.orNull?.asFile else null,
                         logger = logger,
-                        errorFormatMode = parameters.aapt2.get().getErrorFormatMode()
+                        errorFormatMode = parameters.aapt2.get().getErrorFormatMode(),
+                        symbolTableLoader = parameters.symbolTableBuildService.get()::loadClasspath
                     )
 
                     if (LOG.isInfoEnabled) {
@@ -859,7 +892,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 ) {
                     SymbolIo.writeSymbolListWithPackageName(
                         parameters.textSymbolOutputFile.orNull?.asFile!!.toPath(),
-                        File(manifestFile).toPath(),
+                        packageForR,
                         parameters.symbolsWithPackageNameOutputFile.get().asFile.toPath()
                     )
                 }

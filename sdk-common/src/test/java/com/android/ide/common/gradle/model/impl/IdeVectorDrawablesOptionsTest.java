@@ -22,10 +22,18 @@ import static org.junit.Assert.assertEquals;
 import com.android.ide.common.gradle.model.stubs.VectorDrawablesOptionsStub;
 import com.android.testutils.Serialization;
 import java.io.Serializable;
+import org.junit.Before;
 import org.junit.Test;
 
 /** Tests for {@link com.android.ide.common.gradle.model.impl.IdeVectorDrawablesOptionsImpl}. */
 public class IdeVectorDrawablesOptionsTest {
+    private ModelCacheTesting myModelCache;
+
+    @Before
+    public void setUp() throws Exception {
+        myModelCache = ModelCache.createForTesting();
+    }
+
     @Test
     public void serializable() {
         assertThat(IdeVectorDrawablesOptionsImpl.class).isAssignableTo(Serializable.class);
@@ -33,16 +41,10 @@ public class IdeVectorDrawablesOptionsTest {
 
     @Test
     public void serialization() throws Exception {
-        ModelCache modelCache = new ModelCache();
         IdeVectorDrawablesOptionsImpl options =
-                modelCache.vectorDrawablesOptionsFrom(new VectorDrawablesOptionsStub());
+                myModelCache.vectorDrawablesOptionsFrom(new VectorDrawablesOptionsStub());
         byte[] bytes = Serialization.serialize(options);
         Object o = Serialization.deserialize(bytes);
         assertEquals(options, o);
-    }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeVectorDrawablesOptionsImpl.class).verify();
     }
 }

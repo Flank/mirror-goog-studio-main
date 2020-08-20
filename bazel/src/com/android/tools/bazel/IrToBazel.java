@@ -29,6 +29,7 @@ import com.android.tools.bazel.model.Package;
 import com.android.tools.bazel.model.UnmanagedRule;
 import com.android.tools.bazel.model.Workspace;
 import com.google.common.base.Verify;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import java.io.File;
@@ -64,7 +65,7 @@ public class IrToBazel {
         Map<IrLibrary, JavaImport> imports = Maps.newHashMap();
         Map<String, FileGroup> groups = Maps.newHashMap();
         Map<IrModule, ImlModule> rules = new HashMap<>();
-        Map<String, UnmanagedRule> sdks = new HashMap<>();
+        Map<String, UnmanagedRule> unmanaged = new HashMap<>();
         Map<String, JavaImport> reuse = Maps.newHashMap();
 
         // 1st pass: Creation.
@@ -141,18 +142,33 @@ public class IrToBazel {
                 }
                 if (dependency.dependency instanceof IrLibrary) {
                     if (config.strict) {
+                        // TODO: Update iml files to have the right names.
+                        Map<String, String> UNMANAGED = ImmutableMap.of(
+                                "studio-sdk", "studio-sdk",
+                                "studio-plugin", "studio-sdk-plugin",
+                                "intellij-updater", "studio-sdk-updater"
+                        );
                         IrLibrary library = (IrLibrary) dependency.dependency;
                         JavaImport javaImport = imports.get(library);
                         if (javaImport == null) {
-                            if (library.name.equals("studio-sdk") && library.owner == null) {
-                                UnmanagedRule rule = sdks.get("studio-sdk");
+                            Map.Entry<String, String> unmanagedEntry = null;
+                            for (Map.Entry<String, String> entry : UNMANAGED.entrySet()) {
+                                if (library.name.startsWith(entry.getKey()) &&
+                                        library.owner == null) {
+                                    unmanagedEntry = entry;
+                                    break;
+                                }
+                            }
+                            if (unmanagedEntry != null) {
+                                String newName = library.name.replaceAll(
+                                        unmanagedEntry.getKey(),
+                                        unmanagedEntry.getValue());
+                                UnmanagedRule rule = unmanaged.get(newName);
                                 if (rule == null) {
-                                    rule =
-                                            new UnmanagedRule(
-                                                    bazel.findPackage(
-                                                            "prebuilts/studio/intellij-sdk"),
-                                                    "studio-sdk");
-                                    sdks.put("studio-sdk", rule);
+                                    rule = new UnmanagedRule(
+                                            bazel.findPackage("prebuilts/studio/intellij-sdk"),
+                                            newName);
+                                    unmanaged.put(newName, rule);
                                 }
                                 imlModule.addDependency(rule, dependency.exported, scopes);
                                 continue;
@@ -267,7 +283,7 @@ public class IrToBazel {
                                 jarRules,
                                 libraries,
                                 rules,
-                                sdks,
+                                unmanaged,
                                 module,
                                 librariesPkg,
                                 dependency,
@@ -304,7 +320,7 @@ public class IrToBazel {
             Map<String, BazelRule> jarRules,
             Map<String, JavaLibrary> libraries,
             Map<IrModule, ImlModule> rules,
-            Map<String, UnmanagedRule> sdks,
+            Map<String, UnmanagedRule> unmanaged,
             IrModule module,
             Package librariesPkg,
             IrModule.Dependency<? extends IrNode> dependency,
@@ -312,12 +328,12 @@ public class IrToBazel {
         IrLibrary library = (IrLibrary) dependency.dependency;
         JavaLibrary namedLib = null;
         if (library.name.equals("studio-sdk") && library.owner == null) {
-            UnmanagedRule rule = sdks.get("studio-sdk");
+            UnmanagedRule rule = unmanaged.get("studio-sdk");
             if (rule == null) {
                 rule =
                         new UnmanagedRule(
                                 bazel.findPackage("prebuilts/studio/intellij-sdk"), "studio-sdk");
-                sdks.put("studio-sdk", rule);
+                unmanaged.put("studio-sdk", rule);
             }
             rules.get(module).addDependency(rule, dependency.exported, scopes);
         } else if (library.owner == null) {

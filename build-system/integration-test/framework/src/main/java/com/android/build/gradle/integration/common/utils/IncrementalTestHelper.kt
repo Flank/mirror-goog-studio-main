@@ -59,11 +59,11 @@ class IncrementalTestHelper(
 
     /** Records the timestamps and contents of the tracked files. */
     private fun recordTimestampsAndContents() {
-        filesToTrackChanges = filesOrDirsToTrackChanges.flatMap {
-            if (it.isDirectory) {
-                it.walk().filter(File::isFile).toList()
+        filesToTrackChanges = filesOrDirsToTrackChanges.flatMap { fileOrDir ->
+            if (fileOrDir.isDirectory) {
+                fileOrDir.walk().filter { it.isFile }.toList()
             } else {
-                listOf(it)
+                listOf(fileOrDir)
             }
         }.toSet()
 

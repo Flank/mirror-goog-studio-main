@@ -33,13 +33,27 @@ package com.android.build.gradle.external.gnumake
 import com.android.SdkConstants
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue
 import com.android.build.gradle.truth.NativeBuildConfigValueSubject
+import com.android.utils.cxx.streamCompileCommands
 import com.google.common.truth.Truth
 import com.google.gson.Gson
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.util.Arrays
 
 class NativeBuildConfigValueBuilderTest {
+    @get:Rule
+    val tempDir = TemporaryFolder()
+
+    lateinit var compileCommandsJsonBinFile: File
+
+    @Before
+    fun setUp() {
+        compileCommandsJsonBinFile = tempDir.newFile("compile_commands.json.bin")
+    }
+
     @Test
     fun doubleTarget() {
         assertThatNativeBuildConfigEquals(
@@ -281,21 +295,297 @@ class NativeBuildConfigValueBuilderTest {
         )
     }
 
+    @Test
+    fun doubleTarget_compileCommandsJsonBin() {
+        assertThatNativeBuildConfigEquals(
+            """
+            g++ -c a.c -o x86_64/a.o
+            g++ x86_64/a.o -o x86_64/a.so
+            g++ -c a.c -o x86/a.o
+            g++ x86/a.o -o x86/a.so
+            """.trimIndent(),
+            """
+            {
+              "buildFiles": [
+                {
+                  "path": "/projects/MyProject/jni/Android.mk"
+                }
+              ],
+              "cleanCommandsComponents": [
+                ["echo", "clean", "command"]
+              ],  
+              "buildTargetsCommandComponents": ["echo", "build", "command", "{LIST_OF_TARGETS_TO_BUILD}"],
+              "libraries": {
+                "a-debug-x86_64": {
+                  "abi" : "x86_64",      
+                  "artifactName" : "a",
+                  "buildCommandComponents": ["echo", "build", "command", "x86_64/a.so"],
+                  "toolchain": "toolchain-x86_64",
+                  "output": {
+                    "path": "x86_64/a.so"
+                  }
+                },
+                "a-debug-x86": {
+                  "abi" : "x86",
+                  "artifactName" : "a",
+                  "buildCommandComponents": ["echo", "build", "command", "x86/a.so"],
+                  "toolchain": "toolchain-x86",
+                  "output": {
+                    "path": "x86/a.so"
+                  }
+                }
+              },
+              "toolchains": {
+                "toolchain-x86": {
+                  "cCompilerExecutable": {
+                    "path": "g++"
+                  }
+                },
+                "toolchain-x86_64": {
+                  "cCompilerExecutable": {
+                    "path": "g++"
+                  }
+                }
+              },
+              "cFileExtensions": [
+                "c"
+              ],
+              "cppFileExtensions": []
+            }""".trimIndent(),
+            skipProcessingCompilerFlags = true,
+            compileCommandsJsonBinFile = compileCommandsJsonBinFile
+        )
+        val entries = mutableListOf<CompileCommandJsonEntry>()
+        streamCompileCommands(compileCommandsJsonBinFile) { sourceFile: File, compiler: File, flags: List<String>, workingDirectory: File ->
+            entries.add(CompileCommandJsonEntry(sourceFile, compiler, flags, workingDirectory))
+        }
+        Truth.assertThat(entries).containsExactly(
+            CompileCommandJsonEntry(
+                sourceFile = File("a.c"),
+                compiler = File("g++"),
+                flags = listOf(),
+                workingDirectory = File("/projects/MyProject/jni").absoluteFile
+            ),
+            CompileCommandJsonEntry(
+                sourceFile = File("a.c"),
+                compiler = File("g++"),
+                flags = listOf(),
+                workingDirectory = File("/projects/MyProject/jni").absoluteFile
+            )
+        )
+    }
+
+    @Test
+    fun includeInSource_compileCommandsJsonBin() {
+        assertThatNativeBuildConfigEquals(
+            "g++ -c a.c -o x/aa.o -Isome-include-path\n",
+            """{
+              "buildFiles": [
+                {
+                  "path": "/projects/MyProject/jni/Android.mk"
+                }
+              ],
+              "cleanCommandsComponents": [
+                ["echo", "clean", "command"]
+              ],
+              "buildTargetsCommandComponents": ["echo", "build", "command", "{LIST_OF_TARGETS_TO_BUILD}"],
+              "libraries": {
+                "aa-debug-x": {
+                  "buildCommandComponents": ["echo", "build", "command", "x/aa.o"],
+                  "toolchain": "toolchain-x",
+                  "abi": "x",
+                  "artifactName" : "aa",
+                  "output": {
+                    "path": "x/aa.o"
+                  }
+                }
+              },
+              "toolchains": {
+                "toolchain-x": {
+                  "cCompilerExecutable": {
+                    "path": "g++"
+                  }
+                }
+              },
+              "cFileExtensions": [
+                "c"
+              ],
+              "cppFileExtensions": []
+            }""",
+            skipProcessingCompilerFlags = true,
+            compileCommandsJsonBinFile = compileCommandsJsonBinFile
+        )
+        val entries = mutableListOf<CompileCommandJsonEntry>()
+        streamCompileCommands(compileCommandsJsonBinFile) { sourceFile: File, compiler: File, flags: List<String>, workingDirectory: File ->
+            entries.add(CompileCommandJsonEntry(sourceFile, compiler, flags, workingDirectory))
+        }
+        Truth.assertThat(entries).containsExactly(
+            CompileCommandJsonEntry(
+                sourceFile = File("a.c"),
+                compiler = File("g++"),
+                flags = listOf("-Isome-include-path"),
+                workingDirectory = File("/projects/MyProject/jni").absoluteFile
+            )
+        )
+    }
+
+    @Test
+    fun weirdExtension1_compileCommandsJsonBin() {
+        assertThatNativeBuildConfigEquals(
+            """
+                g++ -c a.c -o x86_64/aa.o -Dfoo
+                g++ -c a.S -o x86_64/aS.so -Dfoo
+                g++ x86_64/aa.o x86_64/aS.so -o x86/a.so
+                """.trimIndent(),
+            """{
+              "buildFiles": [
+                {
+                  "path": "/projects/MyProject/jni/Android.mk"
+                }
+              ],
+              "cleanCommandsComponents": [
+                ["echo", "clean", "command"]
+              ],  
+              "buildTargetsCommandComponents": ["echo", "build", "command", "{LIST_OF_TARGETS_TO_BUILD}"],
+              "libraries": {
+                "a-debug-x86": {
+                  "abi" : "x86",
+                  "artifactName" : "a",
+                  "buildCommandComponents": ["echo", "build", "command", "x86/a.so"],
+                  "toolchain": "toolchain-x86",
+                  "output": {
+                    "path": "x86/a.so"
+                  }
+                }
+              },
+              "toolchains": {
+                "toolchain-x86": {
+                  "cCompilerExecutable": {
+                    "path": "g++"
+                  }
+                }
+              },
+              "cFileExtensions": [
+                "S",
+                "c"
+              ],
+              "cppFileExtensions": []
+            }""",
+            skipProcessingCompilerFlags = true,
+            compileCommandsJsonBinFile = compileCommandsJsonBinFile
+        )
+        val entries = mutableListOf<CompileCommandJsonEntry>()
+        streamCompileCommands(compileCommandsJsonBinFile) { sourceFile: File, compiler: File, flags: List<String>, workingDirectory: File ->
+            entries.add(CompileCommandJsonEntry(sourceFile, compiler, flags, workingDirectory))
+        }
+        Truth.assertThat(entries).containsExactly(
+            CompileCommandJsonEntry(
+                sourceFile = File("a.S"),
+                compiler = File("g++"),
+                flags = listOf("-Dfoo"),
+                workingDirectory = File("/projects/MyProject/jni").absoluteFile
+            ),
+            CompileCommandJsonEntry(
+                sourceFile = File("a.c"),
+                compiler = File("g++"),
+                flags = listOf("-Dfoo"),
+                workingDirectory = File("/projects/MyProject/jni").absoluteFile
+            )
+        )
+    }
+
+    @Test
+    fun weirdExtension2_compileCommandsJsonBin() {
+        assertThatNativeBuildConfigEquals(
+            """
+                g++ -c a.S -o x86_64/aS.so -Dfoo
+                g++ -c a.c -o x86_64/aa.o -Dfoo
+                g++ x86_64/aa.o x86_64/aS.so -o x86/a.so
+                """.trimIndent(),
+            """{
+              "buildFiles": [
+                {
+                  "path": "/projects/MyProject/jni/Android.mk"
+                }
+              ],
+              "cleanCommandsComponents": [
+                ["echo", "clean", "command"]
+              ],
+              "buildTargetsCommandComponents": ["echo", "build", "command", "{LIST_OF_TARGETS_TO_BUILD}"],
+              "libraries": {
+                "a-debug-x86": {
+                  "abi" : "x86",
+                  "artifactName" : "a",      
+                  "buildCommandComponents": ["echo", "build", "command", "x86/a.so"],
+                  "toolchain": "toolchain-x86",
+                  "output": {
+                    "path": "x86/a.so"
+                  }
+                }
+              },
+              "toolchains": {
+                "toolchain-x86": {
+                  "cCompilerExecutable": {
+                    "path": "g++"
+                  }
+                }
+              },
+              "cFileExtensions": [
+                "c",
+                "S"
+              ],
+              "cppFileExtensions": []
+            }""",
+            skipProcessingCompilerFlags = true,
+            compileCommandsJsonBinFile = compileCommandsJsonBinFile
+        )
+        val entries = mutableListOf<CompileCommandJsonEntry>()
+        streamCompileCommands(compileCommandsJsonBinFile) { sourceFile: File, compiler: File, flags: List<String>, workingDirectory: File ->
+            entries.add(CompileCommandJsonEntry(sourceFile, compiler, flags, workingDirectory))
+        }
+        Truth.assertThat(entries).containsExactly(
+            CompileCommandJsonEntry(
+                sourceFile = File("a.S"),
+                compiler = File("g++"),
+                flags = listOf("-Dfoo"),
+                workingDirectory = File("/projects/MyProject/jni").absoluteFile
+            ),
+            CompileCommandJsonEntry(
+                sourceFile = File("a.c"),
+                compiler = File("g++"),
+                flags = listOf("-Dfoo"),
+                workingDirectory = File("/projects/MyProject/jni").absoluteFile
+            )
+        )
+    }
+
+    private data class CompileCommandJsonEntry(
+        val sourceFile: File,
+        val compiler: File,
+        val flags: List<String>,
+        val workingDirectory: File
+    )
+
     companion object {
         private fun assertThatNativeBuildConfigEquals(
-            commands: String, expected: String
+            commands: String,
+            expected: String,
+            skipProcessingCompilerFlags: Boolean = false,
+            compileCommandsJsonBinFile: File? = null
         ) {
             var expected = expected
             val projectPath = File("/projects/MyProject/jni/Android.mk")
             val actualValue =
-                NativeBuildConfigValueBuilder(projectPath, projectPath.parentFile)
-                    .setCommands(
+                NativeBuildConfigValueBuilder(projectPath, projectPath.parentFile).apply {
+                    setCommands(
                         Arrays.asList("echo", "build", "command"),
                         Arrays.asList("echo", "clean", "command"),
                         "debug",
                         commands
                     )
-                    .build()
+                    this.skipProcessingCompilerFlags = skipProcessingCompilerFlags
+                    this.compileCommandsJsonBinFile = compileCommandsJsonBinFile
+                }.build()
             if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
                 expected = expected.replace("/", "\\\\")
             }

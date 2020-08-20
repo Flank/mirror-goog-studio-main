@@ -2,14 +2,14 @@ package com.example.helloworldcompose
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.Composable
-import androidx.ui.foundation.Text
-import androidx.ui.core.setContent
-import androidx.ui.layout.Column
-import androidx.ui.core.Modifier
-import androidx.ui.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.foundation.Text
+import androidx.compose.ui.platform.setContent
+import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.padding
 import androidx.ui.tooling.preview.Preview
-import androidx.ui.unit.dp
+import androidx.compose.ui.unit.dp
 
 
 class MainActivity : AppCompatActivity() {

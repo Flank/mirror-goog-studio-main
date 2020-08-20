@@ -109,7 +109,6 @@ coverage_report(
     tests = [
         "//tools/adt/idea/app-inspection/api:intellij.android.app-inspection.api_tests",
         "//tools/adt/idea/app-inspection/ide:intellij.android.app-inspection.ide.tests_tests",
-        "//tools/adt/idea/app-inspection/inspector/api:intellij.android.app-inspection.inspector.api_tests",
     ],
 )
 
@@ -470,10 +469,22 @@ coverage_report(
     ],
 )
 
+# Coverage report for "Pair Devices over Wi-Fi" (aka Wireless ADB)
+coverage_report(
+    name = "adb-wireless",
+    srcpath_include = [
+        "tools/adt/idea/android-adb/src/com/android/tools/idea/adb/wireless",
+    ],
+    tests = [
+        "//tools/adt/idea/android-adb:intellij.android.adb.tests_tests",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     # keep sorted
     reports = [
+        "adb-wireless",
         "all",
         "android-apk",
         "app-inspection",
@@ -527,7 +538,6 @@ coverage_report(
         "//tools/adt/idea/apkanalyzer:intellij.android.apkanalyzer_tests",
         "//tools/adt/idea/app-inspection/api:intellij.android.app-inspection.api_tests",
         "//tools/adt/idea/app-inspection/ide:intellij.android.app-inspection.ide.tests_tests",
-        "//tools/adt/idea/app-inspection/inspector/api:intellij.android.app-inspection.inspector.api_tests",
         "//tools/adt/idea/assistant:assistant-test_tests",
         "//tools/adt/idea/build-attribution:intellij.android.build-attribution.tests_tests",
         "//tools/adt/idea/build-common:intellij.android.buildCommon_tests",

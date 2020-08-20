@@ -154,6 +154,14 @@ val CxxAbiModel.compileCommandsJsonFile: File
     get() = FileUtils.join(originalCxxBuildFolder, "compile_commands.json")
 
 /**
+ * compile_commands.json.bin file for this ABI. This is equivalent to a compile_commands.json file
+ * but more compact.
+ * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/compile_commands.json.bin
+ */
+val CxxAbiModel.compileCommandsJsonBinFile: File
+    get() = FileUtils.join(originalCxxBuildFolder, "compile_commands.json.bin")
+
+/**
  * Text file containing absolute paths to folders containing the generated symbols, one per line.
  * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/symbol_folder_index.txt
  */
@@ -167,6 +175,30 @@ val CxxAbiModel.symbolFolderIndexFile: File
  */
 val CxxAbiModel.buildFileIndexFile: File
     get() = FileUtils.join(originalCxxBuildFolder, "build_file_index.txt")
+
+/**
+ * Text file containing command run to generate C/C++ metadata.
+ *
+ * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/metadata_generation_command.txt
+ */
+val CxxAbiModel.metadataGenerationCommandFile: File
+    get() = FileUtils.join(originalCxxBuildFolder, "metadata_generation_command.txt")
+
+/**
+ * Text file containing STDOUT for the process run to generate C/C++ metadata.
+ *
+ * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/metadata_generation_stdout.txt
+ */
+val CxxAbiModel.metadataGenerationStdoutFile: File
+    get() = FileUtils.join(originalCxxBuildFolder, "metadata_generation_stdout.txt")
+
+/**
+ * Text file containing STDERR for the process run to generate C/C++ metadata.
+ *
+ * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/metadata_generation_stderr.txt
+ */
+val CxxAbiModel.metadataGenerationStderrFile: File
+    get() = FileUtils.join(originalCxxBuildFolder, "metadata_generation_stderr.txt")
 
 fun CxxAbiModel.shouldGeneratePrefabPackages(): Boolean {
     // Prefab will fail if we try to create ARMv5/MIPS/MIPS64 modules. r17 was the first NDK version

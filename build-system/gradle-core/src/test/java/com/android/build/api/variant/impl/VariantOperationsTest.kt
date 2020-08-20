@@ -25,8 +25,10 @@ import com.google.common.truth.Truth
 import org.gradle.api.Action
 import org.junit.Test
 import org.mockito.Mockito
+import java.lang.RuntimeException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.pow
+import kotlin.test.fail
 
 /**
  * Tests for [VariantOperations]
@@ -38,7 +40,7 @@ class VariantOperationsTest {
         val counter = AtomicInteger(0)
         val operations = VariantOperations<ApplicationVariant<ApplicationVariantProperties>>()
         for (i in 1..5) {
-            operations.actions.add(Action { counter.getAndAdd(10.0.pow(i - 1).toInt())})
+            operations.addAction(Action { counter.getAndAdd(10.0.pow(i - 1).toInt())})
         }
         @Suppress("UNCHECKED_CAST")
         val variant = createVariant(ApplicationVariant::class.java) as ApplicationVariant<ApplicationVariantProperties>
@@ -69,7 +71,7 @@ class VariantOperationsTest {
         val counter = AtomicInteger(0)
         val operations = VariantOperations<Variant<*>>()
 
-        operations.actions.add(Action { counter.incrementAndGet()})
+        operations.addAction(Action { counter.incrementAndGet()})
 
         operations.addFilteredAction(
             FilteredComponentAction(
@@ -102,7 +104,7 @@ class VariantOperationsTest {
                 action = Action { orderList.add(1) }
             )
         )
-        operations.actions.add(Action { orderList.add(2) })
+        operations.addAction(Action { orderList.add(2) })
 
         operations.addFilteredAction(
             FilteredComponentAction(
@@ -115,6 +117,19 @@ class VariantOperationsTest {
         operations.executeActions(variant)
 
         Truth.assertThat(orderList).isEqualTo(listOf(1, 2, 3))
+    }
+
+    @Test
+    fun actionInvokedTooLate() {
+        val operations = VariantOperations<Variant<*>>()
+
+        operations.executeActions(Mockito.mock(Variant::class.java))
+        try {
+            operations.addAction( Action { variant -> println(variant.name) })
+            fail("Expected exception not raised")
+        } catch(e: RuntimeException) {
+            Truth.assertThat(e.message).contains("It is too late to add actions")
+        }
     }
 
     private fun <T : Variant<*>> createVariant(

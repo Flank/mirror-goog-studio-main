@@ -94,10 +94,10 @@ class AidlCompileTest {
         // and output dir
         Truth.assertThat(execOperations.capturedExecutions).named("number of invocations").hasSize(3)
         for (processInfo in execOperations.capturedExecutions) {
-            Truth.assertThat(processInfo.executable).isEqualTo(fakeExe.absolutePath)
+            Truth.assertThat(processInfo.executable).isEqualTo(fakeExe.canonicalPath)
 
             Truth.assertThat(processInfo.args).containsAtLeast(
-                "-p" + fakeFramework.absolutePath,
+                "-p" + fakeFramework.canonicalPath,
             "-o" + outputDir.absolutePath)
 
             Truth.assertThat(processInfo.args).containsAnyOf(

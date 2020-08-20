@@ -27,11 +27,11 @@ import org.junit.Test;
 
 /** Tests for {@link IdeAndroidArtifactOutputImpl}. */
 public class IdeAndroidArtifactOutputTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
     }
 
     @Test
@@ -46,12 +46,5 @@ public class IdeAndroidArtifactOutputTest {
         byte[] bytes = Serialization.serialize(output);
         Object o = Serialization.deserialize(bytes);
         assertEquals(output, o);
-    }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeAndroidArtifactOutputImpl.class)
-                .withIgnoredFields("myHashCode")
-                .verify();
     }
 }

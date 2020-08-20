@@ -27,7 +27,7 @@ import java.util.Arrays
  */
 class ChunkBytesToLineOutputStream(
     private val logPrefix: String,
-    private val print: (String) -> Unit = { message -> Logging.getLogger(ChunkBytesToLineOutputStream::class.java).lifecycle(message) },
+    private val print: (String) -> Unit,
     initialBufferSize : Int = 256) : OutputStream() {
     private var buffer = ByteArray(initialBufferSize)
     private var nextByteIndex = 0

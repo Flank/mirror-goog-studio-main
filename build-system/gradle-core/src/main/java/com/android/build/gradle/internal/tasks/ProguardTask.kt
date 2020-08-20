@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.PostprocessingFeatures
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.pipeline.OriginalStream
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -125,8 +126,8 @@ abstract class ProguardTask : ProguardConfigurableTask() {
 
     }
 
-    class CreationAction(creationConfig: VariantCreationConfig, isTestApplication: Boolean) :
-        ProguardConfigurableTask.CreationAction<ProguardTask, VariantCreationConfig>(creationConfig, isTestApplication) {
+    class CreationAction(creationConfig: ConsumableCreationConfig, isTestApplication: Boolean) :
+        ProguardConfigurableTask.CreationAction<ProguardTask, ConsumableCreationConfig>(creationConfig, isTestApplication) {
 
         override val name = computeTaskName("minify", "WithProguard")
         override val type = ProguardTask::class.java

@@ -313,9 +313,9 @@ public abstract class TaskManager<
     // Temporary static variables for Kotlin+Compose configuration
     public static final String KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME =
             "kotlinCompilerClasspath";
-    public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "0.1.0-dev13";
+    public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "0.1.0-dev16";
     public static final String COMPOSE_KOTLIN_COMPILER_VERSION =
-            "1.3.70-dev-withExperimentalGoogleExtensions-20200424";
+            "1.4.0";
     public static final String CREATE_MOCKABLE_JAR_TASK_NAME = "createMockableJar";
 
     @NonNull protected final Project project;
@@ -897,9 +897,7 @@ public abstract class TaskManager<
         // dynamic-features.
         // The main dex list calculation for the bundle also needs the feature classes for reference
         // only
-        if (variantScope.consumesFeatureJars()
-                || ((creationConfig instanceof ApkCreationConfig)
-                        && ((ApkCreationConfig) creationConfig).getNeedsMainDexListForBundle())) {
+        if (variantScope.consumesFeatureJars() || creationConfig.getNeedsMainDexListForBundle()) {
             transformManager.addStream(
                     OriginalStream.builder("metadata-classes")
                             .addContentTypes(TransformManager.CONTENT_CLASS)
@@ -1010,7 +1008,7 @@ public abstract class TaskManager<
         boolean alsoOutputNotCompiledResources =
                 creationConfig.getVariantType().isApk()
                         && !creationConfig.getVariantType().isForTesting()
-                        && creationConfig.getVariantScope().useResourceShrinker();
+                        && creationConfig.useResourceShrinker();
 
         basicCreateMergeResourcesTask(
                 creationConfig,
@@ -1347,7 +1345,8 @@ public abstract class TaskManager<
     }
 
     private static boolean generatesProguardOutputFile(@NonNull ComponentCreationConfig creationConfig) {
-        return creationConfig.getVariantScope().getCodeShrinker() != null
+        return ((creationConfig instanceof ConsumableCreationConfig)
+                        && ((ConsumableCreationConfig) creationConfig).getCodeShrinker() != null)
                 || creationConfig.getVariantType().isDynamicFeature();
     }
 
@@ -1411,7 +1410,7 @@ public abstract class TaskManager<
      *
      * @see #createProcessJavaResTask(ComponentCreationConfig)
      */
-    public void createMergeJavaResTask(@NonNull VariantCreationConfig creationConfig) {
+    public void createMergeJavaResTask(@NonNull ConsumableCreationConfig creationConfig) {
         TransformManager transformManager = creationConfig.getTransformManager();
 
         // Compute the scopes that need to be merged.
@@ -1420,7 +1419,7 @@ public abstract class TaskManager<
         taskFactory.register(new MergeJavaResourceTask.CreationAction(mergeScopes, creationConfig));
 
         // also add a new merged java res stream if needed.
-        if (creationConfig.getVariantScope().getNeedsMergedJavaResStream()) {
+        if (creationConfig.getNeedsMergedJavaResStream()) {
             Provider<RegularFile> mergedJavaResProvider =
                     creationConfig.getArtifacts().get(MERGED_JAVA_RES.INSTANCE);
             transformManager.addStream(
@@ -2167,7 +2166,7 @@ public abstract class TaskManager<
         // ----- Minify next -----
         maybeCreateCheckDuplicateClassesTask(creationConfig);
         maybeCreateJavaCodeShrinkerTask(creationConfig);
-        if (creationConfig.getVariantScope().getCodeShrinker() == CodeShrinker.R8) {
+        if (creationConfig.getCodeShrinker() == CodeShrinker.R8) {
             maybeCreateResourcesShrinkerTasks(creationConfig);
             maybeCreateDexDesugarLibTask(creationConfig, false);
             return;
@@ -2178,8 +2177,9 @@ public abstract class TaskManager<
 
         // Upgrade from legacy multi-dex to native multi-dex if possible when using with a device
         if (dexingType == DexingType.LEGACY_MULTIDEX) {
-            if (variantDslInfo.isMultiDexEnabled()
-                    && variantDslInfo.getMinSdkVersionWithTargetDeviceApi().getFeatureLevel()
+            if (creationConfig.isMultiDexEnabled()
+                    && VariantApiExtensionsKt.getFeatureLevel(
+                                    creationConfig.getMinSdkVersionWithTargetDeviceApi())
                             >= 21) {
                 dexingType = DexingType.NATIVE_MULTIDEX;
             }
@@ -2201,12 +2201,12 @@ public abstract class TaskManager<
     }
 
     private void maybeCreateDesugarTask(
-            @NonNull VariantCreationConfig creationConfig,
+            @NonNull ApkCreationConfig creationConfig,
             @NonNull AndroidVersion minSdk,
             @NonNull TransformManager transformManager,
             boolean isTestCoverageEnabled) {
         VariantScope variantScope = creationConfig.getVariantScope();
-        if (variantScope.getJava8LangSupportType() == Java8LangSupport.DESUGAR) {
+        if (creationConfig.getJava8LangSupportType() == Java8LangSupport.DESUGAR) {
             creationConfig
                     .getTransformManager()
                     .consumeStreams(
@@ -2273,9 +2273,8 @@ public abstract class TaskManager<
             dexOptions = extension.getDexOptions();
         }
 
-        Java8LangSupport java8SLangSupport =
-                creationConfig.getVariantScope().getJava8LangSupportType();
-        boolean minified = creationConfig.getVariantScope().getCodeShrinker() != null;
+        Java8LangSupport java8SLangSupport = creationConfig.getJava8LangSupportType();
+        boolean minified = creationConfig.getCodeShrinker() != null;
         boolean supportsDesugaring =
                 java8SLangSupport == Java8LangSupport.UNUSED
                         || (java8SLangSupport == Java8LangSupport.D8
@@ -2322,7 +2321,7 @@ public abstract class TaskManager<
      * will be merged in a single task.
      */
     private void createDexMergingTasks(
-            @NonNull VariantCreationConfig creationConfig,
+            @NonNull ApkCreationConfig creationConfig,
             @NonNull DexingType dexingType,
             boolean dexingUsingArtifactTransforms) {
 
@@ -2330,7 +2329,7 @@ public abstract class TaskManager<
         // remote classpath present, as they lack dependency information to desugar
         // them correctly in an artifact transform.
         boolean separateFileDependenciesDexingTask =
-                creationConfig.getVariantScope().getJava8LangSupportType() == Java8LangSupport.D8
+                creationConfig.getJava8LangSupportType() == Java8LangSupport.D8
                         && dexingUsingArtifactTransforms;
         if (separateFileDependenciesDexingTask) {
             DexFileDependenciesTask.CreationAction desugarFileDeps =
@@ -2347,7 +2346,7 @@ public abstract class TaskManager<
                             dexingUsingArtifactTransforms,
                             separateFileDependenciesDexingTask);
             taskFactory.register(configAction);
-        } else if (creationConfig.getVariantScope().getCodeShrinker() != null) {
+        } else if (creationConfig.getCodeShrinker() != null) {
             DexMergingTask.CreationAction configAction =
                     new DexMergingTask.CreationAction(
                             creationConfig,
@@ -2572,7 +2571,7 @@ public abstract class TaskManager<
                         new PackageApplication.CreationAction(
                                 creationConfig,
                                 creationConfig.getPaths().getApkLocation(),
-                                variantScope.useResourceShrinker(),
+                                creationConfig.useResourceShrinker(),
                                 manifests,
                                 manifestType),
                         null,
@@ -2804,7 +2803,7 @@ public abstract class TaskManager<
 
     protected void maybeCreateJavaCodeShrinkerTask(
             @NonNull ConsumableCreationConfig creationConfig) {
-        CodeShrinker codeShrinker = creationConfig.getVariantScope().getCodeShrinker();
+        CodeShrinker codeShrinker = creationConfig.getCodeShrinker();
 
         if (codeShrinker != null) {
             doCreateJavaCodeShrinkerTask(
@@ -2848,7 +2847,7 @@ public abstract class TaskManager<
 
     @NonNull
     private TaskProvider<ProguardTask> createProguardTask(
-            @NonNull VariantCreationConfig creationConfig, boolean isTestApplication) {
+            @NonNull ConsumableCreationConfig creationConfig, boolean isTestApplication) {
         return taskFactory.register(
                 new ProguardTask.CreationAction(creationConfig, isTestApplication));
     }
@@ -2940,8 +2939,8 @@ public abstract class TaskManager<
      * tasks
      */
     protected void maybeCreateResourcesShrinkerTasks(
-            @NonNull VariantCreationConfig creationConfig) {
-        if (!creationConfig.getVariantScope().useResourceShrinker()) {
+            @NonNull ConsumableCreationConfig creationConfig) {
+        if (!creationConfig.useResourceShrinker()) {
             return;
         }
 
@@ -3093,7 +3092,8 @@ public abstract class TaskManager<
             super.configure(task);
             task.dependsOn(MAIN_PREBUILD);
 
-            if (creationConfig.getVariantScope().getCodeShrinker() != null) {
+            if ((creationConfig instanceof ConsumableCreationConfig)
+                    && ((ConsumableCreationConfig) creationConfig).getCodeShrinker() != null) {
                 task.dependsOn(EXTRACT_PROGUARD_FILES);
             }
         }
@@ -3345,7 +3345,7 @@ public abstract class TaskManager<
             @NonNull ApkCreationConfig apkCreationConfig,
             boolean enableDexingArtifactTransform) {
         boolean separateFileDependenciesDexingTask =
-                apkCreationConfig.getVariantScope().getJava8LangSupportType() == Java8LangSupport.D8
+                apkCreationConfig.getJava8LangSupportType() == Java8LangSupport.D8
                         && enableDexingArtifactTransform;
         if (apkCreationConfig.getShouldPackageDesugarLibDex()) {
             taskFactory.register(

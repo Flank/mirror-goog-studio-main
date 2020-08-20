@@ -733,6 +733,13 @@ public final class DeviceImpl implements IDevice {
     }
 
     @Override
+    public SocketChannel rawExec(String executable, String[] parameters)
+            throws AdbCommandRejectedException, TimeoutException, IOException {
+        return AdbHelper.rawExec(
+                AndroidDebugBridge.getSocketAddress(), this, executable, parameters);
+    }
+
+    @Override
     public void runEventLogService(LogReceiver receiver)
             throws TimeoutException, AdbCommandRejectedException, IOException {
         AdbHelper.runEventLogService(AndroidDebugBridge.getSocketAddress(), this, receiver);

@@ -28,11 +28,11 @@ import org.junit.Test;
 
 /** Tests for {@link IdeJavaCompileOptionsImpl}. */
 public class IdeJavaCompileOptionsTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
     }
 
     @Test
@@ -55,10 +55,5 @@ public class IdeJavaCompileOptionsTest {
         IdeJavaCompileOptionsImpl copy = myModelCache.javaCompileOptionsFrom(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeJavaCompileOptionsImpl.class).verify();
     }
 }

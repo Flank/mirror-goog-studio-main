@@ -23,7 +23,6 @@ import org.junit.runner.RunWith;
 @RunWith(JarTestSuiteRunner.class)
 @JarTestSuiteRunner.ExcludeClasses({
     GradleCoreBazelSuite.class,
-    com.android.build.gradle.external.gnumake.NdkSampleTest.class,
 })
 public class GradleCoreBazelSuite {
 }

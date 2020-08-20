@@ -18,10 +18,12 @@ package com.android.build.gradle.internal.cxx.logging
 
 enum class LoggingLevel {
     INFO,
+    LIFECYCLE,
     WARN,
     ERROR;
     fun log(message : String) = when(this) {
         INFO -> infoln(message)
+        LIFECYCLE -> lifecycleln(message)
         WARN -> warnln(message)
         ERROR -> errorln(message)
     }

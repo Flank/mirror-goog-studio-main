@@ -132,7 +132,9 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
     )
 
     override fun doTaskAction() {
-        IssueReporterLoggingEnvironment(DefaultIssueReporter(LoggerWrapper(logger))).use { buildImpl() }
+        IssueReporterLoggingEnvironment(DefaultIssueReporter(LoggerWrapper(logger))).use {
+            buildImpl()
+        }
     }
 
     private fun getStlSharedObjectFiles(): Map<Abi, File> {
@@ -330,7 +332,7 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
         if(destination.exists()) {
             destination.delete()
         }
-        
+
         try {
             createLink(destination.toPath(), source.toPath().toRealPath())
             infoln("linked $source to $destination")
@@ -503,11 +505,12 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
                     }
 
             createProcessOutputJunction(
-                buildStep.outputFolder,
-                "android_gradle_build_$logFileSuffix",
+                buildStep.outputFolder.resolve("android_gradle_build_command_$logFileSuffix.txt"),
+                buildStep.outputFolder.resolve("android_gradle_build_stdout_$logFileSuffix.txt"),
+                buildStep.outputFolder.resolve("android_gradle_build_stderr_$logFileSuffix.txt"),
                 processBuilder,
                 "")
-                .logStderrToInfo()
+                .logStderrToLifecycle()
                 .logStdoutToInfo()
                 .execute(ops::exec)
 

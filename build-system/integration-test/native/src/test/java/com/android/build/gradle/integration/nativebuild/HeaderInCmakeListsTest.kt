@@ -19,10 +19,12 @@ package com.android.build.gradle.integration.nativebuild
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.build.gradle.integration.common.fixture.model.readCompileCommandsJsonEntries
+import com.android.build.gradle.integration.common.fixture.model.readCompileCommandsJsonBin
 import com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.cxx.configure.BAKING_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION
+import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.NativeAndroidProject
 import com.google.common.truth.Truth.assertThat
@@ -44,15 +46,13 @@ import java.io.File
  * in android_gradle_build.json but is not in the model sent to Android Studio.
  */
 @RunWith(Parameterized::class)
-class HeaderInCmakeListsTest(private val useV2NativeModel: Boolean) {
+class HeaderInCmakeListsTest(private val cmakeVersionInDsl: String) {
 
     companion object {
-        @Parameterized.Parameters(name = "useV2NativeModel = {0}")
+        @Parameterized.Parameters(name = "version={0}")
         @JvmStatic
-        fun data() = arrayOf(
-            arrayOf(true),
-            arrayOf(false)
-        )
+        fun data() =
+            arrayOf(DEFAULT_CMAKE_VERSION, BAKING_CMAKE_VERSION)
     }
 
     @Rule
@@ -64,10 +64,8 @@ class HeaderInCmakeListsTest(private val useV2NativeModel: Boolean) {
                 .useCppSource(true)
                 .build()
         )
-        .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-        .setWithCmakeDirInLocalProp(true)
-        .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=$useV2NativeModel")
+        .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=true")
         .create()
 
     @Before
@@ -78,6 +76,7 @@ class HeaderInCmakeListsTest(private val useV2NativeModel: Boolean) {
                         android.compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
                         android.ndkPath "${project.ndkPath}"
                         android.externalNativeBuild.cmake.path "src/main/cpp/CMakeLists.txt"
+                        android.externalNativeBuild.cmake.version "$cmakeVersionInDsl"
                 """
 
         )
@@ -104,19 +103,14 @@ target_link_libraries(native-lib ${'$'}{log-lib})
 
     @Test
     fun testThatHeaderFileIsExcluded() {
-        if (useV2NativeModel) {
-            val nativeModules = project.modelV2().fetchNativeModules(null, null)
-            val nativeModule = nativeModules.container.singleModel
-            assertThat(nativeModule.variants.map { it.name }).containsExactly("debug", "release")
-            for (variant in nativeModule.variants) {
-                for (abi in variant.abis) {
-                    assertThat(abi.sourceFlagsFile.readCompileCommandsJsonEntries()).hasSize(1)
-                }
+        val nativeModules = project.modelV2().fetchNativeModules(null, null)
+        val nativeModule = nativeModules.container.singleModel
+        assertThat(nativeModule.variants.map { it.name }).containsExactly("debug", "release")
+        for (variant in nativeModule.variants) {
+            for (abi in variant.abis) {
+                assertThat(abi.sourceFlagsFile.readCompileCommandsJsonBin(nativeModules.normalizer))
+                    .hasSize(1)
             }
-        } else {
-            val nativeProject = project.model().fetch(NativeAndroidProject::class.java)
-            assertThat(nativeProject).hasArtifactGroupsNamed("debug", "release")
-            assertThat(nativeProject.artifacts.first()!!.sourceFiles.size).isEqualTo(1)
         }
     }
 }

@@ -145,6 +145,8 @@ public class GradleModelMocker {
 
     private IdeAndroidProject project;
     private IdeVariant variant;
+
+    private List<IdeVariant> variants = new ArrayList<IdeVariant>();
     private GlobalLibraryMap globalLibraryMap;
     private final Map<IdeLibrary, IdeLibrary> libraryMocks = new HashMap<>();
     private final List<IdeBuildType> buildTypes = Lists.newArrayList();
@@ -293,6 +295,11 @@ public class GradleModelMocker {
         return variant;
     }
 
+    public Collection<IdeVariant> getVariants() {
+        ensureInitialized();
+        return variants;
+    }
+
     @Nullable
     public GlobalLibraryMap getGlobalLibraryMap() {
         ensureInitialized();
@@ -351,7 +358,6 @@ public class GradleModelMocker {
         when(project.getCompileTarget()).thenReturn("android-" + SdkVersionInfo.HIGHEST_KNOWN_API);
 
         variant = mock(IdeVariant.class);
-        when(project.getVariants()).thenReturn(Collections.singletonList(variant));
 
         lintOptions = new IdeLintOptionsImpl();
         when(project.getLintOptions()).thenAnswer(invocation -> lintOptions);
@@ -542,7 +548,6 @@ public class GradleModelMocker {
             when(artifact.getVariantSourceProvider()).thenReturn(variantSourceSet);
         }
         setVariantName(defaultVariantName);
-        when(project.getDefaultVariant()).thenReturn(defaultVariantName);
 
         when(artifact.getName()).thenReturn(ARTIFACT_NAME_MAIN);
         when(testArtifact.getName()).thenReturn(ARTIFACT_NAME_UNIT_TEST);
@@ -607,7 +612,6 @@ public class GradleModelMocker {
         when(mergedFlavor.getResourceConfigurations()).thenReturn(resourceConfigurations);
 
         // Attempt to make additional variants?
-        List<IdeVariant> variants = new ArrayList<>();
         variants.add(variant);
         for (IdeBuildType buildType : buildTypes) {
             String buildTypeName = buildType.getName();
@@ -676,7 +680,6 @@ public class GradleModelMocker {
                 }
             }
         }
-        when(project.getVariants()).thenReturn(variants);
     }
 
     private static int libraryVersion = 0;

@@ -207,7 +207,7 @@ abstract class R8Task: ProguardConfigurableTask() {
                         R8Task::baseDexDir
                     ).on(InternalArtifactType.BASE_DEX)
 
-                    if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
+                    if (creationConfig.needsShrinkDesugarLibrary) {
                         creationConfig.artifacts
                             .setInitialProvider(taskProvider, R8Task::projectOutputKeepRules)
                             .on(InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES)
@@ -217,7 +217,7 @@ abstract class R8Task: ProguardConfigurableTask() {
                     creationConfig.artifacts.use(taskProvider)
                         .wiredWith(R8Task::outputDex)
                         .toAppendTo(InternalMultipleArtifactType.DEX)
-                    if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
+                    if (creationConfig.needsShrinkDesugarLibrary) {
                         creationConfig.artifacts
                             .setInitialProvider(taskProvider, R8Task::projectOutputKeepRules)
                             .on(InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES)
@@ -246,12 +246,12 @@ abstract class R8Task: ProguardConfigurableTask() {
             val artifacts = creationConfig.artifacts
 
             task.enableDesugaring.set(
-                creationConfig.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.R8
+                creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.R8
                         && !variantType.isAar)
 
             task.bootClasspath.from(creationConfig.globalScope.fullBootClasspath)
             task.minSdkVersion
-                .set(creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.apiLevel)
+                .set(creationConfig.minSdkVersionWithTargetDeviceApi.apiLevel)
             task.debuggable
                 .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
             task.disableTreeShaking.set(disableTreeShaking)
@@ -298,7 +298,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             }
             task.baseJar.disallowChanges()
             task.featureJars.disallowChanges()
-            if (creationConfig.variantScope.isCoreLibraryDesugaringEnabled) {
+            if (creationConfig.isCoreLibraryDesugaringEnabled) {
                 task.coreLibDesugarConfig.set(getDesugarLibConfig(creationConfig.globalScope.project))
             }
         }

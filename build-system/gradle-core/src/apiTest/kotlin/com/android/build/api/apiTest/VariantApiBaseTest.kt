@@ -20,7 +20,6 @@ import com.android.SdkConstants
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.AbstractBuildGivenBuildCheckTest
 import com.android.testutils.TestUtils
-import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildProfile
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -450,7 +449,7 @@ ${repositories.joinToString(
             it.writeText(scriptingLanguage.configureInitScript(mavenRepos))
         }
         Logger.getGlobal().info(
-            """Init script: 
+            """Init script:
             ${scriptingLanguage.configureInitScript(mavenRepos)}""".trim()
         )
 
@@ -496,6 +495,7 @@ ${repositories.joinToString(
         val gradleBuildProfile =
             GradleBuildProfile.parseFrom(Files.readAllBytes(listFiles[0].toPath()))
         Truth.assertThat(gradleBuildProfile).isNotNull()
+        Truth.assertThat(gradleBuildProfile.projectList).isNotEmpty()
         gradleBuildProfile.projectList.first {
             it.androidPluginVersion.isNotEmpty()
         }.variantList.forEach { variant ->

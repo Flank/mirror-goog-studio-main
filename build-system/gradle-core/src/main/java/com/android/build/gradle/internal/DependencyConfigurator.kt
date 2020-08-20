@@ -25,6 +25,7 @@ import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform
 import com.android.build.gradle.internal.dependency.AarToClassTransform
 import com.android.build.gradle.internal.dependency.AarTransform
@@ -560,7 +561,8 @@ class DependencyConfigurator(
         if (globalScope.projectOptions[BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION]) {
             val shrinkers: Set<CodeShrinker> = allComponents
                 .asSequence()
-                .map { it.variantScope.codeShrinker }
+                .filterIsInstance(ConsumableCreationConfig::class.java)
+                .map { it.codeShrinker }
                 .filterNotNull()
                 .toSet()
             for (shrinker in shrinkers) {

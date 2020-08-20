@@ -34,6 +34,7 @@ import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl.GlobalSyncIssueService
@@ -439,7 +440,7 @@ class ModelBuilder<
             abiFilters = variantDslInfo.supportedAbis,
             testInfo = testInfo,
             bundleInfo = getBundleInfo(component),
-            codeShrinker = variantScope.codeShrinker?.convert(),
+            codeShrinker = if (component is ConsumableCreationConfig) component.codeShrinker?.convert() else null,
 
             assembleTaskName = taskContainer.assembleTask.name,
             compileTaskName = taskContainer.compileTask.name,

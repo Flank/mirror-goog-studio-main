@@ -16,6 +16,7 @@
 
 package com.android.builder.dexing;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Preconditions;
@@ -27,6 +28,7 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.SortedMap;
 import java.util.jar.JarOutputStream;
 import java.util.zip.CRC32;
@@ -92,7 +94,13 @@ final class NonIncrementalJarDexArchive implements DexArchive {
         Preconditions.checkState(
                 jarOutputStream == null, "Archive is not for reading: %s", targetPath);
 
-        SortedMap<String, byte[]> dexEntries = DexUtilsKt.getSortedDexEntriesInJar(targetPath);
+        SortedMap<String, byte[]> dexEntries =
+                DexUtilsKt.getSortedRelativePathsInJarWithContents(
+                        targetPath.toFile(),
+                        relativePath ->
+                                relativePath
+                                        .toLowerCase(Locale.ENGLISH)
+                                        .endsWith(SdkConstants.DOT_DEX));
         List<DexArchiveEntry> dexArchiveEntries = new ArrayList<>(dexEntries.size());
         for (String relativePath : dexEntries.keySet()) {
             dexArchiveEntries.add(

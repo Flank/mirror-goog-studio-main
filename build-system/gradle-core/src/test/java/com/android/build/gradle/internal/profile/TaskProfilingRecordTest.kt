@@ -66,7 +66,7 @@ class TaskProfilingRecordTest {
     }
 
     @Test
-    fun testCalculateDurationTimeWithWaitTime() {
+    fun testCalculateWaitTime() {
         testTaskRecord.addWorker("first")
         assertThat(testTaskRecord.allWorkersFinished()).isFalse()
 
@@ -77,69 +77,12 @@ class TaskProfilingRecordTest {
         resetClockTo(350)
         testTaskRecord.get("first")?.executionFinished()
         assertThat(testTaskRecord.minimumWaitTime()).isEqualTo(Duration.ofMillis(200))
-        assertThat(testTaskRecord.duration()).isEqualTo(Duration.ofMillis(250))
-    }
-
-    @Test
-    fun testCalculateTaskDuration() {
-        testTaskRecord.addWorker("first")
-        testTaskRecord.addWorker("second")
-        testTaskRecord.addWorker("third")
-
-
-        assertThat(testTaskRecord.allWorkersFinished()).isFalse()
-        assertThat(testTaskRecord.lastWorkerCompletionTime()).isEqualTo(Instant.MIN)
-
-        testTaskRecord.get("second")?.executionStarted()
-        testTaskRecord.get("first")?.executionStarted()
-        testTaskRecord.get("third")?.executionStarted()
-
-        resetClockTo(200)
-        testTaskRecord.get("second")?.executionFinished()
-        assertThat(testTaskRecord.allWorkersFinished()).isFalse()
-        assertThat(testTaskRecord.lastWorkerCompletionTime()).isEqualTo(Instant.ofEpochMilli(200))
-
-        resetClockTo(220)
-        testTaskRecord.get("first")?.executionFinished()
-        assertThat(testTaskRecord.allWorkersFinished()).isFalse()
-        assertThat(testTaskRecord.lastWorkerCompletionTime()).isEqualTo(Instant.ofEpochMilli(220))
-
-        resetClockTo(215)
-        testTaskRecord.get("third")?.executionFinished()
-        assertThat(testTaskRecord.allWorkersFinished()).isTrue()
-        assertThat(testTaskRecord.lastWorkerCompletionTime()).isEqualTo(Instant.ofEpochMilli(220))
-    }
-
-    @Test
-    fun testWorkersCompleteAfterTask() {
-        testTaskRecord.addWorker("first")
-        testTaskRecord.addWorker("second")
-
-        testTaskRecord.get("second")?.executionStarted()
-        testTaskRecord.get("first")?.executionStarted()
-
-        resetClockTo(200)
-        testTaskRecord.get("second")?.executionFinished()
-        resetClockTo(220)
-        testTaskRecord.get("first")?.executionFinished()
-        assertThat(testTaskRecord.allWorkersFinished()).isTrue()
-
-        resetClockTo(135)
-        testTaskRecord.setTaskClosed()
-        resetClockTo(140)
-        testTaskRecord.setTaskEndTime(140)
-
-        assertThat(testTaskRecord.minimumWaitTime()).isEqualTo(Duration.ZERO)
-        assertThat(testTaskRecord.lastWorkerCompletionTime()).isEqualTo(Instant.ofEpochMilli(220))
-
-        assertThat(testTaskRecord.duration()).isEqualTo(Duration.ofMillis(120))
     }
 
     @Test
     fun testTaskCompletesAfterWorkers() {
         testTaskRecord.addWorker("first")
         testTaskRecord.addWorker("second")
-
 
         testTaskRecord.get("second")?.executionStarted()
         testTaskRecord.get("first")?.executionStarted()
@@ -151,12 +94,10 @@ class TaskProfilingRecordTest {
         assertThat(testTaskRecord.allWorkersFinished()).isTrue()
 
         resetClockTo(235)
-        testTaskRecord.setTaskClosed()
         resetClockTo(240)
         testTaskRecord.setTaskEndTime(240)
 
         assertThat(testTaskRecord.minimumWaitTime()).isEqualTo(Duration.ZERO)
-        assertThat(testTaskRecord.lastWorkerCompletionTime()).isEqualTo(Instant.ofEpochMilli(220))
 
         assertThat(testTaskRecord.duration()).isEqualTo(Duration.ofMillis(140))
     }

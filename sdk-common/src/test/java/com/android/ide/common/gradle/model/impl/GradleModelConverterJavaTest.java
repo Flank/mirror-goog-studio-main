@@ -36,7 +36,7 @@ public class GradleModelConverterJavaTest {
      */
     @Test
     public void testResultIsStillImmutableFromJava() {
-        ModelCache modelCache = new ModelCache();
+        ModelCacheTesting modelCache = ModelCache.createForTesting();
         IdeClassField foo1 =
                 modelCache.classFieldFrom(
                         new ClassFieldStub(ResourceType.STRING.getName(), "foo1", "baz"));

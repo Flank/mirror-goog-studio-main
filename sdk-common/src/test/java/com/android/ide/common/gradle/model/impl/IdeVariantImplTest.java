@@ -26,26 +26,18 @@ import org.junit.Test;
 
 /** Tests for {@link com.android.ide.common.gradle.model.impl.IdeVariantImpl}. */
 public class IdeVariantImplTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
     private GradleVersion myGradleVersion;
-    private IdeDependenciesFactory myDependenciesFactory;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
         myGradleVersion = GradleVersion.parse("3.2");
-        myDependenciesFactory = new IdeDependenciesFactory();
     }
 
     @Test
     public void constructor() throws Throwable {
         Variant original = new VariantStub();
-        IdeVariant copy =
-                myModelCache.variantFrom(original, myDependenciesFactory, myGradleVersion);
-    }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeVariantImpl.class, "hashCode").verify();
+        IdeVariant copy = myModelCache.variantFrom(original, myGradleVersion);
     }
 }

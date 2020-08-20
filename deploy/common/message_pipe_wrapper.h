@@ -24,8 +24,14 @@ namespace deploy {
 
 // Class which wraps a file descriptor and provides methods to communicate
 // between different deploy components (agent, agent server, installer, etc).
-// Each message is sent with a size_t prefix indicating the number of bytes
-// that should be read to receive the complete message.
+// Each message is sent with an 8 byte magic number prefix, followed by a size_t
+// indicating the number of bytes that should be read to receive the complete
+// message.
+//
+// Note that changing this protocol requires modifications to the following Java
+// implementations as well:
+//  - tools/base/deploy/deployer/.../AdbInstaller.java
+//  - tools/base/deploy/test/.../AgentBasedClassRedefinerTestBase.java
 class MessagePipeWrapper {
  public:
   MessagePipeWrapper(int fd) : fd_(fd) {}
@@ -50,6 +56,10 @@ class MessagePipeWrapper {
   // Reads a message from the specified file descriptor. Blocks until the read
   // completes or an error occurs.
   bool Read(std::string* message) const;
+
+  // Reads a message from the specified file descriptor. Blocks until the read
+  // completes, an error occurs, or the timeout elapses.
+  bool Read(int timeout_ms, std::string* message);
 
   // Closes the fd.
   void Close();

@@ -196,11 +196,8 @@ abstract class AutoNamespacePreProcessTransform : TransformAction<AutoNamespaceP
     }
 
     private fun compileResources(requestList: MutableList<CompileResourceRequest>) {
-        val aapt2ServiceKey =  parameters.aapt2.registerAaptService()
-
         // TODO: Performance: Investigate if this should be multi-threaded?
-        // TODO(b/152323103) errorFormatMode should be implicit
-        runAapt2Compile(aapt2ServiceKey, requestList, parameters.aapt2.getErrorFormatMode(), false)
+        runAapt2Compile(parameters.aapt2, requestList, false)
     }
 
     companion object {

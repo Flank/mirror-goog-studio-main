@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.Scope
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.databinding.DataBindingExcludeDelegate
 import com.android.build.gradle.internal.databinding.configureFrom
@@ -287,8 +288,8 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: VariantCreationConfig
-    ) : VariantTaskCreationAction<LibraryAarJarsTask, VariantCreationConfig>(
+        creationConfig: ConsumableCreationConfig
+    ) : VariantTaskCreationAction<LibraryAarJarsTask, ConsumableCreationConfig>(
         creationConfig
     ) {
         override val type = LibraryAarJarsTask::class.java
@@ -339,7 +340,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
              * which means gradle will have to deal with possibly non-existent files in the cache
              */
             task.mainScopeClassFiles.from(
-                if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8) {
+                if (creationConfig.codeShrinker == CodeShrinker.R8) {
                     creationConfig.artifacts
                         .get(InternalArtifactType.SHRUNK_CLASSES)
                 } else {
@@ -360,7 +361,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             task.mainScopeClassFiles.disallowChanges()
 
             task.mainScopeResourceFiles.from(
-                if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8) {
+                if (creationConfig.codeShrinker == CodeShrinker.R8) {
                     creationConfig.artifacts
                         .get(InternalArtifactType.SHRUNK_JAVA_RES)
                 } else {

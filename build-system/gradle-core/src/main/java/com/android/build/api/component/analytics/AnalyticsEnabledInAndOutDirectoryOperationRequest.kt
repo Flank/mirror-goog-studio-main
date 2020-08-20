@@ -19,7 +19,9 @@ package com.android.build.api.component.analytics
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.artifact.InAndOutDirectoryOperationRequest
+import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
+import com.google.wireless.android.sdk.stats.ArtifactAccess
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
@@ -34,6 +36,10 @@ open class AnalyticsEnabledInAndOutDirectoryOperationRequest<TaskT: Task> @Injec
                   ArtifactTypeT : Artifact.Transformable {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.TO_TRANSFORM_DIRECTORY_VALUE
+        stats.variantApiAccessBuilder.addArtifactAccessBuilder().also {
+            it.inputArtifactType = AnalyticsUtil.getVariantApiArtifactType(type.javaClass).number
+            it.type = ArtifactAccess.AccessType.TRANSFORM
+        }
         delegate.toTransform(type)
     }
 
@@ -42,6 +48,10 @@ open class AnalyticsEnabledInAndOutDirectoryOperationRequest<TaskT: Task> @Injec
                   ArtifactTypeT : Artifact.ContainsMany {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.TO_TRANSFORM_MANY_VALUE
+        stats.variantApiAccessBuilder.addArtifactAccessBuilder().also {
+            it.inputArtifactType = AnalyticsUtil.getVariantApiArtifactType(type.javaClass).number
+            it.type = ArtifactAccess.AccessType.TRANSFORM_MANY
+        }
         return delegate.toTransformMany(type)
     }
 }

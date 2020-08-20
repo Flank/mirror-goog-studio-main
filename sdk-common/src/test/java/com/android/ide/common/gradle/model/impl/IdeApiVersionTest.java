@@ -27,11 +27,11 @@ import org.junit.Test;
 
 /** Tests for {@link IdeApiVersionImpl}. */
 public class IdeApiVersionTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
     }
 
     @Test
@@ -53,10 +53,5 @@ public class IdeApiVersionTest {
         IdeApiVersionImpl copy = myModelCache.apiVersionFrom(original);
         IdeModelTestUtils.assertEqualsOrSimilar(original, copy);
         IdeModelTestUtils.verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
-    public void equalsAndHashCode() {
-        IdeModelTestUtils.createEqualsVerifier(IdeApiVersionImpl.class).verify();
     }
 }

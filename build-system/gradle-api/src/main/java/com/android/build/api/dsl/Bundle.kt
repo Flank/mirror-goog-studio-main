@@ -28,6 +28,8 @@ interface Bundle {
 
     val texture: BundleTexture
 
+    val deviceTier: BundleDeviceTier
+
     fun abi(action: BundleAbi.() -> Unit)
 
     fun density(action: BundleDensity.() -> Unit)
@@ -35,4 +37,6 @@ interface Bundle {
     fun language(action: BundleLanguage.() -> Unit)
 
     fun texture(action: BundleTexture.() -> Unit)
+
+    fun deviceTier(action: BundleDeviceTier.() -> Unit)
 }

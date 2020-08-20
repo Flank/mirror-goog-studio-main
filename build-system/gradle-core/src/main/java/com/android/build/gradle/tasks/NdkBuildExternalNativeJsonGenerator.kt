@@ -23,8 +23,11 @@ import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
+import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.jsonFile
-import com.android.build.gradle.internal.cxx.model.soFolder
+import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
+import com.android.build.gradle.internal.cxx.model.metadataGenerationStderrFile
+import com.android.build.gradle.internal.cxx.model.metadataGenerationStdoutFile
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.google.common.base.Charsets
@@ -46,8 +49,42 @@ internal class NdkBuildExternalNativeJsonGenerator(
     abis: List<CxxAbiModel>,
     variantBuilder: GradleBuildVariant.Builder
 ) : ExternalNativeJsonGenerator(variant, abis, variantBuilder) {
-    @Throws(IOException::class)
-    override fun processBuildOutput(buildOutput: String, abiConfig: CxxAbiModel) {
+
+    /**
+     * Get the process builder with -n flag. This will tell ndk-build to emit the steps that it
+     * would do to execute the build.
+     */
+    override fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder {
+        val builder = ProcessInfoBuilder()
+        builder.setExecutable(ndkBuild)
+            .addArgs(
+                getBaseArgs(
+                    abi,
+                    removeJobsFlag = false,
+                    // Disable response files so we can parse the command line.
+                    useShortCommand = false,
+                    forceCleanBuild = true,
+                    dryRun = true
+                )
+            )
+        return builder
+    }
+
+    override fun executeProcess(ops: ExecOperations, abi: CxxAbiModel) {
+        createProcessOutputJunction(
+            abi.metadataGenerationCommandFile,
+            abi.metadataGenerationStdoutFile,
+            abi.metadataGenerationStderrFile,
+            getProcessBuilder(abi),
+            ""
+        )
+            .logStderrToLifecycle()
+            .execute(ops::exec)
+
+        parseDryRunOutput(abi)
+    }
+
+    fun parseDryRunOutput(abi: CxxAbiModel) {
         // Write the captured ndk-build output to a file for diagnostic purposes.
         infoln("parse and convert ndk-build output to build configuration JSON")
 
@@ -71,21 +108,27 @@ internal class NdkBuildExternalNativeJsonGenerator(
         // NOTE: CMake doesn't have the same issue because CMake JSON generation happens fully
         // within the Exec call which has 'project/app' as the current directory.
 
+        val buildOutput = abi.metadataGenerationStdoutFile.readText()
+
         // TODO(jomof): This NativeBuildConfigValue is probably consuming a lot of memory for large
         // projects. Should be changed to a streaming model where NativeBuildConfigValueBuilder
         // provides a streaming JsonReader rather than a full object.
-        val buildConfig =
+        val builder =
             NativeBuildConfigValueBuilder(
                 makeFile,
                 variant.module.moduleRootFolder
             )
                 .setCommands(
-                    getBuildCommand(abiConfig, removeJobsFlag = false),
-                    getBuildCommand(abiConfig, removeJobsFlag = true) + listOf("clean"),
+                    getBuildCommand(abi, removeJobsFlag = false),
+                    getBuildCommand(abi, removeJobsFlag = true) + listOf("clean"),
                     variant.variantName,
                     buildOutput
                 )
-                .build()
+        if (variant.module.project.isV2NativeModelEnabled) {
+            builder.skipProcessingCompilerFlags = true
+            builder.compileCommandsJsonBinFile = abi.compileCommandsJsonBinFile
+        }
+        val buildConfig = builder.build()
         applicationMk?.let {
             infoln("found application make file %s", it.absolutePath)
             buildConfig.buildFiles!!.add(it)
@@ -98,41 +141,12 @@ internal class NdkBuildExternalNativeJsonGenerator(
 
         // Write the captured ndk-build output to JSON file
         Files.write(
-            abiConfig.jsonFile.toPath(),
-            actualResult.toByteArray(Charsets.UTF_8)
+                abi.jsonFile.toPath(),
+                actualResult.toByteArray(Charsets.UTF_8)
         )
     }
 
-    /**
-     * Get the process builder with -n flag. This will tell ndk-build to emit the steps that it
-     * would do to execute the build.
-     */
-    override fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder {
-        val builder = ProcessInfoBuilder()
-        builder.setExecutable(ndkBuild)
-            .addArgs(
-                getBaseArgs(
-                    abi,
-                    removeJobsFlag = false,
-                    // Disable response files so we can parse the command line.
-                    useShortCommand = false,
-                    forceCleanBuild = true,
-                    dryRun = true
-                )
-            )
-        return builder
-    }
 
-    override fun executeProcess(ops: ExecOperations, abi: CxxAbiModel): String {
-        return createProcessOutputJunction(
-            abi.soFolder,
-            "android_gradle_generate_ndk_build_json_" + abi.abi.tag,
-            getProcessBuilder(abi),
-            ""
-        )
-            .logStderrToInfo()
-            .executeAndReturnStdoutString(ops::exec)
-    }
 
     /** Get the path of the ndk-build script.  */
     private val ndkBuild: String

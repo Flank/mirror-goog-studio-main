@@ -47,6 +47,13 @@ fun warnln(format: String, vararg args: Any) =
     ThreadLoggingEnvironment.reportFormattedWarningToCurrentLogger(checkedFormat(format, args))
 
 /**
+ * Report a non-error/non-warning message that should be displayed during normal gradle build
+ * without --info flag.
+ */
+fun lifecycleln(format: String, vararg args: Any) =
+        ThreadLoggingEnvironment.reportFormattedLifecycleToCurrentLogger(checkedFormat(format, args))
+
+/**
  * Report diagnostic/informational message.
  */
 fun infoln(format: String, vararg args: Any) =
@@ -126,6 +133,7 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
                 when(message.level) {
                     ERROR -> logger.error(message.toString())
                     WARN -> logger.warn(message.toString())
+                    LIFECYCLE -> logger.lifecycle(message.toString())
                     INFO -> logger.info(message.toString())
                 }
             }
@@ -168,6 +176,13 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
          */
         fun reportFormattedWarningToCurrentLogger(message: String) =
             logger.log(warnRecordOf(message))
+
+        /**
+         * Report a non-error/non-warning message that should be displayed during normal gradle build
+         * without --info flag.
+         */
+        fun reportFormattedLifecycleToCurrentLogger(message: String) =
+            logger.log(lifecycleRecordOf(message))
 
         /**
          * Report diagnostic/informational message.

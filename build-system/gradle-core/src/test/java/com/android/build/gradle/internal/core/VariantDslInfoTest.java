@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.util.List;
 import kotlin.Pair;
+import org.gradle.api.file.DirectoryProperty;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -221,7 +222,7 @@ public class VariantDslInfoTest {
         VariantDslInfo variant = getVariant();
 
         assertThat(variant.getMinSdkVersion().getApiLevel()).isEqualTo(16);
-        assertThat(variant.getMinSdkVersionWithTargetDeviceApi().getApiLevel()).isEqualTo(16);
+        assertThat(variant.getMinSdkVersionFromIDE()).isEqualTo(18);
     }
 
     @Test
@@ -236,7 +237,7 @@ public class VariantDslInfoTest {
         VariantDslInfo variant = getVariant();
 
         assertThat(variant.getMinSdkVersion().getApiLevel()).isEqualTo(16);
-        assertThat(variant.getMinSdkVersionWithTargetDeviceApi().getApiLevel()).isEqualTo(16);
+        assertThat(variant.getMinSdkVersionFromIDE()).isEqualTo(18);
     }
 
     @Test
@@ -251,7 +252,7 @@ public class VariantDslInfoTest {
         VariantDslInfo variant = getVariant();
 
         assertThat(variant.getMinSdkVersion().getApiLevel()).isEqualTo(16);
-        assertThat(variant.getMinSdkVersionWithTargetDeviceApi().getApiLevel()).isEqualTo(18);
+        assertThat(variant.getMinSdkVersionFromIDE()).isEqualTo(18);
     }
 
     @Test
@@ -266,7 +267,7 @@ public class VariantDslInfoTest {
         VariantDslInfo variant = getVariant();
 
         assertThat(variant.getMinSdkVersion().getApiLevel()).isEqualTo(16);
-        assertThat(variant.getMinSdkVersionWithTargetDeviceApi().getApiLevel()).isEqualTo(20);
+        assertThat(variant.getMinSdkVersionFromIDE()).isEqualTo(22);
     }
 
     @Test
@@ -306,7 +307,7 @@ public class VariantDslInfoTest {
 
         builder.addProductFlavor(flavorConfig, new MockSourceProvider("custom"));
 
-        return builder.createVariantDslInfo();
+        return builder.createVariantDslInfo(Mockito.mock(DirectoryProperty.class));
     }
 
     private void initWithInjectedDeviceApi(int deviceApi) {

@@ -243,8 +243,9 @@ class JetifierTest(private val withKotlin: Boolean) {
      * during the configuration or task graph creation phase.
      */
     private fun `check lazy dependency resolution`() {
-        // This configuration is resolved during task graph creation, ignore it for now.
+        // These configurations are resolved before task execution phase, so we ignore them for now.
         val kotlinCompilerClasspath = "kotlinCompilerClasspath"
+        val kotlinKaptWorkers = "kotlinKaptWorkerDependencies"
 
         project.buildFile.appendText(
             """
@@ -258,6 +259,7 @@ class JetifierTest(private val withKotlin: Boolean) {
                     it.incoming.beforeResolve { configuration ->
                         if (configuration.name != "classpath"
                                 && configuration.name != "$kotlinCompilerClasspath"
+                                && configuration.name != "$kotlinKaptWorkers"
                                 && beforeTaskExecutionPhase) {
                             throw new RuntimeException(
                                     configuration.name +

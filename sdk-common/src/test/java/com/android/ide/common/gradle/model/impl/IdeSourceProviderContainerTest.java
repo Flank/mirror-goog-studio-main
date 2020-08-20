@@ -27,11 +27,11 @@ import org.junit.Test;
 
 /** Tests for {@link IdeSourceProviderContainerImpl}. */
 public class IdeSourceProviderContainerTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
     }
 
     @Test
@@ -46,10 +46,5 @@ public class IdeSourceProviderContainerTest {
         byte[] bytes = Serialization.serialize(classField);
         Object o = Serialization.deserialize(bytes);
         assertEquals(classField, o);
-    }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeSourceProviderContainerImpl.class).verify();
     }
 }

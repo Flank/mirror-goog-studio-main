@@ -1,18 +1,18 @@
 {
-	"configurations" : 
+	"configurations" :
 	[
 		{
-			"directories" : 
+			"directories" :
 			[
 				{
 					"build" : ".",
-					"minimumCMakeVersion" : 
+					"minimumCMakeVersion" :
 					{
 						"string" : "3.7"
 					},
 					"projectIndex" : 0,
 					"source" : ".",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						0,
 						1,
@@ -21,15 +21,15 @@
 				}
 			],
 			"name" : "Debug",
-			"projects" : 
+			"projects" :
 			[
 				{
-					"directoryIndexes" : 
+					"directoryIndexes" :
 					[
 						0
 					],
 					"name" : "Project",
-					"targetIndexes" : 
+					"targetIndexes" :
 					[
 						0,
 						1,
@@ -37,7 +37,7 @@
 					]
 				}
 			],
-			"targets" : 
+			"targets" :
 			[
 				{
 					"directoryIndex" : 0,
@@ -64,12 +64,12 @@
 		}
 	],
 	"kind" : "codemodel",
-	"paths" : 
+	"paths" :
 	{
-		"build" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/runtimeFiles_are_included_even_if_not_built_yet_model___3_17_0_/project/.cxx/cmake/debug/x86_64",
+		"build" : "/{PROJECT}/.cxx/cmake/debug/x86_64",
 		"source" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967/tests/CmakeBasicProjectTest/runtimeFiles_are_included_even_if_not_built_yet_model___3_17_0_/project"
 	},
-	"version" : 
+	"version" :
 	{
 		"major" : 2,
 		"minor" : 0

@@ -31,6 +31,7 @@ class IssueReporterLoggingEnvironment(
     override fun log(message: LoggingMessage) {
         when (message.level) {
             LoggingLevel.INFO -> logger.info(message.toString())
+            LoggingLevel.LIFECYCLE -> logger.lifecycle(message.toString())
             LoggingLevel.WARN -> {
                 issueReporter.reportWarning(
                     EXTERNAL_NATIVE_BUILD_CONFIGURATION,

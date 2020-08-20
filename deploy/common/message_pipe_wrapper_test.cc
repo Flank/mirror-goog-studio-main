@@ -62,6 +62,17 @@ TEST_F(MessagePipeWrapperTest, HandleLargeMessage) {
   write_thread.join();
 }
 
+TEST_F(MessagePipeWrapperTest, HandleBadMessage) {
+  int pipe_fds[2];
+  EXPECT_EQ(0, pipe(pipe_fds));
+
+  MessagePipeWrapper read(pipe_fds[0]);
+  write(pipe_fds[1], "xxxxxxxx", 8);
+
+  std::string received;
+  EXPECT_FALSE(read.Read(&received));
+}
+
 TEST_F(MessagePipeWrapperTest, HandleManyMessages) {
   int pipe_fds[2];
   EXPECT_EQ(0, pipe(pipe_fds));
@@ -79,6 +90,17 @@ TEST_F(MessagePipeWrapperTest, HandleManyMessages) {
     EXPECT_TRUE(read.Read(&received));
     EXPECT_EQ(received, std::string(lengths[i], '\xFF'));
   }
+}
+
+TEST_F(MessagePipeWrapperTest, HandleTimeout) {
+  int pipe_fds[2];
+  EXPECT_EQ(0, pipe(pipe_fds));
+
+  MessagePipeWrapper read(pipe_fds[0]);
+  MessagePipeWrapper write(pipe_fds[1]);
+
+  std::string received;
+  EXPECT_FALSE(read.Read(500, &received));
 }
 
 TEST_F(MessagePipeWrapperTest, TestPoll) {

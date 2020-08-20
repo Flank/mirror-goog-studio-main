@@ -43,16 +43,17 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.BooleanOption.BUILD_ONLY_TARGET_ABI
 import com.android.build.gradle.options.BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION
 import com.android.build.gradle.options.BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE
+import com.android.build.gradle.options.BooleanOption.PREFER_CMAKE_FILE_API
 import com.android.build.gradle.options.BooleanOption.ENABLE_PROFILE_JSON
 import com.android.build.gradle.options.BooleanOption.ENABLE_V2_NATIVE_MODEL
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.StringOption.IDE_BUILD_TARGET_ABI
 import com.android.build.gradle.options.StringOption.PROFILE_OUTPUT_DIR
+import com.android.build.gradle.tasks.*
 import com.android.build.gradle.tasks.CmakeAndroidNinjaExternalNativeJsonGenerator
+import com.android.build.gradle.tasks.CmakeQueryMetadataGenerator
 import com.android.build.gradle.tasks.CmakeServerExternalNativeJsonGenerator
-import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.build.gradle.tasks.NdkBuildExternalNativeJsonGenerator
-import com.android.build.gradle.tasks.getPrefabFromMaven
 import com.android.builder.profile.ChromeTracingProfileConverter
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
@@ -102,7 +103,8 @@ data class CxxConfigurationModel(
     val implicitBuildTargetSet: Set<String>,
     val variantName: String,
     val nativeVariantConfig: NativeBuildSystemVariantConfig,
-    val isV2NativeModelEnabled: Boolean
+    val isV2NativeModelEnabled: Boolean,
+    val isPreferCmakeFileApiEnabled: Boolean
 )
 
 /**
@@ -131,7 +133,7 @@ data class CxxConfigurationModel(
             The build staging directory you specified ('${buildStagingDirectory.absolutePath}')
             is a subdirectory of your project's temporary build directory (
             '${buildFolder.absolutePath}'). Files in this directory do not persist through clean
-            builds. It is recommended to either use the default build staging directory 
+            builds. It is recommended to either use the default build staging directory
             ('$defaultCxxFolder'), or specify a path outside the temporary build directory.
             """.trimIndent())
             buildStagingDirectory
@@ -319,7 +321,8 @@ fun tryCreateCxxConfigurationModel(
         nativeVariantConfig = createNativeBuildSystemVariantConfig(
             buildSystem, componentProperties.variantDslInfo
         ),
-        isV2NativeModelEnabled = option(ENABLE_V2_NATIVE_MODEL)
+        isV2NativeModelEnabled = option(ENABLE_V2_NATIVE_MODEL),
+        isPreferCmakeFileApiEnabled = option(PREFER_CMAKE_FILE_API)
     )
 }
 
@@ -411,7 +414,14 @@ fun createCxxMetadataGenerator(
                             + ". Try 3.7.0 or later."
                 )
             }
-            CmakeServerExternalNativeJsonGenerator(variant, abis, variantBuilder)
+
+            val isPreCmakeFileApiVersion = cmakeRevision.major == 3 && cmakeRevision.minor < 15
+            if (isPreCmakeFileApiVersion ||
+                !configurationModel.isV2NativeModelEnabled ||
+                !configurationModel.isPreferCmakeFileApiEnabled) {
+                return CmakeServerExternalNativeJsonGenerator(variant, abis, variantBuilder)
+            }
+            return CmakeQueryMetadataGenerator(variant, abis, variantBuilder)
         }
     }
 }

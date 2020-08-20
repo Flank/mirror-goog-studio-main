@@ -28,7 +28,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -73,8 +72,6 @@ public class BazelLintWrapper {
     }
 
     private final DocumentBuilder documentBuilder;
-    private final Class<?> exitException;
-    private final Field statusField;
 
     public BazelLintWrapper() {
         testXml = Paths.get(System.getenv("XML_OUTPUT_FILE"));
@@ -94,10 +91,7 @@ public class BazelLintWrapper {
 
         try {
             documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            exitException = Class.forName("com.android.tools.lint.Main$ExitException");
-            statusField = exitException.getDeclaredField("status");
-            statusField.setAccessible(true);
-        } catch (ParserConfigurationException | ReflectiveOperationException e) {
+        } catch (ParserConfigurationException e) {
             throw new RuntimeException(e);
         }
     }
@@ -144,33 +138,21 @@ public class BazelLintWrapper {
 
         try {
             System.setOut(new PrintStream(baos));
-            lintMain.run(
-                    new String[] {
-                        "--project", projectXml.toString(),
-                        "--xml", outputXml.toString(),
-                        "--baseline", newBaseline.toString(),
-                        "--config", lintConfig.toString(),
-                        "--update-baseline",
-                    });
-        } catch (Exception e) {
-            if (exitException.isInstance(e)) {
-                int status = 0;
-                try {
-                    status = (int) statusField.get(e);
-                } catch (IllegalAccessException ex) {
-                    ex.printStackTrace();
-                    System.exit(1);
-                }
-
-                switch (status) {
-                    case 0:
-                    case LintCliFlags.ERRNO_CREATED_BASELINE:
-                        break;
-                    default:
-                        System.exit(status);
-                }
-            } else {
-                throw e;
+            int status =
+                    lintMain.run(
+                            new String[] {
+                                "--project", projectXml.toString(),
+                                "--xml", outputXml.toString(),
+                                "--baseline", newBaseline.toString(),
+                                "--config", lintConfig.toString(),
+                                "--update-baseline",
+                            });
+            switch (status) {
+                case 0:
+                case LintCliFlags.ERRNO_CREATED_BASELINE:
+                    break;
+                default:
+                    System.exit(status);
             }
         } finally {
             System.setOut(stdOut);

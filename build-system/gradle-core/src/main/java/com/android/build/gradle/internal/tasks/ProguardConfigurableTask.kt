@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.pipeline.StreamFilter
@@ -95,7 +96,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
     @get:OutputFile
     abstract val mappingFile: RegularFileProperty
 
-    abstract class CreationAction<TaskT : ProguardConfigurableTask, CreationConfigT: VariantCreationConfig>
+    abstract class CreationAction<TaskT : ProguardConfigurableTask, CreationConfigT: ConsumableCreationConfig>
     @JvmOverloads
     internal constructor(
         creationConfig: CreationConfigT,
@@ -203,7 +204,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            if (testedConfig?.variantScope?.codeShrinker != null) {
+            if (testedConfig is ConsumableCreationConfig && testedConfig.codeShrinker != null) {
                 task.testedMappingFile.from(
                     testedConfig
                         .artifacts
@@ -236,7 +237,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
         private fun applyProguardRules(
             task: ProguardConfigurableTask,
-            creationConfig: ComponentCreationConfig,
+            creationConfig: ConsumableCreationConfig,
             inputProguardMapping: FileCollection?,
             testedConfig: VariantCreationConfig?
         ) {
@@ -298,7 +299,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
         private fun applyProguardConfigForNonTest(
             task: ProguardConfigurableTask,
-            creationConfig: ComponentCreationConfig
+            creationConfig: ConsumableCreationConfig
         ) {
             val variantDslInfo = creationConfig.variantDslInfo
 
@@ -349,7 +350,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         }
 
         private fun addFeatureProguardRules(
-            creationConfig: ComponentCreationConfig,
+            creationConfig: ConsumableCreationConfig,
             configurationFiles: ConfigurableFileCollection
         ) {
             configurationFiles.from(
@@ -363,10 +364,10 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         }
 
         private fun maybeGetCodeShrinkerAttributes(
-            creationConfig: ComponentCreationConfig
+            creationConfig: ConsumableCreationConfig
         ): AndroidAttributes? {
-            return if (creationConfig.variantScope.codeShrinker != null) {
-                AndroidAttributes(VariantManager.SHRINKER_ATTR to creationConfig.variantScope.codeShrinker.toString())
+            return if (creationConfig.codeShrinker != null) {
+                AndroidAttributes(VariantManager.SHRINKER_ATTR to creationConfig.codeShrinker.toString())
             } else {
                 null
             }

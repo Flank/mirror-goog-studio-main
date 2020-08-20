@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.DexSubject.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -32,6 +33,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import org.junit.Before;
 import org.junit.Rule;
@@ -156,17 +159,25 @@ public class SwitchMultidexTest {
                 .withProperty("inject.minsdk", "21")
                 .withProperty("inject.multidex", "true")
                 .run("assembleDebug");
-        Apk debug = project.getApk("debug");
-        assertThat(debug.getAllDexes()).hasSize(2);
 
-        Set<String> classes = debug.getAllDexes().get(0).getClasses().keySet();
-        Set<String> classes2 = debug.getAllDexes().get(1).getClasses().keySet();
-        assertThat(classes2).named("No duplicate class definitions").containsNoneIn(classes);
+        // Check no duplicate classes across the dex files
+        Map<String, Dex> classToDexMap = new HashMap<>();
+        for (Dex dex : project.getApk(DEBUG).getAllDexes()) {
+            for (String className : dex.getClasses().keySet()) {
+                Dex previousDex = classToDexMap.put(className, dex);
+                if (previousDex != null) {
+                    fail(
+                            String.format(
+                                    "Class %s is found in both %s and %s",
+                                    className, previousDex.toString(), dex.toString()));
+                }
+            }
+        }
 
         if (project.getIntermediateFile(
                         InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
                 .exists()) {
-            assertThat(Sets.union(classes, classes2))
+            assertThat(classToDexMap.keySet())
                     .containsExactly(
                             "Lcom/example/helloworld/A0;",
                             "Lcom/example/helloworld/A1;",
@@ -176,7 +187,7 @@ public class SwitchMultidexTest {
                             "Lcom/example/helloworld/R$string;",
                             "Lcom/example/helloworld/R;");
         } else {
-            assertThat(Sets.union(classes, classes2))
+            assertThat(classToDexMap.keySet())
                     .containsExactly(
                             "Lcom/example/helloworld/A0;",
                             "Lcom/example/helloworld/A1;",

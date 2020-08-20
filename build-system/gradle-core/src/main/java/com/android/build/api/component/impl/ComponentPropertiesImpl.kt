@@ -21,7 +21,6 @@ import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.ComponentProperties
 import com.android.build.api.component.analytics.AnalyticsEnabledComponentProperties
-import com.android.build.api.component.analytics.AnalyticsEnabledVariantProperties
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
@@ -29,7 +28,6 @@ import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
-import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.api.variant.impl.baseName
 import com.android.build.api.variant.impl.fullName
 import com.android.build.gradle.api.AndroidSourceSet
@@ -52,13 +50,7 @@ import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.has
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR
-import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_R_CLASS_JAR
-import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT
-import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_TRIGGER
-import com.android.build.gradle.internal.scope.InternalArtifactType.ML_SOURCE_OUT
-import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
+import com.android.build.gradle.internal.scope.InternalArtifactType.*
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -69,8 +61,9 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.builder.compiling.BuildConfigType
 import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
-import com.android.builder.dexing.DexingType
+import com.android.builder.errors.IssueReporter
 import com.android.builder.model.ApiVersion
+import com.android.builder.model.CodeShrinker
 import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
 import com.google.common.base.Preconditions
@@ -168,7 +161,7 @@ abstract class ComponentPropertiesImpl(
     // enabled, see b/134766811.
     override val isPrecompileDependenciesResourcesEnabled: Boolean
         get() = internalServices.projectOptions[BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES] &&
-                !variantScope.useResourceShrinker()
+                !useResourceShrinker()
 
     override val registeredProjectClassesVisitors: List<AsmClassVisitorFactory<*>>
         get() {
@@ -222,6 +215,55 @@ abstract class ComponentPropertiesImpl(
         return null
     }
 
+    override fun useResourceShrinker(): Boolean {
+        if (variantType.isForTesting || !variantDslInfo.getPostProcessingOptions().resourcesShrinkingEnabled()) {
+            return false
+        }
+        val newResourceShrinker = globalScope.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]
+        if (variantType.isDynamicFeature) {
+            globalScope
+                .dslServices
+                .issueReporter
+                .reportError(
+                        IssueReporter.Type.GENERIC,
+                        "Resource shrinking must be configured for base module.")
+            return false
+        }
+        if (!newResourceShrinker && globalScope.hasDynamicFeatures()) {
+            val message = String.format(
+                "Resource shrinker for multi-apk applications can be enabled via " +
+                        "experimental flag: '%s'.",
+                BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER.propertyName)
+            globalScope
+                    .dslServices
+                    .issueReporter
+                    .reportError(IssueReporter.Type.GENERIC, message)
+            return false
+        }
+        if (variantType.isAar) {
+            globalScope
+                .dslServices
+                .issueReporter
+                .reportError(IssueReporter.Type.GENERIC, "Resource shrinker cannot be used for libraries.")
+            return false
+        }
+        if (codeShrinker == null) {
+            globalScope
+                .dslServices
+                .issueReporter
+                .reportError(
+                        IssueReporter.Type.GENERIC,
+                        "Removing unused resources requires unused code shrinking to be turned on. See "
+                                + "http://d.android.com/r/tools/shrink-resources.html "
+                                + "for more information.")
+            return false
+        }
+        return true
+    }
+
+    open val codeShrinker: CodeShrinker?
+        get() = null
+
     // ---------------------------------------------------------------------------------------------
     // Private stuff
     // ---------------------------------------------------------------------------------------------
@@ -231,8 +273,8 @@ abstract class ComponentPropertiesImpl(
 
     // FIXME make internal
     fun addVariantOutput(
-        variantOutputConfiguration: VariantOutputConfigurationImpl,
-        outputFileName: String? = null
+            variantOutputConfiguration: VariantOutputConfigurationImpl,
+            outputFileName: String? = null
     ): VariantOutputImpl {
 
         return VariantOutputImpl(

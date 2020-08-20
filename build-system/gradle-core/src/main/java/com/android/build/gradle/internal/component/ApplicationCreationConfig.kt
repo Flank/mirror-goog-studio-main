@@ -18,6 +18,6 @@ package com.android.build.gradle.internal.component
 
 import org.gradle.api.provider.Property
 
-interface ApplicationCreationConfig: ApkCreationConfig, VariantCreationConfig {
+interface ApplicationCreationConfig: ApkCreationConfig {
     val needAssetPackTasks: Property<Boolean>
 }

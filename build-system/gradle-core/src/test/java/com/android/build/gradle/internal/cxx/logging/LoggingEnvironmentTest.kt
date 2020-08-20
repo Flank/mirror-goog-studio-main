@@ -28,6 +28,7 @@ class LoggingEnvironmentTest {
         override fun log(message: LoggingMessage) {
             messages += when(message.level) {
                 INFO -> "info $tag: $message"
+                LIFECYCLE -> "lifecycle $tag: $message"
                 WARN -> "warn $tag: $message"
                 ERROR -> "error $tag: $message"
             }
@@ -40,18 +41,20 @@ class LoggingEnvironmentTest {
             TestLoggingEnvironment("thread 1").use { logger ->
                 errorln("error")
                 warnln("warn")
+                lifecycleln("lifecycle")
                 infoln("info")
                 assertThat(logger.messages).containsExactly("error thread 1: error",
-                    "warn thread 1: warn", "info thread 1: info")
+                    "warn thread 1: warn", "lifecycle thread 1: lifecycle", "info thread 1: info")
             }
         }
         val thread2 = thread {
             TestLoggingEnvironment("thread 2").use { logger ->
                 errorln("error")
                 warnln("warn")
+                lifecycleln("lifecycle")
                 infoln("info")
                 assertThat(logger.messages).containsExactly("error thread 2: error",
-                    "warn thread 2: warn", "info thread 2: info")
+                    "warn thread 2: warn", "lifecycle thread 1: lifecycle", "info thread 2: info")
             }
         }
         thread1.join()

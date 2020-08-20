@@ -22,6 +22,11 @@
   <androidx.cardview/>
   <androidx.collection/>
   <androidx.compose/>
+  <androidx.compose.animation/>
+  <androidx.compose.foundation/>
+  <androidx.compose.material/>
+  <androidx.compose.runtime/>
+  <androidx.compose.ui/>
   <androidx.concurrent/>
   <androidx.constraintlayout/>
   <androidx.contentpager/>
@@ -37,6 +42,7 @@
   <androidx.enterprise/>
   <androidx.exifinterface/>
   <androidx.fragment/>
+  <androidx.games/>
   <androidx.gaming/>
   <androidx.gridlayout/>
   <androidx.heifwriter/>
@@ -132,6 +138,7 @@
   <com.google.android.play/>
   <com.google.android.support/>
   <com.google.android.things/>
+  <com.google.android.ump/>
   <com.google.android.wearable/>
   <com.google.androidbrowserhelper/>
   <com.google.ar/>
@@ -142,6 +149,7 @@
   <com.google.mlkit/>
   <com.google.oboe/>
   <com.google.prefab/>
+  <com.google.test.platform/>
   <com.google.testing.platform/>
   <io.fabric.sdk.android/>
   <org.chromium.net/>

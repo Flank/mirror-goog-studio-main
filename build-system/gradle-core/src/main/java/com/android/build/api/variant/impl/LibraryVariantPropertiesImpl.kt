@@ -22,6 +22,7 @@ import com.android.build.api.component.impl.ConsumableCreationConfigImpl
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
+import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.api.variant.PackagingOptions
 import com.android.build.gradle.internal.component.LibraryCreationConfig
@@ -38,6 +39,7 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.dexing.DexingType
+import com.android.builder.model.CodeShrinker
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
@@ -104,7 +106,7 @@ open class LibraryVariantPropertiesImpl @Inject constructor(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
-    private val delegate= ConsumableCreationConfigImpl(variantDslInfo)
+    private val delegate by lazy { ConsumableCreationConfigImpl(this, globalScope, variantDslInfo) }
 
     override val dexingType: DexingType
         get() = delegate.dexingType
@@ -118,4 +120,17 @@ open class LibraryVariantPropertiesImpl @Inject constructor(
             this,
             stats
         )
+
+    override val codeShrinker: CodeShrinker?
+        get() = delegate.getCodeShrinker()
+
+    override fun getNeedsMergedJavaResStream(): Boolean = delegate.getNeedsMergedJavaResStream()
+
+    override fun getJava8LangSupportType(): VariantScope.Java8LangSupport = delegate.getJava8LangSupportType()
+
+    override val needsShrinkDesugarLibrary: Boolean
+        get() = delegate.needsShrinkDesugarLibrary
+
+    override val minSdkVersionWithTargetDeviceApi: AndroidVersion
+        get() = delegate.minSdkVersionWithTargetDeviceApi
 }

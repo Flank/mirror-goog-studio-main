@@ -25,7 +25,7 @@ import org.junit.Test
 
 class IdeAndroidGradlePluginProjectFlagsTest {
 
-    val modelCache = ModelCache()
+    val modelCache = ModelCache.createForTesting()
 
     @Test
     fun testDefaults() {

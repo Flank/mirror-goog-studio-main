@@ -31,30 +31,46 @@ import org.gradle.api.tasks.TaskProvider
 
 class TaskBasedOperationImpl<TaskT: Task>(
     val objects: ObjectFactory,
-    val artifacts: ArtifactsImpl,
+    override val artifacts: ArtifactsImpl,
     val taskProvider: TaskProvider<TaskT>
-): TaskBasedOperation<TaskT> {
+): TaskBasedOperation<TaskT>, ArtifactOperationRequest {
 
     override fun <FileTypeT : FileSystemLocation> wiredWith(
-        input: (TaskT) -> FileSystemLocationProperty<FileTypeT>
+        taskOutput: (TaskT) -> FileSystemLocationProperty<FileTypeT>
     ): OutOperationRequest<FileTypeT> =
-        OutOperationRequestImpl(artifacts, taskProvider, input)
+        OutOperationRequestImpl(artifacts, taskProvider, taskOutput).also {
+            artifacts.addRequest(it)
+            closeRequest()
+        }
 
     override fun wiredWithFiles(
         taskInput: (TaskT) -> RegularFileProperty,
         taskOutput: (TaskT) -> RegularFileProperty
-    ): InAndOutFileOperationRequest
-            = InAndOutFileOperationRequestImpl(artifacts, taskProvider, taskInput, taskOutput)
+    ): InAndOutFileOperationRequest =
+        InAndOutFileOperationRequestImpl(artifacts, taskProvider, taskInput, taskOutput).also {
+            artifacts.addRequest(it)
+            closeRequest()
+        }
 
     override fun <FileTypeT : FileSystemLocation> wiredWith(
-        input: (TaskT) -> ListProperty<FileTypeT>,
-        output: (TaskT) -> FileSystemLocationProperty<FileTypeT>
+        taskInput: (TaskT) -> ListProperty<FileTypeT>,
+        taskOutput: (TaskT) -> FileSystemLocationProperty<FileTypeT>
     ): CombiningOperationRequest<FileTypeT> =
-        CombiningOperationRequestImpl(objects, artifacts, taskProvider, input, output)
+        CombiningOperationRequestImpl(objects, artifacts, taskProvider, taskInput, taskOutput).also {
+            artifacts.addRequest(it)
+            closeRequest()
+        }
 
     override fun wiredWithDirectories(
         taskInput: (TaskT) -> DirectoryProperty,
         taskOutput: (TaskT) -> DirectoryProperty
     ): InAndOutDirectoryOperationRequestImpl<TaskT> =
-        InAndOutDirectoryOperationRequestImpl(artifacts, taskProvider, taskInput, taskOutput)
+        InAndOutDirectoryOperationRequestImpl(artifacts, taskProvider, taskInput, taskOutput).also {
+            artifacts.addRequest(it)
+            closeRequest()
+        }
+
+    override val description: String
+        get() = "Task ${taskProvider.name} was passed to Artifacts::use method without wiring any " +
+            "input and/or output to an artifact."
 }

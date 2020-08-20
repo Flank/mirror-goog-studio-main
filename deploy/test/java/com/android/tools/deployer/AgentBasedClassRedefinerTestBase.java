@@ -43,7 +43,7 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
     protected static final String AGENT_LOCATION =
             ProcessRunner.getProcessPath("swap.agent.location");
     protected static final String SERVER_LOCATION =
-            ProcessRunner.getProcessPath("swap.server.location");
+            ProcessRunner.getProcessPath("install.server.location");
 
     protected static final String PACKAGE = "package.name";
 
@@ -62,6 +62,17 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
     protected File dataDir;
 
     protected final String artFlag;
+
+    private static final byte[] MAGIC_NUMBER = {
+        (byte) 0xAC,
+        (byte) 0xA5,
+        (byte) 0xAC,
+        (byte) 0xA5,
+        (byte) 0xAC,
+        (byte) 0xA5,
+        (byte) 0xAC,
+        (byte) 0xA5
+    };
 
     public AgentBasedClassRedefinerTestBase(String artFlag) {
         this.artFlag = artFlag;
@@ -83,6 +94,7 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
         android.start();
 
         redefiner = new LocalTestAgentBasedClassRedefiner(android, dexLocation);
+        redefiner.startServer();
     }
 
     @After
@@ -161,38 +173,22 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
         }
 
         protected void redefine(Deploy.SwapRequest request, boolean unused) {
-            redefine(request.toByteArray());
+            Deploy.SendAgentMessageRequest agentRequest =
+                    Deploy.SendAgentMessageRequest.newBuilder()
+                            .setAgentCount(1)
+                            .setSwapRequest(request)
+                            .build();
+            Deploy.InstallServerRequest serverRequest =
+                    Deploy.InstallServerRequest.newBuilder()
+                            .setType(Deploy.InstallServerRequest.Type.HANDLE_REQUEST)
+                            .setSendRequest(agentRequest)
+                            .build();
+            redefine(serverRequest.toByteArray());
         }
 
         protected void redefine(byte[] message) {
             try {
-                // Start a new agent server that will connect to a single agent.
-                System.out.println("Starting agent server");
-
-                String agentCount = "1";
-                // Use stderr as the sync file descriptor.
-                String syncFd = "2";
-                server =
-                        new ProcessBuilder(SERVER_LOCATION, agentCount, socketName, syncFd).start();
-
-                int sync = server.getErrorStream().read();
-                if (sync != -1) {
-                    // Not an error per se, but we probably want to see it in logs.
-                    System.err.println("Sync received unexpected response");
-                }
-
-                // Convert the request into bytes prepended by the request size.
-                byte[] size =
-                        ByteBuffer.allocate(4)
-                                .order(ByteOrder.LITTLE_ENDIAN)
-                                .putInt(message.length)
-                                .array();
-
-                // Send the swap request to the server.
-                OutputStream stdin = server.getOutputStream();
-                stdin.write(size);
-                stdin.write(message);
-                stdin.flush();
+                sendMessage(message);
                 android.attachAgent(AGENT_LOCATION + "=" + socketName);
             } catch (IOException e) {
                 System.err.println(e);
@@ -201,10 +197,58 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
 
         protected Deploy.AgentSwapResponse getAgentResponse()
                 throws IOException, InvalidProtocolBufferException {
+            return getServerResponse().getSendResponse().getAgentResponses(0);
+        }
+
+        private void sendMessage(byte[] message) throws IOException {
+            byte[] size =
+                    ByteBuffer.allocate(MAGIC_NUMBER.length + Integer.BYTES)
+                            .order(ByteOrder.LITTLE_ENDIAN)
+                            .put(MAGIC_NUMBER)
+                            .putInt(message.length)
+                            .array();
+
+            OutputStream stdin = server.getOutputStream();
+            stdin.write(size);
+            stdin.write(message);
+            stdin.flush();
+        }
+
+        private void startServer() throws IOException {
+            System.out.println("Starting install server");
+            server = new ProcessBuilder(SERVER_LOCATION).start();
+            if (getServerResponse().getStatus()
+                    != Deploy.InstallServerResponse.Status.SERVER_STARTED) {
+                System.err.println("Did not receive startup ack from install server");
+            }
+            Deploy.OpenAgentSocketRequest socketRequest =
+                    Deploy.OpenAgentSocketRequest.newBuilder().setSocketName(socketName).build();
+            Deploy.InstallServerRequest serverRequest =
+                    Deploy.InstallServerRequest.newBuilder()
+                            .setType(Deploy.InstallServerRequest.Type.HANDLE_REQUEST)
+                            .setSocketRequest(socketRequest)
+                            .build();
+            sendMessage(serverRequest.toByteArray());
+            if (getServerResponse().getSocketResponse().getStatus()
+                    != Deploy.OpenAgentSocketResponse.Status.OK) {
+                System.err.println("Agent socket could not be opened");
+            }
+        }
+
+        protected Deploy.InstallServerResponse getServerResponse()
+                throws IOException, InvalidProtocolBufferException {
             InputStream stdout = server.getInputStream();
-            byte[] sizeBytes = new byte[4];
+
+            byte[] magicBytes = new byte[MAGIC_NUMBER.length];
 
             int offset = 0;
+            while (offset < magicBytes.length) {
+                offset += stdout.read(magicBytes, offset, magicBytes.length - offset);
+            }
+
+            byte[] sizeBytes = new byte[Integer.BYTES];
+
+            offset = 0;
             while (offset < sizeBytes.length) {
                 offset += stdout.read(sizeBytes, offset, sizeBytes.length - offset);
             }
@@ -216,17 +260,22 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
             while (offset < messageBytes.length) {
                 offset += stdout.read(messageBytes, offset, messageBytes.length - offset);
             }
-            return Deploy.AgentSwapResponse.parseFrom(messageBytes);
+            return Deploy.InstallServerResponse.parseFrom(messageBytes);
         }
 
         protected void stopServer() {
             try {
                 System.out.println("Waiting for server to exit");
                 if (server != null) {
+                    Deploy.InstallServerRequest request =
+                            Deploy.InstallServerRequest.newBuilder()
+                                    .setType(Deploy.InstallServerRequest.Type.SERVER_EXIT)
+                                    .build();
+                    sendMessage(request.toByteArray());
                     server.waitFor();
                 }
                 System.out.println("Server exited");
-            } catch (InterruptedException e) {
+            } catch (IOException | InterruptedException e) {
                 System.err.println(e);
             }
         }

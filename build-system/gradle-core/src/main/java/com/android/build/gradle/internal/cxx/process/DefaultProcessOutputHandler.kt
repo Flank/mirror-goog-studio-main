@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.cxx.process
 
+import com.android.build.gradle.internal.cxx.logging.infoln
+import com.android.build.gradle.internal.cxx.logging.lifecycleln
 import com.android.ide.common.process.ProcessOutput
 import com.android.ide.common.process.ProcessOutputHandler
 import java.io.File
@@ -31,7 +33,7 @@ class DefaultProcessOutputHandler(
     private val stderrFile : File,
     private val stdoutFile : File,
     private val logPrefix: String,
-    private val logErrorToInfo: Boolean,
+    private val logErrorToLifecycle: Boolean,
     private val logOutputToInfo: Boolean) : ProcessOutputHandler {
 
     var stderr : FileOutputStream? = null
@@ -42,11 +44,11 @@ class DefaultProcessOutputHandler(
         val singleStdout = FileOutputStream(stdoutFile, true)
         val stderrReceivers = mutableListOf<OutputStream>(singleStderr)
         val stdoutReceivers = mutableListOf<OutputStream>(singleStdout)
-        if (logErrorToInfo) {
-            stderrReceivers.add(ChunkBytesToLineOutputStream(logPrefix))
+        if (logErrorToLifecycle) {
+            stderrReceivers.add(ChunkBytesToLineOutputStream(logPrefix, { lifecycleln(it) }))
         }
         if (logOutputToInfo) {
-            stdoutReceivers.add(ChunkBytesToLineOutputStream(logPrefix))
+            stdoutReceivers.add(ChunkBytesToLineOutputStream(logPrefix, { infoln(it) }))
         }
         return DefaultProcessOutput(
             singleStderr,

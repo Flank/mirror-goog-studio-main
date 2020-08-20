@@ -16,8 +16,11 @@
 
 package com.android.build.gradle.internal.dependency
 
+import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dependency.AsmClassesTransform.Companion.ATTR_ASM_TRANSFORMED_VARIANT
 import com.android.build.gradle.internal.dexing.readDesugarGraph
 import com.android.build.gradle.internal.dexing.writeDesugarGraph
@@ -320,16 +323,18 @@ abstract class DexingWithClasspathTransform : BaseDexingTransform<BaseDexingTran
 }
 
 fun getDexingArtifactConfigurations(components: Collection<ComponentCreationConfig>): Set<DexingArtifactConfiguration> {
-    return components.map { getDexingArtifactConfiguration(it) }.toSet()
+    return components
+        .filterIsInstance<ApkCreationConfig>()
+        .map { getDexingArtifactConfiguration(it) }.toSet()
 }
 
-fun getDexingArtifactConfiguration(creationConfig: ComponentCreationConfig): DexingArtifactConfiguration {
+fun getDexingArtifactConfiguration(creationConfig: ApkCreationConfig): DexingArtifactConfiguration {
     return DexingArtifactConfiguration(
-        minSdk = creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel,
+        minSdk = creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel(),
         isDebuggable = creationConfig.variantDslInfo.isDebuggable,
-        enableDesugaring = creationConfig.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8,
-        enableCoreLibraryDesugaring = creationConfig.variantScope.isCoreLibraryDesugaringEnabled,
-        needsShrinkDesugarLibrary = creationConfig.variantScope.needsShrinkDesugarLibrary,
+        enableDesugaring = creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.D8,
+        enableCoreLibraryDesugaring = creationConfig.isCoreLibraryDesugaringEnabled,
+        needsShrinkDesugarLibrary = creationConfig.needsShrinkDesugarLibrary,
         incrementalDexingTransform = creationConfig.globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM),
         asmTransformedVariant = if (creationConfig.registeredDependenciesClassesVisitors.isNotEmpty()) creationConfig.name else null
     )

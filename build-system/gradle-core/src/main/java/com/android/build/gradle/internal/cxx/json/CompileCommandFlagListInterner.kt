@@ -25,6 +25,6 @@ import com.android.utils.TokenizedCommandLineMap
  */
 class CompileCommandFlagListInterner {
     private var map = TokenizedCommandLineMap<List<String>>(raw = false)
-    fun internFlags(commandLine: String) =
-        map.computeIfAbsent(commandLine) { tokens -> tokens.toTokenList() }
+    fun internFlags(commandLine: String, sourceFile: String) =
+        map.computeIfAbsent(commandLine, sourceFile) { tokens -> tokens.toTokenList() }
 }

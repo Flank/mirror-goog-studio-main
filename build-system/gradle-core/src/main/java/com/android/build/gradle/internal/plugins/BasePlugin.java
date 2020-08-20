@@ -73,7 +73,7 @@ import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService;
 import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService;
-import com.android.build.gradle.internal.services.BuildServicesKt;
+import com.android.build.gradle.internal.services.ClassesHierarchyBuildService;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.DslServicesImpl;
 import com.android.build.gradle.internal.services.LintClassLoaderBuildService;
@@ -348,6 +348,7 @@ public abstract class BasePlugin<
                         .execute();
 
         new SymbolTableBuildService.RegistrationAction(project, projectOptions).execute();
+        new ClassesHierarchyBuildService.RegistrationAction(project).execute();
 
         projectOptions
                 .getAllOptions()
@@ -496,12 +497,12 @@ public abstract class BasePlugin<
                     new com.android.build.gradle.internal.ide.v2.NativeModelBuilder(
                             projectServices.getIssueReporter(), globalScope, variantModel);
             registry.register(nativeModelBuilderV2);
+        } else {
+            NativeModelBuilder nativeModelBuilder =
+                    new NativeModelBuilder(
+                            projectServices.getIssueReporter(), globalScope, variantModel);
+            registry.register(nativeModelBuilder);
         }
-        // TODO(b/161169301): registering V1 in an `else` branch when ndk-build is properly supported by V2.
-        NativeModelBuilder nativeModelBuilder =
-                new NativeModelBuilder(
-                        projectServices.getIssueReporter(), globalScope, variantModel);
-        registry.register(nativeModelBuilder);
     }
 
     /** Registers a builder for the custom tooling model. */
@@ -682,6 +683,9 @@ public abstract class BasePlugin<
 
         checkSplitConfiguration();
         variantManager.setHasCreatedTasks(true);
+        for (ComponentInfo<VariantT, VariantPropertiesT> variant : variants) {
+            variant.getProperties().getArtifacts().ensureAllOperationsAreSatisfied();
+        }
         // notify our properties that configuration is over for us.
         GradleProperty.Companion.endOfEvaluation();
     }
@@ -879,6 +883,7 @@ public abstract class BasePlugin<
                         projectOptions,
                         project.getGradle().getSharedServices(),
                         aapt2FromMaven,
+                        project.getGradle().getStartParameter().getMaxWorkerCount(),
                         project::file);
     }
 }

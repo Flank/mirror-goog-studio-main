@@ -72,6 +72,29 @@ sealed class TargetDataItem {
      * "type" : "SHARED_LIBRARY"
      */
     data class Type(val type : String) : TargetDataItem()
+
+    /**
+     *  "commandFragments" : [ {
+     *    "fragment" : "-Wl,--exclude-libs,libgcc.a -Wl,--exclude-libs,libgcc_real.a ...",
+     *    "role" : "flags"
+     *  }, { "fragment" : "-llog",
+     *    "role" : "libraries"
+     *  }, {
+     *    "backtrace" : 2,
+     *    "fragment" : "/root/jetified-curl/prefab/modules/curl/libs/android.x86_64/libcurl.so",
+     *    "role" : "libraries"
+     *  } ],
+     *  "language" : "CXX",
+     *  "sysroot" : {
+     *     "path" : "/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/sysroot
+     *   }
+     */
+    data class Link(
+            val targetId : String,
+            val compileCommandFragments : List<CommandFragmentData>,
+            val language : String,
+            val sysroot : String) : TargetDataItem()
+
 }
 
 data class TargetCompileGroupData(
@@ -81,3 +104,5 @@ data class TargetCompileGroupData(
         val language : String, // ex "C"
         val sysroot : String
 )
+
+data class CommandFragmentData(val fragment : String, val role : String)

@@ -21,9 +21,10 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.testutils.apk.Dex
 import com.android.utils.FileUtils
 import com.google.common.base.Throwables
-import com.google.common.collect.Sets
+import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
 
@@ -70,17 +71,23 @@ class AutoEnableMultidexTest {
             .contains("https://developer.android.com/tools/building/multidex.html")
 
         project.executor().run("assembleCurrentDebug")
-        val debug = project.getApk(GradleTestProject.ApkType.DEBUG, "current")
-        assertThat(debug.allDexes).hasSize(2)
-        val classes = debug.allDexes[0].classes.keys
-        val classes2 = debug.allDexes[1].classes.keys
 
-        assertThat(classes2).named("No duplicate class definitions").containsNoneIn(classes)
+        // Check no duplicate classes across the dex files
+        val classToDexMap: MutableMap<String, Dex> = mutableMapOf()
+        for (dex in project.getApk(GradleTestProject.ApkType.DEBUG, "current").allDexes) {
+            for (className in dex.classes.keys) {
+                val previousDex = classToDexMap.put(className, dex)
+                if (previousDex != null) {
+                    Assert.fail("Class $className is found in both $previousDex and $dex")
+                }
+            }
+        }
+
         if (FileUtils.join(project.intermediatesDir,
                 InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.getFolderName())
                 .exists()
         ) {
-            assertThat(Sets.union(classes, classes2))
+            assertThat(classToDexMap.keys)
                     .containsExactly(
                             "Lcom/example/helloworld/A0;",
                             "Lcom/example/helloworld/A1;",
@@ -88,7 +95,7 @@ class AutoEnableMultidexTest {
                             "Lcom/example/helloworld/R;"
                     )
         } else {
-            assertThat(Sets.union(classes, classes2))
+            assertThat(classToDexMap.keys)
                     .containsExactly(
                             "Lcom/example/helloworld/A0;",
                             "Lcom/example/helloworld/A1;",

@@ -35,7 +35,7 @@ import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.TextFormat
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto
-import com.google.testing.platform.server.proto.ServerConfigProto.ServerConfig
+import com.google.testing.platform.proto.api.service.ServerConfigProto.ServerConfig
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

@@ -34,7 +34,6 @@ import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
 import com.android.tools.lint.LintStats.Companion.create
 import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.client.api.Configuration
-import com.android.tools.lint.client.api.LintXmlConfiguration
 import com.android.tools.lint.client.api.GradleVisitor
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintBaseline
@@ -42,6 +41,7 @@ import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.client.api.LintListener
 import com.android.tools.lint.client.api.LintRequest
+import com.android.tools.lint.client.api.LintXmlConfiguration
 import com.android.tools.lint.client.api.UastParser
 import com.android.tools.lint.client.api.XmlParser
 import com.android.tools.lint.detector.api.Context
@@ -67,15 +67,18 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import com.intellij.codeInsight.ExternalAnnotationsManager
 import com.intellij.mock.MockProject
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.pom.java.LanguageLevel
-import com.intellij.psi.PsiManager
 import com.intellij.util.lang.UrlClassLoader
 import org.jetbrains.jps.model.java.impl.JavaSdkUtil
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys.PERF_MANAGER
 import org.jetbrains.kotlin.cli.common.CommonCompilerPerformanceManager
+import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
+import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.config.LanguageVersionSettings
+import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.util.PerformanceCounter.Companion.resetAllCounters
 import org.w3c.dom.Document
@@ -538,16 +541,12 @@ open class LintCliClient : LintClient {
         ) {
             // Offsets in these files will be relative to PSI's text offsets (which may
             // have converted line offsets); make sure we use the same offsets.
-            // (Can't just do this on Windows; what matters is whether the file contains
-            // CRLF's.)
+            // (Can't just do this on Windows; what matters is whether the file contains CRLF's.)
             val vFile = StandardFileSystems.local().findFileByPath(path)
             if (vFile != null) {
-                val project = ideaProject
-                if (project != null) {
-                    val psiFile = PsiManager.getInstance(project).findFile(vFile)
-                    if (psiFile != null) {
-                        return psiFile.text
-                    }
+                val document = FileDocumentManager.getInstance().getDocument(vFile)
+                if (document != null) {
+                    return document.text
                 }
             }
         }
@@ -1140,6 +1139,15 @@ open class LintCliClient : LintClient {
                 if (kotlinLanguageLevel != null) {
                     env.kotlinCompilerConfig.languageVersionSettings = kotlinLanguageLevel
                 }
+
+                // TODO(b/162855232): remove this workaround once lint-psi is updated to Kotlin 1.4.
+                val config = env.kotlinCompilerConfig
+                if (config.languageVersionSettings.languageVersion < LanguageVersion.KOTLIN_1_4) {
+                    config.languageVersionSettings = LanguageVersionSettingsImpl(
+                        LanguageVersion.KOTLIN_1_4, ApiVersion.KOTLIN_1_4
+                    )
+                }
+
                 env.analyzeFiles(kotlinFiles)
             }
             val ok = super.prepare(contexts, javaLanguageLevel, kotlinLanguageLevel)

@@ -18,7 +18,9 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.InAndOutFileOperationRequest
+import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
+import com.google.wireless.android.sdk.stats.ArtifactAccess
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.file.RegularFile
 import javax.inject.Inject
@@ -32,6 +34,10 @@ open class AnalyticsEnabledInAndOutFileOperationRequest @Inject constructor(
                   ArtifactTypeT : Artifact.Transformable {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.TO_TRANSFORM_FILE_VALUE
+        stats.variantApiAccessBuilder.addArtifactAccessBuilder().also {
+            it.inputArtifactType = AnalyticsUtil.getVariantApiArtifactType(type.javaClass).number
+            it.type = ArtifactAccess.AccessType.TRANSFORM
+        }
         delegate.toTransform(type)
     }
 }

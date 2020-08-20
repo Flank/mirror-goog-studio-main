@@ -37,9 +37,9 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.objectweb.asm.Type
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
+import org.objectweb.asm.Type
 import java.io.Serializable
 
 abstract class VariantPropertiesImpl(
@@ -144,6 +144,23 @@ abstract class VariantPropertiesImpl(
 
     override val minSdkVersion: AndroidVersion
         get() = variant.minSdkVersion
+
+    private var _isMultiDexEnabled: Boolean? = variantDslInfo.isMultiDexEnabled
+    override val isMultiDexEnabled: Boolean
+        get() {
+            return _isMultiDexEnabled ?: (minSdkVersion.getFeatureLevel() >= 21)
+        }
+
+    private val isBaseModule = variantDslInfo.variantType.isBaseModule
+
+    override val needsMainDexListForBundle: Boolean
+        get() = isBaseModule
+                && globalScope.hasDynamicFeatures()
+                && dexingType.needsMainDexList
+
+    // TODO: Move down to lower type and remove from VariantScope.
+    override val isCoreLibraryDesugaringEnabled: Boolean
+        get() = variantScope.isCoreLibraryDesugaringEnabled(this)
 
     abstract override fun createUserVisibleVariantPropertiesObject(
         projectServices: ProjectServices,

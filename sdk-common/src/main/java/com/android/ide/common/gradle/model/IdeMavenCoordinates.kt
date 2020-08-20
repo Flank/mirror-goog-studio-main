@@ -44,10 +44,4 @@ interface IdeMavenCoordinates {
      * built from the same POM but differ in their content.
      */
     val classifier: String?
-
-    /**
-     * Returns this coordinates Id without the version attribute.
-     * Since 2.3
-     */
-    val versionlessId: String
 }

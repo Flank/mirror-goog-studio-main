@@ -33,11 +33,11 @@ import org.junit.Test;
 
 /** Tests for {@link IdeNativeAndroidProjectImpl}. */
 public class IdeNativeAndroidProjectImplTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
     }
 
     @Test

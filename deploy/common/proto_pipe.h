@@ -42,14 +42,7 @@ class ProtoPipe {
   // pipe, then attempts to parse the data read into the specified proto.
   bool Read(int timeout_ms, google::protobuf::MessageLite* message) {
     std::string bytes;
-
-    // TODO: Fix this when we fix MessagePipeWrapper to not take a vector.
-    auto ready = MessagePipeWrapper::Poll({&pipe_}, timeout_ms);
-    if (ready.size() == 0) {
-      return false;
-    }
-
-    if (!pipe_.Read(&bytes)) {
+    if (!pipe_.Read(timeout_ms, &bytes)) {
       return false;
     }
 

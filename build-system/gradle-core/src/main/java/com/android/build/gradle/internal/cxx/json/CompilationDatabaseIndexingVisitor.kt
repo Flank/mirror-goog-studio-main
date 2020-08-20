@@ -31,11 +31,12 @@ class CompilationDatabaseIndexingVisitor(private val strings: StringTable) :
     private var flags = ""
     private var file = "."
     private val map = mutableMapOf<String, Int>()
-    private val interner = TokenizedCommandLineMap<String>(raw = true) { tokens ->
-        tokens.removeNth(0) // Remove the path to clang.exe
-        tokens.removeTokenGroup("-c", 1) // Remove -c and one following token
-        tokens.removeTokenGroup("-o", 1) // Remove -o and one following token
-    }
+    private val interner =
+        TokenizedCommandLineMap<String>(raw = true) { tokens, placeholderSourceFile ->
+            tokens.removeNth(0) // Remove the path to clang.exe
+            tokens.removeTokenGroup("-c", 1) // Remove -c and one following token
+            tokens.removeTokenGroup("-o", 1) // Remove -o and one following token
+        }
 
     override fun beginCommand() {
         flags = ""
@@ -50,7 +51,10 @@ class CompilationDatabaseIndexingVisitor(private val strings: StringTable) :
      * Intern each command after stripping -o and -c flags
      */
     override fun visitCommand(command: String) {
-        this.flags = interner.computeIfAbsent(command) { it.toString() }
+        // Note: here we use a placeholder instead of fix this visitor because it will be removed
+        // after V1 sync goes away. Also so far the `-c` trick works fine since CMake always put
+        // source file name after `-c`.
+        this.flags = interner.computeIfAbsent(command, "placeholder") { it.toString() }
     }
 
     override fun endCommand() {

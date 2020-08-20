@@ -27,11 +27,11 @@ import org.junit.Test;
 
 /** Tests for {@link IdeFilterDataImpl}. */
 public class IdeFilterDataTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
     }
 
     @Test
@@ -53,10 +53,5 @@ public class IdeFilterDataTest {
         IdeFilterDataImpl copy = myModelCache.filterDataFrom(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeFilterDataImpl.class).verify();
     }
 }

@@ -1,14 +1,14 @@
 {
-	"artifacts" : 
+	"artifacts" :
 	[
 		{
 			"path" : "Binaries/Tests/FloatUtilsTest"
 		}
 	],
 	"backtrace" : 2,
-	"backtraceGraph" : 
+	"backtraceGraph" :
 	{
-		"commands" : 
+		"commands" :
 		[
 			"add_executable",
 			"add_dolphin_test",
@@ -20,7 +20,7 @@
 			"add_definitions",
 			"include_directories"
 		],
-		"files" : 
+		"files" :
 		[
 			"Source/UnitTests/CMakeLists.txt",
 			"Source/UnitTests/Common/CMakeLists.txt",
@@ -30,7 +30,7 @@
 			"CMakeLists.txt",
 			"Source/CMakeLists.txt"
 		],
-		"nodes" : 
+		"nodes" :
 		[
 			{
 				"file" : 1
@@ -430,10 +430,10 @@
 			}
 		]
 	},
-	"compileGroups" : 
+	"compileGroups" :
 	[
 		{
-			"compileCommandFragments" : 
+			"compileCommandFragments" :
 			[
 				{
 					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -g -DNDEBUG -fPIE  "
@@ -506,7 +506,7 @@
 					"fragment" : "-std=c++17"
 				}
 			],
-			"defines" : 
+			"defines" :
 			[
 				{
 					"backtrace" : 42,
@@ -569,94 +569,94 @@
 					"define" : "__STDC_LIMIT_MACROS"
 				}
 			],
-			"includes" : 
+			"includes" :
 			[
 				{
 					"backtrace" : 57,
-					"path" : "/Users/jomof/projects/dolphin/Externals/curl/include"
+					"path" : "/{PROJECT}/Externals/curl/include"
 				},
 				{
 					"backtrace" : 58,
-					"path" : "/Users/jomof/projects/dolphin/Externals/SFML/include"
+					"path" : "/{PROJECT}/Externals/SFML/include"
 				},
 				{
 					"backtrace" : 59,
-					"path" : "/Users/jomof/projects/dolphin/Source/Core"
+					"path" : "/{PROJECT}/Source/Core"
 				},
 				{
 					"backtrace" : 60,
-					"path" : "/Users/jomof/projects/dolphin/Source/Android"
+					"path" : "/{PROJECT}/Source/Android"
 				},
 				{
 					"backtrace" : 61,
-					"path" : "/Users/jomof/projects/dolphin/Externals/enet/include"
+					"path" : "/{PROJECT}/Externals/enet/include"
 				},
 				{
 					"backtrace" : 62,
-					"path" : "/Users/jomof/projects/dolphin/External/minizip"
+					"path" : "/{PROJECT}/External/minizip"
 				},
 				{
 					"backtrace" : 63,
-					"path" : "/Users/jomof/projects/dolphin/Externals/soundtouch"
+					"path" : "/{PROJECT}/Externals/soundtouch"
 				},
 				{
 					"backtrace" : 64,
-					"path" : "/Users/jomof/projects/dolphin/Externals/mbedtls/include"
+					"path" : "/{PROJECT}/Externals/mbedtls/include"
 				},
 				{
 					"backtrace" : 65,
-					"path" : "/Users/jomof/projects/dolphin/Externals/libiconv-1.14/include"
+					"path" : "/{PROJECT}/Externals/libiconv-1.14/include"
 				},
 				{
 					"backtrace" : 66,
-					"path" : "/Users/jomof/projects/dolphin/Externals/picojson"
+					"path" : "/{PROJECT}/Externals/picojson"
 				},
 				{
 					"backtrace" : 67,
-					"path" : "/Users/jomof/projects/dolphin/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Source/Core"
+					"path" : "/{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/Source/Core"
 				},
 				{
 					"backtrace" : 3,
-					"path" : "/Users/jomof/projects/dolphin/Externals/fmt/include"
+					"path" : "/{PROJECT}/Externals/fmt/include"
 				},
 				{
 					"backtrace" : 3,
-					"path" : "/Users/jomof/projects/dolphin/Externals/minizip/."
+					"path" : "/{PROJECT}/Externals/minizip/."
 				},
 				{
 					"backtrace" : 3,
-					"path" : "/Users/jomof/projects/dolphin/Externals/cubeb/include"
+					"path" : "/{PROJECT}/Externals/cubeb/include"
 				},
 				{
 					"backtrace" : 3,
-					"path" : "/Users/jomof/projects/dolphin/Source/Android/app/.cxx/cmake/debug/arm64-v8a/exports"
+					"path" : "/{PROJECT}/Source/Android/app/.cxx/cmake/debug/arm64-v8a/exports"
 				},
 				{
 					"backtrace" : 3,
-					"path" : "/Users/jomof/projects/dolphin/Externals/pugixml/."
+					"path" : "/{PROJECT}/Externals/pugixml/."
 				},
 				{
 					"backtrace" : 3,
-					"path" : "/Users/jomof/projects/dolphin/Externals/cpp-optparse/."
+					"path" : "/{PROJECT}/Externals/cpp-optparse/."
 				},
 				{
 					"backtrace" : 3,
 					"isSystem" : true,
-					"path" : "/Users/jomof/projects/dolphin/Externals/gtest/include"
+					"path" : "/{PROJECT}/Externals/gtest/include"
 				}
 			],
 			"language" : "CXX",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				0
 			],
-			"sysroot" : 
+			"sysroot" :
 			{
-				"path" : "/Users/jomof/Library/Android/sdk/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+				"path" : "/{SDK}/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
 			}
 		}
 	],
-	"dependencies" : 
+	"dependencies" :
 	[
 		{
 			"backtrace" : 3,
@@ -774,14 +774,14 @@
 			"id" : "unittests_stubhost::@02969707d2e8af0d2b6d"
 		}
 	],
-	"folder" : 
+	"folder" :
 	{
 		"name" : "Tests"
 	},
 	"id" : "FloatUtilsTest::@ee8f045513e280eb9330",
-	"link" : 
+	"link" :
 	{
-		"commandFragments" : 
+		"commandFragments" :
 		[
 			{
 				"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -g -DNDEBUG",
@@ -856,7 +856,7 @@
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/Users/jomof/Library/Android/sdk/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/21/libOpenSLES.so",
+				"fragment" : "/{SDK}/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/21/libOpenSLES.so",
 				"role" : "libraries"
 			},
 			{
@@ -900,7 +900,7 @@
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/Users/jomof/Library/Android/sdk/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libz.a",
+				"fragment" : "/{SDK}/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libz.a",
 				"role" : "libraries"
 			},
 			{
@@ -987,36 +987,36 @@
 			}
 		],
 		"language" : "CXX",
-		"sysroot" : 
+		"sysroot" :
 		{
-			"path" : "/Users/jomof/Library/Android/sdk/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+			"path" : "/{SDK}/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
 		}
 	},
 	"name" : "FloatUtilsTest",
 	"nameOnDisk" : "FloatUtilsTest",
-	"paths" : 
+	"paths" :
 	{
 		"build" : "Source/UnitTests/Common",
 		"source" : "Source/UnitTests/Common"
 	},
-	"sourceGroups" : 
+	"sourceGroups" :
 	[
 		{
 			"name" : "Source Files",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				0
 			]
 		},
 		{
 			"name" : "Object Libraries",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				1
 			]
 		}
 	],
-	"sources" : 
+	"sources" :
 	[
 		{
 			"backtrace" : 2,

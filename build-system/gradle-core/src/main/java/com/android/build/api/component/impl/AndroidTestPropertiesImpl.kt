@@ -42,9 +42,10 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
-import com.android.builder.dexing.DexingType
 import com.android.build.gradle.options.IntegerOption
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import com.android.builder.dexing.DexingType
+import com.android.builder.model.CodeShrinker
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -83,7 +84,7 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     globalScope
 ), AndroidTestProperties, AndroidTestCreationConfig {
 
-    private val delegate = ConsumableCreationConfigImpl(variantDslInfo)
+    private val delegate by lazy { AndroidTestCreationConfigImpl(this, globalScope, variantDslInfo) }
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -97,7 +98,8 @@ open class AndroidTestPropertiesImpl @Inject constructor(
 
     override val applicationId: Property<String> = internalServices.propertyOf(
         String::class.java,
-        variantDslInfo.applicationId)
+        variantDslInfo.applicationId
+    )
 
     override val manifestPlaceholders: MapProperty<String, String> by lazy {
         internalServices.mapPropertyOf(
@@ -133,7 +135,10 @@ open class AndroidTestPropertiesImpl @Inject constructor(
         get() = variantDslInfo.isMinifyEnabled
 
     override val instrumentationRunner: Property<String> =
-        internalServices.propertyOf(String::class.java, variantDslInfo.instrumentationRunner)
+        internalServices.propertyOf(
+            String::class.java,
+            variantDslInfo.getInstrumentationRunner(dexingType)
+        )
 
     override val handleProfiling: Property<Boolean> =
         internalServices.propertyOf(Boolean::class.java, variantDslInfo.handleProfiling)
@@ -170,7 +175,12 @@ open class AndroidTestPropertiesImpl @Inject constructor(
      * @param value a [Provider] for the value
      * @param comment optional comment to be added to the generated resource file for the field.
      */
-    override fun addResValue(name: String, type: String, value: Provider<String>, comment: String?) {
+    override fun addResValue(
+        name: String,
+        type: String,
+        value: Provider<String>,
+        comment: String?
+    ) {
         resValues.put(ResValue.Key(type, name), value.map { ResValue(it, comment) })
     }
 
@@ -233,10 +243,22 @@ open class AndroidTestPropertiesImpl @Inject constructor(
      */
     override val shouldPackageDesugarLibDex: Boolean
         get() = when {
-            !variantScope.isCoreLibraryDesugaringEnabled -> false
+            !isCoreLibraryDesugaringEnabled -> false
             testedConfig.variantType.isAar -> true
-            else -> testedConfig.variantType.isBaseModule && testedConfig.variantScope.needsShrinkDesugarLibrary
+            else -> testedConfig.variantType.isBaseModule && needsShrinkDesugarLibrary
         }
+
+    override val minSdkVersionWithTargetDeviceApi: AndroidVersion =
+        testedVariant.minSdkVersionWithTargetDeviceApi
+
+    override val isMultiDexEnabled: Boolean =
+        testedVariant.isMultiDexEnabled
+
+    override val needsShrinkDesugarLibrary: Boolean
+        get() = delegate.needsShrinkDesugarLibrary
+
+    override val isCoreLibraryDesugaringEnabled: Boolean
+        get() = delegate.isCoreLibraryDesugaringEnabled
 
     override val dexingType: DexingType
         get() = delegate.dexingType
@@ -258,5 +280,13 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     override val shouldPackageProfilerDependencies: Boolean = false
 
     override val advancedProfilingTransforms: List<String> = emptyList()
+
+    override val codeShrinker: CodeShrinker?
+        get() = delegate.getCodeShrinker()
+
+    override fun getNeedsMergedJavaResStream(): Boolean =
+        delegate.getNeedsMergedJavaResStream()
+
+    override fun getJava8LangSupportType(): VariantScope.Java8LangSupport = delegate.getJava8LangSupportType()
 }
 

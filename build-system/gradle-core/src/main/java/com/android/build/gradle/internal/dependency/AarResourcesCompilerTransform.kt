@@ -72,7 +72,7 @@ abstract class AarResourcesCompilerTransform :
 
         val aapt2ServiceKey = parameters.aapt2.registerAaptService()
         // TODO(b/152323103) errorFormatMode should be implicit
-        runAapt2Compile(aapt2ServiceKey, requestList, parameters.aapt2.getErrorFormatMode(), false)
+        runAapt2Compile(parameters.aapt2, requestList, false)
     }
 
     private fun getPackage(manifest: Path): String =

@@ -66,7 +66,8 @@ class TokenizedCommandLine(
 
     /**
      * Remove tokens matching [token] and also remove up to [extra] additional tokens
-     * following that.
+     * following that. If [matchPrefix] is set to true, [token] is treated as a prefix
+     * and any token starts with this prefix would be matched and removed.
      *
      * This function updates [indexes] without resizing it or allocating memory. It
      * works by maintaining a 'read' pointer and a 'write' that are pointers within
@@ -86,7 +87,7 @@ class TokenizedCommandLine(
      *             write
      *
      */
-    fun removeTokenGroup(token: String, extra: Int) {
+    fun removeTokenGroup(token: String, extra: Int, matchPrefix: Boolean = false) {
         checkGeneration()
         invalidate()
         var read = 1
@@ -102,7 +103,7 @@ class TokenizedCommandLine(
 
             // If token matches the one pointed to be read pointer then skip it and also
             // skip any extra tokens.
-            if (tokenMatches(token, read)) {
+            if (tokenMatches(token, read, matchPrefix)) {
                 var count = 0
                 while(count != extra + 1 && !isEndOfCommand(read)) {
                     read = nextTokenAfter(read)
@@ -116,17 +117,17 @@ class TokenizedCommandLine(
                     } while (!isEndOfToken(read - 1))
                 }
             }
-        } while(!isEndOfCommand(read))
+        } while (!isEndOfCommand(read))
         indexes[write] = ZERO_ALLOC_TOKENIZER_END_OF_COMMAND
     }
 
     /**
      * Remove and return the n-th token and return its value as a string.
      * Will return null if the requested token [n] is out of range.
-     * 
+     *
      * This function operates in a manner similar to [removeTokenGroup] in
      * that it uses a read pointer and write pointer to walk across the
-     * [commandLine] and it relies on the read pointer being the same as 
+     * [commandLine] and it relies on the read pointer being the same as
      * write pointer or larger.
      */
     fun removeNth(n: Int) : String? {
@@ -383,14 +384,14 @@ class TokenizedCommandLine(
      * account for the generation counter.
      */
     @VisibleForTesting
-    fun tokenMatches(token: String, offset: Int) : Boolean {
+    fun tokenMatches(token: String, offset: Int, matchPrefix: Boolean) : Boolean {
         checkGeneration()
         var i = 0
         var index = indexes[offset]
         while(index != ZERO_ALLOC_TOKENIZER_END_OF_COMMAND) {
             val endOfToken = index == ZERO_ALLOC_TOKENIZER_END_OF_TOKEN
             if (i == token.length) {
-                return endOfToken
+                return endOfToken || matchPrefix
             }
             if (endOfToken) {
                 return false

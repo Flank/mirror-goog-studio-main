@@ -63,8 +63,11 @@ readonly invocation_id="$(uuidgen)"
   --runs_per_test=//tools/base/bazel:iml_to_build_consistency_test@2 \
   -- \
   //tools/adt/idea/studio:android-studio \
+  //tools/adt/idea/studio:updater_deploy.jar \
+  //tools/adt/idea/updater-ui:sdk-patcher.zip \
   //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar \
   //tools/base/profiler/native/trace_processor_daemon \
+  //tools/adt/idea/studio:test_studio \
   $(< "${script_dir}/targets")
 # Workaround: This invocation [ab]uses --runs_per_test to disable caching for the
 # iml_to_build_consistency_test see https://github.com/bazelbuild/bazel/issues/6038
@@ -87,13 +90,16 @@ if [[ -d "${DIST_DIR}" ]]; then
     -testlogs "${DIST_DIR}/logs/junit" \
     -perfzip "${DIST_DIR}/perfgate_data.zip"
 
-  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.linux.zip ${DIST_DIR}
-  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.win.zip ${DIST_DIR}
-  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.mac.zip ${DIST_DIR}
-  cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${DIST_DIR}
-  cp -a ${bin_dir}/tools/base/sdklib/commandlinetools_*.zip "${DIST_DIR}"
-  cp -a ${bin_dir}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon "${DIST_DIR}"
-
+  readonly artifacts_dir="${DIST_DIR}/artifacts"
+  mkdir -p ${artifacts_dir}
+  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.linux.zip ${artifacts_dir}
+  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.win.zip ${artifacts_dir}
+  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.mac.zip ${artifacts_dir}
+  cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${artifacts_dir}
+  cp -a ${bin_dir}/tools/base/sdklib/commandlinetools_*.zip ${artifacts_dir}
+  cp -a ${bin_dir}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${artifacts_dir}
+  cp -a ${bin_dir}/tools/adt/idea/studio/updater_deploy.jar ${artifacts_dir}/android-studio-updater.jar
+  cp -a ${bin_dir}/tools/adt/idea/updater-ui/sdk-patcher.zip ${artifacts_dir}
 fi
 
 BAZEL_EXITCODE_TEST_FAILURES=3

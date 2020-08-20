@@ -33,6 +33,7 @@ import com.android.ddmlib.logcat.LogCatReceiverTask;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.FakeAdbServer;
 import com.android.fakeadbserver.PortForwarder;
+import com.android.fakeadbserver.devicecommandhandlers.ExecCommandHandler;
 import com.android.testutils.TestResources;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Charsets;
@@ -43,6 +44,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Random;
@@ -81,6 +84,65 @@ public class IntegrationTest {
     @NonNull
     public static Path getPathToAdb() {
         return TestUtils.getSdk().toPath().resolve("platform-tools").resolve(SdkConstants.FN_ADB);
+    }
+
+    @Test
+    public void testRawExec() throws Exception {
+        // Build the server and configure it to use the default ADB command handlers.
+        FakeAdbServer.Builder builder = new FakeAdbServer.Builder();
+        builder.installDefaultCommandHandlers();
+
+        try (FakeAdbServer server = builder.build()) {
+            server.connectDevice(
+              SERIAL,
+              MANUFACTURER,
+              MODEL,
+              RELEASE,
+              SDK,
+              DeviceState.HostConnectionType.USB)
+              .get();
+
+            server.start();
+
+            // Test that we obtain 1 device via the ddmlib APIs
+            AndroidDebugBridge.enableFakeAdbServerMode(server.getPort());
+            AndroidDebugBridge.initIfNeeded(false);
+            AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
+            assertNotNull("Debug bridge", bridge);
+
+            long startTime = System.currentTimeMillis();
+            while (!bridge.isConnected()
+                   && (System.currentTimeMillis() - startTime) < TimeUnit.SECONDS.toMillis(10)) {
+                Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+            }
+
+            IDevice[] devices = bridge.getDevices();
+            IDevice device = null;
+            for (IDevice prospect : devices) {
+                if (!prospect.getSerialNumber().equals(SERIAL)) {
+                    continue;
+                }
+                device = prospect;
+                break;
+            }
+
+            assertNotNull("Device serial=" + SERIAL, device);
+
+            String cmd = ExecCommandHandler.PING_EXEC;
+            String[] parameters = new String[0];
+            String expectedResponse = ExecCommandHandler.PING_EXEC_OUTPUT;
+            try (SocketChannel channel = device.rawExec(cmd, parameters)) {
+                channel.configureBlocking(true);
+                byte[] bytes = new byte[expectedResponse.getBytes(Charsets.UTF_8).length];
+                ByteBuffer buffer = ByteBuffer.wrap(bytes);
+                channel.read(buffer);
+                String response = new String(bytes, Charsets.UTF_8);
+                assertEquals("rawExec response", expectedResponse, response);
+            }
+
+        } finally {
+            AndroidDebugBridge.terminate();
+        }
     }
 
     // ignored because we shouldn't be relying on a hard coded port (5037): fakeadbserver should

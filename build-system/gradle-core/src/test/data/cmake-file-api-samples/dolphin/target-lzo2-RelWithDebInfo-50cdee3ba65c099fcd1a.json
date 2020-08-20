@@ -1,15 +1,15 @@
 {
 	"archive" : {},
-	"artifacts" : 
+	"artifacts" :
 	[
 		{
 			"path" : "Externals/LZO/liblzo2.a"
 		}
 	],
 	"backtrace" : 1,
-	"backtraceGraph" : 
+	"backtraceGraph" :
 	{
-		"commands" : 
+		"commands" :
 		[
 			"add_library",
 			"add_compile_options",
@@ -18,13 +18,13 @@
 			"include_directories",
 			"target_include_directories"
 		],
-		"files" : 
+		"files" :
 		[
 			"Externals/LZO/CMakeLists.txt",
 			"CMake/CheckAndAddFlag.cmake",
 			"CMakeLists.txt"
 		],
-		"nodes" : 
+		"nodes" :
 		[
 			{
 				"file" : 0
@@ -328,10 +328,10 @@
 			}
 		]
 	},
-	"compileGroups" : 
+	"compileGroups" :
 	[
 		{
-			"compileCommandFragments" : 
+			"compileCommandFragments" :
 			[
 				{
 					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O2 -g -DNDEBUG -fPIC  "
@@ -401,7 +401,7 @@
 					"fragment" : "-fomit-frame-pointer"
 				}
 			],
-			"defines" : 
+			"defines" :
 			[
 				{
 					"backtrace" : 35,
@@ -448,59 +448,59 @@
 					"define" : "_M_ARM_64=1"
 				}
 			],
-			"includes" : 
+			"includes" :
 			[
 				{
 					"backtrace" : 46,
-					"path" : "/Users/jomof/projects/dolphin/Source/Core"
+					"path" : "/{PROJECT}/Source/Core"
 				},
 				{
 					"backtrace" : 47,
-					"path" : "/Users/jomof/projects/dolphin/Source/Android"
+					"path" : "/{PROJECT}/Source/Android"
 				},
 				{
 					"backtrace" : 48,
-					"path" : "/Users/jomof/projects/dolphin/Externals/enet/include"
+					"path" : "/{PROJECT}/Externals/enet/include"
 				},
 				{
 					"backtrace" : 49,
-					"path" : "/Users/jomof/projects/dolphin/External/minizip"
+					"path" : "/{PROJECT}/External/minizip"
 				},
 				{
 					"backtrace" : 50,
-					"path" : "/Users/jomof/projects/dolphin/Externals/LZO"
+					"path" : "/{PROJECT}/Externals/LZO"
 				}
 			],
 			"language" : "C",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				0
 			],
-			"sysroot" : 
+			"sysroot" :
 			{
-				"path" : "/Users/jomof/Library/Android/sdk/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+				"path" : "/{SDK}/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
 			}
 		}
 	],
 	"id" : "lzo2::@dfbf75e4d3a882b42e1e",
 	"name" : "lzo2",
 	"nameOnDisk" : "liblzo2.a",
-	"paths" : 
+	"paths" :
 	{
 		"build" : "Externals/LZO",
 		"source" : "Externals/LZO"
 	},
-	"sourceGroups" : 
+	"sourceGroups" :
 	[
 		{
 			"name" : "Source Files",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				0
 			]
 		}
 	],
-	"sources" : 
+	"sources" :
 	[
 		{
 			"backtrace" : 1,

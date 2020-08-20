@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.PostprocessingFeatures;
+import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -28,7 +29,6 @@ import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.internal.packaging.ApkCreatorType;
-import com.android.builder.model.CodeShrinker;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -50,9 +50,6 @@ public interface VariantScope {
             @NonNull ArtifactType artifactType,
             @NonNull Collection<AndroidArtifacts.PublishedConfigType> configTypes,
             @Nullable LibraryElements libraryElements);
-
-    @Nullable
-    CodeShrinker getCodeShrinker();
 
     @NonNull
     List<File> getProguardFiles();
@@ -77,10 +74,6 @@ public interface VariantScope {
     @Nullable
     PostprocessingFeatures getPostprocessingFeatures();
 
-    boolean useResourceShrinker();
-
-    boolean isPrecompileDependenciesResourcesEnabled();
-
     boolean isCrunchPngs();
 
     boolean consumesFeatureJars();
@@ -88,15 +81,9 @@ public interface VariantScope {
     /** Returns whether we need to create original java resource streams */
     boolean getNeedsJavaResStreams();
 
-    /** Returns whether we need to create a stream from the merged java resources */
-    boolean getNeedsMergedJavaResStream();
-
     boolean isTestOnly(VariantPropertiesImpl variantProperties);
 
-    boolean isCoreLibraryDesugaringEnabled();
-
-    /** Returns if we need to shrink desugar lib when desugaring Core Library. */
-    boolean getNeedsShrinkDesugarLibrary();
+    boolean isCoreLibraryDesugaringEnabled(ConsumableCreationConfig creationConfig);
 
     void addNdkDebuggableLibraryFolders(@NonNull Abi abi, @NonNull File searchPath);
 
@@ -127,9 +114,6 @@ public interface VariantScope {
         RETROLAMBDA,
         R8,
     }
-
-    @NonNull
-    Java8LangSupport getJava8LangSupportType();
 
     @NonNull
     DexerTool getDexer();

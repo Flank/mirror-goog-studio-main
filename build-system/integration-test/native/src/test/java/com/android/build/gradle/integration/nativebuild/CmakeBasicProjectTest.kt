@@ -38,13 +38,11 @@ import com.android.builder.model.NativeArtifact
 import com.android.builder.model.NativeVariantAbi
 import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.builder.profile.ChromeTracingProfileConverter
-import com.android.testutils.TestUtils
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils.join
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Lists
 import com.google.common.truth.Truth
-import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -54,7 +52,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.util.zip.GZIPInputStream
-import kotlin.test.fail
 
 /** Assemble tests for Cmake.  */
 @RunWith(Parameterized::class)
@@ -223,7 +220,12 @@ class CmakeBasicProjectTest(
         assertThat(json).isFile()
 
         val config = AndroidBuildGradleJsons.getNativeBuildMiniConfig(json, null)
-        val library = config.libraries["bar-Debug-x86_64"] ?: fail()
+        val library = config
+                .libraries
+                .asSequence()
+                .filter { it.key.contains("bar") }
+                .single()
+                .value
         assertThat(library.runtimeFiles).containsExactly(fooPath)
     }
 
@@ -281,12 +283,12 @@ class CmakeBasicProjectTest(
                           > abis:
                              * NativeAbi:
                                 * name                  = "armeabi-v7a"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json{!}
+                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json.bin{!}
                                 * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/symbol_folder_index.txt{!}
                                 * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/build_file_index.txt{!}
                              * NativeAbi:
                                 * name                  = "x86_64"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json{F}
+                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{F}
                                 * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{F}
                                 * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{F}
                           < abis
@@ -295,12 +297,12 @@ class CmakeBasicProjectTest(
                           > abis:
                              * NativeAbi:
                                 * name                  = "armeabi-v7a"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json{!}
+                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json.bin{!}
                                 * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/armeabi-v7a/symbol_folder_index.txt{!}
                                 * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/armeabi-v7a/build_file_index.txt{!}
                              * NativeAbi:
                                 * name                  = "x86_64"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json{!}
+                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json.bin{!}
                                 * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{!}
                                 * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{!}
                           < abis
@@ -335,12 +337,12 @@ class CmakeBasicProjectTest(
                           > abis:
                              * NativeAbi:
                                 * name                  = "armeabi-v7a"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json{!}
+                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json.bin{!}
                                 * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/symbol_folder_index.txt{!}
                                 * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/build_file_index.txt{!}
                              * NativeAbi:
                                 * name                  = "x86_64"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json{!}
+                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{!}
                                 * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{!}
                                 * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{!}
                           < abis
@@ -349,12 +351,12 @@ class CmakeBasicProjectTest(
                           > abis:
                              * NativeAbi:
                                 * name                  = "armeabi-v7a"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json{!}
+                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json.bin{!}
                                 * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/armeabi-v7a/symbol_folder_index.txt{!}
                                 * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/armeabi-v7a/build_file_index.txt{!}
                              * NativeAbi:
                                 * name                  = "x86_64"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json{!}
+                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json.bin{!}
                                 * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{!}
                                 * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{!}
                           < abis
@@ -419,12 +421,12 @@ class CmakeBasicProjectTest(
                           > abis:
                              * NativeAbi:
                                 * name                  = "armeabi-v7a"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json{F}
+                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json.bin{F}
                                 * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/symbol_folder_index.txt{F}
                                 * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/build_file_index.txt{F}
                              * NativeAbi:
                                 * name                  = "x86_64"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json{F}
+                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{F}
                                 * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{F}
                                 * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{F}
                           < abis
@@ -433,12 +435,12 @@ class CmakeBasicProjectTest(
                           > abis:
                              * NativeAbi:
                                 * name                  = "armeabi-v7a"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json{F}
+                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json.bin{F}
                                 * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/armeabi-v7a/symbol_folder_index.txt{F}
                                 * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/armeabi-v7a/build_file_index.txt{F}
                              * NativeAbi:
                                 * name                  = "x86_64"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json{F}
+                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json.bin{F}
                                 * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{F}
                                 * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{F}
                           < abis

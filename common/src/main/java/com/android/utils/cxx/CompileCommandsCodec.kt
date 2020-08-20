@@ -237,10 +237,10 @@ class CompileCommandsEncoder(val file : File) : AutoCloseable {
      */
     fun writeCompileCommand(
         sourceFile: File,
-        compiler: String, // Not file because it might not have .exe on windows
+        compiler: File,
         flags: List<String>,
         workingDirectory: File) {
-        val compilerIndex = intern(compiler)
+        val compilerIndex = intern(compiler.path)
         val flagsIndex = intern(flags.map { intern(it) })
         val workingDirectoryIndex = intern(workingDirectory.path)
         if (compilerIndex != lastCompilerWritten ||
@@ -386,14 +386,14 @@ private fun MappedByteBuffer.readFlagsTable(start: Int, strings : Array<String?>
  *
  * The callback [action] takes four parameters:
  * - sourceFile: File
- * - compiler: String (not a file because it may not have .exe suffix on Windows)
+ * - compiler: the path to the compiler executable
  * - flags: List<String>
  * - workingDirectory: File
  *
  * All of these parameters are interned and do not need to be re-interned on the receiving side.
  */
 fun streamCompileCommands(file: File,
-        action : (sourceFile:File, compiler:String, flags:List<String>, workingDirectory:File) -> Unit) {
+        action : (sourceFile:File, compiler:File, flags:List<String>, workingDirectory:File) -> Unit) {
     RandomAccessFile(file, "r").use { ras ->
         val map = ras.channel.map(FileChannel.MapMode.READ_ONLY, 0, file.length())
         val start = map.positionAfterMagicAndVersion(file)
@@ -408,13 +408,13 @@ fun streamCompileCommands(file: File,
         }
         map.seekSection(start, CompileCommands)
         val sourceMessagesCount = map.int
-        var lastCompiler = ""
+        lateinit var lastCompiler: File
         var lastFlags = listOf<String>()
         var lastWorkingDirectory = File("")
         repeat(sourceMessagesCount) {
             when(map.get()) {
                 COMPILE_COMMAND_CONTEXT_MESSAGE -> {
-                    lastCompiler = strings[map.int]!!
+                    lastCompiler = File(strings[map.int]!!)
                     lastFlags = flags[map.int]
                     lastWorkingDirectory = internFile(map.int)!!
                 }
@@ -431,3 +431,69 @@ fun streamCompileCommands(file: File,
         }
     }
 }
+
+/**
+ * Strips off arguments that don't affect IDE functionalities from the given list of arguments
+ * passed to clang.
+ *
+ * @param sourceFile the source file to compile
+ * @param args the raw args passed to the compiler
+ * @param scratchSpace the list used to build the final result. This is useful if caller would like
+ * to save some object allocations when stripping a large amount of commands. Caller don't need to
+ * clear the scratch space.
+ */
+fun stripArgsForIde(
+    sourceFile: String,
+    args: List<String>,
+    scratchSpace: MutableList<String> = ArrayList()
+): List<String> {
+    scratchSpace.clear()
+    var i = 0
+    while (i < args.size) {
+        when (val arg = args[i]) {
+            in STRIP_FLAGS_WITHOUT_ARG -> {
+            }
+            in STRIP_FLAGS_WITH_ARG -> i++
+            else -> if (STRIP_FLAGS_WITH_IMMEDIATE_ARG.none { arg.startsWith(it) } && arg != sourceFile) {
+                // Skip args that starts with flags that we should strip. Also skip source file.
+                scratchSpace += arg
+            }
+        }
+        i++
+    }
+    return scratchSpace
+}
+
+// Skip -M* flags because these govern the creation of .d files in gcc. We don't want
+// spurious files dropped by Cidr. See see b.android.com/215555 and
+// b.android.com/213429.
+// Also, removing these flags reduces the number of Settings groups that have to be
+// passed to Android Studio.
+
+/** These are flags that should be stripped and have a following argument. */
+val STRIP_FLAGS_WITH_ARG =
+    listOf(
+        "-o",
+        "--output",
+        "-MF",
+        "-MT",
+        "-MQ"
+    )
+
+/** These are flags that have arguments immediate following them. */
+val STRIP_FLAGS_WITH_IMMEDIATE_ARG = listOf(
+    "--output=",
+    "-MF",
+    "-MT",
+    "-MQ"
+)
+
+/** These are flags that should be stripped and don't have a following argument. */
+val STRIP_FLAGS_WITHOUT_ARG: List<String> =
+    listOf( // Skip -M* flags because these govern the creation of .d files in gcc. We don't want
+        // spurious files dropped by Cidr. See see b.android.com/215555 and
+        // b.android.com/213429
+        "-M", "-MM", "-MD", "-MG", "-MP", "-MMD",
+        // -c tells the compiler to skip linking, which is always true for Android build.
+        "-c"
+    )

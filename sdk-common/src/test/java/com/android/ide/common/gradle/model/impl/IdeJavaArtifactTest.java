@@ -27,28 +27,17 @@ import org.junit.Test;
 
 /** Tests for {@link IdeJavaArtifact}. */
 public class IdeJavaArtifactTest {
-    private ModelCache myModelCache;
-    private IdeDependenciesFactory myDependenciesFactory;
+    private ModelCacheTesting myModelCache;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
-        myDependenciesFactory = new IdeDependenciesFactory();
+        myModelCache = ModelCache.createForTesting();
     }
 
     @Test
     public void constructor() throws Throwable {
         JavaArtifact original = new JavaArtifactStub();
-        IdeJavaArtifact copy = myModelCache.javaArtifactFrom(original, myDependenciesFactory);
+        IdeJavaArtifact copy = myModelCache.javaArtifactFrom(original);
         assertEqualsOrSimilar(original, copy);
-        verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeJavaArtifactImpl.class)
-                .withRedefinedSuperclass()
-                .withIgnoredFields("hashCode")
-                .verify();
     }
 }

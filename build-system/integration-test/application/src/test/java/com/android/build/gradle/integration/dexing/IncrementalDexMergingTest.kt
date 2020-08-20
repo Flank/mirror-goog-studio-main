@@ -24,11 +24,18 @@ import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProj
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder.Companion.COM_EXAMPLE_MYAPPLICATION
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder.Companion.LIB
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
-import com.android.build.gradle.integration.common.utils.ChangeType
+import com.android.build.gradle.integration.common.utils.ChangeType.CHANGED
+import com.android.build.gradle.integration.common.utils.ChangeType.UNCHANGED
+import com.android.build.gradle.integration.common.utils.ChangeType.CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS
 import com.android.build.gradle.integration.common.utils.IncrementalTestHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils.searchAndReplace
+import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType.DEX
 import com.android.build.gradle.internal.scope.getOutputDir
+import com.android.build.gradle.internal.tasks.DexMergingTaskDelegate
+import com.android.build.gradle.options.IntegerOption
+import com.android.testutils.apk.Dex
+import com.android.testutils.apk.Zip
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
@@ -41,29 +48,31 @@ class IncrementalDexMergingTest {
 
     @get:Rule
     val project = EmptyActivityProjectBuilder()
-        .also { it.minSdkVersion = 21 }
-        .addAndroidLibrary(addImplementationDependencyFromApp = true)
-        .build()
+            .also {
+                // Incremental dexing transform is enabled for SDK 24+, set this so we can test that
+                // case.
+                it.minSdkVersion = 24
+            }
+            .addAndroidLibrary(addImplementationDependencyFromApp = true)
+            .build()
 
     private lateinit var app: GradleTestProject
     private lateinit var lib: GradleTestProject
 
     // Java classes
+    private lateinit var classesInApp: List<String>
+    private lateinit var classesInLib: List<String>
     private lateinit var changedClassInApp: String
-    private lateinit var unchangedClassesInApp: List<String>
     private lateinit var changedClassInLib: String
-    private lateinit var unchangedClassesInLib: List<String>
 
     // Java files
     private lateinit var changedJavaFileInApp: File
-    private lateinit var unchangedJavaFilesInApp: List<File>
     private lateinit var changedJavaFileInLib: File
-    private lateinit var unchangedJavaFilesInLib: List<File>
 
     // Merged dex directories
     private lateinit var mergedDexDirForApp: File
     private lateinit var mergedDexDirForLib: File
-    private lateinit var mergedDexDirForExternalLibraries: File
+    private lateinit var mergedDexDirForExtLibs: File
 
     private lateinit var incrementalTestHelper: IncrementalTestHelper
 
@@ -74,133 +83,170 @@ class IncrementalDexMergingTest {
 
         // Add Java files
         addJavaFiles(
-            app,
-            COM_EXAMPLE_MYAPPLICATION
-        ) { changedClass, unchangedClasses, changedJavaFile, unchangedJavaFiles ->
+                app,
+                COM_EXAMPLE_MYAPPLICATION
+        ) { classes, changedClass, changedJavaFile ->
+            classesInApp = classes
             changedClassInApp = changedClass
-            unchangedClassesInApp = unchangedClasses
             changedJavaFileInApp = changedJavaFile
-            unchangedJavaFilesInApp = unchangedJavaFiles
         }
         addJavaFiles(
-            lib,
-            COM_EXAMPLE_LIB
-        ) { changedClass, unchangedClasses, changedJavaFile, unchangedJavaFiles ->
+                lib,
+                COM_EXAMPLE_LIB
+        ) { classes, changedClass, changedJavaFile ->
+            classesInLib = classes
             changedClassInLib = changedClass
-            unchangedClassesInLib = unchangedClasses
             changedJavaFileInLib = changedJavaFile
-            unchangedJavaFilesInLib = unchangedJavaFiles
         }
 
         // Get merged dex directories
         val mergedDexDir = DEX.getOutputDir(app.buildDir).resolve("debug")
         mergedDexDirForApp = mergedDexDir.resolve("mergeProjectDexDebug")
         mergedDexDirForLib = mergedDexDir.resolve("mergeLibDexDebug")
-        mergedDexDirForExternalLibraries = mergedDexDir.resolve("mergeExtDexDebug")
+        mergedDexDirForExtLibs = mergedDexDir.resolve("mergeExtDexDebug")
 
         incrementalTestHelper = IncrementalTestHelper(
-            project = project,
-            buildTask = ":app:assembleDebug",
-            filesOrDirsToTrackChanges = setOf(
-                mergedDexDirForApp,
-                mergedDexDirForLib,
-                mergedDexDirForExternalLibraries
-            )
-        )
+                project = project,
+                buildTask = ":app:assembleDebug",
+                filesOrDirsToTrackChanges = setOf(
+                        mergedDexDirForApp,
+                        mergedDexDirForLib,
+                        mergedDexDirForExtLibs
+                )
+        ).updateExecutor {
+            it.with(IntegerOption.DEXING_NUMBER_OF_BUCKETS, NUMBER_OF_BUCKETS)
+        }
     }
 
     private fun addJavaFiles(
-        subproject: GradleTestProject,
-        packageName: String,
-        collectJavaFiles: (changedClass: String, unchangedClasses: List<String>, changedJavaFile: File, unchangedJavaFiles: List<File>) -> Unit
+            subproject: GradleTestProject,
+            subprojectPackageName: String,
+            collectClasses: (classes: List<String>, changedClass: String, changedJavaFile: File) -> Unit
     ) {
-        val classFullName: (className: String) -> String =
-            { "${packageName.replace('.', '/')}/$it" }
-        val javaFile: (classFullName: String) -> File =
-            { File("${subproject.mainSrcDir}/$it.java") }
+        val getClassFullName: (packageName: String, className: String) -> String =
+                { packageName, className -> "${packageName.replace('.', '/')}/$className" }
+        val getJavaFile: (classFullName: String) -> File =
+                { File("${subproject.mainSrcDir}/$it.java") }
 
-        val changedClassName = "ChangedClass"
-        val changedClassFullName = classFullName(changedClassName)
-        val changedJavaFile = javaFile(changedClassFullName)
-        FileUtils.mkdirs(changedJavaFile.parentFile)
-        changedJavaFile.writeText(
-            """
-            package $packageName;
+        val classes = mutableListOf<String>()
+        var changedClass: String? = null
+        var changedJavaFile: File? = null
 
-            public class $changedClassName {
+        for (i in 0 until NUMBER_OF_PACKAGES_PER_SUBPROJECT) {
+            val packageName = "$subprojectPackageName.package$i"
+            for (j in 0 until NUMBER_OF_CLASSES_PER_PACKAGE) {
+                val className = "Class$j"
+                val classFullName = getClassFullName(packageName, className)
+                val javaFile = getJavaFile(classFullName)
 
-                public void someMethod() {
-                    System.out.println("Change me!");
+                FileUtils.mkdirs(javaFile.parentFile)
+                val text = if (i == 0 && j == 0) {
+                    changedClass = classFullName
+                    changedJavaFile = javaFile
+                    "Change me!"
+                } else {
+                    "Don't change me!"
                 }
+                javaFile.writeText(
+                        """
+                        package $packageName;
+
+                        public class $className {
+
+                            public void someMethod() {
+                                System.out.println("$text");
+                            }
+                        }
+                        """.trimIndent()
+                )
+                classes.add(classFullName)
             }
-            """.trimIndent()
-        )
-
-        val unchangedClassFullNames = mutableListOf<String>()
-        val unchangedJavaFiles = mutableListOf<File>()
-        for (i in 0 until NUMBER_OF_UNCHANGED_CLASSES_PER_SUBPROJECT) {
-            val unchangedClassName = "UnchangedClass$i"
-            val unchangedClassFullName = classFullName(unchangedClassName)
-            val unchangedJavaFile = javaFile(unchangedClassFullName)
-            FileUtils.mkdirs(unchangedJavaFile.parentFile)
-            unchangedJavaFile.writeText(
-                """
-                package $packageName;
-
-                public class $unchangedClassName {
-
-                    public void someMethod() {
-                        System.out.println("Don't change me!");
-                    }
-                }
-                """.trimIndent()
-            )
-            unchangedClassFullNames.add(unchangedClassFullName)
-            unchangedJavaFiles.add(unchangedJavaFile)
         }
 
-        collectJavaFiles(
-            changedClassFullName,
-            unchangedClassFullNames,
-            changedJavaFile,
-            unchangedJavaFiles
-        )
+        collectClasses(classes, changedClass!!, changedJavaFile!!)
     }
 
     @Test
     fun `change Java file`() {
         val testHelper = incrementalTestHelper
-            .runFullBuild()
-            .applyChange {
-                listOf(changedJavaFileInApp, changedJavaFileInLib).forEach {
-                    searchAndReplace(it, "Change me!", "I'm changed!")
+                .runFullBuild()
+                .applyChange {
+                    listOf(changedJavaFileInApp, changedJavaFileInLib).forEach {
+                        searchAndReplace(it, "Change me!", "I'm changed!")
+                    }
+                }
+                .runIncrementalBuild()
+
+        val checkSubproject = { changedClass: String, mergedDexDir: File ->
+            // Check that dex files are put into buckets
+            assertThat(mergedDexDir.listFiles()!!.size).isEqualTo(NUMBER_OF_BUCKETS)
+
+            // Check that only the relevant bucket is reprocessed
+            val bucketWithChangedClass =
+                    DexMergingTaskDelegate.getBucketNumber("$changedClass.dex", NUMBER_OF_BUCKETS)
+            val dexFiles = FileUtils.getAllFiles(mergedDexDir)
+            val dexFileWithChangedClass =
+                    mergedDexDir.resolve(bucketWithChangedClass.toString()).resolve("classes.dex")
+            val dexFilesWithoutChangedClass = dexFiles.filter { it != dexFileWithChangedClass }
+            testHelper.assertFileChanges(
+                    mapOf(dexFileWithChangedClass to CHANGED) +
+                            dexFilesWithoutChangedClass.map {
+                                // TODO(132615300) Update to UNCHANGED once dex merging is made
+                                //  incremental
+                                it to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS
+                            }
+            )
+
+            // Also check that classes of the same package are put in the same bucket/merged dex
+            // file (except for R classes, see the comments in `getBucketNumber` of DexMergingTask)
+            val rClassesPath =
+                    COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.getOutputDir(app.buildDir)
+                            .resolve("debug/R.jar")
+            val rClasses = Zip(rClassesPath).entries
+                    .map {
+                        // Normalize to the form of Lcom/example/package/ExampleClass;
+                        "L${it.toString().substring(1).substringBefore(".class")};"
+                    }
+            val packageToDexFileMap = mutableMapOf<String, File>()
+            for (dexFile in dexFiles) {
+                Dex(dexFile).classes.keys.forEach { fullClassName ->
+                    // fullClassName is in the form of Lcom/example/package/ExampleClass;
+                    if (fullClassName in rClasses) {
+                        return@forEach
+                    }
+                    val packageName = fullClassName.substringAfter('L').substringBeforeLast('/')
+                    val previousDexFile = packageToDexFileMap.put(packageName, dexFile)
+                    assert(previousDexFile == null || previousDexFile == dexFile) {
+                        "Package $packageName is found in both $previousDexFile and $dexFile"
+                    }
                 }
             }
-            .runIncrementalBuild()
+        }
 
-        // Get merged dex files
-        val mergedDexFilesForApp = FileUtils.getAllFiles(mergedDexDirForApp)
-        val mergedDexFilesForLib = FileUtils.getAllFiles(mergedDexDirForLib)
-        val mergedDexFilesForExternalLibraries =
-            FileUtils.getAllFiles(mergedDexDirForExternalLibraries)
+        // Check merged dex files from app and lib
+        checkSubproject(changedClassInApp, mergedDexDirForApp)
+        checkSubproject(changedClassInLib, mergedDexDirForLib)
 
-        // TODO(132615300) Update assertions once dex merging is made incremental
-        assertThat(mergedDexFilesForApp.size()).isEqualTo(1)
-        assertThat(mergedDexFilesForLib.size()).isEqualTo(1)
-        assertThat(mergedDexFilesForExternalLibraries.size()).isEqualTo(1)
+        // Check merged dex files from external libraries
+        assertThat(mergedDexDirForExtLibs.listFiles()!!.size).isEqualTo(1)
         testHelper.assertFileChanges(
-            mergedDexFilesForApp.toMap { ChangeType.CHANGED }
-                    + mergedDexFilesForLib.toMap { ChangeType.CHANGED }
-                    + mergedDexFilesForExternalLibraries.toMap { ChangeType.UNCHANGED }
+                mapOf(FileUtils.getAllFiles(mergedDexDirForExtLibs).single() to UNCHANGED)
         )
 
+        // Check contents of the APK
         app.getApk(DEBUG).use { apk ->
-            (unchangedClassesInApp + changedClassInApp + changedClassInLib + unchangedClassesInLib).forEach {
+            (classesInApp + classesInLib).forEach {
                 assertThat(apk).containsClass("L$it;")
             }
         }
     }
 }
 
-/** Number of classes that we add to a subproject and will not change between builds. */
-private const val NUMBER_OF_UNCHANGED_CLASSES_PER_SUBPROJECT = 10
+/** Number of packages added to a subproject. */
+private const val NUMBER_OF_PACKAGES_PER_SUBPROJECT = 10
+
+/** Number of classes added to a package. */
+private const val NUMBER_OF_CLASSES_PER_PACKAGE = 2
+
+/** Number of buckets used by DexMergingTask. */
+private const val NUMBER_OF_BUCKETS = 4

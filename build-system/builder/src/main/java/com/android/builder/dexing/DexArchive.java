@@ -61,14 +61,7 @@ public interface DexArchive extends Closeable {
      * Returns all dex archive entries in this dex archive.
      *
      * <p>The dex archive entries are sorted to ensure deterministic order.
-     *
-     * <p>Note that dex archive entries across different dex archives should not be sorted together
-     * as the order of dex archives (input files' roots) is controlled by Gradle, and sorting them
-     * could result in a bug (see https://issuetracker.google.com/119064593#comment11 and commit
-     * f4db68dccf76c35f5cdbd2cf3be3fb13b8abb767).
-     *
-     * @return the sorted list of dex archive entries in this dex archive
      */
     @NonNull
-    List<DexArchiveEntry> getSortedDexArchiveEntries() throws IOException;
+    List<DexArchiveEntry> getSortedDexArchiveEntries();
 }

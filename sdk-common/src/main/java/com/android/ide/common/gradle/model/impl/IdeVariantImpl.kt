@@ -23,9 +23,8 @@ import com.android.ide.common.gradle.model.IdeTestedTargetVariant
 import com.android.ide.common.gradle.model.IdeVariant
 import com.google.common.collect.ImmutableList
 import java.io.Serializable
-import java.util.Objects
 
-class IdeVariantImpl(
+data class IdeVariantImpl(
   override val name: String,
   override val displayName: String,
   override val mainArtifact: IdeAndroidArtifact,
@@ -35,29 +34,8 @@ class IdeVariantImpl(
   override val productFlavors: List<String>,
   override val mergedFlavor: IdeProductFlavor,
   override val testedTargetVariants: List<IdeTestedTargetVariant>,
-  override val instantAppCompatible: Boolean,
-  private val desugaredMethods: List<String>
-
+  override val instantAppCompatible: Boolean
 ) : IdeVariant, Serializable {
-
-  private val hashCode: Int = calculateHashCode()
-
-  // Used for serialization by the IDE.
-  @Suppress("unused")
-  internal constructor() : this(
-    name = "",
-    displayName = "",
-    mainArtifact = IdeAndroidArtifactImpl(),
-    extraAndroidArtifacts = mutableListOf(),
-    extraJavaArtifacts = mutableListOf(),
-    buildType = "",
-    productFlavors = mutableListOf(),
-    mergedFlavor = IdeProductFlavorImpl(),
-    testedTargetVariants = mutableListOf(),
-    instantAppCompatible = false,
-    desugaredMethods = mutableListOf()
-  )
-
   override val testArtifacts: List<IdeBaseArtifact>
     get() = ImmutableList.copyOf(
       (extraAndroidArtifacts.asSequence() + extraJavaArtifacts.asSequence()).filter { it.isTestArtifact }.asIterable())
@@ -65,48 +43,4 @@ class IdeVariantImpl(
   override val androidTestArtifact: IdeAndroidArtifact? get() = extraAndroidArtifacts.firstOrNull { it.isTestArtifact }
 
   override val unitTestArtifact: IdeJavaArtifact? get() = extraJavaArtifacts.firstOrNull { it.isTestArtifact }
-
-  override fun equals(other: Any?): Boolean {
-    if (this === other) {
-      return true
-    }
-    if (other !is IdeVariantImpl) {
-      return false
-    }
-    return (name == other.name
-            && displayName == other.displayName
-            && mainArtifact == other.mainArtifact
-            && extraAndroidArtifacts == other.extraAndroidArtifacts
-            && extraJavaArtifacts == other.extraJavaArtifacts
-            && buildType == other.buildType
-            && productFlavors == other.productFlavors
-            && mergedFlavor == other.mergedFlavor
-            && testedTargetVariants == other.testedTargetVariants
-            && instantAppCompatible == other.instantAppCompatible
-            && desugaredMethods == other.desugaredMethods)
-  }
-
-  override fun hashCode(): Int = hashCode
-
-  private fun calculateHashCode(): Int {
-    return Objects.hash(
-      name,
-      displayName,
-      mainArtifact,
-      extraAndroidArtifacts,
-      extraJavaArtifacts,
-      buildType,
-      productFlavors,
-      mergedFlavor,
-      testedTargetVariants,
-      instantAppCompatible,
-      desugaredMethods)
-  }
-
-  override fun toString(): String {
-    return ("IdeVariant{name='$name', displayName='$displayName', mainArtifact=$mainArtifact, " +
-            "extraAndroidArtifacts=$extraAndroidArtifacts, extraJavaArtifacts=$extraJavaArtifacts, buildType='$buildType', " +
-            "productFlavors=$productFlavors, mergedFlavor=$mergedFlavor, testedTargetVariants=$testedTargetVariants, " +
-            "instantAppCompatible=$instantAppCompatible, desugaredMethods=$desugaredMethods}")
-  }
 }

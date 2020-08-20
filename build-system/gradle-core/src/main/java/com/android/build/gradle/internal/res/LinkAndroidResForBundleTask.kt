@@ -267,7 +267,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             ))
 
-            if (variantScope.isPrecompileDependenciesResourcesEnabled) {
+            if (creationConfig.isPrecompileDependenciesResourcesEnabled) {
                 task.compiledDependenciesResources = creationConfig.variantDependencies.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,

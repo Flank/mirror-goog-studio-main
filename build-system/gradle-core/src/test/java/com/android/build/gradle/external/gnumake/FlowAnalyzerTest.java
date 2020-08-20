@@ -34,21 +34,20 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
 
 public class FlowAnalyzerTest {
 
-    @NonNull private final ArrayList<String> compileFlagC = Lists.newArrayList("-c");
-
     private static void assertFlowAnalysisEquals(
             @NonNull String string, @NonNull FlowAnalysisBuilder expected) {
         ListMultimap<String, List<BuildStepInfo>> io =
-                FlowAnalyzer.analyze(string, AbstractOsFileConventions.createForCurrentHost());
+                FlowAnalyzer.analyze(
+                        CommandClassifier.classify(
+                                string, AbstractOsFileConventions.createForCurrentHost()));
 
         assertThat(io).isEqualTo(expected.map);
     }
@@ -97,21 +96,21 @@ public class FlowAnalyzerTest {
     }
 
     @Test
-    public void disallowedTerminal() throws FileNotFoundException {
+    public void disallowedTerminal() {
         assertFlowAnalysisEquals(
                 "g++ -c a.c -o a.o\ng++ a.o -o a.so",
                 flow().with(
                                 "a.so",
                                 step().with(
                                                 "g++",
-                                                compileFlagC,
+                                                ImmutableList.of("-c", "a.c", "-o", "a.o"),
                                                 "a.c",
                                                 Lists.newArrayList("a.o"),
                                                 true)));
     }
 
     @Test
-    public void doubleTarget() throws FileNotFoundException {
+    public void doubleTarget() {
         assertFlowAnalysisEquals(
                 "g++ -c a.c -o x/a.o\n"
                         + "g++ x/a.o -o x/a.so\n"
@@ -121,7 +120,7 @@ public class FlowAnalyzerTest {
                                 "y/a.so",
                                 step().with(
                                                 "g++",
-                                                compileFlagC,
+                                                ImmutableList.of("-c", "a.c", "-o", "y/a.o"),
                                                 "a.c",
                                                 Lists.newArrayList("y/a.o"),
                                                 true))
@@ -129,21 +128,21 @@ public class FlowAnalyzerTest {
                                 "x/a.so",
                                 step().with(
                                                 "g++",
-                                                compileFlagC,
+                                                ImmutableList.of("-c", "a.c", "-o", "x/a.o"),
                                                 "a.c",
                                                 Lists.newArrayList("x/a.o"),
                                                 true)));
     }
 
     @Test
-    public void simple() throws FileNotFoundException {
+    public void simple() {
         assertFlowAnalysisEquals(
                 "g++ -c a.c -o a.o\ng++ a.o -o a.so",
                 flow().with(
                                 "a.so",
                                 step().with(
                                                 "g++",
-                                                compileFlagC,
+                                                ImmutableList.of("-c", "a.c", "-o", "a.o"),
                                                 "a.c",
                                                 Lists.newArrayList("a.o"),
                                                 true)));

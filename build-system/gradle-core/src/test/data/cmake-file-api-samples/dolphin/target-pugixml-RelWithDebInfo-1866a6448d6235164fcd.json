@@ -1,15 +1,15 @@
 {
 	"archive" : {},
-	"artifacts" : 
+	"artifacts" :
 	[
 		{
 			"path" : "Externals/pugixml/libpugixml.a"
 		}
 	],
 	"backtrace" : 1,
-	"backtraceGraph" : 
+	"backtraceGraph" :
 	{
-		"commands" : 
+		"commands" :
 		[
 			"add_library",
 			"add_compile_options",
@@ -18,13 +18,13 @@
 			"include_directories",
 			"target_include_directories"
 		],
-		"files" : 
+		"files" :
 		[
 			"Externals/pugixml/CMakeLists.txt",
 			"CMake/CheckAndAddFlag.cmake",
 			"CMakeLists.txt"
 		],
-		"nodes" : 
+		"nodes" :
 		[
 			{
 				"file" : 0
@@ -316,10 +316,10 @@
 			}
 		]
 	},
-	"compileGroups" : 
+	"compileGroups" :
 	[
 		{
-			"compileCommandFragments" : 
+			"compileCommandFragments" :
 			[
 				{
 					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -g -DNDEBUG -fPIC  "
@@ -389,7 +389,7 @@
 					"fragment" : "-fomit-frame-pointer"
 				}
 			],
-			"defines" : 
+			"defines" :
 			[
 				{
 					"backtrace" : 35,
@@ -436,45 +436,45 @@
 					"define" : "_M_ARM_64=1"
 				}
 			],
-			"includes" : 
+			"includes" :
 			[
 				{
 					"backtrace" : 46,
-					"path" : "/Users/jomof/projects/dolphin/Source/Core"
+					"path" : "/{PROJECT}/Source/Core"
 				},
 				{
 					"backtrace" : 47,
-					"path" : "/Users/jomof/projects/dolphin/Source/Android"
+					"path" : "/{PROJECT}/Source/Android"
 				},
 				{
 					"backtrace" : 48,
-					"path" : "/Users/jomof/projects/dolphin/Externals/pugixml/."
+					"path" : "/{PROJECT}/Externals/pugixml/."
 				}
 			],
 			"language" : "CXX",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				2
 			],
-			"sysroot" : 
+			"sysroot" :
 			{
-				"path" : "/Users/jomof/Library/Android/sdk/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+				"path" : "/{SDK}/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
 			}
 		}
 	],
 	"id" : "pugixml::@9b79c4054cdd0fec4840",
 	"name" : "pugixml",
 	"nameOnDisk" : "libpugixml.a",
-	"paths" : 
+	"paths" :
 	{
 		"build" : "Externals/pugixml",
 		"source" : "Externals/pugixml"
 	},
-	"sourceGroups" : 
+	"sourceGroups" :
 	[
 		{
 			"name" : "Header Files",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				0,
 				1
@@ -482,13 +482,13 @@
 		},
 		{
 			"name" : "Source Files",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				2
 			]
 		}
 	],
-	"sources" : 
+	"sources" :
 	[
 		{
 			"backtrace" : 1,

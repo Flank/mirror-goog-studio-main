@@ -28,11 +28,11 @@ import org.junit.Test;
 
 /** Tests for {@link IdeTestedTargetVariantImpl}. */
 public class IdeTestedTargetVariantTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
     }
 
     @Test
@@ -42,9 +42,8 @@ public class IdeTestedTargetVariantTest {
 
     @Test
     public void serialization() throws Exception {
-        ModelCache modelCache = new ModelCache();
         IdeTestedTargetVariantImpl targetVariant =
-                modelCache.testedTargetVariantFrom(new TestedTargetVariantStub());
+                myModelCache.testedTargetVariantFrom(new TestedTargetVariantStub());
         byte[] bytes = Serialization.serialize(targetVariant);
         Object o = Serialization.deserialize(bytes);
         assertEquals(targetVariant, o);
@@ -56,10 +55,5 @@ public class IdeTestedTargetVariantTest {
         IdeTestedTargetVariantImpl copy = myModelCache.testedTargetVariantFrom(original);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeTestedTargetVariantImpl.class).verify();
     }
 }

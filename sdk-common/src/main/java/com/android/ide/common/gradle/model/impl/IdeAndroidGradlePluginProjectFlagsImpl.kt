@@ -69,9 +69,10 @@ data class IdeAndroidGradlePluginProjectFlagsImpl(
    * Create an empty set of flags for older AGPs and for studio serialization.
    */
   constructor() : this(booleanFlagMap = emptyMap())
-}
 
-private fun Map<BooleanFlag, Boolean>.getBooleanFlag(flag: BooleanFlag): Boolean {
-  return this[flag] ?: flag.legacyDefault
+  companion object {
+    private fun Map<BooleanFlag, Boolean>.getBooleanFlag(flag: BooleanFlag): Boolean {
+      return this[flag] ?: flag.legacyDefault
+    }
+  }
 }
-

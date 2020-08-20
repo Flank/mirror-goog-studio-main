@@ -21,6 +21,7 @@ import com.android.build.api.artifact.impl.ArtifactTransformationRequestImpl
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -147,8 +148,8 @@ abstract class ShrinkResourcesOldShrinkerTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: VariantCreationConfig
-    ) : VariantTaskCreationAction<ShrinkResourcesOldShrinkerTask, VariantCreationConfig>(
+        creationConfig: ConsumableCreationConfig
+    ) : VariantTaskCreationAction<ShrinkResourcesOldShrinkerTask, ConsumableCreationConfig>(
         creationConfig
     ) {
         override val type = ShrinkResourcesOldShrinkerTask::class.java
@@ -218,11 +219,11 @@ abstract class ShrinkResourcesOldShrinkerTask : NonIncrementalTask() {
             // When R8 produces dex files, this task analyzes them. If R8 or Proguard produce
             // class files, this task will analyze those. That is why both types are specified.
             task.classes.from(
-                if (creationConfig.variantScope.codeShrinker == CodeShrinker.PROGUARD) {
+                if (creationConfig.codeShrinker == CodeShrinker.PROGUARD) {
                     creationConfig.artifacts.get(InternalArtifactType.SHRUNK_JAR)
                 } else {
-                    check(creationConfig.variantScope.codeShrinker == CodeShrinker.R8)
-                    { "Unexpected shrinker type: ${creationConfig.variantScope.codeShrinker}" }
+                    check(creationConfig.codeShrinker == CodeShrinker.R8)
+                    { "Unexpected shrinker type: ${creationConfig.codeShrinker}" }
                     if (creationConfig.variantType.isAar) {
                         creationConfig.artifacts.get(InternalArtifactType.SHRUNK_CLASSES)
                     } else {

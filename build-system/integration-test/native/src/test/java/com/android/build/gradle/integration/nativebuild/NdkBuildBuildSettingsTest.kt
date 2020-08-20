@@ -32,19 +32,27 @@ import com.android.utils.FileUtils.join
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 import java.io.IOException
 
-class NdkBuildBuildSettingsTest {
+@RunWith(Parameterized::class)
+class NdkBuildBuildSettingsTest(useV2NativeModel: Boolean) {
     @Rule
     @JvmField
     val project = GradleTestProject.builder()
         .fromTestApp(HelloWorldJniApp.builder().build())
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .addFile(HelloWorldJniApp.androidMkC("src/main/jni"))
-        // TODO(b/161169301): Support v2 model with ndk-build
-        .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=false")
+        .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=$useV2NativeModel")
         .create()
+
+    companion object {
+        @Parameterized.Parameters(name = "useV2NativeModel={0}")
+        @JvmStatic
+        fun data() = arrayOf(arrayOf(false), arrayOf(true))
+    }
 
     @Before
     @Throws(IOException::class)

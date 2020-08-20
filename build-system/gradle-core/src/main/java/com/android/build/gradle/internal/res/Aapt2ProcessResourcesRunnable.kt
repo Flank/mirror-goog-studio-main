@@ -65,7 +65,8 @@ fun processResources(
     aaptConfig: AaptPackageConfig,
     rJar: File?,
     logger: Logger,
-    errorFormatMode: SyncOptions.ErrorFormatMode
+    errorFormatMode: SyncOptions.ErrorFormatMode,
+    symbolTableLoader: (Iterable<File>) -> List<SymbolTable> = { SymbolIo().loadDependenciesSymbolTables(it) }
 ) {
 
     try {
@@ -100,7 +101,7 @@ fun processResources(
             SymbolTable.builder().tablePackage(mainPackageName).build()
 
         // For each dependency, load its symbol file.
-        var depSymbolTables: List<SymbolTable> = SymbolIo().loadDependenciesSymbolTables(
+        var depSymbolTables: List<SymbolTable> = symbolTableLoader.invoke(
             aaptConfig.librarySymbolTableFiles
         )
 

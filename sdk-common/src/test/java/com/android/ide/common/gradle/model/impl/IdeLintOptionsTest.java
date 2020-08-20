@@ -30,12 +30,12 @@ import org.junit.Test;
 
 /** Tests for {@link IdeLintOptions}. */
 public class IdeLintOptionsTest {
-    private ModelCache myModelCache;
+    private ModelCacheTesting myModelCache;
     private GradleVersion myModelVersion;
 
     @Before
     public void setUp() throws Exception {
-        myModelCache = new ModelCache();
+        myModelCache = ModelCache.createForTesting();
         myModelVersion = GradleVersion.parse("2.4.0");
     }
 

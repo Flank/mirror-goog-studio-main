@@ -98,8 +98,9 @@ public class FailureTest extends AgentBasedClassRedefinerTestBase {
         // Send a garbage swap request.
         redefiner.redefine(new byte[] {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF});
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        // The install server exits if it receives an unparseable request.
+        Deploy.InstallServerResponse response = redefiner.getServerResponse();
         Assert.assertEquals(
-                Deploy.AgentSwapResponse.Status.REQUEST_PARSE_FAILED, response.getStatus());
+                Deploy.InstallServerResponse.Status.SERVER_EXITED, response.getStatus());
     }
 }

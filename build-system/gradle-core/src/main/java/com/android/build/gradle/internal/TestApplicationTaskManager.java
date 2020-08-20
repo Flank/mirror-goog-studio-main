@@ -39,7 +39,6 @@ import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.CodeShrinker;
-import com.android.builder.profile.Recorder;
 import com.google.common.base.Preconditions;
 import java.util.List;
 import java.util.Objects;
@@ -144,7 +143,7 @@ public class TestApplicationTaskManager
     @Override
     protected void maybeCreateJavaCodeShrinkerTask(
             @NonNull ConsumableCreationConfig creationConfig) {
-        final CodeShrinker codeShrinker = creationConfig.getVariantScope().getCodeShrinker();
+        final CodeShrinker codeShrinker = creationConfig.getCodeShrinker();
         if (codeShrinker != null) {
             doCreateJavaCodeShrinkerTask(
                     creationConfig, Objects.requireNonNull(codeShrinker), true);

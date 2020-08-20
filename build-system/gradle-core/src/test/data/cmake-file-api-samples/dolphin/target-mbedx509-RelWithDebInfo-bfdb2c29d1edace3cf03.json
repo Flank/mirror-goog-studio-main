@@ -1,15 +1,15 @@
 {
 	"archive" : {},
-	"artifacts" : 
+	"artifacts" :
 	[
 		{
 			"path" : "Externals/mbedtls/library/libmbedx509.a"
 		}
 	],
 	"backtrace" : 1,
-	"backtraceGraph" : 
+	"backtraceGraph" :
 	{
-		"commands" : 
+		"commands" :
 		[
 			"add_library",
 			"install",
@@ -18,14 +18,14 @@
 			"check_and_add_flag",
 			"include_directories"
 		],
-		"files" : 
+		"files" :
 		[
 			"Externals/mbedtls/library/CMakeLists.txt",
 			"CMake/CheckAndAddFlag.cmake",
 			"CMakeLists.txt",
 			"Externals/mbedtls/CMakeLists.txt"
 		],
-		"nodes" : 
+		"nodes" :
 		[
 			{
 				"file" : 0
@@ -290,10 +290,10 @@
 			}
 		]
 	},
-	"compileGroups" : 
+	"compileGroups" :
 	[
 		{
-			"compileCommandFragments" : 
+			"compileCommandFragments" :
 			[
 				{
 					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -Wall -Wextra -W -Wdeclaration-after-statement -Wwrite-strings -Wpointer-arith -Wimplicit-fallthrough -Wshadow -Wmissing-declarations -Wmissing-prototypes -Wdocumentation -Wno-documentation-deprecated-sync -Wunreachable-code -O2 -g -DNDEBUG -fPIC  "
@@ -363,7 +363,7 @@
 					"fragment" : "-fomit-frame-pointer"
 				}
 			],
-			"defines" : 
+			"defines" :
 			[
 				{
 					"define" : "ANDROID"
@@ -402,39 +402,39 @@
 					"define" : "_M_ARM_64=1"
 				}
 			],
-			"includes" : 
+			"includes" :
 			[
 				{
 					"backtrace" : 37,
-					"path" : "/Users/jomof/projects/dolphin/Externals/SFML/include"
+					"path" : "/{PROJECT}/Externals/SFML/include"
 				},
 				{
 					"backtrace" : 38,
-					"path" : "/Users/jomof/projects/dolphin/Source/Core"
+					"path" : "/{PROJECT}/Source/Core"
 				},
 				{
 					"backtrace" : 39,
-					"path" : "/Users/jomof/projects/dolphin/Source/Android"
+					"path" : "/{PROJECT}/Source/Android"
 				},
 				{
 					"backtrace" : 40,
-					"path" : "/Users/jomof/projects/dolphin/Externals/enet/include"
+					"path" : "/{PROJECT}/Externals/enet/include"
 				},
 				{
 					"backtrace" : 41,
-					"path" : "/Users/jomof/projects/dolphin/External/minizip"
+					"path" : "/{PROJECT}/External/minizip"
 				},
 				{
 					"backtrace" : 42,
-					"path" : "/Users/jomof/projects/dolphin/Externals/soundtouch"
+					"path" : "/{PROJECT}/Externals/soundtouch"
 				},
 				{
 					"backtrace" : 44,
-					"path" : "/Users/jomof/projects/dolphin/Externals/mbedtls/include"
+					"path" : "/{PROJECT}/Externals/mbedtls/include"
 				}
 			],
 			"language" : "C",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				0,
 				1,
@@ -446,13 +446,13 @@
 				7,
 				8
 			],
-			"sysroot" : 
+			"sysroot" :
 			{
-				"path" : "/Users/jomof/Library/Android/sdk/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+				"path" : "/{SDK}/ndk/21.1.6352462/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
 			}
 		}
 	],
-	"dependencies" : 
+	"dependencies" :
 	[
 		{
 			"backtrace" : 3,
@@ -460,32 +460,32 @@
 		}
 	],
 	"id" : "mbedx509::@732912fcc58a0dc9a42e",
-	"install" : 
+	"install" :
 	{
-		"destinations" : 
+		"destinations" :
 		[
 			{
 				"backtrace" : 2,
 				"path" : "lib"
 			}
 		],
-		"prefix" : 
+		"prefix" :
 		{
 			"path" : "/usr/local"
 		}
 	},
 	"name" : "mbedx509",
 	"nameOnDisk" : "libmbedx509.a",
-	"paths" : 
+	"paths" :
 	{
 		"build" : "Externals/mbedtls/library",
 		"source" : "Externals/mbedtls/library"
 	},
-	"sourceGroups" : 
+	"sourceGroups" :
 	[
 		{
 			"name" : "Source Files",
-			"sourceIndexes" : 
+			"sourceIndexes" :
 			[
 				0,
 				1,
@@ -499,7 +499,7 @@
 			]
 		}
 	],
-	"sources" : 
+	"sources" :
 	[
 		{
 			"backtrace" : 1,

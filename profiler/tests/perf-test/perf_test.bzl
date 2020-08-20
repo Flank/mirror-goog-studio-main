@@ -6,15 +6,16 @@ load("//tools/base/bazel:android.bzl", "dex_library")
 # srcs: One or more test classes to run under this test.
 # test_app: A target that represents a mock app (i.e. a collection of mock
 #           Android activities.
-def perf_test(name,
-              srcs,
-              test_app,
-              deps = [],
-              jvm_flags = [],
-              data = [],
-              tags = [],
-              app_runtime_deps = [],
-              size = None):
+def perf_test(
+        name,
+        srcs,
+        test_app,
+        deps = [],
+        jvm_flags = [],
+        data = [],
+        tags = [],
+        app_runtime_deps = [],
+        size = None):
     # Copy the undexed version of the test app and transform its bytecode with
     # profiler hooks. This is how profilers work when targetting devices that
     # don't support jvmti.
@@ -28,7 +29,7 @@ def perf_test(name,
             "//conditions:default": "$(location //tools/base/profiler/tests/profiler-transform-main:profilers-transform-main) ./$< ./$@",
         }),
         executable = 1,
-        tools = select({
+        exec_tools = select({
             "//tools/base/bazel:darwin": [],
             "//tools/base/bazel:windows": [],
             "//conditions:default": [

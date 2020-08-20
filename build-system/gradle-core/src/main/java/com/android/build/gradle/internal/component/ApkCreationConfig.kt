@@ -41,8 +41,6 @@ interface ApkCreationConfig: ConsumableCreationConfig {
     /** If this variant should package desugar_lib DEX in the final APK. */
     val shouldPackageDesugarLibDex: Boolean
 
-    val needsMainDexListForBundle: Boolean
-
     /**
      * If this variant should package additional dependencies (code and native libraries) needed for
      * profilers support in the IDE.

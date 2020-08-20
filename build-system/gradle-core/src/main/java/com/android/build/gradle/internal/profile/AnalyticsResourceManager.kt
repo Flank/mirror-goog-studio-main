@@ -170,10 +170,8 @@ class AnalyticsResourceManager(
         taskRecord.setTaskStartTime(taskResult.startTime)
         taskRecord.setTaskEndTime(taskResult.endTime)
 
-        // check that all workers are done before closing this span.
-        if (taskRecord.allWorkersFinished()) {
-            taskRecord.writeTaskSpan()
-        }
+        // all workers must be done at this point
+        taskRecord.writeTaskSpan()
         createAndRecordMemorySample()
     }
 

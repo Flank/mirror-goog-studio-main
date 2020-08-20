@@ -288,6 +288,7 @@ public class VariantManager<
 
     @Nullable
     private ComponentInfo<VariantT, VariantPropertiesT> createVariant(
+            @NonNull String projectPath,
             @NonNull DimensionCombination dimensionCombination,
             @NonNull BuildTypeData<BuildType> buildTypeData,
             @NonNull List<ProductFlavorData<ProductFlavor>> productFlavorDataList,
@@ -325,7 +326,9 @@ public class VariantManager<
                     productFlavorData.getProductFlavor(), productFlavorData.getSourceSet());
         }
 
-        VariantDslInfoImpl variantDslInfo = variantBuilder.createVariantDslInfo();
+        VariantDslInfoImpl variantDslInfo =
+                variantBuilder.createVariantDslInfo(project.getLayout().getBuildDirectory());
+
         ComponentIdentity componentIdentity = variantDslInfo.getComponentIdentity();
 
         // create the Variant object so that we can run the action which may interrupt the creation
@@ -333,6 +336,16 @@ public class VariantManager<
         VariantT variant =
                 variantFactory.createVariantObject(
                         componentIdentity, variantDslInfo, variantApiServices);
+
+        // now that we have the variant, create the analytics object,
+        AnalyticsConfiguratorService configuratorService =
+                BuildServicesKt.getBuildService(
+                                project.getGradle().getSharedServices(),
+                                AnalyticsConfiguratorService.class)
+                        .get();
+
+        GradleBuildVariant.Builder profileBuilder =
+                configuratorService.getVariantBuilder(project.getPath(), variant.getName());
 
         // HACK, we need access to the new type rather than the old. This will go away in the
         // future
@@ -343,9 +356,8 @@ public class VariantManager<
                                         Variant<VariantProperties>, VariantProperties>)
                                 extension;
 
-        GradleBuildVariant.Builder apiAccessStats = GradleBuildVariant.newBuilder();
         AnalyticsEnabledVariant<? extends VariantProperties> userVisibleVariantObject =
-                variant.createUserVisibleVariantObject(projectServices, apiAccessStats);
+                variant.createUserVisibleVariantObject(projectServices, profileBuilder);
         commonExtension.executeVariantOperations(
                 (Variant<VariantProperties>) userVisibleVariantObject);
 
@@ -463,14 +475,15 @@ public class VariantManager<
         // Run the VariantProperties actions
         AnalyticsEnabledVariantProperties userVisibleVariantPropertiesObject =
                 ((VariantPropertiesImpl) variantProperties)
-                        .createUserVisibleVariantPropertiesObject(projectServices, apiAccessStats);
+                        .createUserVisibleVariantPropertiesObject(projectServices, profileBuilder);
         commonExtension.executeVariantPropertiesOperations(userVisibleVariantPropertiesObject);
 
         // also execute the delayed actions registered on the Variant object itself
         ((VariantImpl<VariantProperties>) variant)
                 .executePropertiesActions(userVisibleVariantPropertiesObject);
 
-        return new ComponentInfo(variant, variantProperties, userVisibleVariantObject);
+        return new ComponentInfo(
+                variant, variantProperties, profileBuilder, userVisibleVariantObject);
     }
 
     private void createCompoundSourceSets(
@@ -512,11 +525,7 @@ public class VariantManager<
                     @NonNull DimensionCombination dimensionCombination,
                     @NonNull BuildTypeData<BuildType> buildTypeData,
                     @NonNull List<ProductFlavorData<ProductFlavor>> productFlavorDataList,
-                    @NonNull VariantT testedVariant,
-                    @NonNull
-                            AnalyticsEnabledVariant<? extends VariantProperties>
-                                    userVisibleTestedVariant,
-                    @NonNull VariantPropertiesT testedVariantProperties,
+                    @NonNull ComponentInfo<VariantT, VariantPropertiesT> testedComponentInfo,
                     @NonNull VariantType variantType) {
 
         // handle test variant
@@ -546,10 +555,10 @@ public class VariantManager<
                         variantPropertiesApiServices);
 
         variantBuilder.setTestedVariant(
-                (VariantDslInfoImpl) testedVariantProperties.getVariantDslInfo());
+                (VariantDslInfoImpl) testedComponentInfo.getProperties().getVariantDslInfo());
 
         List<ProductFlavor> productFlavorList =
-                testedVariantProperties.getVariantDslInfo().getProductFlavorList();
+                testedComponentInfo.getProperties().getVariantDslInfo().getProductFlavorList();
 
         // We must first add the flavors to the variant builder, in order to get the proper
         // variant-specific and multi-flavor name as we add/create the variant providers later.
@@ -563,11 +572,12 @@ public class VariantManager<
                     data.getProductFlavor(), data.getTestSourceSet(variantType));
         }
 
-        VariantDslInfoImpl variantDslInfo = variantBuilder.createVariantDslInfo();
+        VariantDslInfoImpl variantDslInfo =
+                variantBuilder.createVariantDslInfo(project.getLayout().getBuildDirectory());
 
         TestComponentImpl<? extends TestComponentProperties> component;
 
-        GradleBuildVariant.Builder apiAccessStats = GradleBuildVariant.newBuilder();
+        GradleBuildVariant.Builder apiAccessStats = testedComponentInfo.getStats();
         // this is ANDROID_TEST
         if (variantType.isApk()) {
             AndroidTestImpl androidTestVariant =
@@ -577,7 +587,10 @@ public class VariantManager<
                             variantApiServices);
 
             // run the action registered on the tested variant via androidTest {}
-            userVisibleTestedVariant.executeAndroidTestActions(androidTestVariant);
+            if (testedComponentInfo.getUserVisibleVariant() != null)
+                testedComponentInfo
+                        .getUserVisibleVariant()
+                        .executeAndroidTestActions(androidTestVariant);
 
             component = androidTestVariant;
         } else {
@@ -589,7 +602,8 @@ public class VariantManager<
                             variantApiServices);
 
             // run the action registered on the tested variant via unitTest {}
-            userVisibleTestedVariant.executeUnitTestActions(unitTestVariant);
+            if (testedComponentInfo.getUserVisibleVariant() != null)
+                testedComponentInfo.getUserVisibleVariant().executeUnitTestActions(unitTestVariant);
 
             component = unitTestVariant;
         }
@@ -658,7 +672,7 @@ public class VariantManager<
                                 variantDslInfo)
                         .addSourceSets(testVariantSourceSets)
                         .setFlavorSelection(getFlavorSelection(variantDslInfo))
-                        .setTestedVariant(testedVariantProperties);
+                        .setTestedVariant(testedComponentInfo.getProperties());
 
         final VariantDependencies variantDependencies = builder.build();
 
@@ -679,7 +693,7 @@ public class VariantManager<
                         pathHelper,
                         artifacts,
                         globalScope,
-                        testedVariantProperties);
+                        testedComponentInfo.getProperties());
 
         // create the internal storage for this variant.
         TestVariantData testVariantData =
@@ -690,7 +704,7 @@ public class VariantManager<
                         variantSources,
                         pathHelper,
                         artifacts,
-                        (TestedVariantData) testedVariantProperties.getVariantData(),
+                        (TestedVariantData) testedComponentInfo.getProperties().getVariantData(),
                         variantPropertiesApiServices,
                         globalScope,
                         taskContainer);
@@ -719,7 +733,7 @@ public class VariantManager<
                             artifacts,
                             variantScope,
                             testVariantData,
-                            testedVariantProperties,
+                            testedComponentInfo.getProperties(),
                             transformManager,
                             variantPropertiesApiServices,
                             taskCreationServices);
@@ -732,8 +746,10 @@ public class VariantManager<
             ((AndroidTestImpl) component)
                     .executePropertiesActions(userVisibleVariantPropertiesObject);
             // or on the tested variant via unitTestProperties {}
-            userVisibleTestedVariant.executeAndroidTestPropertiesActions(
-                    userVisibleVariantPropertiesObject);
+            if (testedComponentInfo.getUserVisibleVariant() != null)
+                testedComponentInfo
+                        .getUserVisibleVariant()
+                        .executeAndroidTestPropertiesActions(userVisibleVariantPropertiesObject);
 
             componentProperties = androidTestProperties;
         } else {
@@ -749,7 +765,7 @@ public class VariantManager<
                             artifacts,
                             variantScope,
                             testVariantData,
-                            testedVariantProperties,
+                            testedComponentInfo.getProperties(),
                             transformManager,
                             variantPropertiesApiServices,
                             taskCreationServices);
@@ -761,18 +777,22 @@ public class VariantManager<
                             projectServices, apiAccessStats);
             ((UnitTestImpl) component).executePropertiesActions(userVisibleVariantPropertiesObject);
             // or on the tested variant via unitTestProperties {}
-            userVisibleTestedVariant.executeUnitTestPropertiesActions(
-                    userVisibleVariantPropertiesObject);
+            if (testedComponentInfo.getUserVisibleVariant() != null)
+                testedComponentInfo
+                        .getUserVisibleVariant()
+                        .executeUnitTestPropertiesActions(userVisibleVariantPropertiesObject);
 
             componentProperties = unitTestProperties;
         }
 
         // register
-        testedVariantProperties
+        testedComponentInfo
+                .getProperties()
                 .getTestComponents()
                 .put(variantDslInfo.getVariantType(), componentProperties);
 
-        return new ComponentInfo<>(component, componentProperties, null);
+        return new ComponentInfo<>(
+                component, componentProperties, testedComponentInfo.getStats(), null);
     }
 
     /**
@@ -830,6 +850,7 @@ public class VariantManager<
             // create the prod variant
             ComponentInfo<VariantT, VariantPropertiesT> variantInfo =
                     createVariant(
+                            project.getPath(),
                             dimensionCombination,
                             buildTypeData,
                             productFlavorDataList,
@@ -861,48 +882,32 @@ public class VariantManager<
                                             variantProperties.getName()));
                 }
 
-                AnalyticsConfiguratorService configuratorService =
-                        BuildServicesKt
-                                .getBuildService(
-                                        project.getGradle().getSharedServices(),
-                                        AnalyticsConfiguratorService.class).
-                                get();
-
-                GradleBuildVariant.Builder variantBuilder =
-                        configuratorService
-                                .getVariantBuilder(project.getPath(), variantProperties.getName())
+                GradleBuildVariant.Builder variantBuilder = variantInfo.getStats();
+                variantBuilder
                         .setIsDebug(buildType.isDebuggable())
                         .setMinSdkVersion(
-                                AnalyticsUtil.toProto(
-                                        variantInfo.getVariant().getMinSdkVersion()))
-                        .setMinifyEnabled(variantScope.getCodeShrinker() != null)
-                        .setUseMultidex(variantDslInfo.isMultiDexEnabled())
+                                AnalyticsUtil.toProto(variantInfo.getVariant().getMinSdkVersion()))
+                        .setMinifyEnabled(variantProperties.getCodeShrinker() != null)
+                        .setUseMultidex(variantProperties.isMultiDexEnabled())
                         .setUseLegacyMultidex(
                                 DexingTypeKt.isLegacyMultiDexMode(
                                         variantProperties.getDexingType()))
                         .setVariantType(
-                                variantProperties
-                                        .getVariantType()
-                                        .getAnalyticsVariantType())
+                                variantProperties.getVariantType().getAnalyticsVariantType())
                         .setDexBuilder(AnalyticsUtil.toProto(variantScope.getDexer()))
                         .setDexMerger(AnalyticsUtil.toProto(variantScope.getDexMerger()))
                         .setCoreLibraryDesugaringEnabled(
-                                variantScope.isCoreLibraryDesugaringEnabled())
+                                variantProperties.isCoreLibraryDesugaringEnabled())
                         .setTestExecution(
                                 AnalyticsUtil.toProto(
                                         globalScope
                                                 .getExtension()
                                                 .getTestOptions()
-                                                .getExecutionEnum()))
-                        .setVariantApiAccess(
-                                variantInfo
-                                        .getUserVisibleVariant()
-                                        .getStats()
-                                        .getVariantApiAccess());
+                                                .getExecutionEnum()));
 
-                if (variantScope.getCodeShrinker() != null) {
+                if (variantProperties.getCodeShrinker() != null) {
                     variantBuilder.setCodeShrinker(
-                            AnalyticsUtil.toProto(variantScope.getCodeShrinker()));
+                            AnalyticsUtil.toProto(variantProperties.getCodeShrinker()));
                 }
 
                 if (variantDslInfo.getTargetSdkVersion().getApiLevel() > 0) {
@@ -914,7 +919,8 @@ public class VariantManager<
                             ApiVersion.newBuilder().setApiLevel(variantDslInfo.getMaxSdkVersion()));
                 }
 
-                VariantScope.Java8LangSupport supportType = variantScope.getJava8LangSupportType();
+                VariantScope.Java8LangSupport supportType =
+                        variantProperties.getJava8LangSupportType();
                 if (supportType != VariantScope.Java8LangSupport.INVALID
                         && supportType != VariantScope.Java8LangSupport.UNUSED) {
                     variantBuilder.setJava8LangSupport(AnalyticsUtil.toProto(supportType));
@@ -930,9 +936,7 @@ public class VariantManager<
                                                 dimensionCombination,
                                                 buildTypeData,
                                                 productFlavorDataList,
-                                                variantInfo.getVariant(),
-                                                variantInfo.getUserVisibleVariant(),
-                                                variantProperties,
+                                                variantInfo,
                                                 ANDROID_TEST);
                         if (androidTest != null) {
                             addTestComponent(androidTest);
@@ -947,9 +951,7 @@ public class VariantManager<
                                             dimensionCombination,
                                             buildTypeData,
                                             productFlavorDataList,
-                                            variantInfo.getVariant(),
-                                            variantInfo.getUserVisibleVariant(),
-                                            variantProperties,
+                                            variantInfo,
                                             UNIT_TEST);
                     if (unitTest != null) {
                         addTestComponent(unitTest);

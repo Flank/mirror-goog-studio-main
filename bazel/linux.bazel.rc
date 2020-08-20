@@ -4,7 +4,7 @@ import %workspace%/tools/base/bazel/common.bazel.rc
 # this higher can make builds faster by allowing more jobs to run in parallel.
 # Setting it too high can result in jobs that timeout, however, while waiting
 # for a remote machine to execute them.
-build:remote --jobs=200
+build:remote --jobs=250
 
 build:remote_common --remote_instance_name=projects/google.com:android-studio-alphasource/instances/default_instance
 
