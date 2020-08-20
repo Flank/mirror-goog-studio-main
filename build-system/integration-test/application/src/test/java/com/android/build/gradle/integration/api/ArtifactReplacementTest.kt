@@ -43,7 +43,7 @@ class ArtifactReplacementTest {
                 apply plugin: 'com.android.application'
                 android {
                     defaultConfig.minSdkVersion 14
-                    compileSdkVersion 29
+                    compileSdkVersion 30
                     lintOptions.checkReleaseBuilds = false
                     defaultConfig {
                         minSdkVersion rootProject.supportLibMinSdk

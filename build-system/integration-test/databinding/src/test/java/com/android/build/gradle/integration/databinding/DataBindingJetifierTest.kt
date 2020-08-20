@@ -43,7 +43,7 @@ class DataBindingJetifierTest {
         TestFileUtils.searchAndReplace(
             project.getSubproject(":app").buildFile,
             "compileSdkVersion rootProject.latestCompileSdk",
-            "compileSdkVersion \"android-29\"")
+            "compileSdkVersion \"android-30\"")
         TestFileUtils.searchAndReplace(
             project.getSubproject(":app")
                 .file("src/main/java/com/example/app/MainActivity.java"),

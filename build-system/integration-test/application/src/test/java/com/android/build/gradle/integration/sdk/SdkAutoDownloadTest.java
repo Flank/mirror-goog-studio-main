@@ -123,9 +123,8 @@ public class SdkAutoDownloadTest {
                         + " = "
                         + mSdkHome.getAbsolutePath().replace("\\", "\\\\"));
 
-
         TestFileUtils.appendToFile(
-                project.getBuildFile(), "android.defaultConfig.minSdkVersion = 29");
+                project.getBuildFile(), "android.defaultConfig.minSdkVersion = 30");
     }
 
     private void installPlatforms() throws IOException {

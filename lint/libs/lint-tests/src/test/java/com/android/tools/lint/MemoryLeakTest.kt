@@ -80,11 +80,11 @@ class MemoryLeakTest {
                 apply plugin: 'com.android.application'
 
                 android {
-                    compileSdkVersion 29
+                    compileSdkVersion 30
                     defaultConfig {
                         applicationId "com.gharrma.sampleapp"
                         minSdkVersion 19
-                        targetSdkVersion 29
+                        targetSdkVersion 30
                         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
                     }
                 }

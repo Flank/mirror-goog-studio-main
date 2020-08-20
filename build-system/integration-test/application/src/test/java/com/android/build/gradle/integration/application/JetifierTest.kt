@@ -277,7 +277,7 @@ class JetifierTest(private val withKotlin: Boolean) {
         TestFileUtils.searchAndReplace(
             project.getSubproject(":app").buildFile,
             "compileSdkVersion rootProject.latestCompileSdk",
-            "compileSdkVersion \"android-29\""
+            "compileSdkVersion \"android-30\""
         )
         TestFileUtils.searchAndReplace(
             project.getSubproject(":app")

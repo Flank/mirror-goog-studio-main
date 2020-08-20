@@ -62,7 +62,7 @@ class NdkBuildBuildSettingsTest(useV2NativeModel: Boolean) {
             """
             apply plugin: 'com.android.application'
                 android {
-                    compileSdkVersion 29
+                    compileSdkVersion 30
                     ndkPath "${project.ndkPath}"
                     defaultConfig {
                       externalNativeBuild {

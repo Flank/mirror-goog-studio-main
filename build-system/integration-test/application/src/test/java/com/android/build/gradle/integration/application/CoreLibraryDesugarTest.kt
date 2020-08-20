@@ -47,6 +47,7 @@ import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import org.jf.dexlib2.immutable.debug.ImmutableStartLocal
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.experimental.categories.Category
@@ -219,6 +220,7 @@ class CoreLibraryDesugarTest {
     }
 
     @Test
+    @Ignore // TODO(b/168864902) Update to work on SDK 30
     fun testModelLintFileFetching() {
         var model = app.model().fetchAndroidProjects().rootBuildModelMap[":app"]
         Truth.assertThat(model!!.variants.first().desugaredMethods)

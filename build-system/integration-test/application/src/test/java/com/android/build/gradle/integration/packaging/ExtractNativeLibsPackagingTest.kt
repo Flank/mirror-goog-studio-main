@@ -92,7 +92,7 @@ class ExtractNativeLibsPackagingTest(
                     """
                         apply plugin: 'com.android.application'
                         android {
-                            compileSdk = 29
+                            compileSdk = 30
                             defaultConfig {
                                 minSdk = $minSdk
                             }
