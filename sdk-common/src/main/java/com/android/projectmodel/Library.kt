@@ -149,18 +149,3 @@ data class ExternalLibrary(
      */
     fun isEmpty() = this == ExternalLibrary(address = address, packageName = packageName)
 }
-
-/**
- * Represents a dependency on another module.
- */
-data class ProjectLibrary(
-    override val address: String,
-    /**
-     * Name of the project.
-     */
-    val projectName: String,
-    /**
-     * Variant of the project being depended upon.
-     */
-    val variant: String
-) : Library()
