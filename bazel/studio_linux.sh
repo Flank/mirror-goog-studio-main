@@ -65,6 +65,7 @@ readonly invocation_id="$(uuidgen)"
   //tools/adt/idea/studio:android-studio \
   //tools/adt/idea/studio:updater_deploy.jar \
   //tools/adt/idea/updater-ui:sdk-patcher.zip \
+  //tools/adt/idea/native/installer:android-studio-bundle-data \
   //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar \
   //tools/base/profiler/native/trace_processor_daemon \
   //tools/adt/idea/studio:test_studio \
@@ -100,6 +101,7 @@ if [[ -d "${DIST_DIR}" ]]; then
   cp -a ${bin_dir}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${artifacts_dir}
   cp -a ${bin_dir}/tools/adt/idea/studio/updater_deploy.jar ${artifacts_dir}/android-studio-updater.jar
   cp -a ${bin_dir}/tools/adt/idea/updater-ui/sdk-patcher.zip ${artifacts_dir}
+  cp -a ${bin_dir}/tools/adt/idea/native/installer/android-studio-bundle-data.zip ${artifacts_dir}
 fi
 
 BAZEL_EXITCODE_TEST_FAILURES=3
