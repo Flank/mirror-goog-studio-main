@@ -74,6 +74,7 @@ set JAVA=%BASEDIR%\prebuilts\studio\jdk\win64\jre\bin\java.exe
 
 %JAVA% -jar %BASEDIR%\bazel-bin\tools\vendor\adt_infra_internal\rbe\logscollector\logs-collector_deploy.jar ^
  -bes %DISTDIR%\bazel-%BUILDNUMBER%.bes ^
+ -testlogs %DISTDIR%\logs\junit ^
  -perfzip %DISTDIR%\perfgate_data.zip
 
 @echo studio_win.cmd time: %time%
