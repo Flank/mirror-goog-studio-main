@@ -21,6 +21,7 @@ import com.android.ide.common.util.PathString
 import com.android.ide.common.util.toPathString
 import com.android.projectmodel.DynamicResourceValue
 import com.android.projectmodel.ExternalLibrary
+import com.android.projectmodel.ExternalLibraryImpl
 import com.android.projectmodel.RecursiveResourceFolder
 import com.android.resources.ResourceType
 import com.google.common.collect.ImmutableMap
@@ -53,7 +54,7 @@ fun classFieldsToDynamicResourceValues(classFields: Map<String, IdeClassField>):
 fun convertLibrary(builderModelLibrary: IdeLibrary): ExternalLibrary? =
   with(builderModelLibrary) {
     when (type) {
-      IdeLibrary.LibraryType.LIBRARY_ANDROID -> ExternalLibrary(
+      IdeLibrary.LibraryType.LIBRARY_ANDROID -> ExternalLibraryImpl(
         address = artifactAddress,
         location = artifact.toPathString(),
         manifestFile = PathString(manifest),
@@ -63,7 +64,7 @@ fun convertLibrary(builderModelLibrary: IdeLibrary): ExternalLibrary? =
         symbolFile = PathString(symbolFile),
         resApkFile = resStaticLibrary?.let(::PathString)
       )
-      IdeLibrary.LibraryType.LIBRARY_JAVA -> ExternalLibrary(
+      IdeLibrary.LibraryType.LIBRARY_JAVA -> ExternalLibraryImpl(
         address = artifactAddress,
         classJars = listOf(artifact.toPathString())
       )
