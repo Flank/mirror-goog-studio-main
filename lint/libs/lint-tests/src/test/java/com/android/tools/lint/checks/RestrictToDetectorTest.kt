@@ -1400,7 +1400,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             src/test/pkg/Foo.kt:29: Error: Foo.getHiddenProp can only be called from tests [RestrictedApi]
                     f.hiddenProp
                       ~~~~~~~~~~
-            src/test/pkg/Foo.kt:31: Error: Foo.getHiddenProp can only be called from tests [RestrictedApi]
+            src/test/pkg/Foo.kt:31: Error: Foo.setHiddenProp can only be called from tests [RestrictedApi]
                     f.hiddenProp = ""
                       ~~~~~~~~~~
             src/test/pkg/Foo.kt:33: Error: Foo.hiddenFunc can only be called from tests [RestrictedApi]
@@ -1409,7 +1409,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             src/test/pkg/Foo.kt:37: Error: Foo.getHiddenProp can only be called from tests [RestrictedApi]
                     b.hiddenProp
                       ~~~~~~~~~~
-            src/test/pkg/Foo.kt:39: Error: Foo.getHiddenProp can only be called from tests [RestrictedApi]
+            src/test/pkg/Foo.kt:39: Error: Foo.setHiddenProp can only be called from tests [RestrictedApi]
                     b.hiddenProp = ""
                       ~~~~~~~~~~
             src/test/pkg/FooCaller.java:6: Error: Foo.getHiddenProp can only be called from tests [RestrictedApi]

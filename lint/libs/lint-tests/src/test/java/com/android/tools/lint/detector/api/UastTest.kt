@@ -420,10 +420,6 @@ class UastTest : TestCase() {
                                     UAnnotation (fqName = null) [@null]
                                     USimpleNameReferenceExpression (identifier = Direction) [Direction]
                                 UMethod (name = Direction) [private fun Direction() = UastEmptyExpression]
-                                UMethod (name = values) [public static fun values() = UastEmptyExpression]
-                                UMethod (name = valueOf) [public static fun valueOf(@null name: java.lang.String) = UastEmptyExpression]
-                                    UParameter (name = name) [@null var name: java.lang.String]
-                                        UAnnotation (fqName = null) [@null]
                             UClass (name = Bar) [public static abstract annotation Bar {...}]
                             UClass (name = Companion) [public static final class Companion {...}]
                                 UField (name = bar) [@org.jetbrains.annotations.NotNull private static final var bar: int = 42]
@@ -1049,10 +1045,10 @@ class UastTest : TestCase() {
             """
             package test.pkg
 
-            class Publisher { }
+            class Publisher<T> { }
 
             fun usedAsArrayElement() {
-                val a = arrayOfNulls<Publisher<*>>(10)
+                val a = arrayOfNulls<Publisher<String>>(10)
                 a[0] = Publisher()
             }
             """

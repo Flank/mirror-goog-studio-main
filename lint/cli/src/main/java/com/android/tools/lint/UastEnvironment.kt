@@ -144,6 +144,14 @@ class UastEnvironment private constructor(
             // sets the keepalive property to true anyway, which is picked up by Lint if running in
             // the same Gradle daemon process. So setting the property here ensures consistency.)
             System.setProperty(KOTLIN_COMPILER_ENVIRONMENT_KEEPALIVE_PROPERTY, "true")
+
+            // Disable the check for broken plugins, otherwise PluginManagerCore fails due to
+            // missing the brokenPlugins.txt file. See commit 256bd8d594 in the Kotlin compiler.
+            System.setProperty("idea.ignore.disabled.plugins", "true")
+
+            // Set 'idea.home.path' to avoid exceptions in PathManager.
+            // Inspired by commit 1a01ba0ae5 in the Kotlin compiler.
+            System.setProperty("idea.home.path", System.getProperty("java.io.tmpdir"))
         }
 
         /**
