@@ -32,6 +32,7 @@ public class BatteryFetcherTest extends TestCase {
     public void testGetBattery() throws Exception {
         IDevice mockDevice = DeviceTest.createMockDevice();
         DeviceTest.injectShellResponse(mockDevice, "20\r\n");
+        DeviceTest.injectShellResponse(mockDevice, "20\r\n");
         EasyMock.replay(mockDevice);
 
         BatteryFetcher fetcher = new BatteryFetcher(mockDevice);
@@ -53,6 +54,7 @@ public class BatteryFetcherTest extends TestCase {
      */
     public void testGetBattery_badResponse() throws Exception {
         IDevice mockDevice = DeviceTest.createMockDevice();
+        DeviceTest.injectShellResponse(mockDevice, "blargh");
         DeviceTest.injectShellResponse(mockDevice, "blargh");
         DeviceTest.injectShellResponse(mockDevice, "blargh");
         EasyMock.replay(mockDevice);
@@ -78,6 +80,12 @@ public class BatteryFetcherTest extends TestCase {
                 EasyMock.anyLong(),
                 EasyMock.anyObject());
         EasyMock.expectLastCall().andThrow(new ShellCommandUnresponsiveException());
+        mockDevice.executeShellCommand(
+                EasyMock.anyObject(),
+                EasyMock.anyObject(),
+                EasyMock.anyLong(),
+                EasyMock.anyObject());
+        EasyMock.expectLastCall().andThrow(new ShellCommandUnresponsiveException());
         EasyMock.replay(mockDevice);
 
         BatteryFetcher fetcher = new BatteryFetcher(mockDevice);
@@ -95,6 +103,12 @@ public class BatteryFetcherTest extends TestCase {
      */
     public void testGetBattery_AssertionError() throws Exception {
         IDevice mockDevice = DeviceTest.createMockDevice();
+        mockDevice.executeShellCommand(
+                EasyMock.anyObject(),
+                EasyMock.anyObject(),
+                EasyMock.anyLong(),
+                EasyMock.anyObject());
+        EasyMock.expectLastCall().andThrow(new AssertionError());
         mockDevice.executeShellCommand(
                 EasyMock.anyObject(),
                 EasyMock.anyObject(),

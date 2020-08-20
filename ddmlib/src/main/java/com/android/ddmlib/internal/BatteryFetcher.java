@@ -17,11 +17,13 @@ package com.android.ddmlib.internal;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -32,6 +34,13 @@ import java.util.regex.Pattern;
  */
 class BatteryFetcher {
     private static final String LOG_TAG = "BatteryFetcher";
+    /**
+     * On Pixel 3 and Pixel 3 XL devices, the battery level reported in the UI is read
+     * from this "maximum fuel gauge" ("maxfg") file. This is a specific design of these
+     * devices.
+     */
+    private static final String MAXFG_PATH = "/sys/class/power_supply/maxfg/capacity";
+    private static final String NORMAL_PATH = "/sys/class/power_supply/*/capacity";
 
     /** The amount of time to wait between unsuccessful battery fetch attempts. */
     private static final long BATTERY_TIMEOUT_MS = 2 * 1000; // 2 seconds
@@ -172,33 +181,47 @@ class BatteryFetcher {
 
     private void initiateBatteryQuery() {
         String threadName = String.format("query-battery-%s", mDevice.getSerialNumber());
-        Thread fetchThread = new Thread(threadName) {
-            @Override
-            public void run() {
-                Throwable exception;
-                try {
-                    // first try to get it from sysfs
-                    SysFsBatteryLevelReceiver sysBattReceiver = new SysFsBatteryLevelReceiver();
-                    mDevice.executeShellCommand("cat /sys/class/power_supply/*/capacity",
-                            sysBattReceiver, BATTERY_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                    if (!setBatteryLevel(sysBattReceiver.getBatteryLevel())) {
-                        // failed! try dumpsys
-                        BatteryReceiver receiver = new BatteryReceiver();
-                        mDevice.executeShellCommand("dumpsys battery", receiver, BATTERY_TIMEOUT_MS,
-                                TimeUnit.MILLISECONDS);
-                        if (setBatteryLevel(receiver.getBatteryLevel())) {
-                            return;
+        Thread fetchThread =
+                new Thread(threadName) {
+                    @Override
+                    public void run() {
+                        Throwable exception;
+                        try {
+                            // first try to get it from sysfs
+                            SysFsBatteryLevelReceiver sysBattReceiver =
+                                    new SysFsBatteryLevelReceiver();
+                            String batteryLevelFile = NORMAL_PATH;
+                            if (hasPath(MAXFG_PATH)) {
+                                batteryLevelFile = MAXFG_PATH;
+                            }
+                            mDevice.executeShellCommand(
+                                    "cat " + batteryLevelFile,
+                                    sysBattReceiver,
+                                    BATTERY_TIMEOUT_MS,
+                                    TimeUnit.MILLISECONDS);
+                            if (!setBatteryLevel(sysBattReceiver.getBatteryLevel())) {
+                                // failed! try dumpsys
+                                BatteryReceiver receiver = new BatteryReceiver();
+                                mDevice.executeShellCommand(
+                                        "dumpsys battery",
+                                        receiver,
+                                        BATTERY_TIMEOUT_MS,
+                                        TimeUnit.MILLISECONDS);
+                                if (setBatteryLevel(receiver.getBatteryLevel())) {
+                                    return;
+                                }
+                            } else {
+                                return;
+                            }
+                            exception =
+                                    new IOException(
+                                            "Unrecognized response to battery level queries");
+                        } catch (Throwable e) {
+                            exception = e;
                         }
-                    } else {
-                        return;
+                        handleBatteryLevelFailure(exception);
                     }
-                    exception = new IOException("Unrecognized response to battery level queries");
-                } catch (Throwable e) {
-                    exception = e;
-                }
-                handleBatteryLevelFailure(exception);
-            }
-        };
+                };
         fetchThread.setDaemon(true);
         fetchThread.start();
     }
@@ -228,5 +251,20 @@ class BatteryFetcher {
             }
         }
         mPendingRequest = null;
+    }
+
+    private boolean hasPath(String path) {
+        CountDownLatch latch = new CountDownLatch(1);
+        CollectingOutputReceiver receiver = new CollectingOutputReceiver(latch);
+        try {
+            mDevice.executeShellCommand(
+                    "ls " + path, receiver, BATTERY_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (Throwable e) {
+            Log.w(LOG_TAG, "Error checking battery path \"" + path + "\": " + e);
+            return false;
+        }
+
+        String value = receiver.getOutput().trim();
+        return !value.endsWith("No such file or directory");
     }
 }
