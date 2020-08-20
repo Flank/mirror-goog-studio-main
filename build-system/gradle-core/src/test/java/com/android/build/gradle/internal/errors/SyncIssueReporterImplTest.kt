@@ -18,10 +18,12 @@ package com.android.build.gradle.internal.errors
 
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.options.SyncOptions
+import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.IssueReporter
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.provider.Property
 import org.junit.Test
+import kotlin.test.assertFailsWith
 
 class SyncIssueReporterImplTest {
 
@@ -49,7 +51,38 @@ class SyncIssueReporterImplTest {
         assertThat(issueReporter.getAllIssuesAndClear().map { it.type }).containsExactly(
             IssueReporter.Type.BUILD_TOOLS_TOO_LOW.type
         )
+        issueReporter.reportError(IssueReporter.Type.COMPILE_SDK_VERSION_NOT_SET, RuntimeException(""))
+        assertThat(issueReporter.getAllIssuesAndClear().map { it.type }).containsExactly(
+            IssueReporter.Type.COMPILE_SDK_VERSION_NOT_SET.type
+        )
+    }
+
+    @Test
+    fun testCloseReportsRemainingErrors() {
+        issueReporter.reportError(IssueReporter.Type.BUILD_TOOLS_TOO_LOW, RuntimeException("Error: 1"))
+        issueReporter.reportError(IssueReporter.Type.COMPILE_SDK_VERSION_NOT_SET, RuntimeException("Error: 2"))
+        issueReporter.reportError(IssueReporter.Type.EDIT_LOCKED_DSL_VALUE, RuntimeException("Error: 3"))
+        issueReporter.reportWarning(IssueReporter.Type.DEPRECATED_DSL, RuntimeException("Warning"))
+
+        val issueException = assertFailsWith<EvalIssueException> {
+            issueReporter.close()
+        }
+        assertThat(issueException.suppressed).hasLength(2)
+        // Ordering might change, so assert about the three errors together
+        val errors = issueException.suppressed.asList() + issueException
+        assertThat(errors.map { it.message }).containsExactly("Error: 1", "Error: 2", "Error: 3")
+    }
+
+    @Test
+    fun testReportingAfterClose() {
         issueReporter.reportError(IssueReporter.Type.BUILD_TOOLS_TOO_LOW, RuntimeException(""))
-        assertThat(issueReporter.getAllIssuesAndClear().map { it.type }).isEmpty()
+        assertThat(issueReporter.getAllIssuesAndClear().map { it.type }).containsExactly(
+            IssueReporter.Type.BUILD_TOOLS_TOO_LOW.type
+        )
+        issueReporter.close()
+        val failure = assertFailsWith<IllegalStateException> {
+            issueReporter.reportError(IssueReporter.Type.BUILD_TOOLS_TOO_LOW, RuntimeException(""))
+        }
+        assertThat(failure).hasMessageThat().isEqualTo("Issue registered after handler locked.")
     }
 }

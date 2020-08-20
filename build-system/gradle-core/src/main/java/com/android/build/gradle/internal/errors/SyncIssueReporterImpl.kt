@@ -32,8 +32,6 @@ import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
-import java.lang.UnsupportedOperationException
-import java.util.concurrent.atomic.AtomicBoolean
 import javax.annotation.concurrent.GuardedBy
 
 class SyncIssueReporterImpl(
@@ -50,6 +48,36 @@ class SyncIssueReporterImpl(
     @get:Synchronized
     override val syncIssues: ImmutableList<SyncIssue>
         get() = ImmutableList.copyOf(_syncIssues.values)
+
+    @Synchronized
+    private fun getAllIssuesAndClear(): ImmutableList<SyncIssue> {
+        val issues = syncIssues
+        _syncIssues.clear()
+        return issues
+    }
+
+    private fun reportRemainingIssues() {
+        lockHandler()
+        val issues = getAllIssuesAndClear()
+        var syncErrorToThrow: EvalIssueException? = null
+        for (issue in issues) {
+            when (issue.severity) {
+                SyncIssue.SEVERITY_WARNING -> logger.warn("WARNING: " + issue.message)
+                SyncIssue.SEVERITY_ERROR -> {
+                    val exception = EvalIssueException(issue.message, issue.data, issue.multiLineMessage)
+                    if (syncErrorToThrow == null) {
+                        syncErrorToThrow = exception
+                    } else {
+                        syncErrorToThrow.addSuppressed(exception)
+                    }
+                }
+                else -> throw IllegalStateException("unexpected issue severity for $issue")
+            }
+        }
+        if (syncErrorToThrow != null) {
+            throw syncErrorToThrow
+        }
+    }
 
     @Synchronized
     override fun hasIssue(type: Type): Boolean {
@@ -94,7 +122,7 @@ class SyncIssueReporterImpl(
      * and any subsequent invocation will return an empty list.
      */
     abstract class GlobalSyncIssueService : BuildService<GlobalSyncIssueService.Parameters>,
-        IssueReporter() {
+        IssueReporter(), AutoCloseable {
         interface Parameters : BuildServiceParameters {
             val mode: Property<EvaluationMode>
         }
@@ -104,19 +132,12 @@ class SyncIssueReporterImpl(
             Logging.getLogger(GlobalSyncIssueService::class.java)
         )
 
-        // Indicates if we should continue reporting issues when queried.
-        private val active = AtomicBoolean(true)
-
         /**
          * Returns all reported sync issues for the first invocation of the method. This is to avoid
          * duplication of sync issues across project when this is queried from the model builder.
          */
         fun getAllIssuesAndClear(): ImmutableList<SyncIssue> {
-            return if (active.compareAndSet(true, false)) {
-                reporter.syncIssues
-            } else {
-                ImmutableList.of()
-            }
+            return reporter.getAllIssuesAndClear()
         }
 
         override fun reportIssue(type: Type, severity: Severity, exception: EvalIssueException) {
@@ -124,6 +145,10 @@ class SyncIssueReporterImpl(
         }
 
         override fun hasIssue(type: Type): Boolean = reporter.hasIssue(type)
+
+        override fun close() {
+            reporter.reportRemainingIssues()
+        }
 
         class RegistrationAction(project: Project, private val evaluationMode: EvaluationMode) :
             ServiceRegistrationAction<GlobalSyncIssueService, Parameters>(
