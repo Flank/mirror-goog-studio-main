@@ -18,16 +18,6 @@ package com.android.projectmodel
 import com.android.ide.common.util.PathString
 
 /**
- * Represents a dependency for a variant.
- */
-sealed class Library {
-    /**
-     * Globally unique identifier for this library, assigned by the build system.
-     */
-    abstract val address: String
-}
-
-/**
  * Represents a dependency on an external library. External libraries are folders containing
  * some combination of prebuilt classes, resources, and manifest file. Although android
  * libraries are normally packaged in an AAR file, the actual dependency is on the folder where the
@@ -36,7 +26,7 @@ sealed class Library {
  * of [ExternalLibrary] describing the contents and location of the extracted folder.
  */
 data class ExternalLibrary(
-    override val address: String,
+    val address: String,
 
     /**
      * Path to the .aar file on the filesystem, if known and one exists.
@@ -98,7 +88,7 @@ data class ExternalLibrary(
      * This is only known for "AARv2" files, built from namespaced sources.
      */
     val resApkFile: PathString? = null
-) : Library() {
+) {
     /**
      * Constructs a new [ExternalLibrary] with the given address and all other values set to their defaults. Intended to
      * simplify construction from Java.

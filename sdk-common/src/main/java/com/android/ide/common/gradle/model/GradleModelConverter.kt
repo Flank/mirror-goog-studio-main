@@ -21,7 +21,6 @@ import com.android.ide.common.util.PathString
 import com.android.ide.common.util.toPathString
 import com.android.projectmodel.DynamicResourceValue
 import com.android.projectmodel.ExternalLibrary
-import com.android.projectmodel.Library
 import com.android.projectmodel.RecursiveResourceFolder
 import com.android.resources.ResourceType
 import com.google.common.collect.ImmutableMap
@@ -31,7 +30,7 @@ import com.google.common.collect.ImmutableMap
 class GradleModelConverter(val project: IdeAndroidProject) {
 
   /**
-   * Converts the given [IdeLibrary] into a [Library]. Returns null if the given library is a module dependency.
+   * Converts the given [IdeLibrary] into a [ExternalLibrary]. Returns null if the given library is a module dependency.
    */
   fun convert(library: IdeLibrary): ExternalLibrary? = convertLibrary(library)
 }
@@ -48,7 +47,7 @@ fun classFieldsToDynamicResourceValues(classFields: Map<String, IdeClassField>):
 }
 
 /**
- * Converts a builder-model [IdeLibrary] into a [Library]. Returns null
+ * Converts a builder-model [IdeLibrary] into a [ExternalLibrary]. Returns null
  * if the input is invalid.
  */
 fun convertLibrary(builderModelLibrary: IdeLibrary): ExternalLibrary? =
