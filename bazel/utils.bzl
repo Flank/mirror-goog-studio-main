@@ -187,9 +187,23 @@ def _dir_archive_impl(ctx):
             fail(file.short_path + "is not in " + prefix)
         else:
             zipper_args.append("{}={}".format(file.short_path[len(prefix) + 1:], file.path))
+    files = []
+    files += ctx.files.files
+    if ctx.attr.stamp:
+        stamp = ctx.actions.declare_file(ctx.label.name + ".stamp.txt")
+        ctx.actions.run(
+            inputs = [ctx.info_file],
+            outputs = [stamp],
+            executable = ctx.executable._status_reader,
+            arguments = ["--src", ctx.info_file.path, "--dst", stamp.path, "--key", "BUILD_EMBED_LABEL"],
+            progress_message = "Extracting label...",
+            mnemonic = "status",
+        )
+        zipper_args.append("%s=%s" % (ctx.attr.stamp, stamp.path))
+        files.append(stamp)
 
     ctx.actions.run(
-        inputs = ctx.files.files,
+        inputs = files,
         outputs = [ctx.outputs.out],
         executable = ctx.executable._zipper,
         arguments = zipper_args,
@@ -203,7 +217,13 @@ dir_archive = rule(
             allow_files = True,
         ),
         "dir": attr.string(mandatory = True),
+        "stamp": attr.string(),
         "ext": attr.string(default = "zip"),
+        "_status_reader": attr.label(
+            default = Label("//tools/base/bazel:status_reader"),
+            cfg = "host",
+            executable = True,
+        ),
         "_zipper": attr.label(
             default = Label("@bazel_tools//tools/zip:zipper"),
             cfg = "host",

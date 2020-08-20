@@ -389,6 +389,19 @@ java_binary(
     ],
 )
 
+py_binary(
+    name = "status_reader",
+    srcs = ["status_reader.py"],
+    visibility = ["//visibility:public"],
+)
+
+py_test(
+    name = "status_reader_test",
+    srcs = ["status_reader_test.py"],
+    visibility = ["//visibility:public"],
+    deps = [":status_reader"],
+)
+
 java_jarjar(
     name = "studio-proto",
     srcs = [
