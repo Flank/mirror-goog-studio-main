@@ -239,7 +239,7 @@ public class GroovyGradleVisitor extends GradleVisitor {
                                     parent,
                                     parentParent,
                                     c.getMethod(),
-                                    c,
+                                    c.getArguments(),
                                     c);
                         }
                     }
@@ -271,8 +271,10 @@ public class GroovyGradleVisitor extends GradleVisitor {
 
         if (node instanceof ArgumentListExpression) {
             List<Expression> expressions = ((ArgumentListExpression) node).getExpressions();
-            if (expressions.size() == 1) {
-                return getOffsets(expressions.get(0), context);
+            if (!expressions.isEmpty()) {
+                return Pair.of(
+                        getOffsets(expressions.get(0), context).getFirst(),
+                        getOffsets(expressions.get(expressions.size() - 1), context).getSecond());
             }
         }
 
@@ -318,11 +320,41 @@ public class GroovyGradleVisitor extends GradleVisitor {
     @Override
     public Location createLocation(@NonNull GradleContext context, @NonNull Object cookie) {
         ASTNode node = (ASTNode) cookie;
+        ASTNode startNode = node;
+        ASTNode endNode = node;
+        // TODO(xof): unify this with the analogous code in getOffsets().
+        if (node instanceof TupleExpression && node.getLastLineNumber() == -1) {
+            // a TupleExpression (in this context) represents the map corresponding to a named
+            // argument list.  However, that TupleExpression isn't real (there aren't explicit
+            // map [] markers), and the various line/column number fields are initialized to -1.
+            // Instead, use the single NamedArgumentListExpression that it contains, which is
+            // real and has useful source position information.
+            //
+            // One might have hoped that the `synthetic` boolean, or the `hasNoRealSourcePosition`
+            // boolean would indicate this.  Alas.
+            TupleExpression tupleExpression = (TupleExpression) node;
+            List<Expression> expressions = tupleExpression.getExpressions();
+            if (!expressions.isEmpty()) {
+                startNode = expressions.get(0);
+                endNode = expressions.get(expressions.size() - 1);
+            }
+        } else if (node instanceof ArgumentListExpression) {
+            // the ArgumentListExpression node includes in its extent not only all the expressions
+            // corresponding to arguments, but also other elements not corresponding to anything
+            // semantic (whitespace, comments).
+            ArgumentListExpression argumentListExpression = (ArgumentListExpression) node;
+            List<Expression> expressions = argumentListExpression.getExpressions();
+            if (!expressions.isEmpty()) {
+                startNode = expressions.get(0);
+                endNode = expressions.get(expressions.size() - 1);
+            }
+        }
+
         Pair<Integer, Integer> offsets = getOffsets(node, context);
-        int fromLine = node.getLineNumber() - 1;
-        int fromColumn = node.getColumnNumber() - 1;
-        int toLine = node.getLastLineNumber() - 1;
-        int toColumn = node.getLastColumnNumber() - 1;
+        int fromLine = startNode.getLineNumber() - 1;
+        int fromColumn = startNode.getColumnNumber() - 1;
+        int toLine = endNode.getLastLineNumber() - 1;
+        int toColumn = endNode.getLastColumnNumber() - 1;
         return Location.create(
                 context.file,
                 new DefaultPosition(fromLine, fromColumn, offsets.getFirst()),

@@ -130,7 +130,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:25: Error: This support library should not use a different version (13) than the compileSdkVersion (19) [GradleCompatible]\n" +
             "    compile 'com.android.support:appcompat-v7:13.0.0'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:1: Warning: 'android' is deprecated; use 'com.android.application' instead [GradleDeprecated]\n" +
             "apply plugin: 'android'\n" +
             "~~~~~~~~~~~~~~~~~~~~~~~\n" +
@@ -139,22 +139,22 @@ class GradleDetectorTest : AbstractCheckTest() {
             "    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:24: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 21.0 [GradleDependency]\n" +
             "    freeCompile 'com.google.guava:guava:11.0.2'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:25: Warning: A newer version of com.android.support:appcompat-v7 than 13.0.0 is available: 19.1.0 [GradleDependency]\n" +
             "    compile 'com.android.support:appcompat-v7:13.0.0'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:26: Warning: A newer version of com.google.android.support:wearable than 1.2.0 is available: 1.3.0 [GradleDependency]\n" +
             "    compile 'com.google.android.support:wearable:1.2.0'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:27: Warning: A newer version of com.android.support:multidex than 1.0.0 is available: 1.0.1 [GradleDependency]\n" +
             "    compile 'com.android.support:multidex:1.0.0'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:29: Warning: A newer version of com.android.support.test:runner than 0.3 is available: 0.5 [GradleDependency]\n" +
             "    androidTestCompile 'com.android.support.test:runner:0.3'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:23: Warning: Avoid using + in version numbers; can lead to unpredictable and unrepeatable builds (com.android.support:appcompat-v7:+) [GradleDynamicVersion]\n" +
             "    compile 'com.android.support:appcompat-v7:+'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "1 errors, 8 warnings\n"
 
         lint().files(mDependencies)
@@ -204,16 +204,16 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 2.4.0-alpha3 is available: 3.5.0-alpha10 [AndroidGradlePluginVersion]\n" +
             "        classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:11: Warning: A newer version of org.apache.httpcomponents:httpcomponents-core than 4.2 is available: 4.4 [GradleDependency]\n" +
             "    compile 'org.apache.httpcomponents:httpcomponents-core:4.2'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:12: Warning: A newer version of com.android.support:recyclerview-v7 than 25.0.0 is available: 26.0.0 [GradleDependency]\n" +
             "    compile 'com.android.support:recyclerview-v7:25.0.0'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:13: Warning: A newer version of com.google.firebase:firebase-messaging than 10.2.1 is available: 11.0.0 [GradleDependency]\n" +
             "    compile 'com.google.firebase:firebase-messaging:10.2.1'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 4 warnings\n"
 
         lint().files(
@@ -283,7 +283,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 "" +
                     "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0 is available: 3.3.2. (There is also a newer version of 3.0.\uD835\uDC65 available, if upgrading to 3.3.2 is difficult: 3.0.1) [AndroidGradlePluginVersion]\n" +
                     "        classpath 'com.android.tools.build:gradle:3.0.0'\n" +
-                    "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                    "                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                     "0 errors, 1 warnings"
             )
             .expectFixDiffs(
@@ -304,7 +304,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:7: Warning: A newer version of com.google.firebase:firebase-messaging than 10.2.1 is available: 11.0.0 [GradleDependency]\n" +
             "    implementation(\"com.google.firebase:firebase-messaging:10.2.1\")\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 1 warnings"
 
         lint().files(
@@ -368,7 +368,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                         val expected = "" +
                             "build.gradle:9: Warning: A newer version of $library than $version is available: $expectedVersion [GradleDependency]\n" +
                             "    $dependencyString\n" +
-                            "    ${"~".repeat(dependencyString.length)}\n" +
+                            "    ${" ".repeat(configuration.length + 1)}" +
+                                "${"~".repeat(library.length + versionString.length + 3)}\n" +
                             "0 errors, 1 warnings"
 
                         lint().files(source).issues(DEPENDENCY).run().expect(expected)
@@ -383,10 +384,10 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:2: Warning: A newer version of com.android.support.constraint:constraint-layout than 1.0.1 is available: 1.0.2 [GradleDependency]\n" +
             "    compile 'com.android.support.constraint:constraint-layout:1.0.1'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:4: Warning: A newer version of com.android.support.constraint:constraint-layout than 1.0.3-alpha5 is available: 1.0.3-alpha8 [GradleDependency]\n" +
             "    compile 'com.android.support.constraint:constraint-layout:1.0.3-alpha5'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 2 warnings\n"
 
         lint().files(
@@ -407,7 +408,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:13: Error: Version 28 (intended for Android Pie and below) is the last version of the legacy support library, so we recommend that you migrate to AndroidX libraries when using Android Q and moving forward. The IDE can help with this: Refactor > Migrate to AndroidX... [GradleCompatible]\n" +
             "    implementation 'com.android.support:appcompat-v7:28.0.0' \n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "1 errors, 0 warnings"
 
         lint().files(
@@ -553,7 +554,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.1 [AndroidGradlePluginVersion]\n" +
             "    classpath 'com.android.tools.build:gradle:3.0.0-alpha4'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 1 warnings"
 
         lint().files(
@@ -620,7 +621,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 "" +
                     "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha01 is available: 3.1.0 [AndroidGradlePluginVersion]\n" +
                     "    classpath 'com.android.tools.build:gradle:3.0.0-alpha01'\n" +
-                    "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                    "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                     "0 errors, 1 warnings"
             )
     }
@@ -659,7 +660,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 """
                 build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.1 [AndroidGradlePluginVersion]
                     classpath 'com.android.tools.build:gradle:3.0.0-alpha4'
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 1 warnings
                 """
             )
@@ -710,19 +711,19 @@ class GradleDetectorTest : AbstractCheckTest() {
             "    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:24: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 21.0 [GradleDependency]\n" +
             "    freeCompile 'com.google.guava:guava:11.0.2'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:25: Warning: A newer version of com.android.support:appcompat-v7 than 13.0.0 is available: 19.1.0 [GradleDependency]\n" +
             "    compile 'com.android.support:appcompat-v7:13.0.0'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:26: Warning: A newer version of com.google.android.support:wearable than 1.2.0 is available: 1.3.0 [GradleDependency]\n" +
             "    compile 'com.google.android.support:wearable:1.2.0'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:27: Warning: A newer version of com.android.support:multidex than 1.0.0 is available: 1.0.1 [GradleDependency]\n" +
             "    compile 'com.android.support:multidex:1.0.0'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:29: Warning: A newer version of com.android.support.test:runner than 0.3 is available: 0.5 [GradleDependency]\n" +
             "    androidTestCompile 'com.android.support.test:runner:0.3'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 6 warnings\n"
 
         lint().files(mDependencies).issues(DEPENDENCY).run().expect(expected)
@@ -732,7 +733,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:9: Warning: A newer version of com.android.support:support-v4 than 19.0 is available: 21.0.2 [GradleDependency]\n" +
             "    compile group: 'com.android.support', name: 'support-v4', version: '19.0'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 1 warnings\n"
 
         lint().files(
@@ -756,7 +757,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:13: Warning: Using the appcompat library when minSdkVersion >= 14 and compileSdkVersion < 21 is not necessary [GradleDependency]\n" +
             "    compile 'com.android.support:appcompat-v7:+'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 1 warnings\n"
 
         lint().files(
@@ -832,7 +833,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:13: Warning: A newer version of com.google.code.gson:gson than 2.2 is available: 2.8.2 [GradleDependency]\n" +
             "    compile 'com.google.code.gson:gson:2.2'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 1 warnings\n"
 
         lint().files(
@@ -860,10 +861,10 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:4: Warning: Do not use Windows file separators in .gradle files; use / instead [GradlePath]\n" +
             "    compile files('my\\\\libs\\\\http.jar')\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:5: Warning: Avoid using absolute paths in .gradle files [GradlePath]\n" +
             "    compile files('/libs/android-support-v4.jar')\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 2 warnings\n"
 
         lint().files(
@@ -913,10 +914,10 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:5: Warning: Deprecated: Replace 'packageName' with 'applicationId' [GradleDeprecated]\n" +
             "        packageName 'my.pkg'\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~\n" +
+            "        ~~~~~~~~~~~\n" +
             "build.gradle:9: Warning: Deprecated: Replace 'packageNameSuffix' with 'applicationIdSuffix' [GradleDeprecated]\n" +
             "            packageNameSuffix \".debug\"\n" +
-            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 2 warnings\n"
 
         lint().files(
@@ -951,13 +952,13 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:9: Warning: Avoid using + in version numbers; can lead to unpredictable and unrepeatable builds (com.android.support:appcompat-v7:+) [GradleDynamicVersion]\n" +
             "    compile 'com.android.support:appcompat-v7:+'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:10: Warning: Avoid using + in version numbers; can lead to unpredictable and unrepeatable builds (com.android.support:support-v4:21.0.+) [GradleDynamicVersion]\n" +
             "    compile group: 'com.android.support', name: 'support-v4', version: '21.0.+'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:11: Warning: Avoid using + in version numbers; can lead to unpredictable and unrepeatable builds (com.android.support:appcompat-v7:+@aar) [GradleDynamicVersion]\n" +
             "    compile 'com.android.support:appcompat-v7:+@aar'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 3 warnings\n"
 
         lint().files(
@@ -1089,7 +1090,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:13: Error: The leading 0 turns this number into octal which is probably not what was intended (interpreted as 8) [AccidentalOctal]\n" +
             "        versionCode 010\n" +
-            "        ~~~~~~~~~~~~~~~\n" +
+            "                    ~~~\n" +
             "1 errors, 0 warnings\n"
 
         lint().files(
@@ -1121,7 +1122,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:5: Error: Version 5.2.08 should not be used; the app can not be published with this version. Use version 11.1.71 instead. [GradleCompatible]\n" +
             "    compile 'com.google.android.gms:play-services:5.2.08'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "1 errors, 0 warnings\n"
 
         lint().files(
@@ -1147,10 +1148,10 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:9: Warning: A newer version of joda-time:joda-time than 2.1 is available: 2.9.9 [NewerVersionAvailable]\n" +
             "    compile 'joda-time:joda-time:2.1'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:10: Warning: A newer version of com.squareup.dagger:dagger than 1.2.0 is available: 1.2.5 [NewerVersionAvailable]\n" +
             "    compile 'com.squareup.dagger:dagger:1.2.0'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 2 warnings\n"
 
         lint().files(
@@ -1214,10 +1215,10 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:9: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 23.6-android [NewerVersionAvailable]\n" +
             "    compile 'com.google.guava:guava:11.0.2'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:10: Warning: A newer version of com.google.guava:guava than 16.0-rc1 is available: 18.0-rc1 [NewerVersionAvailable]\n" +
             "    compile 'com.google.guava:guava:16.0-rc1'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 2 warnings\n"
 
         lint().files(
@@ -1260,10 +1261,10 @@ class GradleDetectorTest : AbstractCheckTest() {
             GRADLE_PLUGIN_RECOMMENDED_VERSION +
             " [AndroidGradlePluginVersion]\n" +
             "        classpath 'com.android.tools.build:gradle:1.0.0'\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:9: Warning: A newer version of com.android.tools.build:gradle than 2.0.0-alpha4 is available: 3.5.0-alpha10 [AndroidGradlePluginVersion]\n" +
             "        classpath 'com.android.tools.build:gradle:2.0.0-alpha4'\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "1 errors, 2 warnings\n"
 
         lint().files(
@@ -1330,7 +1331,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:10: Warning: A newer version of com.google.android.gms:play-services-wearable than 5.0.77 is available: 6.1.71 [GradleDependency]\n" +
             "    compile \"com.google.android.gms:play-services-wearable:\${GPS_VERSION}\"\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 1 warnings\n"
         lint().files(
             source(
@@ -1364,7 +1365,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:4: Error: All gms/firebase libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 7.5.0, 7.3.0. Examples include com.google.android.gms:play-services-wearable:7.5.0 and com.google.android.gms:play-services-location:7.3.0 [GradleCompatible]\n" +
             "    compile 'com.google.android.gms:play-services-wearable:7.5.0'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "1 errors, 0 warnings\n"
         lint().files(
             gradle(
@@ -1383,7 +1384,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:4: Error: All com.android.support libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 25.0-SNAPSHOT, 24.2, 24.1. Examples include com.android.support:preference-v7:25.0-SNAPSHOT and com.android.support:animated-vector-drawable:24.2 [GradleCompatible]\n" +
             "    compile \"com.android.support:appcompat-v7:24.2\"\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "1 errors, 0 warnings\n"
         lint().files(
             gradle(
@@ -1456,7 +1457,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:4: Error: Project depends on com.google.android.support:wearable:2.0.0-alpha3, so it must also depend (as a provided dependency) on com.google.android.wearable:wearable:2.0.0-alpha3 [GradleCompatible]\n" +
             "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "1 errors, 0 warnings\n"
         lint().files(
             gradle(
@@ -1475,7 +1476,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:4: Error: The wearable libraries for com.google.android.support and com.google.android.wearable must use exactly the same versions; found 2.0.0-alpha3 and 2.0.0-alpha4 [GradleCompatible]\n" +
             "    compile \"com.google.android.support:wearable:2.0.0-alpha3\"\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "1 errors, 0 warnings\n"
         lint().files(
             gradle(
@@ -1632,7 +1633,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:5: Warning: A newer version of io.fabric.tools:gradle than 1.22.0 is available: 1.25.1 [GradleDependency]\n" +
             "    classpath 'io.fabric.tools:gradle:1.22.0'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 3 warnings\n"
 
         lint().files(
@@ -1746,13 +1747,13 @@ class GradleDetectorTest : AbstractCheckTest() {
             "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:5: Warning: A newer version of com.bugsnag:bugsnag-android-gradle-plugin than 2.1.2 is available: 3.2.5 [GradleDependency]\n" +
             "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.2'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:6: Warning: A newer version of com.bugsnag:bugsnag-android-gradle-plugin than 2.2 is available: 3.2.5 [GradleDependency]\n" +
             "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.2'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:7: Warning: A newer version of com.bugsnag:bugsnag-android-gradle-plugin than 2.5 is available: 3.2.5 [GradleDependency]\n" +
             "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.5'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 5 warnings"
 
         lint().files(
@@ -1801,7 +1802,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:9: Warning: Deprecated: Replace 'com.google.android.gms:play-services-appindexing:9.8.0' with 'com.google.firebase:firebase-appindexing:10.0.0' or above. More info: http://firebase.google.com/docs/app-indexing/android/migrate [GradleDeprecated]\n" +
             "compile 'com.google.android.gms:play-services-appindexing:9.8.0'\n" +
-            "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 1 warnings\n"
 
         lint().files(
@@ -1931,7 +1932,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             "" +
                 "build.gradle:2: Warning: Avoid using bundled version of Google Play services SDK. [UseOfBundledGooglePlayServices]\n" +
                 "    compile 'com.google.android.gms:play-services:8.5.6'\n" +
-                "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                 "0 errors, 1 warnings\n"
         )
     }
@@ -1971,16 +1972,16 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:14: Error: Version must be at least 10.2.1 when targeting O [GradleCompatible]\n" +
             "    compile 'com.google.android.gms:play-services-gcm:10.2.0'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:15: Error: Version must be at least 10.2.1 when targeting O [GradleCompatible]\n" +
             "    compile 'com.google.firebase:firebase-messaging:10.2.0'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:16: Error: Version must be at least 0.6.0 when targeting O [GradleCompatible]\n" +
             "    compile 'com.google.firebase:firebase-jobdispatcher:0.5.0'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:17: Error: Version must be at least 0.6.0 when targeting O [GradleCompatible]\n" +
             "    compile 'com.google.firebase:firebase-jobdispatcher-with-gcm-dep:0.5.0'\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "4 errors, 0 warnings\n"
         lint().files(
             gradle(
@@ -2150,7 +2151,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 "" +
                     "build.gradle:13: Error: When using a compileSdkVersion android-O revision 2 or higher, the support library version should be 26.0.0-beta1 or higher (was 26.0.0-alpha1) [GradleCompatible]\n" +
                     "    compile 'com.android.support:appcompat-v7:26.0.0-alpha1'\n" +
-                    "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                    "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                     "1 errors, 0 warnings\n"
             )
 
@@ -2181,7 +2182,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 "" +
                     "build.gradle:12: Error: When using a compileSdkVersion older than android-O revision 2, the support library version must be 26.0.0-alpha1 or lower (was 26.0.0-beta1) [GradleCompatible]\n" +
                     "    compile 'com.android.support:appcompat-v7:26.0.0-beta1'\n" +
-                    "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                    "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                     "1 errors, 0 warnings\n"
             )
 
@@ -2396,13 +2397,13 @@ class GradleDetectorTest : AbstractCheckTest() {
                         ~~~~~~~
                 build.gradle.kts:8: Warning: Old buildToolsVersion 25.0.0; recommended version is 25.0.3 or later [GradleDependency]
                     buildToolsVersion("25.0.0")
-                                       ~~~~~~
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 build.gradle.kts:30: Warning: A newer version of com.android.support.constraint:constraint-layout than 1.0.0-alpha8 is available: 1.0.3-alpha8 [GradleDependency]
                     compile("com.android.support.constraint:constraint-layout:1.0.0-alpha8")
                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 build.gradle.kts:12: Warning: The value of minSdkVersion is too low. It can be incremented without noticeably reducing the number of supported devices. [MinSdkTooLow]
                         minSdkVersion(7)
-                                      ~
+                        ~~~~~~~~~~~~~~~~
                 0 errors, 4 warnings
                 """
             )
@@ -2573,52 +2574,52 @@ class GradleDetectorTest : AbstractCheckTest() {
                 """
                 build.gradle:10: Warning: A newer version of log4j:log4j than 1.2.3 is available: 1.2.17 [GradleDependency]
                     compile 'log4j:log4j:1.2.3'  // OK (not included in range)
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            ~~~~~~~~~~~~~~~~~~~
                 build.gradle:14: Warning: A newer version of com.example.ads.thirdparty:example than 7.2.2 is available: 7.3.1 [GradleDependency]
                     compile 'com.example.ads.thirdparty:example:7.2.2' // OK
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 build.gradle:19: Warning: A newer version of com.example.ads.thirdparty:example than 7.0.5 is available: 7.3.1 [GradleDependency]
                     compile 'com.example.ads.thirdparty:example:7.0.5' // OK
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 build.gradle:7: Error: This version is known to be insecure. Details: Bad security bug CVE-4311. Consider switching to recommended version 1.2.17. [RiskyLibrary]
                     compile 'log4j:log4j:1.2.13' // ERROR
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            ~~~~~~~~~~~~~~~~~~~~
                 build.gradle:8: Error: This version is known to be insecure. Details: Bad security bug CVE-4311. Consider switching to recommended version 1.2.17. [RiskyLibrary]
                     compile 'log4j:log4j:1.2.12' // ERROR
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            ~~~~~~~~~~~~~~~~~~~~
                 build.gradle:9: Error: This version is known to be insecure. Details: Bad security bug CVE-4311. Consider switching to recommended version 1.2.17. [RiskyLibrary]
                     compile 'log4j:log4j:1.2.4'  // ERROR
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            ~~~~~~~~~~~~~~~~~~~
                 build.gradle:4: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 1.2.17. [OutdatedLibrary]
                     compile 'log4j:log4j:1.2.16' // ERROR
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            ~~~~~~~~~~~~~~~~~~~~
                 build.gradle:5: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 1.2.17. [OutdatedLibrary]
                     compile 'log4j:log4j:1.2.15' // ERROR
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            ~~~~~~~~~~~~~~~~~~~~
                 build.gradle:6: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 1.2.17. [OutdatedLibrary]
                     compile 'log4j:log4j:1.2.14' // ERROR
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            ~~~~~~~~~~~~~~~~~~~~
                 build.gradle:11: Error: This version is obsolete. Details: Library is obsolete. Consider switching to recommended version 1.2.17. [OutdatedLibrary]
                     compile 'log4j:log4j:0.5'    // ERROR
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            ~~~~~~~~~~~~~~~~~
                 build.gradle:15: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 7.3.1. [OutdatedLibrary]
                     compile 'com.example.ads.thirdparty:example:7.2.1' // ERROR
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 build.gradle:16: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 7.3.1. [OutdatedLibrary]
                     compile 'com.example.ads.thirdparty:example:7.2.0' // ERROR
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 build.gradle:17: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 7.3.1. [OutdatedLibrary]
                     compile 'com.example.ads.thirdparty:example:7.1.1' // ERROR
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 build.gradle:18: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 7.3.1. [OutdatedLibrary]
                     compile 'com.example.ads.thirdparty:example:7.1.0' // ERROR
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 build.gradle:20: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 7.3.1. [OutdatedLibrary]
                     compile 'com.example.ads.thirdparty:example:7.0.0' // ERROR
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 build.gradle:21: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 7.3.1. [OutdatedLibrary]
                     compile 'com.example.ads.thirdparty:example:6.8.5' // ERROR
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 13 errors, 3 warnings
                     """
             ).expectFixDiffs(
@@ -2941,7 +2942,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             .expect(
                 "build.gradle.kts:8: Warning: If you plan to use data binding in a Kotlin project, you should apply the kotlin-kapt plugin. [DataBindingWithoutKapt]\n" +
                     "    isEnabled = true\n" +
-                    "                ~~~~\n" +
+                    "    ~~~~~~~~~~~~~~~~\n" +
                     "0 errors, 1 warnings"
             )
     }
@@ -2991,7 +2992,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 "" +
                     "build.gradle:3: Warning: Use the Lifecycle Java 8 API provided by the lifecycle-common-java8 library instead of Lifecycle annotations for faster incremental build. [LifecycleAnnotationProcessorWithJava8]\n" +
                     "  annotationProcessor \"android.arch.lifecycle:compiler:1.1.1\"\n" +
-                    "  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                    "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                     "0 errors, 1 warnings"
             )
     }
@@ -3276,7 +3277,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 """
                 build.gradle:7: Information: Add suffix -ktx to enable the Kotlin extensions for this library [KtxExtensionAvailable]
                     implementation "androidx.core:core:1.2.0"
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 0 warnings
             """
             )
