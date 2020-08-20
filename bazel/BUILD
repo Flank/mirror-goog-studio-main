@@ -482,6 +482,12 @@ config_setting(
     visibility = ["//visibility:public"],
 )
 
+config_setting(
+    name = "release",
+    values = {"define": "release=true"},
+    visibility = ["//visibility:public"],
+)
+
 coverage_java_test(
     name = "iml_to_build_tests",
     srcs = ["testSrc/com/android/tools/binaries/ImlToBazelTest.java"],

@@ -75,6 +75,7 @@ build:remote_common --auth_enabled=true
 
 build:release -c opt
 build:release --strip=always
+build:release --define release=true
 
 # Mimics the release config to report accurate performance numbers in tests.
 build:remote_common --config=release
