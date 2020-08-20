@@ -37,23 +37,20 @@ target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emula
   -- \
   //tools/adt/idea/android-uitests:AddKotlinTest \
   //tools/adt/idea/android-uitests:AddNewBuildTypeTest \
-  //tools/adt/idea/android-uitests:AddRemoveCppDependencyTest \
   //tools/adt/idea/android-uitests:BasicLayoutEditTest \
-  //tools/adt/idea/android-uitests:CMakeListsTest \
   //tools/adt/idea/android-uitests:CompileWithJava8Test \
   //tools/adt/idea/android-uitests:ConvertFromWebpToPngTest \
   //tools/adt/idea/android-uitests:CreateCppKotlinProjectTest \
   //tools/adt/idea/android-uitests:CreateDefaultActivityTest \
   //tools/adt/idea/android-uitests:CreateNavGraphTest \
   //tools/adt/idea/android-uitests:CreateNewAppModuleWithDefaultsTest \
-  //tools/adt/idea/android-uitests:CreateNewFlavorsTest \
   //tools/adt/idea/android-uitests:CreateNewMobileProjectTest \
   //tools/adt/idea/android-uitests:GenerateApkWithReleaseVariantTest \
   //tools/adt/idea/android-uitests:LaunchApkViewerTest \
   //tools/adt/idea/android-uitests:ModifyMinSdkAndSyncTest \
   //tools/adt/idea/android-uitests:NewComposeProjectTest \
   //tools/adt/idea/android-uitests:OpenCloseVisualizationToolTest \
-  //tools/adt/idea/android-uitests:QuickFixForJniTest
+  //tools/adt/idea/android-uitests:OpenExistingProjectTest
 
 readonly bazel_status_sanity_longrunning=$?
 
