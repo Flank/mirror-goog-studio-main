@@ -21,6 +21,7 @@ readonly config_options="--config=local --config=release --config=cloud_resultst
         ${config_options} \
         --invocation_id=${invocation_id} \
         --build_tag_filters=-no_mac \
+        --build_event_binary_file="${dist_dir}/bazel-${build_number}.bes" \
         --test_tag_filters=-no_mac,-no_test_mac,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate \
         --tool_tag=${script_name} \
         --define=meta_android_build_number=${build_number} \
@@ -46,7 +47,6 @@ if [[ -d "${dist_dir}" ]]; then
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 
   readonly java="prebuilts/studio/jdk/mac/Contents/Home/bin/java"
-  readonly bin_dir="$("${script_dir}"/bazel info ${config_options} bazel-bin)"
   ${java} -jar "${bin_dir}/tools/vendor/adt_infra_internal/rbe/logscollector/logs-collector_deploy.jar" \
     -bes "${dist_dir}/bazel-${build_number}.bes" \
     -testlogs "${dist_dir}/logs/junit"
