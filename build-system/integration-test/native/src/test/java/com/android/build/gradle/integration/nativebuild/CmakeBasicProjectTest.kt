@@ -316,7 +316,7 @@ class CmakeBasicProjectTest(
             )
         } else {
             project.model()
-                .fetchAndroidProjects() // Make sure we can successfully get AndroidProject
+                    .fetchAndroidProjectsAllowSyncIssues() // Allow warning about V2 model flag being removed later
             val model = project.model().fetch(NativeVariantAbi::class.java)
             assertThat(model.buildFiles.map { it.name }).containsExactly("CMakeLists.txt")
         }
@@ -370,7 +370,7 @@ class CmakeBasicProjectTest(
             )
         } else {
             project.model()
-                .fetchAndroidProjects() // Make sure we can successfully get AndroidProject
+                .fetchAndroidProjectsAllowSyncIssues() // Allow warning about V2 model flag being removed later
             val model = project.model().fetch(NativeAndroidProject::class.java)
             assertThat(model.buildSystems).containsExactly(NativeBuildSystem.CMAKE.tag)
             assertThat(model).hasAtLeastBuildFilesShortNames("CMakeLists.txt")

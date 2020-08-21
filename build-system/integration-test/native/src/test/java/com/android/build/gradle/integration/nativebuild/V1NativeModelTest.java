@@ -601,7 +601,7 @@ public class V1NativeModelTest {
     @Test
     public void checkModel() throws Exception {
         Collection<SyncIssue> syncIssues =
-                project.model().fetchAndroidProjects().getOnlyModelSyncIssues();
+                project.model().fetchAndroidProjectsAllowSyncIssues().getOnlyModelSyncIssues();
         assertThat(syncIssues).hasSize(0);
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model).isNotNull();

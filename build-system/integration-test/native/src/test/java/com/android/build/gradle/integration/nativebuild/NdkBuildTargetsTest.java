@@ -144,8 +144,7 @@ public class NdkBuildTargetsTest {
         if (useV2NativeModel) {
             assertV2Model();
         } else {
-            project.model()
-                    .fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
+            project.model().fetchAndroidProjectsAllowSyncIssues();
             assertModel(project.model().fetch(NativeAndroidProject.class));
         }
     }
@@ -163,7 +162,7 @@ public class NdkBuildTargetsTest {
         assertThatApk(apk).contains("lib/x86/libmylibrary2.so");
         assertThatApk(apk).contains("lib/x86_64/libmylibrary2.so");
 
-        project.model().fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
+        project.model().fetchAndroidProjectsAllowSyncIssues();
 
         if (useV2NativeModel) {
             assertV2Model();
