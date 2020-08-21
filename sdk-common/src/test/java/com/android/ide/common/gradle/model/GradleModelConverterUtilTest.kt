@@ -25,8 +25,11 @@ import com.android.projectmodel.DynamicResourceValue
 import com.android.projectmodel.ExternalLibraryImpl
 import com.android.projectmodel.RecursiveResourceFolder
 import com.android.resources.ResourceType
+import com.google.common.truth.Expect
 import com.google.common.truth.Truth.assertThat
+import org.junit.Rule
 import org.junit.Test
+import kotlin.math.exp
 
 /**
  * Tests for [GradleModelConverterUtil].
@@ -34,6 +37,9 @@ import org.junit.Test
 class GradleModelConverterUtilTest {
 
     val modelCache = ModelCache.createForTesting()
+
+    @get:Rule
+    val expect = Expect.createAndEnableStackTrace();
 
     @Test
     fun testClassFieldsToDynamicResourceValues() {
@@ -56,18 +62,14 @@ class GradleModelConverterUtilTest {
         val result = convertLibrary(original)
 
         with(original) {
-            assertThat(result).isEqualTo(
-              ExternalLibraryImpl(
-                address = artifactAddress,
-                location = artifact.toPathString(),
-                manifestFile = PathString(manifest),
-                classJars = listOf(PathString(jarFile)),
-                dependencyJars = localJars.map(::PathString),
-                    resFolder = RecursiveResourceFolder(PathString(resFolder)),
-                    symbolFile = PathString(symbolFile),
-                    resApkFile = resStaticLibrary?.let(::PathString)
-                )
-            )
+            expect.that(result?.address).isEqualTo(artifactAddress)
+            expect.that(result?.location).isEqualTo(artifact.toPathString())
+            expect.that(result?.manifestFile).isEqualTo(PathString(manifest))
+            expect.that(result?.classJars).isEqualTo(listOf(PathString(jarFile)))
+            expect.that(result?.dependencyJars).isEqualTo(localJars.map(::PathString))
+            expect.that(result?.resFolder).isEqualTo(RecursiveResourceFolder(PathString(resFolder)))
+            expect.that(result?.symbolFile).isEqualTo(PathString(symbolFile))
+            expect.that(result?.resApkFile).isEqualTo(resStaticLibrary?.let(::PathString))
         }
     }
 }
