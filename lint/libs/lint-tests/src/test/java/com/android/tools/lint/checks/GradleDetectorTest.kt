@@ -2428,11 +2428,12 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
     }
 
-    fun testExpiring() {
+    fun testExpiring1() {
+        // Not meeting last year's requirement either
         try {
             val calendar = Calendar.getInstance()
             GradleDetector.calendar = calendar
-            calendar.set(Calendar.YEAR, 2018)
+            calendar.set(Calendar.YEAR, 2020)
             calendar.set(Calendar.MONTH, 6)
 
             lint().files(
@@ -2452,8 +2453,46 @@ class GradleDetectorTest : AbstractCheckTest() {
                 .run()
                 .expect(
                     """
-                    build.gradle:5: Error: Google Play will soon require that apps target API level 26 or higher. This will be required for new apps in August 2018, and for updates to existing apps in November 2018. [ExpiringTargetSdkVersion]
+                    build.gradle:5: Error: Google Play requires that apps target API level 28 or higher.
+                     [ExpiredTargetSdkVersion]
                             targetSdkVersion 17
+                            ~~~~~~~~~~~~~~~~~~~
+                    1 errors, 0 warnings
+                    """
+                )
+        } finally {
+            GradleDetector.calendar = null
+        }
+    }
+
+    fun testExpiring2() {
+        // Already meeting last year's requirement but not this year's requirement
+        try {
+            val calendar = Calendar.getInstance()
+            GradleDetector.calendar = calendar
+            calendar.set(Calendar.YEAR, 2020)
+            calendar.set(Calendar.MONTH, 6)
+
+            lint().files(
+                gradle(
+                    "" +
+                        "apply plugin: 'com.android.application'\n" +
+                        "\n" +
+                        "android {\n" +
+                        "    defaultConfig {\n" +
+                        "        targetSdkVersion 28\n" +
+                        "        targetSdkVersion 29 // OK\n" +
+                        "    }\n" +
+                        "}\n"
+                )
+            )
+                .issues(EXPIRED_TARGET_SDK_VERSION, EXPIRING_TARGET_SDK_VERSION)
+                .sdkHome(mockSupportLibraryInstallation)
+                .run()
+                .expect(
+                    """
+                    build.gradle:5: Error: Google Play will soon require that apps target API level 29 or higher. This will be required for new apps in August 2020, and for updates to existing apps in November 2020. [ExpiringTargetSdkVersion]
+                            targetSdkVersion 28
                             ~~~~~~~~~~~~~~~~~~~
                     1 errors, 0 warnings
                     """
@@ -2467,7 +2506,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         try {
             val calendar = Calendar.getInstance()
             GradleDetector.calendar = calendar
-            calendar.set(Calendar.YEAR, 2018)
+            calendar.set(Calendar.YEAR, 2020)
             calendar.set(Calendar.MONTH, 10)
 
             lint().files(
@@ -2487,7 +2526,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 .run()
                 .expect(
                     """
-                    build.gradle:5: Error: Google Play requires that apps target API level 26 or higher.
+                    build.gradle:5: Error: Google Play requires that apps target API level 29 or higher.
                      [ExpiredTargetSdkVersion]
                             targetSdkVersion 17
                             ~~~~~~~~~~~~~~~~~~~

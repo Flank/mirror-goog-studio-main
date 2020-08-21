@@ -32,6 +32,7 @@ import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.SdkVersionInfo
 import com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API
 import com.android.tools.lint.checks.ManifestDetector.TARGET_NEWER
+import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
@@ -199,15 +200,42 @@ open class GradleDetector : Detector(), GradleScanner {
                 val version = getSdkVersion(value)
                 if (version > 0 && version < context.client.highestKnownApiLevel) {
                     var warned = false
-                    if (version <= 25) {
+                    if (version < 29) {
                         val now = calendar ?: Calendar.getInstance()
                         val year = now.get(Calendar.YEAR)
                         val month = now.get(Calendar.MONTH)
 
-                        // After November 1st 2018, the apps are required to use 26 or higher
-                        if (year > 2018 || month >= 10) {
-                            val message =
-                                "Google Play requires that apps target API level 26 or higher.\n"
+                        // After November 1st 2020, the apps are required to use 29 or higher
+                        // (month is zero-based)
+                        // https://developer.android.com/distribute/play-policies
+                        val required: Int
+                        val issue: Issue
+                        if (year > 2020 || month >= 10) {
+                            required = 29
+                            issue = EXPIRED_TARGET_SDK_VERSION
+                        } else if (version < 28 && year > 2018) {
+                            required = 28
+                            issue = EXPIRED_TARGET_SDK_VERSION
+                        } else if (year == 2020) {
+                            // Meets last year's requirement but not yet the upcoming one.
+                            // Start warning 6 months in advance.
+                            // (Check for 2020 here: no, we don't have a time machine, but let's
+                            // allow developers to go back in time.)
+                            required = 29
+                            issue = EXPIRING_TARGET_SDK_VERSION
+                        } else {
+                            required = -1
+                            issue = IssueRegistry.LINT_ERROR
+                        }
+                        if (required != -1) {
+                            val message = if (issue == EXPIRED_TARGET_SDK_VERSION)
+                                "Google Play requires that apps target API level $required or higher.\n"
+                            else
+                                "Google Play will soon require that apps target API " +
+                                    "level 29 or higher. This will be required for new apps " +
+                                    "in August 2020, and for updates to existing apps in " +
+                                    "November 2020."
+
                             val highest = context.client.highestKnownApiLevel
                             val label = "Update targetSdkVersion to $highest"
                             val fix = fix().name(label)
@@ -217,40 +245,14 @@ open class GradleDetector : Detector(), GradleScanner {
                                 .build()
 
                             // Don't report if already suppressed with EXPIRING
-
-                            val alreadySuppressed = context.containsCommentSuppress() &&
-                                context.isSuppressedWithComment(
-                                    valueCookie,
-                                    EXPIRING_TARGET_SDK_VERSION
-                                )
+                            val alreadySuppressed =
+                                issue != EXPIRING_TARGET_SDK_VERSION &&
+                                    context.containsCommentSuppress() &&
+                                    context.isSuppressedWithComment(valueCookie, issue)
 
                             if (!alreadySuppressed) {
-                                report(
-                                    context,
-                                    valueCookie,
-                                    EXPIRED_TARGET_SDK_VERSION,
-                                    message,
-                                    fix
-                                )
+                                report(context, valueCookie, issue, message, fix)
                             }
-                            warned = true
-                        } else if (month >= 4 && year == 2018) {
-                            // Start warning about this earlier - in May.
-                            // (Check for 2018 here: no, we don't have a time machine, but let's
-                            // allow developers to go back in time.)
-                            val message = "" +
-                                "Google Play will soon require that apps target API " +
-                                "level 26 or higher. This will be required for new apps " +
-                                "in August 2018, and for updates to existing apps in " +
-                                "November 2018."
-                            val highest = context.client.highestKnownApiLevel
-                            val label = "Update targetSdkVersion to $highest"
-                            val fix = fix().name(label)
-                                .replace()
-                                .all()
-                                .with(highest.toString())
-                                .build()
-                            report(context, valueCookie, EXPIRING_TARGET_SDK_VERSION, message, fix)
                             warned = true
                         }
                     }
