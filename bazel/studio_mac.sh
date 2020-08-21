@@ -6,6 +6,11 @@ readonly out_dir="$1"
 readonly dist_dir="$2"
 readonly build_number="$3"
 
+if [[ $build_number =~ ^[0-9]+$ ]];
+then
+  IS_POST_SUBMIT=true
+fi
+
 readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
 
@@ -52,4 +57,12 @@ if [[ -d "${dist_dir}" ]]; then
     -testlogs "${dist_dir}/logs/junit"
 fi
 
-exit $bazel_status
+BAZEL_EXITCODE_TEST_FAILURES=3
+
+# For post-submit builds, if the tests fail we still want to report success
+# otherwise ATP will think the build failed and there are no tests. b/152755167
+if [[ $IS_POST_SUBMIT && $bazel_status == $BAZEL_EXITCODE_TEST_FAILURES ]]; then
+  exit 0
+else
+  exit $bazel_status
+fi

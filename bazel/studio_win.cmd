@@ -7,6 +7,13 @@ set OUTDIR=%1
 set DISTDIR=%2
 set BUILDNUMBER=%3
 
+@REM It is a post-submit build if the build number does not start with "P"
+IF "%BUILDNUMBER:~0,1%"=="P" (
+  SET /A IS_POST_SUBMIT=0
+) ELSE (
+  SET /A IS_POST_SUBMIT=1
+)
+
 set TESTTAGFILTERS=-no_windows,-no_test_windows,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate
 
 @rem The current directory the executing script is in.
@@ -93,7 +100,15 @@ CALL %SCRIPTDIR%bazel.cmd shutdown
 @rem execution, and any open processes will prevent this removal on windows.
 CALL %BASEDIR%\tools\vendor\adt_infra_internal\build\scripts\slave\kill-processes.cmd %BASEDIR%
 @echo studio_win.cmd time: %time%
-EXIT /B %exitcode%
+
+SET /A BAZEL_EXITCODE_TEST_FAILURES=3
+
+IF %IS_POST_SUBMIT% EQU 1 (
+  IF %EXITCODE% EQU %BAZEL_EXITCODE_TEST_FAILURES% (
+    EXIT /B 0
+  )
+)
+EXIT /B %EXITCODE%
 
 @rem HELPER FUNCTIONS
 :NORMALIZE_PATH
