@@ -735,7 +735,7 @@ class UastTest : TestCase() {
                         try {
                             canThrow()
                         }
-                        catch (e) {
+                        catch (@java.lang.SuppressWarnings(null = "Something") var t: java.lang.Throwable) {
                         }
                     }
                     public fun canThrow() : void {
