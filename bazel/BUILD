@@ -398,6 +398,10 @@ py_binary(
 py_test(
     name = "status_reader_test",
     srcs = ["status_reader_test.py"],
+    tags = [
+        "no_mac",
+        "no_windows",
+    ],
     visibility = ["//visibility:public"],
     deps = [":status_reader"],
 )
