@@ -227,14 +227,6 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
         return javaContext.getLocation(cookie as UElement)
     }
 
-    override fun getPropertyKeyCookie(cookie: Any): Any {
-        return cookie
-    }
-
-    override fun getPropertyPairCookie(cookie: Any): Any {
-        return cookie
-    }
-
     override fun getStartOffset(context: GradleContext, cookie: Any): Int {
         val start = javaContext.getLocation(cookie as UElement).start
         return start?.offset ?: -1

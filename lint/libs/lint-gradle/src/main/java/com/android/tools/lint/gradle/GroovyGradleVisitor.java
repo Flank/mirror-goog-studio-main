@@ -337,16 +337,4 @@ public class GroovyGradleVisitor extends GradleVisitor {
                 new DefaultPosition(fromLine, fromColumn, offsets.getFirst()),
                 new DefaultPosition(toLine, toColumn, offsets.getSecond()));
     }
-
-    @NonNull
-    @Override
-    public Object getPropertyKeyCookie(@NonNull Object cookie) {
-        return cookie;
-    }
-
-    @NonNull
-    @Override
-    public Object getPropertyPairCookie(@NonNull Object cookie) {
-        return cookie;
-    }
 }
