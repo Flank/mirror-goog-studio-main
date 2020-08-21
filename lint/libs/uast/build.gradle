@@ -1,4 +1,5 @@
-apply plugin: 'java'
+apply plugin: 'com.android.tools.java'
+apply plugin: 'com.android.tools.publish'
 
 group = 'com.android.tools.external.org-jetbrains'
 archivesBaseName = 'uast'
@@ -17,9 +18,6 @@ prebuiltJars.forEach {
 
 project.ext.pomName = 'Unified AST'
 project.ext.pomDesc = 'Unified AST'
-
-apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 
 tasks.getByName("sourcesJar") {
     from zipTree("../../../../../prebuilts/tools/common/lint-psi/uast/uast-common-sources.jar")

@@ -1,5 +1,5 @@
 apply plugin: 'application'
-apply plugin: 'java'
+apply plugin: 'com.android.tools.java-library'
 
 mainClassName = "com.android.apigenerator.Main"
 applicationDefaultJvmArgs = ["-ea", "-Xms1048m", "-Xmx2048m"]

@@ -1,6 +1,6 @@
-apply plugin: 'java'
+apply plugin: 'com.android.tools.java-library'
+apply plugin: 'com.android.tools.publish'
 apply plugin: 'jacoco-tools-base'
-apply plugin: 'clone-artifacts'
 
 dependencies {
     compile project(':base:ddmlib')
@@ -14,7 +14,3 @@ version = rootProject.ext.buildVersion
 
 project.ext.pomName = 'Android Builder Test API library'
 project.ext.pomDesc = 'API for the Test extension point in the Builder library.'
-
-apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/javadoc.gradle"
-

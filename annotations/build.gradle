@@ -1,4 +1,5 @@
-apply plugin: 'java'
+apply plugin: 'com.android.tools.java-library'
+apply plugin: 'com.android.tools.publish'
 apply plugin: 'sdk-java-lib'
 
 sourceCompatibility = JavaVersion.VERSION_1_6
@@ -10,6 +11,3 @@ version = rootProject.ext.baseVersion
 
 project.ext.pomName = 'Android Tools Annotations library'
 project.ext.pomDesc = 'annotations used throughout the Android tools libraries.'
-
-apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/javadoc.gradle"

@@ -1,4 +1,4 @@
-apply plugin: 'java-library'
+apply plugin: 'com.android.tools.java-library'
 apply plugin: 'jacoco-tools-base'
 
 dependencies {
@@ -10,19 +10,4 @@ dependencies {
     testCompile libs.junit
     testCompile libs.apache_commons_io
     testCompile libs.mockito_core
-}
-
-
-// Export the sources jar.
-configurations {
-    sourcesOnly
-}
-
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-artifacts {
-    sourcesOnly sourcesJar 
 }

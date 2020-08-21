@@ -9,13 +9,3 @@ sdk {
     }
 }
 
-subprojects { Project project ->
-    // only configure leaf projects.
-    if (!project.getSubprojects().isEmpty()) return
-
-    // exclude aar projects.
-    if ("fdr".equals(project.name)) return
-
-    apply from: "$rootDir/buildSrc/base/baseJava.gradle"
-}
-

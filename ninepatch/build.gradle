@@ -1,4 +1,5 @@
-apply plugin: 'java'
+apply plugin: 'com.android.tools.java-library'
+apply plugin: 'com.android.tools.publish'
 apply plugin: 'jacoco-tools-base'
 
 group = 'com.android.tools'
@@ -21,6 +22,3 @@ jar {
 
 project.ext.pomName = 'NinePatch'
 project.ext.pomDesc = 'draws a bitmap in nine or more sections'
-
-apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/javadoc.gradle"

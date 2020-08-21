@@ -1,4 +1,5 @@
-apply plugin: 'java'
+apply plugin: 'com.android.tools.java-library'
+apply plugin: 'com.android.tools.publish'
 apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
 apply plugin: 'com.google.protobuf'
@@ -32,6 +33,3 @@ protobuf {
 
 project.ext.pomName = 'Android Tools ddmlib'
 project.ext.pomDesc = 'Library providing APIs to talk to Android devices'
-
-apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/javadoc.gradle"
