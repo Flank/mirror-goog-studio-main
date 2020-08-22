@@ -150,7 +150,8 @@ public class ApkPreInstaller {
 
             pushRequestBuilder.addAllPatchInstructions(patches);
 
-            boolean inherit = ApkInstaller.canInherit(localApks.size(), diffs);
+            boolean inherit =
+                    ApkInstaller.canInherit(localApks.size(), diffs, Deployer.InstallMode.DELTA);
             pushRequestBuilder.setInherit(inherit);
             pushRequestBuilder.setPackageName(packageName);
 
