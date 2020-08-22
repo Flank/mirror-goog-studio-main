@@ -288,8 +288,10 @@ public class ApkInstaller {
         }
 
         // We use inheritance if there are more than one apks, and if the manifests
-        // have not changed
-        boolean inherit = canInherit(apks.size(), new ApkDiffer().diff(dump.apks, localApks));
+        // have not changed.
+        boolean inherit =
+                canInherit(apks.size(), new ApkDiffer().diff(dump.apks, localApks), installMode);
+
         builder.setInherit(inherit);
         builder.addAllPatchInstructions(patches);
         builder.setPackageName(packageName);
@@ -330,7 +332,7 @@ public class ApkInstaller {
         return DeltaInstallStatus.SUCCESS;
     }
 
-    public static boolean canInherit(int apkCount, List<FileDiff> diff) {
+    public static boolean canInherit(int apkCount, List<FileDiff> diff, Deployer.InstallMode mode) {
         boolean inherit = apkCount > 1;
         if (inherit) {
             for (FileDiff fileDiff : diff) {
@@ -339,6 +341,15 @@ public class ApkInstaller {
                     inherit = false;
                 }
             }
+        }
+
+        // If all APKs are unchanged and we use DELTA_NO_SKIP to force an install,
+        // we get an error from PM.
+        // We enable inherit just to get around this specific case. However, a much better solution
+        // is find something that does not require DELTA_NO_SKIP.
+        // is find something that does not require DELTA_NO_SKIP.
+        if (mode == Deployer.InstallMode.DELTA_NO_SKIP) {
+            inherit = inherit && !diff.isEmpty();
         }
         return inherit;
     }
