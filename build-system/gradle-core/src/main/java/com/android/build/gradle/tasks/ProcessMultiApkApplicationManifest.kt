@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.tasks.manifest.mergeManifestsForApplication
+import com.android.build.gradle.internal.tasks.manifest.mergeManifests
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.manifmerger.ManifestMerger2
 import com.android.utils.FileUtils
@@ -128,7 +128,7 @@ abstract class ProcessMultiApkApplicationManifest: ManifestProcessorTask() {
                 return mergedManifestOutputFile
             }
         }
-        mergeManifestsForApplication(
+        mergeManifests(
             mainMergedManifest.get().asFile,
             if (compatibleScreensManifestFilePath != null)
                 listOf(File(compatibleScreensManifestFilePath))

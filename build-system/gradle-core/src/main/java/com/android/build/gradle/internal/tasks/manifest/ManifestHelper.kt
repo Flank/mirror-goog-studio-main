@@ -31,7 +31,7 @@ import java.io.File
 import java.io.IOException
 
 /** Invoke the Manifest Merger version 2.  */
-fun mergeManifestsForApplication(
+fun mergeManifests(
     mainManifest: File,
     manifestOverlays: List<File>,
     dependencies: List<ManifestProvider>,
