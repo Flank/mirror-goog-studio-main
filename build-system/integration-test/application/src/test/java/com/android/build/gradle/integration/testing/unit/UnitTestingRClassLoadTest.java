@@ -152,22 +152,4 @@ public class UnitTestingRClassLoadTest {
             assertThat(myStringField.getInt(null)).isNotEqualTo(0);
         }
     }
-
-    /** Smoke tests for the classpath build service. */
-    @Test
-    public void checkLoadRClassInTestWithBuildService() throws Exception {
-        GradleBuildResult result =
-                project.executor()
-                        .with(BooleanOption.ENABLE_SYMBOL_TABLE_CACHING, true)
-                        .run(":c:test");
-        File xmlResults =
-                project.file(
-                        "c/build/test-results/testDebugUnitTest/"
-                                + "TEST-com.example.c.test.MyTest.xml");
-        assertThat(xmlResults).isFile();
-
-        assertThat(result.getStdout())
-                .contains(
-                        "SymbolTableBuildService: cache miss - loaded table 'com.example.a' from disk");
-    }
 }
