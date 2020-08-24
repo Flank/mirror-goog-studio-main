@@ -27,11 +27,6 @@
 
 namespace deploy {
 
-const int kRwFileMode =
-    S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH;
-const int kRxFileMode =
-    S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
-
 // 4 Arguments:
 //   Package Name
 //   Previous OID

@@ -554,6 +554,7 @@ message InstallServerResponse {
     SERVER_STARTED = 1;
     SERVER_EXITED = 2;
     REQUEST_COMPLETED = 3;
+    ERROR = 4;
   }
 
   Status status = 1;
