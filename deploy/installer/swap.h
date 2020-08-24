@@ -74,11 +74,6 @@ class SwapCommand : public Command {
   // src_path to the destination specified by dst_path.
   bool CopyBinaries(const std::string& src_path,
                     const std::string& dst_path) const noexcept;
-
-  // Given an unsigned character array of length array_len, writes it out as a
-  // file to the path specified by dst_path.
-  bool WriteArrayToDisk(const unsigned char* array, uint64_t array_len,
-                        const std::string& dst_path) const noexcept;
 };
 
 }  // namespace deploy

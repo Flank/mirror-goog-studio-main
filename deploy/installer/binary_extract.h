@@ -24,6 +24,8 @@ namespace deploy {
 bool ExtractBinaries(const std::string& target_dir,
                      const std::vector<std::string>& files_to_extract);
 
+// Given an unsigned character array of length array_len, writes it out as a
+// file to the path specified by dst_path.
 bool WriteArrayToDisk(const unsigned char* array, uint64_t array_len,
                       const std::string& dst_path);
 }  // namespace deploy
