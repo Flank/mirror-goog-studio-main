@@ -30,7 +30,7 @@ import java.util.Map;
 
 /** Services for writing the view hierarchy into a ComponentTreeEvent protobuf. */
 class ComponentTree {
-    private static final String COMPOSE_VIEW = "androidx.ui.core.AndroidComposeView";
+    private static final String COMPOSE_VIEW = "androidx.compose.ui.platform.AndroidComposeView";
     private final StringTable mStringTable = new StringTable();
     private final ResourceConfiguration mConfiguration = new ResourceConfiguration(mStringTable);
     private final boolean mShowComposeNodes;

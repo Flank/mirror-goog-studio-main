@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package androidx.ui.core
+package androidx.compose.ui.platform
 
 import android.content.Context
 import android.view.ViewGroup

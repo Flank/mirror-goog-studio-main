@@ -20,7 +20,7 @@ import android.content.res.Resources
 import android.graphics.Color
 import android.view.View
 import android.view.inspector.WindowInspector
-import androidx.ui.core.AndroidComposeView
+import androidx.compose.ui.platform.AndroidComposeView
 import androidx.ui.tooling.inspector.InspectorNode
 import androidx.ui.tooling.inspector.NodeParameter
 import androidx.ui.tooling.inspector.ParameterType

@@ -37,7 +37,7 @@ import android.widget.LinearLayout;
 import android.widget.RootLinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
-import androidx.ui.core.AndroidComposeView;
+import androidx.compose.ui.platform.AndroidComposeView;
 
 public class StandardView {
     private static final int LAYOUT = 1;
