@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantInputModel;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.SigningConfig;
+import com.android.utils.StdLogger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import groovy.util.Eval;
@@ -372,7 +373,8 @@ public class AppPluginInternalTest {
         assertThat(file.getAbsolutePath())
                 .isEqualTo(
                         GradleKeystoreHelper.getDefaultDebugKeystoreLocation(
-                                        new DirectGradleEnvironmentProvider())
+                                        new DirectGradleEnvironmentProvider(),
+                                        new StdLogger(StdLogger.Level.VERBOSE))
                                 .getAbsolutePath());
 
         variant = VariantCheckers.findComponent(components, "flavor1Staging");
@@ -393,7 +395,8 @@ public class AppPluginInternalTest {
         assertThat(file1.getAbsolutePath())
                 .isEqualTo(
                         GradleKeystoreHelper.getDefaultDebugKeystoreLocation(
-                                        new DirectGradleEnvironmentProvider())
+                                        new DirectGradleEnvironmentProvider(),
+                                        new StdLogger(StdLogger.Level.VERBOSE))
                                 .getAbsolutePath());
 
         variant = VariantCheckers.findComponent(components, "flavor2Staging");

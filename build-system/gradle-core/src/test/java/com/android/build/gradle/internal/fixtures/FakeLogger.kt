@@ -21,295 +21,276 @@ import org.gradle.api.logging.Logger
 import org.slf4j.Marker
 
 open class FakeLogger: Logger {
-    override fun debug(p0: String?, p1: Any?) {
-        // ignore
+
+    val debugs = mutableListOf<String>()
+    val warnings = mutableListOf<String>()
+    val errors = mutableListOf<String>()
+    val lifeCycles = mutableListOf<String>()
+    val quiets = mutableListOf<String>()
+    val infos = mutableListOf<String>()
+    val traces = mutableListOf<String>()
+
+    override fun debug(format: String, arg: Any) {
+        debugs.add(String.format(format, arg))
     }
 
-    override fun warn(p0: String?, p1: Any?) {
-        TODO("not implemented")
+    override fun warn(format: String, arg: Any) {
+        warnings.add(String.format(format, arg))
     }
 
-    override fun warn(p0: String?, vararg p1: Any?) {
-        TODO("not implemented")
+    override fun warn(format: String, vararg args: Any) {
+        warnings.add(String.format(format, *args))
     }
 
-    override fun warn(p0: String?, p1: Any?, p2: Any?) {
-        TODO("not implemented")
+    override fun warn(format: String, arg1: Any, arg2: Any) {
+        warnings.add(String.format(format, arg1, arg2))
     }
 
-    override fun warn(p0: String?, p1: Throwable?) {
-        TODO("not implemented")
+    override fun warn(message: String, t: Throwable?) {
+        warnings.add(message)
     }
 
-    override fun warn(p0: Marker?, p1: String?) {
-        TODO("not implemented")
+    override fun warn(marker: Marker, msg: String) {
+        warnings.add(msg)
     }
 
-    override fun warn(p0: Marker?, p1: String?, p2: Any?) {
-        TODO("not implemented")
+    override fun warn(marker: Marker, format: String, arg: Any) {
+        warnings.add(String.format(format, arg))
     }
 
-    override fun warn(p0: Marker?, p1: String?, p2: Any?, p3: Any?) {
-        TODO("not implemented")
+    override fun warn(marker: Marker, format: String, arg1: Any, arg2: Any) {
+        warnings.add(String.format(format, arg1, arg2))
     }
 
-    override fun warn(p0: Marker?, p1: String?, vararg p2: Any?) {
-        TODO("not implemented")
+    override fun warn(marker: Marker, format: String, vararg args: Any) {
+        warnings.add(String.format(format, *args))
     }
 
-    override fun warn(p0: Marker?, p1: String?, p2: Throwable?) {
-        TODO("not implemented")
+    override fun warn(marker: Marker, message: String, t: Throwable) {
+        warnings.add(message)
     }
 
-    override fun isQuietEnabled(): Boolean {
-        TODO("not implemented")
+    override fun isQuietEnabled(): Boolean = true
+
+    override fun getName(): String = "fakelogger"
+
+    override fun info(format: String, vararg args: Any) {
+        infos.add(String.format(format, *args))
     }
 
-    override fun getName(): String {
-        TODO("not implemented")
+    override fun info(message: String) {
+        infos.add(message)
     }
 
-    override fun info(p0: String?, vararg p1: Any?) {
-        TODO("not implemented")
+    override fun info(format: String, arg: Any) {
+        infos.add(String.format(format, arg))
     }
 
-    override fun info(p0: String?) {
-        TODO("not implemented")
+    override fun info(format: String, arg1: Any, arg2: Any) {
+        infos.add(String.format(format, arg1, arg2))
     }
 
-    override fun info(p0: String?, p1: Any?) {
-        TODO("not implemented")
+    override fun info(message: String, t: Throwable) {
+        infos.add(message)
     }
 
-    override fun info(p0: String?, p1: Any?, p2: Any?) {
-        TODO("not implemented")
+    override fun info(marker: Marker, message: String) {
+        infos.add(message)
     }
 
-    override fun info(p0: String?, p1: Throwable?) {
-        TODO("not implemented")
+    override fun info(marker: Marker, format: String, arg: Any) {
+        infos.add(String.format(format, arg))
     }
 
-    override fun info(p0: Marker?, p1: String?) {
-        TODO("not implemented")
+    override fun info(marker: Marker, format: String, arg1: Any, arg2: Any) {
+        infos.add(String.format(format, arg1, arg2))
     }
 
-    override fun info(p0: Marker?, p1: String?, p2: Any?) {
-        TODO("not implemented")
+    override fun info(marker: Marker, format: String, vararg args: Any) {
+        infos.add(String.format(format, *args))
     }
 
-    override fun info(p0: Marker?, p1: String?, p2: Any?, p3: Any?) {
-        TODO("not implemented")
+    override fun info(marker: Marker, message: String, t: Throwable) {
+        infos.add(message)
     }
 
-    override fun info(p0: Marker?, p1: String?, vararg p2: Any?) {
-        TODO("not implemented")
+    override fun isErrorEnabled(): Boolean = true
+
+    override fun isErrorEnabled(marker: Marker): Boolean = true
+
+    override fun error(message: String) {
+        errors.add(message)
     }
 
-    override fun info(p0: Marker?, p1: String?, p2: Throwable?) {
-        TODO("not implemented")
+    override fun error(format: String, arg: Any) {
+        errors.add(String.format(format, arg))
     }
 
-    override fun isErrorEnabled(): Boolean {
-        TODO("not implemented")
+    override fun error(format: String, arg1: Any, arg2: Any) {
+        errors.add(String.format(format, arg1, arg2))
     }
 
-    override fun isErrorEnabled(p0: Marker?): Boolean {
-        TODO("not implemented")
+    override fun error(format: String, vararg args: Any) {
+        errors.add(String.format(format, *args))
     }
 
-    override fun error(p0: String?) {
-        TODO("not implemented")
+    override fun error(message: String, t: Throwable?) {
+        errors.add(message)
     }
 
-    override fun error(p0: String?, p1: Any?) {
-        TODO("not implemented")
+    override fun error(marker: Marker, message: String) {
+        errors.add(message)
     }
 
-    override fun error(p0: String?, p1: Any?, p2: Any?) {
-        TODO("not implemented")
+    override fun error(marker: Marker, format: String, arg: Any) {
+        errors.add(String.format(format, arg))
     }
 
-    override fun error(p0: String?, vararg p1: Any?) {
-        TODO("not implemented")
+    override fun error(marker: Marker, format: String, arg1: Any, arg2: Any) {
+        errors.add(String.format(format, arg1, arg2))
     }
 
-    override fun error(p0: String?, p1: Throwable?) {
-        TODO("not implemented")
+    override fun error(marker: Marker, format: String, vararg args: Any) {
+        errors.add(String.format(format, *args))
     }
 
-    override fun error(p0: Marker?, p1: String?) {
-        TODO("not implemented")
+    override fun error(marker: Marker, message: String, t: Throwable) {
+        errors.add(message)
     }
 
-    override fun error(p0: Marker?, p1: String?, p2: Any?) {
-        TODO("not implemented")
-    }
+    override fun isDebugEnabled(): Boolean = true
 
-    override fun error(p0: Marker?, p1: String?, p2: Any?, p3: Any?) {
-        TODO("not implemented")
-    }
-
-    override fun error(p0: Marker?, p1: String?, vararg p2: Any?) {
-        TODO("not implemented")
-    }
-
-    override fun error(p0: Marker?, p1: String?, p2: Throwable?) {
-        TODO("not implemented")
-    }
-
-    override fun isDebugEnabled(): Boolean {
-        TODO("not implemented")
-    }
-
-    override fun isDebugEnabled(p0: Marker?): Boolean {
-        TODO("not implemented")
-    }
+    override fun isDebugEnabled(marker: Marker): Boolean = true
 
     override fun log(p0: LogLevel?, p1: String?) {
         TODO("not implemented")
     }
 
-    override fun log(p0: LogLevel?, p1: String?, vararg p2: Any?) {
+    override fun log(p0: LogLevel?, format: String, vararg args: Any) {
         TODO("not implemented")
     }
 
-    override fun log(p0: LogLevel?, p1: String?, p2: Throwable?) {
+    override fun log(p0: LogLevel?, message: String, t: Throwable) {
         TODO("not implemented")
     }
 
-    override fun debug(p0: String?, vararg p1: Any?) {
-        TODO("not implemented")
+    override fun debug(format: String, vararg args: Any) {
+        debugs.add(String.format(format, *args))
     }
 
-    override fun debug(p0: String?) {
-        TODO("not implemented")
+    override fun debug(message: String) {
+        debugs.add(message)
     }
 
-    override fun debug(p0: String?, p1: Any?, p2: Any?) {
-        TODO("not implemented")
+    override fun debug(format: String, arg1: Any, arg2: Any) {
+        debugs.add(String.format(format, arg1, arg2))
     }
 
-    override fun debug(p0: String?, p1: Throwable?) {
-        TODO("not implemented")
+    override fun debug(message: String, t: Throwable) {
+        debugs.add(message)
     }
 
-    override fun debug(p0: Marker?, p1: String?) {
-        TODO("not implemented")
+    override fun debug(marker: Marker, message: String) {
+        debugs.add(message)
     }
 
-    override fun debug(p0: Marker?, p1: String?, p2: Any?) {
-        TODO("not implemented")
+    override fun debug(marker: Marker, format: String, arg: Any) {
+        debugs.add(String.format(format, arg))
     }
 
-    override fun debug(p0: Marker?, p1: String?, p2: Any?, p3: Any?) {
-        TODO("not implemented")
+    override fun debug(marker: Marker, format: String, arg1: Any, arg2: Any) {
+        debugs.add(String.format(format, arg1, arg2))
     }
 
-    override fun debug(p0: Marker?, p1: String?, vararg p2: Any?) {
-        TODO("not implemented")
+    override fun debug(marker: Marker, format: String, vararg args: Any) {
+        debugs.add(String.format(format, *args))
     }
 
-    override fun debug(p0: Marker?, p1: String?, p2: Throwable?) {
-        TODO("not implemented")
+    override fun debug(marker: Marker, message: String, t: Throwable) {
+        debugs.add(message)
     }
 
-    override fun isEnabled(p0: LogLevel?): Boolean {
-        TODO("not implemented")
+    override fun isEnabled(level: LogLevel?): Boolean = true
+
+    override fun lifecycle(message: String) {
+        lifeCycles.add(message)
     }
 
-    override fun lifecycle(p0: String?) {
-        TODO("not implemented")
+    override fun lifecycle(format: String, vararg args: Any) {
+        lifeCycles.add(String.format(format, *args))
     }
 
-    override fun lifecycle(p0: String?, vararg p1: Any?) {
-        TODO("not implemented")
+    override fun lifecycle(message: String, t: Throwable) {
+        lifeCycles.add(message)
     }
 
-    override fun lifecycle(p0: String?, p1: Throwable?) {
-        TODO("not implemented")
+    override fun quiet(message: String) {
+        quiets.add(message)
     }
 
-    override fun quiet(p0: String?) {
-        TODO("not implemented")
+    override fun quiet(format: String, vararg args: Any) {
+        quiets.add(String.format(format, *args))
     }
 
-    override fun quiet(p0: String?, vararg p1: Any?) {
-        TODO("not implemented")
+    override fun quiet(message: String, t: Throwable) {
+        quiets.add(message)
     }
 
-    override fun quiet(p0: String?, p1: Throwable?) {
-        TODO("not implemented")
+    override fun isLifecycleEnabled(): Boolean = true
+
+    override fun isInfoEnabled(): Boolean = true
+
+    override fun isInfoEnabled(marker: Marker): Boolean = true
+
+    override fun trace(message: String) {
+        traces.add(message)
     }
 
-    override fun isLifecycleEnabled(): Boolean {
-        TODO("not implemented")
+    override fun trace(format: String, arg: Any) {
+        traces.add(String.format(format, arg))
     }
 
-    override fun isInfoEnabled(): Boolean {
-        TODO("not implemented")
+    override fun trace(format: String, arg1: Any, arg2: Any) {
+        traces.add(String.format(format, arg1, arg2))
     }
 
-    override fun isInfoEnabled(p0: Marker?): Boolean {
-        TODO("not implemented")
+    override fun trace(format: String, vararg args: Any) {
+        traces.add(String.format(format, *args))
     }
 
-    override fun trace(p0: String?) {
-        TODO("not implemented")
+    override fun trace(message: String, t: Throwable) {
+        traces.add(message)
     }
 
-    override fun trace(p0: String?, p1: Any?) {
-        TODO("not implemented")
+    override fun trace(marker: Marker, message: String) {
+        traces.add(message)
     }
 
-    override fun trace(p0: String?, p1: Any?, p2: Any?) {
-        TODO("not implemented")
+    override fun trace(marker: Marker, format: String, arg: Any) {
+        traces.add(String.format(format, arg))
     }
 
-    override fun trace(p0: String?, vararg p1: Any?) {
-        TODO("not implemented")
+    override fun trace(marker: Marker, format: String, arg1: Any, arg2: Any) {
+        traces.add(String.format(format, arg1, arg2))
     }
 
-    override fun trace(p0: String?, p1: Throwable?) {
-        TODO("not implemented")
+    override fun trace(marker: Marker, format: String, vararg args: Any) {
+        traces.add(String.format(format, *args))
     }
 
-    override fun trace(p0: Marker?, p1: String?) {
-        TODO("not implemented")
+    override fun trace(marker: Marker, message: String, t: Throwable) {
+        traces.add(message)
     }
 
-    override fun trace(p0: Marker?, p1: String?, p2: Any?) {
-        TODO("not implemented")
-    }
+    override fun isWarnEnabled(): Boolean = true
 
-    override fun trace(p0: Marker?, p1: String?, p2: Any?, p3: Any?) {
-        TODO("not implemented")
-    }
+    override fun isWarnEnabled(marker: Marker): Boolean = true
 
-    override fun trace(p0: Marker?, p1: String?, vararg p2: Any?) {
-        TODO("not implemented")
-    }
+    override fun isTraceEnabled(): Boolean = true
 
-    override fun trace(p0: Marker?, p1: String?, p2: Throwable?) {
-        TODO("not implemented")
-    }
+    override fun isTraceEnabled(marker: Marker): Boolean = true
 
-    override fun isWarnEnabled(): Boolean {
-        TODO("not implemented")
-    }
-
-    override fun isWarnEnabled(p0: Marker?): Boolean {
-        TODO("not implemented")
-    }
-
-    override fun isTraceEnabled(): Boolean {
-        TODO("not implemented")
-    }
-
-    override fun isTraceEnabled(p0: Marker?): Boolean {
-        TODO("not implemented")
-    }
-
-    override fun warn(p0: String?) {
-        TODO("not implemented")
+    override fun warn(message: String) {
+        traces.add(message)
     }
 }

@@ -23,6 +23,7 @@ import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.utils.EnvironmentProvider;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
+import com.android.utils.StdLogger;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.io.Closeables;
@@ -78,7 +79,8 @@ public final class KeystoreHelper {
      */
     @NonNull
     public static String defaultDebugKeystoreLocation() throws AndroidLocationException {
-        return defaultDebugKeystoreLocation(EnvironmentProvider.DIRECT);
+        return defaultDebugKeystoreLocation(
+                EnvironmentProvider.DIRECT, new StdLogger(StdLogger.Level.VERBOSE));
     }
 
     /**
@@ -89,10 +91,11 @@ public final class KeystoreHelper {
      */
     @NonNull
     public static String defaultDebugKeystoreLocation(
-            @NonNull EnvironmentProvider environmentProvider) throws AndroidLocationException {
+            @NonNull EnvironmentProvider environmentProvider, @NonNull ILogger logger)
+            throws AndroidLocationException {
         // this is guaranteed to either return a non null value (terminated with a platform
         // specific separator), or throw.
-        String folder = AndroidLocation.getFolder(environmentProvider);
+        String folder = AndroidLocation.getFolder(environmentProvider, logger);
         return folder + "debug.keystore";
     }
 

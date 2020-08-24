@@ -20,6 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.EnvironmentProvider;
 import com.android.utils.FileUtils;
+import com.android.utils.ILogger;
+import com.android.utils.StdLogger;
 import java.io.File;
 
 /**
@@ -80,7 +82,10 @@ public final class AndroidLocation {
         }
 
         @Nullable
-        public String validatePath(@NonNull EnvironmentProvider environmentProvider, boolean silent)
+        public String validatePath(
+                @NonNull EnvironmentProvider environmentProvider,
+                @NonNull ILogger logger,
+                boolean silent)
                 throws AndroidLocationException {
             String path;
             if (mIsSysProp) {
@@ -88,6 +93,7 @@ public final class AndroidLocation {
                         checkPath(
                                 environmentProvider,
                                 environmentProvider.getSystemProperty(mName),
+                                logger,
                                 silent);
                 if (path != null) {
                     return path;
@@ -99,6 +105,7 @@ public final class AndroidLocation {
                         checkPath(
                                 environmentProvider,
                                 environmentProvider.getEnvVariable(mName),
+                                logger,
                                 silent);
                 if (path != null) {
                     return path;
@@ -111,6 +118,7 @@ public final class AndroidLocation {
         private String checkPath(
                 @NonNull EnvironmentProvider environmentProvider,
                 @Nullable String path,
+                @NonNull ILogger logger,
                 boolean silent)
                 throws AndroidLocationException {
             if (path == null) {
@@ -129,11 +137,11 @@ public final class AndroidLocation {
             // We are using ANDROID_SDK_HOME
             if (!isSdkRootWithoutDotAndroid(file)) {
                 // FIXME b/162859043
-                System.out.println(
+                logger.warning(
                         "Using ANDROID_SDK_HOME for the location of the '.android' preferences location is deprecated, please use "
-                        + ANDROID_PREFS_ROOT
-                        + " instead.\n"
-                        + "Support for ANDROID_SDK_HOME will be removed in 6.0");
+                                + ANDROID_PREFS_ROOT
+                                + " instead.\n"
+                                + "Support for ANDROID_SDK_HOME will be removed in 6.0");
                 return path;
             }
             if (!silent) {
@@ -143,11 +151,18 @@ public final class AndroidLocation {
                                         + "This is the path of the preference folder expected by the Android tools.\n"
                                         + "It should NOT be set to the same as the root of your SDK.\n"
                                         + "To set a custom SDK Location, use ANDROID_SDK_ROOT.\n"
-                                        + "To set a custom location for '.android', use " + ANDROID_PREFS_ROOT+ ".\n"
+                                        + "To set a custom location for '.android', use "
+                                        + ANDROID_PREFS_ROOT
+                                        + ".\n"
                                         + "ANDROID_SDK_HOME is deprecated and will be removed in 6.0.\n"
                                         + "If this is not set we default to: %2$s",
                                 path,
-                                findValidPath(environmentProvider, TEST_TMPDIR, USER_HOME, HOME)));
+                                findValidPath(
+                                        environmentProvider,
+                                        logger,
+                                        TEST_TMPDIR,
+                                        USER_HOME,
+                                        HOME)));
             }
             return null;
         }
@@ -170,7 +185,7 @@ public final class AndroidLocation {
      * @throws AndroidLocationException
      */
     public static String getFolder() throws AndroidLocationException {
-        return getFolder(EnvironmentProvider.DIRECT);
+        return getFolder(EnvironmentProvider.DIRECT, new StdLogger(StdLogger.Level.VERBOSE));
     }
 
     /**
@@ -180,10 +195,11 @@ public final class AndroidLocation {
      * @return an OS specific path, terminated by a separator.
      * @throws AndroidLocationException if the location is not found
      */
-    public static String getFolder(@NonNull EnvironmentProvider environmentProvider)
+    public static String getFolder(
+            @NonNull EnvironmentProvider environmentProvider, @NonNull ILogger logger)
             throws AndroidLocationException {
         if (sPrefsLocation == null) {
-            sPrefsLocation = findHomeFolder(environmentProvider);
+            sPrefsLocation = findHomeFolder(environmentProvider, logger);
         }
 
         // make sure the folder exists!
@@ -221,7 +237,9 @@ public final class AndroidLocation {
     public static String getFolderWithoutWrites() {
         if (sPrefsLocation == null) {
             try {
-                sPrefsLocation = findHomeFolder(EnvironmentProvider.DIRECT);
+                sPrefsLocation =
+                        findHomeFolder(
+                                EnvironmentProvider.DIRECT, new StdLogger(StdLogger.Level.VERBOSE));
             }
             catch (AndroidLocationException e) {
                 return null;
@@ -238,7 +256,11 @@ public final class AndroidLocation {
     @NonNull
     public static String getAvdFolder() throws AndroidLocationException {
         if (sAvdLocation == null) {
-            String home = findValidPath(EnvironmentProvider.DIRECT, Global.ANDROID_AVD_HOME);
+            String home =
+                    findValidPath(
+                            EnvironmentProvider.DIRECT,
+                            new StdLogger(StdLogger.Level.VERBOSE),
+                            Global.ANDROID_AVD_HOME);
             if (home == null) {
                 home = getFolder() + FOLDER_AVD;
             }
@@ -252,14 +274,20 @@ public final class AndroidLocation {
 
     public static String getUserHomeFolder() throws AndroidLocationException {
         return findValidPath(
-                EnvironmentProvider.DIRECT, Global.TEST_TMPDIR, Global.USER_HOME, Global.HOME);
+                EnvironmentProvider.DIRECT,
+                new StdLogger(StdLogger.Level.VERBOSE),
+                Global.TEST_TMPDIR,
+                Global.USER_HOME,
+                Global.HOME);
     }
 
-    private static String findHomeFolder(EnvironmentProvider environmentProvider)
+    private static String findHomeFolder(
+            @NonNull EnvironmentProvider environmentProvider, @NonNull ILogger logger)
             throws AndroidLocationException {
         String home =
                 findValidPath(
                         environmentProvider,
+                        logger,
                         Global.ANDROID_PREFS_ROOT,
                         Global.ANDROID_SDK_HOME,
                         Global.TEST_TMPDIR,
@@ -294,10 +322,13 @@ public final class AndroidLocation {
      * @return the content of the first property/variable that is a valid directory.
      */
     @Nullable
-    private static String findValidPath(EnvironmentProvider environmentProvider, Global... vars)
+    private static String findValidPath(
+            @NonNull EnvironmentProvider environmentProvider,
+            @NonNull ILogger logger,
+            @NonNull Global... vars)
             throws AndroidLocationException {
         for (Global var : vars) {
-            String path = var.validatePath(environmentProvider, true);
+            String path = var.validatePath(environmentProvider, logger, true);
             if (path != null) {
                 return path;
             }

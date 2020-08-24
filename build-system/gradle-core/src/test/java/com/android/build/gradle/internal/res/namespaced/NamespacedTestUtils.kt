@@ -16,16 +16,9 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.build.gradle.internal.fixtures.FakeComponentIdentifier
-import com.android.build.gradle.internal.fixtures.FakeLogger
-import com.android.build.gradle.internal.fixtures.FakeResolvedComponentResult
-import com.android.build.gradle.internal.fixtures.FakeResolvedDependencyResult
 import com.android.ide.common.symbols.Symbol
 import com.android.resources.ResourceType
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableSet
-import org.gradle.api.artifacts.result.DependencyResult
-import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import java.io.File
 import javax.tools.ToolProvider
 
@@ -57,17 +50,4 @@ fun symbol(type: String, name: String, maybeDefinition: Boolean = false): Symbol
         return Symbol.attributeSymbol(name, 0, isMaybeDefinition = maybeDefinition)
     }
     return Symbol.normalSymbol(resType, name, 0)
-}
-
-class MockLogger : FakeLogger() {
-    val warnings = ArrayList<String>()
-    val infos = ArrayList<String>()
-
-    override fun warn(p0: String?) {
-        warnings.add(p0!!)
-    }
-
-    override fun info(p0: String?) {
-        infos.add(p0!!)
-    }
 }
