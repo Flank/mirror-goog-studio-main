@@ -29,7 +29,7 @@ namespace deploy {
 class Socket : public MessagePipeWrapper {
  public:
   Socket() : MessagePipeWrapper(-1) {}
-  virtual ~Socket() { Close(); }
+  virtual ~Socket();
 
   Socket(Socket&& other) : MessagePipeWrapper(std::move(other)) {}
 
@@ -57,6 +57,9 @@ class Socket : public MessagePipeWrapper {
  private:
   Socket(const Socket&) = delete;
   Socket& operator=(const Socket&) = delete;
+#ifdef __APPLE__
+  bool is_socket_server_ = false;
+#endif
 };
 }  // namespace deploy
 
