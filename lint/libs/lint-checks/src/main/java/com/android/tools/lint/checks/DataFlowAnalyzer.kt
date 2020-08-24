@@ -34,6 +34,7 @@ import org.jetbrains.uast.ULabeledExpression
 import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.ULocalVariable
 import org.jetbrains.uast.UPolyadicExpression
+import org.jetbrains.uast.UPostfixExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.UReturnExpression
@@ -45,6 +46,7 @@ import org.jetbrains.uast.UYieldExpression
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.getQualifiedParentOrThis
 import org.jetbrains.uast.java.JavaUIfExpression
+import org.jetbrains.uast.kotlin.KotlinPostfixOperators
 import org.jetbrains.uast.kotlin.KotlinUSwitchEntry
 import org.jetbrains.uast.kotlin.expressions.KotlinUElvisExpression
 import org.jetbrains.uast.tryResolve
@@ -212,6 +214,18 @@ abstract class DataFlowAnalyzer(
                 }
             }
         }
+        super.afterVisitVariable(node)
+    }
+
+    override fun afterVisitPostfixExpression(node: UPostfixExpression) {
+        if (node.operator == KotlinPostfixOperators.EXCLEXCL) {
+            val element = node.operand
+            if (instances.contains(element)) {
+                instances.add(node)
+            }
+        }
+
+        super.afterVisitPostfixExpression(node)
     }
 
     protected fun addVariableReference(node: UVariable) {
@@ -303,6 +317,7 @@ abstract class DataFlowAnalyzer(
 
     override fun afterVisitBinaryExpression(node: UBinaryExpression) {
         if (!node.isAssignment()) {
+            super.afterVisitBinaryExpression(node)
             return
         }
 
@@ -337,6 +352,7 @@ abstract class DataFlowAnalyzer(
                 references.remove(lhs)
             }
         }
+        super.afterVisitBinaryExpression(node)
     }
 
     override fun afterVisitReturnExpression(node: UReturnExpression) {
@@ -351,6 +367,7 @@ abstract class DataFlowAnalyzer(
                 }
             }
         }
+        super.afterVisitReturnExpression(node)
     }
 
     /**
