@@ -83,10 +83,18 @@ abstract class AnalyticsEnabledVariantProperties (
             return delegate.manifestPlaceholders
         }
 
+    private val userVisiblePackagingOptions: PackagingOptions by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledPackagingOptions::class.java,
+            delegate.packagingOptions,
+            stats
+        )
+    }
+
     override val packagingOptions: PackagingOptions
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
-            return delegate.packagingOptions
+            return userVisiblePackagingOptions
         }
 }

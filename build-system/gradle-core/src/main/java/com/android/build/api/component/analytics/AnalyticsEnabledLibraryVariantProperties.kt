@@ -38,16 +38,24 @@ open class AnalyticsEnabledLibraryVariantProperties @Inject constructor(
             return delegate.applicationId
         }
 
+    private val userVisiblePackagingOptions: LibraryPackagingOptions by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledLibraryPackagingOptions::class.java,
+            delegate.packagingOptions,
+            stats
+        )
+    }
+
     override val packagingOptions: LibraryPackagingOptions
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
-            return delegate.packagingOptions
+            return userVisiblePackagingOptions
         }
 
     override fun packagingOptions(action: LibraryPackagingOptions.() -> Unit) {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
-        delegate.packagingOptions(action)
+        action.invoke(userVisiblePackagingOptions)
     }
 }

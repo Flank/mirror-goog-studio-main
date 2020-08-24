@@ -19,7 +19,6 @@ package com.android.build.api.component.analytics
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.ApkPackagingOptions
 import com.android.build.api.variant.DynamicFeatureVariantProperties
-import com.android.build.api.variant.impl.ApkPackagingOptionsImpl
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
@@ -43,16 +42,24 @@ open class AnalyticsEnabledDynamicFeatureVariantProperties @Inject constructor(
         delegate.aaptOptions(action)
     }
 
+    private val userVisiblePackagingOptions: ApkPackagingOptions by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledApkPackagingOptions::class.java,
+            delegate.packagingOptions,
+            stats
+        )
+    }
+
     override val packagingOptions: ApkPackagingOptions
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
-            return delegate.packagingOptions
+            return userVisiblePackagingOptions
         }
 
     override fun packagingOptions(action: ApkPackagingOptions.() -> Unit) {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
-        delegate.packagingOptions(action)
+        action.invoke(userVisiblePackagingOptions)
     }
 }
