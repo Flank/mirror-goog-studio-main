@@ -231,7 +231,8 @@ class XmlResourceBuilderTest {
     Truth.assertThat(root.getChildList()[0].hasElement()).isFalse()
     Truth.assertThat(root.getChildList()[0].getText()).isEqualTo("text")
 
-    // Consecutive text elements should be treated as a single element.
+    // Consecutive text elements should be treated as a single element. XMLEventReader parses those
+    // as one event, even though they're divided by new lines.
     /*
      * <test>
      *   Text that is
@@ -240,8 +241,7 @@ class XmlResourceBuilderTest {
      */
     proto = XmlResourceBuilder(fakeFile)
       .startElement("test", "")
-      .addText("Text that is")
-      .addText("continued here.")
+      .addText("\nText that is\n continued here.")
       .endElement()
       .build()
       .xmlProto
@@ -255,7 +255,7 @@ class XmlResourceBuilderTest {
     Truth.assertThat(root.getChildList()).hasSize(1)
 
     Truth.assertThat(root.getChildList()[0].hasElement()).isFalse()
-    Truth.assertThat(root.getChildList()[0].getText()).isEqualTo("Text that is continued here.")
+    Truth.assertThat(root.getChildList()[0].getText()).isEqualTo("\nText that is\n continued here.")
 
     // Text elements should be considered separate if they have anything inbetween them.
     /*
