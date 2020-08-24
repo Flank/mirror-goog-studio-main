@@ -25,7 +25,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
@@ -384,16 +383,7 @@ public class LibraryTaskManager
         TaskProvider<BundleAar> bundle =
                 taskFactory.register(new BundleAar.CreationAction(variantProperties));
 
-        variantProperties
-                .getTaskContainer()
-                .getAssembleTask()
-                .configure(
-                        task -> {
-                            task.dependsOn(
-                                    variantProperties
-                                            .getArtifacts()
-                                            .get(ArtifactType.AAR.INSTANCE));
-                        });
+        TaskFactoryUtils.dependsOn(variantProperties.getTaskContainer().getAssembleTask(), bundle);
 
         final VariantDependencies variantDependencies = variantProperties.getVariantDependencies();
 

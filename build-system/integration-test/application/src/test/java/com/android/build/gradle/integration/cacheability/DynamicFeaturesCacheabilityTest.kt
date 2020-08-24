@@ -54,12 +54,14 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:preBuild",
 
                     ":feature1:clean",
+                    ":feature1:compileDebugSources",
                     ":feature1:generateDebugAssets",
                     ":feature1:generateDebugResources",
                     ":feature1:preBuild",
                     ":feature1:preDebugBuild",
 
                     ":feature2:clean",
+                    ":feature2:compileDebugSources",
                     ":feature2:generateDebugAssets",
                     ":feature2:generateDebugResources",
                     ":feature2:preBuild",
@@ -171,6 +173,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:compileDebugAidl",
                     ":app:compileDebugRenderscript",
                     ":app:compileDebugShaders",
+                    ":app:compileDebugSources",
                     ":app:mergeDebugNativeDebugMetadata",
                     ":app:processDebugJavaRes",
                     ":app:stripDebugDebugSymbols",
