@@ -457,12 +457,12 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             return;
         }
         String javaHome = System.getProperty("java.home");
-        String processes = runProcess(javaHome + "/../bin/jps");
+        String processes = runProcess(javaHome + "/bin/jps");
 
         String[] lines = processes.split(System.lineSeparator());
         for (String line : lines) {
             String pid = line.split(" ")[0];
-            String threadDump = runProcess(javaHome + "/../bin/jstack", "-l", pid);
+            String threadDump = runProcess(javaHome + "/bin/jstack", "-l", pid);
 
             System.out.println("Fetching thread dump for: " + line);
             System.out.println("Thread dump is:");
