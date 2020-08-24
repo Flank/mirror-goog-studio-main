@@ -110,7 +110,7 @@ public class HardwareConfigHelperTest extends TestCase {
         assertFalse(isTv(round));
         assertFalse(isMobile(round));
         assertFalse(isAutomotive(round));
-        assertEquals("Android Wear Round (1.7\", 320 \u00d7 320, hdpi)", getNexusLabel(round));
+        assertEquals("Wear OS Round (1.8\", 320 \u00d7 320, hdpi)", getNexusLabel(round));
         assertEquals("320 \u00d7 320, hdpi (Round)", getNexusMenuLabel(round));
 
 
