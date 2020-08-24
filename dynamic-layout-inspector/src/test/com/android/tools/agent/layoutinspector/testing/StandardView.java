@@ -130,7 +130,10 @@ public class StandardView {
                         .withId(LINEAR_LAYOUT_ID)
                         .withBounds(10, 50, 980, 2000)
                         .withLayoutId(LAYOUT)
+                        .withLayoutWidth(ViewGroup.LayoutParams.MATCH_PARENT)
+                        .withLayoutHeight(ViewGroup.LayoutParams.MATCH_PARENT)
                         .withResources(resources)
+                        .withResolutionStack(LAYOUT, THEME)
                         .withAttachedToWindow(true)
                         .build();
 
