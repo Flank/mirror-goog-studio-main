@@ -120,7 +120,14 @@ public final class AndroidLocation {
             if (!file.isDirectory()) {
                 return null;
             }
-            if (!(this == ANDROID_SDK_HOME && isSdkRootWithoutDotAndroid(file))) {
+
+            // FIXME b/162859043
+            if (this != ANDROID_SDK_HOME) {
+                return path;
+            }
+
+            // We are using ANDROID_SDK_HOME
+            if (!isSdkRootWithoutDotAndroid(file)) {
                 // FIXME b/162859043
                 System.out.println(
                         "Using ANDROID_SDK_HOME for the location of the '.android' preferences location is deprecated, please use "
