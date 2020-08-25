@@ -51,8 +51,6 @@ public final class SdkConstants {
     /**
      * ANDROID_HOME environment variable that specifies the installation path of an Android SDK.
      *
-     * <p>FIXME b/162859043
-     *
      * @deprecated Use {@link #ANDROID_SDK_ROOT_ENV} instead.
      * @see <a href="https://developer.android.com/studio/command-line/variables">Android SDK
      *     environment variables</a>
