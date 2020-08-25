@@ -311,6 +311,8 @@ class CompileCommandsEncoder(val file : File) : AutoCloseable {
         ras.seek(flagListsIndexEntry + Int.SIZE_BYTES)
         ras.writeLong(offsetOfFlagLists)
 
+        ras.fd.sync()
+
         lock.close()
         channel.close()
         ras.close()
