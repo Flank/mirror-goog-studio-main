@@ -29,13 +29,11 @@ import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.process.LoggedProcessOutputHandler
-import com.android.ide.common.process.ProcessExecutor
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.resources.FileStatus.CHANGED
 import com.android.ide.common.resources.FileStatus.NEW
 import com.android.ide.common.resources.FileStatus.REMOVED
-import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.DirectoryProperty
@@ -43,6 +41,7 @@ import org.gradle.api.file.FileTree
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -56,7 +55,6 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.process.ExecOperations
 import org.gradle.workers.WorkerExecutor
 import java.io.File
-import java.io.Serializable
 import java.nio.file.FileSystems
 import java.nio.file.PathMatcher
 import java.nio.file.Paths
@@ -76,8 +74,7 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
     abstract val outputDir: DirectoryProperty
 
     @get:Input
-    lateinit var excludePatterns: List<String>
-        private set
+    abstract val keepDebugSymbols: SetProperty<String>
 
     @get:Inject
     abstract val execOperations: ExecOperations
@@ -113,7 +110,7 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
                 workerExecutor,
                 inputDir.get().asFile,
                 outputDir.get().asFile,
-                excludePatterns,
+                keepDebugSymbols.get(),
                 sdkBuildService.get().stripExecutableFinderProvider,
                 null,
                 this
@@ -125,7 +122,7 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
             workerExecutor,
             inputDir.get().asFile,
             outputDir.get().asFile,
-            excludePatterns,
+            keepDebugSymbols.get(),
             sdkBuildService.get().stripExecutableFinderProvider,
             changedInputs,
             this
@@ -161,8 +158,9 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
             super.configure(task)
 
             creationConfig.artifacts.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
-            task.excludePatterns =
-                creationConfig.globalScope.extension.packagingOptions.doNotStrip.sorted()
+            task.keepDebugSymbols.setDisallowChanges(
+                creationConfig.packagingOptions.jniLibs.keepDebugSymbols
+            )
             task.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
@@ -178,7 +176,7 @@ class StripDebugSymbolsDelegate(
     val workers: WorkerExecutor,
     val inputDir: File,
     val outputDir: File,
-    val excludePatterns: List<String>,
+    val keepDebugSymbols: Set<String>,
     val stripToolFinderProvider: Provider<SymbolStripExecutableFinder>,
     val changedInputs: Map<File, FileStatus>?,
     private val instantiator: AndroidVariantTask
@@ -189,7 +187,7 @@ class StripDebugSymbolsDelegate(
             FileUtils.cleanOutputDir(outputDir)
         }
 
-        val excludeMatchers = excludePatterns.map { compileGlob(it) }
+        val keepDebugSymbolsMatchers = keepDebugSymbols.map { compileGlob(it) }
 
         // by lazy, because we don't want to spend the extra time or print out NDK-related spam if
         // there are no .so files to strip
@@ -208,7 +206,9 @@ class StripDebugSymbolsDelegate(
                 when (changedInputs[input]) {
                     NEW, CHANGED -> {
                         val justCopyInput =
-                            excludeMatchers.any { matcher -> matcher.matches(Paths.get(path)) }
+                            keepDebugSymbolsMatchers.any { matcher ->
+                                matcher.matches(Paths.get(path))
+                            }
                         workers.noIsolation().submit(StripDebugSymbolsRunnable::class.java) {
                             it.initializeFromAndroidVariantTask(instantiator)
                             it.input.set(input)
@@ -229,7 +229,7 @@ class StripDebugSymbolsDelegate(
                 val path = FileUtils.relativePath(input, inputDir)
                 val output = File(outputDir, path)
                 val justCopyInput =
-                    excludeMatchers.any { matcher -> matcher.matches(Paths.get(path)) }
+                    keepDebugSymbolsMatchers.any { matcher -> matcher.matches(Paths.get(path)) }
 
                 workers.noIsolation().submit(StripDebugSymbolsRunnable::class.java) {
                     it.initializeFromAndroidVariantTask(instantiator)
