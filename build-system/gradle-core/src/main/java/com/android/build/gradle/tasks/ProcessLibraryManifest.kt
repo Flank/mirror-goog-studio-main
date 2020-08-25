@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.manifest.mergeManifests
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.MergingReport
 import com.android.utils.FileUtils
@@ -71,7 +72,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
 
     @get:Optional
     @get:Input
-    abstract val manifestPlaceholders: MapProperty<String, Any>
+    abstract val manifestPlaceholders: MapProperty<String, String>
 
     /** The processed Manifests files folder.  */
     @get:OutputDirectory
@@ -286,7 +287,6 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             task: ProcessLibraryManifest
         ) {
             super.configure(task)
-            val variantDslInfo = creationConfig.variantDslInfo
             val variantSources = creationConfig.variantSources
             val project = creationConfig.globalScope.project
             task.minSdkVersion
@@ -311,14 +311,8 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             task.mainSplit.disallowChanges()
             task.isNamespaced =
                 creationConfig.globalScope.extension.aaptOptions.namespaced
-            task.packageOverride.set(creationConfig.applicationId)
-            task.packageOverride.disallowChanges()
-            task.manifestPlaceholders.set(
-                task.project.provider(
-                    variantDslInfo::manifestPlaceholders
-                )
-            )
-            task.manifestPlaceholders.disallowChanges()
+            task.packageOverride.setDisallowChanges(creationConfig.applicationId)
+            task.manifestPlaceholders.setDisallowChanges(creationConfig.manifestPlaceholders)
             task.mainManifest
                 .set(project.provider(variantSources::mainManifestFilePath))
             task.mainManifest.disallowChanges()

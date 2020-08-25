@@ -44,7 +44,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
-open class LibraryVariantPropertiesImpl @Inject constructor(
+open class  LibraryVariantPropertiesImpl @Inject constructor(
     override val variant: LibraryVariantImpl,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,

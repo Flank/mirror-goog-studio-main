@@ -32,7 +32,6 @@ import com.android.builder.model.VectorDrawablesOptions
 import com.android.sdklib.AndroidVersion
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File

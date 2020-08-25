@@ -39,6 +39,7 @@ import com.android.builder.dexing.DexingType
 import com.google.common.collect.ImmutableList
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
@@ -117,4 +118,10 @@ open class UnitTestPropertiesImpl @Inject constructor(
             this,
             stats
         )
+
+    /**
+     * for unit tests, the placeholders are always empty.
+     */
+    override val manifestPlaceholders: MapProperty<String, String> =
+            internalServices.mapPropertyOf(String::class.java, String::class.java, mapOf())
 }

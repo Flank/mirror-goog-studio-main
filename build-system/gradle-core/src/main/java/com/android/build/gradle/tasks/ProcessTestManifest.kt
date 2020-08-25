@@ -372,7 +372,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
     abstract val testLabel: Property<String?>
 
     @get:Input
-    abstract val placeholdersValues: MapProperty<String, Any>
+    abstract val placeholdersValues: MapProperty<String, String>
 
     /**
      * Compute the final list of providers based on the manifest file collection.
@@ -465,12 +465,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     ArtifactScope.ALL,
                     AndroidArtifacts.ArtifactType.MANIFEST
                 )
-            task.placeholdersValues
-                .set(
-                    project.provider<Map<String, Any>>(
-                        variantDslInfo::manifestPlaceholders
-                    )
-                )
+            task.placeholdersValues.setDisallowChanges(creationConfig.manifestPlaceholders)
             task.placeholdersValues.disallowChanges()
             if (!creationConfig.globalScope.extension.aaptOptions.namespaced) {
                 task.navigationJsons = project.files(
