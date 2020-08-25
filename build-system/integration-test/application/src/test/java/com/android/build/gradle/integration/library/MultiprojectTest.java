@@ -30,9 +30,6 @@ public class MultiprojectTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("multiproject")
-                    // b/157470515, http://b/146208910, http://b/149978740
-                    .withConfigurationCaching(
-                            BaseGradleExecutor.ConfigurationCaching.WARN)
                     .create();
 
     @Before

@@ -581,9 +581,6 @@ class MinifyFeaturesTest(
 
     @get:Rule
     val project = GradleTestProject.builder().fromTestApp(testApp)
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-        // b/157470515
-        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
         .create()
 
     @get:Rule

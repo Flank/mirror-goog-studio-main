@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.testing
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -129,9 +128,6 @@ class DynamicFeatureUnitTestSanityTest {
 
     @get:Rule
     val project = GradleTestProject.builder().fromTestApp(gradleBuild)
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-        // b/157470515
-        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
         .create()
 
     @Test

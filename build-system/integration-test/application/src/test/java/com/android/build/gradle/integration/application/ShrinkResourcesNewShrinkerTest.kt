@@ -43,15 +43,15 @@ class ShrinkResourcesNewShrinkerTest {
     @get:Rule
     var project = builder().fromTestProject("shrink")
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-        // b/157470515, http://b/149978740
-        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=26")
+        // http://b/149978740
+        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=20")
         .create()
 
     @get:Rule
     var projectWithDynamicFeatureModules = builder().fromTestProject("shrinkDynamicFeatureModules")
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-        // b/157470515, http://b/149978740
-        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=5")
+        // http://b/149978740
+        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=2")
         .create()
 
     @Test

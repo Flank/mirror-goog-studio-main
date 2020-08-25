@@ -35,7 +35,9 @@ class LibraryProfileContentTest {
     @get:Rule
     var project = GradleTestProject.builder()
         .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.library"))
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF) // b/157470515
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
+        // TODO b/158092419
+        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=23")
         .enableProfileOutput()
         .create()
 

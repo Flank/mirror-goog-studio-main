@@ -60,9 +60,6 @@ public class AppWithCompileIndirectJavaProjectTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("projectWithModules")
-                    // b/157470515, http://b/146208910, http://b/149978740
-                    .withConfigurationCaching(
-                            BaseGradleExecutor.ConfigurationCaching.WARN)
                     .create();
 
     @BeforeClass

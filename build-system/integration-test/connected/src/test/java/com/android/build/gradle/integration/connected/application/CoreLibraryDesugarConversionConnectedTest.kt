@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.connected.application
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.DESUGAR_DEPENDENCY_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
@@ -58,7 +59,11 @@ class CoreLibraryDesugarConversionConnectedTest(minSdkVersion: Int) {
         GradleTestProject.builder()
             .fromTestApp(
                 HelloWorldApp.forPluginWithMinSdkVersion("com.android.application", minSdkVersion)
-            ).create()
+            )
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
+            // b/149978740
+            .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
+            .create()
 
     @Before
     fun setUp() {

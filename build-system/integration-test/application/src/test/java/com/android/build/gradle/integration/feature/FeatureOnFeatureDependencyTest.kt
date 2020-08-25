@@ -16,14 +16,13 @@
 
 package com.android.build.gradle.integration.feature
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.testutils.truth.FileSubject.assertThat
-import java.io.File
 import org.junit.Rule
 import org.junit.Test
+import java.io.File
 
 /**
  * Test checking that a dynamic-feature test can reference the base application code.
@@ -63,9 +62,6 @@ class FeatureOnFeatureDependencyTest {
     @get:Rule
     val project = GradleTestProject.builder()
         .fromTestApp(testApp)
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-        // b/157470515
-        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
         .create()
 
     @Test
