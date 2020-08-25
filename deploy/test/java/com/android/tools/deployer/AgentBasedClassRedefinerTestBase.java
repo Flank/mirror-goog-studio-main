@@ -176,7 +176,10 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
             Deploy.SendAgentMessageRequest agentRequest =
                     Deploy.SendAgentMessageRequest.newBuilder()
                             .setAgentCount(1)
-                            .setSwapRequest(request)
+                            .setAgentRequest(
+                                    Deploy.AgentRequest.newBuilder()
+                                            .setSwapRequest(request)
+                                            .build())
                             .build();
             Deploy.InstallServerRequest serverRequest =
                     Deploy.InstallServerRequest.newBuilder()
@@ -197,7 +200,7 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
 
         protected Deploy.AgentSwapResponse getAgentResponse()
                 throws IOException, InvalidProtocolBufferException {
-            return getServerResponse().getSendResponse().getAgentResponses(0);
+            return getServerResponse().getSendResponse().getAgentResponses(0).getSwapResponse();
         }
 
         private void sendMessage(byte[] message) throws IOException {

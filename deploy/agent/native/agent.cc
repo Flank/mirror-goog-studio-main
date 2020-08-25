@@ -37,23 +37,35 @@ namespace deploy {
 static int run_counter = 0;
 
 void SendResponse(const deploy::Socket& socket,
-                  proto::AgentSwapResponse& response) {
+                  proto::AgentResponse& response) {
   // Convert all events to proto events.
   std::unique_ptr<std::vector<Event>> events = ConsumeEvents();
   for (Event& event : *events) {
     ConvertEventToProtoEvent(event, response.add_events());
   }
+
+  response.set_pid(getpid());
+
+  if (response.has_swap_response() &&
+      response.swap_response().status() != proto::AgentSwapResponse::OK) {
+    response.set_status(proto::AgentResponse::SWAP_FAILURE);
+  } else {
+    response.set_status(proto::AgentResponse::OK);
+  }
+
   std::string response_bytes;
   response.SerializeToString(&response_bytes);
   socket.Write(response_bytes);
 }
 
 void SendFailure(const deploy::Socket& socket,
-                 proto::AgentSwapResponse::Status status) {
-  proto::AgentSwapResponse response;
+                 proto::AgentResponse::Status status) {
+  proto::AgentResponse response;
   response.set_pid(getpid());
   response.set_status(status);
-  SendResponse(socket, response);
+  std::string response_bytes;
+  response.SerializeToString(&response_bytes);
+  socket.Write(response_bytes);
 }
 
 jint HandleStartupAgent(JavaVM* vm, const std::string& app_data_dir) {
@@ -96,7 +108,7 @@ jint HandleStartupAgent(JavaVM* vm, const std::string& app_data_dir) {
   return JNI_OK;
 }
 
-jint HandleSwapAgent(JavaVM* vm, char* socket_name) {
+jint HandleAgentRequest(JavaVM* vm, char* socket_name) {
   jvmtiEnv* jvmti;
   JNIEnv* jni;
 
@@ -117,57 +129,64 @@ jint HandleSwapAgent(JavaVM* vm, char* socket_name) {
     return JNI_OK;
   }
 
-  // Read the swap request from the socket.
-
+  // Read the request from the socket.
   std::string request_bytes;
   if (!socket.Read(&request_bytes)) {
     ErrEvent("Could not read request from socket");
-    SendFailure(socket, proto::AgentSwapResponse::SOCKET_READ_FAILED);
+    SendFailure(socket, proto::AgentResponse::SOCKET_READ_FAILED);
     return JNI_OK;
   }
 
-  proto::SwapRequest request;
+  proto::AgentRequest request;
   if (!request.ParseFromString(request_bytes)) {
     ErrEvent("Could not parse swap request");
-    SendFailure(socket, proto::AgentSwapResponse::REQUEST_PARSE_FAILED);
+    SendFailure(socket, proto::AgentResponse::REQUEST_PARSE_FAILED);
     return JNI_OK;
   }
 
-  // Only initialize exception logging if we're on R+, for now.
-
-  if (request.overlay_swap()) {
-    auto agent_purpose = request.restart_activity()
-                             ? proto::AgentExceptionLog::APPLY_CHANGES
-                             : proto::AgentExceptionLog::APPLY_CODE_CHANGES;
-    CrashLogger::Instance().Initialize(request.package_name(), agent_purpose);
+  // Set up the JVMTI and JNI environments. Regardless of what
+  // the agent is about to perform.
+  if (vm->GetEnv((void**)&jvmti, JVMTI_VERSION_1_2) != JNI_OK) {
+    ErrEvent("Error retrieving JVMTI function table.");
+    SendFailure(socket, proto::AgentResponse::JVMTI_SETUP_FAILED);
+    return JNI_OK;
   }
-
-  // Set up the JVMTI and JNI environments.
 
   if (vm->GetEnv((void**)&jni, JNI_VERSION_1_2) != JNI_OK) {
     ErrEvent("Error retrieving JNI function table.");
-    SendFailure(socket, proto::AgentSwapResponse::JNI_SETUP_FAILED);
+    SendFailure(socket, proto::AgentResponse::JNI_SETUP_FAILED);
     return JNI_OK;
   }
 
-  if (vm->GetEnv((void**)&jvmti, JVMTI_VERSION_1_2) != JNI_OK) {
-    ErrEvent("Error retrieving JVMTI function table.");
-    SendFailure(socket, proto::AgentSwapResponse::JVMTI_SETUP_FAILED);
-    return JNI_OK;
-  }
-
-  // Try to add capabilities needed for the swap, then swap.
-
+  // Try to add capabilities needed. Swap and Live Literal probably have
+  // different capabilities requirement. However, we are not going to
+  // be targeting certain Android device with one but not the other so
+  // we are going to request all the capabilities we ever use at once here.
   if (jvmti->AddCapabilities(&REQUIRED_CAPABILITIES) != JVMTI_ERROR_NONE) {
     ErrEvent("Error setting capabilities.");
-    SendFailure(socket, proto::AgentSwapResponse::SET_CAPABILITIES_FAILED);
-  } else {
-    proto::AgentSwapResponse response =
-        Swapper::Instance().Swap(jvmti, jni, request);
+    SendFailure(socket, proto::AgentResponse::SET_CAPABILITIES_FAILED);
+    jvmti->DisposeEnvironment();
+    return JNI_OK;
+  }
+
+  proto::AgentResponse response;
+  if (request.has_swap_request()) {
+    // Only initialize exception logging if we're on R+, for now.
+    proto::SwapRequest swap_request = request.swap_request();
+    if (swap_request.overlay_swap()) {
+      auto agent_purpose = swap_request.restart_activity()
+                               ? proto::AgentExceptionLog::APPLY_CHANGES
+                               : proto::AgentExceptionLog::APPLY_CODE_CHANGES;
+      CrashLogger::Instance().Initialize(swap_request.package_name(),
+                                         agent_purpose);
+    }
+
+    *response.mutable_swap_response() =
+        Swapper::Instance().Swap(jvmti, jni, swap_request);
     SendResponse(socket, response);
   }
 
-  // We return JNI_OK even if the hot swap fails, since returning JNI_ERR just
+  // We return JNI_OK even if anything failed, since returning JNI_ERR just
   // causes ART to attempt to re-attach the agent with a null classloader.
   jvmti->DisposeEnvironment();
   return JNI_OK;
@@ -181,7 +200,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
   if (input[0] == '/') {
     return HandleStartupAgent(vm, input);
   } else {
-    return HandleSwapAgent(vm, input);
+    return HandleAgentRequest(vm, input);
   }
 }
 

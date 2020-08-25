@@ -240,6 +240,9 @@ public class DeployerException extends Exception {
                 "Cannot preinstall: apks have different package name (%s and %s)",
                 "%s", "Retry", ResolutionAction.RETRY),
 
+        AGENT_FAILED(
+                "We were unable to deploy your changes%s", "%s", "Retry", ResolutionAction.RETRY),
+
         AGENT_SWAP_FAILED(
                 "We were unable to deploy your changes%s", "%s", "Retry", ResolutionAction.RETRY),
 
@@ -515,6 +518,11 @@ public class DeployerException extends Exception {
     public static DeployerException swapFailed(Deploy.SwapResponse.Status code) {
         String suffix = code != Deploy.SwapResponse.Status.UNKNOWN ? ": " + code.name() : ".";
         return new DeployerException(Error.SWAP_FAILED, code, new String[] {suffix}, "");
+    }
+
+    public static DeployerException agentFailed(Deploy.AgentResponse.Status code) {
+        String suffix = code != Deploy.AgentResponse.Status.UNKNOWN ? ": " + code.name() : ".";
+        return new DeployerException(Error.AGENT_FAILED, code, new String[] {suffix}, "");
     }
 
     public static DeployerException agentSwapFailed(Deploy.AgentSwapResponse.Status code) {

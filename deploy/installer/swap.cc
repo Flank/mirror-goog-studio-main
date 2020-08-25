@@ -274,11 +274,11 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
   size_t total_agents = request_.process_ids().size() + request_.extra_agents();
 
   std::string response_bytes;
-  std::unordered_map<int, proto::AgentSwapResponse> agent_responses;
+  std::unordered_map<int, proto::AgentResponse> agent_responses;
 
   while (agent_responses.size() < total_agents &&
          server_output.Read(&response_bytes)) {
-    proto::AgentSwapResponse agent_response;
+    proto::AgentResponse agent_response;
 
     if (!agent_response.ParseFromString(response_bytes)) {
       waitpid(agent_server_pid, &status, 0);
@@ -293,7 +293,7 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
       AddRawEvent(ConvertProtoEventToEvent(event));
     }
 
-    if (agent_response.status() != proto::AgentSwapResponse::OK) {
+    if (agent_response.status() != proto::AgentResponse::OK) {
       auto failed_agent = response_->add_failed_agents();
       *failed_agent = agent_response;
     }
