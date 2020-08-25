@@ -28,8 +28,10 @@ coverage_java_library(
     srcs = glob(["src/main/java/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/common:studio.android.sdktools.common",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
         "//tools/base/third_party:com.google.flatbuffers_flatbuffers-java",
+        "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.tensorflow_tensorflow-lite-metadata",
     ],
 )
