@@ -256,37 +256,50 @@ public class GroovyGradleVisitor extends GradleVisitor {
     }
 
     @NonNull
-    private static Pair<Integer, Integer> getOffsets(ASTNode node, Context context) {
+    private static Pair<ASTNode, ASTNode> getBoundingNodes(ASTNode node) {
         if (node.getLastLineNumber() == -1 && node instanceof TupleExpression) {
-            // Workaround: TupleExpressions yield bogus offsets, so use its
-            // children instead
-            TupleExpression exp = (TupleExpression) node;
-            List<Expression> expressions = exp.getExpressions();
+            // This TupleExpression is not real, probably corresponding to a named argument
+            // list.  Use its children instead.
+            TupleExpression expression = (TupleExpression) node;
+            List<Expression> expressions = expression.getExpressions();
             if (!expressions.isEmpty()) {
                 return Pair.of(
-                        getOffsets(expressions.get(0), context).getFirst(),
-                        getOffsets(expressions.get(expressions.size() - 1), context).getSecond());
+                        getBoundingNodes(expressions.get(0)).getFirst(),
+                        getBoundingNodes(expressions.get(expressions.size() - 1)).getSecond());
+            }
+        }
+        if (node instanceof ArgumentListExpression) {
+            // An ArgumentListExpression's bounds can extend beyond the last expression in the
+            // argument list, for example into trailing whitespace or comments.  The bounds given
+            // by the first and last subexpressions are more appropriate for highlighting issues
+            // related to user code.
+            ArgumentListExpression expression = (ArgumentListExpression) node;
+            List<Expression> expressions = expression.getExpressions();
+            if (!expressions.isEmpty()) {
+                return Pair.of(
+                        getBoundingNodes(expressions.get(0)).getFirst(),
+                        getBoundingNodes(expressions.get(expressions.size() - 1)).getSecond());
             }
         }
 
-        if (node instanceof ArgumentListExpression) {
-            List<Expression> expressions = ((ArgumentListExpression) node).getExpressions();
-            if (!expressions.isEmpty()) {
-                return Pair.of(
-                        getOffsets(expressions.get(0), context).getFirst(),
-                        getOffsets(expressions.get(expressions.size() - 1), context).getSecond());
-            }
-        }
+        return Pair.of(node, node);
+    }
+
+    @NonNull
+    private static Pair<Integer, Integer> getOffsets(ASTNode node, Context context) {
+        Pair<ASTNode, ASTNode> boundingNodes = getBoundingNodes(node);
+        ASTNode startNode = boundingNodes.getFirst();
+        ASTNode endNode = boundingNodes.getSecond();
 
         CharSequence source = context.getContents();
         assert source != null; // because we successfully parsed
         int start = 0;
         int end = source.length();
         int line = 1;
-        int startLine = node.getLineNumber();
-        int startColumn = node.getColumnNumber();
-        int endLine = node.getLastLineNumber();
-        int endColumn = node.getLastColumnNumber();
+        int startLine = startNode.getLineNumber();
+        int startColumn = startNode.getColumnNumber();
+        int endLine = endNode.getLastLineNumber();
+        int endColumn = endNode.getLastColumnNumber();
         int column = 1;
         for (int index = 0, len = end; index < len; index++) {
             if (line == startLine && column == startColumn) {
@@ -320,35 +333,9 @@ public class GroovyGradleVisitor extends GradleVisitor {
     @Override
     public Location createLocation(@NonNull GradleContext context, @NonNull Object cookie) {
         ASTNode node = (ASTNode) cookie;
-        ASTNode startNode = node;
-        ASTNode endNode = node;
-        // TODO(xof): unify this with the analogous code in getOffsets().
-        if (node instanceof TupleExpression && node.getLastLineNumber() == -1) {
-            // a TupleExpression (in this context) represents the map corresponding to a named
-            // argument list.  However, that TupleExpression isn't real (there aren't explicit
-            // map [] markers), and the various line/column number fields are initialized to -1.
-            // Instead, use the single NamedArgumentListExpression that it contains, which is
-            // real and has useful source position information.
-            //
-            // One might have hoped that the `synthetic` boolean, or the `hasNoRealSourcePosition`
-            // boolean would indicate this.  Alas.
-            TupleExpression tupleExpression = (TupleExpression) node;
-            List<Expression> expressions = tupleExpression.getExpressions();
-            if (!expressions.isEmpty()) {
-                startNode = expressions.get(0);
-                endNode = expressions.get(expressions.size() - 1);
-            }
-        } else if (node instanceof ArgumentListExpression) {
-            // the ArgumentListExpression node includes in its extent not only all the expressions
-            // corresponding to arguments, but also other elements not corresponding to anything
-            // semantic (whitespace, comments).
-            ArgumentListExpression argumentListExpression = (ArgumentListExpression) node;
-            List<Expression> expressions = argumentListExpression.getExpressions();
-            if (!expressions.isEmpty()) {
-                startNode = expressions.get(0);
-                endNode = expressions.get(expressions.size() - 1);
-            }
-        }
+        Pair<ASTNode, ASTNode> boundingNodes = getBoundingNodes(node);
+        ASTNode startNode = boundingNodes.getFirst();
+        ASTNode endNode = boundingNodes.getSecond();
 
         Pair<Integer, Integer> offsets = getOffsets(node, context);
         int fromLine = startNode.getLineNumber() - 1;
