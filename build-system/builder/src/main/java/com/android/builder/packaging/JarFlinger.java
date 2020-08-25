@@ -29,12 +29,14 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.jar.Attributes;
@@ -76,6 +78,8 @@ public class JarFlinger implements JarCreator {
         ImmutableSortedMap.Builder<String, Path> candidateFiles = ImmutableSortedMap.naturalOrder();
         Files.walkFileTree(
                 directory,
+                EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+                Integer.MAX_VALUE,
                 new SimpleFileVisitor<Path>() {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
@@ -109,7 +113,7 @@ public class JarFlinger implements JarCreator {
                 }
                 } else {
                 BytesSource source =
-                        new BytesSource(entry.getValue().toFile(), entryPath, compressionLevel);
+                        new BytesSource(entry.getValue(), entryPath, compressionLevel);
                     zipArchive.add(source);
                 }
         }

@@ -16,11 +16,17 @@
 
 package com.android.builder.packaging;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.zipflinger.Entry;
 import com.android.zipflinger.ZipArchive;
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -116,5 +122,38 @@ public class TestJarFlinger {
         Assert.assertEquals("Archive should have two entries", 2, entries.size());
         Assert.assertTrue("Archive should contain entry 'file1", entries.containsKey("file1"));
         Assert.assertTrue("Archive should contain entry 'file2", entries.containsKey("file2"));
+    }
+
+    @Test
+    public void testDirectoryWithSymlinks() throws Exception {
+        Path path = getOutPath("testDirectoryWithSymlinks.zip");
+        Path dir = createDirectoryWithSymlinks();
+
+        try (JarFlinger flinger = new JarFlinger(path)) {
+            flinger.addDirectory(dir);
+        }
+
+        assertThat(ZipArchive.listEntries(path.toFile()).keySet())
+                .containsExactly("linked/file.txt", "regular.txt", "regular.txt.link");
+    }
+
+    private static Path createDirectoryWithSymlinks() throws IOException {
+        FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
+
+        Path realDir = fs.getPath("/real");
+        Files.createDirectories(realDir);
+        Files.write(realDir.resolve("file.txt"), new byte[0]);
+
+        Path symlinks = fs.getPath("/symlinks");
+        Files.createDirectory(symlinks);
+        Files.createSymbolicLink(symlinks.resolve("linked"), realDir);
+
+        Path regularFile = symlinks.resolve("regular.txt");
+        Files.write(regularFile, new byte[0]);
+
+        Path linkToRegularFile = symlinks.resolve("regular.txt.link");
+        Files.createSymbolicLink(linkToRegularFile, regularFile);
+
+        return symlinks;
     }
 }
