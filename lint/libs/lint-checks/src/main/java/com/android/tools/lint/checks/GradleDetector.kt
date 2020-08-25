@@ -830,7 +830,7 @@ open class GradleDetector : Detector(), GradleScanner {
                             newerVersion,
                             newerVersion.major == version.major &&
                                 newerVersion.minor == version.minor,
-                            safeReplacement, dependency, isResolved, cookie
+                            safeReplacement, dependency, isResolved, statementCookie
                         )
                         maybeReportAgpVersionIssue(context)
                     }

@@ -204,7 +204,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 2.4.0-alpha3 is available: 3.5.0-alpha10 [AndroidGradlePluginVersion]\n" +
             "        classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n" +
-            "                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:11: Warning: A newer version of org.apache.httpcomponents:httpcomponents-core than 4.2 is available: 4.4 [GradleDependency]\n" +
             "    compile 'org.apache.httpcomponents:httpcomponents-core:4.2'\n" +
             "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
@@ -283,7 +283,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 "" +
                     "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0 is available: 3.3.2. (There is also a newer version of 3.0.\uD835\uDC65 available, if upgrading to 3.3.2 is difficult: 3.0.1) [AndroidGradlePluginVersion]\n" +
                     "        classpath 'com.android.tools.build:gradle:3.0.0'\n" +
-                    "                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                    "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                     "0 errors, 1 warnings"
             )
             .expectFixDiffs(
@@ -554,7 +554,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected = "" +
             "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.1 [AndroidGradlePluginVersion]\n" +
             "    classpath 'com.android.tools.build:gradle:3.0.0-alpha4'\n" +
-            "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 1 warnings"
 
         lint().files(
@@ -621,7 +621,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 "" +
                     "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha01 is available: 3.1.0 [AndroidGradlePluginVersion]\n" +
                     "    classpath 'com.android.tools.build:gradle:3.0.0-alpha01'\n" +
-                    "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                    "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                     "0 errors, 1 warnings"
             )
     }
@@ -660,7 +660,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 """
                 build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.1 [AndroidGradlePluginVersion]
                     classpath 'com.android.tools.build:gradle:3.0.0-alpha4'
-                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 1 warnings
                 """
             )
@@ -1261,10 +1261,10 @@ class GradleDetectorTest : AbstractCheckTest() {
             GRADLE_PLUGIN_RECOMMENDED_VERSION +
             " [AndroidGradlePluginVersion]\n" +
             "        classpath 'com.android.tools.build:gradle:1.0.0'\n" +
-            "                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:9: Warning: A newer version of com.android.tools.build:gradle than 2.0.0-alpha4 is available: 3.5.0-alpha10 [AndroidGradlePluginVersion]\n" +
             "        classpath 'com.android.tools.build:gradle:2.0.0-alpha4'\n" +
-            "                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "1 errors, 2 warnings\n"
 
         lint().files(
