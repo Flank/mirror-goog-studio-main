@@ -27,9 +27,9 @@ class JniLibsApkPackagingOptionsImpl(
 ) : JniLibsPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices),
     JniLibsApkPackagingOptions {
 
-    override val legacyPackaging =
+    override val useLegacyPackaging =
         variantPropertiesApiServices.propertyOf(
             Boolean::class.java,
-            dslPackagingOptions.jniLibs.legacyPackaging ?: (minSdk < M)
+            dslPackagingOptions.jniLibs.useLegacyPackaging ?: (minSdk < M)
         )
 }
