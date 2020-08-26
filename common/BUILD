@@ -123,60 +123,54 @@ iml_module(
 
 # managed by go/iml_to_build [unb]
 iml_module(
-    name = "unb.studio.android.sdktools.common",
+    name = "studio.android.sdktools.common",
     srcs = ["src/main/java"],
     bundle_data = [
         "src/main/java/com/android/SdkConstants.java",
     ],
     iml_files = ["android.sdktools.common.iml"],
     lint_baseline = "lint_baseline.xml",
+    project = "unb",
     # do not sort: must match IML order
     resources = [
         "src/main/resources",
         "version",
     ],
-    tags = [
-        "manual",
-        "unb",
-    ],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
         "//tools/adt/idea/.idea/libraries:unb.Guava",
-        "//tools/base/annotations:unb.studio.android.sdktools.android-annotations",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations",
     ],
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/adt/idea/.idea/libraries:unb.Guava",
-        "//tools/base/annotations:unb.studio.android.sdktools.android-annotations[module]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
     ],
 )
 
 # managed by go/iml_to_build [unb]
 iml_module(
-    name = "unb.studio.android.sdktools.common.tests",
+    name = "studio.android.sdktools.common.tests",
     iml_files = ["android.sdktools.common.tests.iml"],
-    tags = [
-        "manual",
-        "unb",
-    ],
+    project = "unb",
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
         "//tools/adt/idea/.idea/libraries:unb.Guava",
-        "//tools/base/annotations:unb.studio.android.sdktools.android-annotations",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations",
     ],
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/adt/idea/.idea/libraries:unb.Guava",
-        "//tools/base/testutils:unb.studio.android.sdktools.testutils[module, test]",
-        "//tools/base/annotations:unb.studio.android.sdktools.android-annotations[module]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/adt/idea/.idea/libraries:unb.truth[test]",
-        "//tools/base/common:unb.studio.android.sdktools.common[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
     ],
 )

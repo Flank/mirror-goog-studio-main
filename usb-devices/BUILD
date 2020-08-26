@@ -20,14 +20,11 @@ iml_module(
 
 # managed by go/iml_to_build [unb]
 iml_module(
-    name = "unb.studio.usb-devices",
+    name = "studio.usb-devices",
     srcs = ["src"],
     iml_files = ["usb-devices.iml"],
     lint_baseline = "lint_baseline.xml",
-    tags = [
-        "manual",
-        "unb",
-    ],
+    project = "unb",
     test_data = glob(["testData/**"]),
     test_resources = ["testData"],
     test_srcs = ["testSrc"],
@@ -36,6 +33,6 @@ iml_module(
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
-        "//tools/base/testutils:unb.studio.android.sdktools.testutils[module, test]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
     ],
 )

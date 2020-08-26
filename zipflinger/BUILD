@@ -202,22 +202,19 @@ iml_module(
 
 # managed by go/iml_to_build [unb]
 iml_module(
-    name = "unb.studio.android.sdktools.zipflinger",
+    name = "studio.android.sdktools.zipflinger",
     srcs = ["src"],
     iml_files = ["android.sdktools.zipflinger.iml"],
     lint_baseline = "lint_baseline.xml",
-    tags = [
-        "manual",
-        "no_test_mac",
-        "unb",
-    ],
+    project = "unb",
+    tags = ["no_test_mac"],
     test_data = glob(["test/resource/**"]),
     test_srcs = ["test/src/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/base/annotations:unb.studio.android.sdktools.android-annotations[module]",
-        "//tools/base/testutils:unb.studio.android.sdktools.testutils[module]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module]",
     ],
 )

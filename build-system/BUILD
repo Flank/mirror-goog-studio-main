@@ -243,24 +243,21 @@ maven_repo(
 
 # managed by go/iml_to_build [unb]
 iml_module(
-    name = "unb.studio.android.sdktools.manifest-merger",
+    name = "studio.android.sdktools.manifest-merger",
     srcs = ["manifest-merger/src/main/java"],
     iml_files = ["manifest-merger/android.sdktools.manifest-merger.iml"],
     lint_baseline = "lint_baseline.xml",
-    tags = [
-        "manual",
-        "unb",
-    ],
+    project = "unb",
     test_srcs = ["manifest-merger/src/test/java"],
     visibility = ["//visibility:public"],
-    exports = ["//tools/base/sdklib:unb.studio.android.sdktools.sdklib"],
+    exports = ["//tools/base/sdklib:studio.android.sdktools.sdklib"],
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/base/sdklib:unb.studio.android.sdktools.sdklib[module]",
+        "//tools/base/sdklib:studio.android.sdktools.sdklib[module]",
         "//tools/adt/idea/.idea/libraries:unb.mockito[test]",
-        "//tools/base/sdk-common:unb.studio.android.sdktools.sdk-common[module]",
-        "//tools/base/testutils:unb.studio.android.sdktools.testutils[module, test]",
+        "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/adt/idea/.idea/libraries:unb.truth[test]",
         "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
     ],

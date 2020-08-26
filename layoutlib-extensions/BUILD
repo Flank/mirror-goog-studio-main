@@ -42,15 +42,12 @@ kotlin_library(
 
 # managed by go/iml_to_build [unb]
 iml_module(
-    name = "unb.studio.android.sdktools.layoutlib-extensions",
+    name = "studio.android.sdktools.layoutlib-extensions",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.layoutlib-extensions.iml"],
     lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
+    project = "unb",
     resources = ["src/main/resources"],
-    tags = [
-        "manual",
-        "unb",
-    ],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [

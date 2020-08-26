@@ -20,22 +20,19 @@ iml_module(
 
 # managed by go/iml_to_build [unb]
 iml_module(
-    name = "unb.studio.android.sdktools.layoutinspector",
+    name = "studio.android.sdktools.layoutinspector",
     srcs = ["src"],
     iml_files = ["android.sdktools.layoutinspector.iml"],
     lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
-    tags = [
-        "manual",
-        "unb",
-    ],
+    project = "unb",
     visibility = ["//visibility:public"],
-    exports = ["//tools/base/common:unb.studio.android.sdktools.common"],
+    exports = ["//tools/base/common:studio.android.sdktools.common"],
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/base/common:unb.studio.android.sdktools.common[module]",
-        "//tools/base/annotations:unb.studio.android.sdktools.android-annotations[module]",
-        "//tools/base/ddmlib:unb.studio.android.sdktools.ddmlib[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
+        "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
         "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
     ],
 )

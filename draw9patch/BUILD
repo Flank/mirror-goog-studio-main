@@ -21,7 +21,7 @@ iml_module(
 
 # managed by go/iml_to_build [unb]
 iml_module(
-    name = "unb.studio.android.sdktools.draw9patch",
+    name = "studio.android.sdktools.draw9patch",
     # do not sort: must match IML order
     srcs = [
         "src/main/java",
@@ -29,10 +29,7 @@ iml_module(
     ],
     iml_files = ["android.sdktools.draw9patch.iml"],
     lint_baseline = "lint_baseline.xml",
-    tags = [
-        "manual",
-        "unb",
-    ],
+    project = "unb",
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order

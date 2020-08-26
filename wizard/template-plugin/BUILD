@@ -19,14 +19,11 @@ iml_module(
 
 # managed by go/iml_to_build [unb]
 iml_module(
-    name = "unb.studio.intellij.android.wizardTemplate.plugin",
+    name = "studio.intellij.android.wizardTemplate.plugin",
     srcs = ["src"],
     iml_files = ["intellij.android.wizardTemplate.plugin.iml"],
     lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
-    tags = [
-        "manual",
-        "unb",
-    ],
+    project = "unb",
     test_srcs = ["testSrc"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order

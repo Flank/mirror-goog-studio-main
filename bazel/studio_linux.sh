@@ -45,11 +45,15 @@ fi
 # Generate a UUID for use as the bazel test invocation id
 readonly invocation_id="$(uuidgen)"
 
+# Temporary hack to switch to the "unb" rules:
+mv "${script_dir}/project.bzl" "${script_dir}/project.bzl.bak"
+echo "PROJECT = \"unb\"" > "${script_dir}/project.bzl"
+
 # Run Bazel
+# --keep_going \
 "${script_dir}/bazel" \
   --max_idle_secs=60 \
   test \
-  --keep_going \
   ${config_options} \
   --worker_max_instances=${WORKER_INSTANCES} \
   --invocation_id=${invocation_id} \
@@ -69,11 +73,17 @@ readonly invocation_id="$(uuidgen)"
   //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar \
   //tools/base/profiler/native/trace_processor_daemon \
   //tools/adt/idea/studio:test_studio \
-  //tools/adt/idea/studio:searchable_options_test \
-  $(< "${script_dir}/targets")
+  //tools/adt/idea/studio:searchable_options_test
+# $(< "${script_dir}/targets") contains:
+  # @blaze//:aswb_tests \
+  # //prebuilts/studio/... \
+  # //prebuilts/tools/... \
+  # //tools/... \
 # Workaround: This invocation [ab]uses --runs_per_test to disable caching for the
 # iml_to_build_consistency_test see https://github.com/bazelbuild/bazel/issues/6038
 # This has the side effect of running it twice, but as it only takes a few seconds that seems ok.
+
+mv "${script_dir}/project.bzl.bak" "${script_dir}/project.bzl"
 
 readonly bazel_status=$?
 
