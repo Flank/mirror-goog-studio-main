@@ -52,16 +52,16 @@ public class LintFixTest {
         // Make sure quickfixes worked too
         File source = project.file("app/src/main/kotlin/test/pkg/AccessTest2.kt");
         // The original source has this:
-        //    private val field5 = arrayOfNulls<Inner>(100)
+        //    private fun method1() { ... }
         //    ...
         //    private constructor()
         //    ...
         // After applying quickfixes, it contains this:
-        //    internal val field5 = arrayOfNulls<Inner>(100)
+        //    internal fun method1() { ... }
         //    ...
         //    internal constructor()
         //    ...
-        assertThat(source).contains("internal val field5");
+        assertThat(source).contains("internal fun method1()");
         assertThat(source).contains("internal constructor()");
     }
 }

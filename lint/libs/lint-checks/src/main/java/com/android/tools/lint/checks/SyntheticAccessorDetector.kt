@@ -32,6 +32,10 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMember
 import com.intellij.psi.PsiMethod
+import org.jetbrains.kotlin.asJava.elements.KtLightMethod
+import org.jetbrains.kotlin.asJava.elements.isGetter
+import org.jetbrains.kotlin.asJava.elements.isSetter
+import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.USimpleNameReferenceExpression
@@ -175,6 +179,11 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
                 if (!context.evaluator.isPrivate(member)) {
                     return
                 }
+                if (resolved is PsiField && isKotlin(resolved)) {
+                    // We don't recommend changing 'private' Kotlin fields to 'internal', because
+                    // that's just trading a synthetic accessor for a property accessor.
+                    return
+                }
                 val constant = ConstantEvaluator.evaluate(context, node)
                 if (constant != null) {
                     return // constant expression: inlined by javac or kotlinc
@@ -216,10 +225,19 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
 
         val isKotlin = isKotlin(member)
         val name = if (isKotlin) "Make internal" else "Make package protected"
+
+        val fixRange = if (member is KtLightMethod && (member.isGetter || member.isSetter)) {
+            // For Kotlin property accessors we have to modify the property declaration instead.
+            val ktProperty = member.kotlinOrigin as? KtProperty ?: return
+            context.getLocation(ktProperty)
+        } else {
+            context.getLocation(member)
+        }
+
         val fix = fix().replace()
             .name(name)
             .sharedName(name)
-            .range(context.getLocation(member))
+            .range(fixRange)
             .text("private ")
             .with(if (isKotlin) "internal " else "")
             .autoFix()
