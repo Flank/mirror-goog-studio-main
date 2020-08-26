@@ -308,6 +308,12 @@ public class DeployerException extends Exception {
                 "Retry",
                 ResolutionAction.RETRY),
 
+        UNSUPPORTED_IWI_CHANGE(
+                "A change was not supported by the IWI pipeline. Deployment should fall back to regular installation",
+                "",
+                "",
+                ResolutionAction.NONE),
+
         OPERATION_NOT_SUPPORTED("Operation not supported.", "%s", "", ResolutionAction.NONE),
 
         RUN_TIME_EXCEPTION("Runtime Exception.", "%s", "Retry", ResolutionAction.RETRY);
@@ -585,6 +591,10 @@ public class DeployerException extends Exception {
 
     public static DeployerException jdbcNativeLibError(String nativeLibLoc) {
         return new DeployerException(Error.JDBC_NATIVE_LIB, NO_ARGS, nativeLibLoc);
+    }
+
+    public static DeployerException changeNotSupportedByIWI(ChangeType type) {
+        return new DeployerException(Error.UNSUPPORTED_IWI_CHANGE, type, NO_ARGS, NO_ARGS);
     }
 
     public static DeployerException operationNotSupported(String reason) {

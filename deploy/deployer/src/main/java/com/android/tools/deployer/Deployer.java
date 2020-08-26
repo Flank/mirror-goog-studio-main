@@ -176,9 +176,10 @@ public class Deployer {
                 runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, runner.create(paths));
 
         boolean installSuccess = false;
-        if (options.useOptimisticInstall) {
+        if (!options.optimisticInstallSupport.isEmpty()) {
             OptimisticApkInstaller apkInstaller =
-                    new OptimisticApkInstaller(installer, adb, deployCache, metrics);
+                    new OptimisticApkInstaller(
+                            installer, adb, deployCache, metrics, options, logger);
             Task<OverlayId> overlayId =
                     runner.create(
                             Tasks.OPTIMISTIC_INSTALL, apkInstaller::install, packageName, apks);

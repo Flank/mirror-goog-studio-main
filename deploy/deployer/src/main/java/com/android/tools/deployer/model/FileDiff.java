@@ -33,4 +33,8 @@ public class FileDiff {
         this.newFile = newFile;
         this.status = status;
     }
+
+    public String getName() {
+        return oldFile == null ? newFile.getName() : oldFile.getName();
+    }
 }
