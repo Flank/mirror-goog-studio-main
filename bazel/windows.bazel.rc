@@ -17,4 +17,7 @@ build:remote --extra_execution_platforms=//tools/base/bazel/foundry:rbe_windows2
 build:remote --host_platform=//tools/base/bazel/foundry:rbe_windows2019_as
 build:remote --platforms=//tools/base/bazel/foundry:rbe_windows2019_as
 
+# Remove once b/162497186 is resolved
+build:remote --nouse_ijars
+
 build --compiler=clang-cl
