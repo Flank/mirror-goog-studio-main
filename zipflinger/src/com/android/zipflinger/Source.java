@@ -115,8 +115,8 @@ public abstract class Source {
 
     // Guaranteed to be called before writeTo. After this method has been called, every fields
     // in an entry must be known (csize, size, crc32, and compressionFlag).
-    abstract void prepare() throws IOException;
+    public abstract void prepare() throws IOException;
 
     // Return the number of bytes written.
-    abstract long writeTo(@NonNull ZipWriter writer) throws IOException;
+    public abstract long writeTo(@NonNull ZipWriter writer) throws IOException;
 }

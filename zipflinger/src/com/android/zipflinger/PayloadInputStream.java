@@ -28,13 +28,13 @@ import java.nio.channels.FileChannel;
  * Does not need to be closed. And does not close the wrapped
  * channel either.
  */
-class PayloadInputStream extends InputStream {
+public class PayloadInputStream extends InputStream {
 
     private FileChannel channel;
     private Location boundaries;
     private long position;
 
-    PayloadInputStream(@NonNull FileChannel channel, @NonNull Location location)
+    public PayloadInputStream(@NonNull FileChannel channel, @NonNull Location location)
             throws IOException {
         this.channel = channel;
         this.boundaries = location;

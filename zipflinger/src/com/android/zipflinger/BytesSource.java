@@ -93,10 +93,10 @@ public class BytesSource extends Source {
     }
 
     @Override
-    void prepare() {}
+    public void prepare() {}
 
     @Override
-    long writeTo(@NonNull ZipWriter writer) throws IOException {
+    public long writeTo(@NonNull ZipWriter writer) throws IOException {
         return writer.write(zipEntryPayload);
     }
 }
