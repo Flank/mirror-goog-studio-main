@@ -1856,6 +1856,33 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testConstraintReferencedIds() {
+        // Regression test for
+        // 79995034: Lint unused id does not take in account constraint_referenced_ids
+        lint().files(
+                        xml(
+                                "res/layout/main.xml",
+                                ""
+                                        + "<merge xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "    tools:keep=\"@layout/main\">\n"
+                                        + "    <Space\n"
+                                        + "        android:id=\"@+id/view1\"\n"
+                                        + "        android:layout_width=\"0dp\"\n"
+                                        + "        android:layout_height=\"0dp\" />\n"
+                                        + "\n"
+                                        + "    <androidx.constraintlayout.helper.widget.Flow\n"
+                                        + "        android:layout_width=\"0dp\"\n"
+                                        + "        android:layout_height=\"0dp\"\n"
+                                        + "        app:constraint_referenced_ids=\"view1\"\n"
+                                        + "        app:flow_maxElementsWrap=\"3\"\n"
+                                        + "        app:flow_wrapMode=\"aligned\" />\n"
+                                        + "</merge>\n"))
+                .run()
+                .expectClean();
+    }
+
     public void testSuspendFunctions() {
         // Regression test for https://issuetracker.google.com/135168818
         lint().files(

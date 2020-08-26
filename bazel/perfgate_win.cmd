@@ -38,6 +38,7 @@ CALL %SCRIPTDIR%bazel.cmd ^
  --test_tag_filters=%TESTTAGFILTERS% ^
  --profile=%DISTDIR%\winprof%BUILDNUMBER%.json.gz ^
  --runs_per_test=5 ^
+ --nouse_ijars ^
  -- //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar ^
  %TARGETS%
 

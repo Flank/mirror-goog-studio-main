@@ -336,7 +336,9 @@ open class VariantDslInfoImpl internal constructor(
                         ?: defaultConfig.testApplicationId
 
                 return if (testAppIdFromFlavors == null) {
-                    packageName
+                    testedVariantImpl?.applicationId?.map {
+                        "$it.test"
+                    } ?: packageName
                 } else {
                     // needed to make nullability work in kotlinc
                     val finalTestAppIdFromFlavors: String = testAppIdFromFlavors
