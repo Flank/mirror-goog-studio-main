@@ -21,6 +21,7 @@ import com.android.utils.cxx.Sections.FlagLists
 import com.android.utils.cxx.Sections.StringTable
 import java.io.File
 import java.io.RandomAccessFile
+import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
@@ -183,7 +184,9 @@ class CompileCommandsEncoder(val file : File) : AutoCloseable {
         ras.seek(bufferStartPosition)
         ras.write(map.array(), 0, map.position())
         bufferStartPosition += map.position()
-        map.clear()
+        // Type cast is required when this code is compiled by JDK 9+ and runs on JDK 8. See b/165948891 and
+        // https://stackoverflow.com/questions/61267495/exception-in-thread-main-java-lang-nosuchmethoderror-java-nio-bytebuffer-flip
+        (map as Buffer).clear()
     }
 
     /**
@@ -323,7 +326,7 @@ class CompileCommandsEncoder(val file : File) : AutoCloseable {
  * Read [MAGIC] and [VERSION] and return the position immediately after.
  */
 private fun MappedByteBuffer.positionAfterMagicAndVersion(file: File) : Int {
-    position(0)
+    (this as Buffer).position(0)
     MAGIC.forEach { expected ->
         val actual = get()
         if (actual != expected.toByte()) {
@@ -338,13 +341,14 @@ private fun MappedByteBuffer.positionAfterMagicAndVersion(file: File) : Int {
  * Leave the buffer pointer set at the beginning of [section]
  */
 private fun MappedByteBuffer.seekSection(start: Int, section: Sections) {
-    position(start)
+    val buffer: Buffer = this
+    buffer.position(start)
     val indexSize = int
     repeat(indexSize) {
         val type = Sections.getByValue(int)
         val offset = long
         if (type == section) {
-            position(offset.toInt())
+            buffer.position(offset.toInt())
             return
         }
     }
