@@ -183,7 +183,7 @@ class CompileCommandsEncoder(val file : File) : AutoCloseable {
         ras.seek(bufferStartPosition)
         ras.write(map.array(), 0, map.position())
         bufferStartPosition += map.position()
-        map.position(0)
+        map.clear()
     }
 
     /**
