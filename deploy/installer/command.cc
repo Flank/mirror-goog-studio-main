@@ -22,6 +22,7 @@
 #include "tools/base/deploy/installer/delta_install.h"
 #include "tools/base/deploy/installer/delta_preinstall.h"
 #include "tools/base/deploy/installer/dump.h"
+#include "tools/base/deploy/installer/live_literal_update.h"
 #include "tools/base/deploy/installer/oid_push.h"
 #include "tools/base/deploy/installer/overlay_install.h"
 #include "tools/base/deploy/installer/overlay_swap.h"
@@ -41,6 +42,8 @@ std::unique_ptr<Command> GetCommand(const char* command_name,
            [&]() { return new DeltaPreinstallCommand(workspace); }},
           {"deltainstall",
            [&]() { return new DeltaInstallCommand(workspace); }},
+          {"liveliteralupdate",
+           [&]() { return new LiveLiteralUpdateCommand(workspace); }},
           {"overlayswap", [&]() { return new OverlaySwapCommand(workspace); }},
           {"overlayinstall",
            [&]() { return new OverlayInstallCommand(workspace); }},
