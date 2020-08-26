@@ -56,7 +56,7 @@ public class CallStatement extends Statement {
         return updated;
     }
 
-    boolean isManaged(String owner) {
+    public boolean isManaged(String owner) {
         return preComments.stream().anyMatch(s -> s.toLowerCase().equals(managedMark(owner)));
     }
 
