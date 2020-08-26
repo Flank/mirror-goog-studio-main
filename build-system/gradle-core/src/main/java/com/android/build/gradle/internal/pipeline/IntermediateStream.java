@@ -24,19 +24,21 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import org.gradle.api.Project;
+import org.gradle.api.Transformer;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 
 /**
  * Version of TransformStream handling outputs of transforms.
@@ -186,26 +188,22 @@ class IntermediateStream extends TransformStream {
         // create a collection that only returns the requested content type/scope,
         // and contain the dependency information.
 
-        // the collection inside this type of stream cannot be used as is. This is because it
+        // The collection inside this type of stream cannot be used as is. This is because it
         // contains the root location rather that the actual inputs of the stream. Therefore
         // we need to go through them and create a single collection that contains the actual
         // inputs.
-        // However the content of the intermediate root folder isn't known at configuration
-        // time so we need to pass a callable that will compute the files dynamically.
-        Callable<Collection<File>> supplier =
-                () -> {
-                    // If the task has not been executed, return an empty list; otherwise, gradle
-                    // will try to resolve the output files before task execution.
-                    // TaskState::getExecuted below will return true if task was executed or if it
-                    // is UP_TO_DATE, FROM_CACHE, SKIPPED, or NO_SOURCE.
-                    if (!project.getTasks().getByName(taskName).getState().getExecuted()) {
-                        return ImmutableList.of();
-                    }
-                    init(false);
-                    return folderUtils.getFiles(streamFilter);
-                };
-
-        return project.files(supplier).builtBy(getFileCollection().getBuildDependencies());
+        StreamBasedTask streamBasedTask = (StreamBasedTask) project.getTasks().getByName(taskName);
+        Provider<Collection<File>> map =
+                streamBasedTask
+                        .getStreamOutputFolder()
+                        .map(
+                                (Transformer<? extends Collection<File>, ? super Directory>
+                                                & Serializable)
+                                        (s -> {
+                                            init(false);
+                                            return folderUtils.getFiles(streamFilter);
+                                        }));
+        return project.files(map);
     }
 
     private void init(boolean ignoreUnexpectedScopes) {

@@ -579,6 +579,10 @@ public abstract class TransformTask extends StreamBasedTask {
             task.consumedInputStreams = consumedInputStreams;
             task.referencedInputStreams = referencedInputStreams;
             task.outputStream = outputStream;
+            if (outputStream != null) {
+                task.getStreamOutputFolder()
+                        .fileProvider(task.getProject().provider(outputStream::getRootLocation));
+            }
             task.setVariantName(variantName);
             boolean cachingEnabled = transform.isCacheable();
             task.getOutputs()

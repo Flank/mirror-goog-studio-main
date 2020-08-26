@@ -20,8 +20,8 @@ import android.databinding.tool.util.Preconditions;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.google.common.collect.Iterables;
-import java.io.File;
 import java.util.Collection;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitivity;
@@ -42,13 +42,7 @@ public abstract class StreamBasedTask extends AndroidVariantTask {
     @Nullable
     @Optional
     @OutputDirectory
-    public File getStreamOutputFolder() {
-        if (outputStream != null) {
-            return outputStream.getRootLocation();
-        }
-
-        return null;
-    }
+    public abstract DirectoryProperty getStreamOutputFolder();
 
     /**
      * We register each of the streams as a separate input in order to get incremental updates per

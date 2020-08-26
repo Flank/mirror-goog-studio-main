@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -34,8 +33,7 @@ public class JarJarTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("jarjarIntegration")
-                    // http://b/161336692
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .setTargetGradleVersion("6.7-20200825220036+0000")
                     .create();
 
     @AfterClass
