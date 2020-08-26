@@ -46,10 +46,43 @@ class CompileCommandsCodecTest {
         // Safety check to make sure we don't write a whole final block
         assertThat(out.length()).isLessThan(1024)
         streamCompileCommands(out) {
-            sourceFileStreamed,
-                    compilerStreamed,
-                    flagsStreamed,
-                    workingDirectoryStreamed ->
+                sourceFileStreamed,
+                compilerStreamed,
+                flagsStreamed,
+                workingDirectoryStreamed ->
+            assertThat(sourceFileStreamed).isEqualTo(sourceFile)
+            assertThat(compilerStreamed).isEqualTo(compiler)
+            assertThat(flagsStreamed).isEqualTo(flags)
+            assertThat(workingDirectoryStreamed).isEqualTo(workingDirectory)
+        }
+    }
+
+    @Test
+    fun stringLargerThanBufferSize() {
+        val folder = tempFolder.newFolder()
+        val out = File(folder, "compile_commands.json.bin")
+        val sourceFile = File("my/source/file.cpp")
+        val compiler = File("clang.exe")
+        val flags = listOf("-a", "-b")
+        val workingDirectory = File("my/working/directory")
+        // Set the initial buffer size to 1 so that it has to grow
+        // to be able to support the size of the strings passed in.
+        CompileCommandsEncoder(out, initialBufferSize = 1).use { encoder ->
+            encoder.writeCompileCommand(
+                sourceFile,
+                compiler,
+                flags,
+                workingDirectory
+            )
+        }
+        println("File size is ${out.length()}")
+        // Safety check to make sure we don't write a whole final block
+        assertThat(out.length()).isLessThan(1024)
+        streamCompileCommands(out) {
+                sourceFileStreamed,
+                compilerStreamed,
+                flagsStreamed,
+                workingDirectoryStreamed ->
             assertThat(sourceFileStreamed).isEqualTo(sourceFile)
             assertThat(compilerStreamed).isEqualTo(compiler)
             assertThat(flagsStreamed).isEqualTo(flags)

@@ -79,7 +79,7 @@ private const val VERSION = 1
 private const val COMPILE_COMMAND_CONTEXT_MESSAGE : Byte = 0x00
 private const val COMPILE_COMMAND_FILE_MESSAGE : Byte = 0x01
 
-private const val BYTEBUFFER_WINDOW_SIZE = 1024 * 32 // Grow by 32K each time growth is needed
+private const val BYTEBUFFER_WINDOW_SIZE = 1024 * 32
 
 /**
  * Enum of different file section types.
@@ -97,12 +97,15 @@ private enum class Sections {
 /**
  * Class that encodes compile commands into a binary format.
  */
-class CompileCommandsEncoder(val file : File) : AutoCloseable {
+class CompileCommandsEncoder(
+    val file : File,
+    initialBufferSize : Int = BYTEBUFFER_WINDOW_SIZE
+) : AutoCloseable {
     private val ras = RandomAccessFile(file, "rw")
     private val channel = ras.channel
     private val lock = channel.lock()
     private var bufferStartPosition = 0L
-    private var map = ByteBuffer.allocate(BYTEBUFFER_WINDOW_SIZE)
+    private var map = ByteBuffer.allocate(initialBufferSize)
     private val stringTableIndexEntry : Long
     private val flagListsIndexEntry : Long
     private val compileCommandsIndexEntry : Long
@@ -136,7 +139,7 @@ class CompileCommandsEncoder(val file : File) : AutoCloseable {
         compileCommandsIndexEntry = writeSectionIndexEntry(CompileCommands)
         stringTableIndexEntry = writeSectionIndexEntry(StringTable)
         flagListsIndexEntry = writeSectionIndexEntry(FlagLists)
-        countOfSourceMessagesOffset = map.position().toLong()
+        countOfSourceMessagesOffset = ras.filePointer + map.position().toLong()
         encodeInt(0) // Reserve for count of source messages
     }
 
@@ -155,7 +158,7 @@ class CompileCommandsEncoder(val file : File) : AutoCloseable {
     private fun encodeUTF8(string : String) {
         val bytes = string.toByteArray(Charsets.UTF_8)
         val map = ensureAtLeast(
-            Short.SIZE_BYTES +
+            Int.SIZE_BYTES +
             bytes.size
         )
         map.putInt(bytes.size)
@@ -170,8 +173,11 @@ class CompileCommandsEncoder(val file : File) : AutoCloseable {
      * Check the size of [map] and grow if necessary.
      */
     private fun ensureAtLeast(bytes: Int) : ByteBuffer {
-        if (BYTEBUFFER_WINDOW_SIZE <= map.position() + bytes) {
+        if (map.capacity() < map.position() + bytes) {
             flushBuffer()
+            if (map.capacity() < bytes) {
+                map = ByteBuffer.allocate(bytes)
+            }
         }
         return map
     }
@@ -215,7 +221,7 @@ class CompileCommandsEncoder(val file : File) : AutoCloseable {
      *
      */
     private fun writeSectionIndexEntry(section: Sections): Long {
-        val result = map.position().toLong()
+        val result = ras.filePointer + map.position().toLong()
         encodeInt(section.ordinal)
         encodeLongZero()
         return result
