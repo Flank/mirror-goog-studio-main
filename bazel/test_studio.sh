@@ -81,10 +81,16 @@ if [[ -d "${DIST_DIR}" ]]; then
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
   readonly bin_dir="$("${script_dir}"/bazel info ${config_options} bazel-bin)"
 
+  if [[ $IS_POST_SUBMIT ]]; then
+    readonly perfgate_arg="-perfzip \"${DIST_DIR}/perfgate_data.zip\""
+  else
+    readonly perfgate_arg=""
+  fi
+
   ${java} -jar "${bin_dir}/tools/vendor/adt_infra_internal/rbe/logscollector/logs-collector_deploy.jar" \
     -bes "${DIST_DIR}/bazel-${BUILD_NUMBER}.bes" \
     -testlogs "${DIST_DIR}/logs/junit" \
-    -perfzip "${DIST_DIR}/perfgate_data.zip"
+    ${perfgate_arg}
 
   cp -a ${bin_dir}/tools/idea/updater/updater_deploy.jar ${DIST_DIR}/android-studio-updater.jar
   cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${DIST_DIR}
