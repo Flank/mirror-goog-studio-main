@@ -371,9 +371,6 @@ public class VariantManager<
 
         VariantSources variantSources = variantBuilder.createVariantSources();
 
-        // Only record release artifacts
-        //TODO(b/162715908) record application ids
-
         // Add the container of dependencies.
         // The order of the libraries is important, in descending order:
         // variant-specific, build type, multi-flavor, flavor1, flavor2, ..., defaultConfig.

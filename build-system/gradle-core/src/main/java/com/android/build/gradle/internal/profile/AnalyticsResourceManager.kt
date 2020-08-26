@@ -75,6 +75,7 @@ class AnalyticsResourceManager(
 
     @VisibleForTesting
     val executionSpans = ConcurrentLinkedQueue<GradleBuildProfileSpan>()
+    private val applicationIds = ConcurrentLinkedQueue<String>()
 
     private val nameAnonymizer = NameAnonymizer()
     private var lastRecordId: AtomicLong? = null
@@ -318,6 +319,10 @@ class AnalyticsResourceManager(
         otherEvents.add(event)
     }
 
+    fun recordApplicationId(metadataFile: File) {
+        applicationIds.add(metadataFile.readText())
+    }
+
     private fun getProjectId(projectPath: String) : Long {
         val id = projects[projectPath]?.projectBuilder?.id
         if (id != null) {
@@ -396,7 +401,8 @@ class AnalyticsResourceManager(
             .setGcCount(endMemorySample.gcCount - initialMemorySample.gcCount)
             .setGcTime(endMemorySample.gcTimeMs - initialMemorySample.gcTimeMs)
 
-        //TODO(b/162715908) add raw application ids
+        profileBuilder.addAllRawProjectId(applicationIds.toSet().toList().sorted())
+
         return profileBuilder.build()
     }
 

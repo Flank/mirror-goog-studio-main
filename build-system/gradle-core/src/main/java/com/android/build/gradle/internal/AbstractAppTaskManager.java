@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.feature.BundleAllClasses;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.tasks.AnalyticsRecordingTask;
 import com.android.build.gradle.internal.tasks.ApkZipPackagingTask;
 import com.android.build.gradle.internal.tasks.AppClasspathCheckTask;
 import com.android.build.gradle.internal.tasks.AppPreBuildTask;
@@ -57,7 +58,6 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ExtractDeepLinksTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.builder.core.VariantType;
-import com.android.builder.profile.Recorder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.List;
@@ -234,6 +234,13 @@ public abstract class AbstractAppTaskManager<
             } else {
                 //noinspection unchecked
                 task = taskFactory.register(AppPreBuildTask.getCreationAction(creationConfig));
+                ApkCreationConfig config = (ApkCreationConfig) creationConfig;
+                // Only record application ids for release artifacts
+                if (!config.getDebuggable()) {
+                    TaskProvider<AnalyticsRecordingTask> recordTask =
+                            taskFactory.register(new AnalyticsRecordingTask.CreationAction(config));
+                    task.configure(it -> it.finalizedBy(recordTask));
+                }
             }
 
             if (!useDependencyConstraints) {

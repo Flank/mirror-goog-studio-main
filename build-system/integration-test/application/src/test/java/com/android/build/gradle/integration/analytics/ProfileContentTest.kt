@@ -49,10 +49,10 @@ class ProfileContentTest {
             capturer.capture { project.model().fetchAndroidProjects() })
 
         val cleanBuild = Iterables.getOnlyElement(
-            capturer.capture { project.execute("assembleDebug") })
+            capturer.capture { project.execute("assembleRelease") })
 
         val noOpBuild = Iterables.getOnlyElement(
-            capturer.capture { project.execute("assembleDebug") })
+            capturer.capture { project.execute("assembleRelease") })
 
         for (profile in listOf(getModel, cleanBuild, noOpBuild)) {
             assertThat(profile.spanCount).isGreaterThan(0)
@@ -75,11 +75,12 @@ class ProfileContentTest {
             assertThat(gbv.minSdkVersion.apiLevel).isEqualTo(SUPPORT_LIB_MIN_SDK)
             assertThat(gbv.hasTargetSdkVersion()).named("has target sdk version").isFalse()
             assertThat(gbv.hasMaxSdkVersion()).named("has max sdk version").isFalse()
-            //TODO re-enable this test when (b/162715908) is fixed
-//            assertThat(HashSet(profile.rawProjectIdList))
-//                .containsExactly("com.example.helloworld")
             assertThat(gbp.pluginNamesList).contains("com.android.build.gradle.AppPlugin")
             assertThat(gbp.pluginNamesList).contains("org.jetbrains.kotlin.gradle.plugin.KotlinAndroidPluginWrapper")
+        }
+        for (profile in listOf(cleanBuild, noOpBuild)) {
+            assertThat(HashSet(profile.rawProjectIdList))
+                .containsExactly("com.example.helloworld")
         }
     }
 }
