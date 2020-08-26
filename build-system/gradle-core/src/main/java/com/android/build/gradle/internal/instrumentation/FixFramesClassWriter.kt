@@ -76,13 +76,13 @@ open class FixFramesClassWriter : ClassWriter {
                 secondType.substring(firstTypeArrayNestingDepth + 1, secondType.length - 1)
 
         val firstTypeInterfaces =
-                classesHierarchyResolver.getAllInterfacesInInternalForm(firstComponentType, true)
+                classesHierarchyResolver.getAllInterfacesInInternalForm(firstComponentType)
         val firstTypeSuperClasses =
-                classesHierarchyResolver.getAllSuperClassesInInternalForm(firstComponentType, true)
+                classesHierarchyResolver.getAllSuperClassesInInternalForm(firstComponentType)
         val secondTypeInterfaces =
-                classesHierarchyResolver.getAllInterfacesInInternalForm(secondComponentType, true)
+                classesHierarchyResolver.getAllInterfacesInInternalForm(secondComponentType)
         val secondTypeSuperClasses =
-                classesHierarchyResolver.getAllSuperClassesInInternalForm(secondComponentType, true)
+                classesHierarchyResolver.getAllSuperClassesInInternalForm(secondComponentType)
 
         if (isAssignableFrom(firstComponentType,
                         secondComponentType,
@@ -107,13 +107,13 @@ open class FixFramesClassWriter : ClassWriter {
         }
 
         val firstTypeInterfaces =
-                classesHierarchyResolver.getAllInterfacesInInternalForm(firstType, true)
+                classesHierarchyResolver.getAllInterfacesInInternalForm(firstType)
         val firstTypeSuperClasses =
-                classesHierarchyResolver.getAllSuperClassesInInternalForm(firstType, true)
+                classesHierarchyResolver.getAllSuperClassesInInternalForm(firstType)
         val secondTypeInterfaces =
-                classesHierarchyResolver.getAllInterfacesInInternalForm(secondType, true)
+                classesHierarchyResolver.getAllInterfacesInInternalForm(secondType)
         val secondTypeSuperClasses =
-                classesHierarchyResolver.getAllSuperClassesInInternalForm(secondType, true)
+                classesHierarchyResolver.getAllSuperClassesInInternalForm(secondType)
 
         if (isAssignableFrom(firstType, secondType, secondTypeInterfaces, secondTypeSuperClasses)) {
             return firstType

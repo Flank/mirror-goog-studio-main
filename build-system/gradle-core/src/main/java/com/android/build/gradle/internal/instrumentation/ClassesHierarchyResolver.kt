@@ -27,11 +27,6 @@ class ClassesHierarchyResolver(classesDataCache: ClassesDataCache, sources: Set<
 
     private val classesDataCaches = classesDataCache.getSourceCaches(sources)
 
-    private fun loadClassData(className: String): ClassesDataSourceCache.ClassData {
-        return maybeLoadClassData(className)
-            ?: throw RuntimeException("Unable to find class data for $className")
-    }
-
     private fun maybeLoadClassData(className: String): ClassesDataSourceCache.ClassData? {
         // Check if it's already cached
         classesDataCaches.forEach {
@@ -67,11 +62,8 @@ class ClassesHierarchyResolver(classesDataCache: ClassesDataCache, sources: Set<
         return getAllSuperClassesInInternalForm(className).map { it.replace('/', '.') }
     }
 
-    fun getAllSuperClassesInInternalForm(
-        className: String,
-        failOnError: Boolean = false
-    ): List<String> {
-        return doGetAllSuperClasses(className, failOnError).reversed()
+    fun getAllSuperClassesInInternalForm(className: String): List<String> {
+        return doGetAllSuperClasses(className).reversed()
     }
 
     /**
@@ -90,33 +82,29 @@ class ClassesHierarchyResolver(classesDataCache: ClassesDataCache, sources: Set<
         return getAllInterfacesInInternalForm(className).map { it.replace('/', '.') }
     }
 
-    fun getAllInterfacesInInternalForm(
-        className: String,
-        failOnError: Boolean = false
-    ): List<String> {
-        return doGetAllInterfaces(className, failOnError).sorted()
+    fun getAllInterfacesInInternalForm(className: String): List<String> {
+        return doGetAllInterfaces(className).sorted()
     }
 
-    private fun doGetAllSuperClasses(className: String, failOnError: Boolean): MutableList<String> {
-        val classData = if (failOnError) loadClassData(className) else maybeLoadClassData(className)
+    private fun doGetAllSuperClasses(className: String): MutableList<String> {
+        val classData = maybeLoadClassData(className)
         if (classData?.superClass == null) {
             return mutableListOf()
         }
         return doGetAllSuperClasses(
-            classData.superClass,
-            failOnError
+            classData.superClass
         ).apply { add(classData.superClass) }
     }
 
-    private fun doGetAllInterfaces(className: String, failOnError: Boolean): MutableSet<String> {
-        val classData = if (failOnError) loadClassData(className) else maybeLoadClassData(className)
+    private fun doGetAllInterfaces(className: String): MutableSet<String> {
+        val classData = maybeLoadClassData(className)
         return mutableSetOf<String>().apply {
             if (classData?.superClass != null) {
-                addAll(doGetAllInterfaces(classData.superClass, failOnError))
+                addAll(doGetAllInterfaces(classData.superClass))
             }
             classData?.interfaces?.forEach { interfaceClass ->
                 if (add(interfaceClass)) {
-                    addAll(doGetAllInterfaces(interfaceClass, failOnError))
+                    addAll(doGetAllInterfaces(interfaceClass))
                 }
             }
         }
