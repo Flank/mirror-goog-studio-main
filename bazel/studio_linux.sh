@@ -73,7 +73,8 @@ echo "PROJECT = \"unb\"" > "${script_dir}/project.bzl"
   //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar \
   //tools/base/profiler/native/trace_processor_daemon \
   //tools/adt/idea/studio:test_studio \
-  //tools/adt/idea/studio:searchable_options_test
+  //tools/adt/idea/studio:searchable_options_test \
+  //tools/base/...
 # $(< "${script_dir}/targets") contains:
   # @blaze//:aswb_tests \
   # //prebuilts/studio/... \
