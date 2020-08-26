@@ -27,17 +27,6 @@
 #include "tools/base/deploy/common/log.h"
 
 namespace deploy {
-namespace {
-auto __access = access;
-auto __creat = creat;
-auto __fopen = fopen;
-auto __stat = stat;
-auto __chmod = chmod;
-auto __mkdir = mkdir;
-auto __opendir = opendir;
-auto __unlink = unlink;
-int (*__open)(const char*, int, ...) = open;
-}  // namespace
 
 std::string IO::ResolvePath(const std::string& path) {
   // Only apply the prefix to absolute paths.
@@ -48,19 +37,19 @@ std::string IO::ResolvePath(const std::string& path) {
 }
 
 int IO::access(const std::string& pathname, int mode) {
-  return __access(ResolvePath(pathname).c_str(), mode);
+  return ::access(ResolvePath(pathname).c_str(), mode);
 }
 
 int IO::creat(const std::string& pathname, mode_t mode) {
-  return __creat(ResolvePath(pathname).c_str(), mode);
+  return ::creat(ResolvePath(pathname).c_str(), mode);
 }
 
 FILE* IO::fopen(const std::string& filename, const std::string& mode) {
-  return __fopen(ResolvePath(filename).c_str(), mode.c_str());
+  return ::fopen(ResolvePath(filename).c_str(), mode.c_str());
 }
 
 int IO::stat(const std::string& pathname, struct stat* statbuf) {
-  int ret = __stat(ResolvePath(pathname).c_str(), statbuf);
+  int ret = ::stat(ResolvePath(pathname).c_str(), statbuf);
 #ifdef __ANDROID__
   return ret;
 #else
@@ -82,27 +71,27 @@ int IO::stat(const std::string& pathname, struct stat* statbuf) {
 }
 
 int IO::chmod(const std::string& pathname, mode_t mode) {
-  return __chmod(ResolvePath(pathname).c_str(), mode);
+  return ::chmod(ResolvePath(pathname).c_str(), mode);
 }
 
 int IO::mkdir(const std::string& pathname, mode_t mode) {
-  return __mkdir(ResolvePath(pathname).c_str(), mode);
+  return ::mkdir(ResolvePath(pathname).c_str(), mode);
 }
 
 int IO::open(const std::string& pathname, int flags) {
-  return __open(ResolvePath(pathname).c_str(), flags);
+  return ::open(ResolvePath(pathname).c_str(), flags);
 }
 
 int IO::open(const std::string& pathname, int flags, mode_t mode) {
-  return __open(ResolvePath(pathname).c_str(), flags, mode);
+  return ::open(ResolvePath(pathname).c_str(), flags, mode);
 }
 
 DIR* IO::opendir(const std::string& name) {
-  return __opendir(ResolvePath(name).c_str());
+  return ::opendir(ResolvePath(name).c_str());
 }
 
 int IO::unlink(const std::string& pathname) {
-  return __unlink(ResolvePath(pathname).c_str());
+  return ::unlink(ResolvePath(pathname).c_str());
 }
 
 }  // namespace deploy
