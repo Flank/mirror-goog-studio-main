@@ -152,7 +152,7 @@ TEST(SchedulingRequestHandlerTest, PopulateEventsAllData) {
 
   // Very simple test to make sure we are returning more data than the
   // tests above.
-  EXPECT_EQ(result.sched_event_size(), 583930);
+  EXPECT_EQ(result.sched_event_size(), 945682);
   EXPECT_EQ(result.num_cores(), 8);
 }
 

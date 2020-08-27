@@ -152,7 +152,12 @@ message QueryResult {
 }
 
 message ProcessMetadataResult {
+  // List of processes contained in the processed trace, with associated
+  // threads.
   repeated ProcessMetadata process = 1;
+
+  // Threads that we don't know to which process they belong to.
+  repeated ThreadMetadata dangling_thread = 2;
 
   message ProcessMetadata {
     int64 id = 1;

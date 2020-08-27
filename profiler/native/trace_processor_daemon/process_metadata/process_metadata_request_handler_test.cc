@@ -59,6 +59,7 @@ TEST(ProcessMetadataRequestHandlerTest, PopulateMetadataByProcessId) {
   handler.PopulateMetadata(params_proto, &result);
 
   EXPECT_EQ(result.process_size(), 1);
+  EXPECT_EQ(result.dangling_thread_size(), 0);
 
   auto tank_process = result.process(0);
   EXPECT_EQ(tank_process.id(), TANK_PROCESS_PID);
@@ -78,6 +79,7 @@ TEST(ProcessMetadataRequestHandlerTest, PopulateMetadataAllData) {
 
   // tank.trace has 240 process, but we discard the process with pid = 0.
   EXPECT_EQ(result.process_size(), 239);
+  EXPECT_EQ(result.dangling_thread_size(), 743);
 }
 
 }  // namespace
