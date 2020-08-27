@@ -17,10 +17,19 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.ApkPackagingOptions
+import com.android.build.api.variant.JniLibsApkPackagingOptions
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 
 class ApkPackagingOptionsImpl(
     dslPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions,
-    variantPropertiesApiServices: VariantPropertiesApiServices
+    variantPropertiesApiServices: VariantPropertiesApiServices,
+    minSdk: Int
 ) : PackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices), ApkPackagingOptions {
+
+    override val jniLibs =
+        JniLibsApkPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices, minSdk)
+
+    override fun jniLibs(action: JniLibsApkPackagingOptions.() -> Unit) {
+        action.invoke(jniLibs)
+    }
 }

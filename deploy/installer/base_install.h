@@ -28,7 +28,7 @@ class BaseInstallCommand : public Command {
  public:
   BaseInstallCommand(Workspace& workspace);
   virtual ~BaseInstallCommand() = default;
-  virtual void ParseParameters(int argc, char** argv);
+  virtual void ParseParameters(const proto::InstallerRequest& request);
 
  protected:
   bool CreateInstallSession(std::string* output,

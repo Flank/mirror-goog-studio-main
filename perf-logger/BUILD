@@ -23,12 +23,9 @@ iml_module(
 
 # managed by go/iml_to_build [unb]
 iml_module(
-    name = "unb.studio.perf-logger",
+    name = "studio.perf-logger",
     iml_files = ["perf-logger.iml"],
-    tags = [
-        "manual",
-        "unb",
-    ],
+    project = "unb",
     test_srcs = [
         "src/main/java",
         "src/test/java",
@@ -37,10 +34,10 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/base/testutils:unb.studio.android.sdktools.testutils[module, test]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/adt/idea/.idea/libraries:unb.Guava[test]",
         "//tools/adt/idea/.idea/libraries:unb.truth[test]",
-        "//tools/base/annotations:unb.studio.android.sdktools.android-annotations[module, test]",
-        "//tools/base/common:unb.studio.android.sdktools.common[module, test]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module, test]",
+        "//tools/base/common:studio.android.sdktools.common[module, test]",
     ],
 )

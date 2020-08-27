@@ -46,7 +46,7 @@ interface SyncIssue {
      *
      * This is an optional extension of [message]
      */
-    val multiLineMessage: List<String?>?
+    val multiLineMessage: List<String>?
 
     companion object {
         const val SEVERITY_WARNING = 1

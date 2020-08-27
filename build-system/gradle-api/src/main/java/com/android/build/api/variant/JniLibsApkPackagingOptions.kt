@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package androidx.ui.core
+package com.android.build.api.variant
 
-import android.content.Context
-import android.view.ViewGroup
+import org.gradle.api.Incubating
+import org.gradle.api.provider.Property
 
 /**
- * During testing this is used instead of the version in androidx-ui-core, since that library
- * is not available during tests.
+ * Defines an APK variant's packaging options for native library (.so) files.
  */
-class AndroidComposeView(context: Context) : ViewGroup(context) {
-    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-    }
+@Incubating
+interface JniLibsApkPackagingOptions : JniLibsPackagingOptions {
+
+    /**
+     * Whether to use the legacy convention of compressing all .so files in the APK.
+     */
+    val legacyPackaging: Property<Boolean>
 }

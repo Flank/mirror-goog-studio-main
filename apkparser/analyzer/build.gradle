@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-apply plugin: 'java'
+apply plugin: 'com.android.tools.java-library'
+apply plugin: 'com.android.tools.publish'
 apply plugin: 'sdk-java-lib'
 
 def jardeps = [
@@ -59,6 +60,3 @@ project.ext.pomDesc = 'Library for parsing and analyzing information from APK fi
 group = 'com.android.tools.apkparser'
 archivesBaseName = 'apkanalyzer'
 version = rootProject.ext.baseVersion
-
-apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/javadoc.gradle"

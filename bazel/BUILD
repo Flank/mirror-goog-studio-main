@@ -389,6 +389,23 @@ java_binary(
     ],
 )
 
+py_binary(
+    name = "status_reader",
+    srcs = ["status_reader.py"],
+    visibility = ["//visibility:public"],
+)
+
+py_test(
+    name = "status_reader_test",
+    srcs = ["status_reader_test.py"],
+    tags = [
+        "no_mac",
+        "no_windows",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [":status_reader"],
+)
+
 java_jarjar(
     name = "studio-proto",
     srcs = [
@@ -479,6 +496,12 @@ config_setting(
 config_setting(
     name = "android_cpu_armeabi",
     values = {"cpu": "armeabi"},
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "release",
+    values = {"define": "release=true"},
     visibility = ["//visibility:public"],
 )
 

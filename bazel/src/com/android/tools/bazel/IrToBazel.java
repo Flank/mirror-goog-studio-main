@@ -81,7 +81,7 @@ public class IrToBazel {
                                 + " (does it not have a BUILD file yet?)");
             }
             name = config.nameRule(pkg.getName(), rel, name);
-            name = bazelProject.id().isEmpty() ? name : bazelProject.id() + "." + name;
+            // Modules in different projects use the same name and different project attributes.
             ImlModule iml = new ImlModule(pkg, name);
             rules.put(bazelModule, iml);
 

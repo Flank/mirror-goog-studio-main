@@ -590,8 +590,10 @@ public class LibraryTaskManager
                 taskFactory.register(
                         new VerifyLibraryResourcesTask.CreationAction(variantProperties));
 
-        TaskFactoryUtils.dependsOn(
-                variantProperties.getTaskContainer().getAssembleTask(), verifyLibraryResources);
+        variantProperties.getTaskContainer().getAssembleTask().configure(task -> {
+            task.dependsOn(variantProperties.getArtifacts().get(
+                    InternalArtifactType.VERIFIED_LIBRARY_RESOURCES.INSTANCE));
+        });
     }
 
     @Override

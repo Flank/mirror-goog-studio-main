@@ -55,7 +55,7 @@ public final class SdkConstants {
      * @see <a href="https://developer.android.com/studio/command-line/variables">Android SDK
      *     environment variables</a>
      */
-    public static final String ANDROID_HOME_ENV = "ANDROID_HOME";
+    @Deprecated public static final String ANDROID_HOME_ENV = "ANDROID_HOME";
 
     /**
      * ANDROID_SDK_ROOT environment variable that specifies the installation path of an Android SDK.

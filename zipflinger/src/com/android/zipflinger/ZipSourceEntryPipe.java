@@ -44,7 +44,7 @@ class ZipSourceEntryPipe extends Source {
     }
 
     @Override
-    void prepare() throws IOException {
+    public void prepare() throws IOException {
         crc = entry.getCrc();
         if (compressionLevel != Deflater.NO_COMPRESSION) {
             compressionFlag = LocalFileHeader.COMPRESSION_DEFLATE;
@@ -65,7 +65,7 @@ class ZipSourceEntryPipe extends Source {
     }
 
     @Override
-    long writeTo(@NonNull ZipWriter writer) throws IOException {
+    public long writeTo(@NonNull ZipWriter writer) throws IOException {
         return writer.write(byteBuffer);
     }
 }

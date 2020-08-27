@@ -18,10 +18,14 @@ package test.inspector;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.inspection.ArtToolInterface;
+import androidx.inspection.ArtToolInterface.EntryHook;
+import androidx.inspection.ArtToolInterface.ExitHook;
 import androidx.inspection.Connection;
 import androidx.inspection.InspectorEnvironment;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 import test.inspector.api.TestInspectorApi;
 import test.inspector.api.TodoInspectorApi;
 
@@ -60,11 +64,11 @@ public final class TodoInspector extends TestInspector {
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
-
-        environment.registerEntryHook(
+        ArtToolInterface artTooling = environment.artTI();
+        artTooling.registerEntryHook(
                 classActivity,
                 "newGroup()" + SIGNATURE_TODO_GROUP,
-                new InspectorEnvironment.EntryHook() {
+                new EntryHook() {
                     @Override
                     public void onEntry(@Nullable Object self, @NonNull List<Object> params) {
                         getConnection()
@@ -73,8 +77,8 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
-        InspectorEnvironment.ExitHook<Object> hook =
-                new InspectorEnvironment.ExitHook<Object>() {
+        ExitHook<Object> hook =
+                new ExitHook<Object>() {
                     @Override
                     public Object onExit(Object returnValue) {
                         getConnection()
@@ -83,15 +87,15 @@ public final class TodoInspector extends TestInspector {
                     }
                 };
 
-        environment.registerExitHook(classActivity, "newGroup()" + SIGNATURE_TODO_GROUP, hook);
+        artTooling.registerExitHook(classActivity, "newGroup()" + SIGNATURE_TODO_GROUP, hook);
 
-        environment.registerExitHook(
+        artTooling.registerExitHook(
                 classActivity, "newGroup(" + SIGNATURE_STRING + ")" + SIGNATURE_TODO_GROUP, hook);
 
-        environment.registerEntryHook(
+        artTooling.registerEntryHook(
                 classActivity,
                 "newItem()" + SIGNATURE_TODO_ITEM,
-                new InspectorEnvironment.EntryHook() {
+                new EntryHook() {
                     @Override
                     public void onEntry(@Nullable Object self, @NonNull List<Object> params) {
                         getConnection()
@@ -99,10 +103,10 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
-        environment.registerExitHook(
+        artTooling.registerExitHook(
                 classActivity,
                 "newItem()" + SIGNATURE_TODO_ITEM,
-                new InspectorEnvironment.ExitHook<Object>() {
+                new ExitHook<Object>() {
                     @Override
                     public Object onExit(Object returnValue) {
                         getConnection()
@@ -111,10 +115,10 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
-        environment.registerEntryHook(
+        artTooling.registerEntryHook(
                 classActivity,
                 "removeGroup(I)V",
-                new InspectorEnvironment.EntryHook() {
+                new EntryHook() {
                     @Override
                     public void onEntry(@Nullable Object self, @NonNull List<Object> params) {
                         Integer index = (Integer) params.get(0);
@@ -125,10 +129,10 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
-        environment.registerExitHook(
+        artTooling.registerExitHook(
                 classActivity,
                 "getItemsCount()I",
-                new InspectorEnvironment.ExitHook<Object>() {
+                new ExitHook<Object>() {
                     @Override
                     public Object onExit(Object returnValue) {
                         Integer count = (Integer) returnValue;
@@ -140,10 +144,10 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
-        environment.registerExitHook(
+        artTooling.registerExitHook(
                 classActivity,
                 "getByteItemsCount()B",
-                new InspectorEnvironment.ExitHook<Object>() {
+                new ExitHook<Object>() {
                     @Override
                     public Object onExit(Object returnValue) {
                         Byte count = (Byte) returnValue;
@@ -155,10 +159,10 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
-        environment.registerExitHook(
+        artTooling.registerExitHook(
                 classActivity,
                 "getShortItemsCount()S",
-                new InspectorEnvironment.ExitHook<Object>() {
+                new ExitHook<Object>() {
                     @Override
                     public Object onExit(Object returnValue) {
                         Short count = (Short) returnValue;
@@ -170,10 +174,10 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
-        environment.registerExitHook(
+        artTooling.registerExitHook(
                 classActivity,
                 "getLongItemsCount()J",
-                new InspectorEnvironment.ExitHook<Object>() {
+                new ExitHook<Object>() {
                     @Override
                     public Object onExit(Object returnValue) {
                         Long count = (Long) returnValue;
@@ -185,10 +189,10 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
-       environment.registerExitHook(
+        artTooling.registerExitHook(
                 classActivity,
                 "clearAllItems()V",
-                new InspectorEnvironment.ExitHook<Object>() {
+                new ExitHook<Object>() {
                     @Override
                     public Object onExit(Object returnValue) {
                         getConnection()
@@ -199,10 +203,10 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
-        environment.registerExitHook(
+        artTooling.registerExitHook(
                 classActivity,
                 "hasEmptyTodoList()Z",
-                new InspectorEnvironment.ExitHook<Object>() {
+                new ExitHook<Object>() {
                     @Override
                     public Object onExit(Object returnValue) {
                         Boolean empty = (Boolean) returnValue;
@@ -214,10 +218,10 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
-        environment.registerExitHook(
+        artTooling.registerExitHook(
                 classActivity,
                 "getActiveGroupTrailingChar()C",
-                new InspectorEnvironment.ExitHook<Object>() {
+                new ExitHook<Object>() {
                     @Override
                     public Object onExit(Object returnValue) {
                         Character trailing = (Character) returnValue;
@@ -229,10 +233,10 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
-        environment.registerExitHook(
+        artTooling.registerExitHook(
                 classActivity,
                 "getAverageItemCount()F",
-                new InspectorEnvironment.ExitHook<Object>() {
+                new ExitHook<Object>() {
                     @Override
                     public Object onExit(Object returnValue) {
                         Float avg = (Float) returnValue;
@@ -247,10 +251,10 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
-        environment.registerExitHook(
+        artTooling.registerExitHook(
                 classActivity,
                 "getDoubleAverageItemCount()D",
-                new InspectorEnvironment.ExitHook<Object>() {
+                new ExitHook<Object>() {
                     @Override
                     public Object onExit(Object returnValue) {
                         Double avg = (Double) returnValue;
@@ -265,10 +269,10 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
-        environment.registerEntryHook(
+        artTooling.registerEntryHook(
                 classActivity,
                 "prefillItems()V",
-                new InspectorEnvironment.EntryHook() {
+                new EntryHook() {
                     @Override
                     public void onEntry(@Nullable Object self, @NonNull List<Object> params) {
                         getConnection()
@@ -277,10 +281,10 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
-        environment.registerEntryHook(
+        artTooling.registerEntryHook(
                 classActivity,
                 "logItem(I" + SIGNATURE_STRING + SIGNATURE_TODO_ITEM + ")V",
-                new InspectorEnvironment.EntryHook() {
+                new EntryHook() {
                     @Override
                     public void onEntry(@Nullable Object self, @NonNull List<Object> params) {
                         Integer severity = (Integer) params.get(0);
@@ -291,10 +295,10 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
-        environment.registerEntryHook(
+        artTooling.registerEntryHook(
                 classActivity,
                 "selectFirstGroup()V",
-                new InspectorEnvironment.EntryHook() {
+                new EntryHook() {
                     @Override
                     public void onEntry(@Nullable Object self, @NonNull List<Object> params) {
                         if (isDisposed) {
@@ -304,10 +308,10 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
-        environment.registerExitHook(
+        artTooling.registerExitHook(
                 classActivity,
                 "selectFirstGroup()V",
-                new InspectorEnvironment.ExitHook<Object>() {
+                new ExitHook<Object>() {
                     @Override
                     public Object onExit(Object returnValue) {
                         if (isDisposed) {
@@ -320,10 +324,10 @@ public final class TodoInspector extends TestInspector {
 
         for (byte i = 0; i < 2; i++) {
             final byte hookId = i;
-            environment.registerEntryHook(
+            artTooling.registerEntryHook(
                     classActivity,
                     "selectLastGroup()V",
-                    new InspectorEnvironment.EntryHook() {
+                    new EntryHook() {
                         @Override
                         public void onEntry(@Nullable Object self, @NonNull List<Object> params) {
                             getConnection()
@@ -333,10 +337,10 @@ public final class TodoInspector extends TestInspector {
                         }
                     });
 
-            environment.registerExitHook(
+            artTooling.registerExitHook(
                     classActivity,
                     "selectLastGroup()V",
-                    new InspectorEnvironment.ExitHook<Object>() {
+                    new ExitHook<Object>() {
                         @Override
                         public Object onExit(Object returnValue) {
                             getConnection()
@@ -356,9 +360,13 @@ public final class TodoInspector extends TestInspector {
             if (Arrays.equals(command.toByteArray(), bytes)) {
                 switch (command) {
                     case COUNT_TODO_GROUPS:
-                        return new byte[] {(byte) environment.findInstances(classGroup).size()};
+                        return new byte[] {
+                            (byte) environment.artTI().findInstances(classGroup).size()
+                        };
                     case COUNT_TODO_ITEMS:
-                        return new byte[] {(byte) environment.findInstances(classItem).size()};
+                        return new byte[] {
+                            (byte) environment.artTI().findInstances(classItem).size()
+                        };
                 }
                 break;
             }

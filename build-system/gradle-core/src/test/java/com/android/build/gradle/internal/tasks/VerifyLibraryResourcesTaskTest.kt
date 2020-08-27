@@ -16,21 +16,13 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
-import com.android.build.gradle.internal.services.AsyncResourceProcessor
-import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask
 import com.android.builder.files.SerializableChange
 import com.android.builder.files.SerializableInputChanges
-import com.android.builder.internal.aapt.AaptConvertConfig
-import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.builder.internal.aapt.v2.Aapt2
 import com.android.ide.common.resources.CompileResourceRequest
+import com.android.ide.common.resources.CopyToOutputDirectoryResourceCompilationService
 import com.android.ide.common.resources.FileStatus
 import com.android.utils.FileUtils
-import com.android.utils.ILogger
-import com.google.common.io.Files
-import com.google.common.util.concurrent.MoreExecutors
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -45,25 +37,6 @@ class VerifyLibraryResourcesTaskTest {
 
     @get: Rule
     val temporaryFolder = TemporaryFolder()
-
-
-    object TestAapt2: Aapt2 {
-        override fun compile(request: CompileResourceRequest, logger: ILogger) {
-            Files.copy(request.inputFile, compileOutputFor(request))
-        }
-
-        override fun link(request: AaptPackageConfig, logger: ILogger) {
-            throw UnsupportedOperationException()
-        }
-
-        override fun convert(request: AaptConvertConfig, logger: ILogger) {
-            throw UnsupportedOperationException()
-        }
-
-        fun compileOutputFor(request: CompileResourceRequest): File {
-            return File(request.outputDirectory, request.inputFile.name + "-c")
-        }
-    }
 
     @Test
     fun otherFilesShouldBeIgnored() {
@@ -91,26 +64,18 @@ class VerifyLibraryResourcesTaskTest {
 
         val outputDir = temporaryFolder.newFolder("output")
 
-        val processor = AsyncResourceProcessor<Aapt2>(
-            projectName = "testProject",
-            owner = "verifyTask",
-            executor = MoreExecutors.newDirectExecutorService(),
-            service = TestAapt2,
-            errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE
-        )
-
+        val compilationService = CopyToOutputDirectoryResourceCompilationService
         VerifyLibraryResourcesTask.compileResources(
             inputs = SerializableInputChanges(roots = listOf(mergedDir), changes = inputs),
             outDirectory = outputDir,
-            asyncResourceProcessor = processor,
             mergeBlameFolder = temporaryFolder.newFolder(),
-            analyticsService = FakeNoOpAnalyticsService()
+            compilationService = compilationService
         )
 
-        val fileOut = TestAapt2.compileOutputFor(CompileResourceRequest(file, outputDir, "values"))
+        val fileOut = compilationService.compileOutputFor(CompileResourceRequest(file, outputDir, "values"))
         assertTrue(fileOut.exists())
 
-        val dirOut = TestAapt2.compileOutputFor(
+        val dirOut = compilationService.compileOutputFor(
                 CompileResourceRequest(invalidFile, outputDir, mergedDir.name))
         assertFalse(dirOut.exists())
     }

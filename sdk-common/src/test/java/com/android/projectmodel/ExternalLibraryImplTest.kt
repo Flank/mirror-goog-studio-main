@@ -22,26 +22,26 @@ import org.junit.Test
 /**
  * Test cases for [ExternalLibrary]
  */
-class ExternalLibraryTest {
+class ExternalLibraryImplTest {
     @Test
     fun toStringDefaultTest() {
-        val cfg = ExternalLibrary("foo")
-        assertThat(cfg.toString()).isEqualTo("ExternalLibrary(address=foo)")
+        val cfg = ExternalLibraryImpl("foo")
+        assertThat(cfg.toString()).isEqualTo("ExternalLibraryImpl(address=foo)")
     }
 
     @Test
     fun toStringOverrideTest() {
-        val cfg = ExternalLibrary(
+        val cfg = ExternalLibraryImpl(
             address = "foo",
             classJars = listOf(PathString("/bar/baz"))
         )
-        assertThat(cfg.toString()).isEqualTo("ExternalLibrary(address=foo,classJars=[file:///bar/baz])")
+        assertThat(cfg.toString()).isEqualTo("ExternalLibraryImpl(address=foo,classJars=[file:///bar/baz])")
     }
 
     @Test
     fun simpleConstructorTest() {
-        assertThat(ExternalLibrary("foo")).isEqualTo(
-            ExternalLibrary(
+        assertThat(ExternalLibraryImpl("foo")).isEqualTo(
+            ExternalLibraryImpl(
                 address = "foo",
                 manifestFile = null
             )
@@ -54,14 +54,14 @@ class ExternalLibraryTest {
     fun withManifestFileTest() {
         val manifest = barPath
         val address = "foo"
-        val lib = ExternalLibrary(address)
-        val withManifest = ExternalLibrary(
+        val lib = ExternalLibraryImpl(address)
+        val withManifest = ExternalLibraryImpl(
             address = address,
             manifestFile = manifest
         )
 
         assertThat(lib.withManifestFile(manifest)).isEqualTo(
-            ExternalLibrary(
+            ExternalLibraryImpl(
                 address = address,
                 manifestFile = manifest
             )
@@ -75,31 +75,31 @@ class ExternalLibraryTest {
 
     @Test
     fun withClassesJarTest() {
-        assertThat(ExternalLibrary("foo").withClassJars(listOf(barPath)))
-            .isEqualTo(ExternalLibrary(address = "foo", classJars = listOf(barPath)))
+        assertThat(ExternalLibraryImpl("foo").withClassJars(listOf(barPath)))
+            .isEqualTo(ExternalLibraryImpl(address = "foo", classJars = listOf(barPath)))
     }
 
     @Test
     fun withResFolderTest() {
-        assertThat(ExternalLibrary("foo").withResFolder(RecursiveResourceFolder(barPath)))
-            .isEqualTo(ExternalLibrary(address = "foo", resFolder = RecursiveResourceFolder(barPath)))
+        assertThat(ExternalLibraryImpl("foo").withResFolder(RecursiveResourceFolder(barPath)))
+            .isEqualTo(ExternalLibraryImpl(address = "foo", resFolder = RecursiveResourceFolder(barPath)))
     }
 
     @Test
     fun withLocationTest() {
-        assertThat(ExternalLibrary("foo").withLocation(barPath))
-            .isEqualTo(ExternalLibrary(address = "foo", location = barPath))
+        assertThat(ExternalLibraryImpl("foo").withLocation(barPath))
+            .isEqualTo(ExternalLibraryImpl(address = "foo", location = barPath))
     }
 
     @Test
     fun withSymbolFileTest() {
-        assertThat(ExternalLibrary("foo").withSymbolFile(barPath))
-            .isEqualTo(ExternalLibrary(address = "foo", symbolFile = barPath))
+        assertThat(ExternalLibraryImpl("foo").withSymbolFile(barPath))
+            .isEqualTo(ExternalLibraryImpl(address = "foo", symbolFile = barPath))
     }
 
     @Test
     fun testIsEmpty() {
-        val testLib = ExternalLibrary("foo")
+        val testLib = ExternalLibraryImpl("foo")
 
         // Metadata-only libs are considered to be "empty"
         assertThat(testLib.isEmpty()).isTrue()

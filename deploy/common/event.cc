@@ -52,6 +52,8 @@ void InitEventSystem() {
   events->clear();
 }
 
+void ResetEvents() { events->clear(); }
+
 static inline void AddEvent(Event::Type type, const std::string& text) {
   AddRawEvent({GetTime(), type, getpid(), gettid(), text});
 }

@@ -40,9 +40,6 @@ class ParsedPackagingOptions
     )
 {
 
-    constructor(packagingOptions: SerializablePackagingOptions) :
-            this(packagingOptions.excludes, packagingOptions.pickFirsts, packagingOptions.merges)
-
     /**
      * Paths excluded.
      */

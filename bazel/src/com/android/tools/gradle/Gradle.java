@@ -99,8 +99,14 @@ public class Gradle implements Closeable {
 
         HashMap<String, String> env = new HashMap<>();
 
-        env.put("ANDROID_HOME", new File(TestUtils.getRelativeSdk()).getAbsolutePath());
+        env.put("ANDROID_SDK_ROOT", new File(TestUtils.getRelativeSdk()).getAbsolutePath());
         env.put("BUILD_DIR", buildDir.getAbsolutePath());
+        env.put("ANDROID_PREFS_ROOT", androidDir.getAbsolutePath());
+
+        // needed when running against older AGP versions
+        // ANDROID_HOME: old name of ANDROID_SDK_ROOT
+        // ANDROID_SDK_HOME: old name of ANDROID_PREFS_ROOT
+        env.put("ANDROID_HOME", new File(TestUtils.getRelativeSdk()).getAbsolutePath());
         env.put("ANDROID_SDK_HOME", androidDir.getAbsolutePath());
 
         // On windows it is needed to set a few more environment variables
@@ -238,7 +244,7 @@ public class Gradle implements Closeable {
                         + "       delete fileTree(gradle.gradleUserHomeDir.toString() + '/caches/transforms-2') { "
                         + "           exclude '*.lock'\n"
                         + "        }\n"
-                        + "       delete System.env['ANDROID_SDK_HOME'] + '/build-cache'\n"
+                        + "       delete System.env['ANDROID_PREFS_ROOT'] + '/build-cache'\n"
                         + "    }\n"
                         + "}\n";
 

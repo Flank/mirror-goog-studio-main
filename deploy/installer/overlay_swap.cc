@@ -24,16 +24,13 @@
 
 namespace deploy {
 
-void OverlaySwapCommand::ParseParameters(int argc, char** argv) {
-  deploy::MessagePipeWrapper wrapper(STDIN_FILENO);
-  std::string data;
-  if (!wrapper.Read(&data)) {
+void OverlaySwapCommand::ParseParameters(
+    const proto::InstallerRequest& request) {
+  if (!request.has_overlay_swap_request()) {
     return;
   }
 
-  if (!request_.ParseFromString(data)) {
-    return;
-  }
+  request_ = request.overlay_swap_request();
 
   std::vector<int> pids(request_.process_ids().begin(),
                         request_.process_ids().end());

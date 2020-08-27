@@ -181,6 +181,14 @@ public class CallExpression extends Expression {
         }
     }
 
+    public void setArgument(String name, String value) {
+        if (!value.isEmpty()) {
+            setArgument(name, LiteralExpression.string(value));
+        } else {
+            removeArgument(name);
+        }
+    }
+
     private void removeArgument(String name) {
         Argument arg = getNamedArgument(name);
         if (arg != null) {

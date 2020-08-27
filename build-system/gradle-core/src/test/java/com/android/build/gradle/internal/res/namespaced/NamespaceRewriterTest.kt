@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.build.gradle.internal.fixtures.FakeLogger
 import com.android.ide.common.symbols.Symbol
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
@@ -152,7 +153,7 @@ class NamespaceRewriterTest {
             .add(symbol("string", "s2"))
             .build()
 
-        val logger = MockLogger()
+        val logger = FakeLogger()
         // Just override the existing file as we compile them per test.
         NamespaceRewriter(
             ImmutableList.of(

@@ -240,6 +240,9 @@ public class DeployerException extends Exception {
                 "Cannot preinstall: apks have different package name (%s and %s)",
                 "%s", "Retry", ResolutionAction.RETRY),
 
+        AGENT_FAILED(
+                "We were unable to deploy your changes%s", "%s", "Retry", ResolutionAction.RETRY),
+
         AGENT_SWAP_FAILED(
                 "We were unable to deploy your changes%s", "%s", "Retry", ResolutionAction.RETRY),
 
@@ -257,6 +260,9 @@ public class DeployerException extends Exception {
                 "Android Studio is unable to recognize the version of the application currently installed on the target device.",
                 "Reinstall and restart app",
                 ResolutionAction.RUN_APP),
+
+        UNSUPPORTED_ARCH(
+                "The target device's architecture is not supported", "", "", ResolutionAction.NONE),
 
         UNKNOWN_JVMTI_ERROR("Invalid error code %s", "", "Retry", ResolutionAction.RETRY),
 
@@ -492,6 +498,10 @@ public class DeployerException extends Exception {
         return new DeployerException(Error.DUMP_MIXED_ARCH, NO_ARGS, reason);
     }
 
+    public static DeployerException unsupportedArch() {
+        return new DeployerException(Error.UNSUPPORTED_ARCH, NO_ARGS, NO_ARGS);
+    }
+
     public static DeployerException parseFailed(String reason) {
         return new DeployerException(Error.PARSE_FAILED, NO_ARGS, reason);
     }
@@ -500,7 +510,7 @@ public class DeployerException extends Exception {
         return new DeployerException(Error.PREINSTALL_FAILED, NO_ARGS, reason);
     }
 
-    public static DeployerException installFailed(InstallStatus code, String reason) {
+    public static DeployerException installFailed(Enum<?> code, String reason) {
         String suffix = code != InstallStatus.UNKNOWN_ERROR ? ": " + code.name() : ".";
         return new DeployerException(Error.INSTALL_FAILED, code, new String[] {suffix}, reason);
     }
@@ -508,6 +518,11 @@ public class DeployerException extends Exception {
     public static DeployerException swapFailed(Deploy.SwapResponse.Status code) {
         String suffix = code != Deploy.SwapResponse.Status.UNKNOWN ? ": " + code.name() : ".";
         return new DeployerException(Error.SWAP_FAILED, code, new String[] {suffix}, "");
+    }
+
+    public static DeployerException agentFailed(Deploy.AgentResponse.Status code) {
+        String suffix = code != Deploy.AgentResponse.Status.UNKNOWN ? ": " + code.name() : ".";
+        return new DeployerException(Error.AGENT_FAILED, code, new String[] {suffix}, "");
     }
 
     public static DeployerException agentSwapFailed(Deploy.AgentSwapResponse.Status code) {

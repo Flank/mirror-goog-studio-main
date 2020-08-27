@@ -18,14 +18,10 @@ package com.android.tools.deployer;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.idea.protobuf.CodedInputStream;
 import com.android.tools.idea.protobuf.CodedOutputStream;
-import com.android.tools.idea.protobuf.MessageLite;
-import com.android.tools.idea.protobuf.Parser;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ObjectArrays;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -33,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.channels.SocketChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -70,15 +67,36 @@ public class AdbInstaller implements Installer {
         DO_NO_RETRY
     };
 
+    private final AdbInstallerChannelManager channelsProvider;
+    private final Mode mode;
+
+    public enum Mode {
+        DAEMON, // Instruct the installer binary on device to keep input fd open and answer
+        // requests as they come.
+
+        ONE_SHOT // Instruct the installer to answer to one request and exit.
+    }
+
     public AdbInstaller(
             String installersFolder,
             AdbClient adb,
             Collection<DeployMetric> metrics,
             ILogger logger) {
+        this(installersFolder, adb, metrics, logger, Mode.ONE_SHOT);
+    }
+
+    public AdbInstaller(
+            String installersFolder,
+            AdbClient adb,
+            Collection<DeployMetric> metrics,
+            ILogger logger,
+            Mode mode) {
         this.adb = adb;
         this.installersFolder = installersFolder;
         this.metrics = metrics;
         this.logger = logger;
+        this.channelsProvider = new AdbInstallerChannelManager(logger, mode);
+        this.mode = mode;
     }
 
     private void logEvents(List<Deploy.Event> events) {
@@ -98,35 +116,47 @@ public class AdbInstaller implements Installer {
 
     @Override
     public Deploy.DumpResponse dump(List<String> packageNames) throws IOException {
-        String[] cmd =
-                buildCmd(
-                        ObjectArrays.concat(
-                                "dump", packageNames.toArray(new String[packageNames.size()])));
-        Deploy.InstallerResponse installerResponse =
-                invokeRemoteCommand(cmd, null, 6, TimeUnit.SECONDS);
+        Deploy.DumpRequest.Builder dumpRequestBuilder = Deploy.DumpRequest.newBuilder();
+        for (String packageName : packageNames) {
+            dumpRequestBuilder.addPackageNames(packageName);
+        }
+        Deploy.InstallerRequest.Builder request =
+                buildRequest("dump").setDumpRequest(dumpRequestBuilder);
+        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
         Deploy.DumpResponse response = installerResponse.getDumpResponse();
         logger.verbose("installer dump: " + response.getStatus().toString());
         return response;
     }
 
-
     @Override
-    public Deploy.SwapResponse swap(Deploy.SwapRequest request) throws IOException {
-        String[] cmd = buildCmd(new String[] {"swap"});
-        ByteArrayInputStream inputStream = wrap(request);
-        Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
+    public Deploy.SwapResponse swap(Deploy.SwapRequest swapRequest) throws IOException {
+        Deploy.InstallerRequest.Builder request = buildRequest("swap");
+        request.setSwapRequest(swapRequest);
+        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
         Deploy.SwapResponse response = installerResponse.getSwapResponse();
         logger.verbose("installer swap: " + response.getStatus().toString());
         return response;
     }
 
     @Override
-    public Deploy.SwapResponse overlaySwap(Deploy.OverlaySwapRequest request) throws IOException {
-        String[] cmd = buildCmd(new String[] {"overlayswap"});
-        ByteArrayInputStream inputStream = wrap(request);
-        Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
+    public Deploy.SwapResponse overlaySwap(Deploy.OverlaySwapRequest overlaySwapRequest)
+            throws IOException {
+        Deploy.InstallerRequest.Builder request = buildRequest("overlayswap");
+        request.setOverlaySwapRequest(overlaySwapRequest);
+        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
         Deploy.SwapResponse response = installerResponse.getSwapResponse();
         logger.verbose("installer overlayswap: " + response.getStatus().toString());
+        return response;
+    }
+
+    @Override
+    public Deploy.OverlayInstallResponse overlayInstall(
+            Deploy.OverlayInstallRequest overlayInstallRequest) throws IOException {
+        Deploy.InstallerRequest.Builder request = buildRequest("overlayinstall");
+        request.setOverlayInstall(overlayInstallRequest);
+        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
+        Deploy.OverlayInstallResponse response = installerResponse.getOverlayInstallResponse();
+        logger.verbose("installer overlayinstall: " + response.getStatus().toString());
         return response;
     }
 
@@ -135,10 +165,11 @@ public class AdbInstaller implements Installer {
             throws IOException {
         // Doing a overylayid push with both new and old OID as the argument effectively verifies
         // the OID without updating it.
-        String[] cmd = buildCmd(new String[] {"overlayidpush"});
-        Deploy.OverlayIdPush request = createOidPushRequest(packageName, oid, oid, false);
-        ByteArrayInputStream inputStream = wrap(request);
-        Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
+        Deploy.OverlayIdPush overlayIdPushRequest =
+                createOidPushRequest(packageName, oid, oid, false);
+        Deploy.InstallerRequest.Builder request = buildRequest("overlayidpush");
+        request.setOverlayIdPush(overlayIdPushRequest);
+        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
         Deploy.OverlayIdPushResponse response = installerResponse.getOverlayidpushResponse();
         logger.verbose("installer overlayidpush: " + response.getStatus().toString());
         return response;
@@ -157,9 +188,9 @@ public class AdbInstaller implements Installer {
     @Override
     public Deploy.DeltaPreinstallResponse deltaPreinstall(Deploy.InstallInfo info)
             throws IOException {
-        String[] cmd = buildCmd(new String[] {"deltapreinstall"});
-        ByteArrayInputStream inputStream = wrap(info);
-        Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
+        Deploy.InstallerRequest.Builder request = buildRequest("deltapreinstall");
+        request.setInstallInfoRequest(info);
+        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
         Deploy.DeltaPreinstallResponse response = installerResponse.getDeltapreinstallResponse();
         logger.verbose("installer deltapreinstall: " + response.getStatus().toString());
         return response;
@@ -167,27 +198,25 @@ public class AdbInstaller implements Installer {
 
     @Override
     public Deploy.DeltaInstallResponse deltaInstall(Deploy.InstallInfo info) throws IOException {
-        String[] cmd = buildCmd(new String[] {"deltainstall"});
-        ByteArrayInputStream inputStream = wrap(info);
-        Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
+        Deploy.InstallerRequest.Builder request = buildRequest("deltainstall");
+        request.setInstallInfoRequest(info);
+        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
         Deploy.DeltaInstallResponse response = installerResponse.getDeltainstallResponse();
         logger.verbose("installer deltainstall: " + response.getStatus().toString());
         return response;
     }
 
-    private Deploy.InstallerResponse invokeRemoteCommand(
-            String[] cmd, ByteArrayInputStream inputStream) throws IOException {
-        return invokeRemoteCommand(
-                cmd, inputStream, AdbClient.DEFAULT_TIMEOUT, AdbClient.DEFAULT_TIMEUNIT);
+    private Deploy.InstallerResponse sendInstallerRequest(Deploy.InstallerRequest request)
+            throws IOException {
+        return sendInstallerRequest(request, AdbClient.DEFAULT_TIMEOUT, AdbClient.DEFAULT_TIMEUNIT);
     }
 
-    private Deploy.InstallerResponse invokeRemoteCommand(
-            String[] cmd, ByteArrayInputStream inputStream, long timeOut, TimeUnit timeUnit)
-            throws IOException {
-        Trace.begin("./installer " + cmd[2]);
+    private Deploy.InstallerResponse sendInstallerRequest(
+            Deploy.InstallerRequest request, long timeOut, TimeUnit timeUnit) throws IOException {
+        Trace.begin("./installer " + request.getCommandName());
         long start = System.nanoTime();
         Deploy.InstallerResponse response =
-                invokeRemoteCommand(cmd, inputStream, OnFail.RETRY, timeOut, timeUnit);
+                sendInstallerRequest(request, OnFail.RETRY, timeOut, timeUnit);
         logEvents(response.getEventsList());
         long end = System.nanoTime();
 
@@ -238,29 +267,32 @@ public class AdbInstaller implements Installer {
     // Invoke command on device. The command must be known by installer android executable.
     // Send content of data into the executable standard input and return a proto buffer
     // object specific to the command.
-    private Deploy.InstallerResponse invokeRemoteCommand(
-            String[] cmd,
-            ByteArrayInputStream inputStream,
+    private Deploy.InstallerResponse sendInstallerRequest(
+            Deploy.InstallerRequest installerRequest,
             OnFail onFail,
             long timeOut,
             TimeUnit timeUnit)
             throws IOException {
-        byte[] output = adb.shell(cmd, inputStream, timeOut, timeUnit);
-        Deploy.InstallerResponse response = unwrap(output, Deploy.InstallerResponse.parser());
+        ByteBuffer request = wrap(installerRequest);
+        Deploy.InstallerResponse response = null;
 
-        // Handle the case where the executable is not present on the device. In this case, the
+        SocketChannel channel = channelsProvider.getChannel(adb, getVersion());
+        if (writeRequest(channel, request, timeOut, timeUnit)) {
+            response = readResponse(channel, timeOut, timeUnit);
+        }
+
+        // Handle the case where the executable is not present on the device.
+        // In this case, the
         // shell invocation will return something that is not parsable by protobuffer. Most
-        // likely something like "Command not found.".
+        // likely "/system/bin/sh: /data/local/tmp/.studio/bin/installer: not found".
         if (response == null) {
             if (onFail == OnFail.DO_NO_RETRY) {
                 // This is the second time this error happens. Aborting.
                 throw new IOException("Invalid installer response");
             }
+            channelsProvider.reset(adb);
             prepare();
-            if (inputStream != null) {
-                inputStream.reset();
-            }
-            return invokeRemoteCommand(cmd, inputStream, OnFail.DO_NO_RETRY, timeOut, timeUnit);
+            return sendInstallerRequest(installerRequest, OnFail.DO_NO_RETRY, timeOut, timeUnit);
         }
 
         // Parse response.
@@ -269,13 +301,77 @@ public class AdbInstaller implements Installer {
                 // This is the second time this error happens. Aborting.
                 throw new IOException("Unrecoverable installer WRONG_VERSION error. Aborting");
             }
+            channelsProvider.reset(adb);
             prepare();
-            if (inputStream != null) {
-                inputStream.reset();
-            }
-            return invokeRemoteCommand(cmd, inputStream, OnFail.DO_NO_RETRY, timeOut, timeUnit);
+            return sendInstallerRequest(installerRequest, OnFail.DO_NO_RETRY, timeOut, timeUnit);
         }
+
+        if (mode == Mode.ONE_SHOT) {
+            channelsProvider.reset(adb);
+        }
+
         return response;
+    }
+
+    private boolean writeRequest(
+            SocketChannel channel, ByteBuffer request, long timeOut, TimeUnit timeUnit) {
+        // TODO use timeOut and timeUnit here with Selector
+        try {
+            channel.write(request);
+        } catch (IOException e) {
+            // If the connection has been broken an IOException 'broken pipe' will be received here.
+            return false;
+        }
+        return request.remaining() == 0;
+    }
+
+    private Deploy.InstallerResponse readResponse(
+            SocketChannel channel, long timeOut, TimeUnit timeUnit) {
+        try {
+            // TODO use timeOut and timeUnit here with Selector
+            ByteBuffer bufferMarker = ByteBuffer.allocate(MAGIC_NUMBER.length);
+            if (!readIntoBuffer(channel, bufferMarker)) {
+                return null;
+            }
+            if (!Arrays.equals(MAGIC_NUMBER, bufferMarker.array())) {
+                String garbage = new String(bufferMarker.array(), Charsets.UTF_8);
+                logger.info("Read '" + garbage + "' from socket");
+                return null;
+            }
+
+            ByteBuffer bufferSize =
+                    ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN);
+            if (!readIntoBuffer(channel, bufferSize)) {
+                return null;
+            }
+
+            bufferSize.rewind();
+            int responseSize = bufferSize.getInt();
+            if (responseSize < 0) {
+                return null;
+            }
+
+            ByteBuffer bufferPayload = ByteBuffer.allocate(responseSize);
+            if (!readIntoBuffer(channel, bufferPayload)) {
+                return null;
+            }
+
+            return unwrap(bufferPayload);
+        } catch (IOException e) {
+            // If the connection has been broken an IOException 'broken pipe' will be received here.
+            return null;
+        }
+    }
+
+    private static boolean readIntoBuffer(SocketChannel channel, ByteBuffer buffer)
+            throws IOException {
+        while (buffer.remaining() != 0) {
+            int read = channel.read(buffer);
+            if (read == -1) {
+                break;
+            }
+        }
+        return buffer.remaining() == 0;
     }
 
     private void prepare() throws IOException {
@@ -314,8 +410,14 @@ public class AdbInstaller implements Installer {
     }
 
     private void cleanAndPushInstaller(File installerFile) throws IOException {
-        runShell(new String[] {"rm", "-fr", Deployer.BASE_DIRECTORY});
-        runShell(new String[] {"mkdir", "-p", Deployer.INSTALLER_DIRECTORY});
+        runShell(
+                new String[] {
+                    "rm", "-fr", Deployer.INSTALLER_DIRECTORY, Deployer.INSTALLER_TMP_DIRECTORY
+                });
+        runShell(
+                new String[] {
+                    "mkdir", "-p", Deployer.INSTALLER_DIRECTORY, Deployer.INSTALLER_TMP_DIRECTORY
+                });
 
         // No need to check result here. If something wrong happens, an IOException is thrown.
         adb.push(installerFile.getAbsolutePath(), INSTALLER_PATH);
@@ -347,60 +449,48 @@ public class AdbInstaller implements Installer {
         return stream;
     }
 
-    private String[] buildCmd(String[] parameters) {
-        String[] base = {INSTALLER_PATH, "-version=" + getVersion()};
-        return ObjectArrays.concat(base, parameters, String.class);
-    }
-
-    private <T extends MessageLite> T unwrap(byte[] b, Parser<T> parser) {
-        if (b == null) {
-            return null;
-        }
-        if (b.length < MAGIC_NUMBER.length + Integer.BYTES) {
-            return null;
-        }
-        ByteBuffer buffer = ByteBuffer.wrap(b).order(ByteOrder.LITTLE_ENDIAN);
-        byte[] magicNumber = new byte[MAGIC_NUMBER.length];
-        buffer.get(magicNumber);
-        if (!Arrays.equals(magicNumber, MAGIC_NUMBER)) {
-            return null;
-        }
-        int size = buffer.getInt();
-        if (size != buffer.remaining()) {
-            return null;
-        }
+    private Deploy.InstallerResponse unwrap(ByteBuffer buffer) {
+        buffer.rewind();
         try {
             CodedInputStream cis = CodedInputStream.newInstance(buffer);
-            return parser.parseFrom(cis);
+            return Deploy.InstallerResponse.parser().parseFrom(cis);
         } catch (IOException e) {
             // All in-memory buffers, should not happen
             throw new IllegalStateException(e);
         }
     }
 
-    private ByteArrayInputStream wrap(MessageLite message) {
+    private ByteBuffer wrap(Deploy.InstallerRequest message) {
+        int messageSize = message.getSerializedSize();
         int headerSize = MAGIC_NUMBER.length + Integer.BYTES;
-        int size = message.getSerializedSize();
-        byte[] buffer = new byte[headerSize + size];
+        byte[] buffer = new byte[headerSize + messageSize];
 
         // Write size in the buffer.
         ByteBuffer headerWriter = ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN);
         headerWriter.put(MAGIC_NUMBER);
-        headerWriter.putInt(size);
+        headerWriter.putInt(messageSize);
 
         // Write protobuffer payload in the buffer.
         try {
-            CodedOutputStream cos = CodedOutputStream.newInstance(buffer, headerSize, size);
+            CodedOutputStream cos = CodedOutputStream.newInstance(buffer, headerSize, messageSize);
             message.writeTo(cos);
         } catch (IOException e) {
             // In memory buffers, should not happen
             throw new IllegalStateException(e);
         }
-        return new ByteArrayInputStream(buffer);
+        return ByteBuffer.wrap(buffer);
     }
 
     @VisibleForTesting
     public String getVersion() {
         return Version.hash();
+    }
+
+    private Deploy.InstallerRequest.Builder buildRequest(String commandName) {
+        Deploy.InstallerRequest.Builder request =
+                Deploy.InstallerRequest.newBuilder()
+                        .setCommandName(commandName)
+                        .setVersion(getVersion());
+        return request;
     }
 }

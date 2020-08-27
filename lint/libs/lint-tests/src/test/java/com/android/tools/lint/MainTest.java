@@ -633,6 +633,28 @@ public class MainTest extends AbstractCheckTest {
                 new String[] {"--check", "HardcodedText", project.getPath()});
     }
 
+    public void testGradleKts() throws Exception {
+        File project =
+                getProjectDir(
+                        null,
+                        manifest().minSdk(1),
+                        source("build.gradle.kts", ""), // placeholder; only name counts
+                        // placeholder to ensure we have .class files
+                        source("bin/classes/foo/bar/ApiCallTest.class", ""));
+        checkDriver(
+                ""
+                        + "\n"
+                        + "build.gradle.kts: Error: \"MainTest_testGradleKts\" is a Gradle project. To correctly analyze Gradle projects, you should run \"gradlew lint\" instead. [LintError]\n"
+                        + "1 errors, 0 warnings\n",
+                "",
+
+                // Expected exit code
+                ERRNO_SUCCESS,
+
+                // Args
+                new String[] {"--check", "HardcodedText", project.getPath()});
+    }
+
     public void testInvalidLintXmlId() throws Exception {
         // Regression test for
         // 37070812: Lint does not fail when invalid issue ID is referenced in XML

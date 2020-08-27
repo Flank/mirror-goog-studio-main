@@ -48,9 +48,13 @@ class FilteringSpec(
     @Transient
     private var filteredFileCollection: Lazy<FileCollection> = lazy { initFilteredFileCollection() }
 
+    /** Keep lazy, as invoking getArtifacts() is quite costly with configuration caching. */
+    @Transient
+    private var originalArtifacts = lazy { artifacts.artifacts }
+
     override fun isSatisfiedBy(file: File): Boolean {
         if (excluded.value.isEmpty()) return true
-        val keptFiles = artifacts.artifacts.asSequence()
+        val keptFiles = originalArtifacts.value.asSequence()
             .filter { !excluded.value.contains(it.toIdString()) }
             .map { it.file }.toSet()
         return keptFiles.contains(file)
@@ -78,10 +82,10 @@ class FilteringSpec(
     fun getArtifactFiles(): MutableSet<ResolvedArtifactResult> {
 
         if (excluded.value.isEmpty()) {
-            return artifacts.artifacts
+            return originalArtifacts.value
         }
 
-        return artifacts.artifacts.asSequence()
+        return originalArtifacts.value.asSequence()
             .filter { !excluded.value.contains(it.toIdString()) }.toMutableSet()
     }
 
@@ -95,5 +99,6 @@ class FilteringSpec(
         objectInputStream.defaultReadObject()
         excluded = lazy { computeFilteredArtifacts() }
         filteredFileCollection = lazy { initFilteredFileCollection() }
+        originalArtifacts = lazy { artifacts.artifacts }
     }
 }

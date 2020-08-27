@@ -1,6 +1,7 @@
-apply plugin: 'java'
+apply plugin: 'com.android.tools.java-library'
 apply plugin: 'java-test-fixtures'
-apply plugin: 'kotlin'
+apply plugin: 'com.android.tools.kotlin'
+apply plugin: 'com.android.tools.publish'
 apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
 
@@ -36,10 +37,3 @@ sourceSets {
 
 project.ext.pomName = 'Android Tools repository'
 project.ext.pomDesc = 'A library for downloading and managing package repositories'
-
-apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/javadoc.gradle"
-
-tasks.withType(Javadoc) {
-    options.addStringOption('Xdoclint:none', '-quiet')
-}

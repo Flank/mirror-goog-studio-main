@@ -229,7 +229,7 @@ public class GroovyGradleVisitor extends GradleVisitor {
                                     parent,
                                     parentParent,
                                     c.getMethod(),
-                                    c,
+                                    c.getArguments(),
                                     c);
                         }
                     }
@@ -246,35 +246,50 @@ public class GroovyGradleVisitor extends GradleVisitor {
     }
 
     @NonNull
-    private static Pair<Integer, Integer> getOffsets(ASTNode node, Context context) {
+    private static Pair<ASTNode, ASTNode> getBoundingNodes(ASTNode node) {
         if (node.getLastLineNumber() == -1 && node instanceof TupleExpression) {
-            // Workaround: TupleExpressions yield bogus offsets, so use its
-            // children instead
-            TupleExpression exp = (TupleExpression) node;
-            List<Expression> expressions = exp.getExpressions();
+            // This TupleExpression is not real, probably corresponding to a named argument
+            // list.  Use its children instead.
+            TupleExpression expression = (TupleExpression) node;
+            List<Expression> expressions = expression.getExpressions();
             if (!expressions.isEmpty()) {
                 return Pair.of(
-                        getOffsets(expressions.get(0), context).getFirst(),
-                        getOffsets(expressions.get(expressions.size() - 1), context).getSecond());
+                        getBoundingNodes(expressions.get(0)).getFirst(),
+                        getBoundingNodes(expressions.get(expressions.size() - 1)).getSecond());
+            }
+        }
+        if (node instanceof ArgumentListExpression) {
+            // An ArgumentListExpression's bounds can extend beyond the last expression in the
+            // argument list, for example into trailing whitespace or comments.  The bounds given
+            // by the first and last subexpressions are more appropriate for highlighting issues
+            // related to user code.
+            ArgumentListExpression expression = (ArgumentListExpression) node;
+            List<Expression> expressions = expression.getExpressions();
+            if (!expressions.isEmpty()) {
+                return Pair.of(
+                        getBoundingNodes(expressions.get(0)).getFirst(),
+                        getBoundingNodes(expressions.get(expressions.size() - 1)).getSecond());
             }
         }
 
-        if (node instanceof ArgumentListExpression) {
-            List<Expression> expressions = ((ArgumentListExpression) node).getExpressions();
-            if (expressions.size() == 1) {
-                return getOffsets(expressions.get(0), context);
-            }
-        }
+        return Pair.of(node, node);
+    }
+
+    @NonNull
+    private static Pair<Integer, Integer> getOffsets(ASTNode node, Context context) {
+        Pair<ASTNode, ASTNode> boundingNodes = getBoundingNodes(node);
+        ASTNode startNode = boundingNodes.getFirst();
+        ASTNode endNode = boundingNodes.getSecond();
 
         CharSequence source = context.getContents();
         assert source != null; // because we successfully parsed
         int start = 0;
         int end = source.length();
         int line = 1;
-        int startLine = node.getLineNumber();
-        int startColumn = node.getColumnNumber();
-        int endLine = node.getLastLineNumber();
-        int endColumn = node.getLastColumnNumber();
+        int startLine = startNode.getLineNumber();
+        int startColumn = startNode.getColumnNumber();
+        int endLine = endNode.getLastLineNumber();
+        int endColumn = endNode.getLastColumnNumber();
         int column = 1;
         for (int index = 0, len = end; index < len; index++) {
             if (line == startLine && column == startColumn) {
@@ -308,26 +323,18 @@ public class GroovyGradleVisitor extends GradleVisitor {
     @Override
     public Location createLocation(@NonNull GradleContext context, @NonNull Object cookie) {
         ASTNode node = (ASTNode) cookie;
+        Pair<ASTNode, ASTNode> boundingNodes = getBoundingNodes(node);
+        ASTNode startNode = boundingNodes.getFirst();
+        ASTNode endNode = boundingNodes.getSecond();
+
         Pair<Integer, Integer> offsets = getOffsets(node, context);
-        int fromLine = node.getLineNumber() - 1;
-        int fromColumn = node.getColumnNumber() - 1;
-        int toLine = node.getLastLineNumber() - 1;
-        int toColumn = node.getLastColumnNumber() - 1;
+        int fromLine = startNode.getLineNumber() - 1;
+        int fromColumn = startNode.getColumnNumber() - 1;
+        int toLine = endNode.getLastLineNumber() - 1;
+        int toColumn = endNode.getLastColumnNumber() - 1;
         return Location.create(
                 context.file,
                 new DefaultPosition(fromLine, fromColumn, offsets.getFirst()),
                 new DefaultPosition(toLine, toColumn, offsets.getSecond()));
-    }
-
-    @NonNull
-    @Override
-    public Object getPropertyKeyCookie(@NonNull Object cookie) {
-        return cookie;
-    }
-
-    @NonNull
-    @Override
-    public Object getPropertyPairCookie(@NonNull Object cookie) {
-        return cookie;
     }
 }

@@ -1,17 +1,25 @@
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-apply plugin: 'java-gradle-plugin'
-apply plugin: 'kotlin'
-apply plugin: 'jacoco-tools-base'
-apply plugin: 'clone-artifacts'
-apply plugin: 'license-report'
-apply plugin: 'com.google.protobuf'
+plugins {
+    id 'com.android.tools.java-library'
+    id 'com.android.tools.kotlin'
+    id 'com.android.tools.publish'
+    id 'java-gradle-plugin'
+    id 'jacoco-tools-base'
+    id 'license-report'
+    id 'com.google.protobuf'
+}
 
 configurations {
     provided
     includeInJar
-    includeInJarSources
+    includeInJarSources {
+        attributes {
+            attribute(DocsType.DOCS_TYPE_ATTRIBUTE, objects.named(DocsType, DocsType.SOURCES))
+            attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.DOCUMENTATION))
+        }
+    }
 }
 
 licenseReport {
@@ -54,17 +62,55 @@ task apiTest(type: Test) {
 }
 
 check.dependsOn apiTest
-apiTest.dependsOn publishLocal
+apiTest.dependsOn tasks.findByName('publish')
 
-gradlePlugin {
-    testSourceSets sourceSets.apiTest
-    plugins {
-        androidApplication {
-            id = 'com.android.application'
-            implementationClass = 'com.android.build.gradle.AppPlugin'
+publishing {
+    publications {
+        withType(MavenPublication) {
+            artifactId = 'gradle'
         }
     }
 }
+
+/**
+ * Although this DSL will generated META-INF/gradle-plugins descriptors, we still keep them
+ * in our sources because AGP is also built with bazel which does not know how to generate plugin
+ * descriptors.
+ */
+gradlePlugin {
+    testSourceSets sourceSets.apiTest
+    plugins {
+        comAndroidApplication {
+            id = "com.android.application"
+            implementationClass = "com.android.build.gradle.AppPlugin"
+        }
+        comAndroidLibrary {
+            id = "com.android.library"
+            implementationClass = "com.android.build.gradle.LibraryPlugin"
+        }
+        comAndroidDynamicFeature {
+            id = "com.android.dynamic-feature"
+            implementationClass = "com.android.build.gradle.DynamicFeaturePlugin"
+        }
+        comAndroidReporting {
+            id = "com.android.reporting"
+            implementationClass = "com.android.build.gradle.ReportingPlugin"
+        }
+        comAndroidAssetPack {
+            id = "com.android.asset-pack"
+            implementationClass = "com.android.build.gradle.AssetPackPlugin"
+        }
+        comAndroidLint {
+            id = "com.android.lint"
+            implementationClass = "com.android.build.gradle.LintPlugin"
+        }
+        comAndroidTest {
+            id = "com.android.test"
+            implementationClass = "com.android.build.gradle.TestPlugin"
+        }
+    }
+}
+
 
 dependencies {
     compile project(':base:builder')
@@ -98,6 +144,7 @@ dependencies {
     compileOnly libs.jacoco_report
     // already packaged in (':base:builder')
     compileOnly project(':base:profile')
+    compileOnly project(':dx')
 
     // Add gradleApi to classpath for compilation, but use provided configuration so that groovy is
     // not exposed as a runtime dependency.
@@ -120,12 +167,14 @@ dependencies {
     testCompile testFixtures(project(":base:repository"))
     apiTestCompile project(":base:apkparser:apkanalyzer")
     apiTestCompile project(":base:apkparser:apkanalyzer-cli")
+    testCompileOnly project(':base:profile')
+    testCompileOnly project(':dx')
 
     // mlkit-common
     includeInJar(project(':base:mlkit-common')) {
         transitive = false
     }
-    includeInJarSources(project(path:':base:mlkit-common', configuration:'sourcesOnly')) {
+    includeInJarSources(project(path:':base:mlkit-common')) {
         transitive = false
     }
     implementation libs.flatbuffers
@@ -138,28 +187,12 @@ protobuf {
     }
 }
 
-compileKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-        freeCompilerArgs = ["-Xjvm-default=enable", "-Xno-optimized-callable-references"]
-    }
-}
-
-compileTestKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-        freeCompilerArgs = ["-Xjvm-default=enable", "-Xno-optimized-callable-references"]
-    }
-}
-
 group = 'com.android.tools.build'
-archivesBaseName = 'gradle'
 version = rootProject.ext.buildVersion
 
 project.ext.pomName = 'Gradle Plug-in for Android'
 project.ext.pomDesc = 'Gradle plug-in to build Android applications.'
-
-apply from: "$rootDir/buildSrc/base/publish.gradle"
+project.ext.customArtifactId = 'gradle'
 
 test {
     environment("CUSTOM_REPO",
@@ -203,32 +236,7 @@ apiTest {
                     + rootProject.file("../prebuilts/tools/common/m2/repository/").toString())
 
     dependsOn ':publishAndroidGradleLocal'
-    dependsOn ':base:apkparser:apkanalyzer-cli:publishLocal'
-}
-
-javadoc {
-    exclude     "**/internal/**"
-
-    options.docTitle "Gradle Plugin for Android"
-    options.header ""
-    options.footer "Copyright (C) 2012 The Android Open Source Project"
-}
-
-task javadocJar(type: Jar, dependsOn:javadoc) {
-    classifier  'javadoc'
-    from        javadoc.destinationDir
-
-}
-
-tasks.withType(Javadoc) {
-    classpath += configurations.provided
-}
-
-// Only package JavaDoc if using --init-script=buildSrc/base/release.gradle
-if (project.hasProperty("release")) {
-    artifacts {
-        archives javadocJar
-    }
+    dependsOn ':base:apkparser:apkanalyzer-cli:publish'
 }
 
 tasks.processResources {

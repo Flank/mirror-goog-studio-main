@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.tasks.manifest.mergeManifestsForApplication
+import com.android.build.gradle.internal.tasks.manifest.mergeManifests
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.MergingReport
@@ -66,21 +66,13 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
     @get:Input
     abstract val packageOverride: Property<String>
 
-    @get:Input
-    @get:Optional
-    abstract val versionCode: Property<Int?>
-
-    @get:Optional
-    @get:Input
-    abstract val versionName: Property<String?>
-
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFiles
     abstract val manifestOverlays: ListProperty<File>
 
     @get:Optional
     @get:Input
-    abstract val manifestPlaceholders: MapProperty<String, Any>
+    abstract val manifestPlaceholders: MapProperty<String, String>
 
     /** The processed Manifests files folder.  */
     @get:OutputDirectory
@@ -95,7 +87,6 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
     @get:Optional
     @get:OutputDirectory
     abstract val aaptFriendlyManifestOutputDirectory: DirectoryProperty
-
     /**
      * The aapt friendly processed Manifest. In case we are processing a library manifest, some
      * placeholders may not have been resolved (and will be when the library is merged into the
@@ -125,8 +116,6 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             it.mainManifest.set(mainManifest.get())
             it.manifestOverlays.set(manifestOverlays)
             it.packageOverride.set(packageOverride)
-            it.versionCode.set(versionCode)
-            it.versionName.set(versionName)
             it.minSdkVersion.set(minSdkVersion)
             it.targetSdkVersion.set(targetSdkVersion)
             it.maxSdkVersion.set(maxSdkVersion)
@@ -147,8 +136,6 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
         abstract val mainManifest: RegularFileProperty
         abstract val manifestOverlays: ListProperty<File>
         abstract val packageOverride: Property<String>
-        abstract val versionCode: Property<Int>
-        abstract val versionName: Property<String>
         abstract val minSdkVersion: Property<String>
         abstract val targetSdkVersion: Property<String>
         abstract val maxSdkVersion: Property<Int>
@@ -167,13 +154,13 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                 if (parameters.namespaced.get()) listOf(
                     ManifestMerger2.Invoker.Feature.FULLY_NAMESPACE_LOCAL_RESOURCES
                 ) else emptyList()
-            val mergingReport = mergeManifestsForApplication(
+            val mergingReport = mergeManifests(
                 parameters.mainManifest.asFile.get(),
                 parameters.manifestOverlays.get(), emptyList(), emptyList(),
                 null,
                 parameters.packageOverride.get(),
-                parameters.versionCode.orNull,
-                parameters.versionName.orNull,
+                null,
+                null,
                 parameters.minSdkVersion.orNull,
                 parameters.targetSdkVersion.orNull,
                 parameters.maxSdkVersion.orNull,
@@ -300,7 +287,6 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             task: ProcessLibraryManifest
         ) {
             super.configure(task)
-            val variantDslInfo = creationConfig.variantDslInfo
             val variantSources = creationConfig.variantSources
             val project = creationConfig.globalScope.project
             task.minSdkVersion
@@ -325,16 +311,8 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             task.mainSplit.disallowChanges()
             task.isNamespaced =
                 creationConfig.globalScope.extension.aaptOptions.namespaced
-            task.versionName.setDisallowChanges(variantDslInfo.versionName)
-            task.versionCode.setDisallowChanges(variantDslInfo.versionCode)
-            task.packageOverride.set(creationConfig.applicationId)
-            task.packageOverride.disallowChanges()
-            task.manifestPlaceholders.set(
-                task.project.provider(
-                    variantDslInfo::manifestPlaceholders
-                )
-            )
-            task.manifestPlaceholders.disallowChanges()
+            task.packageOverride.setDisallowChanges(creationConfig.applicationId)
+            task.manifestPlaceholders.setDisallowChanges(creationConfig.manifestPlaceholders)
             task.mainManifest
                 .set(project.provider(variantSources::mainManifestFilePath))
             task.mainManifest.disallowChanges()

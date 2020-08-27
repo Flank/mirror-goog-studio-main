@@ -78,8 +78,9 @@ class DynamicAppTest {
     @get:Rule
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("dynamicApp")
-        // b/157470515, http://b/146208910, http://b/149978740
+        // http://b/149978740
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
+        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=6")
         .create()
 
     private val bundleContent: Array<String> = arrayOf(

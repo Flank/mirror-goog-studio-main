@@ -497,22 +497,19 @@ exports_files(
 
 # managed by go/iml_to_build [unb]
 iml_module(
-    name = "unb.studio.android.sdktools.lint-model",
+    name = "studio.android.sdktools.lint-model",
     srcs = ["libs/lint-model/src/main/java"],
     iml_files = ["libs/lint-model/android.sdktools.lint-model.iml"],
     lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
-    tags = [
-        "manual",
-        "unb",
-    ],
+    project = "unb",
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/base/annotations:unb.studio.android.sdktools.android-annotations[module]",
-        "//tools/base/common:unb.studio.android.sdktools.common[module]",
-        "//tools/base/sdk-common:unb.studio.android.sdktools.sdk-common[module]",
-        "//tools/base/build-system/builder-model:unb.studio.android.sdktools.builder-model[module]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
+        "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
+        "//tools/base/build-system/builder-model:studio.android.sdktools.builder-model[module]",
         "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
         "//tools/adt/idea/.idea/libraries:unb.kxml2",
     ],
@@ -520,24 +517,21 @@ iml_module(
 
 # managed by go/iml_to_build [unb]
 iml_module(
-    name = "unb.studio.android.sdktools.lint-api",
+    name = "studio.android.sdktools.lint-api",
     srcs = ["libs/lint-api/src/main/java"],
     iml_files = ["libs/lint-api/android.sdktools.lint-api.iml"],
     lint_baseline = "libs/lint-api/empty_baseline.xml",
-    tags = [
-        "manual",
-        "unb",
-    ],
+    project = "unb",
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
         "//tools/adt/idea/.idea/libraries:unb.asm-tools",
-        "//tools/base/annotations:unb.studio.android.sdktools.android-annotations",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations",
         "//tools/adt/idea/.idea/libraries:unb.Guava",
-        "//tools/base/lint:unb.studio.android.sdktools.lint-model",
-        "//tools/base/sdk-common:unb.studio.android.sdktools.sdk-common",
-        "//tools/base/layoutlib-api:unb.studio.android.sdktools.layoutlib-api",
-        "//tools/base/build-system:unb.studio.android.sdktools.manifest-merger",
+        "//tools/base/lint:studio.android.sdktools.lint-model",
+        "//tools/base/sdk-common:studio.android.sdktools.sdk-common",
+        "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api",
+        "//tools/base/build-system:studio.android.sdktools.manifest-merger",
     ],
     # do not sort: must match IML order
     deps = [
@@ -545,37 +539,34 @@ iml_module(
         "//prebuilts/studio/intellij-sdk:studio-sdk-plugin-java",
         "//prebuilts/studio/intellij-sdk:studio-sdk-plugin-Kotlin",
         "//tools/adt/idea/.idea/libraries:unb.asm-tools",
-        "//tools/base/annotations:unb.studio.android.sdktools.android-annotations[module]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/adt/idea/.idea/libraries:unb.Guava",
-        "//tools/base/lint:unb.studio.android.sdktools.lint-model[module]",
-        "//tools/base/common:unb.studio.android.sdktools.common[module]",
-        "//tools/base/sdklib:unb.studio.android.sdktools.sdklib[module]",
-        "//tools/base/sdk-common:unb.studio.android.sdktools.sdk-common[module]",
-        "//tools/base/layoutlib-api:unb.studio.android.sdktools.layoutlib-api[module]",
-        "//tools/base/build-system:unb.studio.android.sdktools.manifest-merger[module]",
+        "//tools/base/lint:studio.android.sdktools.lint-model[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
+        "//tools/base/sdklib:studio.android.sdktools.sdklib[module]",
+        "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
+        "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api[module]",
+        "//tools/base/build-system:studio.android.sdktools.manifest-merger[module]",
         "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
     ],
 )
 
 # managed by go/iml_to_build [unb]
 iml_module(
-    name = "unb.studio.android.sdktools.lint-checks",
+    name = "studio.android.sdktools.lint-checks",
     srcs = ["libs/lint-checks/src/main/java"],
     iml_files = ["libs/lint-checks/android.sdktools.lint-checks.iml"],
     lint_baseline = "libs/lint-checks/lint_baseline.xml",
+    project = "unb",
     resources = ["libs/lint-checks/src/main/resources"],
-    tags = [
-        "manual",
-        "unb",
-    ],
     visibility = ["//visibility:public"],
-    exports = ["//tools/base/lint:unb.studio.android.sdktools.lint-api"],
+    exports = ["//tools/base/lint:studio.android.sdktools.lint-api"],
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//prebuilts/studio/intellij-sdk:studio-sdk-plugin-java",
         "//prebuilts/studio/intellij-sdk:studio-sdk-plugin-Kotlin",
-        "//tools/base/lint:unb.studio.android.sdktools.lint-api[module]",
+        "//tools/base/lint:studio.android.sdktools.lint-api[module]",
         "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
     ],
 )

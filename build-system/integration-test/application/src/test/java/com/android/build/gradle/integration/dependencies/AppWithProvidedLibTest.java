@@ -18,9 +18,7 @@ package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.builder;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
@@ -46,10 +44,6 @@ public class AppWithProvidedLibTest {
     public static GradleTestProject project =
             builder()
                     .fromTestProject("dynamicApp")
-                    .withConfigurationCaching(
-                            BaseGradleExecutor.ConfigurationCaching.WARN)
-                    // b/157470515
-                    .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
                     .create();
 
     static ModelContainer<AndroidProject> modelContainer;

@@ -25,6 +25,7 @@
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "tools/base/deploy/common/socket.h"
+#include "tools/base/deploy/proto/deploy.pb.h"
 
 using namespace deploy;
 
@@ -52,19 +53,30 @@ void LogError(const std::string& message) {
 }
 
 Status ForwardInstallerToAgents() {
-  std::string message;
+  std::string inputFromInstaller;
 
   // Failure to read from the installer kills the server.
-  if (!installer_output.Read(&message)) {
+  if (!installer_output.Read(&inputFromInstaller)) {
     LogError("Failed to read from installer");
     return SERVER_EXIT;
   }
+
+  // The Installer issued a SwapRequest but the Agent expect an AgentRequest.
+  // Wrap accordingly.
+  proto::SwapRequest swap_request;
+  swap_request.ParseFromString(inputFromInstaller);
+
+  proto::AgentRequest agent_request;
+  *agent_request.mutable_swap_request() = swap_request;
+
+  std::string outputToAgent;
+  agent_request.SerializeToString(&outputToAgent);
 
   // Failure to write to an agent prevents the installer from trying to read or
   // write any messages to/from that agent.
   auto agent = std::begin(agent_sockets);
   while (agent != std::end(agent_sockets)) {
-    if (!(*agent)->Write(message)) {
+    if (!(*agent)->Write(outputToAgent)) {
       LogInfo("Agent disconnected (write)");
       agent = agent_sockets.erase(agent);
     } else {

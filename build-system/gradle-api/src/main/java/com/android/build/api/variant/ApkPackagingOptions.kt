@@ -23,4 +23,7 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface ApkPackagingOptions : PackagingOptions {
+
+    /** PackagingOptions for native libraries. Initialized from the corresponding DSL. */
+    fun jniLibs(action: JniLibsApkPackagingOptions.() -> Unit)
 }

@@ -1,4 +1,5 @@
-apply plugin: 'java'
+apply plugin: 'com.android.tools.java-library'
+apply plugin: 'com.android.tools.publish'
 apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
 
@@ -17,7 +18,3 @@ dependencies {
 
 project.ext.pomName = 'Android Tools layoutlib-api'
 project.ext.pomDesc = 'Library to use the rendering library for Android layouts: layoutlib'
-
-apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/javadoc.gradle"
-

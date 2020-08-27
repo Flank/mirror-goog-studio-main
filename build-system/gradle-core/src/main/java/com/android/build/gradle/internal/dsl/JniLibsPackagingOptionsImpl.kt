@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.dsl
 import com.android.build.api.dsl.JniLibsPackagingOptions
 
 class JniLibsPackagingOptionsImpl : JniLibsPackagingOptions {
-    override val legacyPackaging: Boolean? = null
+    override var legacyPackaging: Boolean? = null
     override val excludes: MutableSet<String> = mutableSetOf()
     override val pickFirsts: MutableSet<String> = mutableSetOf()
     override val keepDebugSymbols: MutableSet<String> = mutableSetOf()

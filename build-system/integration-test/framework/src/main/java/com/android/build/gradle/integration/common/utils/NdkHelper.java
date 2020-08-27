@@ -37,7 +37,7 @@ public class NdkHelper {
 
     @NonNull
     public static NdkInfo getNdkInfo(GradleTestProject project) {
-        return new DefaultNdkInfo(project.getAndroidNdkHome());
+        return new DefaultNdkInfo(project.getAndroidNdkDir());
     }
 
     @NonNull

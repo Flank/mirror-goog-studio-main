@@ -16,8 +16,10 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.PackagingOptions
+import com.android.build.api.variant.JniLibsPackagingOptions
+import com.android.build.api.variant.LibraryPackagingOptions
 import com.android.build.api.variant.LibraryVariantProperties
+import com.android.build.api.variant.ResourcesPackagingOptions
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
@@ -57,29 +59,54 @@ class AnalyticsEnabledLibraryVariantPropertiesTest {
 
     @Test
     fun getPackagingOptions() {
-        val packagingOptions = Mockito.mock(PackagingOptions::class.java)
+        val packagingOptions = Mockito.mock(LibraryPackagingOptions::class.java)
+        val jniLibsPackagingOptions = Mockito.mock(JniLibsPackagingOptions::class.java)
+        val resourcesPackagingOptions = Mockito.mock(ResourcesPackagingOptions::class.java)
+        Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsPackagingOptions)
+        Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
         Mockito.`when`(delegate.packagingOptions).thenReturn(packagingOptions)
-        Truth.assertThat(proxy.packagingOptions).isEqualTo(packagingOptions)
+        // simulate a user configuring packaging options for jniLibs and resources
+        proxy.packagingOptions.jniLibs
+        proxy.packagingOptions.resources
 
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(4)
         Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE)
-        Mockito.verify(delegate, Mockito.times(1))
-            .packagingOptions
+            stats.variantApiAccess.variantPropertiesAccessList.map { it.type }
+        ).containsExactlyElementsIn(
+            listOf(
+                VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE,
+                VariantPropertiesMethodType.JNI_LIBS_PACKAGING_OPTIONS_VALUE,
+                VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE,
+                VariantPropertiesMethodType.RESOURCES_PACKAGING_OPTIONS_VALUE
+            )
+        )
+        Mockito.verify(delegate, Mockito.times(1)).packagingOptions
     }
 
     @Test
-    fun packagingOptionsAction() {
-        @Suppress("UNCHECKED_CAST")
-        val action = Mockito.mock(Function1::class.java) as PackagingOptions.() -> Unit
+    fun packagingOptionsActions() {
+        val packagingOptions = Mockito.mock(LibraryPackagingOptions::class.java)
+        val jniLibsPackagingOptions = Mockito.mock(JniLibsPackagingOptions::class.java)
+        val resourcesPackagingOptions = Mockito.mock(ResourcesPackagingOptions::class.java)
+        Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsPackagingOptions)
+        Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
+        Mockito.`when`(delegate.packagingOptions).thenReturn(packagingOptions)
+        val action: LibraryPackagingOptions.() -> Unit = {
+            this.jniLibs {}
+            this.resources {}
+        }
         proxy.packagingOptions(action)
 
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(3)
         Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE)
-        Mockito.verify(delegate, Mockito.times(1))
-            .packagingOptions(action)
+            stats.variantApiAccess.variantPropertiesAccessList.map { it.type }
+        ).containsExactlyElementsIn(
+            listOf(
+                VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE,
+                VariantPropertiesMethodType.JNI_LIBS_PACKAGING_OPTIONS_ACTION_VALUE,
+                VariantPropertiesMethodType.RESOURCES_PACKAGING_OPTIONS_ACTION_VALUE
+            )
+        )
+        Mockito.verify(delegate, Mockito.times(1)).packagingOptions
     }
 }

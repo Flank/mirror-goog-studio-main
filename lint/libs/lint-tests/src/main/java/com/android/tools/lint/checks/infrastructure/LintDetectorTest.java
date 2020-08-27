@@ -1122,7 +1122,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                                     + "Either allow the test to use any installed SDK (it defaults to the "
                                     + "highest version) via TestLintTask#requireCompileSdk(false), or make "
                                     + "sure the SDK being used is the right  one via "
-                                    + "TestLintTask#sdkHome(File) or $ANDROID_HOME and that the actual SDK "
+                                    + "TestLintTask#sdkHome(File) or $ANDROID_SDK_ROOT and that the actual SDK "
                                     + "platform (platforms/"
                                     + project.getBuildTargetHash()
                                     + " is installed "

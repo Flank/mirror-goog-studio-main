@@ -20,38 +20,18 @@ import androidx.annotation.NonNull;
 import androidx.inspection.ArtToolInterface;
 import androidx.inspection.InspectorEnvironment;
 import androidx.inspection.InspectorExecutors;
-import java.util.Arrays;
-import java.util.List;
 
 class InspectorEnvironmentImpl implements InspectorEnvironment {
-    private final long mAppInspectionServicePtr;
-    private final String inspectorId;
     private final InspectorExecutors mExecutors;
+
+    private final ArtToolInterface mArtTooling;
 
     InspectorEnvironmentImpl(
             long mAppInspectionServicePtr,
             @NonNull String inspectorId,
             @NonNull InspectorExecutors executors) {
-        this.mAppInspectionServicePtr = mAppInspectionServicePtr;
-        this.inspectorId = inspectorId;
+        mArtTooling = new ArtToolInterfaceImpl(mAppInspectionServicePtr, inspectorId);
         mExecutors = executors;
-    }
-
-    @Override
-    public <T> List<T> findInstances(Class<T> clazz) {
-        return Arrays.asList(nativeFindInstances(mAppInspectionServicePtr, clazz));
-    }
-
-    @Override
-    public void registerEntryHook(
-            Class<?> originClass, String originMethod, ArtToolInterface.EntryHook entryHook) {
-        AppInspectionService.addEntryHook(inspectorId, originClass, originMethod, entryHook);
-    }
-
-    @Override
-    public <T> void registerExitHook(
-            Class<?> originClass, String originMethod, ArtToolInterface.ExitHook<T> exitHook) {
-        AppInspectionService.addExitHook(inspectorId, originClass, originMethod, exitHook);
     }
 
     @NonNull
@@ -60,6 +40,10 @@ class InspectorEnvironmentImpl implements InspectorEnvironment {
         return mExecutors;
     }
 
-    private static native <T> T[] nativeFindInstances(long servicePtr, Class<T> clazz);
+    @NonNull
+    @Override
+    public ArtToolInterface artTI() {
+        return mArtTooling;
+    }
 }
 

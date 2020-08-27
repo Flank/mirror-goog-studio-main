@@ -24,13 +24,14 @@ import com.android.build.gradle.internal.instrumentation.FixFramesClassWriter
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
 import com.android.builder.utils.isValidZipEntryName
-import com.android.ide.common.resources.FileStatus
 import com.android.utils.FileUtils
 import com.google.common.hash.Hashing
 import com.google.common.io.ByteStreams
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.work.ChangeType
+import org.gradle.work.FileChange
 import org.gradle.workers.WorkerExecutor
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
@@ -70,109 +71,15 @@ class FixStackFramesDelegate(
     companion object {
         private val logger = LoggerWrapper.getLogger(FixStackFramesDelegate::class.java)
         private val zeroFileTime: FileTime = FileTime.fromMillis(0)
-    }
 
-    private fun getUniqueName(input: File): String {
-        return Hashing.sha256().hashString(input.absolutePath, StandardCharsets.UTF_8)
-            .toString() + DOT_JAR
-    }
-
-    private fun processFiles(
-        workers: WorkerExecutor,
-        changedInput: Map<File, FileStatus>,
-        task: AndroidVariantTask,
-        classesHierarchyBuildServiceProvider: Provider<ClassesHierarchyBuildService>
-    ) {
-        changedInput.entries.forEach { entry ->
-            val out = File(outFolder, getUniqueName(entry.key))
-
-            Files.deleteIfExists(out.toPath())
-
-            if (entry.value == FileStatus.NEW || entry.value == FileStatus.CHANGED) {
-                workers.noIsolation()
-                    .submit(FixStackFramesRunnable::class.java) { params ->
-                        params.initializeFromAndroidVariantTask(task)
-                        params.input.set(entry.key)
-                        params.output.set(out)
-                        params.classesHierarchyBuildService.set(
-                            classesHierarchyBuildServiceProvider
-                        )
-                        params.classpath.set(
-                            listOf(
-                                bootClasspath,
-                                classesToFix,
-                                referencedClasses
-                            ).flatten()
-                        )
-                    }
-            }
-        }
-        // We keep waiting for all the workers to finnish so that all the work is done before
-        // we remove services in Manager.close()
-        workers.await()
-    }
-
-    fun doFullRun(
-        workers: WorkerExecutor,
-        task: AndroidVariantTask,
-        classesHierarchyBuildServiceProvider: Provider<ClassesHierarchyBuildService>
-    ) {
-        FileUtils.cleanOutputDir(outFolder)
-
-        val inputToProcess = classesToFix.map { it to FileStatus.NEW }.toMap()
-
-        processFiles(workers, inputToProcess, task, classesHierarchyBuildServiceProvider)
-    }
-
-    fun doIncrementalRun(
-        workers: WorkerExecutor,
-        changedInput: Map<File, FileStatus>,
-        task: AndroidVariantTask,
-        classesHierarchyBuildServiceProvider: Provider<ClassesHierarchyBuildService>
-    ) {
-        // We should only process (unzip and fix stack) existing jar input from classesToFix
-        // If changedInput contains a folder or deleted jar we will still try to delete
-        // corresponding output entry (if exists) but will do no processing
-        val jarsToProcess = classesToFix.filter(File::isFile).toSet()
-
-        val inputToProcess = changedInput.entries.filter {
-            it.value == FileStatus.REMOVED || jarsToProcess.contains(it.key)
-        }.associate { it.key to it.value }
-
-        processFiles(workers, inputToProcess, task, classesHierarchyBuildServiceProvider)
-    }
-
-    abstract class Params : ProfileAwareWorkAction.Parameters() {
-        abstract val input: Property<File>
-
-        abstract val output: Property<File>
-
-        abstract val classesHierarchyBuildService: Property<ClassesHierarchyBuildService>
-
-        abstract val classpath: ListProperty<File>
-    }
-
-    abstract class FixStackFramesRunnable : ProfileAwareWorkAction<Params>() {
-
-        override fun run() {
-            createFile(
-                parameters.input.get(),
-                parameters.output.get(),
-                parameters.classesHierarchyBuildService.get()
-                    .getClassesHierarchyResolverBuilder()
-                    .addSources(parameters.classpath.get())
-                    .build()
-            )
-        }
-
-        private fun createFile(
-            input: File,
-            output: File,
+        fun transformJar(
+            inputJar: File,
+            outputJar: File,
             classesHierarchyResolver: ClassesHierarchyResolver
         ) {
-            ZipFile(input).use { inputZip ->
+            ZipFile(inputJar).use { inputZip ->
                 ZipOutputStream(
-                    Files.newOutputStream(output.toPath()).buffered()
+                    Files.newOutputStream(outputJar.toPath()).buffered()
                 ).use { outputZip ->
                     val inEntries = inputZip.entries()
                     while (inEntries.hasMoreElements()) {
@@ -207,7 +114,6 @@ class FixStackFramesDelegate(
                     }
                 }
             }
-
         }
 
         private fun getFixedClass(
@@ -226,6 +132,100 @@ class FixStackFramesDelegate(
                 logger.verbose(t.message!!)
                 bytes
             }
+        }
+    }
+
+    private fun getUniqueName(input: File): String {
+        return Hashing.sha256().hashString(input.absolutePath, StandardCharsets.UTF_8)
+            .toString() + DOT_JAR
+    }
+
+    private fun processFiles(
+        workers: WorkerExecutor,
+        changedInput: Map<File, ChangeType>,
+        task: AndroidVariantTask,
+        classesHierarchyBuildServiceProvider: Provider<ClassesHierarchyBuildService>
+    ) {
+        changedInput.entries.forEach { entry ->
+            val out = File(outFolder, getUniqueName(entry.key))
+
+            Files.deleteIfExists(out.toPath())
+
+            if (entry.value == ChangeType.ADDED || entry.value == ChangeType.MODIFIED) {
+                workers.noIsolation()
+                    .submit(FixStackFramesRunnable::class.java) { params ->
+                        params.initializeFromAndroidVariantTask(task)
+                        params.input.set(entry.key)
+                        params.output.set(out)
+                        params.classesHierarchyBuildService.set(
+                            classesHierarchyBuildServiceProvider
+                        )
+                        params.classpath.set(
+                            listOf(
+                                bootClasspath,
+                                classesToFix,
+                                referencedClasses
+                            ).flatten()
+                        )
+                    }
+            }
+        }
+        // We keep waiting for all the workers to finnish so that all the work is done before
+        // we remove services in Manager.close()
+        workers.await()
+    }
+
+    fun doFullRun(
+        workers: WorkerExecutor,
+        task: AndroidVariantTask,
+        classesHierarchyBuildServiceProvider: Provider<ClassesHierarchyBuildService>
+    ) {
+        FileUtils.cleanOutputDir(outFolder)
+
+        val inputToProcess = classesToFix.map { it to ChangeType.ADDED }.toMap()
+
+        processFiles(workers, inputToProcess, task, classesHierarchyBuildServiceProvider)
+    }
+
+    fun doIncrementalRun(
+        workers: WorkerExecutor,
+        inputChanges: Iterable<FileChange>,
+        task: AndroidVariantTask,
+        classesHierarchyBuildServiceProvider: Provider<ClassesHierarchyBuildService>
+    ) {
+        // We should only process (unzip and fix stack) existing jar input from classesToFix
+        // If changedInput contains a folder or deleted jar we will still try to delete
+        // corresponding output entry (if exists) but will do no processing
+        val jarsToProcess = classesToFix.filter(File::isFile).toSet()
+
+        val inputToProcess = inputChanges.filter {
+            it.changeType == ChangeType.REMOVED || jarsToProcess.contains(it.file)
+        }.associate { it.file to it.changeType }
+
+        processFiles(workers, inputToProcess, task, classesHierarchyBuildServiceProvider)
+    }
+
+    abstract class Params : ProfileAwareWorkAction.Parameters() {
+        abstract val input: Property<File>
+
+        abstract val output: Property<File>
+
+        abstract val classesHierarchyBuildService: Property<ClassesHierarchyBuildService>
+
+        abstract val classpath: ListProperty<File>
+    }
+
+    abstract class FixStackFramesRunnable : ProfileAwareWorkAction<Params>() {
+
+        override fun run() {
+            transformJar(
+                parameters.input.get(),
+                parameters.output.get(),
+                parameters.classesHierarchyBuildService.get()
+                    .getClassesHierarchyResolverBuilder()
+                    .addSources(parameters.classpath.get())
+                    .build()
+            )
         }
     }
 }

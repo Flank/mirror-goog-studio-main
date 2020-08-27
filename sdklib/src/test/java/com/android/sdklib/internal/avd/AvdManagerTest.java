@@ -35,7 +35,7 @@ import junit.framework.TestCase;
 
 public class AvdManagerTest extends TestCase {
 
-    private static final File ANDROID_HOME = new File("/android-home");
+    private static final File ANDROID_PREFS_ROOT = new File("/android-home");
 
     private AndroidSdkHandler mAndroidSdkHandler;
     private AvdManager mAvdManager;
@@ -64,11 +64,11 @@ public class AvdManagerTest extends TestCase {
         recordWearSysImgChina(mFileOp);
         recordChromeOsSysImg(mFileOp);
         mAndroidSdkHandler =
-                new AndroidSdkHandler(new File("/sdk"), ANDROID_HOME,  mFileOp);
+                new AndroidSdkHandler(new File("/sdk"), ANDROID_PREFS_ROOT, mFileOp);
         mAvdManager =
                 AvdManager.getInstance(
                         mAndroidSdkHandler,
-                        new File(ANDROID_HOME, AndroidLocation.FOLDER_AVD),
+                        new File(ANDROID_PREFS_ROOT, AndroidLocation.FOLDER_AVD),
                         new NullLogger());
         mAvdFolder =
                 AvdInfo.getDefaultAvdFolder(mAvdManager, getName(), mFileOp, false);
@@ -581,8 +581,8 @@ public class AvdManagerTest extends TestCase {
         // Verify that the two fixed hardware properties changed back, but the other hardware
         // property and the user-settable property did not change.
         Map<String, String> updatedHardwareProperties = updatedDeviceInfo.getProperties();
-        assertEquals("2152", updatedHardwareProperties.get("hw.lcd.height"));
-        assertEquals("1680",  updatedHardwareProperties.get("hw.displayRegion.0.1.height"));
+        assertEquals("2208", updatedHardwareProperties.get("hw.lcd.height"));
+        assertEquals("2208",  updatedHardwareProperties.get("hw.displayRegion.0.1.height"));
         assertEquals("1536", updatedHardwareProperties.get("hw.ramSize"));
         assertEquals("yes",  updatedHardwareProperties.get("hw.keyboard"));
     }

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.zip.Deflater;
 
 public class BytesSource extends Source {
@@ -44,11 +45,16 @@ public class BytesSource extends Source {
         build(bytes, bytes.length, compressionLevel);
     }
 
-    public BytesSource(@NonNull File file, @NonNull String name, int compressionLevel)
+    public BytesSource(@NonNull Path file, @NonNull String name, int compressionLevel)
             throws IOException {
         super(name);
-        byte[] bytes = Files.readAllBytes(file.toPath());
+        byte[] bytes = Files.readAllBytes(file);
         build(bytes, bytes.length, compressionLevel);
+    }
+
+    public BytesSource(@NonNull File file, @NonNull String name, int compressionLevel)
+            throws IOException {
+        this(file.toPath(), name, compressionLevel);
     }
 
     /**
@@ -87,10 +93,10 @@ public class BytesSource extends Source {
     }
 
     @Override
-    void prepare() {}
+    public void prepare() {}
 
     @Override
-    long writeTo(@NonNull ZipWriter writer) throws IOException {
+    public long writeTo(@NonNull ZipWriter writer) throws IOException {
         return writer.write(zipEntryPayload);
     }
 }

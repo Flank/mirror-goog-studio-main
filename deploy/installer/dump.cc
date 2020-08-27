@@ -37,13 +37,15 @@
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
-void DumpCommand::ParseParameters(int argc, char** argv) {
-  if (argc < 1) {
+void DumpCommand::ParseParameters(const proto::InstallerRequest& request) {
+  if (!request.has_dump_request()) {
     return;
   }
 
-  for (int i = 0; i < argc; ++i) {
-    package_names_.emplace_back(argv[i]);
+  proto::DumpRequest dumpRequest = request.dump_request();
+  for (size_t i = 0; i < dumpRequest.package_names_size(); i++) {
+    const std::string& package_name = dumpRequest.package_names(i);
+    package_names_.emplace_back(package_name);
   }
 
   ready_to_run_ = true;

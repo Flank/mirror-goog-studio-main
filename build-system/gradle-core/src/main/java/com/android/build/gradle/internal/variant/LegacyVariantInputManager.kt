@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.variant
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.DefaultConfigData
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.BuildType
@@ -58,7 +59,13 @@ class LegacyVariantInputManager(
     override val signingConfigContainer: NamedDomainObjectContainer<SigningConfig> =
         dslServices.domainObjectContainer(
             SigningConfig::class.java,
-            SigningConfigFactory(dslServices, getDefaultDebugKeystoreLocation(dslServices.gradleEnvironmentProvider))
+            SigningConfigFactory(
+                dslServices,
+                getDefaultDebugKeystoreLocation(
+                    dslServices.gradleEnvironmentProvider,
+                    LoggerWrapper(dslServices.logger)
+                )
+            )
         )
 
     override val defaultConfig: DefaultConfig = dslServices.newInstance(DefaultConfig::class.java, BuilderConstants.MAIN, dslServices)

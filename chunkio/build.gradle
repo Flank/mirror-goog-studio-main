@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-apply plugin: 'java'
+apply plugin: 'com.android.tools.java-library'
+apply plugin: 'com.android.tools.publish'
 apply plugin: 'jacoco-tools-base'
 
 sourceSets {
@@ -26,6 +27,3 @@ project.ext.pomDesc = 'annotations for use with chunkio-processor, and runtime s
 group = 'com.android.tools.chunkio'
 archivesBaseName = 'chunkio'
 version = rootProject.ext.baseVersion
-
-apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/javadoc.gradle"

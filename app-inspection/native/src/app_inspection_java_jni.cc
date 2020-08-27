@@ -258,7 +258,7 @@ Java_com_android_tools_agent_app_inspection_AppInspectionService_nativeRegisterE
 }
 
 JNIEXPORT jobjectArray JNICALL
-Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeFindInstances(
+Java_com_android_tools_agent_app_inspection_ArtToolInterfaceImpl_nativeFindInstances(
     JNIEnv *env, jclass callerClass, jlong servicePtr, jclass jclass) {
   return app_inspection::FindInstances(env, servicePtr, jclass);
 }

@@ -27,7 +27,7 @@ class DeltaInstallCommand : public BaseInstallCommand {
  public:
   explicit DeltaInstallCommand(Workspace& workspace);
   virtual ~DeltaInstallCommand() = default;
-  virtual void ParseParameters(int argc, char** argv);
+  virtual void ParseParameters(const proto::InstallerRequest& request);
   virtual void Run(proto::InstallerResponse* response);
 
  private:

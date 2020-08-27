@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.bundle
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.AabSubject.Companion.assertThat
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -33,9 +32,6 @@ class DynamicAppLegacyMultidexTest {
     @get:Rule
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("multiDex")
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-        // b/157470515, http://b/149978740
-        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
         .create()
 
     private val forcedPrimaryDexClasses = listOf(

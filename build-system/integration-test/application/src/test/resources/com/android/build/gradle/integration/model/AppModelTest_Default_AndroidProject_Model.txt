@@ -12,7 +12,7 @@
     - buildToolsVersion = "29.0.2"
     - dynamicFeatures   = []
     > bootClasspath:
-       * {SDK}/platforms/android-29/android.jar{F}
+       * {ANDROID_SDK}/platforms/android-29/android.jar{F}
     < bootClasspath
     > defaultConfig:
        > productFlavor:
@@ -373,7 +373,7 @@
     > signingConfigs:
        > signingConfig(debug):
           - name            = "debug"
-          - storeFile       = {ANDROID_HOME}/.android/debug.keystore{!}
+          - storeFile       = {ANDROID_PREFS}/.android/debug.keystore{!}
           - storePassword   = "android"
           - keyAlias        = "AndroidDebugKey"
           - keyPassword     = "android"

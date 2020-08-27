@@ -99,6 +99,7 @@ class NoOpIncrementalBuildMinifyTest {
                 ":mergeReleaseResources",
                 ":mergeReleaseShaders",
                 ":minifyReleaseWithR8",
+                ":optimizeReleaseResources",
                 ":packageDebugAndroidTest",
                 ":packageRelease",
                 ":preBuild",

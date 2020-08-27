@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertNull;
 
 import com.android.SdkConstants;
@@ -57,7 +55,7 @@ public class PlatformLoaderTest {
         Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
 
         // Copy all necessary prebuilts
-        File realAndroidHome = project.getAndroidHome();
+        File realAndroidHome = project.getAndroidSdkDir();
 
         FileUtils.copyDirectoryContentToDirectory(
                 FileUtils.join(

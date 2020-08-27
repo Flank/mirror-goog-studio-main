@@ -33,7 +33,7 @@ socklen_t InitAddr(const std::string& socket_name, struct sockaddr_un* addr) {
   addr->sun_family = AF_UNIX;
 #ifdef __APPLE__
   // Mac does not support abstract sockets, use a named one for testing
-  std::string name = Env::root() + "/.abstract_" + socket_name;
+  std::string name = "/tmp/.abstract_" + socket_name;
   strncpy(addr->sun_path, name.c_str(), sizeof(addr->sun_path) - 1);
   return SUN_LEN(addr);
 #else
@@ -58,6 +58,20 @@ bool Socket::Open() {
   return fd_ != -1;
 }
 
+Socket::~Socket() {
+#ifdef __APPLE__
+  if (is_socket_server_) {
+    struct sockaddr_un addr;
+    socklen_t address_size = sizeof(sockaddr_un);
+
+    if (!getsockname(fd_, (struct sockaddr*)&addr, &address_size)) {
+      unlink(addr.sun_path);
+    }
+  }
+#endif
+  Close();
+}
+
 bool Socket::BindAndListen(const std::string& socket_name) {
   if (fd_ == -1) {
     return false;
@@ -65,6 +79,12 @@ bool Socket::BindAndListen(const std::string& socket_name) {
 
   struct sockaddr_un addr = {0};
   socklen_t len = InitAddr(socket_name, &addr);
+#ifdef __APPLE__
+  // Unlink the named domain socket just in case it was not properly unlinked
+  // last time.
+  unlink(addr.sun_path);
+#endif
+
   if (bind(fd_, (const struct sockaddr*)&addr, len) == -1) {
     return false;
   }
@@ -74,6 +94,9 @@ bool Socket::BindAndListen(const std::string& socket_name) {
     return false;
   }
 
+#ifdef __APPLE__
+  is_socket_server_ = true;
+#endif
   return true;
 }
 

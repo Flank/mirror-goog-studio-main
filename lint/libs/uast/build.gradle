@@ -1,20 +1,23 @@
-apply plugin: 'java'
+apply plugin: 'com.android.tools.java'
+apply plugin: 'com.android.tools.publish'
 
 group = 'com.android.tools.external.org-jetbrains'
 archivesBaseName = 'uast'
 version = rootProject.ext.baseVersion
 
-jar {
-    from zipTree("../../../../../prebuilts/tools/common/lint-psi/uast/uast-common.jar")
-    from zipTree("../../../../../prebuilts/tools/common/lint-psi/uast/uast-java.jar")
-    from zipTree("../../../../../prebuilts/tools/common/lint-psi/uast/uast-kotlin.jar")
+def prebuiltJars = [
+    "../../../../../prebuilts/tools/common/lint-psi/uast/uast-common.jar",
+    "../../../../../prebuilts/tools/common/lint-psi/uast/uast-java.jar",
+    "../../../../../prebuilts/tools/common/lint-psi/uast/uast-kotlin.jar",
+]
+
+prebuiltJars.forEach {
+    jar.from(zipTree(it))
+    dependencies.compile(files(it)) // For Symbol resolution in Intellij IDEA
 }
 
 project.ext.pomName = 'Unified AST'
 project.ext.pomDesc = 'Unified AST'
-
-apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 
 tasks.getByName("sourcesJar") {
     from zipTree("../../../../../prebuilts/tools/common/lint-psi/uast/uast-common-sources.jar")

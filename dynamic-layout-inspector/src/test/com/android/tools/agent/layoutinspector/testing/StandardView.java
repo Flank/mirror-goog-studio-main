@@ -37,7 +37,7 @@ import android.widget.LinearLayout;
 import android.widget.RootLinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
-import androidx.ui.core.AndroidComposeView;
+import androidx.compose.ui.platform.AndroidComposeView;
 
 public class StandardView {
     private static final int LAYOUT = 1;
@@ -130,7 +130,10 @@ public class StandardView {
                         .withId(LINEAR_LAYOUT_ID)
                         .withBounds(10, 50, 980, 2000)
                         .withLayoutId(LAYOUT)
+                        .withLayoutWidth(ViewGroup.LayoutParams.MATCH_PARENT)
+                        .withLayoutHeight(ViewGroup.LayoutParams.MATCH_PARENT)
                         .withResources(resources)
+                        .withResolutionStack(LAYOUT, THEME)
                         .withAttachedToWindow(true)
                         .build();
 

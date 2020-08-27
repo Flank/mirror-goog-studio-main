@@ -1,4 +1,5 @@
-apply plugin: 'java'
+apply plugin: 'com.android.tools.java-library'
+apply plugin: 'com.android.tools.publish'
 apply plugin: 'sdk-java-lib'
 
 dependencies {
@@ -22,6 +23,3 @@ project.ext.pomDesc = 'Library for parsing the resources.arsc file'
 group = 'com.android.tools.apkparser'
 archivesBaseName = 'binary-resources'
 version = rootProject.ext.baseVersion
-
-apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/javadoc.gradle"

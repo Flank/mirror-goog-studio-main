@@ -55,6 +55,14 @@ class ProtoPipe {
   MessagePipeWrapper pipe_;
 };
 
+// A derived class that owns the fd passed in the constructor and will therefore
+// close it when it is destructed.
+class OwnedProtoPipe : public ProtoPipe {
+ public:
+  OwnedProtoPipe(int fd) : ProtoPipe(fd) {}
+  virtual ~OwnedProtoPipe() { Close(); }
+};
+
 }  // namespace deploy
 
 #endif

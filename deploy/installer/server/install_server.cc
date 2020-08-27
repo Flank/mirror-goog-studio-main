@@ -184,7 +184,7 @@ void InstallServer::HandleSendMessage(
 void InstallServer::HandleSendMessageInner(
     const proto::SendAgentMessageRequest& request,
     proto::SendAgentMessageResponse* response) {
-  const std::string request_bytes = request.swap_request().SerializeAsString();
+  const std::string request_bytes = request.agent_request().SerializeAsString();
   std::vector<std::unique_ptr<Socket>> agents;
   for (int i = 0; i < request.agent_count(); ++i) {
     std::unique_ptr<Socket> agent(new Socket);

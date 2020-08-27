@@ -52,9 +52,11 @@ class GradleContext(
         return startOffset >= 0 && isSuppressedWithComment(startOffset, issue)
     }
 
-    fun getPropertyKeyCookie(cookie: Any): Any = gradleVisitor.getPropertyKeyCookie(cookie)
+    @Deprecated(message = "unused", replaceWith = ReplaceWith(expression = "cookie"))
+    fun getPropertyKeyCookie(cookie: Any): Any = cookie
 
-    fun getPropertyPairCookie(cookie: Any): Any = gradleVisitor.getPropertyPairCookie(cookie)
+    @Deprecated(message = "unused", replaceWith = ReplaceWith(expression = "cookie"))
+    fun getPropertyPairCookie(cookie: Any): Any = cookie
 
     /**
      * Reports an issue applicable to a given source location. The source location is used as the

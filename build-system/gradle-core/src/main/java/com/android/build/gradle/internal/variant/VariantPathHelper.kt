@@ -78,14 +78,6 @@ class VariantPathHelper(
             variantDslInfo.dirName
         )
 
-    val compiledResourcesOutputDir: File
-        get() = FileUtils.join(
-            intermediatesDir,
-            SdkConstants.FD_RES,
-            SdkConstants.FD_COMPILED,
-            variantDslInfo.dirName
-        )
-
     val buildConfigSourceOutputDir: File
         get() = FileUtils.join(generatedDir, "source", "buildConfig", variantDslInfo.dirName)
 

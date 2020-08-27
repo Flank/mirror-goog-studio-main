@@ -47,8 +47,8 @@ class DynamicFeatureDependsOnJavaLibTest {
                 .build()
         )
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-        // b/157470515, https://github.com/gradle/gradle/issues/13317
-        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=4")
+        // https://github.com/gradle/gradle/issues/13317
+        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
         .create()
 
     /** Regression test for b/79660649. */

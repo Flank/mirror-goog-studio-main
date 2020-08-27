@@ -104,19 +104,16 @@ kotlin_test(
 
 # managed by go/iml_to_build [unb]
 iml_module(
-    name = "unb.studio.android.sdktools.testutils",
+    name = "studio.android.sdktools.testutils",
     iml_files = ["android.sdktools.testutils.iml"],
-    tags = [
-        "manual",
-        "unb",
-    ],
+    project = "unb",
     test_srcs = ["src/main/java"],
     test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/base/common:unb.studio.android.sdktools.common[module, test]",
+        "//tools/base/common:studio.android.sdktools.common[module, test]",
         "//tools/adt/idea/.idea/libraries:unb.mockito[test]",
         "//tools/adt/idea/.idea/libraries:unb.truth[test]",
         "//tools/adt/idea/.idea/libraries:unb.dexlib2[test]",
@@ -128,12 +125,9 @@ iml_module(
 
 # managed by go/iml_to_build [unb]
 iml_module(
-    name = "unb.studio.testutils-tests",
+    name = "studio.testutils-tests",
     iml_files = ["testutils-tests.iml"],
-    tags = [
-        "manual",
-        "unb",
-    ],
+    project = "unb",
     test_data = ["//prebuilts/studio/sdk:platforms/latest"] + glob(["src/test/data/**"]),
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
@@ -141,9 +135,9 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/base/testutils:unb.studio.android.sdktools.testutils[module, test]",
-        "//tools/base/annotations:unb.studio.android.sdktools.android-annotations[module, test]",
-        "//tools/base/common:unb.studio.android.sdktools.common[module, test]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module, test]",
+        "//tools/base/common:studio.android.sdktools.common[module, test]",
         "//tools/adt/idea/.idea/libraries:unb.Guava[test]",
         "//tools/adt/idea/.idea/libraries:unb.truth[test]",
         "//tools/adt/idea/.idea/libraries:unb.dexlib2[test]",

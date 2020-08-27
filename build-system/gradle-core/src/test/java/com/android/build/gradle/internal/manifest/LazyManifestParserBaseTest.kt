@@ -148,7 +148,7 @@ internal abstract class LazyManifestParserBaseTest :
         override val type: Int = -1,
         override val data: String? = null,
         override val message: String = "",
-        override val multiLineMessage: List<String?>? = null
+        override val multiLineMessage: List<String>? = null
     ): SyncIssue
 
     private fun SyncIssue.toFake(): SyncIssue = FakeSyncIssue(
@@ -164,7 +164,7 @@ internal abstract class LazyManifestParserBaseTest :
         override var type: Int = -1,
         override var data: String? = null,
         override var message: String = "",
-        override var multiLineMessage: List<String?>? = null
+        override var multiLineMessage: List<String>? = null
     ): SyncIssue {
         fun toFake(): SyncIssue = FakeSyncIssue(
             this.severity,

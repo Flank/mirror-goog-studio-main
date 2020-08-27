@@ -59,6 +59,7 @@ public class AndroidArtifacts {
     private static final String TYPE_CLASSES_JAR = "android-classes-jar"; // In AAR
     private static final String TYPE_CLASSES_DIR = "android-classes-directory"; // Not in AAR
     private static final String TYPE_SHARED_CLASSES = "android-shared-classes";
+    private static final String TYPE_CLASSES_FIXED_FRAMES_JAR = "android-classes-fixed-frames-jar";
     private static final String TYPE_DEX = "android-dex";
     private static final String TYPE_DEX_AND_KEEP_RULES = "android-dex-and-keep-rules";
     private static final String TYPE_KEEP_RULES = "android-keep-rules";
@@ -282,6 +283,8 @@ public class AndroidArtifacts {
          */
         CLASSES_DIR(TYPE_CLASSES_DIR),
         SHARED_CLASSES(TYPE_SHARED_CLASSES),
+        /** A jar containing classes with recalculated stack frames */
+        CLASSES_FIXED_FRAMES_JAR(TYPE_CLASSES_FIXED_FRAMES_JAR),
         // Jar or processed jar, used for purposes such as computing the annotation processor
         // classpath or building the model.
         // IMPORTANT: Consumers should generally use PROCESSED_JAR instead of JAR, as the jars may

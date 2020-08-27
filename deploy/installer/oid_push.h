@@ -26,7 +26,7 @@ class OverlayIdPushCommand : public Command {
  public:
   OverlayIdPushCommand(Workspace& workspace) : Command(workspace) {}
   virtual ~OverlayIdPushCommand() {}
-  virtual void ParseParameters(int argc, char** argv);
+  virtual void ParseParameters(const proto::InstallerRequest& request);
   virtual void Run(proto::InstallerResponse* response);
 
  private:

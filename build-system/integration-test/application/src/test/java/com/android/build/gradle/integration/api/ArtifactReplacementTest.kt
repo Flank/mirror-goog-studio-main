@@ -79,6 +79,9 @@ class ArtifactReplacementTest {
                             task.getMappingFile().set(
                                 it.artifacts.get(ArtifactType.OBFUSCATION_MAPPING_FILE.INSTANCE)
                             )
+                            task.getProjectBuildDir().set(
+                                project.buildDir.toString()
+                            )
                         }
                     }
                 }
@@ -98,15 +101,15 @@ class ArtifactReplacementTest {
                         "package=\"com.example.test\" android:versionCode=\"67\" android:versionName=\"1.0\" >" +
                         "</manifest>")
                         writer.close()
-                    } 
+                    }
                 }
                 abstract class ProduceTwoArtifacts extends DefaultTask {
                     @OutputFile
                     abstract RegularFileProperty getOutputManifest()
-                    
+
                     @OutputFile
                     abstract RegularFileProperty getMappingFile()
-                    
+
                     @TaskAction
                     void taskAction() {
                         FileWriter writer = new FileWriter(getMappingFile().get().getAsFile())
@@ -121,17 +124,20 @@ class ArtifactReplacementTest {
                     }
                 }
                 abstract class VerifyArtifacts extends DefaultTask {
+                    @Input
+                    abstract Property<String> getProjectBuildDir()
+
                     @InputFile
                     abstract RegularFileProperty getFinalManifest()
-                    
+
                     @InputFile
                     abstract RegularFileProperty getMappingFile()
-                    
+
                     @TaskAction
                     void taskAction() {
                         assert getFinalManifest().get().asFile.absolutePath.contains("debugReplaceArtifacts")
                         assert getMappingFile().get().asFile.absolutePath.contains("debugProduceTwoArtifacts")
-                        assert new File(project.buildDir.toString() + "/intermediates/merged_manifest/debug/debugProduceTwoArtifacts/AndroidManifest.xml").exists()
+                        assert new File(getProjectBuildDir().get() + "/intermediates/merged_manifest/debug/debugProduceTwoArtifacts/AndroidManifest.xml").exists()
                         System.out.println("Verification finished successfully")
                     }
                 }

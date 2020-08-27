@@ -23,8 +23,8 @@ import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.LibraryPackagingOptions
 import com.android.build.api.variant.LibraryVariantProperties
-import com.android.build.api.variant.PackagingOptions
 import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -44,7 +44,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
-open class LibraryVariantPropertiesImpl @Inject constructor(
+open class  LibraryVariantPropertiesImpl @Inject constructor(
     override val variant: LibraryVariantImpl,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
@@ -98,7 +98,11 @@ open class LibraryVariantPropertiesImpl @Inject constructor(
         super.transformClassesWith(classVisitorFactoryImplClass, scope, instrumentationParamsConfig)
     }
 
-    override fun packagingOptions(action: PackagingOptions.() -> Unit) {
+    override val packagingOptions: LibraryPackagingOptions by lazy {
+        LibraryPackagingOptionsImpl(globalScope.extension.packagingOptions, internalServices)
+    }
+
+    override fun packagingOptions(action: LibraryPackagingOptions.() -> Unit) {
         action.invoke(packagingOptions)
     }
 

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 package com.android.build.gradle.integration.resources
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -27,6 +26,7 @@ import com.android.testutils.truth.FileSubject
 import org.junit.Rule
 import org.junit.Test
 import org.objectweb.asm.Opcodes
+
 /**
  * Tests the new namespaced resource pipeline for a project with multi-level dynamic features.
  *
@@ -268,9 +268,6 @@ class NamespacedDynamicFeatureIntegrationTest {
             .build()
     @get:Rule
     val project = GradleTestProject.builder().fromTestApp(testApp)
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-        // b/157470515
-        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
         .create()
 
     @Test
@@ -295,13 +292,13 @@ class NamespacedDynamicFeatureIntegrationTest {
                 assertThat(apk).contains(lib2DotDrawablePath)
                 assertThat(apk).containsClass("Lcom/example/otherFeature1/R;")
                 // TODO(b/72695265): Reinstate these assertions
-                //  assertThat(apk).containsClass("Lcom/example/otherFeature1/R\$string;") 
-                //  assertThat(apk.mainDexFile.get().getFields("Lcom/example/otherFeature1/R\$string;")) 
-                //      .containsExactly( 
-                //          "public static final I otherFeature1String", 
-                //          "public static final I applicationString", 
-                //          "public static final I lib2String", 
-                //          "public static final I lib1String" 
+                //  assertThat(apk).containsClass("Lcom/example/otherFeature1/R\$string;")
+                //  assertThat(apk.mainDexFile.get().getFields("Lcom/example/otherFeature1/R\$string;"))
+                //      .containsExactly(
+                //          "public static final I otherFeature1String",
+                //          "public static final I applicationString",
+                //          "public static final I lib2String",
+                //          "public static final I lib1String"
                 //      )
                 assertThat(apk).doesNotContainClass("Lcom/example/lib1/R;")
                 assertThat(apk).doesNotContainClass("Lcom/example/lib1/R\$string;")
@@ -319,15 +316,15 @@ class NamespacedDynamicFeatureIntegrationTest {
                 assertThat(apk).contains(lib3DotDrawablePath)
                 assertThat(apk).containsClass("Lcom/example/otherFeature2/R;")
                 // TODO(b/72695265): Reinstate these assertions
-                //  assertThat(apk).containsClass("Lcom/example/otherFeature2/R\$string;") 
-                //  assertThat(apk.mainDexFile.get().getFields("Lcom/example/otherFeature2/R\$string;")) 
-                //      .containsExactly( 
-                //          "public static final I otherFeature2String", 
-                //          "public static final I otherFeature1String", 
-                //          "public static final I applicationString", 
-                //          "public static final I lib3String", 
-                //          "public static final I lib2String", 
-                //          "public static final I lib1String" 
+                //  assertThat(apk).containsClass("Lcom/example/otherFeature2/R\$string;")
+                //  assertThat(apk.mainDexFile.get().getFields("Lcom/example/otherFeature2/R\$string;"))
+                //      .containsExactly(
+                //          "public static final I otherFeature2String",
+                //          "public static final I otherFeature1String",
+                //          "public static final I applicationString",
+                //          "public static final I lib3String",
+                //          "public static final I lib2String",
+                //          "public static final I lib1String"
                 //      )
                 assertThat(apk).doesNotContainClass("Lcom/example/lib1/R;")
                 assertThat(apk).doesNotContainClass("Lcom/example/lib1/R\$string;")

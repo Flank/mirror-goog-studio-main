@@ -33,9 +33,9 @@ namespace deploy {
 DeltaInstallCommand::DeltaInstallCommand(Workspace& workspace)
     : BaseInstallCommand(workspace) {}
 
-void DeltaInstallCommand::ParseParameters(int argc, char** argv) {
+void DeltaInstallCommand::ParseParameters(const proto::InstallerRequest& request) {
   Metric m("DELTAINSTALL_UPLOAD");
-  BaseInstallCommand::ParseParameters(argc, argv);
+  BaseInstallCommand::ParseParameters(request);
 }
 
 void DeltaInstallCommand::Run(proto::InstallerResponse* response) {

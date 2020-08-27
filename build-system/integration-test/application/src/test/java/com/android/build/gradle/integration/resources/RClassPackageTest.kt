@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.resources
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.testutils.truth.FileSubject.assertThat
 import org.junit.Rule
@@ -26,15 +27,15 @@ import org.junit.Test
 class RClassPackageTest {
 
     private val app = MinimalSubProject.app("com.example.app")
-        .withFile(
-            "src/main/res/values/values.xml",
-            """
+            .withFile(
+                    "src/main/res/values/values.xml",
+                    """
                 <resources>
                     <string name="app_string">hello</string>
                 </resources>""".trimIndent()
-        )
-        .withFile("src/main/java/com/example/app/MyClass.java",
-            """
+            )
+            .withFile("src/main/java/com/example/app/MyClass.java",
+                    """
                 package com.example.app;
 
                 public class MyClass {
@@ -43,16 +44,16 @@ class RClassPackageTest {
                     }
                 }
             """.trimIndent())
-        .withFile(
-            "src/androidTest/res/values/values.xml",
-            """
+            .withFile(
+                    "src/androidTest/res/values/values.xml",
+                    """
                 <resources>
                     <string name="test_string">hi</string>
                 </resources>
             """.trimIndent())
-        .withFile(
-            "src/androidTest/java/com/example/app/test/MyTestClass.java",
-            """
+            .withFile(
+                    "src/androidTest/java/com/example/app/test/MyTestClass.java",
+                    """
                 package com.example.app.test;
 
                 public class MyTestClass {
@@ -67,27 +68,39 @@ class RClassPackageTest {
     val project = GradleTestProject.builder().fromTestApp(app).create()
 
     @Test
-    fun checkCorrectPackages() {
+    fun checkDefault() {
         // Check default packages work.
         project.execute("assembleDebug", "assembleAndroidTest")
+        assertThatApk(project.getTestApk()).hasPackageName("com.example.app.test")
+    }
 
-        // Now add package overrides and make sure that:
+    @Test
+    fun checkCustomApplicationId() {
+        // Add package overrides and make sure that:
         // a) app package for R remains unchanged
-        // b) androidTest R package gets changed
+        // b) androidTest R package gets changed to applicationId + ".test"
         // TODO(b/162244493): migrate everything to use the actual package name in AGP 5.0.
         project.buildFile.appendText(
-            """
+                """
                 android.defaultConfig.applicationId "com.hello.world"
              """
         )
+        // Updating test R class
+        project.file("src/androidTest/java/com/example/app/test/MyTestClass.java").also {
+            TestFileUtils.searchAndReplace(it, "com.example.app.test.R", "com.hello.world.test.R")
+        }
 
         // App package should not be changed
         project.execute("assembleDebug", "assembleAndroidTest")
+        assertThatApk(project.getTestApk()).hasPackageName("com.hello.world.test")
+    }
 
+    @Test
+    fun testCustomTestApplicationId() {
         project.buildFile.appendText(
-            """
+                """
                 android.defaultConfig.testApplicationId "com.foo.bar"
-            """.trimIndent())
+            """)
 
         project.executeExpectingFailure("assembleAndroidTest")
 
@@ -97,6 +110,24 @@ class RClassPackageTest {
         TestFileUtils.searchAndReplace(testClass, "com.example.app.test.R", "com.foo.bar.R")
 
         project.execute("assembleAndroidTest")
+        assertThatApk(project.getTestApk()).hasPackageName("com.foo.bar")
+    }
+
+    @Test
+    fun testCustomApplicationIdAndTestApplicationId() {
+        project.buildFile.appendText(
+                """
+                android.defaultConfig.applicationId "com.hello.world"
+                android.defaultConfig.testApplicationId "com.foo.bar"
+            """)
+
+        // Updating the package in the test class to use the new R package should fix the build
+        val testClass = project.file("src/androidTest/java/com/example/app/test/MyTestClass.java")
+        assertThat(testClass).exists()
+        TestFileUtils.searchAndReplace(testClass, "com.example.app.test.R", "com.foo.bar.R")
+
+        project.execute("assembleAndroidTest")
+        assertThatApk(project.getTestApk()).hasPackageName("com.foo.bar")
 
     }
 }

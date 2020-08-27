@@ -108,7 +108,7 @@ class LintGradleClient(
 
     override fun findResource(relativePath: String): File? {
         return if (!isAndroid) {
-            // Don't attempt to look up resources from an $ANDROID_HOME; may not
+            // Don't attempt to look up resources from an $ANDROID_SDK_ROOT; may not
             // exist and those checks shouldn't apply in non-Android contexts
             null
         } else {

@@ -107,14 +107,11 @@ coverage_java_test(
 
 # managed by go/iml_to_build [unb]
 iml_module(
-    name = "unb.studio.android.sdktools.repository",
+    name = "studio.android.sdktools.repository",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.repository.iml"],
     lint_baseline = "lint_baseline.xml",
-    tags = [
-        "manual",
-        "unb",
-    ],
+    project = "unb",
     test_resources = ["src/test/resources"],
     test_srcs = [
         "src/test/java",
@@ -124,7 +121,7 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/base/annotations:unb.studio.android.sdktools.android-annotations[module]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/adt/idea/.idea/libraries:unb.Guava",
         "//tools/adt/idea/.idea/libraries:unb.jimfs[test]",
         "//tools/adt/idea/.idea/libraries:unb.truth[test]",

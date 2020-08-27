@@ -226,7 +226,7 @@ class LintBaseline(
         severity: Severity?,
         project: Project?
     ): Boolean {
-        val found = findAndMark(issue, location, message, severity)
+        val found = findAndMark(issue, location, message, severity, 0)
         if (writeOnClose && (!removeFixed || found)) {
 
             if (entriesToWrite != null && issue.id != IssueRegistry.BASELINE.id) {
@@ -241,16 +241,17 @@ class LintBaseline(
         issue: Issue,
         location: Location,
         message: String,
-        severity: Severity?
+        severity: Severity?,
+        depth: Int
     ): Boolean {
         val entries = messageToEntry[message]
         if (entries == null || entries.isEmpty()) {
             // Sometimes messages are changed in lint; try to gracefully handle this
             val messages = idToMessages.get(issue.id)
-            if (messages != null && messages.isNotEmpty()) {
+            if (messages != null && messages.isNotEmpty() && depth < 20) {
                 for (oldMessage in messages) {
                     if (message != oldMessage && sameMessage(issue, message, oldMessage)) {
-                        return findAndMark(issue, location, oldMessage, severity)
+                        return findAndMark(issue, location, oldMessage, severity, depth + 1)
                     }
                 }
             }

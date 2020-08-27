@@ -15,6 +15,7 @@
  */
 package com.android.tools.deployer;
 
+import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deploy.proto.Deploy.AgentSwapResponse;
 import com.android.tools.deploy.proto.Deploy.JvmtiError;
 import com.android.tools.deploy.proto.Deploy.SwapResponse;
@@ -68,14 +69,25 @@ public class InstallerResponseHandler {
         return handleAgentFailures(response.getFailedAgentsList());
     }
 
-    private SuccessStatus handleAgentFailures(List<AgentSwapResponse> failedAgents)
+    private SuccessStatus handleAgentFailures(List<Deploy.AgentResponse> failedAgents)
             throws DeployerException {
         if (failedAgents.isEmpty()) {
             return SuccessStatus.OK;
         }
 
-        // For now, just pick the first failed agent; multiple agent errors only occurs in multi-process apps.
-        AgentSwapResponse failedAgent = failedAgents.get(0);
+        // For now, just pick the first failed agent; multiple agent errors only occurs in
+        // multi-process apps.
+        Deploy.AgentResponse failedAgent = failedAgents.get(0);
+
+        if (failedAgent.getStatus() == Deploy.AgentResponse.Status.SWAP_FAILURE) {
+            handleAgentSwapFailures(failedAgent.getSwapResponse());
+        }
+
+        throw DeployerException.agentFailed(failedAgent.getStatus());
+    }
+
+    private SuccessStatus handleAgentSwapFailures(Deploy.AgentSwapResponse failedAgent)
+            throws DeployerException {
 
         if (failedAgent.getStatus() == AgentSwapResponse.Status.CLASS_NOT_FOUND) {
             throw DeployerException.classNotFound(failedAgent.getClassName());

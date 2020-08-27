@@ -107,16 +107,3 @@ android_cc_binary(
     ],
     visibility = ["//visibility:public"],
 )
-
-java_library(
-    name = "java",
-    resource_jars = [
-        "//tools/idea/java/debugger/debugger-agent-storage:intellij.java.debugger.agent.storage.jar",
-    ],
-)
-
-dex_library(
-    name = "debug",
-    jars = [":java"],
-    visibility = ["//visibility:public"],
-)

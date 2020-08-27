@@ -69,11 +69,6 @@ public class FakeAndroid implements SimpleWebServer.RequestHandler {
             attachAgentMethod.setAccessible(true);
             attachAgentMethod.invoke(null, myAttachAgentPath);
             System.out.println("attach-agent " + myAttachAgentPath);
-
-            if (curClassLoader != null) {
-                Thread.currentThread().setContextClassLoader(curClassLoader);
-            }
-
         } catch (InterruptedException ex) {
             System.err.println("Failed to block for webrequest: " + ex);
         } catch (ClassNotFoundException

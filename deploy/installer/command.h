@@ -32,7 +32,7 @@ class Command {
   virtual ~Command() = default;
 
   // Parse parameters and set readyToRun to true if no error was encountered.
-  virtual void ParseParameters(int argc, char** argv) = 0;
+  virtual void ParseParameters(const proto::InstallerRequest& request) = 0;
 
   // Execute command.
   virtual void Run(proto::InstallerResponse* response) = 0;

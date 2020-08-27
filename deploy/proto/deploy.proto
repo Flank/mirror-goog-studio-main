@@ -135,6 +135,18 @@ message ClassDef {
   repeated FieldReInitState fields = 3;
 }
 
+message LiveLiteralUpdateRequest {
+}
+
+message LiveLiteralUpdateResponse {
+  enum Status {
+    UNKNOWN = 0;
+    OK = 1;
+    ERROR = 2;
+  }
+  Status status = 1;
+}
+
 message JvmtiError {
   message Details {
     enum Type {
@@ -157,34 +169,18 @@ message JvmtiError {
   repeated Details details = 2;
 }
 
-// A response detailing the results of a swap request.
-message AgentSwapResponse {
+message AgentResponse {
   enum Status {
     UNKNOWN = 0;
-    OK = 1;                    // The swap completed successfully
-    SOCKET_READ_FAILED = 2;    // The request could not be read from the socket
-    REQUEST_PARSE_FAILED = 3;  // The request could not be parsed into a proto
-    INSTRUMENTATION_FAILED = 4;  // The application could not be instrumented
-    CLASS_NOT_FOUND = 5;     // The class requested for swap could not be found
-    JVMTI_ERROR = 6;         // A JVMTI error occurred during swap
-    JNI_SETUP_FAILED = 7;    // The JNI environment could not be set up.
-    JVMTI_SETUP_FAILED = 8;  // The JVMTI environment could not be set up.
-    SET_CAPABILITIES_FAILED = 9;  // JVMTI capabilities could not be set.
+    OK = 1;
+    SOCKET_READ_FAILED = 2;       // The request could not be read from the socket
+    REQUEST_PARSE_FAILED = 3;     // The request could not be parsed into a proto
+    JNI_SETUP_FAILED = 4;         // The JNI environment could not be set up.
+    JVMTI_SETUP_FAILED = 5;       // The JVMTI environment could not be set up.
+    SET_CAPABILITIES_FAILED = 6;  // JVMTI capabilities could not be set.
 
-    // JVMTI supports the swap but some variables cannot be reinit.
-    UNSUPPORTED_REINIT = 10;
-    UNSUPPORTED_REINIT_STATIC_PRIMITIVE = 11;
-    UNSUPPORTED_REINIT_STATIC_OBJECT = 12;
-    UNSUPPORTED_REINIT_STATIC_ARRAY = 13;
-    UNSUPPORTED_REINIT_NON_STATIC_PRIMITIVE = 14;
-    UNSUPPORTED_REINIT_NON_STATIC_OBJECT = 15;
-    UNSUPPORTED_REINIT_NON_STATIC_ARRAY = 16;
-    UNSUPPORTED_REINIT_STATIC_PRIMITIVE_NOT_CONSTANT = 17;
-
-    UNSUPPORTED_REINIT_R_CLASS_VALUE_MODIFIED = 18;
+    SWAP_FAILURE = 7;             // Has a corresponding AgentSwapResponse with error.
   }
-
-  // The state of the swap that was requested.
   Status status = 1;
 
   // The pid of the process this agent was attached to.
@@ -192,12 +188,52 @@ message AgentSwapResponse {
 
   repeated Event events = 3;
 
+  oneof response {
+    AgentSwapResponse swap_response = 4; 
+    AgentLiveLiteralUpdateResponse live_literal_response = 5; 
+  }
+}
+
+// A response detailing the results of a AgentRequest.
+message AgentSwapResponse {
+  enum Status {
+    UNKNOWN = 0;
+    OK = 1;                    // The swap completed successfully
+    INSTRUMENTATION_FAILED = 2;  // The application could not be instrumented
+    CLASS_NOT_FOUND = 3;     // The class requested for swap could not be found
+    JVMTI_ERROR = 4;         // A JVMTI error occurred during swap
+
+    // JVMTI supports the swap but some variables cannot be reinit.
+    UNSUPPORTED_REINIT = 5;
+    UNSUPPORTED_REINIT_STATIC_PRIMITIVE = 6;
+    UNSUPPORTED_REINIT_STATIC_OBJECT = 7;
+    UNSUPPORTED_REINIT_STATIC_ARRAY = 8;
+    UNSUPPORTED_REINIT_NON_STATIC_PRIMITIVE = 9;
+    UNSUPPORTED_REINIT_NON_STATIC_OBJECT = 10;
+    UNSUPPORTED_REINIT_NON_STATIC_ARRAY = 11;
+    UNSUPPORTED_REINIT_STATIC_PRIMITIVE_NOT_CONSTANT = 12;
+
+    UNSUPPORTED_REINIT_R_CLASS_VALUE_MODIFIED = 13;
+  }
+
+  // The state of the swap that was requested.
+  Status status = 1;
+
   // Detailed information on the errors that occurred.
   oneof error_details {
     string class_name = 4;
     JvmtiError jvmti_error = 5;
     string error_msg = 6;
   }
+}
+
+message AgentLiveLiteralUpdateResponse {
+  enum Status {
+    UNKNOWN = 0;
+    OK = 1;
+    ERROR = 2;
+  }
+  Status status = 1;
 }
 
 message AgentExceptionLog {
@@ -247,13 +283,31 @@ message SwapResponse {
 
   Status status = 1;
 
-  repeated AgentSwapResponse failed_agents = 2;
+  repeated AgentResponse failed_agents = 2;
 
   // Additional data to help display a better error message in studio
   string extra = 3;
 
   // Error logs retrieved from the device during swap.
   repeated AgentExceptionLog agent_logs = 4;
+}
+
+message DumpRequest {
+  repeated string package_names = 1;
+}
+
+message InstallerRequest {
+  string version = 1;
+  string command_name = 2;
+  oneof request {
+    DumpRequest dump_request = 3;
+    SwapRequest swap_request = 4;
+    InstallInfo install_info_request = 5;
+    OverlaySwapRequest overlay_swap_request = 6;
+    OverlayIdPush overlay_id_push = 7;
+    OverlayInstallRequest overlay_install = 8;
+    LiveLiteralUpdateRequest live_literal_request = 9;
+  }
 }
 
 // Message returned by the Android native IRR installer. There are two layers :
@@ -278,6 +332,7 @@ message InstallerResponse {
     DeltaInstallResponse deltainstall_response = 6;
     OverlayIdPushResponse overlayidpush_response = 7;
     OverlayInstallResponse overlay_install_response = 8;
+    LiveLiteralUpdateResponse live_literal_response = 9;
   }
 }
 
@@ -442,7 +497,14 @@ message OpenAgentSocketResponse {
 
 message SendAgentMessageRequest {
   int32 agent_count = 1;
-  SwapRequest swap_request = 2;
+  AgentRequest agent_request = 2;
+}
+
+message AgentRequest {
+  oneof request {
+    SwapRequest swap_request = 1;
+    LiveLiteralUpdateRequest live_literal_request = 2;
+  }
 }
 
 message SendAgentMessageResponse {
@@ -456,7 +518,7 @@ message SendAgentMessageResponse {
   }
 
   Status status = 1;
-  repeated AgentSwapResponse agent_responses = 2;
+  repeated AgentResponse agent_responses = 2;
 }
 
 message OverlayIdPushResponse {

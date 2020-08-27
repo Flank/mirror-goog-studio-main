@@ -35,10 +35,10 @@ class ZipSourceEntry extends Source {
     }
 
     @Override
-    void prepare() {}
+    public void prepare() {}
 
     @Override
-    long writeTo(@NonNull ZipWriter writer) throws IOException {
+    public long writeTo(@NonNull ZipWriter writer) throws IOException {
         writer.transferFrom(zipSource.getChannel(), payloadLoc.first, payloadLoc.size());
         return payloadLoc.size();
     }

@@ -79,7 +79,7 @@ public class Entry {
     }
 
     @NonNull
-    Location getPayloadLocation() {
+    public Location getPayloadLocation() {
         return payloadLocation;
     }
 

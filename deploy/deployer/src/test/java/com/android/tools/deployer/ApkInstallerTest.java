@@ -18,6 +18,7 @@ package com.android.tools.deployer;
 import static com.android.tools.deployer.InstallStatus.INSTALL_FAILED_PERMISSION_MODEL_DOWNGRADE;
 
 import com.android.ddmlib.InstallReceiver;
+import java.util.ArrayList;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -34,5 +35,15 @@ public class ApkInstallerTest {
         String errorCode = receiver.getErrorCode();
         AdbClient.InstallResult result = ApkInstaller.parseInstallerResultErrorCode(errorCode);
         Assert.assertEquals(INSTALL_FAILED_PERMISSION_MODEL_DOWNGRADE, result.status);
+    }
+
+    @Test
+    public void forceInstallOnNoDeltaShouldTurnOffInheritance() {
+        boolean inherit =
+                ApkInstaller.canInherit(15, new ArrayList<>(), Deployer.InstallMode.DELTA_NO_SKIP);
+        Assert.assertFalse(inherit);
+
+        inherit = ApkInstaller.canInherit(15, new ArrayList<>(), Deployer.InstallMode.DELTA);
+        Assert.assertTrue(inherit);
     }
 }

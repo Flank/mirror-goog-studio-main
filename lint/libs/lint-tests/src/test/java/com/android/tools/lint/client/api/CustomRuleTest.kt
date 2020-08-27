@@ -35,26 +35,7 @@ import java.io.File
 class CustomRuleTest {
     @Test
     fun testProjectLintJar() {
-        val expected = "" +
-            "src/test/pkg/AppCompatTest.java:7: Warning: Should use getSupportActionBar instead of getActionBar name [UnitTestAppCompatMethod]\n" +
-            "        getActionBar();                    // ERROR\n" +
-            "        ~~~~~~~~~~~~\n" +
-            "src/test/pkg/AppCompatTest.java:10: Warning: Should use startSupportActionMode instead of startActionMode name [UnitTestAppCompatMethod]\n" +
-            "        startActionMode(null);             // ERROR\n" +
-            "        ~~~~~~~~~~~~~~~\n" +
-            "src/test/pkg/AppCompatTest.java:13: Warning: Should use supportRequestWindowFeature instead of requestWindowFeature name [UnitTestAppCompatMethod]\n" +
-            "        requestWindowFeature(0);           // ERROR\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~\n" +
-            "src/test/pkg/AppCompatTest.java:16: Warning: Should use setSupportProgressBarVisibility instead of setProgressBarVisibility name [UnitTestAppCompatMethod]\n" +
-            "        setProgressBarVisibility(true);    // ERROR\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "src/test/pkg/AppCompatTest.java:17: Warning: Should use setSupportProgressBarIndeterminate instead of setProgressBarIndeterminate name [UnitTestAppCompatMethod]\n" +
-            "        setProgressBarIndeterminate(true);\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "src/test/pkg/AppCompatTest.java:18: Warning: Should use setSupportProgressBarIndeterminateVisibility instead of setProgressBarIndeterminateVisibility name [UnitTestAppCompatMethod]\n" +
-            "        setProgressBarIndeterminateVisibility(true);\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 6 warnings\n"
+        val expected = expectedOutput
         lint().files(
             classpath(),
             manifest().minSdk(1),
@@ -73,26 +54,7 @@ class CustomRuleTest {
     fun testProjectLintJarWithServiceRegistry() {
         // Like testProjectLintJar, but the custom rules are loaded via
         // META-INF/services/*IssueRegistry loading instead of a manifest key
-        val expected = "" +
-            "src/test/pkg/AppCompatTest.java:7: Warning: Should use getSupportActionBar instead of getActionBar name [UnitTestAppCompatMethod]\n" +
-            "        getActionBar();                    // ERROR\n" +
-            "        ~~~~~~~~~~~~\n" +
-            "src/test/pkg/AppCompatTest.java:10: Warning: Should use startSupportActionMode instead of startActionMode name [UnitTestAppCompatMethod]\n" +
-            "        startActionMode(null);             // ERROR\n" +
-            "        ~~~~~~~~~~~~~~~\n" +
-            "src/test/pkg/AppCompatTest.java:13: Warning: Should use supportRequestWindowFeature instead of requestWindowFeature name [UnitTestAppCompatMethod]\n" +
-            "        requestWindowFeature(0);           // ERROR\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~\n" +
-            "src/test/pkg/AppCompatTest.java:16: Warning: Should use setSupportProgressBarVisibility instead of setProgressBarVisibility name [UnitTestAppCompatMethod]\n" +
-            "        setProgressBarVisibility(true);    // ERROR\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "src/test/pkg/AppCompatTest.java:17: Warning: Should use setSupportProgressBarIndeterminate instead of setProgressBarIndeterminate name [UnitTestAppCompatMethod]\n" +
-            "        setProgressBarIndeterminate(true);\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "src/test/pkg/AppCompatTest.java:18: Warning: Should use setSupportProgressBarIndeterminateVisibility instead of setProgressBarIndeterminateVisibility name [UnitTestAppCompatMethod]\n" +
-            "        setProgressBarIndeterminateVisibility(true);\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 6 warnings\n"
+        val expected = expectedOutput
 
         lint().files(
             classpath(),
@@ -112,26 +74,6 @@ class CustomRuleTest {
 
     @Test
     fun testProjectIsLibraryLintJar() {
-        val expected = "" +
-            "src/main/java/test/pkg/AppCompatTest.java:7: Warning: Should use getSupportActionBar instead of getActionBar name [UnitTestAppCompatMethod]\n" +
-            "        getActionBar();                    // ERROR\n" +
-            "        ~~~~~~~~~~~~\n" +
-            "src/main/java/test/pkg/AppCompatTest.java:10: Warning: Should use startSupportActionMode instead of startActionMode name [UnitTestAppCompatMethod]\n" +
-            "        startActionMode(null);             // ERROR\n" +
-            "        ~~~~~~~~~~~~~~~\n" +
-            "src/main/java/test/pkg/AppCompatTest.java:13: Warning: Should use supportRequestWindowFeature instead of requestWindowFeature name [UnitTestAppCompatMethod]\n" +
-            "        requestWindowFeature(0);           // ERROR\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~\n" +
-            "src/main/java/test/pkg/AppCompatTest.java:16: Warning: Should use setSupportProgressBarVisibility instead of setProgressBarVisibility name [UnitTestAppCompatMethod]\n" +
-            "        setProgressBarVisibility(true);    // ERROR\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "src/main/java/test/pkg/AppCompatTest.java:17: Warning: Should use setSupportProgressBarIndeterminate instead of setProgressBarIndeterminate name [UnitTestAppCompatMethod]\n" +
-            "        setProgressBarIndeterminate(true);\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "src/main/java/test/pkg/AppCompatTest.java:18: Warning: Should use setSupportProgressBarIndeterminateVisibility instead of setProgressBarIndeterminateVisibility name [UnitTestAppCompatMethod]\n" +
-            "        setProgressBarIndeterminateVisibility(true);\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 6 warnings\n"
         lint().files(
             classpath(),
             manifest().minSdk(1),
@@ -154,32 +96,40 @@ class CustomRuleTest {
                 val dependencies = variant.mainArtifact.level2Dependencies
                 val library = dependencies.androidLibraries.iterator().next()
                 Mockito.`when`(library.lintJar).thenReturn(lintJar.path)
-            }.allowMissingSdk().run().expect(expected)
+            }
+            .allowMissingSdk().run().expect(expectedOutputGradle)
+    }
+
+    @Test
+    fun testLintJarFromLintXml() {
+        lint().files(
+            classpath(),
+            manifest().minSdk(1),
+            gradle(
+                "" +
+                    "apply plugin: 'com.android.library'\n" +
+                    "dependencies {\n" +
+                    "    compile 'my.test.group:artifact:1.0'\n" +
+                    "}\n"
+            ),
+            xml(
+                "lint.xml",
+                "<lint lintJars=\"" + lintJar.path + "\" />"
+            ),
+            appCompatTestSource,
+            appCompatTestClass
+        )
+            .incremental("build/intermediates/javac/debug/classes/test/pkg/AppCompatTest.class")
+            .allowDelayedIssueRegistration()
+            .issueIds("UnitTestAppCompatMethod")
+            .allowObsoleteLintChecks(true)
+            .allowMissingSdk()
+            .run()
+            .expect(expectedOutputGradle)
     }
 
     @Test
     fun `Load lint custom rules from lintChecks`() {
-        val expected = "" +
-            "src/main/java/test/pkg/AppCompatTest.java:7: Warning: Should use getSupportActionBar instead of getActionBar name [UnitTestAppCompatMethod]\n" +
-            "        getActionBar();                    // ERROR\n" +
-            "        ~~~~~~~~~~~~\n" +
-            "src/main/java/test/pkg/AppCompatTest.java:10: Warning: Should use startSupportActionMode instead of startActionMode name [UnitTestAppCompatMethod]\n" +
-            "        startActionMode(null);             // ERROR\n" +
-            "        ~~~~~~~~~~~~~~~\n" +
-            "src/main/java/test/pkg/AppCompatTest.java:13: Warning: Should use supportRequestWindowFeature instead of requestWindowFeature name [UnitTestAppCompatMethod]\n" +
-            "        requestWindowFeature(0);           // ERROR\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~\n" +
-            "src/main/java/test/pkg/AppCompatTest.java:16: Warning: Should use setSupportProgressBarVisibility instead of setProgressBarVisibility name [UnitTestAppCompatMethod]\n" +
-            "        setProgressBarVisibility(true);    // ERROR\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "src/main/java/test/pkg/AppCompatTest.java:17: Warning: Should use setSupportProgressBarIndeterminate instead of setProgressBarIndeterminate name [UnitTestAppCompatMethod]\n" +
-            "        setProgressBarIndeterminate(true);\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "src/main/java/test/pkg/AppCompatTest.java:18: Warning: Should use setSupportProgressBarIndeterminateVisibility instead of setProgressBarIndeterminateVisibility name [UnitTestAppCompatMethod]\n" +
-            "        setProgressBarIndeterminateVisibility(true);\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 6 warnings"
-
         lint().files(
             classpath(),
             manifest().minSdk(1),
@@ -203,31 +153,12 @@ class CustomRuleTest {
             }
             .allowMissingSdk()
             .run()
-            .expect(expected)
+            .expect(expectedOutputGradle)
     }
 
     @Test
     fun testGlobalLintJar() {
-        val expected = "" +
-            "src/test/pkg/AppCompatTest.java:7: Warning: Should use getSupportActionBar instead of getActionBar name [UnitTestAppCompatMethod]\n" +
-            "        getActionBar();                    // ERROR\n" +
-            "        ~~~~~~~~~~~~\n" +
-            "src/test/pkg/AppCompatTest.java:10: Warning: Should use startSupportActionMode instead of startActionMode name [UnitTestAppCompatMethod]\n" +
-            "        startActionMode(null);             // ERROR\n" +
-            "        ~~~~~~~~~~~~~~~\n" +
-            "src/test/pkg/AppCompatTest.java:13: Warning: Should use supportRequestWindowFeature instead of requestWindowFeature name [UnitTestAppCompatMethod]\n" +
-            "        requestWindowFeature(0);           // ERROR\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~\n" +
-            "src/test/pkg/AppCompatTest.java:16: Warning: Should use setSupportProgressBarVisibility instead of setProgressBarVisibility name [UnitTestAppCompatMethod]\n" +
-            "        setProgressBarVisibility(true);    // ERROR\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "src/test/pkg/AppCompatTest.java:17: Warning: Should use setSupportProgressBarIndeterminate instead of setProgressBarIndeterminate name [UnitTestAppCompatMethod]\n" +
-            "        setProgressBarIndeterminate(true);\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "src/test/pkg/AppCompatTest.java:18: Warning: Should use setSupportProgressBarIndeterminateVisibility instead of setProgressBarIndeterminateVisibility name [UnitTestAppCompatMethod]\n" +
-            "        setProgressBarIndeterminateVisibility(true);\n" +
-            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 6 warnings\n"
+        val expected = expectedOutput
         lint()
             .allowObsoleteLintChecks(false)
             .files(classpath(), manifest().minSdk(1), appCompatTestSource, appCompatTestClass)
@@ -471,6 +402,29 @@ class CustomRuleTest {
                 }
             )
     }
+
+    private val expectedOutputGradle = "" +
+        "src/main/java/test/pkg/AppCompatTest.java:7: Warning: Should use getSupportActionBar instead of getActionBar name [UnitTestAppCompatMethod]\n" +
+        "        getActionBar();                    // ERROR\n" +
+        "        ~~~~~~~~~~~~\n" +
+        "src/main/java/test/pkg/AppCompatTest.java:10: Warning: Should use startSupportActionMode instead of startActionMode name [UnitTestAppCompatMethod]\n" +
+        "        startActionMode(null);             // ERROR\n" +
+        "        ~~~~~~~~~~~~~~~\n" +
+        "src/main/java/test/pkg/AppCompatTest.java:13: Warning: Should use supportRequestWindowFeature instead of requestWindowFeature name [UnitTestAppCompatMethod]\n" +
+        "        requestWindowFeature(0);           // ERROR\n" +
+        "        ~~~~~~~~~~~~~~~~~~~~\n" +
+        "src/main/java/test/pkg/AppCompatTest.java:16: Warning: Should use setSupportProgressBarVisibility instead of setProgressBarVisibility name [UnitTestAppCompatMethod]\n" +
+        "        setProgressBarVisibility(true);    // ERROR\n" +
+        "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+        "src/main/java/test/pkg/AppCompatTest.java:17: Warning: Should use setSupportProgressBarIndeterminate instead of setProgressBarIndeterminate name [UnitTestAppCompatMethod]\n" +
+        "        setProgressBarIndeterminate(true);\n" +
+        "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+        "src/main/java/test/pkg/AppCompatTest.java:18: Warning: Should use setSupportProgressBarIndeterminateVisibility instead of setProgressBarIndeterminateVisibility name [UnitTestAppCompatMethod]\n" +
+        "        setProgressBarIndeterminateVisibility(true);\n" +
+        "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+        "0 errors, 6 warnings\n"
+
+    private val expectedOutput = expectedOutputGradle.replace("src/main/java/", "src/")
 
     private val appCompatTestSource = java(
         "" +

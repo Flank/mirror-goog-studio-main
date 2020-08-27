@@ -1,6 +1,7 @@
 import com.google.common.collect.ImmutableMap
 
-apply plugin: 'java'
+apply plugin: 'com.android.tools.java-library'
+apply plugin: 'com.android.tools.publish'
 apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
 
@@ -102,7 +103,7 @@ task removeSdkComponents(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     main = "com.android.sdklib.tool.sdkmanager.SdkManagerCli"
     args = [
-      '--sdk_root=' + System.getenv("ANDROID_HOME"),
+      '--sdk_root=' + System.getenv("ANDROID_SDK_ROOT"),
       '--verbose',
       '--uninstall',
       // Entries below are temporary and should always include dates. For example:
@@ -122,9 +123,9 @@ task initSdkForTests(type: JavaExec, dependsOn: removeSdkComponents) {
         if (project.hasProperty('downloaderArgs')) {
             args(downloaderArgs.split(','))
         } else {
-            def sdk_home = System.getenv("ANDROID_HOME")
+            def sdk_home = System.getenv("ANDROID_SDK_ROOT")
             if (sdk_home == null) {
-                throw new GradleException('Required ANDROID_HOME environment variable not set.')
+                throw new GradleException('Required ANDROID_SDK_ROOT environment variable not set.')
             }
             args = ['--sdk_root=' + sdk_home,
                     '--channel=3',
@@ -177,7 +178,7 @@ task initSdkForConnectedTestsStableChannel(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     main = "com.android.sdklib.tool.sdkmanager.SdkManagerCli"
 
-    args = ['--sdk_root=' + System.getenv("ANDROID_HOME"),
+    args = ['--sdk_root=' + System.getenv("ANDROID_SDK_ROOT"),
             '--channel=0',
             '--verbose',
             'system-images;android-26;google_apis;x86',
@@ -214,7 +215,7 @@ task initSdkForConnectedTestsUnstableChannel(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     main = "com.android.sdklib.tool.sdkmanager.SdkManagerCli"
 
-    args = ['--sdk_root=' + System.getenv("ANDROID_HOME"),
+    args = ['--sdk_root=' + System.getenv("ANDROID_SDK_ROOT"),
             '--channel=2',
             '--verbose',
             'platforms;android-29',
@@ -255,6 +256,3 @@ offline_sdk_targets.each { config ->
 
 project.ext.pomName = 'Android Tools sdklib'
 project.ext.pomDesc = 'A library to parse and download the Android SDK.'
-
-apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/javadoc.gradle"

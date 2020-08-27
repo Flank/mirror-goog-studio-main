@@ -16,6 +16,7 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
+import com.android.tools.tracer.Trace;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +30,21 @@ public class MetricsRecorder {
     public MetricsRecorder() {
         this.deployMetrics = new ArrayList<>();
         this.agentExceptionLogs = new ArrayList<>();
+    }
+
+    public void start(String name) {
+        deployMetrics.add(new DeployMetric(name));
+        Trace.begin(name);
+    }
+
+    public void finish() {
+        currentMetric().finish("Success");
+        Trace.end();
+    }
+
+    public void finish(Enum<?> status) {
+        currentMetric().finish(status.name());
+        Trace.end();
     }
 
     public List<DeployMetric> getDeployMetrics() {
@@ -45,5 +61,9 @@ public class MetricsRecorder {
 
     void add(List<Deploy.AgentExceptionLog> logs) {
         agentExceptionLogs.addAll(logs);
+    }
+
+    private DeployMetric currentMetric() {
+        return deployMetrics.get(deployMetrics.size() - 1);
     }
 }

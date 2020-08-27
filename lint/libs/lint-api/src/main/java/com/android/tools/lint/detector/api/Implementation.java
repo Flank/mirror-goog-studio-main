@@ -171,6 +171,13 @@ public class Implementation {
             }
         }
 
+        if (this.scope.size() == scope.size() + 1
+                && !scope.contains(Scope.TEST_SOURCES)
+                && this.scope.contains(Scope.TEST_SOURCES)) {
+            // TEST_SOURCES is a special marker scope
+            return true;
+        }
+
         return false;
     }
 }

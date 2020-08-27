@@ -21,6 +21,7 @@ import com.android.utils.cxx.Sections.FlagLists
 import com.android.utils.cxx.Sections.StringTable
 import java.io.File
 import java.io.RandomAccessFile
+import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
@@ -78,7 +79,7 @@ private const val VERSION = 1
 private const val COMPILE_COMMAND_CONTEXT_MESSAGE : Byte = 0x00
 private const val COMPILE_COMMAND_FILE_MESSAGE : Byte = 0x01
 
-private const val BYTEBUFFER_WINDOW_SIZE = 1024 * 32 // Grow by 32K each time growth is needed
+private const val BYTEBUFFER_WINDOW_SIZE = 1024 * 32
 
 /**
  * Enum of different file section types.
@@ -96,12 +97,15 @@ private enum class Sections {
 /**
  * Class that encodes compile commands into a binary format.
  */
-class CompileCommandsEncoder(val file : File) : AutoCloseable {
+class CompileCommandsEncoder(
+    val file : File,
+    initialBufferSize : Int = BYTEBUFFER_WINDOW_SIZE
+) : AutoCloseable {
     private val ras = RandomAccessFile(file, "rw")
     private val channel = ras.channel
     private val lock = channel.lock()
     private var bufferStartPosition = 0L
-    private var map = ByteBuffer.allocate(BYTEBUFFER_WINDOW_SIZE)
+    private var map = ByteBuffer.allocate(initialBufferSize)
     private val stringTableIndexEntry : Long
     private val flagListsIndexEntry : Long
     private val compileCommandsIndexEntry : Long
@@ -135,7 +139,7 @@ class CompileCommandsEncoder(val file : File) : AutoCloseable {
         compileCommandsIndexEntry = writeSectionIndexEntry(CompileCommands)
         stringTableIndexEntry = writeSectionIndexEntry(StringTable)
         flagListsIndexEntry = writeSectionIndexEntry(FlagLists)
-        countOfSourceMessagesOffset = map.position().toLong()
+        countOfSourceMessagesOffset = ras.filePointer + map.position().toLong()
         encodeInt(0) // Reserve for count of source messages
     }
 
@@ -154,7 +158,7 @@ class CompileCommandsEncoder(val file : File) : AutoCloseable {
     private fun encodeUTF8(string : String) {
         val bytes = string.toByteArray(Charsets.UTF_8)
         val map = ensureAtLeast(
-            Short.SIZE_BYTES +
+            Int.SIZE_BYTES +
             bytes.size
         )
         map.putInt(bytes.size)
@@ -169,8 +173,11 @@ class CompileCommandsEncoder(val file : File) : AutoCloseable {
      * Check the size of [map] and grow if necessary.
      */
     private fun ensureAtLeast(bytes: Int) : ByteBuffer {
-        if (BYTEBUFFER_WINDOW_SIZE <= map.position() + bytes) {
+        if (map.capacity() < map.position() + bytes) {
             flushBuffer()
+            if (map.capacity() < bytes) {
+                map = ByteBuffer.allocate(bytes)
+            }
         }
         return map
     }
@@ -183,7 +190,9 @@ class CompileCommandsEncoder(val file : File) : AutoCloseable {
         ras.seek(bufferStartPosition)
         ras.write(map.array(), 0, map.position())
         bufferStartPosition += map.position()
-        map.position(0)
+        // Type cast is required when this code is compiled by JDK 9+ and runs on JDK 8. See b/165948891 and
+        // https://stackoverflow.com/questions/61267495/exception-in-thread-main-java-lang-nosuchmethoderror-java-nio-bytebuffer-flip
+        (map as Buffer).clear()
     }
 
     /**
@@ -212,7 +221,7 @@ class CompileCommandsEncoder(val file : File) : AutoCloseable {
      *
      */
     private fun writeSectionIndexEntry(section: Sections): Long {
-        val result = map.position().toLong()
+        val result = ras.filePointer + map.position().toLong()
         encodeInt(section.ordinal)
         encodeLongZero()
         return result
@@ -311,6 +320,8 @@ class CompileCommandsEncoder(val file : File) : AutoCloseable {
         ras.seek(flagListsIndexEntry + Int.SIZE_BYTES)
         ras.writeLong(offsetOfFlagLists)
 
+        ras.fd.sync()
+
         lock.close()
         channel.close()
         ras.close()
@@ -321,7 +332,7 @@ class CompileCommandsEncoder(val file : File) : AutoCloseable {
  * Read [MAGIC] and [VERSION] and return the position immediately after.
  */
 private fun MappedByteBuffer.positionAfterMagicAndVersion(file: File) : Int {
-    position(0)
+    (this as Buffer).position(0)
     MAGIC.forEach { expected ->
         val actual = get()
         if (actual != expected.toByte()) {
@@ -336,13 +347,14 @@ private fun MappedByteBuffer.positionAfterMagicAndVersion(file: File) : Int {
  * Leave the buffer pointer set at the beginning of [section]
  */
 private fun MappedByteBuffer.seekSection(start: Int, section: Sections) {
-    position(start)
+    val buffer: Buffer = this
+    buffer.position(start)
     val indexSize = int
     repeat(indexSize) {
         val type = Sections.getByValue(int)
         val offset = long
         if (type == section) {
-            position(offset.toInt())
+            buffer.position(offset.toInt())
             return
         }
     }

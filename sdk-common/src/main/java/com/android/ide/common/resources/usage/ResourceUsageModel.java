@@ -26,6 +26,7 @@ import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_PARENT;
 import static com.android.SdkConstants.ATTR_SHRINK_MODE;
 import static com.android.SdkConstants.ATTR_TYPE;
+import static com.android.SdkConstants.CONSTRAINT_REFERENCED_IDS;
 import static com.android.SdkConstants.PREFIX_ANDROID;
 import static com.android.SdkConstants.PREFIX_BINDING_EXPR;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
@@ -56,6 +57,7 @@ import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.android.utils.SdkUtils;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -630,6 +632,15 @@ public class ResourceUsageModel {
                     String value = attr.getValue();
                     if (!(value.startsWith(PREFIX_RESOURCE_REF)
                             || value.startsWith(PREFIX_THEME_REF))) {
+
+                        String name = attr.getLocalName();
+                        if (CONSTRAINT_REFERENCED_IDS.equals(name)) {
+                            Splitter splitter = Splitter.on(',').trimResults().omitEmptyStrings();
+                            for (String id : splitter.split(value)) {
+                                markReachable(addResource(ResourceType.ID, id, null));
+                            }
+                        }
+
                         continue;
                     }
                     ResourceUrl url = ResourceUrl.parse(value);

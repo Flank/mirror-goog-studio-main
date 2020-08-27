@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks;
+package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.build.api.transform.QualifiedContent
@@ -65,8 +65,10 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
     abstract val projectClasses: ConfigurableFileCollection
     @get: Classpath
     abstract val subProjectClasses: ConfigurableFileCollection
+
     @get: Classpath
-    abstract val externaLibsClasses: DirectoryProperty
+    abstract val externaLibsClasses: ConfigurableFileCollection
+
     @get: CompileClasspath
     abstract val desugaringClasspath: ConfigurableFileCollection
     @get: CompileClasspath
@@ -88,12 +90,11 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
     val enableBugFixForJacoco: Property<Boolean> = objectFactory.property(Boolean::class.java)
 
     override fun doTaskAction() {
-        val libs = externaLibsClasses.asFile.get().listFiles()!!.toList().sortedBy { it.name }
         DesugarTaskDelegate(
             initiator = this,
             projectClasses = projectClasses.files,
             subProjectClasses = subProjectClasses.files,
-            externaLibsClasses = libs,
+            externaLibsClasses = externaLibsClasses.files,
             desugaringClasspath = desugaringClasspath.files,
             projectOutput = projectOutput.asFile.get(),
             subProjectOutput = subProjectOutput.asFile.get(),
@@ -204,9 +205,12 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                     AndroidArtifacts.ArtifactType.CLASSES_JAR
                 )
             )
-            creationConfig.artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.FIXED_STACK_FRAMES,
-                task.externaLibsClasses
+            task.externaLibsClasses.from(
+                creationConfig.variantDependencies.getArtifactFileCollection(
+                    AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                    AndroidArtifacts.ArtifactScope.EXTERNAL,
+                    AndroidArtifacts.ArtifactType.CLASSES_FIXED_FRAMES_JAR
+                )
             )
 
             task.desugaringClasspath.from(variantScope.providedOnlyClasspath)
@@ -229,7 +233,7 @@ class DesugarTaskDelegate(
     private val initiator: AndroidVariantTask,
     private val projectClasses: Set<File>,
     private val subProjectClasses: Set<File>,
-    private val externaLibsClasses: List<File>,
+    private val externaLibsClasses: Set<File>,
     private val desugaringClasspath: Set<File>,
     private val projectOutput: File,
     private val subProjectOutput: File,

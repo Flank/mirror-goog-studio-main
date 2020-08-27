@@ -1,5 +1,4 @@
-apply plugin: 'java'
-apply plugin: 'clone-artifacts'
+apply plugin: 'com.android.tools.java-library'
 apply plugin: 'idea'
 
 dependencies {

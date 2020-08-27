@@ -25,6 +25,9 @@ open class PackagingOptionsImpl(
     variantPropertiesApiServices: VariantPropertiesApiServices
 ) : PackagingOptions {
 
+    override val jniLibs =
+        JniLibsPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
+
     override val resources =
         ResourcesPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
 

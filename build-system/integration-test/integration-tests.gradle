@@ -17,7 +17,7 @@
 ext.testEnvironment =
         /*
          * We keep the following properties:
-         * - starting with CUSTOM_ e.g. CUSTOM_ANDROID_HOME
+         * - starting with CUSTOM_ e.g. CUSTOM_ANDROID_SDK_ROOT
          * - DEBUG_INNER_TEST: to allow us to debug tests
          * - starting with LC_ or LANG_, so the locale is set up correctly
          * - BUILDBOT_: to get BuildBot specific information

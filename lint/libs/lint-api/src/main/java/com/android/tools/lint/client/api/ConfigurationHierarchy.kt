@@ -45,6 +45,7 @@ open class ConfigurationHierarchy(
         val file = File(project.dir, LintXmlConfiguration.CONFIG_FILE_NAME)
         val configuration = getConfigurationForFile(file, create)
         projects[project] = configuration
+        configuration.projectLevel = true
         return configuration
     }
 
@@ -78,6 +79,9 @@ open class ConfigurationHierarchy(
             // inherit from it
             if (xmlFile.isFile) {
                 val parent = getConfigurationForFile(xmlFile, lintXmlCreator)
+                if (configuration.projectLevel) {
+                    parent.projectLevel = true
+                }
                 setParent(configuration, parent)
             }
         }
@@ -140,7 +144,14 @@ open class ConfigurationHierarchy(
         } else {
             null
         }
-        parentOf[configuration] = parent ?: NONE
+        if (parent != null) {
+            parentOf[configuration] = parent
+            if (configuration.projectLevel) {
+                parent.projectLevel = true
+            }
+        } else {
+            parentOf[configuration] = NONE
+        }
 
         return parent
     }

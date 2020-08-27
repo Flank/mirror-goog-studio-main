@@ -486,6 +486,8 @@ class LintDriver
             for (library in project.allLibraries) {
                 jarFiles.addAll(client.findRuleJars(library))
             }
+            val configuration = project.getConfiguration(this)
+            jarFiles.addAll(configuration.getLintJars())
         }
 
         jarFiles.addAll(client.findGlobalRuleJars())
@@ -1239,15 +1241,15 @@ class LintDriver
                                 GradleContext(uastVisitor, this, project, main, context.file)
                             fireEvent(EventType.SCANNING_FILE, context)
                             for (detector in detectors) {
-                                detector.beforeCheckFile(context)
+                                detector.beforeCheckFile(gradleContext)
                             }
 
                             uastVisitor.visitBuildScript(gradleContext, gradleScanners)
                             for (scanner in customVisitedGradleScanners) {
-                                scanner.visitBuildScript(context)
+                                scanner.visitBuildScript(gradleContext)
                             }
                             for (detector in detectors) {
-                                detector.afterCheckFile(context)
+                                detector.afterCheckFile(gradleContext)
                             }
 
                             context.setJavaFile(null)

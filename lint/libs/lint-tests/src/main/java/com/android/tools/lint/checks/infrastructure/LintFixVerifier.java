@@ -34,6 +34,7 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.xml.XmlPrettyPrinter;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.Incident;
+import com.android.tools.lint.LintFixPerformer;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintFix.DataMap;
 import com.android.tools.lint.detector.api.LintFix.GroupType;
@@ -42,6 +43,7 @@ import com.android.tools.lint.detector.api.LintFix.ReplaceString;
 import com.android.tools.lint.detector.api.LintFix.SetAttribute;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
+import com.android.tools.lint.detector.api.Project;
 import com.android.utils.PositionXmlParser;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Lists;
@@ -206,7 +208,12 @@ public class LintFixVerifier {
             }
 
             for (LintFix lintFix : list) {
-                String targetPath = incident.getDisplayPath();
+                Location location = LintFixPerformer.Companion.getLocation(incident);
+                Project project = incident.getProject();
+                String targetPath =
+                        project != null
+                                ? project.getDisplayPath(location.getFile())
+                                : location.getFile().getPath();
                 TestFile file = findTestFile(targetPath);
                 if (file == null) {
                     fail("Didn't find test file " + targetPath);

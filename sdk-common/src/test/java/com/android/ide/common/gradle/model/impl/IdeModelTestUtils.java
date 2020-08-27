@@ -31,6 +31,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
+import nl.jqno.equalsverifier.api.SingleTypeEqualsVerifierApi;
 import org.junit.ComparisonFailure;
 
 public final class IdeModelTestUtils {
@@ -139,15 +140,15 @@ public final class IdeModelTestUtils {
 
 
     @NonNull
-    public static <T extends Serializable> EqualsVerifier<T> createEqualsVerifier(
+    public static <T extends Serializable> SingleTypeEqualsVerifierApi<T> createEqualsVerifier(
             @NonNull Class<T> type) {
         return createEqualsVerifier(type, "myHashCode");
     }
 
     @NonNull
-    public static <T extends Serializable> EqualsVerifier<T> createEqualsVerifier(
+    public static <T extends Serializable> SingleTypeEqualsVerifierApi<T> createEqualsVerifier(
             @NonNull Class<T> type, @NonNull String hashCodeField) {
-        EqualsVerifier<T> equalsVerifier = EqualsVerifier.forClass(type);
+        SingleTypeEqualsVerifierApi<T> equalsVerifier = EqualsVerifier.forClass(type);
         equalsVerifier
                 .withCachedHashCode(hashCodeField, "calculateHashCode", null)
                 .suppress(Warning.NO_EXAMPLE_FOR_CACHED_HASHCODE);

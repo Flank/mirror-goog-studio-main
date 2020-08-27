@@ -28,6 +28,7 @@ android {
 
     defaultConfig {
         minSdkVersion 14
+        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion 28
 
         renderscriptTargetApi 28

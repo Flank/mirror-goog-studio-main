@@ -1,4 +1,5 @@
-apply plugin: 'java'
+apply plugin: 'com.android.tools.java'
+apply plugin: 'com.android.tools.publish'
 
 group = 'com.android.tools.external.com-intellij'
 archivesBaseName = 'intellij-core'
@@ -14,6 +15,3 @@ jar {
 
 project.ext.pomName = 'IntelliJ IDEA Core'
 project.ext.pomDesc = 'IntelliJ IDEA Core'
-
-apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/javadoc.gradle"

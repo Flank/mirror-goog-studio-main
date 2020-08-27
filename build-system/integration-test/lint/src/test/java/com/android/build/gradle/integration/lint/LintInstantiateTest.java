@@ -16,20 +16,25 @@
 
 package com.android.build.gradle.integration.lint;
 
+import static com.android.testutils.truth.FileSubject.assertThat;
+
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.File;
-
-import static com.android.testutils.truth.FileSubject.assertThat;
 
 /** Integration test for lint analyzing Kotlin code from Gradle. */
 public class LintInstantiateTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("lintInstantiate").create();
+            GradleTestProject.builder()
+                    .fromTestProject("lintInstantiate")
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
+                    // b/158092419, b/146208910
+                    .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=49")
+                    .create();
 
     @Test
     public void checkFindErrors() {

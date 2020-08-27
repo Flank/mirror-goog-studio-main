@@ -67,13 +67,15 @@ public class Build extends Node {
         nodes.add(this);
     }
 
-    public CallStatement getCall(String name) {
+    public CallStatement getCall(String name, String id) {
         for (Statement statement : statements) {
             if (statement instanceof CallStatement) {
                 CallExpression call = ((CallStatement)statement).getCall();
                 String literal = call.getLiteralArgument("name");
                 if (literal != null && literal.equals("\"" + name + "\"")) {
-                    return (CallStatement)statement;
+                    if (id == null || ((CallStatement) statement).isManaged(id)) {
+                        return (CallStatement) statement;
+                    }
                 }
             }
         }

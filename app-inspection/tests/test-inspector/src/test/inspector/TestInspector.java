@@ -84,7 +84,7 @@ public class TestInspector extends Inspector {
         }
 
         Class<?> foundInstance = null;
-        for (Class instance : environment.findInstances(Class.class)) {
+        for (Class instance : environment.artTI().findInstances(Class.class)) {
             if (instance != null && instance.getName().equals(className)) {
                 if (foundInstance == null) {
                     foundInstance = instance;

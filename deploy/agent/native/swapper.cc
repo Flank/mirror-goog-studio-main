@@ -39,7 +39,6 @@ Swapper& Swapper::Instance() {
 proto::AgentSwapResponse Swapper::Swap(jvmtiEnv* jvmti, JNIEnv* jni,
                                        const proto::SwapRequest& request) {
   proto::AgentSwapResponse response;
-  response.set_pid(getpid());
 
   // TODO: Find a cleaner method to distinguish swap / overlay swap than a
   // boolean flag passed through.

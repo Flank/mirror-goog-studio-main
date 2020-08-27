@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.connected.application;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import com.android.tools.bazel.avd.Emulator;
@@ -31,7 +32,12 @@ public class KotlinAppConnectedTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("kotlinApp").create();
+            GradleTestProject.builder()
+                    .fromTestProject("kotlinApp")
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
+                    // b/158092419
+                    .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=45")
+                    .create();
 
     @Test
     public void connectedAndroidTest() throws Exception {

@@ -84,6 +84,11 @@ import kotlin.math.max
  *  `&lt;option name="..." value="...">`: Specifies an option value. This can be used
  *    to configure some lint checks with options.
  *
+ * Finally, on the root &lt;lint> element you can specify a number of attributes,
+ * such as `lintJars` (a list of jar files containing custom lint checks, separated
+ * by a semicolon as a path separator), and flags like warningsAsErrors, checkTestSources,
+ * etc (matching most of the flags offered via the lintOptions block in Gradle files.)
+ *
  * Nesting & Precedence
  * ======================
  *
@@ -117,7 +122,13 @@ import kotlin.math.max
 open class LintXmlConfiguration protected constructor(
     val client: LintClient,
     val configFile: File,
-    override val dir: File = configFile.parentFile ?: File(".")
+    override val dir: File = configFile.parentFile ?: File("."),
+    /**
+     * Whether this configuration corresponds to a project folder or higher.
+     * Certain configuration is not allowed in individual source file folders,
+     * such as enabling disabled lint checks.
+     */
+    override var projectLevel: Boolean = false
 ) : Configuration() {
 
     private val parent: Configuration? get() = client.getParentConfiguration(this)
@@ -125,7 +136,7 @@ open class LintXmlConfiguration protected constructor(
     protected constructor(
         client: LintClient,
         project: Project
-    ) : this(client, File(project.dir, CONFIG_FILE_NAME), project.dir)
+    ) : this(client, File(project.dir, CONFIG_FILE_NAME), project.dir, true)
 
     private var bulkEditing = false
 
@@ -155,6 +166,7 @@ open class LintXmlConfiguration protected constructor(
     private var applySuggestions: Boolean? = null
     private var removeFixedBaselineIssues: Boolean? = null
     private var abortOnError: Boolean? = null
+    private var lintJars: List<File>? = null
 
     /**
      * Specific issue configuration specified in a lint.xml file. This corresponds to
@@ -646,6 +658,29 @@ open class LintXmlConfiguration protected constructor(
                                     "abortOnError" ->
                                         if (applies())
                                             abortOnError = value.asBoolean()
+                                    "lintJar", "lintJars" -> {
+                                        if (!projectLevel) {
+                                            reportError("`lintJar` can only be specified for lint.xml files at the module level or higher", parser)
+                                        } else if (applies()) {
+                                            // Using ; instead of File.pathSeparator here
+                                            // because we want to handle both Windows and
+                                            // Linux interchangeably; we don't want a file
+                                            // created on Windows (using ; as a path separator
+                                            // and frequently contains : in paths, such as C:\),
+                                            // to be split on the : on Linux/Mac.
+                                            lintJars = value.split(';').map { path ->
+                                                val file = File(path)
+                                                val absolute = if (file.isAbsolute)
+                                                    file
+                                                else
+                                                    File(configFile.parentFile, path)
+                                                if (!absolute.exists()) {
+                                                    reportError("lintJar $absolute does not exist")
+                                                }
+                                                absolute
+                                            }.toList()
+                                        }
+                                    }
                                     else -> reportError(
                                         "Unexpected attribute `$name`",
                                         parser
@@ -700,6 +735,13 @@ open class LintXmlConfiguration protected constructor(
                                         Severity.IGNORE
                                     } else null
                                 if (severity != null) {
+                                    // TODO: If !projectLevel and we're turning on a check
+                                    // here, report a warning that this can only be done at
+                                    // the project level. The challenge in implementing this
+                                    // now is that we don't want to flag changing the severity
+                                    // of already enabled checks (e.g. enabled in inherited
+                                    // configurations, or checks already warning/error/fatal
+                                    // and we're setting it to a different one of those.)
                                     addSeverity(idList, severity, fileClients, issueClients)
                                 } else {
                                     reportError("Unknown severity `$severityString`", parser)
@@ -1054,6 +1096,13 @@ open class LintXmlConfiguration protected constructor(
         return abortOnError
     }
 
+    override fun getLintJars(): List<File> {
+        ensureInitialized()
+        val inheritedJars = parent?.getLintJars() ?: return lintJars ?: emptyList()
+        val jars = lintJars ?: return inheritedJars
+        return jars + inheritedJars
+    }
+
     private fun writeConfig() {
         try {
             ensureInitialized()
@@ -1096,6 +1145,23 @@ open class LintXmlConfiguration protected constructor(
                 )
             }
             abortOnError?.let { writeAttribute(writer, "abortOnError", it.toString()) }
+            lintJars?.let {
+                writeAttribute(
+                    writer, "lintJars",
+                    it.joinToString(";") { f ->
+                        val lintPath = f.path
+                        val xmlPath = configFile.parentFile?.path ?: ""
+                        if (lintPath.startsWith(xmlPath) &&
+                            lintPath != xmlPath &&
+                            lintPath[xmlPath.length] == File.separatorChar
+                        ) {
+                            lintPath.substring(xmlPath.length + 1).replace(File.separatorChar, '/')
+                        } else {
+                            lintPath.replace(File.separatorChar, '/')
+                        }
+                    }
+                )
+            }
             writer.write(">\n")
             for (issueMap in getIssueMaps()) {
                 if (issueMap.isEmpty()) {

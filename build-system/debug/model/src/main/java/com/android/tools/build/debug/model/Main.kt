@@ -47,11 +47,11 @@ fun main(args : Array<String>) {
                 GradleTestProjectBuilder.MemoryRequirement.useDefault())
 
         val models: ModelContainer<AndroidProject> = modelBuilder
-                .withSdkInLocalProperties()
-                .level(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD)
-                //.level(AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL)
-                .ignoreSyncIssues()
-                .fetchAndroidProjects()
+            .withLocalPrefsRoot()
+            .level(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD)
+            //.level(AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL)
+            .ignoreSyncIssues()
+            .fetchAndroidProjects()
 
         val action: (Map<String, AndroidProject>) -> Unit = { map ->
             map.keys.forEach {

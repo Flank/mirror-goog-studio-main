@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.AndroidJarInput
+import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -25,9 +26,8 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.processResources
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
-import com.android.build.gradle.internal.services.AsyncResourceProcessor
 import com.android.build.gradle.internal.services.getBuildService
-import com.android.build.gradle.internal.services.use
+import com.android.build.gradle.internal.services.getLeasingAapt2
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
@@ -37,10 +37,10 @@ import com.android.builder.files.SerializableInputChanges
 import com.android.builder.internal.aapt.AaptException
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.builder.internal.aapt.v2.Aapt2
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
+import com.android.ide.common.resources.ResourceCompilationService
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableSet
@@ -49,6 +49,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -58,16 +59,18 @@ import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
+import org.gradle.workers.WorkerExecutor
 import java.io.File
+import javax.inject.Inject
 
 @CacheableTask
 abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
 
     @get:OutputDirectory
-    lateinit var compiledDirectory: File
-        private set
+    abstract val compiledDirectory: DirectoryProperty
 
     // Merged resources directory.
     @get:Incremental
@@ -132,36 +135,48 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
      */
     protected abstract class Action : ProfileAwareWorkAction<Params>() {
 
+        @get:Inject
+        abstract val workerExecutor: WorkerExecutor
+
         override fun run() {
-            parameters.aapt2.get().use(context = this.parameters) { asyncAapt2 ->
+            val aapt2Input = parameters.aapt2.get()
+            WorkerExecutorResourceCompilationService(
+                projectName = parameters.projectName.get(),
+                taskOwner = parameters.taskOwner.get(),
+                analyticsService = parameters.analyticsService,
+                workerExecutor = workerExecutor,
+                aapt2Input = aapt2Input
+            ).use { compilationService ->
                 compileResources(
                     inputs = parameters.inputs.get(),
                     outDirectory = parameters.compiledDirectory.get().asFile,
-                    asyncResourceProcessor = asyncAapt2,
-                    mergeBlameFolder = parameters.mergeBlameFolder.get().asFile,
-                    analyticsService = parameters.analyticsService.get()
+                    compilationService = compilationService,
+                    mergeBlameFolder = parameters.mergeBlameFolder.get().asFile
                 )
-
-                val compiledDependenciesResourcesDirs = parameters.compiledDependenciesResources.reversed()
-                val config = AaptPackageConfig.Builder()
-                    .setManifestFile(
-                        manifestFile = parameters.manifestFile.get().asFile
-                    )
-                    .addResourceDirectories(compiledDependenciesResourcesDirs)
-                    .addResourceDir(resourceDir = parameters.compiledDirectory.get().asFile)
-                    .setLibrarySymbolTableFiles(ImmutableSet.of())
-                    .setOptions(AaptOptions())
-                    .setVariantType(VariantTypeImpl.LIBRARY)
-                    .setAndroidTarget(androidJar = parameters.androidJar.get().asFile)
-                    .setMergeBlameDirectory(parameters.mergeBlameFolder.get().asFile)
-                    .setManifestMergeBlameFile(parameters.manifestMergeBlameFile.get().asFile)
-                    .build()
-
-                asyncAapt2.await() // All compilation must be done before linking.
-                asyncAapt2.submit(parameters.analyticsService.get()) { aapt2 ->
-                    processResources(aapt2, config, null, asyncAapt2.logger, asyncAapt2.errorFormatMode)
-                }
             }
+
+            val compiledDependenciesResourcesDirs =
+                parameters.compiledDependenciesResources.reversed()
+            val config = AaptPackageConfig.Builder()
+                .setManifestFile(manifestFile = parameters.manifestFile.get().asFile)
+                .addResourceDirectories(compiledDependenciesResourcesDirs)
+                .addResourceDir(resourceDir = parameters.compiledDirectory.get().asFile)
+                .setLibrarySymbolTableFiles(ImmutableSet.of())
+                .setOptions(AaptOptions())
+                .setVariantType(VariantTypeImpl.LIBRARY)
+                .setAndroidTarget(androidJar = parameters.androidJar.get().asFile)
+                .setMergeBlameDirectory(parameters.mergeBlameFolder.get().asFile)
+                .setManifestMergeBlameFile(parameters.manifestMergeBlameFile.get().asFile)
+                .build()
+
+            workerExecutor.await() // All compilation must be done before linking.
+            processResources(
+                aapt = aapt2Input.getLeasingAapt2(),
+                aaptConfig = config,
+                rJar = null,
+                logger = Logging.getLogger(this::class.java),
+                errorFormatMode = aapt2Input.buildService.get().parameters.errorFormatMode.get()
+            )
         }
     }
 
@@ -176,6 +191,14 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
         override val type: Class<VerifyLibraryResourcesTask>
             get() = VerifyLibraryResourcesTask::class.java
 
+        override fun handleProvider(taskProvider: TaskProvider<VerifyLibraryResourcesTask>) {
+            super.handleProvider(taskProvider)
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider = taskProvider,
+                property = VerifyLibraryResourcesTask::compiledDirectory
+            ).on(InternalArtifactType.VERIFIED_LIBRARY_RESOURCES)
+        }
+
         /** Configure the given newly-created task object.  */
         override fun configure(
             task: VerifyLibraryResourcesTask
@@ -187,7 +210,6 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                 task.inputDirectory
             )
 
-            task.compiledDirectory = creationConfig.paths.compiledResourcesOutputDir
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
                 task.manifestFiles
@@ -224,7 +246,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
          *
          * @param inputs the new, changed or modified files that need to be compiled or removed.
          * @param outDirectory the directory containing compiled resources.
-         * @param asyncResourceProcessor AAPT tool to execute the resource compiling
+         * @param compilationService AAPT tool to execute the resource compiling
          * @param analyticsService the build service to record execution spans
          */
         @JvmStatic
@@ -232,9 +254,8 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
         fun compileResources(
             inputs: SerializableInputChanges,
             outDirectory: File,
-            asyncResourceProcessor: AsyncResourceProcessor<Aapt2>,
-            mergeBlameFolder: File,
-            analyticsService: AnalyticsService
+            compilationService: ResourceCompilationService,
+            mergeBlameFolder: File
         ) {
             for (change in inputs.changes) {
                 // Accept only files in subdirectories of the merged resources directory.
@@ -258,9 +279,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                                 isPngCrunching = false,
                                 mergeBlameFolder = mergeBlameFolder
                             )
-                            asyncResourceProcessor.submit(analyticsService) {
-                                it.compile(request, asyncResourceProcessor.iLogger)
-                            }
+                            compilationService.submitCompile(request)
                         } catch (e: Exception) {
                             throw AaptException("Failed to compile file ${change.file.absolutePath}", e)
                         }

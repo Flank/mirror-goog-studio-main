@@ -22,8 +22,6 @@ import com.android.tools.bazel.parser.ast.Argument;
 import com.android.tools.bazel.parser.ast.Build;
 import com.android.tools.bazel.parser.ast.CallExpression;
 import com.android.tools.bazel.parser.ast.CallStatement;
-import com.android.tools.bazel.parser.ast.Expression;
-import com.android.tools.bazel.parser.ast.ListExpression;
 import com.android.tools.bazel.parser.ast.Statement;
 import com.android.tools.utils.WorkspaceUtils;
 import java.io.File;
@@ -123,13 +121,17 @@ public class FixUnbundledRules {
                     continue;
                 }
                 CallExpression call = ((CallStatement) statement).getCall();
-                String literal = call.getLiteralArgument("name");
-                if (literal != null
-                        && (literal.startsWith("\"" + PROJECT_ID + ".")
-                                || literal.contains("/" + PROJECT_ID + "."))) {
-                    String original = literal.substring(PROJECT_ID.length() + 2, literal.length() - 1);
-                    CallStatement oCall = buildFile.getCall(original);
-                    boolean tags = false;
+                String name = call.getLiteralArgument("name");
+                if (name != null) {
+                    if (name.startsWith("\"" + PROJECT_ID + ".")
+                            || name.contains("/" + PROJECT_ID + ".")) {
+                        name = name.substring(PROJECT_ID.length() + 2, name.length() - 1);
+                    } else {
+                        name = name.substring(1, name.length() - 1);
+                    }
+                }
+                if (((CallStatement) statement).isManaged(PROJECT_ID)) {
+                    CallStatement oCall = buildFile.getCall(name, "");
                     if (oCall != null) {
                         if (!defined.containsKey(call.getLiteral())) {
                             continue;
@@ -145,28 +147,10 @@ public class FixUnbundledRules {
                                 // Leave generated fields alone.
                                 continue;
                             }
-                            if (a.getName().equals("tags")) {
-                                ListExpression le =
-                                        ListExpression.build(Arrays.asList("manual", PROJECT_ID));
-                                if (a.getExpression() instanceof ListExpression) {
-                                    for (Expression e :
-                                            ((ListExpression) a.getExpression()).getExpressions()) {
-                                        le.add(e);
-                                    }
-                                }
-                                call.setArgument("tags", le);
-                                tags = true;
-                            } else {
-                                call.setArgument(a.getName(), a.getExpression());
-                            }
+                            call.setArgument(a.getName(), a.getExpression());
                             statement.setHidden(false);
                             update = true;
                         }
-                    }
-                    if (!tags) {
-                        call.addElementToList("tags", "manual");
-                        call.addElementToList("tags", PROJECT_ID);
-                        update = true;
                     }
                 }
             }

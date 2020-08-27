@@ -405,34 +405,24 @@ public class GlobalScope {
      */
     @NonNull
     public FileCollection getFullBootClasspath() {
-        return project.files(
-                BootClasspathBuilder.INSTANCE
-                        .computeClasspath(
-                                project,
-                                getDslServices().getIssueReporter(),
-                                getSdkComponents()
-                                        .flatMap(
-                                                SdkComponentsBuildService
-                                                        ::getTargetBootClasspathProvider),
-                                getSdkComponents()
-                                        .flatMap(
-                                                SdkComponentsBuildService
-                                                        ::getTargetAndroidVersionProvider),
-                                getSdkComponents()
-                                        .flatMap(
-                                                SdkComponentsBuildService
-                                                        ::getAdditionalLibrariesProvider),
-                                getSdkComponents()
-                                        .flatMap(
-                                                SdkComponentsBuildService
-                                                        ::getOptionalLibrariesProvider),
-                                getSdkComponents()
-                                        .flatMap(
-                                                SdkComponentsBuildService
-                                                        ::getAnnotationsJarProvider),
-                                true,
-                                ImmutableList.of())
-                        .get());
+        return project.files(getFullBootClasspathProvider().get());
+    }
+
+    @NonNull
+    public Provider<List<RegularFile>> getFullBootClasspathProvider() {
+        return BootClasspathBuilder.INSTANCE.computeClasspath(
+                project,
+                getDslServices().getIssueReporter(),
+                getSdkComponents()
+                        .flatMap(SdkComponentsBuildService::getTargetBootClasspathProvider),
+                getSdkComponents()
+                        .flatMap(SdkComponentsBuildService::getTargetAndroidVersionProvider),
+                getSdkComponents()
+                        .flatMap(SdkComponentsBuildService::getAdditionalLibrariesProvider),
+                getSdkComponents().flatMap(SdkComponentsBuildService::getOptionalLibrariesProvider),
+                getSdkComponents().flatMap(SdkComponentsBuildService::getAnnotationsJarProvider),
+                true,
+                ImmutableList.of());
     }
 
     @NonNull

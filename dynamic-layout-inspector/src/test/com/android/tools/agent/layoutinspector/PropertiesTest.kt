@@ -18,8 +18,9 @@ package com.android.tools.agent.layoutinspector
 
 import android.content.res.Resources
 import android.graphics.Color
+import android.view.View
 import android.view.inspector.WindowInspector
-import androidx.ui.core.AndroidComposeView
+import androidx.compose.ui.platform.AndroidComposeView
 import androidx.ui.tooling.inspector.InspectorNode
 import androidx.ui.tooling.inspector.NodeParameter
 import androidx.ui.tooling.inspector.ParameterType
@@ -41,6 +42,7 @@ import org.junit.Test
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import java.util.Collections
 import java.util.concurrent.TimeUnit
 
 class PropertiesTest {
@@ -65,7 +67,24 @@ class PropertiesTest {
             top = 121,
             width = 421,
             height = 269,
-            children = emptyList(),
+            children = listOf(
+                InspectorNode(
+                    id = -2,
+                    name = "Text",
+                    fileName = "MainActivity.kt",
+                    packageHash = 1777,
+                    offset = 47,
+                    lineNumber = 27,
+                    left = 55,
+                    top = 121,
+                    width = 421,
+                    height = 56,
+                    children = emptyList(),
+                    parameters = listOf(
+                        NodeParameter("text", ParameterType.String, "Hello World")
+                    )
+                )
+            ),
             parameters = listOf(
                 NodeParameter("name", ParameterType.String, "Hello"),
                 NodeParameter("wrap", ParameterType.Boolean, true),
@@ -137,6 +156,69 @@ class PropertiesTest {
     }
 
     @Test
+    fun testProtoBuilderForSnapshot() {
+        val linearLayout = StandardView.createLinearLayoutWithTextView()
+        val text = linearLayout.getChildAt(0)
+        WindowInspector.getGlobalWindowViews().add(linearLayout)
+        val properties = Properties()
+        properties.saveAllViewProperties(Collections.singletonList<View>(linearLayout), 23)
+        val event1 = agentRule.events.poll(5, TimeUnit.SECONDS)!!
+        val event2 = agentRule.events.poll(5, TimeUnit.SECONDS)!!
+        val event3 = agentRule.events.poll(10, TimeUnit.MILLISECONDS)
+        val propertyEvent1 = event1.layoutInspectorEvent.properties
+        val propertyEvent2 = event2.layoutInspectorEvent.properties
+        assertThat(event3).isNull()
+        assertThat(propertyEvent1.viewId).isEqualTo(linearLayout.uniqueDrawingId)
+        assertThat(propertyEvent1.generation).isEqualTo(23)
+        assertThat(propertyEvent2.viewId).isEqualTo(text.uniqueDrawingId)
+        assertThat(propertyEvent2.generation).isEqualTo(23)
+        var index = 0
+        with (PropertyChecker(propertyEvent1)) {
+            check(index++, "focused", Type.BOOLEAN, 0)
+            check(index++, "byte", Type.BYTE, 0)
+            check(index++, "char", Type.CHAR, 0)
+            check(index++, "double", Type.DOUBLE, 0.0)
+            check(index++, "scaleX", Type.FLOAT, 0.0f)
+            check(index++, "scrollX", Type.INT32, 0)
+            check(index++, "long", Type.INT64, 0L)
+            check(index++, "short", Type.INT16, 0)
+            check(index++, "outlineSpotShadowColor", Type.COLOR, 0L)
+            check(index++, "foregroundGravity", Type.GRAVITY, Collections.emptySet<String>())
+            check(index++, "visibility", Type.INT_ENUM, "visible")
+            check(index++, "scrollIndicators", Type.INT_FLAG, Collections.emptySet<String>())
+            check(index++, "layout_width", Type.INT_ENUM, "match_parent")
+            check(index++, "layout_height", Type.INT_ENUM, "match_parent")
+            assertThat(size).isEqualTo(index)
+        }
+        index = 0
+        with (PropertyChecker(propertyEvent2)) {
+            check(index++, "focused", Type.BOOLEAN, 1)
+            check(index++, "byte", Type.BYTE, 7)
+            check(index++, "char", Type.CHAR, 'g'.toInt())
+            check(index++, "double", Type.DOUBLE, 3.75)
+            check(index++, "scaleX", Type.FLOAT, 1.75f)
+            check(index++, "scrollX", Type.INT32, 10)
+            check(index++, "long", Type.INT64, 7000L)
+            check(index++, "short", Type.INT16, 70)
+            check(index++, "transitionName", Type.STRING, "MyTransitionName")
+            check(index++, "backgroundTint", Type.COLOR, Color.BLUE)
+            check(index++, "background", Type.COLOR, Color.YELLOW)
+            check(index++, "outlineSpotShadowColor", Type.COLOR, Color.RED)
+            check(index++, "foregroundGravity", Type.GRAVITY,
+                ImmutableSet.of("top", "fill_horizontal"))
+            check(index++, "visibility", Type.INT_ENUM, "invisible")
+            check(index++, "labelFor", Type.RESOURCE, ResourceEntry("id", "pck", "other"))
+            check(index++, "scrollIndicators", Type.INT_FLAG, ImmutableSet.of("left", "bottom"))
+            check(index++, "text", Type.STRING, "Hello World!")
+            check(index++, "layout_width", Type.INT_ENUM, "match_parent")
+            check(index++, "layout_height", Type.INT32, 400)
+            check(index++, "layout_marginBottom", Type.INT32, 10)
+            check(index++, "layout_gravity", Type.GRAVITY, ImmutableSet.of("end"))
+            assertThat(size).isEqualTo(index)
+        }
+    }
+
+    @Test
     fun testParameterProtoBuilder() {
         val androidComposeView = mock(AndroidComposeView::class.java)
         val resources = mock(Resources::class.java)
@@ -158,6 +240,57 @@ class PropertiesTest {
         assertThat(propertyEvent.viewId).isEqualTo(node.id)
         assertThat(propertyEvent.generation).isEqualTo(21)
         with (PropertyChecker(propertyEvent)) {
+            check(index++, "name", Type.STRING, "Hello")
+            check(index++, "wrap", Type.BOOLEAN, 1)
+            check(index++, "number", Type.DOUBLE, 321.5)
+            check(index++, "factor", Type.FLOAT, 1.5f)
+            check(index++, "count", Type.INT32, 17)
+            check(index++, "largeCount", Type.INT64, 17L)
+            check(index++, "color", Type.COLOR, Color.BLUE)
+            check(index++, "resId", Type.RESOURCE, ResourceEntry("font", "pck", "garamond"))
+            check(index++, "elevation", Type.DIMENSION_DP, 2.0f)
+            check(index++, "fontSize", Type.DIMENSION_SP, 12.0f)
+            check(index++, "baseLineOffset", Type.DIMENSION_EM, 0.2f)
+            check(index, 0, "x", Type.DIMENSION_DP, 2.0f)
+            check(index, 1, "y", Type.DIMENSION_DP, 2.0f)
+            check(index++, "rect", Type.STRING, "Rect")
+            assertThat(size).isEqualTo(index)
+        }
+    }
+
+    @Test
+    fun testParameterProtoBuilderForSnapshot() {
+        val androidComposeView = mock(AndroidComposeView::class.java)
+        val resources = mock(Resources::class.java)
+        `when`(androidComposeView.getTag(eq(TREE_ENTRY))).thenReturn(listOf(node))
+        `when`(androidComposeView.resources).thenReturn(resources)
+        `when`(resources.getResourceTypeName(eq(fontId))).thenReturn("font")
+        `when`(resources.getResourcePackageName(eq(fontId))).thenReturn("pck")
+        `when`(resources.getResourceEntryName(eq(fontId))).thenReturn("garamond")
+        val builder = TreeBuilderWrapper(PropertiesTest::class.java.classLoader!!)
+        val nodes = builder.convert(androidComposeView)
+        WindowInspector.getGlobalWindowViews().add(androidComposeView)
+
+        val properties = Properties()
+        properties.setComposeParameters(nodes.flatMap { it.children }.plus(nodes)
+            .associateBy({ it.id }, { it.parameters }))
+        properties.saveAllComposeParameters(24)
+        val event1 = agentRule.events.poll(5, TimeUnit.SECONDS)!!
+        val event2 = agentRule.events.poll(5, TimeUnit.SECONDS)!!
+        val event3 = agentRule.events.poll(10, TimeUnit.MILLISECONDS)
+        val propertyEvent1 = event1.layoutInspectorEvent.properties
+        val propertyEvent2 = event2.layoutInspectorEvent.properties
+        assertThat(event3).isNull()
+        assertThat(propertyEvent1.viewId).isEqualTo(-2)
+        assertThat(propertyEvent1.generation).isEqualTo(24)
+        assertThat(propertyEvent2.viewId).isEqualTo(node.id)
+        assertThat(propertyEvent2.generation).isEqualTo(24)
+        var index = 0
+        with (PropertyChecker(propertyEvent1)) {
+            check(index++, "text", Type.STRING, "Hello World")
+        }
+        index = 0
+        with (PropertyChecker(propertyEvent2)) {
             check(index++, "name", Type.STRING, "Hello")
             check(index++, "wrap", Type.BOOLEAN, 1)
             check(index++, "number", Type.DOUBLE, 321.5)

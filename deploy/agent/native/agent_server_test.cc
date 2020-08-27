@@ -160,9 +160,9 @@ TEST_F(AgentServerTest, ForwardManyAgents) {
     std::string message;
     ASSERT_TRUE(output_->Read(&message));
 
-    proto::AgentSwapResponse response;
+    proto::AgentResponse response;
     ASSERT_TRUE(response.ParseFromString(message));
-    ASSERT_EQ(response.status(), proto::AgentSwapResponse::OK);
+    ASSERT_EQ(response.status(), proto::AgentResponse::OK);
     pids.emplace(response.pid());
   }
 

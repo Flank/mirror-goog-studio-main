@@ -310,7 +310,7 @@ public class SigningTest {
         new SigningConfigHelper(
                         debugSigningConfig,
                         BuilderConstants.DEBUG,
-                        GradleTestProject.ANDROID_SDK_HOME)
+                        GradleTestProject.ANDROID_PREFS_ROOT)
                 .test();
 
         SigningConfig mySigningConfig =

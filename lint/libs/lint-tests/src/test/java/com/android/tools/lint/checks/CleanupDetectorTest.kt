@@ -2078,6 +2078,31 @@ class CleanupDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testNotNullAssertionOperator() {
+        // 165534909: Recycle for Cursor closed with `use` in Kotlin
+        lint().files(
+            kotlin(
+                """
+                import android.content.ContentResolver
+
+                /** Get the count of existing call logs. */
+                fun getCallLogCount(): Int {
+                    val contentResolver: ContentResolver = context.getContentResolver()
+                    return contentResolver.query(
+                        /*uri=*/ Calls.CONTENT_URI,
+                        /*projection=*/ null,
+                        /*selection=*/ null,
+                        /*selectionArgs=*/ null,
+                        /*sortOrder=*/ null
+                    )!!.use {
+                        it.count
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
     private val dialogFragment = java(
         """
         package android.support.v4.app;

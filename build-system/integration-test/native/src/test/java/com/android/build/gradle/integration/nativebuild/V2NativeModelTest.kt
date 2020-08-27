@@ -128,19 +128,19 @@ class V2NativeModelTest : ModelComparator() {
             ).isEqualTo(
                 """
                 sourceFile: {PROJECT}/src/main/cxx/executable/main.cpp{F}
-                compiler:   {NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++{F}
+                compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++{F}
                 workingDir: {PROJECT}/.cxx/cmake/debug/x86{D}
-                flags:      [--target=i686-none-linux-android16, --gcc-toolchain={NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64, --sysroot={NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/sysroot, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIE]
-                
+                flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIE]
+
                 sourceFile: {PROJECT}/src/main/cxx/hello-jni.c{F}
-                compiler:   {NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang{F}
+                compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang{F}
                 workingDir: {PROJECT}/.cxx/cmake/debug/x86{D}
-                flags:      [--target=i686-none-linux-android16, --gcc-toolchain={NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64, --sysroot={NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/sysroot, -Dhello_jni_EXPORTS, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIC]
-                
+                flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot, -Dhello_jni_EXPORTS, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIC]
+
                 sourceFile: {PROJECT}/src/main/cxx/executable/main.cpp{F}
-                compiler:   {NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++{F}
+                compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++{F}
                 workingDir: {PROJECT}/.cxx/cmake/debug/x86{D}
-                flags:      [--target=i686-none-linux-android16, --gcc-toolchain={NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64, --sysroot={NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/sysroot, -Dhello_jni_EXPORTS, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIC]
+                flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot, -Dhello_jni_EXPORTS, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIC]
                 """.trimIndent()
             )
             PLATFORM_WINDOWS -> Truth.assertThat(
@@ -149,19 +149,19 @@ class V2NativeModelTest : ModelComparator() {
                 )
             ).isEqualTo(
                 "sourceFile: {PROJECT}/src/main/cxx/hello-jni.c{F}\n" +
-                        "compiler:   {NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe{F}\n" +
+                        "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe{F}\n" +
                         "workingDir: {PROJECT}/.cxx/cmake/debug/x86{D}\n" +
-                        "flags:      [--target=i686-none-linux-android16, --gcc-toolchain={NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64, --sysroot={NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/sysroot, -Dhello_jni_EXPORTS, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIC, {PROJECT}/src/main/cxx/hello-jni.c]\n" +
+                        "flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/sysroot, -Dhello_jni_EXPORTS, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIC, {PROJECT}/src/main/cxx/hello-jni.c]\n" +
                         "\n" +
                         "sourceFile: {PROJECT}/src/main/cxx/executable/main.cpp{F}\n" +
-                        "compiler:   {NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe{F}\n" +
+                        "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe{F}\n" +
                         "workingDir: {PROJECT}/.cxx/cmake/debug/x86{D}\n" +
-                        "flags:      [--target=i686-none-linux-android16, --gcc-toolchain={NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64, --sysroot={NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/sysroot, -Dhello_jni_EXPORTS, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIC, {PROJECT}/src/main/cxx/executable/main.cpp]\n" +
+                        "flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/sysroot, -Dhello_jni_EXPORTS, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIC, {PROJECT}/src/main/cxx/executable/main.cpp]\n" +
                         "\n" +
                         "sourceFile: {PROJECT}/src/main/cxx/executable/main.cpp{F}\n" +
-                        "compiler:   {NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe{F}\n" +
+                        "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe{F}\n" +
                         "workingDir: {PROJECT}/.cxx/cmake/debug/x86{D}\n" +
-                        "flags:      [--target=i686-none-linux-android16, --gcc-toolchain={NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64, --sysroot={NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/sysroot, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIE, {PROJECT}/src/main/cxx/executable/main.cpp]"
+                        "flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/sysroot, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIE, {PROJECT}/src/main/cxx/executable/main.cpp]"
             )
             PLATFORM_DARWIN -> {
             } // Skip checking Mac since there is no PSQ.

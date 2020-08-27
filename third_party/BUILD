@@ -100,6 +100,14 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "com.github.gundy_semver4j",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/github/gundy/semver4j/0.16.4:jar",
+    visibility = ["//visibility:public"],
+    exports = [":org.antlr_antlr4-runtime"],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "com.google.android_annotations",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/android/annotations/4.1.1.4:jar",
     visibility = ["//visibility:public"],
@@ -523,7 +531,7 @@ maven_java_library(
     name = "de.undercouch_gradle-download-task",
     export_artifact = "//prebuilts/tools/common/m2/repository/de/undercouch/gradle-download-task/4.0.2:jar",
     visibility = ["//visibility:public"],
-    exports = [":org.apache.httpcomponents_httpclient"],
+    exports = [],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
@@ -909,7 +917,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "nl.jqno.equalsverifier_equalsverifier",
-    export_artifact = "//prebuilts/tools/common/m2/repository/nl/jqno/equalsverifier/equalsverifier/2.1.5:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/nl/jqno/equalsverifier/equalsverifier/3.4.1:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -945,6 +953,14 @@ maven_java_library(
 maven_java_library(
     name = "org.antlr_antlr4",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/antlr/antlr4/4.5.3:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "org.antlr_antlr4-runtime",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/antlr/antlr4-runtime/4.5.2-1:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -1389,22 +1405,6 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/intellij/deps/trove4j/1.0.20181211:jar",
     visibility = ["//visibility:public"],
     exports = [],
-)
-
-# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
-maven_java_library(
-    name = "org.antlr_antlr4-runtime",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/antlr/antlr4-runtime/4.5.2-1:jar",
-    visibility = ["//visibility:public"],
-    exports = [],
-)
-
-# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
-maven_java_library(
-    name = "com.github.gundy_semver4j",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/github/gundy/semver4j/0.16.4:jar",
-    visibility = ["//visibility:public"],
-    exports = [":org.antlr_antlr4-runtime"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.

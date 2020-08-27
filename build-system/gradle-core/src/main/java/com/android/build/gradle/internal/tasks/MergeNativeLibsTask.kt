@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.cxx.gradle.generator.variantObjFolder
-import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -35,11 +34,12 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
@@ -76,9 +76,11 @@ abstract class MergeNativeLibsTask
     @get:SkipWhenEmpty
     abstract val profilerNativeLibs: DirectoryProperty
 
-    @get:Nested
-    lateinit var packagingOptions: SerializablePackagingOptions
-        private set
+    @get:Input
+    abstract val excludes: SetProperty<String>
+
+    @get:Input
+    abstract val pickFirsts: SetProperty<String>
 
     private lateinit var intermediateDir: File
 
@@ -118,7 +120,6 @@ abstract class MergeNativeLibsTask
             it.subProjectJavaRes.from(subProjectNativeLibs)
             it.externalLibJavaRes.from(externalLibNativeLibs, allProfilerNativeLibs)
             it.outputDirectory.set(outputDir)
-            it.packagingOptions.set(packagingOptions)
             it.incrementalStateFile.set(incrementalStateFile)
             it.incremental.set(isIncremental)
             it.cacheDir.set(cacheDir)
@@ -126,6 +127,8 @@ abstract class MergeNativeLibsTask
                 it.changedInputs.set(changedInputs)
             }
             it.contentType.set(NATIVE_LIBS)
+            it.excludes.set(excludes)
+            it.pickFirsts.set(pickFirsts)
         }
     }
 
@@ -154,9 +157,8 @@ abstract class MergeNativeLibsTask
         ) {
             super.configure(task)
 
-            task.packagingOptions =
-                    SerializablePackagingOptions(
-                        creationConfig.globalScope.extension.packagingOptions)
+            task.excludes.setDisallowChanges(creationConfig.packagingOptions.jniLibs.excludes)
+            task.pickFirsts.setDisallowChanges(creationConfig.packagingOptions.jniLibs.pickFirsts)
             task.intermediateDir =
                     creationConfig.paths.getIncrementalDir(
                         "${creationConfig.name}-mergeNativeLibs")

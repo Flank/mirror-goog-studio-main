@@ -7,6 +7,13 @@ set OUTDIR=%1
 set DISTDIR=%2
 set BUILDNUMBER=%3
 
+@REM It is a post-submit build if the build number does not start with "P"
+IF "%BUILDNUMBER:~0,1%"=="P" (
+  SET /A IS_POST_SUBMIT=0
+) ELSE (
+  SET /A IS_POST_SUBMIT=1
+)
+
 set TESTTAGFILTERS=-no_windows,-no_test_windows,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate
 
 @rem The current directory the executing script is in.
@@ -36,7 +43,6 @@ dir %EXECROOT%\bazel-out\host\bin\tools\base\bazel\kotlinc.exe.runfiles
 dir %EXECROOT%\bazel-out\host\bin\tools\base\bazel\formc.exe.runfiles
 
 @echo studio_win.cmd time: %time%
-@rem Remove --nouse_ijars which is a temporary fix for http://b/162497186
 @rem Run Bazel
 CALL %SCRIPTDIR%bazel.cmd ^
  --max_idle_secs=60 ^
@@ -48,7 +54,6 @@ CALL %SCRIPTDIR%bazel.cmd ^
  --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^
  --test_tag_filters=%TESTTAGFILTERS% ^
  --profile=%DISTDIR%\winprof%BUILDNUMBER%.json.gz ^
- --nouse_ijars ^
  -- ^
  //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar ^
  //tools/base/profiler/native/trace_processor_daemon ^
@@ -72,9 +77,16 @@ copy %BASEDIR%\bazel-bin\tools\base\profiler\native\trace_processor_daemon\trace
 
 set JAVA=%BASEDIR%\prebuilts\studio\jdk\win64\jre\bin\java.exe
 
+IF %IS_POST_SUBMIT% EQU 1 (
+  SET PERFGATE_ARG=-perfzip %DISTDIR%\perfgate_data.zip
+) ELSE (
+  SET PERFGATE_ARG=
+)
+
 %JAVA% -jar %BASEDIR%\bazel-bin\tools\vendor\adt_infra_internal\rbe\logscollector\logs-collector_deploy.jar ^
  -bes %DISTDIR%\bazel-%BUILDNUMBER%.bes ^
- -perfzip %DISTDIR%\perfgate_data.zip
+ -testlogs %DISTDIR%\logs\junit ^
+ %PERFGATE_ARG%
 
 @echo studio_win.cmd time: %time%
 
@@ -92,7 +104,15 @@ CALL %SCRIPTDIR%bazel.cmd shutdown
 @rem execution, and any open processes will prevent this removal on windows.
 CALL %BASEDIR%\tools\vendor\adt_infra_internal\build\scripts\slave\kill-processes.cmd %BASEDIR%
 @echo studio_win.cmd time: %time%
-EXIT /B %exitcode%
+
+SET /A BAZEL_EXITCODE_TEST_FAILURES=3
+
+IF %IS_POST_SUBMIT% EQU 1 (
+  IF %EXITCODE% EQU %BAZEL_EXITCODE_TEST_FAILURES% (
+    EXIT /B 0
+  )
+)
+EXIT /B %EXITCODE%
 
 @rem HELPER FUNCTIONS
 :NORMALIZE_PATH

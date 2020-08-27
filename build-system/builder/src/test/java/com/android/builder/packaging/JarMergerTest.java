@@ -21,16 +21,19 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.primitives.Bytes;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,6 +44,7 @@ import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
 import org.junit.Test;
 
 public class JarMergerTest {
@@ -55,8 +59,10 @@ public class JarMergerTest {
 
     private static final ByteArrayHolder RESOURCE_CONTENT =
             new ByteArrayHolder("resource content\n".getBytes(Charsets.UTF_8));
+
     private static final ByteArrayHolder RESOURCE_CONTENT_2 =
             new ByteArrayHolder("resource content 2\n".getBytes(Charsets.UTF_8));
+
     private static final ByteArrayHolder REMOVED_TYPEDEFS =
             new ByteArrayHolder(new byte[] {0x12, 0x34});
 
@@ -75,6 +81,28 @@ public class JarMergerTest {
                         MYCLASS_CONTENT,
                         "resource.txt",
                         RESOURCE_CONTENT)
+                .inOrder();
+    }
+
+    @Test
+    public void directoryWithSymlinks() throws Exception {
+        Path out = Jimfs.newFileSystem(Configuration.unix()).getPath("/out/output.jar");
+        Path dir = createDirectoryWithSymlinks();
+
+        try (JarMerger merger = new JarMerger(out)) {
+            merger.addDirectory(dir);
+        }
+
+        assertThat(getEntries(out))
+                .containsExactly(
+                        "linked/com/example/MyClass.class",
+                        MYCLASS_CONTENT,
+                        "linked/resource.txt",
+                        RESOURCE_CONTENT,
+                        "regular.txt",
+                        RESOURCE_CONTENT_2,
+                        "regular.txt.link",
+                        RESOURCE_CONTENT_2)
                 .inOrder();
     }
 
@@ -301,6 +329,23 @@ public class JarMergerTest {
         return dir;
     }
 
+    private static Path createDirectoryWithSymlinks() throws IOException {
+        FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
+        Path symlinks = fs.getPath("/symlinks");
+        Files.createDirectory(symlinks);
+
+        Path realDir = createDirectoryWithClassAndResource(fs.getPath("/real"));
+        Files.createSymbolicLink(symlinks.resolve("linked"), realDir);
+
+        Path regularFile = symlinks.resolve("regular.txt");
+        Files.write(regularFile, RESOURCE_CONTENT_2.data);
+
+        Path linkToRegularFile = symlinks.resolve("regular.txt.link");
+        Files.createSymbolicLink(linkToRegularFile, regularFile);
+
+        return symlinks;
+    }
+
     private static Path createJarWithClass() throws IOException {
         Path jar = Jimfs.newFileSystem(Configuration.unix()).getPath("test", "testjar.jar");
         Files.createDirectories(jar.getParent());
@@ -359,7 +404,7 @@ public class JarMergerTest {
         public boolean equals(Object obj) {
             return this == obj
                     || obj instanceof ByteArrayHolder
-                            && Arrays.equals(this.data, ((ByteArrayHolder) obj).data);
+                    && Arrays.equals(this.data, ((ByteArrayHolder) obj).data);
         }
 
         @Override

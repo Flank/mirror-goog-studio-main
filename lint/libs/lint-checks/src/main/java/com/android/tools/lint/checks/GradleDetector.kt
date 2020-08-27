@@ -32,6 +32,7 @@ import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.SdkVersionInfo
 import com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API
 import com.android.tools.lint.checks.ManifestDetector.TARGET_NEWER
+import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
@@ -199,15 +200,42 @@ open class GradleDetector : Detector(), GradleScanner {
                 val version = getSdkVersion(value)
                 if (version > 0 && version < context.client.highestKnownApiLevel) {
                     var warned = false
-                    if (version <= 25) {
+                    if (version < 29) {
                         val now = calendar ?: Calendar.getInstance()
                         val year = now.get(Calendar.YEAR)
                         val month = now.get(Calendar.MONTH)
 
-                        // After November 1st 2018, the apps are required to use 26 or higher
-                        if (year > 2018 || month >= 10) {
-                            val message =
-                                "Google Play requires that apps target API level 26 or higher.\n"
+                        // After November 1st 2020, the apps are required to use 29 or higher
+                        // (month is zero-based)
+                        // https://developer.android.com/distribute/play-policies
+                        val required: Int
+                        val issue: Issue
+                        if (year > 2020 || month >= 10) {
+                            required = 29
+                            issue = EXPIRED_TARGET_SDK_VERSION
+                        } else if (version < 28 && year > 2018) {
+                            required = 28
+                            issue = EXPIRED_TARGET_SDK_VERSION
+                        } else if (year == 2020) {
+                            // Meets last year's requirement but not yet the upcoming one.
+                            // Start warning 6 months in advance.
+                            // (Check for 2020 here: no, we don't have a time machine, but let's
+                            // allow developers to go back in time.)
+                            required = 29
+                            issue = EXPIRING_TARGET_SDK_VERSION
+                        } else {
+                            required = -1
+                            issue = IssueRegistry.LINT_ERROR
+                        }
+                        if (required != -1) {
+                            val message = if (issue == EXPIRED_TARGET_SDK_VERSION)
+                                "Google Play requires that apps target API level $required or higher.\n"
+                            else
+                                "Google Play will soon require that apps target API " +
+                                    "level 29 or higher. This will be required for new apps " +
+                                    "in August 2020, and for updates to existing apps in " +
+                                    "November 2020."
+
                             val highest = context.client.highestKnownApiLevel
                             val label = "Update targetSdkVersion to $highest"
                             val fix = fix().name(label)
@@ -217,40 +245,14 @@ open class GradleDetector : Detector(), GradleScanner {
                                 .build()
 
                             // Don't report if already suppressed with EXPIRING
-
-                            val alreadySuppressed = context.containsCommentSuppress() &&
-                                context.isSuppressedWithComment(
-                                    valueCookie,
-                                    EXPIRING_TARGET_SDK_VERSION
-                                )
+                            val alreadySuppressed =
+                                issue != EXPIRING_TARGET_SDK_VERSION &&
+                                    context.containsCommentSuppress() &&
+                                    context.isSuppressedWithComment(statementCookie, issue)
 
                             if (!alreadySuppressed) {
-                                report(
-                                    context,
-                                    valueCookie,
-                                    EXPIRED_TARGET_SDK_VERSION,
-                                    message,
-                                    fix
-                                )
+                                report(context, statementCookie, issue, message, fix)
                             }
-                            warned = true
-                        } else if (month >= 4 && year == 2018) {
-                            // Start warning about this earlier - in May.
-                            // (Check for 2018 here: no, we don't have a time machine, but let's
-                            // allow developers to go back in time.)
-                            val message = "" +
-                                "Google Play will soon require that apps target API " +
-                                "level 26 or higher. This will be required for new apps " +
-                                "in August 2018, and for updates to existing apps in " +
-                                "November 2018."
-                            val highest = context.client.highestKnownApiLevel
-                            val label = "Update targetSdkVersion to $highest"
-                            val fix = fix().name(label)
-                                .replace()
-                                .all()
-                                .with(highest.toString())
-                                .build()
-                            report(context, valueCookie, EXPIRING_TARGET_SDK_VERSION, message, fix)
                             warned = true
                         }
                     }
@@ -276,15 +278,15 @@ open class GradleDetector : Detector(), GradleScanner {
                     targetSdkVersion = version
                     checkTargetCompatibility(context)
                 } else {
-                    checkIntegerAsString(context, value, valueCookie)
+                    checkIntegerAsString(context, value, statementCookie)
                 }
             } else if (property == "minSdkVersion") {
                 val version = getSdkVersion(value)
                 if (version > 0) {
                     minSdkVersion = version
-                    checkMinSdkVersion(context, version, valueCookie)
+                    checkMinSdkVersion(context, version, statementCookie)
                 } else {
-                    checkIntegerAsString(context, value, valueCookie)
+                    checkIntegerAsString(context, value, statementCookie)
                 }
             }
 
@@ -303,14 +305,14 @@ open class GradleDetector : Detector(), GradleScanner {
                         "conflict with the implicit getters for the defaultConfig " +
                         "properties. For example, try using the prefix compute- " +
                         "instead of get-."
-                    report(context, valueCookie, GRADLE_GETTER, message)
+                    report(context, statementCookie, GRADLE_GETTER, message)
                 }
             } else if (property == "packageName") {
                 val message = "Deprecated: Replace 'packageName' with 'applicationId'"
                 val fix = fix()
                     .name("Replace 'packageName' with 'applicationId'", true)
                     .replace().text("packageName").with("applicationId").autoFix().build()
-                report(context, context.getPropertyKeyCookie(valueCookie), DEPRECATED, message, fix)
+                report(context, propertyCookie, DEPRECATED, message, fix)
             }
             if (property == "versionCode" &&
                 context.isEnabled(HIGH_APP_VERSION_CODE) &&
@@ -320,7 +322,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 if (version >= VERSION_CODE_HIGH_THRESHOLD) {
                     val message =
                         "The 'versionCode' is very high and close to the max allowed value"
-                    report(context, valueCookie, HIGH_APP_VERSION_CODE, message)
+                    report(context, statementCookie, HIGH_APP_VERSION_CODE, message)
                 }
             }
         } else if (property == "compileSdkVersion" && parent == "android") {
@@ -339,10 +341,10 @@ open class GradleDetector : Detector(), GradleScanner {
             }
             if (version > 0) {
                 compileSdkVersion = version
-                compileSdkVersionCookie = valueCookie
+                compileSdkVersionCookie = statementCookie
                 checkTargetCompatibility(context)
             } else {
-                checkIntegerAsString(context, value, valueCookie)
+                checkIntegerAsString(context, value, statementCookie)
             }
         } else if (property == "buildToolsVersion" && parent == "android") {
             val versionString = getStringLiteralValue(value)
@@ -357,7 +359,7 @@ open class GradleDetector : Detector(), GradleScanner {
                             recommended +
                             " or later"
                         val fix = getUpdateDependencyFix(version.toString(), recommended.toString())
-                        report(context, valueCookie, DEPENDENCY, message, fix)
+                        report(context, statementCookie, DEPENDENCY, message, fix)
                     }
 
                     // 23.0.0 shipped with a serious bugs which affects program correctness
@@ -378,7 +380,7 @@ open class GradleDetector : Detector(), GradleScanner {
                             "Build Tools `23.0.0` should not be used; " +
                                 "it has some known serious bugs. Use version `$recommended` " +
                                 "instead."
-                        reportFatalCompatibilityIssue(context, valueCookie, message)
+                        reportFatalCompatibilityIssue(context, statementCookie, message)
                     }
                 }
             }
@@ -503,12 +505,12 @@ open class GradleDetector : Detector(), GradleScanner {
             val fix = fix()
                 .name("Replace 'packageNameSuffix' with 'applicationIdSuffix'", true)
                 .replace().text("packageNameSuffix").with("applicationIdSuffix").autoFix().build()
-            report(context, context.getPropertyKeyCookie(valueCookie), DEPRECATED, message, fix)
+            report(context, propertyCookie, DEPRECATED, message, fix)
         } else if (property == "applicationIdSuffix") {
             val suffix = getStringLiteralValue(value)
             if (suffix != null && !suffix.startsWith(".")) {
                 val message = "Application ID suffix should probably start with a \".\""
-                report(context, valueCookie, PATH, message)
+                report(context, statementCookie, PATH, message)
             }
         } else if (property == "minSdkVersion" &&
             parent == "dev" &&
@@ -531,7 +533,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 if (mAppliedKotlinAndroidPlugin && !mAppliedKotlinKaptPlugin) {
                     val message =
                         "If you plan to use data binding in a Kotlin project, you should apply the kotlin-kapt plugin."
-                    report(context, valueCookie, DATA_BINDING_WITHOUT_KAPT, message, null)
+                    report(context, statementCookie, DATA_BINDING_WITHOUT_KAPT, message, null)
                 }
             }
         }
@@ -687,7 +689,7 @@ open class GradleDetector : Detector(), GradleScanner {
         }
     }
 
-    private fun checkIntegerAsString(context: GradleContext, value: String, valueCookie: Any) {
+    private fun checkIntegerAsString(context: GradleContext, value: String, cookie: Any) {
         // When done developing with a preview platform you might be tempted to switch from
         //     compileSdkVersion 'android-G'
         // to
@@ -700,7 +702,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 "Use an integer rather than a string here (replace $value with just $string)"
             val fix =
                 fix().name("Replace with integer", true).replace().text(value).with(string).build()
-            report(context, valueCookie, STRING_INTEGER, message, fix)
+            report(context, cookie, STRING_INTEGER, message, fix)
         }
     }
 
@@ -779,12 +781,12 @@ open class GradleDetector : Detector(), GradleScanner {
             GMS_GROUP_ID, FIREBASE_GROUP_ID, GOOGLE_SUPPORT_GROUP_ID, ANDROID_WEAR_GROUP_ID -> {
                 // Play services
 
-                checkPlayServices(context, dependency, version, revision, cookie)
+                checkPlayServices(context, dependency, version, revision, cookie, statementCookie)
             }
 
             "com.android.tools.build" -> {
                 if ("gradle" == artifactId) {
-                    if (checkGradlePluginDependency(context, dependency, cookie)) {
+                    if (checkGradlePluginDependency(context, dependency, statementCookie)) {
                         return
                     }
 
@@ -828,7 +830,7 @@ open class GradleDetector : Detector(), GradleScanner {
                             newerVersion,
                             newerVersion.major == version.major &&
                                 newerVersion.minor == version.minor,
-                            safeReplacement, dependency, isResolved, cookie
+                            safeReplacement, dependency, isResolved, statementCookie
                         )
                         maybeReportAgpVersionIssue(context)
                     }
@@ -870,7 +872,7 @@ open class GradleDetector : Detector(), GradleScanner {
                         val fix = getUpdateDependencyFix(revision, "1.22.1")
                         report(
                             context,
-                            cookie,
+                            statementCookie,
                             DEPENDENCY,
                             "Use Fabric Gradle plugin version 1.21.6 or later to " +
                                 "improve Instant Run performance (was $revision)",
@@ -888,7 +890,7 @@ open class GradleDetector : Detector(), GradleScanner {
                         val fix = getUpdateDependencyFix(revision, "2.4.1")
                         report(
                             context,
-                            cookie,
+                            statementCookie,
                             DEPENDENCY,
                             "Use BugSnag Gradle plugin version 2.1.2 or later to " +
                                 "improve Instant Run performance (was $revision)",
@@ -967,7 +969,7 @@ open class GradleDetector : Detector(), GradleScanner {
                     ""
 
             val message = "$prefix Details: ${deprecated.message}$separatorDot$suffix"
-            report(context, statementCookie, issue, message, fix)
+            report(context, cookie, issue, message, fix)
         } else {
             val recommended = sdkRegistry.getRecommendedVersion(dependency)
             if (recommended != null && (newerVersion == null || recommended > newerVersion)) {
@@ -1240,7 +1242,8 @@ open class GradleDetector : Detector(), GradleScanner {
         dependency: GradleCoordinate,
         version: GradleVersion,
         revision: String,
-        cookie: Any
+        cookie: Any,
+        statementCookie: Any
     ) {
         val groupId = dependency.groupId
         val artifactId = dependency.artifactId
@@ -1320,7 +1323,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 // in the editor
                 if (!context.scope.contains(Scope.ALL_RESOURCE_FILES)) {
                     // Incremental editing: try flagging them in this file!
-                    checkConsistentWearableLibraries(context, cookie)
+                    checkConsistentWearableLibraries(context, cookie, statementCookie)
                 }
             }
         }
@@ -1384,7 +1387,8 @@ open class GradleDetector : Detector(), GradleScanner {
 
     private fun checkConsistentWearableLibraries(
         context: Context,
-        cookie: Any?
+        cookie: Any?,
+        statementCookie: Any?
     ) {
         // Make sure we have both
         //   compile 'com.google.android.support:wearable:2.0.0-alpha3'
@@ -1408,11 +1412,11 @@ open class GradleDetector : Detector(), GradleScanner {
                 ANDROID_WEAR_GROUP_ID == coordinates.groupId
             ) {
                 if (!library.provided) {
-                    if (cookie != null) {
+                    if (statementCookie != null) {
                         val message =
                             "This dependency should be marked as `compileOnly`, not `compile`"
 
-                        reportFatalCompatibilityIssue(context, cookie, message)
+                        reportFatalCompatibilityIssue(context, statementCookie, message)
                     } else {
                         val message =
                             "The $ANDROID_WEAR_GROUP_ID:$WEARABLE_ARTIFACT_ID dependency should be marked as `compileOnly`, not `compile`"
@@ -1619,7 +1623,7 @@ open class GradleDetector : Detector(), GradleScanner {
         ) {
             checkConsistentPlayServices(context, null)
             checkConsistentSupportLibraries(context, null)
-            checkConsistentWearableLibraries(context, null)
+            checkConsistentWearableLibraries(context, null, null)
         }
 
         // Check for disallowed dependencies

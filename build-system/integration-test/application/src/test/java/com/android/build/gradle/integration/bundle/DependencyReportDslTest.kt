@@ -70,8 +70,8 @@ class DependenciesReportDslTest {
     @get:Rule
     val project = GradleTestProject.builder().fromTestApp(testApp)
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-        // b/157470515, http://b/149978740
-        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=3")
+        // http://b/149978740
+        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=2")
         .create()
 
     @Test

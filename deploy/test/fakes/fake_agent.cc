@@ -23,9 +23,9 @@ bool FakeAgent::Connect(const std::string& socket_address) {
 }
 
 bool FakeAgent::RespondSuccess() {
-  proto::AgentSwapResponse response;
+  proto::AgentResponse response;
   response.set_pid(pid_);
-  response.set_status(proto::AgentSwapResponse::OK);
+  response.set_status(proto::AgentResponse::OK);
 
   std::string response_bytes;
   response.SerializeToString(&response_bytes);
@@ -33,9 +33,9 @@ bool FakeAgent::RespondSuccess() {
 }
 
 bool FakeAgent::RespondFailure() {
-  proto::AgentSwapResponse response;
+  proto::AgentResponse response;
   response.set_pid(pid_);
-  response.set_status(proto::AgentSwapResponse::SOCKET_READ_FAILED);
+  response.set_status(proto::AgentResponse::SOCKET_READ_FAILED);
 
   std::string response_bytes;
   response.SerializeToString(&response_bytes);
@@ -45,9 +45,9 @@ bool FakeAgent::RespondFailure() {
 // TODO(noahz): Refactor protocol logic out of sockets/messagepipewrappers to
 // allow this to *actually* test a crash.
 bool FakeAgent::RespondCrash() {
-  proto::AgentSwapResponse response;
+  proto::AgentResponse response;
   response.set_pid(pid_);
-  response.set_status(proto::AgentSwapResponse::SOCKET_READ_FAILED);
+  response.set_status(proto::AgentResponse::SOCKET_READ_FAILED);
 
   std::string response_bytes;
   response.SerializeToString(&response_bytes);

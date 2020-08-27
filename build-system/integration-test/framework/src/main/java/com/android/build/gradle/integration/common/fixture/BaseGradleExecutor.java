@@ -96,8 +96,8 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     @NonNull private final GradleTestProjectBuilder.MemoryRequirement memoryRequirement;
     @NonNull private LoggingLevel loggingLevel = LoggingLevel.INFO;
     private boolean offline = true;
-    private boolean sdkInLocalProperties = false;
-    private boolean localAndroidSdkHome = false;
+    private boolean localPrefsRoot = false;
+    private boolean perTestPrefsRoot = false;
     private boolean failOnWarning = true;
     private ConfigurationCaching configurationCaching;
 
@@ -190,13 +190,21 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return (T) this;
     }
 
-    public final T withSdkInLocalProperties() {
-        sdkInLocalProperties = true;
+    /** Sets to run Gradle with the normal preference root (~/.android) */
+    public final T withLocalPrefsRoot() {
+        localPrefsRoot = true;
         return (T) this;
     }
 
-    public final T withLocalAndroidSdkHome() {
-        localAndroidSdkHome = true;
+    /** Sets to run Gradle with a per-test class preference root.
+     *
+     * The preference root outside of test is normally ~/.android.
+     * Without this flag, the folder is located in the build output, common to all-tests.
+     *
+     * Turning this flag on, will make each test class use their own directory.
+     */
+    public final T withPerTestPrefsRoot() {
+        perTestPrefsRoot = true;
         return (T) this;
     }
 
@@ -254,26 +262,28 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
                 break;
         }
 
-        if (!sdkInLocalProperties) {
-            Path androidSdkHome;
-            if (localAndroidSdkHome) {
-                androidSdkHome = projectDirectory.getParent().resolve("android_sdk_home");
+        if (!localPrefsRoot) {
+            Path preferencesRootDir;
+            if (perTestPrefsRoot) {
+                preferencesRootDir = projectDirectory.getParent().resolve("android_prefs_root");
             } else {
-                androidSdkHome = GradleTestProject.ANDROID_SDK_HOME.toPath();
+                preferencesRootDir = GradleTestProject.ANDROID_PREFS_ROOT.toPath();
             }
 
-            Files.createDirectories(androidSdkHome);
+            Files.createDirectories(preferencesRootDir);
 
-            this.androidSdkHome = androidSdkHome.toFile();
+            this.preferencesRootDir = preferencesRootDir.toFile();
 
             arguments.add(
-                    String.format("-D%s=%s", "ANDROID_SDK_HOME", androidSdkHome.toAbsolutePath()));
+                    String.format(
+                            "-D%s=%s", "ANDROID_PREFS_ROOT", preferencesRootDir.toAbsolutePath()));
         }
 
         return arguments;
     }
 
-    @Nullable public File androidSdkHome = null;
+    /** Location of the Android Preferences folder (normally in ~/.android) */
+    @Nullable public File preferencesRootDir = null;
 
     protected final Set<String> getOptionPropertyNames() {
         return options.getOptions()
@@ -447,12 +457,12 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             return;
         }
         String javaHome = System.getProperty("java.home");
-        String processes = runProcess(javaHome + "/../bin/jps");
+        String processes = runProcess(javaHome + "/bin/jps");
 
         String[] lines = processes.split(System.lineSeparator());
         for (String line : lines) {
             String pid = line.split(" ")[0];
-            String threadDump = runProcess(javaHome + "/../bin/jstack", "-l", pid);
+            String threadDump = runProcess(javaHome + "/bin/jstack", "-l", pid);
 
             System.out.println("Fetching thread dump for: " + line);
             System.out.println("Thread dump is:");

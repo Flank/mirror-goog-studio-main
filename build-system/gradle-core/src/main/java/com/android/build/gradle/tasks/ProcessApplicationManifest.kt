@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT
 import com.android.build.gradle.internal.scope.InternalArtifactType.NAVIGATION_JSON
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.tasks.manifest.mergeManifestsForApplication
+import com.android.build.gradle.internal.tasks.manifest.mergeManifests
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessApplicationManifest.CreationAction.ManifestProviderImpl
@@ -143,7 +143,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         }
         val navJsons = navigationJsons?.files ?: setOf()
 
-        val mergingReport = mergeManifestsForApplication(
+        val mergingReport = mergeManifests(
             mainManifest.get(),
             manifestOverlays.get(),
             computeFullProviderList(),

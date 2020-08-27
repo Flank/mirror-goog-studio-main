@@ -31,6 +31,7 @@
 #include "tools/base/bazel/native/matryoshka/doll.h"
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
+#include "tools/base/deploy/common/proto_pipe.h"
 #include "tools/base/deploy/common/socket.h"
 #include "tools/base/deploy/common/trace.h"
 #include "tools/base/deploy/common/utils.h"
@@ -54,18 +55,12 @@ const int kRxFileMode =
 // filesystem io is because the installer does not have permissions in the
 // /data/data/<app> directory and needs to utilize run-as.
 
-void SwapCommand::ParseParameters(int argc, char** argv) {
-  deploy::MessagePipeWrapper wrapper(STDIN_FILENO);
-  std::string data;
-  if (!wrapper.Read(&data)) {
+void SwapCommand::ParseParameters(const proto::InstallerRequest& request) {
+  if (!request.has_swap_request()) {
     return;
   }
 
-  if (!request_.ParseFromString(data)) {
-    return;
-  }
-
-  request_bytes_ = data;
+  request_ = request.swap_request();
 
   // Set this value here so we can re-use it in other methods.
   target_dir_ =
@@ -261,7 +256,7 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
     return proto::SwapResponse::START_SERVER_FAILED;
   }
 
-  OwnedMessagePipeWrapper server_input(write_fd);
+  OwnedProtoPipe server_input(write_fd);
   OwnedMessagePipeWrapper server_output(read_fd);
 
   if (!AttachAgents()) {
@@ -270,7 +265,7 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
     return proto::SwapResponse::AGENT_ATTACH_FAILED;
   }
 
-  if (!server_input.Write(request_bytes_)) {
+  if (!server_input.Write(request_)) {
     ErrEvent("Could not write to agent proxy server");
     waitpid(agent_server_pid, &status, 0);
     return proto::SwapResponse::WRITE_TO_SERVER_FAILED;
@@ -279,11 +274,11 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
   size_t total_agents = request_.process_ids().size() + request_.extra_agents();
 
   std::string response_bytes;
-  std::unordered_map<int, proto::AgentSwapResponse> agent_responses;
+  std::unordered_map<int, proto::AgentResponse> agent_responses;
 
   while (agent_responses.size() < total_agents &&
          server_output.Read(&response_bytes)) {
-    proto::AgentSwapResponse agent_response;
+    proto::AgentResponse agent_response;
 
     if (!agent_response.ParseFromString(response_bytes)) {
       waitpid(agent_server_pid, &status, 0);
@@ -298,7 +293,7 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
       AddRawEvent(ConvertProtoEventToEvent(event));
     }
 
-    if (agent_response.status() != proto::AgentSwapResponse::OK) {
+    if (agent_response.status() != proto::AgentResponse::OK) {
       auto failed_agent = response_->add_failed_agents();
       *failed_agent = agent_response;
     }

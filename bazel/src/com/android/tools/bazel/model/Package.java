@@ -114,7 +114,7 @@ public class Package {
                     } else {
                         keepFile = true;
                         listener.error(
-                                "diff " + tmp.getAbsolutePath() + " " + build.getAbsolutePath());
+                                "diff " + build.getAbsolutePath() + " " + tmp.getAbsolutePath());
                     }
                 }
             } finally {

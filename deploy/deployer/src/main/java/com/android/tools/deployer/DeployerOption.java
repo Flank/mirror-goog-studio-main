@@ -18,6 +18,7 @@ package com.android.tools.deployer;
 public class DeployerOption {
     public final boolean useOptimisticSwap;
     public final boolean useOptimisticResourceSwap;
+    public final boolean useOptimisticInstall;
     public final boolean useStructuralRedefinition;
     public final boolean useVariableReinitialization;
     public final boolean fastRestartOnSwapFail;
@@ -25,11 +26,13 @@ public class DeployerOption {
     private DeployerOption(
             boolean useOptimisticSwap,
             boolean useOptimisticResourceSwap,
+            boolean useOptimisticInstall,
             boolean useStructuralRedefinition,
             boolean useVariableReinitialization,
             boolean fastRestartOnSwapFail) {
         this.useOptimisticSwap = useOptimisticSwap;
         this.useOptimisticResourceSwap = useOptimisticResourceSwap;
+        this.useOptimisticInstall = useOptimisticInstall;
         this.useStructuralRedefinition = useStructuralRedefinition;
         this.useVariableReinitialization = useVariableReinitialization;
         this.fastRestartOnSwapFail = fastRestartOnSwapFail;
@@ -38,6 +41,7 @@ public class DeployerOption {
     public static class Builder {
         private boolean useOptimisticSwap;
         private boolean useOptimisticResourceSwap;
+        private boolean useOptimisticInstall;
         private boolean useStructuralRedefinition;
         private boolean useVariableReinitialization;
         private boolean fastRestartOnSwapFail;
@@ -49,6 +53,11 @@ public class DeployerOption {
 
         public Builder setUseOptimisticResourceSwap(boolean useOptimisticResourceSwap) {
             this.useOptimisticResourceSwap = useOptimisticResourceSwap;
+            return this;
+        }
+
+        public Builder setUseOptimisticInstall(boolean useOptimisticInstall) {
+            this.useOptimisticInstall = useOptimisticInstall;
             return this;
         }
 
@@ -71,6 +80,7 @@ public class DeployerOption {
             return new DeployerOption(
                     useOptimisticSwap,
                     useOptimisticResourceSwap,
+                    useOptimisticInstall,
                     useStructuralRedefinition,
                     useVariableReinitialization,
                     fastRestartOnSwapFail);

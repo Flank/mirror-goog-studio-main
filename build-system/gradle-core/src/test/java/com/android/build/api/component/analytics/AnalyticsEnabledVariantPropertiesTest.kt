@@ -17,13 +17,15 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.JniLibsPackagingOptions
 import com.android.build.api.variant.PackagingOptions
+import com.android.build.api.variant.ResourcesPackagingOptions
 import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.junit.Before
 import org.junit.Test
@@ -37,15 +39,13 @@ class AnalyticsEnabledVariantPropertiesTest {
     @Mock
     lateinit var delegate: VariantProperties
 
-    @Mock lateinit var objectFactory: ObjectFactory
-
     private val stats = GradleBuildVariant.newBuilder()
     private lateinit var proxy: AnalyticsEnabledVariantProperties
 
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
-        proxy = object: AnalyticsEnabledVariantProperties(delegate, stats, objectFactory) {}
+        proxy = object: AnalyticsEnabledVariantProperties(delegate, stats, FakeObjectFactory.factory) {}
     }
 
     @Test
@@ -148,14 +148,26 @@ class AnalyticsEnabledVariantPropertiesTest {
     @Test
     fun getPackagingOptions() {
         val packagingOptions = Mockito.mock(PackagingOptions::class.java)
+        val jniLibsPackagingOptions = Mockito.mock(JniLibsPackagingOptions::class.java)
+        val resourcesPackagingOptions = Mockito.mock(ResourcesPackagingOptions::class.java)
+        Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsPackagingOptions)
+        Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
         Mockito.`when`(delegate.packagingOptions).thenReturn(packagingOptions)
-        Truth.assertThat(proxy.packagingOptions).isEqualTo(packagingOptions)
+        // simulate a user configuring packaging options for jniLibs and resources
+        proxy.packagingOptions.jniLibs
+        proxy.packagingOptions.resources
 
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(4)
         Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE)
-        Mockito.verify(delegate, Mockito.times(1))
-            .packagingOptions
+            stats.variantApiAccess.variantPropertiesAccessList.map { it.type }
+        ).containsExactlyElementsIn(
+            listOf(
+                VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE,
+                VariantPropertiesMethodType.JNI_LIBS_PACKAGING_OPTIONS_VALUE,
+                VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE,
+                VariantPropertiesMethodType.RESOURCES_PACKAGING_OPTIONS_VALUE
+            )
+        )
+        Mockito.verify(delegate, Mockito.times(1)).packagingOptions
     }
 }

@@ -32,7 +32,8 @@ public class JavaImport extends BazelRule {
 
     @Override
     public void update() throws IOException {
-        CallStatement statement = getCallStatement("java_import", name);
+        String id = getPackage().getWorkspace().id();
+        CallStatement statement = getCallStatement("java_import", name, id);
         CallExpression call = statement.getCall();
 
         call.setArgument("jars", jars);
@@ -40,7 +41,7 @@ public class JavaImport extends BazelRule {
         if (!statement.isFromFile()) {
             call.setArgument("visibility", ImmutableList.of("//visibility:public"));
         }
-        statement.setIsManaged(getPackage().getWorkspace().id());
+        statement.setIsManaged(id);
     }
 
     public void addJar(String jar) {

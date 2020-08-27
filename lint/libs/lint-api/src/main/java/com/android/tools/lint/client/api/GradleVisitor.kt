@@ -38,8 +38,10 @@ open class GradleVisitor {
         // test infrastructure, the Gradle PSI model in the IDE, etc.
     }
 
+    @Deprecated(message = "unused", replaceWith = ReplaceWith(expression = "cookie"))
     open fun getPropertyKeyCookie(cookie: Any): Any = cookie
 
+    @Deprecated(message = "unused", replaceWith = ReplaceWith(expression = "cookie"))
     open fun getPropertyPairCookie(cookie: Any): Any = cookie
 
     open fun getStartOffset(context: GradleContext, cookie: Any): Int = -1

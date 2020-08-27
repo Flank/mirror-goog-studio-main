@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-apply plugin: 'java'
+apply plugin: 'com.android.tools.java-library'
+apply plugin: 'com.android.tools.publish'
 apply plugin: 'jacoco-tools-base'
 
 dependencies {
@@ -32,6 +33,3 @@ project.ext.pomDesc = 'library to read pixel data and metadata from various imag
 group = 'com.android.tools.pixelprobe'
 archivesBaseName = 'pixelprobe'
 version = rootProject.ext.baseVersion
-
-apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/javadoc.gradle"

@@ -39,6 +39,7 @@ android {
     defaultConfig {
         applicationId "com.example.basicrenderscript"
         minSdkVersion 21
+        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"

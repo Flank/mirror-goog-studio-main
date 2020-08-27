@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.component
 
 import org.gradle.api.Named
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 
 /**
@@ -63,4 +64,6 @@ interface TestCreationConfig: ComponentCreationConfig, Named {
     val testLabel: Provider<String?>
 
     val isTestCoverageEnabled: Boolean
+
+    val manifestPlaceholders: MapProperty<String, String>
 }

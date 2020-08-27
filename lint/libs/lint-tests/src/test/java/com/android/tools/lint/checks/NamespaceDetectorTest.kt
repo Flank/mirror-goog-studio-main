@@ -56,6 +56,7 @@ class NamespaceDetectorTest : AbstractCheckTest() {
     )
 
     private val mLibrary = source("build.gradle", "")
+    private val mLibraryKts = source("build.gradle.kts", "")
 
     private val mNamespace3 = xml(
         "res/layout/namespace3.xml",
@@ -131,6 +132,20 @@ class NamespaceDetectorTest : AbstractCheckTest() {
             """
         lint().files(
             mLibrary, // placeholder; only name counts
+            mCustomview
+        ).run().expect(expected)
+    }
+
+    fun testGradleKts() {
+        val expected =
+            """
+            res/layout/customview.xml:5: Error: In Gradle projects, always use http://schemas.android.com/apk/res-auto for custom attributes [ResAuto]
+                xmlns:foo="http://schemas.android.com/apk/res/foo"
+                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        lint().files(
+            mLibraryKts, // placeholder; only name counts
             mCustomview
         ).run().expect(expected)
     }

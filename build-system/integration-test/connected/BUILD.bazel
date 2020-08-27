@@ -120,8 +120,6 @@ gradle_connected_test(
 )
 
 gradle_connected_test(
-<<<<<<< HEAD   (f41f3f Merge cherrypicks of [12437735, 12437299, 12437300, 12437301)
-=======
     name = "CoreLibraryDesugarConversionConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA,
@@ -131,7 +129,6 @@ gradle_connected_test(
 )
 
 gradle_connected_test(
->>>>>>> CHANGE (e40a19 Bump Compose version to 1.0.0-alpha01)
     name = "D8DesugaringConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA,
@@ -307,6 +304,8 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/androidx/vectordrawable/vectordrawable-animated/1.1.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/vectordrawable/vectordrawable/1.1.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/versionedparcelable/versionedparcelable/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.0.9:jar",
+        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/1.0.9:jar",
         "//prebuilts/tools/common/m2/repository/com/google/android/gms/play-services-base/15.0.1:aar",
         "//prebuilts/tools/common/m2/repository/com/google/android/gms/play-services-basement/15.0.1:aar",
         "//prebuilts/tools/common/m2/repository/com/google/android/gms/play-services-tasks/15.0.1:aar",

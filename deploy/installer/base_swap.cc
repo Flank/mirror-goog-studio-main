@@ -113,7 +113,7 @@ void BaseSwapCommand::Swap(const proto::SwapRequest& swap_request,
 
   auto send_request = server_request.mutable_send_request();
   send_request->set_agent_count(process_ids_.size() + extra_agents_count_);
-  *send_request->mutable_swap_request() = swap_request;
+  *send_request->mutable_agent_request()->mutable_swap_request() = swap_request;
 
   if (!client_->Write(server_request)) {
     swap_response->set_status(proto::SwapResponse::WRITE_TO_SERVER_FAILED);
@@ -136,7 +136,7 @@ void BaseSwapCommand::Swap(const proto::SwapRequest& swap_request,
       AddRawEvent(ConvertProtoEventToEvent(event));
     }
 
-    if (agent_response.status() != proto::AgentSwapResponse::OK) {
+    if (agent_response.status() != proto::AgentResponse::OK) {
       auto failed_agent = swap_response->add_failed_agents();
       *failed_agent = agent_response;
     }

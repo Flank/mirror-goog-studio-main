@@ -192,7 +192,7 @@ class LayoutInflationDetector : LayoutDetector(), SourceCodeScanner {
                     otherwise any layout parameters on the root of the inflated layout will be \
                     ignored.""",
                 //noinspection LintImplUnexpectedDomain
-                moreInfo = "http://www.doubleencore.com/2013/05/layout-inflation-as-intended",
+                moreInfo = "https://www.bignerdranch.com/blog/understanding-androids-layoutinflater-inflate/",
                 category = Category.CORRECTNESS,
                 priority = 5,
                 severity = Severity.WARNING,

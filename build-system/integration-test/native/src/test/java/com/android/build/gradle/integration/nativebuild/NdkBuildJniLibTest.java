@@ -228,9 +228,9 @@ public class NdkBuildJniLibTest {
                                         fetchResult.getNormalizer()))
                         .isEqualTo(
                                 "sourceFile: {PROJECT}/lib/src/main/cxx/hello-jni.c{F}\n"
-                                        + "compiler:   {NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang{F}\n"
+                                        + "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang{F}\n"
                                         + "workingDir: {PROJECT}/lib{D}\n"
-                                        + "flags:      [-target, i686-none-linux-android21, -fdata-sections, -ffunction-sections, -fstack-protector-strong, -funwind-tables, -no-canonical-prefixes, --sysroot, {NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/sysroot, -g, -Wno-invalid-command-line-argument, -Wno-unused-command-line-argument, -D_FORTIFY_SOURCE=2, -fPIC, -O0, -UNDEBUG, -fno-limit-debug-info, -I{PROJECT}/lib/src/main/cxx, -DANDROID, -Wformat, -Werror=format-security, -mstackrealign]");
+                                        + "flags:      [-target, i686-none-linux-android21, -fdata-sections, -ffunction-sections, -fstack-protector-strong, -funwind-tables, -no-canonical-prefixes, --sysroot, {ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot, -g, -Wno-invalid-command-line-argument, -Wno-unused-command-line-argument, -D_FORTIFY_SOURCE=2, -fPIC, -O0, -UNDEBUG, -fno-limit-debug-info, -I{PROJECT}/lib/src/main/cxx, -DANDROID, -Wformat, -Werror=format-security, -mstackrealign]");
             } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
                 assertThat(
                                 dumpCompileCommandsJsonBin(
@@ -238,9 +238,9 @@ public class NdkBuildJniLibTest {
                                         fetchResult.getNormalizer()))
                         .isEqualTo(
                                 "sourceFile: {PROJECT}/lib/src/main/cxx/hello-jni.c{F}\n"
-                                        + "compiler:   {NDK_ROOT}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe{F}\n"
+                                        + "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe{F}\n"
                                         + "workingDir: {PROJECT}/lib{D}\n"
-                                        + "flags:      [-target, i686-none-linux-android21, -fdata-sections, -ffunction-sections, -fstack-protector-strong, -funwind-tables, -no-canonical-prefixes, --sysroot, {NDK_ROOT}/build//../toolchains/llvm/prebuilt/windows-x86_64/sysroot, -g, -Wno-invalid-command-line-argument, -Wno-unused-command-line-argument, -D_FORTIFY_SOURCE=2, -fPIC, -O0, -UNDEBUG, -fno-limit-debug-info, -I{PROJECT}/lib/src/main/cxx, -DANDROID, -Wformat, -Werror=format-security, -mstackrealign]");
+                                        + "flags:      [-target, i686-none-linux-android21, -fdata-sections, -ffunction-sections, -fstack-protector-strong, -funwind-tables, -no-canonical-prefixes, --sysroot, {ANDROID_NDK}/build//../toolchains/llvm/prebuilt/windows-x86_64/sysroot, -g, -Wno-invalid-command-line-argument, -Wno-unused-command-line-argument, -D_FORTIFY_SOURCE=2, -fPIC, -O0, -UNDEBUG, -fno-limit-debug-info, -I{PROJECT}/lib/src/main/cxx, -DANDROID, -Wformat, -Werror=format-security, -mstackrealign]");
             }
         } else {
             // Make sure we can successfully get AndroidProject

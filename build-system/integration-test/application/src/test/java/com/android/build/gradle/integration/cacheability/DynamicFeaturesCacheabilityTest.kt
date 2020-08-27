@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.cacheability
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.DID_WORK
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FAILED
@@ -211,9 +210,6 @@ class DynamicFeaturesCacheabilityTest {
         return GradleTestProject
             .builder()
             .withName(projectName)
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-            // b/157470515
-            .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
             .fromTestProject("dynamicApp")
             .create()
     }

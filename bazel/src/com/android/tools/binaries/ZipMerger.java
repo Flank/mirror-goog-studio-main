@@ -34,7 +34,7 @@ import java.util.zip.Deflater;
 
 public class ZipMerger {
     public static void main(String[] args) throws Exception {
-        if (args.length < 2 || !args[0].equals("c")) {
+        if (args.length < 2 || !(args[0].equals("c") || args[0].equals("cC"))) {
             printUsage();
             return;
         }
@@ -52,6 +52,7 @@ public class ZipMerger {
             }
         }
 
+        int level = args[0].equals("cC") ? Deflater.BEST_COMPRESSION : Deflater.NO_COMPRESSION;
         List<Action> overrides = new ArrayList<>();
         List<Action> adds = new ArrayList<>();
         for (String arg : expanded) {
@@ -92,7 +93,7 @@ public class ZipMerger {
             }
         }
 
-        createZip(out, adds, overrides);
+        createZip(out, adds, overrides, level);
     }
 
     private enum Type {
@@ -108,7 +109,8 @@ public class ZipMerger {
         Type type;
     }
 
-    private static void createZip(String out, List<Action> adds, List<Action> overridesList) throws Exception {
+    private static void createZip(
+            String out, List<Action> adds, List<Action> overridesList, int level) throws Exception {
         File outFile = new File(out);
         if (outFile.exists()) {
             outFile.delete();
@@ -123,9 +125,9 @@ public class ZipMerger {
                 if (add.type == Type.ADD) {
                     File file = add.data;
                     if (overrides.containsKey(add.entry)) {
-                        file = patchArchive(overrides, add.entry, file);
+                        file = patchArchive(overrides, add.entry, file, level);
                     }
-                    zip.add(new BytesSource(file, add.entry, Deflater.NO_COMPRESSION));
+                    zip.add(new BytesSource(file, add.entry, level));
                 } else if (add.type == Type.EXTRACT){
                     List<String> skipped =
                             addZipFileToArchive(add.entry, add.data, zip, overrides::containsKey);
@@ -135,11 +137,13 @@ public class ZipMerger {
                             ByteBuffer content = archive.getContent(oldName);
                             File in = File.createTempFile("before", ".jar");
                             try (FileOutputStream fos = new FileOutputStream(in)) {
-                                fos.write(content.array());
+                                byte[] array = new byte[content.remaining()];
+                                content.get(array);
+                                fos.write(array);
                             }
                             in.deleteOnExit();
-                            File o = patchArchive(overrides, newName, in);
-                            zip.add(new BytesSource(o, newName, Deflater.NO_COMPRESSION));
+                            File o = patchArchive(overrides, newName, in, level);
+                            zip.add(new BytesSource(o, newName, level));
                         }
                     }
                 }
@@ -147,7 +151,8 @@ public class ZipMerger {
         }
     }
 
-    private static File patchArchive(Map<String, List<Action>> overrides, String newName, File in)
+    private static File patchArchive(
+            Map<String, List<Action>> overrides, String newName, File in, int level)
             throws Exception {
         File o = File.createTempFile("after", ".jar");
         o.delete();
@@ -159,7 +164,7 @@ public class ZipMerger {
         try (ZipArchive patched = new ZipArchive(o)) {
             addZipFileToArchive("", in, patched, filesToOverride.keySet()::contains);
             for (Map.Entry<String, File> e : filesToOverride.entrySet()) {
-                patched.add(new BytesSource(e.getValue(), e.getKey(), Deflater.NO_COMPRESSION));
+                patched.add(new BytesSource(e.getValue(), e.getKey(), level));
             }
         }
         o.deleteOnExit();
