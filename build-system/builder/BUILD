@@ -23,6 +23,8 @@ kotlin_library(
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
+    # http://b/166582569
+    api_version = "1.3",
     bundled_deps = [
         "//tools/base/build-system/profile",
         "//tools/dx/dalvik/dx",
