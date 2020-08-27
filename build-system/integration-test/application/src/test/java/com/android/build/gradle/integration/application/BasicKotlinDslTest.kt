@@ -45,6 +45,16 @@ class BasicKotlinDslTest {
 
             android {
                 compileSdkVersion(${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION})
+
+                buildTypes {
+                    debug {
+                        isPseudoLocalesEnabled = true
+                    }
+                    release {
+                        isMinifyEnabled = true
+                    }
+                }
+
             }
         """.trimIndent())
 

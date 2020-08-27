@@ -126,6 +126,37 @@ interface CommonExtension<
     fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildTypeT>>)
 
     /**
+     * Shortcut extension method to allow easy access to the predefined `debug` [BuildType]
+     *
+     * For example:
+     * ```
+     *  android {
+     *      buildTypes {
+     *          debug {
+     *              // ...
+     *          }
+     *      }
+     * }
+     * ```
+     */
+    fun NamedDomainObjectContainer<BuildTypeT>.debug(action: BuildTypeT.() -> Unit)
+    /**
+     * Shortcut extension method to allow easy access to the predefined `release` [BuildType]
+     *
+     * For example:
+     * ```
+     *  android {
+     *      buildTypes {
+     *          release {
+     *              // ...
+     *          }
+     *      }
+     * }
+     * ```
+     */
+    fun NamedDomainObjectContainer<BuildTypeT>.release(action: BuildTypeT.() -> Unit)
+
+    /**
      * Specifies options for the
      * [Data Binding Library](https://developer.android.com/topic/libraries/data-binding/index.html).
      *

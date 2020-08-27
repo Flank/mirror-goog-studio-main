@@ -151,6 +151,14 @@ abstract class CommonExtensionImpl<
         action.execute(buildTypes)
     }
 
+    override fun NamedDomainObjectContainer<BuildTypeT>.debug(action: BuildTypeT.() -> Unit) {
+        getByName("debug", action)
+    }
+
+    override fun NamedDomainObjectContainer<BuildTypeT>.release(action: BuildTypeT.() -> Unit)  {
+        getByName("release", action)
+    }
+
     override val dataBinding: DataBindingOptions =
         dslServices.newInstance(
             DataBindingOptions::class.java,
