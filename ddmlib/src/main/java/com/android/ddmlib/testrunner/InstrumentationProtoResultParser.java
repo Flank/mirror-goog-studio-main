@@ -92,6 +92,9 @@ public class InstrumentationProtoResultParser implements IInstrumentationResultP
         /** The logcat output emitted during this test case */
         private StringBuilder mLogcat = new StringBuilder();
 
+        /** A maximum length of logcat message to be stored and reported. */
+        private static final int MAX_LOGCAT_LENGTH = 10000;
+
         /**
          * The test status metrics emitted during the execution of the test case by {@code
          * android.app.Instrumentation#sendStatus}. The insertion order is preserved unless the test
@@ -113,7 +116,14 @@ public class InstrumentationProtoResultParser implements IInstrumentationResultP
         }
 
         public void appendLogcat(String logcat) {
-            mLogcat.append(logcat);
+            if (mLogcat.length() >= MAX_LOGCAT_LENGTH) {
+                return;
+            }
+            if (mLogcat.length() + logcat.length() < MAX_LOGCAT_LENGTH) {
+                mLogcat.append(logcat);
+            } else {
+                mLogcat.append(logcat.subSequence(0, MAX_LOGCAT_LENGTH - mLogcat.length()));
+            }
         }
 
         public void clearLogcat() {
