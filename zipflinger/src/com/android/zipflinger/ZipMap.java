@@ -22,11 +22,11 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class ZipMap {
-    private final Map<String, Entry> entries = new HashMap<>();
+    private final Map<String, Entry> entries = new LinkedHashMap<>();
     private CentralDirectory cd = null;
 
     // To build an accurate location of entries in the zip payload, data descriptors must be read.
