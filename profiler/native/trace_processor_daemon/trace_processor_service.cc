@@ -136,6 +136,9 @@ grpc::Status TraceProcessorServiceImpl::QueryBatch(
         handler.PopulateCounters(request.counters_request(),
                                  query_result->mutable_counters_result());
       } break;
+      case QueryParameters::kCpuCoreCountersRequest:
+        // TODO(b/162354761): implement handler for CPU data.
+        break;
       case QueryParameters::QUERY_NOT_SET:
         // Do nothing.
         break;

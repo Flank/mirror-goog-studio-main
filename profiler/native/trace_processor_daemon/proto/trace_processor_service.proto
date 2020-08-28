@@ -22,7 +22,6 @@ option java_outer_classname = "TraceProcessor";
 import "memory_data.proto";
 
 service TraceProcessorService {
-
   // Request to load a trace into the daemon.
   rpc LoadTrace(LoadTraceRequest) returns (LoadTraceResponse) {}
 
@@ -62,9 +61,9 @@ message QueryBatchResponse {
 message QueryParameters {
   // Fields 1 to 100 reserved to future metadata passed on the request.
 
-  // Trace Identifier that represents which trace this query should be run against.
-  // When this field is 0, then execute against the last loaded trace for compatibility,
-  // might be required in the future.
+  // Trace Identifier that represents which trace this query should be run
+  // against. When this field is 0, then execute against the last loaded trace
+  // for compatibility, might be required in the future.
   int64 trace_id = 1;
 
   oneof query {
@@ -73,6 +72,7 @@ message QueryParameters {
     SchedulingEventsParameters sched_request = 103;
     AllocationDataRequest memory_request = 104;
     CountersParameters counters_request = 105;
+    CpuCoreCountersParameters cpu_core_counters_request = 106;
   }
 
   // Returns metadata information for a process of the provided id.
@@ -95,8 +95,8 @@ message QueryParameters {
 
   // Returns all CPU scheduling events for all threads part of the process
   // identified by process_id or for a single thread identified by thread_id.
-  // If no criteria is set, return all the scheduling data contained in the trace.
-  // See SchedulingEventsResults for the data returned from this.
+  // If no criteria is set, return all the scheduling data contained in the
+  // trace. See SchedulingEventsResults for the data returned from this.
   message SchedulingEventsParameters {
     oneof criteria {
       int64 process_id = 1;
@@ -108,6 +108,10 @@ message QueryParameters {
   message CountersParameters {
     int64 process_id = 1;
   }
+
+  // Returns data from all CPU cores, e.g. frequency counters.
+  // See https://perfetto.dev/docs/analysis/sql-tables#cpu_counter_track.
+  message CpuCoreCountersParameters {}
 }
 
 message QueryResult {
@@ -134,6 +138,7 @@ message QueryResult {
     SchedulingEventsResult sched_result = 103;
     NativeAllocationContext memory_events = 104;
     CountersResult counters_result = 105;
+    CpuCoreCountersResult cpu_core_counters_result = 106;
   }
 
   enum QueryFailureReason {
@@ -144,7 +149,6 @@ message QueryResult {
     // If this instance of TPD doesn't know about the trace specified.
     TRACE_NOT_FOUND = 2;
   }
-
 }
 
 message ProcessMetadataResult {
@@ -196,14 +200,14 @@ message SchedulingEventsResult {
   // List of scheduling events, ordered by thread_id and increasing timestamp.
   repeated SchedulingEvent sched_event = 1;
 
-  // How many cores the device has.
+  // How many cores the device has as seen by Perfetto.
   int32 num_cores = 2;
 
   message SchedulingEvent {
     int64 process_id = 1;
     int64 thread_id = 2;
     // In which cpu core the event happened.
-    // Will be in [0, num_cores).
+    // Will be in [0, num_cores - 1].
     int32 cpu = 3;
 
     // The timestamp in nanoseconds of when this event happened.
@@ -233,17 +237,34 @@ message CountersResult {
 
   // List of counters.
   repeated Counter counter = 2;
+}
 
-  message Counter {
-    // The counter name.
-    string name = 1;
+message CpuCoreCountersResult {
+  // How many cores the device has as seen by Perfetto.
+  int32 num_cores = 1;
 
-    // All entries of this counter, with associated timestamps.
-    repeated CounterValue value = 2;
+  // List of counters by CPU core ID.
+  repeated CountersPerCore counters_per_core = 2;
+
+  message CountersPerCore {
+    // Which cpu core the counter is associated with.
+    // Will be in [0, num_cores - 1].
+    int32 cpu = 1;
+
+    // List of counters.
+    repeated Counter counter = 2;
   }
+}
 
-  message CounterValue {
-    int64 timestamp_nanoseconds = 1;
-    double value = 2;
-  }
+message Counter {
+  // The counter name.
+  string name = 1;
+
+  // All entries of this counter, with associated timestamps.
+  repeated CounterValue value = 2;
+}
+
+message CounterValue {
+  int64 timestamp_nanoseconds = 1;
+  double value = 2;
 }

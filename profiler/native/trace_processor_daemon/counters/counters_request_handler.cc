@@ -17,6 +17,7 @@
 #include "counters_request_handler.h"
 
 using namespace profiler::perfetto;
+using profiler::perfetto::proto::Counter;
 using profiler::perfetto::proto::CountersResult;
 using profiler::perfetto::proto::QueryParameters;
 
@@ -30,7 +31,7 @@ void CountersRequestHandler::PopulateCounters(CountersParameters params,
 
   result->set_process_id(params.process_id());
 
-  std::unordered_map<std::string, CountersResult::Counter*> counters_map;
+  std::unordered_map<std::string, Counter*> counters_map;
 
   std::string query_string =
       "SELECT process_counter_track.name, counter.ts, counter.value "
