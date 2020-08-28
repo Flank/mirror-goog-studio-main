@@ -46,44 +46,11 @@ internal enum class BuildSystem {
         override val localRepositories: List<Path>
             get() = BazelIntegrationTestsSuite.MAVEN_REPOS
     },
-    IDEA {
-        override val localRepositories: List<Path>
-            // The classes build by idea and jars are added separately.
-            get() = ImmutableList.of(
-                TestUtils
-                    .getWorkspaceFile("prebuilts/tools/common/m2/repository")
-                    .toPath()
-            )
-
-        override fun getCommonBuildScriptContent(
-            withAndroidGradlePlugin: Boolean,
-            withKotlinGradlePlugin: Boolean,
-            withDeviceProvider: Boolean
-        ): String {
-            val buildScript = StringBuilder(
-                """
-def commonScriptFolder = buildscript.sourceFile.parent
-apply from: "${"$"}commonScriptFolder/commonVersions.gradle", to: rootProject.ext
-
-project.buildscript { buildscript ->
-    apply from: "${"$"}commonScriptFolder/commonLocalRepo.gradle", to:buildscript
-    dependencies {        classpath files("""
-            )
-            for (url in (GradleTestProject::class.java.classLoader as URLClassLoader).urLs) {
-                buildScript.append("                '").append(url.file).append("',\n")
-            }
-            buildScript.append(
-                """        )
-    }
-}"""
-            )
-            return buildScript.toString()
-        }
-    };
+    ;
 
     abstract val localRepositories: List<Path>
 
-    open fun getCommonBuildScriptContent(
+    fun getCommonBuildScriptContent(
         withAndroidGradlePlugin: Boolean,
         withKotlinGradlePlugin: Boolean,
         withDeviceProvider: Boolean
@@ -131,9 +98,7 @@ project.buildscript { buildscript ->
                 System.getenv(GradleTestProject.ENV_CUSTOM_REPO) != null -> {
                     GRADLE
                 }
-                else -> {
-                    IDEA
-                }
+                else -> throw IllegalStateException("Tests must be run from the build system")
             }
         }
     }

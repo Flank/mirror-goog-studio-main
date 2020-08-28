@@ -61,9 +61,6 @@ fun initializeTestLocation() : TestLocation {
         System.getenv("TEST_TMPDIR") != null -> {
             File(System.getenv("TEST_TMPDIR"))
         }
-        BuildSystem.get() === BuildSystem.IDEA -> {
-            File(TestUtils.getWorkspaceRoot(), "out/gradle-integration-tests")
-        }
         else -> {
             throw IllegalStateException("unable to determine location for BUILD_DIR")
         }
