@@ -35,6 +35,9 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre = []):
     if jre:
         args.add("--no-jdk")
 
+    # b/166582569
+    args.add("-api-version", "1.3")
+
     # To enable persistent Bazel workers, all arguments must come in an argfile.
     args.use_param_file("@%s", use_always = True)
     args.set_param_file_format("multiline")
