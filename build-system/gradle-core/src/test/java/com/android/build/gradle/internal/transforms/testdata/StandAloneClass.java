@@ -16,4 +16,4 @@
 
 package com.android.build.gradle.internal.transforms.testdata;
 
-public class DummyStandAlone {}
+public class StandAloneClass {}
