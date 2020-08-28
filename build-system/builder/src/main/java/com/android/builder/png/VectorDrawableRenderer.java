@@ -30,6 +30,7 @@ import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.common.vectordrawable.VdPreview;
 import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
+import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.io.Files;
 import java.awt.image.BufferedImage;
@@ -141,8 +142,7 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
                 // As there is no version qualifier, N density .png format images are generated from
                 // the vectors if they are required e.g when the minimum SDK is below the
                 // PreprocessingReason SDK threshold. A vector with the version qualifier set to the
-                // PR
-                // SDK threshold and ANYDPI density qualifier is created.
+                // PR SDK threshold and ANYDPI density qualifier is created.
                 if (mMinSdk < reason.getSdkThreshold() && mDensities.size() > 0) {
                     for (Density density : mDensities) {
                         FolderConfiguration newConfiguration =
@@ -159,8 +159,25 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
                 originalConfiguration.setVersionQualifier(
                         new VersionQualifier(reason.getSdkThreshold()));
             }
-            filesToBeGenerated.add(
-                    new File(getDirectory(originalConfiguration), inputXmlFile.getName()));
+
+            // Avoid regenerating a vector with reason.mSdkThreshold which will be directly
+            // generated from a source directory with the SdkThreshold version.
+            FolderConfiguration minSdkSourceConfig =
+                    FolderConfiguration.copyOf(originalConfiguration);
+            if (originalConfiguration.getDensityQualifier()
+                    .isMatchFor(new DensityQualifier(Density.ANYDPI))) {
+                minSdkSourceConfig.removeQualifier(originalConfiguration.getDensityQualifier());
+            }
+            minSdkSourceConfig.setVersionQualifier(new VersionQualifier(reason.mSdkThreshold));
+            File possibleMinReasonSdkResource =
+                    FileUtils.join(
+                            inputXmlFile.getParentFile().getParentFile(),
+                            "drawable-" + minSdkSourceConfig.getQualifierString(),
+                            inputXmlFile.getName());
+            if (filesToBeGenerated.isEmpty() || !possibleMinReasonSdkResource.exists()) {
+                filesToBeGenerated.add(
+                        new File(getDirectory(originalConfiguration), inputXmlFile.getName()));
+            }
         }
 
         return filesToBeGenerated;
