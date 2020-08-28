@@ -128,11 +128,10 @@ public class PackagingUtils {
     @NonNull
     public static Predicate<String> getNoCompressPredicate(
             @Nullable Collection<String> aaptOptionsNoCompress,
-            @NonNull ManifestAttributeSupplier manifest,
+            @NonNull NativeLibrariesPackagingMode nativeLibsPackagingMode,
+            @Nullable Boolean useEmbeddedDex,
             int minSdk) {
-        NativeLibrariesPackagingMode nativeLibsPackagingMode =
-                getNativeLibrariesLibrariesPackagingMode(manifest);
-        DexPackagingMode dexPackagingMode = getDexPackagingMode(manifest, minSdk);
+        DexPackagingMode dexPackagingMode = getDexPackagingMode(useEmbeddedDex, minSdk);
 
         return getNoCompressPredicateForExtensions(
                 getAllNoCompressExtensions(
@@ -231,11 +230,9 @@ public class PackagingUtils {
 
     @NonNull
     public static NativeLibrariesPackagingMode getNativeLibrariesLibrariesPackagingMode(
-            @NonNull ManifestAttributeSupplier manifest) {
-        Boolean extractNativeLibs = manifest.getExtractNativeLibs();
-
-        // The default is "true", so we only package *.so files differently if the user explicitly
-        // set this to "false".
+            @Nullable Boolean extractNativeLibs) {
+        // The default is "true", so we only package *.so files differently if
+        // android:extractNativeLibs is explicitly set to "false".
         if (Boolean.FALSE.equals(extractNativeLibs)) {
             return NativeLibrariesPackagingMode.UNCOMPRESSED_AND_ALIGNED;
         } else {
@@ -245,9 +242,7 @@ public class PackagingUtils {
 
     @NonNull
     public static DexPackagingMode getDexPackagingMode(
-            @NonNull ManifestAttributeSupplier manifest,
-            int minSdk) {
-        Boolean useEmbeddedDex = manifest.getUseEmbeddedDex();
+            @Nullable Boolean useEmbeddedDex, int minSdk) {
         if (Boolean.TRUE.equals(useEmbeddedDex)) {
             // If useEmbeddedDex is true, dex files must be uncompressed.
             return DexPackagingMode.UNCOMPRESSED;

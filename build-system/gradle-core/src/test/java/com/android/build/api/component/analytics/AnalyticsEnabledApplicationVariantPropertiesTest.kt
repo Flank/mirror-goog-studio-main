@@ -20,7 +20,7 @@ import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.ApkPackagingOptions
-import com.android.build.api.variant.JniLibsPackagingOptions
+import com.android.build.api.variant.JniLibsApkPackagingOptions
 import com.android.build.api.variant.ResourcesPackagingOptions
 import com.android.build.api.variant.SigningConfig
 import com.android.build.api.variant.VariantOutput
@@ -145,9 +145,9 @@ class AnalyticsEnabledApplicationVariantPropertiesTest {
     @Test
     fun getPackagingOptions() {
         val packagingOptions = Mockito.mock(ApkPackagingOptions::class.java)
-        val jniLibsPackagingOptions = Mockito.mock(JniLibsPackagingOptions::class.java)
+        val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackagingOptions::class.java)
         val resourcesPackagingOptions = Mockito.mock(ResourcesPackagingOptions::class.java)
-        Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsPackagingOptions)
+        Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsApkPackagingOptions)
         Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
         Mockito.`when`(delegate.packagingOptions).thenReturn(packagingOptions)
         // simulate a user configuring packaging options for jniLibs and resources
@@ -171,9 +171,9 @@ class AnalyticsEnabledApplicationVariantPropertiesTest {
     @Test
     fun packagingOptionsActions() {
         val packagingOptions = Mockito.mock(ApkPackagingOptions::class.java)
-        val jniLibsPackagingOptions = Mockito.mock(JniLibsPackagingOptions::class.java)
+        val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackagingOptions::class.java)
         val resourcesPackagingOptions = Mockito.mock(ResourcesPackagingOptions::class.java)
-        Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsPackagingOptions)
+        Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsApkPackagingOptions)
         Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
         Mockito.`when`(delegate.packagingOptions).thenReturn(packagingOptions)
         val action: ApkPackagingOptions.() -> Unit = {

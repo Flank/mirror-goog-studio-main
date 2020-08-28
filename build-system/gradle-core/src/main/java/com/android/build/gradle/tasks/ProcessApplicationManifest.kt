@@ -68,7 +68,6 @@ import java.io.IOException
 import java.io.UncheckedIOException
 import java.util.ArrayList
 import java.util.EnumSet
-import java.util.stream.Collectors
 
 /** A task that processes the manifest  */
 @CacheableTask
@@ -159,7 +158,13 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             null /* aaptFriendlyManifestOutputFile */,
             ManifestMerger2.MergeType.APPLICATION,
             manifestPlaceholders.get(),
-            optionalFeatures.get(),
+            optionalFeatures.get().plus(
+                mutableListOf<Invoker.Feature>().also {
+                    if (!jniLibsUseLegacyPackaging.get()) {
+                        it.add(Invoker.Feature.DO_NOT_EXTRACT_NATIVE_LIBS)
+                    }
+                }
+            ),
             dependencyFeatureNames,
             reportFile.get().asFile,
             LoggerWrapper.getLogger(ProcessApplicationManifest::class.java)
@@ -241,18 +246,11 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
     @get:Input
     abstract val maxSdkVersion: Property<Int?>
 
-    /** Not an input, see [.getOptionalFeaturesString].  */
-    @get:Internal
+    @get:Input
     abstract val optionalFeatures: SetProperty<Invoker.Feature>
 
-    /** Synthetic input for [.getOptionalFeatures]  */
     @get:Input
-    val optionalFeaturesString: List<String>
-        get() = optionalFeatures
-            .get()
-            .stream()
-            .map { obj: Invoker.Feature -> obj.toString() }
-            .collect(Collectors.toList())
+    abstract val jniLibsUseLegacyPackaging: Property<Boolean>
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -380,6 +378,9 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             task.maxSdkVersion.disallowChanges()
             task.optionalFeatures.set(project.provider { getOptionalFeatures(creationConfig) })
             task.optionalFeatures.disallowChanges()
+            task.jniLibsUseLegacyPackaging.setDisallowChanges(
+                creationConfig.packagingOptions.jniLibs.useLegacyPackaging
+            )
             task.variantOutput.setDisallowChanges(
                 creationConfig.outputs.getMainSplit()
             )

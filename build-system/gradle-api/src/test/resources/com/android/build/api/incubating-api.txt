@@ -811,6 +811,7 @@ com.android.build.api.variant.AndroidVersion.<init>: com.android.build.api.varia
 com.android.build.api.variant.AndroidVersion.getApiLevel: int ()
 com.android.build.api.variant.AndroidVersion.getCodename: java.lang.String ()
 com.android.build.api.variant.ApkPackagingOptions implements com.android.build.api.variant.PackagingOptions
+com.android.build.api.variant.ApkPackagingOptions.getJniLibs: com.android.build.api.variant.JniLibsApkPackagingOptions ()
 com.android.build.api.variant.ApkPackagingOptions.jniLibs: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.JniLibsApkPackagingOptions, kotlin.Unit>)
 com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.ApplicationVariant.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)

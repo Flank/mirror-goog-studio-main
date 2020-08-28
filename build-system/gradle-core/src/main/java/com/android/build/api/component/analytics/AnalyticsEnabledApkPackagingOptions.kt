@@ -27,6 +27,13 @@ open class AnalyticsEnabledApkPackagingOptions @Inject constructor(
     stats: GradleBuildVariant.Builder
 ) : AnalyticsEnabledPackagingOptions(delegate, stats), ApkPackagingOptions {
 
+    override val jniLibs: JniLibsApkPackagingOptions
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.JNI_LIBS_PACKAGING_OPTIONS_VALUE
+            return delegate.jniLibs
+        }
+
     override fun jniLibs(action: JniLibsApkPackagingOptions.() -> Unit) {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.JNI_LIBS_PACKAGING_OPTIONS_ACTION_VALUE
