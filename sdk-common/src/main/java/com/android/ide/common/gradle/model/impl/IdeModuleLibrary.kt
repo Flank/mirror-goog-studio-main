@@ -18,6 +18,7 @@ package com.android.ide.common.gradle.model.impl
 import com.android.ide.common.gradle.model.IdeLibrary
 import com.google.common.annotations.VisibleForTesting
 import java.io.File
+import java.io.Serializable
 
 /**
  * The implementation of IdeLibrary for modules.
@@ -25,7 +26,7 @@ import java.io.File
 data class IdeModuleLibrary(
   val core: IdeModuleLibraryCore,
   override val isProvided: Boolean
-) : IdeLibrary by core {
+) : IdeLibrary by core, Serializable {
   @VisibleForTesting
   constructor(
     projectPath: String,
@@ -42,7 +43,7 @@ data class IdeModuleLibraryCore(
   override val folder: File?,
   override val lintJar: String?
 
-) : IdeLibrary {
+) : IdeLibrary, Serializable {
 
   // Used for serialization by the IDE.
   constructor() : this(

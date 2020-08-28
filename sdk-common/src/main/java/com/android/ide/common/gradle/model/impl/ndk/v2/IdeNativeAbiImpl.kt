@@ -17,10 +17,11 @@ package com.android.ide.common.gradle.model.impl.ndk.v2
 
 import com.android.ide.common.gradle.model.ndk.v2.IdeNativeAbi
 import java.io.File
+import java.io.Serializable
 
 data class IdeNativeAbiImpl(
   override val name: String,
   override val sourceFlagsFile: File,
   override val symbolFolderIndexFile: File,
   override val buildFileIndexFile: File
-) : IdeNativeAbi
+) : IdeNativeAbi, Serializable
