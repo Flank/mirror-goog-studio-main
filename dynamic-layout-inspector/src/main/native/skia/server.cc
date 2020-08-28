@@ -31,7 +31,9 @@ class SkiaParserServiceImpl final
     } else {
       v1::TreeBuildingCanvas::ParsePicture(
           request->skp().data(), request->skp().length(), request->version(),
-          &request->requested_nodes(), response->mutable_root());
+          &request->requested_nodes(),
+          request->scale() == 0 ? 1 : request->scale(),
+          response->mutable_root());
     }
     return ::grpc::Status::OK;
   }

@@ -362,7 +362,9 @@ public class LayoutInspectorService {
             // the
             // main window, but can be positive for floating windows (e.g. dialogs).
             int[] rootOffset = new int[2];
-            root.getLocationInSurface(rootOffset);
+            if (root != null) {
+                root.getLocationInSurface(rootOffset);
+            }
 
             long event = initComponentTree(request, rootViewIds, rootOffset[0], rootOffset[1]);
             if (root != null) {

@@ -68,14 +68,25 @@ void TreeBuildingCanvas::didTranslate(SkScalar dx, SkScalar dy) {
   this->didConcat(SkMatrix::MakeTrans(dx, dy));
 }
 
+void TreeBuildingCanvas::didScale(SkScalar sx, SkScalar sy) {
+  this->didConcat(SkMatrix::MakeScale(sx, sy));
+}
+
 void TreeBuildingCanvas::didSetMatrix(const SkMatrix& matrix) {
-  real_canvas->setMatrix(matrix);
+#ifdef TREEBUILDINGCANVAS_DEBUG
+  printDebug("orig was\n", request_scale);
+  matrix.dump();
+#endif
+
+  SkMatrix scaled = SkMatrix::Concat(
+      SkMatrix::MakeScale(request_scale, request_scale), matrix);
+  real_canvas->setMatrix(scaled);
 #ifdef TREEBUILDINGCANVAS_DEBUG
   printDebug("didSetMatrix\n");
-  matrix.dump(); /*
-std::cerr << std::endl << "total: ";
-real_canvas->getTotalMatrix().dump();
-std::cerr << std::flush;*/
+  matrix.dump();
+  std::cerr << std::endl << "total: ";
+  real_canvas->getTotalMatrix().dump();
+  std::cerr << std::flush;
 #endif
 }
 
@@ -137,7 +148,8 @@ void TreeBuildingCanvas::onDrawImageRect(const SkImage* image,
                                          SrcRectConstraint constraint) {
   nonHeaderCommand();
 #ifdef TREEBUILDINGCANVAS_DEBUG
-  printDebug("drawImageRect\n");
+  printDebug("drawImageRect x:%f y:%f w:%f h:%f\n", dst.x(), dst.y(),
+             dst.width(), dst.height());
   real_canvas->getTotalMatrix().dump();
   real_canvas->getTotalMatrix().mapRect(dst).dump();
 #endif
@@ -391,10 +403,11 @@ void TreeBuildingCanvas::onDrawAnnotation(const SkRect&, const char* key,
         imageInfo.bytesPerPixel() * newImageInfo.width(), rect.x(), rect.y());
     // TODO: _allocated_ or move?
     node->set_image(std::move(bytes));
-    // TODO: redundant?
+    node->set_width(rect.width());
+    node->set_height(rect.height());
 #ifdef TREEBUILDINGCANVAS_DEBUG
-    printDebug("createNode width: %i height: %i\n", rect.width(),
-               rect.height());
+    printDebug("createNode x:%i y:%i w:%i h:%i\n", rect.x(), rect.y(),
+               rect.width(), rect.height());
 #endif
   }
 #ifdef TREEBUILDINGCANVAS_DEBUG
@@ -414,8 +427,8 @@ void TreeBuildingCanvas::exitView(bool hasData) {
   if (hasData && topView.didDraw) {
     auto last = views.rbegin() + 1;
     createNode(topView.id, last, true);
-    }
-    views.pop_back();
+  }
+  views.pop_back();
 }
 
 void TreeBuildingCanvas::addView(long id) {

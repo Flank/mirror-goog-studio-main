@@ -25,8 +25,10 @@ message RequestedNodeInfo {
 
 message GetViewTreeRequest {
   bytes skp = 1;
-  int32 version = 2;             // See above for description
+  int32 version = 2;      // See above for description
   repeated RequestedNodeInfo requested_nodes = 3;
+  // Factor by which to scale the result. Should probably be < 1.
+  float scale = 4;
 }
 
 message InspectorView {
@@ -35,8 +37,8 @@ message InspectorView {
   string type_for_v0_only = 3 [deprecated = true];
   int32 x_for_v0_only = 4 [deprecated = true];
   int32 y_for_v0_only = 5 [deprecated = true];
-  int32 width_for_v0_only = 6 [deprecated = true];
-  int32 height_for_v0_only = 7 [deprecated = true];
+  int32 width = 6;
+  int32 height = 7;
 
   bytes image = 8;
 

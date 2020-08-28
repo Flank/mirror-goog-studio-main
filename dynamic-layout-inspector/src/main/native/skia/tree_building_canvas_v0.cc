@@ -398,8 +398,8 @@ void TreeBuildingCanvas::onDrawAnnotation(const SkRect& rect, const char* key,
   node->set_type_for_v0_only(type);
   node->set_x_for_v0_only(offsetX);
   node->set_y_for_v0_only(offsetY);
-  node->set_width_for_v0_only(width);
-  node->set_height_for_v0_only(height);
+  node->set_width(width);
+  node->set_height(height);
 
   node->set_allocated_image(image.release());
   return node;
