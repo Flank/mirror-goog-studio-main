@@ -30,7 +30,10 @@ import java.util.function.Function;
  * Manages the location of the android files (including emulator files, ddms config, debug keystore)
  *
  * <p>This does not manages the SDK location. For that see [SdkLocator]
+ *
+ * @deprecated Use {@link AndroidLocationsException} or {@link AndroidLocationsSingleton}.
  */
+@Deprecated
 public final class AndroidLocation {
 
     /**

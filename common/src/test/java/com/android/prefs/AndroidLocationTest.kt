@@ -15,9 +15,7 @@
  */
 package com.android.prefs
 
-import com.android.utils.EnvironmentProvider
 import com.android.utils.FileUtils
-import com.android.utils.ILogger
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
@@ -148,31 +146,4 @@ class AndroidLocationTest {
         )
     }
 
-}
-
-private class FakeProvider(
-    private val map: Map<String, String>
-): EnvironmentProvider {
-    override fun getSystemProperty(key: String): String? = map[key]
-    override fun getEnvVariable(key: String): String? = map[key]
-}
-
-private class RecordingLogger: ILogger {
-    val warnings = mutableListOf<String>()
-
-    override fun error(t: Throwable?, msgFormat: String?, vararg args: Any?) {
-        throw RuntimeException("Unexpected call to errors()")
-    }
-
-    override fun warning(msgFormat: String, vararg args: Any?) {
-        warnings.add(String.format(msgFormat, *args))
-    }
-
-    override fun info(msgFormat: String, vararg args: Any?) {
-        throw RuntimeException("Unexpected call to info()")
-    }
-
-    override fun verbose(msgFormat: String, vararg args: Any?) {
-        throw RuntimeException("Unexpected call to verbose()")
-    }
 }
