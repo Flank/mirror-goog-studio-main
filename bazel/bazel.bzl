@@ -221,6 +221,9 @@ def _iml_module_impl(ctx):
         if hasattr(this_dep, "module"):
             transitive_data = depset(transitive = [transitive_data, this_dep.module.transitive_data])
             form_deps += this_dep.module.forms
+        elif DefaultInfo in this_dep:
+            transitive_data = depset(transitive = [transitive_data, this_dep[DefaultInfo].default_runfiles.files])
+
         if java_common.provider in this_dep:
             java_deps, transitive_runtime_jars, transitive_compile_time_jars = accumulate_provider(
                 this_dep[java_common.provider],
