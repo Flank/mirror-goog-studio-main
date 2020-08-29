@@ -115,7 +115,7 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
                                 .build());
         redefiner.redefine(request);
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getStaticFinalPrimitives");
@@ -156,7 +156,7 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
                                 .build());
         redefiner.redefine(request);
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(
                 Deploy.AgentSwapResponse.Status.UNSUPPORTED_REINIT_NON_STATIC_PRIMITIVE,
                 response.getStatus());
@@ -193,7 +193,7 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
                                 .build());
         redefiner.redefine(request);
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(
                 Deploy.AgentSwapResponse.Status.UNSUPPORTED_REINIT_STATIC_PRIMITIVE_NOT_CONSTANT,
                 response.getStatus());
@@ -224,7 +224,7 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
                                 .build());
         redefiner.redefine(request);
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(
                 Deploy.AgentSwapResponse.Status.UNSUPPORTED_REINIT_STATIC_OBJECT,
                 response.getStatus());
@@ -255,7 +255,7 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
                                 .build());
         redefiner.redefine(request);
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(
                 Deploy.AgentSwapResponse.Status.UNSUPPORTED_REINIT_STATIC_ARRAY,
                 response.getStatus());
@@ -277,7 +277,7 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
                         "app.StaticVarInit$BgThread", "app/StaticVarInit$BgThread.dex", false);
         redefiner.redefine(request);
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "waitBackgroundThread");
@@ -310,7 +310,7 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
                 createRequest("app.StaticVarInit", "app/StaticVarInit.dex", false, state);
         redefiner.redefine(request);
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getStaticIntFromVirtual");

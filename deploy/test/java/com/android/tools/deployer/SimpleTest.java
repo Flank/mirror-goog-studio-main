@@ -46,7 +46,7 @@ public class SimpleTest extends AgentBasedClassRedefinerTestBase {
         Deploy.SwapRequest request = createRequest("app.Target", "app/Target.dex", false);
         redefiner.redefine(request);
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
@@ -67,7 +67,7 @@ public class SimpleTest extends AgentBasedClassRedefinerTestBase {
                 createRequest("app.ClinitTarget", "app/ClinitTarget.dex", false);
         redefiner.redefine(request);
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "printCounter");
@@ -96,7 +96,7 @@ public class SimpleTest extends AgentBasedClassRedefinerTestBase {
                         false);
         redefiner.redefine(request);
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getNewClassStatus");
@@ -111,7 +111,7 @@ public class SimpleTest extends AgentBasedClassRedefinerTestBase {
         Deploy.SwapRequest request = createRequest("app.NonExistentClass", "app/Target.dex", false);
         redefiner.redefine(request);
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(Deploy.AgentSwapResponse.Status.CLASS_NOT_FOUND, response.getStatus());
     }
 }

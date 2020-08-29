@@ -19,94 +19,40 @@ import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.fakeandroid.ProcessRunner;
 import com.android.tools.idea.protobuf.ByteString;
-import com.android.tools.idea.protobuf.InvalidProtocolBufferException;
-import java.io.File;
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Map;
-import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
-public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTestBase {
-    protected static final String ACTIVITY_CLASS = "app.TestActivity";
+public abstract class AgentBasedClassRedefinerTestBase extends AgentTestBase {
 
-    // Location of the initial test-app that has the ACTIVITY_CLASS
-    protected static final String DEX_LOCATION = ProcessRunner.getProcessPath("app.dex.location");
-
-    protected static final String AGENT_LOCATION =
-            ProcessRunner.getProcessPath("swap.agent.location");
-    protected static final String SERVER_LOCATION =
-            ProcessRunner.getProcessPath("install.server.location");
-
-    protected static final String PACKAGE = "package.name";
-
-    protected static final String LOCAL_HOST = "127.0.0.1";
-    protected static final int RETURN_VALUE_TIMEOUT = 1000;
-
-    protected static final Collection<String> ALL_ART_FLAGS =
-            Arrays.asList(null, "-Xopaque-jni-ids:true");
-
-    protected FakeAndroidDriver android;
+    // Location of all the dex files to be swapped in to test hotswapping.
+    private static final String DEX_SWAP_LOCATION =
+            ProcessRunner.getProcessPath("app.swap.dex.location");
 
     protected LocalTestAgentBasedClassRedefiner redefiner;
 
-    protected TemporaryFolder dexLocation;
-
-    protected File dataDir;
-
-    protected final String artFlag;
-
-    private static final byte[] MAGIC_NUMBER = {
-        (byte) 0xAC,
-        (byte) 0xA5,
-        (byte) 0xAC,
-        (byte) 0xA5,
-        (byte) 0xAC,
-        (byte) 0xA5,
-        (byte) 0xAC,
-        (byte) 0xA5
-    };
-
     public AgentBasedClassRedefinerTestBase(String artFlag) {
-        this.artFlag = artFlag;
+        super(artFlag);
     }
 
     @Before
+    @Override
     public void setUp() throws Exception {
-        dexLocation = new TemporaryFolder();
-        dexLocation.create();
-
-        File root = Files.createTempDirectory("root_dir").toFile();
-        String[] env = new String[] {
-            "FAKE_DEVICE_ROOT=" + root.getAbsolutePath()
-        };
-        dataDir = new File(root, "/data/data/" + PACKAGE);
-        File dotStudio = new File(dataDir, "/code_cache/.studio");
-        dotStudio.mkdirs();
-        android = new FakeAndroidDriver(LOCAL_HOST, -1, artFlag, env);
-        android.start();
-
+        super.setUp();
         redefiner = new LocalTestAgentBasedClassRedefiner(android, dexLocation);
         redefiner.startServer();
     }
 
     @After
+    @Override
     public void tearDown() {
-        android.stop();
+        super.tearDown();
         redefiner.stopServer();
-    }
-
-    protected void startupAgent() {
-        // Ideally, we modify FakeAndroidDriver to do this, but this suffices to exercise the code
-        // path for now.
-        android.attachAgent(AGENT_LOCATION + "=" + dataDir.toString());
     }
 
     protected Deploy.SwapRequest createRequest(
@@ -159,17 +105,11 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
         return request.build();
     }
 
-    protected static class LocalTestAgentBasedClassRedefiner {
-        private final TemporaryFolder messageDir;
-        private final FakeAndroidDriver android;
-        private final String socketName;
-        private Process server;
-
+    /** A helper to communicate SwapRequest to the agent with the on-host installer. */
+    protected static class LocalTestAgentBasedClassRedefiner extends InstallServerTestClient {
         protected LocalTestAgentBasedClassRedefiner(
                 FakeAndroidDriver android, TemporaryFolder messageDir) {
-            this.android = android;
-            this.messageDir = messageDir;
-            this.socketName = "irsocket:" + UUID.randomUUID();
+            super(android, messageDir);
         }
 
         protected void redefine(Deploy.SwapRequest request, boolean unused) {
@@ -192,99 +132,46 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
         protected void redefine(byte[] message) {
             try {
                 sendMessage(message);
-                android.attachAgent(AGENT_LOCATION + "=" + socketName);
+                attachAgent();
             } catch (IOException e) {
-                System.err.println(e);
-            }
-        }
-
-        protected Deploy.AgentSwapResponse getAgentResponse()
-                throws IOException, InvalidProtocolBufferException {
-            return getServerResponse().getSendResponse().getAgentResponses(0).getSwapResponse();
-        }
-
-        private void sendMessage(byte[] message) throws IOException {
-            byte[] size =
-                    ByteBuffer.allocate(MAGIC_NUMBER.length + Integer.BYTES)
-                            .order(ByteOrder.LITTLE_ENDIAN)
-                            .put(MAGIC_NUMBER)
-                            .putInt(message.length)
-                            .array();
-
-            OutputStream stdin = server.getOutputStream();
-            stdin.write(size);
-            stdin.write(message);
-            stdin.flush();
-        }
-
-        private void startServer() throws IOException {
-            System.out.println("Starting install server");
-            server = new ProcessBuilder(SERVER_LOCATION).start();
-            if (getServerResponse().getStatus()
-                    != Deploy.InstallServerResponse.Status.SERVER_STARTED) {
-                System.err.println("Did not receive startup ack from install server");
-            }
-            Deploy.OpenAgentSocketRequest socketRequest =
-                    Deploy.OpenAgentSocketRequest.newBuilder().setSocketName(socketName).build();
-            Deploy.InstallServerRequest serverRequest =
-                    Deploy.InstallServerRequest.newBuilder()
-                            .setType(Deploy.InstallServerRequest.Type.HANDLE_REQUEST)
-                            .setSocketRequest(socketRequest)
-                            .build();
-            sendMessage(serverRequest.toByteArray());
-            if (getServerResponse().getSocketResponse().getStatus()
-                    != Deploy.OpenAgentSocketResponse.Status.OK) {
-                System.err.println("Agent socket could not be opened");
-            }
-        }
-
-        protected Deploy.InstallServerResponse getServerResponse()
-                throws IOException, InvalidProtocolBufferException {
-            InputStream stdout = server.getInputStream();
-
-            byte[] magicBytes = new byte[MAGIC_NUMBER.length];
-
-            int offset = 0;
-            while (offset < magicBytes.length) {
-                offset += stdout.read(magicBytes, offset, magicBytes.length - offset);
-            }
-
-            byte[] sizeBytes = new byte[Integer.BYTES];
-
-            offset = 0;
-            while (offset < sizeBytes.length) {
-                offset += stdout.read(sizeBytes, offset, sizeBytes.length - offset);
-            }
-
-            int size = ByteBuffer.wrap(sizeBytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
-            byte[] messageBytes = new byte[size];
-
-            offset = 0;
-            while (offset < messageBytes.length) {
-                offset += stdout.read(messageBytes, offset, messageBytes.length - offset);
-            }
-            return Deploy.InstallServerResponse.parseFrom(messageBytes);
-        }
-
-        protected void stopServer() {
-            try {
-                System.out.println("Waiting for server to exit");
-                if (server != null) {
-                    Deploy.InstallServerRequest request =
-                            Deploy.InstallServerRequest.newBuilder()
-                                    .setType(Deploy.InstallServerRequest.Type.SERVER_EXIT)
-                                    .build();
-                    sendMessage(request.toByteArray());
-                    server.waitFor();
-                }
-                System.out.println("Server exited");
-            } catch (IOException | InterruptedException e) {
                 System.err.println(e);
             }
         }
 
         public void redefine(Deploy.SwapRequest request) {
             redefine(request, true);
+        }
+
+        protected Deploy.AgentSwapResponse getSwapAgentResponse() throws IOException {
+            return getAgentResponse().getSwapResponse();
+        }
+    }
+
+    /**
+     * The ":test-app-swap" rule output contains a list of dex file that we can hotswap. Use this
+     * method to extract a class from the output.
+     *
+     * @return The single file dex code of a given class compiled in our dex_library
+     *     ":test-app-swap" rule.
+     */
+    protected static byte[] getSplittedDex(String name) throws IOException {
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(DEX_SWAP_LOCATION))) {
+            for (ZipEntry entry = zis.getNextEntry(); entry != null; entry = zis.getNextEntry()) {
+                if (!entry.getName().equals(name)) {
+                    continue;
+                }
+
+                byte[] buffer = new byte[1024];
+                ByteArrayOutputStream dexContent = new ByteArrayOutputStream();
+
+                int len;
+                while ((len = zis.read(buffer)) > 0) {
+                    dexContent.write(buffer, 0, len);
+                }
+                return dexContent.toByteArray();
+            }
+            Assert.fail("Cannot find " + name + " in " + DEX_SWAP_LOCATION);
+            return null;
         }
     }
 }

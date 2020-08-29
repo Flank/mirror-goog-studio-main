@@ -18,7 +18,6 @@ package com.android.tools.deployer;
 import com.android.tools.deploy.proto.Deploy;
 import java.util.Collection;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -49,7 +48,7 @@ public class KotlinTest extends AgentBasedClassRedefinerTestBase {
                 createRequest("pkg.KotlinSimpleTarget", "pkg/KotlinSimpleTarget.dex", false);
         redefiner.redefine(request);
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getKotlinSimpleTargetStatus");
@@ -70,7 +69,7 @@ public class KotlinTest extends AgentBasedClassRedefinerTestBase {
                 createRequest("pkg.KotlinFailedTarget", "pkg/KotlinFailedTarget.dex", false);
         redefiner.redefine(request);
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(Deploy.AgentSwapResponse.Status.JVMTI_ERROR, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getKotlinFailedTargetStatus");
@@ -94,7 +93,7 @@ public class KotlinTest extends AgentBasedClassRedefinerTestBase {
                         false);
         redefiner.redefine(request);
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getKotlinCompanionTargetStatus");

@@ -48,7 +48,7 @@ public class FailureTest extends AgentBasedClassRedefinerTestBase {
                 createRequest("app.FailedTarget", "app/FailedTarget.dex", false);
         redefiner.redefine(request);
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(Deploy.AgentSwapResponse.Status.JVMTI_ERROR, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getFailedTargetStatus");
@@ -77,7 +77,7 @@ public class FailureTest extends AgentBasedClassRedefinerTestBase {
                         false);
         redefiner.redefine(request);
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(Deploy.AgentSwapResponse.Status.JVMTI_ERROR, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getFailedTargetStatus");
