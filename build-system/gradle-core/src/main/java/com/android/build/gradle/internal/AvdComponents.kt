@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.sdklib.FileOpFileWrapper
 import com.android.sdklib.devices.DeviceManager
 import com.android.sdklib.internal.avd.AvdCamera
+import com.android.sdklib.internal.avd.AvdInfo
 import com.android.sdklib.internal.avd.AvdManager
 import com.android.sdklib.internal.avd.EmulatedProperties
 import com.android.sdklib.internal.avd.GpuMode
@@ -79,13 +80,13 @@ abstract class AvdComponentsBuildService @Inject constructor(
         // TODO(b/16526279): Make sure this is wired up correctly once build service is set up.
         File(parameters.avdLocation.get())
     }
-
-    private fun genDeviceName(imageHash: String, hardwareProfile: String) =
-        imageHash.replace(';', '_') + hardwareProfile.replace(' ','_')
-
-    private fun createOrRetrieveAvd(imageHash: String, hardwareProfile: String): File {
-        val generatedDeviceName = genDeviceName(imageHash, hardwareProfile)
-        val info = avdManager.getAvd(generatedDeviceName, false)
+    
+    private fun createOrRetrieveAvd(
+        imageHash: String,
+        deviceName: String,
+        hardwareProfile: String
+    ): File {
+        val info = avdManager.getAvd(deviceName, false)
         if (info != null) {
             // already generated the avd
             return info.configFile
@@ -110,9 +111,12 @@ abstract class AvdComponentsBuildService @Inject constructor(
         hardwareConfig.putAll(DeviceManager.getHardwareProperties(device))
         EmulatedProperties.restrictDefaultRamSize(hardwareConfig)
 
+        val deviceFolder = AvdInfo.getDefaultAvdFolder(
+            avdManager, deviceName, sdkHandler.fileOp, false)
+
         val newInfo = avdManager.createAvd(
-            avdFolder,
-            generatedDeviceName,
+            deviceFolder,
+            deviceName,
             systemImage,
             null,
             null,
@@ -181,9 +185,13 @@ abstract class AvdComponentsBuildService @Inject constructor(
             EmulatedProperties.USE_HOST_GPU_KEY to HardwareProperties.BOOLEAN_YES,
             EmulatedProperties.VM_HEAP_STORAGE_KEY to EmulatedProperties.DEFAULT_HEAP.toString())
 
-    fun avdProvider(imageHash: String, hardwareProfile: String): Provider<Directory> =
+    fun avdProvider(
+        imageHash: String,
+        deviceName: String,
+        hardwareProfile: String
+    ): Provider<Directory> =
         objectFactory.directoryProperty().fileProvider(providerFactory.provider {
-            createOrRetrieveAvd(imageHash, hardwareProfile)
+            createOrRetrieveAvd(imageHash, deviceName, hardwareProfile)
         })
 
     class RegistrationAction(

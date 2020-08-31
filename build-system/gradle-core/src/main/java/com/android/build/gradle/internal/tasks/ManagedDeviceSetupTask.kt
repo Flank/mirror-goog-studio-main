@@ -27,6 +27,8 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 
+private val DEVICE_PREFIX = "dev"
+private val DEVICE_DEVIDER = "_"
 private val SYSTEM_IMAGE_PREFIX = "system-images;"
 private val HASH_DIVIDER = ";"
 
@@ -61,6 +63,7 @@ abstract class ManagedDeviceSetupTask: NonIncrementalTask() {
         workerExecutor.noIsolation().submit(ManagedDeviceSetupRunnable::class.java) {
             it.avdService.set(avdService)
             it.imageHash.set(computeImageHash())
+            it.deviceName.set(computeDeviceName())
             it.hardwareProfile.set(hardwareProfile)
         }
     }
@@ -68,7 +71,9 @@ abstract class ManagedDeviceSetupTask: NonIncrementalTask() {
     abstract class ManagedDeviceSetupRunnable : ProfileAwareWorkAction<ManagedDeviceSetupParams>() {
         override fun run() {
             parameters.avdService.get().avdProvider(
-                parameters.imageHash.get(), parameters.hardwareProfile.get())
+                parameters.imageHash.get(),
+                parameters.deviceName.get(),
+                parameters.hardwareProfile.get()).get()
 
             // TODO(b/165626279) Expand the avd with the emulator command.
         }
@@ -77,6 +82,7 @@ abstract class ManagedDeviceSetupTask: NonIncrementalTask() {
     abstract class ManagedDeviceSetupParams : ProfileAwareWorkAction.Parameters() {
         abstract val avdService: Property<AvdComponentsBuildService>
         abstract val imageHash: Property<String>
+        abstract val deviceName: Property<String>
         abstract val hardwareProfile: Property<String>
     }
 
@@ -85,6 +91,14 @@ abstract class ManagedDeviceSetupTask: NonIncrementalTask() {
                 computeVersionString() + HASH_DIVIDER +
                 computeVendorString() + HASH_DIVIDER +
                 abi.get()
+    }
+
+    private fun computeDeviceName(): String {
+        return DEVICE_PREFIX +
+                apiLevel.get() + DEVICE_DEVIDER +
+                systemImageVendor.get() + DEVICE_DEVIDER +
+                abi.get() + DEVICE_DEVIDER +
+                hardwareProfile.get().replace(' ', '_')
     }
 
     private fun computeVersionString() = "android-${apiLevel.get()}"
