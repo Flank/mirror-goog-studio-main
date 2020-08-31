@@ -95,9 +95,10 @@ void LayoutInspectorAgentCommand::RegisterAgentLayoutInspectorCommandHandler(
 
           case LayoutInspectorCommand::REFRESH: {
             jmethodID refresh_command_method = jni_env->GetMethodID(
-                inspector_class, "onRefreshLayoutInspectorCommand", "()V");
+                inspector_class, "onRefreshLayoutInspectorCommand", "(Z)V");
 
-            jni_env->CallVoidMethod(inspector_service, refresh_command_method);
+            jni_env->CallVoidMethod(inspector_service, refresh_command_method,
+                                    liCommand->compose_mode());
             break;
           }
 
