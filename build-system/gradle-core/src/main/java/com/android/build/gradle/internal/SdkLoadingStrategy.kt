@@ -43,6 +43,12 @@ class SdkLoadingStrategy(
     fun getSupportNativeLibFolder(): File? = if (directLoad.loadedSuccessfully()) directLoad.getSupportNativeLibFolder() else fullLoad.getSupportNativeLibFolder()
     fun getSupportBlasLibFolder(): File? = if (directLoad.loadedSuccessfully()) directLoad.getSupportBlasLibFolder() else fullLoad.getSupportBlasLibFolder()
 
+    fun getSystemImageLibFolder(imageHash: String): File? =
+        directLoad.getSystemImageLibFolder(imageHash)?: fullLoad.getSystemImageLibFolder(imageHash)
+
+    fun getEmulatorLibFolder(): File? =
+        directLoad.getEmulatorLibFolder()?: fullLoad.getEmulatorLibFolder()
+
     @Synchronized
     fun reset() {
         directLoad.reset()

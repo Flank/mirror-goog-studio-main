@@ -24,7 +24,6 @@ import com.android.sdklib.repository.targets.AndroidTargetManager;
 import com.google.common.base.Splitter;
 import java.util.List;
 
-
 /**
  * Helper methods to manipulate hash strings used by {@link IAndroidTarget#hashString()}.
  */
@@ -35,6 +34,9 @@ public abstract class AndroidTargetHash {
      * @see AndroidTargetManager#getTargetFromHashString(String, ProgressIndicator)
      */
     public static final String PLATFORM_HASH_PREFIX = "android-";
+
+    /** Prefix used to build hash strings for system image targets */
+    public static final String SYSTEM_IMAGE_PREFIX = "system-images";
 
     /**
      * Returns the hash string for a given platform version.
@@ -165,5 +167,9 @@ public abstract class AndroidTargetHash {
      */
     public static boolean isPlatform(@NonNull String hashString) {
         return hashString.startsWith(PLATFORM_HASH_PREFIX);
+    }
+
+    public static boolean isSystemImage(@NonNull String hashString) {
+        return hashString.startsWith(SYSTEM_IMAGE_PREFIX);
     }
 }

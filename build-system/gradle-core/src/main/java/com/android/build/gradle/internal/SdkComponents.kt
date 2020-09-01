@@ -207,7 +207,12 @@ abstract class SdkComponentsBuildService @Inject constructor(
 
     fun sdkImageDirectoryProvider(imageHash: String): Provider<Directory> =
         objectFactory.directoryProperty().fileProvider(providerFactory.provider {
-            sdkHandler.installSystemImage(imageHash)
+            sdkLoadStrategy.getSystemImageLibFolder(imageHash)
+        })
+
+    val emulatorDirectoryProvider: Provider<Directory> =
+        objectFactory.directoryProperty().fileProvider(providerFactory.provider {
+            sdkLoadStrategy.getEmulatorLibFolder()
         })
 
     val ndkDirectoryProvider: Provider<Directory> =

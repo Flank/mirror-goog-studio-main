@@ -24,6 +24,7 @@ import static com.android.SdkConstants.FD_TOOLS;
 import static com.android.SdkConstants.FN_ADB;
 import static com.android.SdkConstants.FN_ANNOTATIONS_JAR;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
@@ -458,6 +459,24 @@ public class DefaultSdkLoader implements SdkLoader {
         }
         // getLatestLocalPackageForPrefix above should have set it to non-null by now, but let's be safe.
         return localSdkToolPackage != null ? localSdkToolPackage.getLocation() : null;
+    }
+
+    @Override
+    @Nullable
+    public File getLocalEmulator() {
+        ProgressIndicator progress =
+                new LoggerProgressIndicatorWrapper(new StdLogger(StdLogger.Level.WARNING));
+        RepoManager repoManager = mSdkHandler.getSdkManager(progress);
+        repoManager.loadSynchronously(0, progress, null, null);
+        LocalPackage localEmulatorPackage =
+                mSdkHandler.getLatestLocalPackageForPrefix(
+                        SdkConstants.FD_EMULATOR, null, false, progress);
+        if (localEmulatorPackage == null) {
+            // We want the developer to download/update the emulator manually. As this could have
+            // unintended side-effects such as invalidating pre-existing avd snapshots.
+            return null;
+        }
+        return localEmulatorPackage.getLocation();
     }
 
     /**

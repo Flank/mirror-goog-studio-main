@@ -125,8 +125,19 @@ public class PlatformLoader implements SdkLoader {
     @Nullable
     public File installSdkTool(@NonNull SdkLibData sdkLibData, @NonNull String packageId) {
         ProgressIndicator progress = new ConsoleProgressIndicator();
-        progress.logWarning("Installing missing SDK components is not supported when building"
-                + " using an SDK from platfrom prebuilds.");
+        progress.logWarning(
+                "Installing missing SDK components is not supported when building"
+                        + " using an SDK from platform prebuilds.");
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public File getLocalEmulator() {
+        ProgressIndicator progress = new ConsoleProgressIndicator();
+        progress.logWarning(
+                "Retrieving the Emulator is not supported when building using an"
+                        + " SDK from platform prebuilds.");
         return null;
     }
 

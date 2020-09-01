@@ -54,12 +54,14 @@ class SdkDirectLoadingStrategy(
         // We use Optional<> wrapper since ConcurrentHashMap don't support null values.
         private val buildToolsCache = ConcurrentHashMap<Revision, Optional<BuildToolInfo>>()
         private val platformCache = ConcurrentHashMap<String, Optional<PlatformComponents>>()
+        private val systemImageCache = ConcurrentHashMap<String, Optional<SystemImageComponents>>()
 
         @VisibleForTesting
         @Synchronized
         fun clearCaches() {
             buildToolsCache.clear()
             platformCache.clear()
+            systemImageCache.clear()
         }
     }
 
@@ -69,10 +71,12 @@ class SdkDirectLoadingStrategy(
 
     /** Holder of all components loaded **/
     private class DirectLoadComponents(
+        internal val sdkDirectory: File,
         internal val platformTools: PlatformToolsComponents,
         internal val supportTools: SupportToolsComponents,
         internal val buildToolInfo: BuildToolInfo,
-        internal val platform: PlatformComponents
+        internal val platform: PlatformComponents,
+        internal val emulator: EmulatorComponents?
     )
 
     @Synchronized
@@ -125,15 +129,19 @@ class SdkDirectLoadingStrategy(
             )
         }.orElse(null)
 
+        val emulator = EmulatorComponents.build(sdkDirectory)
+
         if (platformTools == null || supportTools == null || buildTools == null || platform == null) {
             return null
         }
 
         return DirectLoadComponents(
+            sdkDirectory,
             platformTools,
             supportTools,
             buildTools,
-            platform
+            platform,
+            emulator
         )
     }
 
@@ -200,6 +208,18 @@ class SdkDirectLoadingStrategy(
         RenderScriptProcessor.getSupportBlasLibFolder(it.location)
     }
 
+    fun getSystemImageLibFolder(imageHash: String) =
+        systemImageCache.getOrPut(imageHash) {
+            Optional.ofNullable(
+                SystemImageComponents.build(
+                    components?.sdkDirectory,
+                    imageHash
+                ))
+        }.orElse(null)?.systemImageDir
+
+    fun getEmulatorLibFolder() = components?.emulator?.emulatorDir
+
+
     fun reset() {
         clearCaches()
     }
@@ -262,6 +282,7 @@ private class PlatformComponents(
     /** This is the optional libraries of this platform. **/
     internal val optionalLibraries: List<OptionalLibrary>) {
 
+    // TODO: fix documentation.
     companion object {
         internal fun build(sdkDirectory: File, targetHash: String): PlatformComponents? {
             if (!AndroidTargetHash.isPlatform(targetHash)) {
@@ -298,6 +319,38 @@ private class PlatformComponents(
                     platformPackage
                 )
             )
+        }
+    }
+}
+
+private class SystemImageComponents(internal val systemImageDir: File) {
+    companion object{
+        internal fun build(sdkDirectory: File?, targetHash: String): SystemImageComponents? {
+            sdkDirectory ?: return null
+            if (!AndroidTargetHash.isSystemImage(targetHash)) {
+                // If it is not a system image hash, we have no way of finding what directory it is
+                // in here.
+                return null
+            }
+            val systemImageBase = sdkDirectory.resolve(targetHash.replace(';', '/'))
+            val systemImageXml = systemImageBase.resolve("package.xml")
+            if (!systemImageXml.exists()) {
+                return null
+            }
+            return SystemImageComponents(systemImageBase)
+        }
+    }
+}
+
+private class EmulatorComponents(internal val emulatorDir: File) {
+    companion object{
+        internal fun build(sdkDirectory: File): EmulatorComponents? {
+            val emulatorBase = sdkDirectory.resolve(SdkConstants.FD_EMULATOR)
+            val emulatorXml = emulatorBase.resolve("package.xml")
+            if (!emulatorXml.exists()) {
+                return null
+            }
+            return EmulatorComponents(emulatorBase)
         }
     }
 }
