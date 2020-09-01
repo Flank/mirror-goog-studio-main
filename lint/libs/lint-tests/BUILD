@@ -76,6 +76,7 @@ kotlin_test(
         "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
+        "//tools/base/common:tools.fixtures",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/lint:tools.lint-api",
         "//tools/base/lint:tools.lint-checks",

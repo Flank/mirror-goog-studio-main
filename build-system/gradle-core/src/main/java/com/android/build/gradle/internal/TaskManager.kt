@@ -87,6 +87,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CL
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
+import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.AndroidReportTask
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
@@ -222,6 +223,7 @@ import org.gradle.api.logging.Logging
 import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPlugin
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
@@ -306,11 +308,15 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
 
         // Create C/C++ configuration, build, and clean tasks
+        val androidLocationBuildService: Provider<AndroidLocationsBuildService> =
+                getBuildService(project.gradle.sharedServices)
         createCxxTasks(
-                globalScope.sdkComponents.get(),
-                globalScope.dslServices.issueReporter,
-                taskFactory,
-                variants);
+            androidLocationBuildService.get(),
+            globalScope.sdkComponents.get(),
+            globalScope.dslServices.issueReporter,
+            taskFactory,
+            variants
+        )
     }
 
     fun createPostApiTasks() {
@@ -2037,13 +2043,18 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             return
         }
 
+        val service: Provider<AndroidLocationsBuildService> =
+                getBuildService(
+                    creationConfig.services.buildServiceRegistry,
+                    AndroidLocationsBuildService::class.java
+                )
+
         // FIXME create one per signing config instead of one per variant.
         taskFactory.register(
                 ValidateSigningTask.CreationAction(
                         creationConfig,
-                        getDefaultDebugKeystoreLocation(
-                                creationConfig.services.gradleEnvironmentProvider,
-                                LoggerWrapper(logger))))
+                        service.get().getDefaultDebugKeystoreLocation()
+                        ))
     }
 
     /**

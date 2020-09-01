@@ -22,6 +22,7 @@ import static com.android.SdkConstants.FN_ADB;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.prefs.AndroidLocationsSingleton;
 import com.android.repository.Revision;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.sdklib.BuildToolInfo;
@@ -82,7 +83,8 @@ public class SdkHelper {
             @NonNull BuildToolInfo.PathId pathId) {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         BuildToolInfo buildToolInfo =
-                AndroidSdkHandler.getInstance(findSdkDir().toPath())
+                AndroidSdkHandler.getInstance(
+                                AndroidLocationsSingleton.INSTANCE, findSdkDir().toPath())
                         .getBuildToolInfo(revision, progress);
         if (buildToolInfo == null) {
             throw new RuntimeException("Test requires build-tools " + revision.toString());
@@ -99,7 +101,8 @@ public class SdkHelper {
     public static IAndroidTarget getTarget(int minimumApiLevel) {
         FakeProgressIndicator progressIndicator = new FakeProgressIndicator();
         IAndroidTarget target =
-                AndroidSdkHandler.getInstance(findSdkDir().toPath())
+                AndroidSdkHandler.getInstance(
+                                AndroidLocationsSingleton.INSTANCE, findSdkDir().toPath())
                         .getAndroidTargetManager(progressIndicator)
                         .getTargetOfAtLeastApiLevel(minimumApiLevel, progressIndicator);
         return target;

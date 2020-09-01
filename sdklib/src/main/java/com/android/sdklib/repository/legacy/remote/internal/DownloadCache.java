@@ -19,8 +19,7 @@ package com.android.sdklib.repository.legacy.remote.internal;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.prefs.AndroidLocation;
-import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.prefs.AndroidLocationsSingleton;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.SettingsController;
 import com.android.repository.io.FileOp;
@@ -45,7 +44,6 @@ import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
 import org.apache.http.message.BasicHeader;
-
 
 /**
  * A simple cache for the XML resources handled by the SDK Manager.
@@ -177,8 +175,8 @@ public class DownloadCache {
             @NonNull SettingsController settings) {
         File androidFolder;
         try {
-            androidFolder = new File(AndroidLocation.getFolder());
-        } catch (AndroidLocationException e) {
+            androidFolder = AndroidLocationsSingleton.INSTANCE.getPrefsLocation();
+        } catch (Throwable e) {
             androidFolder = null;
         }
         return new DownloadCache(androidFolder, fileOp, strategy, settings);

@@ -20,8 +20,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.android.annotations.NonNull;
 import com.android.ddmlib.internal.DeviceImpl;
-import com.android.prefs.AndroidLocation;
+import com.android.prefs.AndroidLocationsSingleton;
 import com.android.testutils.SystemPropertyOverrides;
+import com.android.utils.FileUtils;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
@@ -51,11 +52,12 @@ public class EmulatorConsoleIntegrationTest extends TestCase {
                 mySystemPropertyOverrides.setProperty(
                         "user.home", mFakeUserHomeDirectory.toString());
             }
-            Path authTokenPath =
-                    new File(AndroidLocation.getUserHomeFolder(), ".emulator_console_auth_token")
-                            .toPath();
+            File homeLocation = AndroidLocationsSingleton.INSTANCE.getUserHomeLocation();
+            Truth.assertThat(homeLocation).named("Home Location").isNotNull();
+            FileUtils.mkdirs(homeLocation);
+            Path authTokenPath = new File(homeLocation, ".emulator_console_auth_token").toPath();
             fakeAuthToken = Files.createFile(authTokenPath);
-        } catch (IOException | AndroidLocation.AndroidLocationException ex) {
+        } catch (Throwable ex) {
             fail("Couldn't setup fake auth token file.  Error: " + ex.getMessage());
         }
     }

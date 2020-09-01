@@ -19,6 +19,7 @@ package com.android.tools.apk.analyzer;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.prefs.AndroidLocationsSingleton;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.NullLogger;
 import com.google.common.annotations.VisibleForTesting;
@@ -270,7 +271,9 @@ public class ApkAnalyzerCli {
                                 cmdName, toolsDirProp));
             }
         }
-        AndroidSdkHandler sdkHandler = AndroidSdkHandler.getInstance(Paths.get(osSdkFolder));
+        AndroidSdkHandler sdkHandler =
+                AndroidSdkHandler.getInstance(
+                        AndroidLocationsSingleton.INSTANCE, Paths.get(osSdkFolder));
         return new AaptInvoker(sdkHandler, new NullLogger());
     }
 

@@ -17,6 +17,7 @@ package com.android.sdklib.tool.sdkmanager;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.prefs.AndroidLocationsSingleton;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.License;
 import com.android.repository.api.ProgressIndicator;
@@ -75,7 +76,8 @@ public class SdkManagerCli {
                 throw new CommandFailedException();
             }
         }
-        AndroidSdkHandler handler = AndroidSdkHandler.getInstance(localPath);
+        AndroidSdkHandler handler =
+                AndroidSdkHandler.getInstance(AndroidLocationsSingleton.INSTANCE, localPath);
         new SdkManagerCli(
                         settings,
                         System.out,

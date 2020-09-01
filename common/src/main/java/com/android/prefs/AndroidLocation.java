@@ -31,7 +31,8 @@ import java.util.function.Function;
  *
  * <p>This does not manages the SDK location. For that see [SdkLocator]
  *
- * @deprecated Use {@link AndroidLocationsException} or {@link AndroidLocationsSingleton}.
+ * @deprecated Use {@link AndroidLocationsException} or {@link AndroidLocationsSingleton}. Inside
+ *     Gradle, use the build service instead of the singleton.
  */
 @Deprecated
 public final class AndroidLocation {

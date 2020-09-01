@@ -17,6 +17,7 @@ package com.android.sdklib.repository;
 
 import static com.android.repository.testframework.FakePackage.FakeLocalPackage;
 
+import com.android.prefs.AndroidLocationsSingleton;
 import com.android.repository.Revision;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.RepositorySource;
@@ -207,7 +208,8 @@ public class AndroidSdkHandlerTest extends TestCase {
         Locale.setDefault(new Locale("hi", "IN"));
         try {
             Set<RepositorySourceProvider> providers =
-                    AndroidSdkHandler.getInstance(TestUtils.getSdk())
+                    AndroidSdkHandler.getInstance(
+                                    AndroidLocationsSingleton.INSTANCE, TestUtils.getSdk())
                             .getSdkManager(new FakeProgressIndicator())
                             .getSourceProviders();
             boolean found = false;

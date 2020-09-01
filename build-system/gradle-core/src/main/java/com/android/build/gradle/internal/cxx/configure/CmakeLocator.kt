@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLog
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.warnln
+import com.android.prefs.AndroidLocationsProvider
 import com.android.repository.Revision
 import com.android.repository.api.LocalPackage
 import com.android.sdklib.repository.AndroidSdkHandler
@@ -173,9 +174,10 @@ private fun getSdkCmakeFolders(sdkRoot : File?) : List<File> {
 }
 
 private fun getSdkCmakePackages(
+    androidLocationsProvider: AndroidLocationsProvider,
     sdkFolder: File?
 ): List<LocalPackage> {
-    val androidSdkHandler = AndroidSdkHandler.getInstance(sdkFolder?.toPath())
+    val androidSdkHandler = AndroidSdkHandler.getInstance(androidLocationsProvider, sdkFolder?.toPath())
     val sdkManager = androidSdkHandler.getSdkManager(
         LoggerProgressIndicatorWrapper(
             ThreadLoggingEnvironment.getILogger(CMAKE_PACKAGES_SDK, CMAKE_PACKAGES_SDK)
@@ -436,6 +438,7 @@ class CmakeLocator {
     fun findCmakePath(
         cmakeVersionFromDsl: String?,
         cmakeFile: File?,
+        androidLocationsProvider: AndroidLocationsProvider,
         sdkFolder: File?,
         downloader: Consumer<String>): File? {
         PassThroughDeduplicatingLoggingEnvironment().use {
@@ -446,7 +449,7 @@ class CmakeLocator {
                     { getEnvironmentPaths() },
                     { getSdkCmakeFolders(sdkFolder) },
                     { folder -> getCmakeRevisionFromExecutable(folder) },
-                    { getSdkCmakePackages(sdkFolder) })
+                    { getSdkCmakePackages(androidLocationsProvider, sdkFolder) })
         }
     }
 }

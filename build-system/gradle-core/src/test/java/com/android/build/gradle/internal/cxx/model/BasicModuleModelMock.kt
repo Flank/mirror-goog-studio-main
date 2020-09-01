@@ -55,6 +55,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.builder.errors.IssueReporter
+import com.android.prefs.AndroidLocationsProvider
 import com.android.repository.Revision
 import com.android.utils.FileUtils.join
 import org.gradle.api.Project
@@ -180,6 +181,10 @@ open class BasicModuleModelMock {
     val mergedNdkConfig = mock(
         MergedNdkConfig::class.java,
         throwUnmocked
+    )
+
+    val androidLocationProvider = mock(
+        AndroidLocationsProvider::class.java
     )
 
     val sdkComponents = mock(
@@ -403,7 +408,7 @@ open class BasicModuleModelMock {
             doReturn(ndkFolder).`when`(ndkInstallStatus.getOrThrow()).ndkDirectory
             doReturn(Revision.parseRevision(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)).`when`(ndkInstallStatus.getOrThrow()).revision
             doReturn(cmakeDir.parentFile).`when`(cmakeFinder)
-                .findCmakePath(any(), any(), any(), any())
+                .findCmakePath(any(), any(), any(), any(), any())
 
             doReturn(null).`when`(gradle).parent
 

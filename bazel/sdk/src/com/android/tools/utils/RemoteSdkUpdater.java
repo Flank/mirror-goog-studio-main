@@ -20,6 +20,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.prefs.AndroidLocationsSingleton;
 import com.android.repository.api.Channel;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.ProgressIndicator;
@@ -233,7 +234,9 @@ public final class RemoteSdkUpdater {
                     }
                 };
 
-        RepoManager repoManager = AndroidSdkHandler.getInstance(null).getSdkManager(progress);
+        RepoManager repoManager =
+                AndroidSdkHandler.getInstance(AndroidLocationsSingleton.INSTANCE, null)
+                        .getSdkManager(progress);
         repoManager.loadSynchronously(0, progress, new LegacyDownloader(fop, settings), settings);
 
         RepositoryPackages packages = repoManager.getPackages();

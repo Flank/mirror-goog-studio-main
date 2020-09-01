@@ -45,6 +45,7 @@ class LookupSettingFromModelKtTest {
             // Walk all vals in the model and invoke them
             val module = createCxxModuleModel(
                 it.sdkComponents,
+                it.androidLocationProvider,
                 it.configurationParameters,
                 it.cmakeFinder)
             val variant = createCxxVariantModel(
@@ -73,6 +74,7 @@ class LookupSettingFromModelKtTest {
                     buildSystem = NativeBuildSystem.NDK_BUILD)
             val abi = createInitialCxxModel(
                     sdkComponents,
+                    androidLocationProvider,
                     listOf(parameters))
                     .single { abi -> abi.abi == Abi.X86_64 }
 
@@ -91,7 +93,9 @@ class LookupSettingFromModelKtTest {
                             arguments = listOf("-DANDROID_STL=c++_shared")
                     )
             )
-            val allAbis = createInitialCxxModel(it.sdkComponents, listOf(configurationParameters))
+            val allAbis = createInitialCxxModel(
+                it.sdkComponents, it.androidLocationProvider, listOf(configurationParameters)
+            )
             val abi = allAbis.single { abi -> abi.abi == Abi.X86_64 }
 
             Macro.values().forEach { macro ->
@@ -127,7 +131,12 @@ class LookupSettingFromModelKtTest {
     @Test
     fun `ensure all ndkBuild macros example values are accurate`() {
         BasicNdkBuildMock().let {
-            val allAbis = createInitialCxxModel(it.sdkComponents, listOf(it.configurationParameters))
+            val allAbis =
+                    createInitialCxxModel(
+                        it.sdkComponents,
+                        it.androidLocationProvider,
+                        listOf(it.configurationParameters)
+                    )
             val abi = allAbis.single { abi -> abi.abi == Abi.X86_64 }
 
             Macro.values().forEach { macro ->

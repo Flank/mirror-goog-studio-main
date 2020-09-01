@@ -44,6 +44,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.tasks.NativeBuildSystem
+import com.android.prefs.AndroidLocationsProvider
 import com.android.repository.Revision
 import com.android.utils.FileUtils.join
 import org.gradle.api.Project
@@ -63,6 +64,7 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     val cmake = Mockito.mock(CmakeOptions::class.java)
     val ndkBuild = Mockito.mock(NdkBuildOptions::class.java)
     val project = Mockito.mock(Project::class.java)
+    val androidLocationProvider = Mockito.mock(AndroidLocationsProvider::class.java)
     val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
     val sdkDirectoryProvider = Mockito.mock(Provider::class.java) as Provider<Directory>
     val sdkDirectory = Mockito.mock(Directory::class.java)
@@ -142,7 +144,7 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     val componentParameters = tryCreateConfigurationParameters(
             variantImpl
     )!!
-    val module = createCxxModuleModel(sdkComponents, componentParameters)
+    val module = createCxxModuleModel(sdkComponents, androidLocationProvider, componentParameters)
     val variant = createCxxVariantModel(componentParameters, module)
     return createCxxAbiModel(
         sdkComponents,

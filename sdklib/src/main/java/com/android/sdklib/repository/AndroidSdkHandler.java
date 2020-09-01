@@ -21,7 +21,8 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Slow;
-import com.android.prefs.AndroidLocation;
+import com.android.prefs.AbstractAndroidLocations;
+import com.android.prefs.AndroidLocationsProvider;
 import com.android.repository.Revision;
 import com.android.repository.api.ConstantSourceProvider;
 import com.android.repository.api.LocalPackage;
@@ -190,7 +191,7 @@ public final class AndroidSdkHandler {
     /** Location of the local SDK. */
     @Nullable private final Path mLocation;
 
-    /** @see AndroidLocation#getFolder() */
+    /** @see AbstractAndroidLocations#getPrefsLocation() */
     @Nullable private final Path mAndroidFolder;
 
     /**
@@ -207,11 +208,13 @@ public final class AndroidSdkHandler {
     /**
      * Get a {@code AndroidSdkHandler} instance.
      *
+     * @param locationProvider a location provider to get the path to the .android folder.
      * @param localPath The path to the local SDK. If {@code null} this handler will only be used
      *     for remote operations.
      */
     @NonNull
-    public static AndroidSdkHandler getInstance(@Nullable Path localPath) {
+    public static AndroidSdkHandler getInstance(
+            @NonNull AndroidLocationsProvider locationProvider, @Nullable Path localPath) {
         Path key = localPath == null ? NULL_PATH : localPath;
         synchronized (sInstances) {
             return sInstances.computeIfAbsent(
@@ -219,8 +222,8 @@ public final class AndroidSdkHandler {
                     k -> {
                         Path androidFolder;
                         try {
-                            androidFolder = Paths.get(AndroidLocation.getFolder());
-                        } catch (AndroidLocation.AndroidLocationException e) {
+                            androidFolder = locationProvider.getPrefsLocation().toPath();
+                        } catch (Throwable e) {
                             androidFolder = null;
                         }
                         return new AndroidSdkHandler(
@@ -242,8 +245,8 @@ public final class AndroidSdkHandler {
     }
 
     /**
-     * Don't use this, use {@link #getInstance(Path)}, unless you're in a unit test and need to
-     * specify a custom {@link FileOp} and/or {@code androidFolder}.
+     * Don't use this, use {@link #getInstance(AndroidLocationsProvider, Path)}, unless you're in a
+     * unit test and need to specify a custom {@link FileOp} and/or {@code androidFolder}.
      */
     @VisibleForTesting
     public AndroidSdkHandler(

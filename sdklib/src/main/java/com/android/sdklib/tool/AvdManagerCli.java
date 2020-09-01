@@ -21,7 +21,8 @@ import static com.google.common.base.Verify.verifyNotNull;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.prefs.AndroidLocation;
+import com.android.prefs.AndroidLocationsException;
+import com.android.prefs.AndroidLocationsSingleton;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
@@ -146,7 +147,7 @@ class AvdManagerCli extends CommandLineParser {
     private AndroidSdkHandler mSdkHandler;
 
     private AvdManager mAvdManager;
-    private String mAvdFolder;
+    private File mAvdFolder;
 
     /**
      * Action definitions for AvdManager command line.
@@ -193,7 +194,9 @@ class AvdManagerCli extends CommandLineParser {
         init();
         parseArgs(args);
         if (mSdkHandler == null) {
-            mSdkHandler = AndroidSdkHandler.getInstance(Paths.get(mOsSdkFolder));
+            mSdkHandler =
+                    AndroidSdkHandler.getInstance(
+                            AndroidLocationsSingleton.INSTANCE, Paths.get(mOsSdkFolder));
         }
         doAction();
     }
@@ -258,8 +261,8 @@ class AvdManagerCli extends CommandLineParser {
     private void init() {
         if (mAvdFolder == null) {
             try {
-                mAvdFolder = AndroidLocation.getAvdFolder();
-            } catch (AndroidLocation.AndroidLocationException e) {
+                mAvdFolder = AndroidLocationsSingleton.INSTANCE.getAvdLocation();
+            } catch (Throwable e) {
                 // We'll print an error out later since the folder isn't defined.
             }
         }
@@ -332,17 +335,14 @@ class AvdManagerCli extends CommandLineParser {
     }
 
     /**
-     * Lazily creates and returns an instance of the AVD Manager. The same instance is reused
-     * later.
+     * Lazily creates and returns an instance of the AVD Manager. The same instance is reused later.
      *
      * @return A non-null AVD Manager instance.
      */
     @NonNull
-    private AvdManager getAvdManager() throws AndroidLocation.AndroidLocationException {
+    private AvdManager getAvdManager() throws AndroidLocationsException {
         if (mAvdManager == null) {
-            mAvdManager =
-                    verifyNotNull(
-                            AvdManager.getInstance(mSdkHandler, new File(mAvdFolder), mSdkLog));
+            mAvdManager = verifyNotNull(AvdManager.getInstance(mSdkHandler, mAvdFolder, mSdkLog));
         }
         return mAvdManager;
     }
@@ -518,7 +518,7 @@ class AvdManagerCli extends CommandLineParser {
         try {
             AvdManager avdManager = getAvdManager();
             displayAvdList(avdManager);
-        } catch (AndroidLocation.AndroidLocationException e) {
+        } catch (AndroidLocationsException e) {
             errorAndExit(e.getMessage());
         }
     }
@@ -625,8 +625,8 @@ class AvdManagerCli extends CommandLineParser {
     private DeviceManager createDeviceManager() {
         File androidFolder;
         try {
-            androidFolder = new File(AndroidLocation.getFolder());
-        } catch (AndroidLocation.AndroidLocationException e) {
+            androidFolder = AndroidLocationsSingleton.INSTANCE.getPrefsLocation();
+        } catch (Throwable e) {
             mSdkLog.warning(e.getMessage());
             androidFolder = null;
         }
@@ -862,7 +862,7 @@ class AvdManagerCli extends CommandLineParser {
                 errorAndExit("AVD not created.");
             }
 
-        } catch (AndroidLocation.AndroidLocationException e) {
+        } catch (AndroidLocationsException e) {
             errorAndExit(e.getMessage());
         }
     }
@@ -911,7 +911,7 @@ class AvdManagerCli extends CommandLineParser {
             }
 
             avdManager.deleteAvd(info, mSdkLog);
-        } catch (AndroidLocation.AndroidLocationException e) {
+        } catch (AndroidLocationsException e) {
             errorAndExit(e.getMessage());
         }
     }
@@ -966,15 +966,18 @@ class AvdManagerCli extends CommandLineParser {
             // to rename that folder too.
             if (newName != null && paramFolderPath == null) {
                 // Compute the original data path
-                File originalFolder = new File(
-                        AndroidLocation.getFolder() + AndroidLocation.FOLDER_AVD,
-                        info.getName() + AvdManager.AVD_FOLDER_EXTENSION);
+                File originalFolder =
+                        new File(
+                                AndroidLocationsSingleton.INSTANCE.getAvdLocation(),
+                                info.getName() + AvdManager.AVD_FOLDER_EXTENSION);
                 if (originalFolder.equals(new File(info.getDataFolderPath()))) {
                     try {
                         // The AVD is using the default data folder path based on the AVD name.
                         // That folder needs to be adjusted to use the new name.
-                        File f = new File(AndroidLocation.getFolder() + AndroidLocation.FOLDER_AVD,
-                                newName + AvdManager.AVD_FOLDER_EXTENSION);
+                        File f =
+                                new File(
+                                        AndroidLocationsSingleton.INSTANCE.getAvdLocation(),
+                                        newName + AvdManager.AVD_FOLDER_EXTENSION);
                         paramFolderPath = f.getCanonicalPath();
                     } catch (IOException e) {
                         // Fail to resolve canonical path. Fail now rather than later.
@@ -1009,7 +1012,7 @@ class AvdManagerCli extends CommandLineParser {
                 avdManager.updateAvd(info, properties);
             }
             avdManager.moveAvd(info, newName, paramFolderPath, mSdkLog);
-        } catch (AndroidLocation.AndroidLocationException | IOException e) {
+        } catch (AndroidLocationsException | IOException e) {
             errorAndExit(e.getMessage());
         }
     }
@@ -1422,7 +1425,7 @@ class AvdManagerCli extends CommandLineParser {
         mSdkHandler = sdkHandler;
         mOsSdkFolder = sdkRoot;
         mInput = input;
-        mAvdFolder = avdRoot;
+        mAvdFolder = new File(avdRoot);
     }
 
     private AvdManagerCli(ILogger logger) {

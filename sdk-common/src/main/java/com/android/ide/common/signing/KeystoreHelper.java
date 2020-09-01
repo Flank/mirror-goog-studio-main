@@ -18,12 +18,10 @@ package com.android.ide.common.signing;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.prefs.AndroidLocation;
-import com.android.prefs.AndroidLocation.AndroidLocationException;
-import com.android.utils.EnvironmentProvider;
+import com.android.prefs.AndroidLocationsException;
+import com.android.prefs.AndroidLocationsProvider;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
-import com.android.utils.StdLogger;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.io.Closeables;
@@ -70,33 +68,19 @@ public final class KeystoreHelper {
      */
     private static final int DEFAULT_VALIDITY_YEARS = 30;
 
-
     /**
      * Returns the location of the default debug keystore.
      *
      * @return The location of the default debug keystore
-     * @throws AndroidLocationException if the location cannot be computed
+     * @throws AndroidLocationsException if the location cannot be computed
      */
     @NonNull
-    public static String defaultDebugKeystoreLocation() throws AndroidLocationException {
-        return defaultDebugKeystoreLocation(
-                EnvironmentProvider.DIRECT, new StdLogger(StdLogger.Level.VERBOSE));
-    }
-
-    /**
-     * Returns the location of the default debug keystore.
-     *
-     * @return The location of the default debug keystore
-     * @throws AndroidLocationException if the location cannot be computed
-     */
-    @NonNull
-    public static String defaultDebugKeystoreLocation(
-            @NonNull EnvironmentProvider environmentProvider, @NonNull ILogger logger)
-            throws AndroidLocationException {
+    public static File defaultDebugKeystoreLocation(
+            @NonNull AndroidLocationsProvider androidLocationsProvider)
+            throws AndroidLocationsException {
         // this is guaranteed to either return a non null value (terminated with a platform
         // specific separator), or throw.
-        String folder = AndroidLocation.getFolder(environmentProvider, logger);
-        return folder + "debug.keystore";
+        return new File(androidLocationsProvider.getPrefsLocation(), "debug.keystore");
     }
 
     /**

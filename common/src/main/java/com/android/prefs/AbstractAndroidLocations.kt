@@ -38,16 +38,16 @@ abstract class AbstractAndroidLocations protected constructor(
         /**
          * The name of the .android folder returned by [prefsLocation].
          */
-        @JvmStatic
+        @JvmField
         val FOLDER_DOT_ANDROID = ".android"
 
         /**
          * Virtual Device folder inside the path returned by [avdLocation]
          */
-        @JvmStatic
+        @JvmField
         val FOLDER_AVD = "avd"
 
-        @JvmStatic
+        @JvmField
         val ANDROID_PREFS_ROOT = "ANDROID_PREFS_ROOT"
     }
 
@@ -58,12 +58,7 @@ abstract class AbstractAndroidLocations protected constructor(
      */
     @get:Throws(AndroidLocationsException::class)
     override val prefsLocation: File by lazy {
-        File(rootLocation, FOLDER_DOT_ANDROID)
-    }
-
-    @Throws(AndroidLocationsException::class)
-    override fun getAndCreatePrefsLocation(): File {
-        return prefsLocation.also {
+        File(rootLocation, FOLDER_DOT_ANDROID).also {
             if (!it.exists()) {
                 try {
                     FileUtils.mkdirs(it)
@@ -95,7 +90,7 @@ This is the path of preference folder expected by the Android tools."""
     /**
      * Computes, memoizes in the instance, and returns the location of the home folder.
      */
-    override val useHomeLocation: File? by lazy {
+    override val userHomeLocation: File? by lazy {
         findValidPath(mutableListOf(), Global.TEST_TMPDIR, Global.USER_HOME, Global.HOME)
     }
 

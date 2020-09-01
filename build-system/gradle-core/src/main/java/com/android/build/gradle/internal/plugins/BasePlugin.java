@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.NonFinalPluginExpiry;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
+import com.android.build.gradle.internal.SdkComponentsBuildService.VersionedSdkLoader;
 import com.android.build.gradle.internal.SdkComponentsKt;
 import com.android.build.gradle.internal.SdkLocator;
 import com.android.build.gradle.internal.TaskManager;
@@ -82,6 +83,7 @@ import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService;
 import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService;
+import com.android.build.gradle.internal.services.AndroidLocationsBuildService;
 import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.services.ClassesHierarchyBuildService;
 import com.android.build.gradle.internal.services.DslServices;
@@ -138,6 +140,7 @@ import org.gradle.api.plugins.ExtraPropertiesExtension;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.StopExecutionException;
 import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
@@ -273,6 +276,8 @@ public abstract class BasePlugin<
 
         this.project = project;
 
+        new AndroidLocationsBuildService.RegistrationAction(project).execute();
+
         optionService = new ProjectOptionService.RegistrationAction(project).execute().get();
 
         createProjectServices(project);
@@ -378,11 +383,27 @@ public abstract class BasePlugin<
                 .execute();
         Provider<SdkComponentsBuildService> sdkComponentsBuildService =
                 new SdkComponentsBuildService.RegistrationAction(project, projectOptions).execute();
+
+        Provider<AndroidLocationsBuildService> locationsProvider =
+                BuildServicesKt.getBuildService(
+                        project.getGradle().getSharedServices(),
+                        AndroidLocationsBuildService.class);
+
+        ProviderFactory providers = project.getProviders();
+        Provider<VersionedSdkLoader> versionSdkLoader =
+                sdkComponentsBuildService.map(
+                        buildService ->
+                                buildService.sdkLoader(
+                                        providers.provider(() -> extension.getCompileSdkVersion()),
+                                        providers.provider(
+                                                () -> extension.getBuildToolsRevision())));
         Provider<AvdComponentsBuildService> avdComponentsBuildService =
                 new AvdComponentsBuildService.RegistrationAction(
                                 project,
                                 getManagedDeviceAvdFolder(
-                                        project.getObjects(), project.getProviders()),
+                                        project.getObjects(),
+                                        project.getProviders(),
+                                        locationsProvider.get()),
                                 sdkComponentsBuildService,
                                 project.getProviders()
                                         .provider(() -> extension.getCompileSdkVersion()),

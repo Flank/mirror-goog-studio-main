@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,24 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.cxx.model
+package com.android.prefs
 
-import org.junit.Test
+import java.io.File
 
-class CreateCxxVariantModelTest {
+/**
+ * An implementation of AndroidLocationProvider to be used in tests.
+ *
+ * This is accessible through common's text fixtures artifact.
+ */
+class FakeAndroidLocationsProvider(override val userHomeLocation: File): AndroidLocationsProvider {
 
-    @Test
-    fun `simple variant does not throw exception`() {
-        BasicCmakeMock().let {
-            val module = createCxxModuleModel(
-                it.sdkComponents,
-                it.androidLocationProvider,
-                it.configurationParameters
-            )
-            createCxxVariantModel(
-                it.configurationParameters,
-                module
-            )
-        }
-    }
+    override val prefsLocation: File
+        get() = File(userHomeLocation, ".android").also { it.mkdirs() }
+
+    override val avdLocation: File
+        get() = File(prefsLocation, AbstractAndroidLocations.FOLDER_AVD)
 }

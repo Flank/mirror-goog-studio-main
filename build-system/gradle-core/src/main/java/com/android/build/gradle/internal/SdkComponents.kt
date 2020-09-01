@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.cxx.stripping.SymbolStripExecutableFind
 import com.android.build.gradle.internal.cxx.stripping.createSymbolStripExecutableFinder
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl
 import com.android.build.gradle.internal.ndk.NdkHandler
+import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -71,6 +72,7 @@ abstract class SdkComponentsBuildService @Inject constructor(
         val projectRootDir: RegularFileProperty
         val offlineMode: Property<Boolean>
         val issueReporter: Property<SyncIssueReporterImpl.GlobalSyncIssueService>
+        val androidLocationsServices: Property<AndroidLocationsBuildService>
 
         val enableSdkDownload: Property<Boolean>
         val androidSdkChannel: Property<Int>
@@ -84,7 +86,11 @@ abstract class SdkComponentsBuildService @Inject constructor(
     // Trick to not initialize the sdkHandler just to call unload() on it. Using the Delegate
     // allows to test wether or not the [SdkHandler] has been initialized.
     private val sdkHandlerDelegate = lazy {
-        SdkHandler(sdkSourceSet, parameters.issueReporter.get()).also {
+        SdkHandler(
+            parameters.androidLocationsServices.get(),
+            sdkSourceSet,
+            parameters.issueReporter.get()
+        ).also {
             it.setSdkLibData(
                 SdkLibDataFactory(
                     !parameters.offlineMode.get() && parameters.enableSdkDownload.get(),
@@ -339,6 +345,7 @@ abstract class SdkComponentsBuildService @Inject constructor(
             parameters.projectRootDir.set(project.rootDir)
             parameters.offlineMode.set(project.gradle.startParameter.isOffline)
             parameters.issueReporter.set(getBuildService(project.gradle.sharedServices))
+            parameters.androidLocationsServices.set(getBuildService(project.gradle.sharedServices))
 
             parameters.enableSdkDownload.set(projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD))
             parameters.androidSdkChannel.set(projectOptions.get(IntegerOption.ANDROID_SDK_CHANNEL))

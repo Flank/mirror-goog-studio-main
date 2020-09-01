@@ -18,8 +18,7 @@ package com.android.sdklib.repository.legacy.remote.internal.sources;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.prefs.AndroidLocation;
-import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.prefs.AndroidLocationsSingleton;
 import com.android.repository.api.RepoManager;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.google.common.annotations.VisibleForTesting;
@@ -187,7 +186,7 @@ class SdkSourceProperties {
     @VisibleForTesting
     protected boolean loadProperties() {
         try {
-            String folder = AndroidLocation.getFolder();
+            File folder = AndroidLocationsSingleton.INSTANCE.getPrefsLocation();
             File f = new File(folder, SRC_FILENAME);
             if (f.exists()) {
                 FileInputStream fis = null;
@@ -206,7 +205,7 @@ class SdkSourceProperties {
 
                 return true;
             }
-        } catch (AndroidLocationException ignore) {
+        } catch (Throwable ignore) {
             // nop
         }
         return false;
@@ -221,16 +220,14 @@ class SdkSourceProperties {
         // Persist it to the file
         FileOutputStream fos = null;
         try {
-            String folder = AndroidLocation.getFolder();
+            File folder = AndroidLocationsSingleton.INSTANCE.getPrefsLocation();
             File f = new File(folder, SRC_FILENAME);
 
             fos = new FileOutputStream(f);
 
             sSourcesProperties.store(fos,"## Sites Settings for Android SDK Manager");//$NON-NLS-1$
 
-        } catch (AndroidLocationException ignore) {
-            // nop
-        } catch (IOException ignore) {
+        } catch (Throwable ignore) {
             // nop
         } finally {
             if (fos != null) {

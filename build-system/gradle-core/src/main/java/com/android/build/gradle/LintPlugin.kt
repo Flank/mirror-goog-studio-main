@@ -40,9 +40,11 @@ import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
+import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.DslServicesImpl
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.StringCachingBuildService
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.options.Option
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.options.SyncOptions
@@ -252,6 +254,9 @@ abstract class LintPlugin : Plugin<Project> {
             project,
             SyncOptions.getModelQueryMode(projectServices.projectOptions)
         ).execute()
+
+        AndroidLocationsBuildService.RegistrationAction(project).execute()
+
         SdkComponentsBuildService.RegistrationAction(
             project,
             projectServices.projectOptions

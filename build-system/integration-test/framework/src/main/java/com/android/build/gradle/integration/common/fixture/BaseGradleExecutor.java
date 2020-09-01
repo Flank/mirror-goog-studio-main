@@ -26,7 +26,7 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.Option;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.StringOption;
-import com.android.prefs.AndroidLocation;
+import com.android.prefs.AbstractAndroidLocations;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
@@ -287,7 +287,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             arguments.add(
                     String.format(
                             "-D%s=%s",
-                            AndroidLocation.ANDROID_PREFS_ROOT,
+                            AbstractAndroidLocations.ANDROID_PREFS_ROOT,
                             preferencesRootDir.getAbsolutePath()));
         }
 

@@ -11,6 +11,7 @@ import com.android.build.gradle.integration.common.truth.ModelContainerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
+import com.android.prefs.AndroidLocationsSingleton;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
@@ -75,7 +76,8 @@ public class OptionalLibraryTest {
         File sdkLocation = project.getAndroidSdkDir();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager targetMgr =
-                AndroidSdkHandler.getInstance(sdkLocation.toPath())
+                AndroidSdkHandler.getInstance(
+                                AndroidLocationsSingleton.INSTANCE, sdkLocation.toPath())
                         .getAndroidTargetManager(progress);
         IAndroidTarget target =
                 targetMgr.getTargetFromHashString(GradleTestProject.getCompileSdkHash(), progress);
@@ -114,7 +116,8 @@ public class OptionalLibraryTest {
         File sdkLocation = project.getAndroidSdkDir();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager targetMgr =
-                AndroidSdkHandler.getInstance(sdkLocation.toPath())
+                AndroidSdkHandler.getInstance(
+                                AndroidLocationsSingleton.INSTANCE, sdkLocation.toPath())
                         .getAndroidTargetManager(progress);
         IAndroidTarget target =
                 targetMgr.getTargetFromHashString(GradleTestProject.getCompileSdkHash(), progress);

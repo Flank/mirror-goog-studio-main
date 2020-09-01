@@ -26,20 +26,12 @@ interface AndroidLocationsProvider {
     /**
      * The location of the .android folder
      *
-     * To query the AVD Folder, use [avdLocation] as it could be be overridden
-     */
-    @get:Throws(AndroidLocationsException::class)
-    val prefsLocation: File
-
-    /**
-     * The location of the .android folder.
-     *
      * This creates the folder if it's missing
      *
      * To query the AVD Folder, use [avdLocation] as it could be be overridden
      */
-    @Throws(AndroidLocationsException::class)
-    fun getAndCreatePrefsLocation(): File
+    @get:Throws(AndroidLocationsException::class)
+    val prefsLocation: File
 
     /**
      * The location of the AVD folder.
@@ -54,5 +46,5 @@ interface AndroidLocationsProvider {
      *
      * To query the AVD Folder, use [avdLocation] as it could be overridden
      */
-    val useHomeLocation: File?
+    val userHomeLocation: File?
 }

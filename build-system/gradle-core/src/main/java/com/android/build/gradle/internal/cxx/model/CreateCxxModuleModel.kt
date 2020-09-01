@@ -29,7 +29,9 @@ import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import com.android.build.gradle.internal.cxx.configure.ndkMetaAbisFile
 import com.android.build.gradle.internal.cxx.configure.trySymlinkNdk
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationParameters
+import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
+import com.android.prefs.AndroidLocationsProvider
 import com.android.utils.FileUtils.join
 import java.io.File
 import java.io.FileReader
@@ -39,6 +41,7 @@ import java.io.FileReader
  */
 fun createCxxModuleModel(
     sdkComponents : SdkComponentsBuildService,
+    androidLocationProvider: AndroidLocationsProvider,
     configurationParameters: CxxConfigurationParameters,
     cmakeLocator: CmakeLocator
 ) : CxxModuleModel {
@@ -103,6 +106,7 @@ fun createCxxModuleModel(
                         cmakeLocator.findCmakePath(
                                 configurationParameters.cmakeVersion,
                                 localPropertyFile(CMAKE_DIR_PROPERTY),
+                                androidLocationProvider,
                                 sdkComponents.sdkDirectoryProvider.get().asFile
                         ) { sdkComponents.installCmake(it) }
                     val cmakeExe =
@@ -149,9 +153,11 @@ fun createCxxModuleModel(
 
 fun createCxxModuleModel(
     sdkComponents: SdkComponentsBuildService,
+    androidLocationProvider: AndroidLocationsProvider,
     configurationParameters: CxxConfigurationParameters
 ) = createCxxModuleModel(
     sdkComponents,
+    androidLocationProvider,
     configurationParameters,
     CmakeLocator()
 )

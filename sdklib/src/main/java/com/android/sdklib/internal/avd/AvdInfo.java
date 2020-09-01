@@ -19,7 +19,6 @@ package com.android.sdklib.internal.avd;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.repository.io.FileOp;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.ISystemImage;
@@ -252,17 +251,16 @@ public final class AvdInfo implements Comparable<AvdInfo> {
     }
 
     /**
-     * Helper method that returns the default AVD folder that would be used for a given
-     * AVD name <em>if and only if</em> the AVD was created with the default choice.
-     * <p>
-     * Callers must NOT use this to "guess" the actual folder from an actual AVD since
-     * the purpose of the AVD .ini file is to be able to change this folder. Callers
-     * should however use this to create a new {@link AvdInfo} to setup its data folder
-     * to the default.
-     * <p>
-     * The default is {@code getDefaultAvdFolder()/avdname.avd/}.
-     * <p>
-     * For an actual existing AVD, callers must use {@link #getDataFolderPath()} instead.
+     * Helper method that returns the default AVD folder that would be used for a given AVD name
+     * <em>if and only if</em> the AVD was created with the default choice.
+     *
+     * <p>Callers must NOT use this to "guess" the actual folder from an actual AVD since the
+     * purpose of the AVD .ini file is to be able to change this folder. Callers should however use
+     * this to create a new {@link AvdInfo} to setup its data folder to the default.
+     *
+     * <p>The default is {@code getDefaultAvdFolder()/avdname.avd/}.
+     *
+     * <p>For an actual existing AVD, callers must use {@link #getDataFolderPath()} instead.
      *
      * @param manager The AVD Manager, used to get the AVD storage path.
      * @param avdName The name of the desired AVD.
@@ -270,9 +268,11 @@ public final class AvdInfo implements Comparable<AvdInfo> {
      * @throws AndroidLocationException if there's a problem getting android root directory.
      */
     @NonNull
-    public static File getDefaultAvdFolder(@NonNull AvdManager manager, @NonNull String avdName,
-            @NonNull FileOp fileOp, boolean unique)
-            throws AndroidLocationException {
+    public static File getDefaultAvdFolder(
+            @NonNull AvdManager manager,
+            @NonNull String avdName,
+            @NonNull FileOp fileOp,
+            boolean unique) {
         File base = manager.getBaseAvdFolder();
         File result = new File(base, avdName + AvdManager.AVD_FOLDER_EXTENSION);
         if (unique) {
@@ -287,16 +287,14 @@ public final class AvdInfo implements Comparable<AvdInfo> {
 
     /**
      * Helper method that returns the .ini {@link File} for a given AVD name.
-     * <p>
-     * The default is {@code getDefaultAvdFolder()/avdname.ini}.
+     *
+     * <p>The default is {@code getDefaultAvdFolder()/avdname.ini}.
      *
      * @param manager The AVD Manager, used to get the AVD storage path.
      * @param avdName The name of the desired AVD.
-     * @throws AndroidLocationException if there's a problem getting android root directory.
      */
     @NonNull
-    public static File getDefaultIniFile(@NonNull AvdManager manager, @NonNull String avdName)
-            throws AndroidLocationException {
+    public static File getDefaultIniFile(@NonNull AvdManager manager, @NonNull String avdName) {
         File avdRoot = manager.getBaseAvdFolder();
         return new File(avdRoot, avdName + AvdManager.INI_EXTENSION);
     }

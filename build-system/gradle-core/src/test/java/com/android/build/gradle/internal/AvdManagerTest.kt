@@ -19,6 +19,7 @@ package com.android.build.gradle.internal
 import com.android.SdkConstants
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
+import com.android.prefs.AndroidLocationsSingleton
 import com.android.repository.testframework.MockFileOp
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.google.common.truth.Truth.assertThat
@@ -66,7 +67,9 @@ class AvdManagerTest {
         manager = AvdManager(
             fileOp.toFile(avdFolder),
             FakeGradleProvider(versionedSdkLoader),
-            sdkHandler)
+            sdkHandler,
+            AndroidLocationsSingleton
+        )
     }
 
     @Test

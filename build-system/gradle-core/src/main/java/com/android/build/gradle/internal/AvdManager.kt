@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal
 
 import com.android.SdkConstants
+import com.android.prefs.AndroidLocationsProvider
 import com.android.sdklib.PathFileWrapper
 import com.android.sdklib.devices.DeviceManager
 import com.android.sdklib.internal.avd.AvdCamera
@@ -38,7 +39,8 @@ import java.io.File
 class AvdManager(
     avdFolder: File,
     private val versionedSdkLoader: Provider<SdkComponentsBuildService.VersionedSdkLoader>,
-    private val sdkHandler: AndroidSdkHandler
+    private val sdkHandler: AndroidSdkHandler,
+    private val androidLocationsProvider: AndroidLocationsProvider
 ) {
 
     private val sdkDirectory: File
@@ -55,7 +57,7 @@ class AvdManager(
     }
 
     private val deviceManager: DeviceManager by lazy {
-        DeviceManager.createInstance(sdkDirectory.toPath(), logger)
+        DeviceManager.createInstance(androidLocationsProvider, sdkDirectory.toPath(), logger)
     }
 
     fun createOrRetrieveAvd(

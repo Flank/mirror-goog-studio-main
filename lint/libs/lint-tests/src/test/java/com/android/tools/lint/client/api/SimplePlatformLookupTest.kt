@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.client.api
 
+import com.android.prefs.FakeAndroidLocationsProvider
 import com.android.repository.api.ConsoleProgressIndicator
 import com.android.repository.api.ProgressIndicatorAdapter
 import com.android.sdklib.IAndroidTarget
@@ -44,6 +45,9 @@ class SimplePlatformLookupTest {
     @get:Rule
     var temporaryFolder = TemporaryFolder()
 
+    @get:Rule
+    val homeFolder = TemporaryFolder()
+
     private fun checkQueries(checks: (PlatformLookup) -> Unit) {
         val sdkFolder = createSampleSdk()
         checkQueries(sdkFolder, checks)
@@ -60,7 +64,11 @@ class SimplePlatformLookupTest {
     ) {
         // Now process the same folder with the real SDK manager to see
         // how it does
-        val handler = AndroidSdkHandler.getInstance(sdkFolder.toPath())
+        val handler = AndroidSdkHandler.getInstance(
+            FakeAndroidLocationsProvider(homeFolder.root),
+            sdkFolder.toPath()
+        )
+
         val logger = object : ConsoleProgressIndicator() {
             override fun logInfo(s: String) {
             }

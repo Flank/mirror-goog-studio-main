@@ -19,7 +19,7 @@ package com.android.ddmlib;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
-import com.android.prefs.AndroidLocation;
+import com.android.prefs.AndroidLocationsSingleton;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -340,7 +340,7 @@ public final class EmulatorConsole {
             } catch (IOException e) {
                 Log.w(LOG_TAG, "Failed to start Emulator console for " + mPort);
                 return false;
-            } catch (AndroidLocation.AndroidLocationException e) {
+            } catch (Throwable e) {
                 Log.w(LOG_TAG, "Failed to get emulator console auth token");
                 return false;
             }
@@ -639,8 +639,11 @@ public final class EmulatorConsole {
         }
     }
 
-    public synchronized String sendAuthentication() throws IOException, AndroidLocation.AndroidLocationException {
-        File emulatorConsoleAuthTokenFile = new File(AndroidLocation.getUserHomeFolder(), EMULATOR_CONSOLE_AUTH_TOKEN);
+    public synchronized String sendAuthentication() throws IOException {
+        File emulatorConsoleAuthTokenFile =
+                new File(
+                        AndroidLocationsSingleton.INSTANCE.getUserHomeLocation(),
+                        EMULATOR_CONSOLE_AUTH_TOKEN);
         String authToken =
                 Files.asCharSource(emulatorConsoleAuthTokenFile, Charsets.UTF_8).read().trim();
         String command = String.format(COMMAND_AUTH, authToken);
