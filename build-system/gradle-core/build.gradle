@@ -92,10 +92,6 @@ gradlePlugin {
             id = "com.android.dynamic-feature"
             implementationClass = "com.android.build.gradle.DynamicFeaturePlugin"
         }
-        comAndroidReporting {
-            id = "com.android.reporting"
-            implementationClass = "com.android.build.gradle.ReportingPlugin"
-        }
         comAndroidAssetPack {
             id = "com.android.asset-pack"
             implementationClass = "com.android.build.gradle.AssetPackPlugin"
