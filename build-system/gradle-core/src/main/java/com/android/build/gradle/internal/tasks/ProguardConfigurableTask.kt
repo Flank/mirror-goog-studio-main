@@ -24,7 +24,6 @@ import com.android.build.api.transform.QualifiedContent.Scope
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.VariantManager
-import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dependency.AndroidAttributes
@@ -100,7 +99,8 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
     @JvmOverloads
     internal constructor(
         creationConfig: CreationConfigT,
-        private val isTestApplication: Boolean = false
+        private val isTestApplication: Boolean = false,
+        private val addCompileRClass: Boolean
     ) : VariantTaskCreationAction<TaskT, CreationConfigT>(
         creationConfig
     ) {
@@ -225,6 +225,14 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
             task.includeFeaturesInScopes.set(includeFeaturesInScopes)
 
             task.classes.from(classes)
+
+            if (addCompileRClass) {
+                task.classes.from(
+                        creationConfig
+                                .artifacts
+                                .get(InternalArtifactType.COMPILE_R_CLASS_JAR)
+                )
+            }
 
             task.resources.from(resources)
 

@@ -173,8 +173,10 @@ abstract class R8Task: ProguardConfigurableTask() {
 
     class CreationAction(
             creationConfig: ConsumableCreationConfig,
-            isTestApplication: Boolean = false
-    ) : ProguardConfigurableTask.CreationAction<R8Task, ConsumableCreationConfig>(creationConfig, isTestApplication) {
+            isTestApplication: Boolean = false,
+            addCompileRClass: Boolean
+    ) : ProguardConfigurableTask.CreationAction<R8Task, ConsumableCreationConfig>(
+            creationConfig, isTestApplication, addCompileRClass) {
         override val type = R8Task::class.java
         override val name =  computeTaskName("minify", "WithR8")
 

@@ -2817,13 +2817,20 @@ public abstract class TaskManager<
             @NonNull ConsumableCreationConfig creationConfig,
             @NonNull CodeShrinker codeShrinker,
             Boolean isTestApplication) {
+        // The compile R class jar is added to the classes to be processed in libraries so that
+        // proguard can shrink an empty library project, as the R class is always kept and
+        // then removed by library jar transforms.
+        boolean addCompileRClass =
+                this instanceof LibraryTaskManager
+                        && creationConfig.getBuildFeatures().getAndroidResources();
+
         @NonNull TaskProvider<? extends Task> task;
         switch (codeShrinker) {
             case PROGUARD:
-                task = createProguardTask(creationConfig, isTestApplication);
+                task = createProguardTask(creationConfig, isTestApplication, addCompileRClass);
                 break;
             case R8:
-                task = createR8Task(creationConfig, isTestApplication);
+                task = createR8Task(creationConfig, isTestApplication, addCompileRClass);
                 break;
             default:
                 throw new AssertionError("Unknown value " + codeShrinker);
@@ -2838,18 +2845,24 @@ public abstract class TaskManager<
 
     @NonNull
     private TaskProvider<ProguardTask> createProguardTask(
-            @NonNull ConsumableCreationConfig creationConfig, boolean isTestApplication) {
+            @NonNull ConsumableCreationConfig creationConfig,
+            boolean isTestApplication,
+            boolean addCompileRClass) {
         return taskFactory.register(
-                new ProguardTask.CreationAction(creationConfig, isTestApplication));
+                new ProguardTask.CreationAction(
+                        creationConfig, isTestApplication, addCompileRClass));
     }
 
     @NonNull
     private TaskProvider<R8Task> createR8Task(
-            @NonNull ConsumableCreationConfig creationConfig, Boolean isTestApplication) {
+            @NonNull ConsumableCreationConfig creationConfig,
+            Boolean isTestApplication,
+            boolean addCompileRClass) {
         if (creationConfig instanceof ApplicationCreationConfig) {
             publishFeatureDex((ApplicationCreationConfig) creationConfig);
         }
-        return taskFactory.register(new R8Task.CreationAction(creationConfig, isTestApplication));
+        return taskFactory.register(
+                new R8Task.CreationAction(creationConfig, isTestApplication, addCompileRClass));
     }
 
     private void maybeCreateDexSplitterTask(@NonNull ApkCreationConfig creationConfig) {

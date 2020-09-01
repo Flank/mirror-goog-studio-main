@@ -126,8 +126,13 @@ abstract class ProguardTask : ProguardConfigurableTask() {
 
     }
 
-    class CreationAction(creationConfig: ConsumableCreationConfig, isTestApplication: Boolean) :
-        ProguardConfigurableTask.CreationAction<ProguardTask, ConsumableCreationConfig>(creationConfig, isTestApplication) {
+    class CreationAction(
+            creationConfig: ConsumableCreationConfig,
+            isTestApplication: Boolean,
+            addCompileRClass: Boolean
+    ) :
+        ProguardConfigurableTask.CreationAction<ProguardTask, ConsumableCreationConfig>(
+                creationConfig, isTestApplication, addCompileRClass) {
 
         override val name = computeTaskName("minify", "WithProguard")
         override val type = ProguardTask::class.java
