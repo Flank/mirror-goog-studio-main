@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.common.fixture.app
 
 import com.android.build.gradle.integration.common.fixture.ANDROIDX_CONSTRAINT_LAYOUT_VERSION
 import com.android.build.gradle.integration.common.fixture.ANDROIDX_VERSION
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.DEFAULT_MIN_SDK_VERSION
 import com.android.build.gradle.integration.common.fixture.EmptyGradleProject
 import com.android.build.gradle.integration.common.fixture.GradleProject
@@ -51,6 +52,8 @@ class EmptyActivityProjectBuilder {
     var useAndroidX: Boolean = true
     var useGradleBuildCache: Boolean = false
     var gradleBuildCacheDir: File? = null
+    var withConfigurationCaching: BaseGradleExecutor.ConfigurationCaching =
+            BaseGradleExecutor.ConfigurationCaching.ON
 
     /** The app subproject. */
     private lateinit var app: GradleProject
@@ -87,6 +90,7 @@ class EmptyActivityProjectBuilder {
         val rootProjectBuilder = GradleTestProject.builder()
             .withName(projectName)
             .fromTestApp(subProjectsBuilder.build())
+            .withConfigurationCaching(withConfigurationCaching)
 
         rootProjectBuilder.withKotlinGradlePlugin(kotlinUsedInSubProjects)
 
