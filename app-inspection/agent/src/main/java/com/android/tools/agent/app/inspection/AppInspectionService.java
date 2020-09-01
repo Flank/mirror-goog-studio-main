@@ -99,8 +99,10 @@ public class AppInspectionService {
      * @param inspectorId the unique id of the inspector being launched
      * @param dexPath the path to the .dex file of the inspector
      * @param projectName the name of the studio project that is trying to launch the inspector
-     * @param versionFileName the full name of the version file located in the APK's META-INF
-     * @param minVersion the minimum version of the library this inspector is compatible with
+     * @param versionFileName the full name of the version file located in the APK's META-INF. Null
+     *     if inspector is not targeting any particular library (ex: DB inspector).
+     * @param minVersion the minimum version of the library this inspector is compatible with. Null
+     *     if inspector is not targeting any particular library (ex: DB inspector).
      * @param force if true, create the inspector even if one is already running
      * @param commandId unique id of this command in the context of app inspection service
      */
@@ -132,7 +134,11 @@ public class AppInspectionService {
             doDispose(inspectorId);
         }
 
-        if (!doCheckVersion(commandId, versionFileName, minVersion)) {
+        VersionTargetInfo versionTarget = null;
+        if (minVersion != null && versionFileName != null) {
+            versionTarget = new VersionTargetInfo(versionFileName, minVersion);
+        }
+        if (!doCheckVersion(commandId, versionTarget)) {
             return;
         }
 
@@ -207,17 +213,24 @@ public class AppInspectionService {
      * <p>This will compare the provided minVersion with the version string located in the version
      * file in the APK's META-INF directory.
      *
+     * <p>In the case the provided version targeting information is null, return true because the
+     * inspector is targeting the Android framework.
+     *
      * <p>Note, this method will send the appropriate response to the command if the check failed in
      * any way. In other words, callers don't need to send a response if this method returns false.
      *
      * @param commandId the id of the command
-     * @param versionFileName the full name of the version file located in APK's META-INF
-     * @param minVersion minimum version this inspector is compatible with
+     * @param versionTarget contains the version compatibility and location of the library. Null if
+     *     inspector does not target any particular library.
      * @return true if check passed. false if check failed for any reason.
      */
-    private boolean doCheckVersion(int commandId, String versionFileName, String minVersion) {
+    private boolean doCheckVersion(int commandId, VersionTargetInfo versionTarget) {
+        if (versionTarget == null) {
+            return true;
+        }
         VersionChecker.Result versionResult =
-                VersionChecker.checkVersion(versionFileName, minVersion);
+                VersionChecker.checkVersion(
+                        versionTarget.versionFileName, versionTarget.minVersion);
         if (versionResult.status == VersionChecker.Result.Status.INCOMPATIBLE) {
             sendCreateInspectorResponseVersionIncompatible(commandId, versionResult.message);
             return false;
@@ -409,4 +422,14 @@ public class AppInspectionService {
 
     private static native void nativeRegisterExitHook(
             long servicePtr, Class<?> originClass, String originMethod);
+
+    private static class VersionTargetInfo {
+        String versionFileName;
+        String minVersion;
+
+        public VersionTargetInfo(String versionFileName, String minVersion) {
+            this.versionFileName = versionFileName;
+            this.minVersion = minVersion;
+        }
+    }
 }

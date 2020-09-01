@@ -17,7 +17,10 @@
 package com.android.tools.app.inspection;
 
 import static com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status.ERROR;
-import static com.android.tools.app.inspection.AppInspection.CreateInspectorResponse.Status.*;
+import static com.android.tools.app.inspection.AppInspection.CreateInspectorResponse.Status.GENERIC_SERVICE_ERROR;
+import static com.android.tools.app.inspection.AppInspection.CreateInspectorResponse.Status.LIBRARY_MISSING;
+import static com.android.tools.app.inspection.AppInspection.CreateInspectorResponse.Status.SUCCESS;
+import static com.android.tools.app.inspection.AppInspection.CreateInspectorResponse.Status.VERSION_INCOMPATIBLE;
 import static com.google.common.truth.Truth.assertThat;
 
 import androidx.annotation.NonNull;
@@ -766,6 +769,17 @@ public final class AppInspectionTest {
     }
 
     @Test
+    public void createInspectorForFramework() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        assertCreateInspectorResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(
+                                "test.inspector", onDevicePath, "test.project", null, null, false)),
+                SUCCESS);
+        appInspectionRule.assertInput(EXPECTED_INSPECTOR_CREATED);
+    }
+
+    @Test
     public void createInspectorWithIncompatibleVersion() throws Exception {
         String onDevicePath = injectInspectorDex();
         AppInspectionResponse response =
@@ -885,21 +899,21 @@ public final class AppInspectionTest {
             String minVersion,
             boolean force) {
 
+        LaunchMetadata.Builder metadata =
+                LaunchMetadata.newBuilder().setLaunchedByName(project).setForce(force);
+        if (versionFile != null && minVersion != null) {
+            metadata.setVersionParams(
+                    AppInspection.VersionParams.newBuilder()
+                            .setVersionFileName(versionFile)
+                            .setMinVersion(minVersion)
+                            .build());
+        }
         return AppInspectionCommand.newBuilder()
                 .setInspectorId(inspectorId)
                 .setCreateInspectorCommand(
                         CreateInspectorCommand.newBuilder()
                                 .setDexPath(dexPath)
-                                .setLaunchMetadata(
-                                        LaunchMetadata.newBuilder()
-                                                .setLaunchedByName(project)
-                                                .setForce(force)
-                                                .setVersionParams(
-                                                        AppInspection.VersionParams.newBuilder()
-                                                                .setVersionFileName(versionFile)
-                                                                .setMinVersion(minVersion)
-                                                                .build())
-                                                .build())
+                                .setLaunchMetadata(metadata)
                                 .build())
                 .build();
     }

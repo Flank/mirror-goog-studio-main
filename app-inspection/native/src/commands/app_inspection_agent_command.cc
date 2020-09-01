@@ -57,16 +57,20 @@ void AppInspectionAgentCommand::RegisterAppInspectionCommandHandler(
           jstring project = jni_env->NewStringUTF(
               create_inspector.launch_metadata().launched_by_name().c_str());
           jboolean force = create_inspector.launch_metadata().force();
-          jstring version_file_name =
-              jni_env->NewStringUTF(create_inspector.launch_metadata()
-                                        .version_params()
-                                        .version_file_name()
-                                        .c_str());
-          jstring min_version =
-              jni_env->NewStringUTF(create_inspector.launch_metadata()
-                                        .version_params()
-                                        .min_version()
-                                        .c_str());
+          jstring version_file_name = nullptr;
+          jstring min_version = nullptr;
+          if (create_inspector.launch_metadata().has_version_params()) {
+            version_file_name =
+                jni_env->NewStringUTF(create_inspector.launch_metadata()
+                                          .version_params()
+                                          .version_file_name()
+                                          .c_str());
+            min_version =
+                jni_env->NewStringUTF(create_inspector.launch_metadata()
+                                          .version_params()
+                                          .min_version()
+                                          .c_str());
+          }
           jmethodID create_inspector_method = jni_env->GetMethodID(
               service_class, "createInspector",
               "(Ljava/lang/String;Ljava/lang/String;Ljava/"
