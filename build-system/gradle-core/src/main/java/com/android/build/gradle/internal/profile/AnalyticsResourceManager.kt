@@ -40,6 +40,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleTransformExecution
 import org.gradle.api.Project
 import org.gradle.api.execution.TaskExecutionGraph
+import org.gradle.api.internal.StartParameterInternal
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.tooling.events.FinishEvent
@@ -288,6 +289,11 @@ class AnalyticsResourceManager(
             .setMaxMemory(Runtime.getRuntime().maxMemory())
             .setGradleVersion(Strings.nullToEmpty(project.gradle.gradleVersion))
 
+        val configCachingEnabled = isConfigCachingEnabled(project.gradle)
+        if (configCachingEnabled != null) {
+            profileBuilder.configurationCachingEnabled = configCachingEnabled
+        }
+
         val anonymizedProjectId =
             try {
                 Anonymizer.anonymizeUtf8(
@@ -439,6 +445,19 @@ class AnalyticsResourceManager(
             else -> {
                 null
             }
+        }
+    }
+
+    private fun isConfigCachingEnabled(gradle : Gradle): Boolean? {
+        return try {
+            //TODO(b/167384234) move away from using Gradle internal class when public API is available
+            val startParameters = gradle.startParameter as StartParameterInternal
+            startParameters.isConfigurationCache
+        } catch (e : Throwable) {
+            LoggerWrapper
+                .getLogger(AnalyticsResourceManager::class.java)
+                .warning("Unable to decide if config caching is enabled, details: %s", e.message)
+            return null
         }
     }
 }
