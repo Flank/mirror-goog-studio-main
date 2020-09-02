@@ -18,6 +18,7 @@
 
 #include <grpc++/grpc++.h>
 #include <gtest/gtest.h>
+
 #include <algorithm>
 #include <climits>
 #include <cstdint>
@@ -128,6 +129,64 @@ TEST(CountersRequestHandlerTest, PopulateCountersNoProcessId) {
 
   EXPECT_EQ(result.process_id(), 0);
   EXPECT_EQ(result.counter_size(), 0);
+}
+
+TEST(CountersRequestHandlerTest, PopulateCpuCoreCounters) {
+  auto tp = LoadTrace(TESTDATA_PATH);
+  auto handler = CountersRequestHandler(tp.get());
+
+  proto::QueryParameters::CpuCoreCountersParameters params_proto;
+  proto::CpuCoreCountersResult result;
+  handler.PopulateCpuCoreCounters(params_proto, &result);
+
+  EXPECT_EQ(result.num_cores(), 8);
+  EXPECT_EQ(result.counters_per_core_size(), 8);
+
+  counter_accumulator expected_freq[] = {
+      counter_accumulator{2070, 949125196591, 1009905239625, 576000.0,
+                          1766400.0},
+      counter_accumulator{2070, 949125392425, 1009905269261, 576000.0,
+                          1766400.0},
+      counter_accumulator{2070, 949125398727, 1009905275771, 576000.0,
+                          1766400.0},
+      counter_accumulator{2070, 949125401435, 1009905281552, 576000.0,
+                          1766400.0},
+      counter_accumulator{1122, 949125219248, 1008770240346, 825600.0,
+                          2803200.0},
+      counter_accumulator{1122, 949125411539, 1008771915658, 825600.0,
+                          2803200.0},
+      counter_accumulator{1122, 949125414352, 1008771921179, 825600.0,
+                          2803200.0},
+      counter_accumulator{1122, 949125416852, 1008771922273, 825600.0,
+                          2803200.0},
+  };
+
+  for (size_t i = 0; i < result.counters_per_core_size(); ++i) {
+    std::unordered_map<std::string, counter_accumulator> counter_map;
+    for (auto counter : result.counters_per_core(i).counter()) {
+      counter_accumulator acc;
+      for (auto entry : counter.value()) {
+        acc.occurrences++;
+
+        acc.first_entry_ts =
+            std::min(acc.first_entry_ts, entry.timestamp_nanoseconds());
+        acc.last_entry_ts =
+            std::max(acc.last_entry_ts, entry.timestamp_nanoseconds());
+
+        acc.min_value = std::min(acc.min_value, entry.value());
+        acc.max_value = std::max(acc.max_value, entry.value());
+      }
+      counter_map[counter.name()] = acc;
+    }
+
+    EXPECT_EQ(counter_map["cpufreq"].occurrences, expected_freq[i].occurrences);
+    EXPECT_EQ(counter_map["cpufreq"].first_entry_ts,
+              expected_freq[i].first_entry_ts);
+    EXPECT_EQ(counter_map["cpufreq"].last_entry_ts,
+              expected_freq[i].last_entry_ts);
+    EXPECT_EQ(counter_map["cpufreq"].min_value, expected_freq[i].min_value);
+    EXPECT_EQ(counter_map["cpufreq"].max_value, expected_freq[i].max_value);
+  }
 }
 
 }  // namespace

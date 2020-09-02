@@ -30,6 +30,10 @@ class CountersRequestHandler {
   void PopulateCounters(proto::QueryParameters::CountersParameters params,
                         proto::CountersResult* result);
 
+  void PopulateCpuCoreCounters(
+      proto::QueryParameters::CpuCoreCountersParameters params,
+      proto::CpuCoreCountersResult* result);
+
  private:
   ::perfetto::trace_processor::TraceProcessor* tp_;
 };
