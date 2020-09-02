@@ -62,30 +62,21 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
         context: GradleContext
     ) {
         if (node.isAssignment()) {
-            val parentCall = getSurroundingNamedBlock(node)
-            if (parentCall != null) {
-                val parentParentCall = getSurroundingNamedBlock(parentCall)
-                val parentName =
-                    getMethodName(parentCall)
-                val parentParentName = if (parentParentCall != null)
-                    getMethodName(parentParentCall)
-                else null
-                if (parentName != null) {
-                    val target = node.leftOperand.asSourceString()
-                    val value = node.rightOperand.asSourceString()
-                    for (scanner in detectors) {
-                        scanner.checkDslPropertyAssignment(
-                            context,
-                            target,
-                            value,
-                            parentName,
-                            parentParentName,
-                            node.leftOperand,
-                            node.rightOperand,
-                            node
-                        )
-                    }
-                }
+            val parentName = getParent(node)
+            val parentParentName = getParentN(node, 2)
+            val target = node.leftOperand.asSourceString()
+            val value = node.rightOperand.asSourceString()
+            for (scanner in detectors) {
+                scanner.checkDslPropertyAssignment(
+                    context,
+                    target,
+                    value,
+                    parentName,
+                    parentParentName,
+                    node.leftOperand,
+                    node.rightOperand,
+                    node
+                )
             }
         } else {
             val left = node.leftOperand
@@ -119,41 +110,27 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
                         // Some sort of DSL property?
                         // Parent should be block, its parent lambda, its parent a call -
                         // the name is the parent
-                        val parentCall = getSurroundingNamedBlock(node)
-                        if (parentCall != null) {
-                            val parentParentCall =
-                                getSurroundingNamedBlock(parentCall)
-                            val parentName =
-                                getMethodName(
-                                    parentCall
-                                )
-                            val parentParentName = if (parentParentCall != null)
-                                getMethodName(
-                                    parentParentCall
-                                )
-                            else null
-                            if (parentName != null) {
-                                val value = arg.asSourceString()
-                                for (scanner in detectors) {
-                                    // How do I represent this: we're passing
-                                    // in *two* values:
-                                    //  the plugin id
-                                    // and then the version to use
-                                    // For now just passing the first one, e.g.
-                                    // in the above, plugins.id = "com.android.application"
+                        val parentName = getParent(node)
+                        val parentParentName = getParentN(node, 2)
+                        val value = arg.asSourceString()
+                        for (scanner in detectors) {
+                            // How do I represent this: we're passing
+                            // in *two* values:
+                            //  the plugin id
+                            // and then the version to use
+                            // For now just passing the first one, e.g.
+                            // in the above, plugins.id = "com.android.application"
 
-                                    scanner.checkDslPropertyAssignment(
-                                        context,
-                                        target,
-                                        value,
-                                        parentName,
-                                        parentParentName,
-                                        left,
-                                        arg,
-                                        node
-                                    )
-                                }
-                            }
+                            scanner.checkDslPropertyAssignment(
+                                context,
+                                target,
+                                value,
+                                parentName,
+                                parentParentName,
+                                left,
+                                arg,
+                                node
+                            )
                         }
                     }
                 }
@@ -174,31 +151,20 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
                 // Some sort of DSL property?
                 // Parent should be block, its parent lambda, its parent a call -
                 // the name is the parent
-                val parentCall = getSurroundingNamedBlock(node)
-                if (parentCall != null) {
-                    val parentParentCall = getSurroundingNamedBlock(parentCall)
-                    val parentName =
-                        getMethodName(parentCall)
-                    val parentParentName = if (parentParentCall != null)
-                        getMethodName(
-                            parentParentCall
-                        )
-                    else null
-                    if (parentName != null) {
-                        val value = arg.asSourceString()
-                        for (scanner in detectors) {
-                            scanner.checkDslPropertyAssignment(
-                                context,
-                                propertyName,
-                                value,
-                                parentName,
-                                parentParentName,
-                                node.methodIdentifier ?: node,
-                                arg,
-                                node
-                            )
-                        }
-                    }
+                val parentName = getParent(node)
+                val parentParentName = getParentN(node, 2)
+                val value = arg.asSourceString()
+                for (scanner in detectors) {
+                    scanner.checkDslPropertyAssignment(
+                        context,
+                        propertyName,
+                        value,
+                        parentName,
+                        parentParentName,
+                        node.methodIdentifier ?: node,
+                        arg,
+                        node
+                    )
                 }
             }
         }
@@ -222,6 +188,17 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
 
         return null
     }
+
+    private fun getParentN(node: UElement, n: Int): String? {
+        val parentCall = getSurroundingNamedBlock(node)
+        return when {
+            parentCall == null -> null
+            n == 1 -> getMethodName(parentCall)
+            else -> getParentN(parentCall, n - 1)
+        }
+    }
+
+    private fun getParent(node: UElement) = getParentN(node, 1)
 
     override fun createLocation(context: GradleContext, cookie: Any): Location {
         return javaContext.getLocation(cookie as UElement)
