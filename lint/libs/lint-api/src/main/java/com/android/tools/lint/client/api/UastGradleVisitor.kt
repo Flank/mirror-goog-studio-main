@@ -47,14 +47,6 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
                     handleBinaryExpression(node, detectors, context)
                     return super.visitBinaryExpression(node)
                 }
-
-                override fun visitReturnExpression(node: UReturnExpression): Boolean {
-                    val returnExpression = node.returnExpression
-                    if (returnExpression is UCallExpression) {
-                        visitCallExpression(returnExpression)
-                    }
-                    return super.visitReturnExpression(node)
-                }
             })
     }
 
@@ -149,15 +141,28 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
     ) {
         val valueArguments = node.valueArguments
         val propertyName = getMethodName(node)
-        if (propertyName != null && valueArguments.size == 1) {
-            val arg = valueArguments[0]
-            if (arg !is ULambdaExpression) {
+        if (propertyName == null) {
+            return
+        } else {
+            val parentName = getParent(node)
+            val parentParentName = getParentN(node, 2)
+            val unnamedArguments = valueArguments.map { it.asSourceString() }
+            for (scanner in detectors) {
+                scanner.checkMethodCall(
+                    context,
+                    propertyName,
+                    parentName,
+                    parentParentName,
+                    mapOf(),
+                    unnamedArguments,
+                    node
+                )
+            }
+            if (valueArguments.size == 1 && valueArguments[0] !is ULambdaExpression) {
                 // Some sort of DSL property?
                 // Parent should be block, its parent lambda, its parent a call -
                 // the name is the parent
-                val parentName = getParent(node)
-                val parentParentName = getParentN(node, 2)
-                val value = arg.asSourceString()
+                val value = unnamedArguments[0]
                 for (scanner in detectors) {
                     scanner.checkDslPropertyAssignment(
                         context,
@@ -166,7 +171,7 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
                         parentName,
                         parentParentName,
                         node.methodIdentifier ?: node,
-                        arg,
+                        valueArguments[0],
                         node
                     )
                 }

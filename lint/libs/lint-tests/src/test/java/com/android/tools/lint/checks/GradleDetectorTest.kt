@@ -1292,6 +1292,47 @@ class GradleDetectorTest : AbstractCheckTest() {
         ).issues(AGP_DEPENDENCY, GRADLE_PLUGIN_COMPATIBILITY).run().expect(expected)
     }
 
+    fun testPreviewVersionsKts() {
+        val expected = "" +
+                "build.gradle.kts:7: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is " +
+                GRADLE_PLUGIN_RECOMMENDED_VERSION +
+                " [GradlePluginVersion]\n" +
+                "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "build.gradle.kts:8: Warning: A newer version of com.android.tools.build:gradle than 1.0.0 is available: " +
+                GRADLE_PLUGIN_RECOMMENDED_VERSION +
+                " [AndroidGradlePluginVersion]\n" +
+                "        classpath(\"com.android.tools.build:gradle:1.0.0\")\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "build.gradle.kts:9: Warning: A newer version of com.android.tools.build:gradle than 2.0.0-alpha4 is available: 3.5.0-alpha10 [AndroidGradlePluginVersion]\n" +
+                "        classpath(\"com.android.tools.build:gradle:2.0.0-alpha4\")\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "1 errors, 2 warnings\n"
+
+        lint().files(
+            kts(
+                "" +
+                        "buildscript {\n" +
+                        "    repositories {\n" +
+                        "        google()\n" +
+                        "        jcenter()\n" +
+                        "    }\n" +
+                        "    dependencies {\n" +
+                        "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
+                        "        classpath(\"com.android.tools.build:gradle:1.0.0\")\n" +
+                        "        classpath(\"com.android.tools.build:gradle:2.0.0-alpha4\")\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "\n" +
+                        "allprojects {\n" +
+                        "    repositories {\n" +
+                        "        jcenter()\n" +
+                        "    }\n" +
+                        "}\n"
+            )
+        ).issues(AGP_DEPENDENCY, GRADLE_PLUGIN_COMPATIBILITY).run().expect(expected)
+    }
+
     fun testPreviewVersionsNoGoogleMaven() {
         // regression test for b/144442233: if we don't have google() in buildscript repositories,
         // we probably shouldn't unconditionally update AGP version dependencies.
@@ -1322,6 +1363,43 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "        jcenter()\n" +
                     "    }\n" +
                     "}\n"
+            )
+        ).issues(DEPENDENCY, GRADLE_PLUGIN_COMPATIBILITY).run()
+            .expect(expected)
+            .expectFixDiffs("")
+    }
+
+    fun testPreviewVersionsNoGoogleMavenKts() {
+        // regression test for b/144442233, Kts version: check that we can detect and react to
+        // 0-argument calls, even if it's unrealistic that any .build.kts file suffers from this
+        // precise problem.
+        val expected = "" +
+                "build.gradle.kts:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is " +
+                GRADLE_PLUGIN_RECOMMENDED_VERSION +
+                " [GradlePluginVersion]\n" +
+                "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "1 errors, 0 warnings\n"
+
+        lint().files(
+            kts(
+                "" +
+                        "buildscript {\n" +
+                        "    repositories {\n" +
+                        "        jcenter()\n" +
+                        "    }\n" +
+                        "    dependencies {\n" +
+                        "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
+                        "        classpath(\"com.android.tools.build:gradle:1.0.0\")\n" +
+                        "        classpath(\"com.android.tools.build:gradle:2.0.0-alpha4\")\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "\n" +
+                        "allprojects {\n" +
+                        "    repositories {\n" +
+                        "        jcenter()\n" +
+                        "    }\n" +
+                        "}\n"
             )
         ).issues(DEPENDENCY, GRADLE_PLUGIN_COMPATIBILITY).run()
             .expect(expected)
