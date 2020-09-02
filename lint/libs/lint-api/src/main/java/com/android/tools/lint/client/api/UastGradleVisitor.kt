@@ -25,7 +25,9 @@ import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
+import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULambdaExpression
+import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
@@ -62,9 +64,11 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
         context: GradleContext
     ) {
         if (node.isAssignment()) {
-            val parentName = getParent(node)
-            val parentParentName = getParentN(node, 2)
-            val target = node.leftOperand.asSourceString()
+            val hierarchy = getPropertyHierarchy(node.leftOperand)
+            val target = hierarchy.firstOrNull() ?: return
+            val hierarchyWithParents = hierarchy + getParent(node) + getParentN(node, 2)
+            val parentName = hierarchyWithParents[1]
+            val parentParentName = hierarchyWithParents[2]
             val value = node.rightOperand.asSourceString()
             for (scanner in detectors) {
                 scanner.checkDslPropertyAssignment(
@@ -167,6 +171,22 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
                     )
                 }
             }
+        }
+    }
+
+    private fun getPropertyHierarchy(expression: UExpression): List<String> {
+        return when (expression) {
+            is UQualifiedReferenceExpression -> {
+                val result = mutableListOf(expression.selector.asSourceString())
+                var receiver = expression.receiver
+                while (receiver is UQualifiedReferenceExpression) {
+                    result.add(receiver.selector.asSourceString())
+                    receiver = receiver.receiver
+                }
+                result.add(receiver.asSourceString())
+                result
+            }
+            else -> listOf(expression.asSourceString())
         }
     }
 
