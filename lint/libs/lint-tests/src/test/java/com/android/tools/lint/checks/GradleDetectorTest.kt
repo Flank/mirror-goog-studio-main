@@ -3462,6 +3462,125 @@ class GradleDetectorTest : AbstractCheckTest() {
                 """.trimIndent())
     }
 
+    fun testJavaLanguageLevelCleanKts() {
+        val sourceCompatibility = listOf(
+            "java.sourceCompatibility = JavaVersion.VERSION_1_8",
+            "java { sourceCompatibility = JavaVersion.VERSION_1_8 }",
+        )
+        val targetCompatibility = listOf(
+            "java.targetCompatibility = JavaVersion.VERSION_1_8",
+            "java { targetCompatibility = JavaVersion.VERSION_1_8 }",
+        )
+        sourceCompatibility.forEach { sc ->
+            targetCompatibility.forEach { tc ->
+                lint().files(
+                    kts(
+                        """
+                           plugins {
+                               id("java")
+                           }
+                        """.trimIndent() + "\n${sc}\n${tc}"
+                    ).indented())
+                    .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
+                    .run()
+                    .expectClean()
+            }
+        }
+    }
+
+    fun testJavaLanguageLevelNoSourceCompatibilityKts() {
+        val targetCompatibility = listOf(
+            "java.targetCompatibility = JavaVersion.VERSION_1_8",
+            "java { targetCompatibility = JavaVersion.VERSION_1_8 }",
+        )
+        targetCompatibility.forEach { tc ->
+            lint().files(
+                kts(
+                    """
+                        plugins {
+                           id("java")
+                        }
+                    """.trimIndent() + "\n${tc}"
+                ).indented())
+                .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
+                .run()
+                .expect(
+                    """
+                        build.gradle.kts:2: Warning: no Java sourceCompatibility directive [JavaPluginLanguageLevel]
+                           id("java")
+                           ~~~~~~~~~~
+                        0 errors, 1 warnings
+                    """)
+                .expectFixDiffs(
+                    """
+                        Fix for build.gradle.kts line 2: Insert sourceCompatibility directive for JDK8:
+                        @@ -5 +5
+                        + java.sourceCompatibility = JavaVersion.VERSION_1_8
+                    """.trimIndent())
+        }
+    }
+
+    fun testJavaLanguageLevelNoTargetCompatibilityKts() {
+        val sourceCompatibility = listOf(
+            "java.sourceCompatibility = JavaVersion.VERSION_1_8",
+            "java { sourceCompatibility = JavaVersion.VERSION_1_8 }",
+        )
+        sourceCompatibility.forEach { sc ->
+            lint().files(
+                kts(
+                    """
+                        plugins {
+                           id("java")
+                        }
+                    """.trimIndent() + "\n${sc}"
+                ).indented())
+                .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
+                .run()
+                .expect(
+                    """
+                        build.gradle.kts:2: Warning: no Java targetCompatibility directive [JavaPluginLanguageLevel]
+                           id("java")
+                           ~~~~~~~~~~
+                        0 errors, 1 warnings
+                    """)
+                .expectFixDiffs(
+                    """
+                        Fix for build.gradle.kts line 2: Insert targetCompatibility directive for JDK8:
+                        @@ -5 +5
+                        + java.targetCompatibility = JavaVersion.VERSION_1_8
+                    """.trimIndent())
+        }
+    }
+
+    fun testJavaLanguageLevelNoDirectivesKts() {
+        lint().files(
+            kts(
+                """
+                    plugins {
+                       id("java")
+                    }
+                """.trimIndent()
+            ).indented())
+            .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
+            .run()
+            .expect(
+                """
+                    build.gradle.kts:2: Warning: no Java language level directives [JavaPluginLanguageLevel]
+                       id("java")
+                       ~~~~~~~~~~
+                    0 errors, 1 warnings
+                """)
+            .expectFixDiffs(
+                """
+                    Fix for build.gradle.kts line 2: Insert JDK8 language level directives:
+                    @@ -4 +4
+                    + java {
+                    +     sourceCompatibility = JavaVersion.VERSION_1_8
+                    +     targetCompatibility = JavaVersion.VERSION_1_8
+                    + }
+                """.trimIndent())
+    }
+
     // -------------------------------------------------------------------------------------------
     // Test infrastructure below here
     // -------------------------------------------------------------------------------------------
