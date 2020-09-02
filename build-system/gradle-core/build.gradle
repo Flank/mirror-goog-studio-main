@@ -62,7 +62,6 @@ task apiTest(type: Test) {
 }
 
 check.dependsOn apiTest
-apiTest.dependsOn tasks.findByName('publish')
 
 publishing {
     publications {
@@ -232,7 +231,6 @@ apiTest {
                     + rootProject.file("../prebuilts/tools/common/m2/repository/").toString())
 
     dependsOn ':publishAndroidGradleLocal'
-    dependsOn ':base:apkparser:apkanalyzer-cli:publish'
 }
 
 tasks.processResources {
