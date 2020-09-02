@@ -26,10 +26,10 @@ import javax.inject.Inject
  * Shim object for [ApplicationVariant] that records all mutating accesses to the analytics.
  */
 open class AnalyticsEnabledApplicationVariant @Inject constructor(
-    override val delegate: ApplicationVariant<ApplicationVariantProperties>,
+    override val delegate: ApplicationVariant,
     stats: GradleBuildVariant.Builder
-) : AnalyticsEnabledVariant<ApplicationVariantProperties>(delegate, stats),
-    ApplicationVariant<ApplicationVariantProperties> {
+) : AnalyticsEnabledVariant(delegate, stats),
+    ApplicationVariant {
 
     override val debuggable: Boolean
         get() = delegate.debuggable

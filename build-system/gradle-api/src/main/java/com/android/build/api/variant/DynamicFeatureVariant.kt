@@ -18,6 +18,6 @@ package com.android.build.api.variant
 import org.gradle.api.Incubating
 
 @Incubating
-interface DynamicFeatureVariant<PropertiesT: DynamicFeatureVariantProperties> : Variant<PropertiesT> {
+interface DynamicFeatureVariant : Variant {
 
 }

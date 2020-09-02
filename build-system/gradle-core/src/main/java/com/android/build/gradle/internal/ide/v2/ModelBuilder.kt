@@ -100,7 +100,7 @@ class ModelBuilder<
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
-        VariantT : Variant<VariantPropertiesT>,
+        VariantT : Variant,
         VariantPropertiesT : VariantProperties,
         ExtensionT : CommonExtension<
                 AndroidSourceSetT,

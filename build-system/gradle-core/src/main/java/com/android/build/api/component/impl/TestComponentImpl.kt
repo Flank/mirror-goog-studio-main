@@ -22,10 +22,10 @@ import com.android.build.api.component.TestComponentProperties
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.VariantApiServices
 
-abstract class TestComponentImpl<PropertiesT : TestComponentProperties>(
+abstract class TestComponentImpl(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity,
     variantApiServices: VariantApiServices
-) : ComponentImpl<PropertiesT>(variantDslInfo, variantConfiguration, variantApiServices),
-    TestComponent<PropertiesT> {
+) : ComponentImpl(variantDslInfo, variantConfiguration, variantApiServices),
+    TestComponent {
 }

@@ -37,5 +37,5 @@ interface InternalDynamicFeatureExtension :
                 BuildType,
                 DefaultConfig,
                 ProductFlavor,
-                DynamicFeatureVariant<DynamicFeatureVariantProperties>,
+                DynamicFeatureVariant,
                 DynamicFeatureVariantProperties>

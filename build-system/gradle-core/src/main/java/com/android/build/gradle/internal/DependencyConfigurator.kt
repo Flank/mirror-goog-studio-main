@@ -553,10 +553,10 @@ class DependencyConfigurator(
     }
 
     /** Configure artifact transforms that require variant-specific attribute information.  */
-    fun <VariantT : VariantImpl<out VariantProperties>, VariantPropertiesT : VariantPropertiesImpl>
+    fun <VariantT : VariantImpl, VariantPropertiesT : VariantPropertiesImpl>
             configureVariantTransforms(
         variants: List<ComponentInfo<VariantT, VariantPropertiesT>>,
-        testComponents: List<ComponentInfo<TestComponentImpl<out TestComponentProperties>, TestComponentPropertiesImpl>>
+        testComponents: List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
     ): DependencyConfigurator {
         val allComponents: List<ComponentCreationConfig> =
             (variants + testComponents).map { it.properties as ComponentCreationConfig }

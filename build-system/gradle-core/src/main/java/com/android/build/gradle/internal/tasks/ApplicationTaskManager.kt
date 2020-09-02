@@ -16,13 +16,11 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.TestComponentProperties
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.internal.AbstractAppTaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
@@ -32,11 +30,9 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask
-import com.android.build.gradle.internal.transforms.ShrinkAppBundleResourcesTask
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.errors.IssueReporter
-import com.android.builder.profile.Recorder
 import com.google.common.collect.ImmutableMap
 import org.gradle.api.Action
 import org.gradle.api.artifacts.ArtifactView
@@ -49,7 +45,7 @@ import java.util.stream.Collectors
 
 class ApplicationTaskManager(
     variants: List<ComponentInfo<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>>,
-    testComponents: List<ComponentInfo<TestComponentImpl<out TestComponentProperties>, TestComponentPropertiesImpl>>,
+    testComponents: List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>,
     hasFlavors: Boolean,
     globalScope: GlobalScope,
     extension: BaseExtension

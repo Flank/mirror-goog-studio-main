@@ -38,7 +38,7 @@ class TestExtensionImpl(
             BuildType,
             DefaultConfig,
             ProductFlavor,
-            TestVariant<TestVariantProperties>,
+            TestVariant,
             TestVariantProperties>(
         dslServices,
         dslContainers
@@ -49,13 +49,13 @@ class TestExtensionImpl(
         dslServices.newInstance(TestBuildFeaturesImpl::class.java)
 
     @Suppress("UNCHECKED_CAST")
-    override val onVariants: GenericFilteredComponentActionRegistrar<TestVariant<TestVariantProperties>>
+    override val onVariants: GenericFilteredComponentActionRegistrar<TestVariant>
         get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
             dslServices,
             variantOperations,
             TestVariant::class.java
-        ) as GenericFilteredComponentActionRegistrar<TestVariant<TestVariantProperties>>
+        ) as GenericFilteredComponentActionRegistrar<TestVariant>
     @Suppress("UNCHECKED_CAST")
     override val onVariantProperties: GenericFilteredComponentActionRegistrar<TestVariantProperties>
         get() = dslServices.newInstance(

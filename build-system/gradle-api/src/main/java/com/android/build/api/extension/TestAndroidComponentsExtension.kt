@@ -17,7 +17,6 @@
 package com.android.build.api.extension
 
 import com.android.build.api.variant.TestVariant
-import com.android.build.api.variant.TestVariantProperties
 import org.gradle.api.Incubating
 
 /**
@@ -26,4 +25,4 @@ import org.gradle.api.Incubating
  * A test module is created when a build script is applying the 'com.android.test' plugin.
  */
 @Incubating
-interface TestAndroidComponentsExtension: AndroidComponentsExtension<TestVariant<TestVariantProperties>>
+interface TestAndroidComponentsExtension: AndroidComponentsExtension<TestVariant>

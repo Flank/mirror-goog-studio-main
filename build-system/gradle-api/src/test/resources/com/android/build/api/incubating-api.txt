@@ -88,7 +88,6 @@ com.android.build.api.component.BuildTypedComponentActionRegistrar.withFlavor: v
 com.android.build.api.component.BuildTypedComponentActionRegistrar.withFlavor: void (kotlin.Pair<java.lang.String, java.lang.String>, org.gradle.api.Action<ComponentT>)
 com.android.build.api.component.Component implements com.android.build.api.component.ComponentIdentity, com.android.build.api.component.ActionableComponentObject
 com.android.build.api.component.Component.getEnabled: boolean ()
-com.android.build.api.component.Component.onProperties: void (kotlin.jvm.functions.Function1<? super PropertiesT, kotlin.Unit>)
 com.android.build.api.component.Component.setEnabled: void (boolean)
 com.android.build.api.component.ComponentIdentity implements org.gradle.api.Named
 com.android.build.api.component.ComponentIdentity.getBuildType: java.lang.String ()
@@ -928,13 +927,13 @@ com.android.build.api.variant.TestVariantProperties.getTestLabel: org.gradle.api
 com.android.build.api.variant.TestVariantProperties.getTestedApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.TestVariantProperties.packagingOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.ApkPackagingOptions, kotlin.Unit>)
 com.android.build.api.variant.Variant implements com.android.build.api.component.Component, com.android.build.api.component.ActionableComponentObject
-com.android.build.api.variant.Variant.androidTest: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTest<com.android.build.api.component.AndroidTestProperties>, kotlin.Unit>)
+com.android.build.api.variant.Variant.androidTest: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTest, kotlin.Unit>)
 com.android.build.api.variant.Variant.androidTestProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTestProperties, kotlin.Unit>)
 com.android.build.api.variant.Variant.getMinSdkVersion: com.android.build.api.variant.AndroidVersion ()
 com.android.build.api.variant.Variant.getRenderscriptTargetApi: int ()
 com.android.build.api.variant.Variant.setMinSdkVersion: void (com.android.build.api.variant.AndroidVersion)
 com.android.build.api.variant.Variant.setRenderscriptTargetApi: void (int)
-com.android.build.api.variant.Variant.unitTest: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTest<com.android.build.api.component.UnitTestProperties>, kotlin.Unit>)
+com.android.build.api.variant.Variant.unitTest: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTest, kotlin.Unit>)
 com.android.build.api.variant.Variant.unitTestProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTestProperties, kotlin.Unit>)
 com.android.build.api.variant.VariantInfo
 com.android.build.api.variant.VariantInfo.getBuildTypeName: java.lang.String ()

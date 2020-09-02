@@ -40,7 +40,7 @@ interface TestExtension<
             DefaultConfigT,
             ProductFlavorT,
             SigningConfigT,
-            TestVariant<TestVariantProperties>,
+            TestVariant,
             TestVariantProperties> {
     // TODO(b/140406102)
     /**

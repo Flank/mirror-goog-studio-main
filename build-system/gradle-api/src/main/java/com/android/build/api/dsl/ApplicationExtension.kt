@@ -40,7 +40,7 @@ interface ApplicationExtension<
             DefaultConfigT,
             ProductFlavorT,
             SigningConfigT,
-            ApplicationVariant<ApplicationVariantProperties>,
+            ApplicationVariant,
             ApplicationVariantProperties>,
     ApkExtension,
     TestedExtension {

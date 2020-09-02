@@ -29,7 +29,7 @@ abstract class TestedExtensionImpl<
         BuildTypeT : com.android.build.api.dsl.BuildType,
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
-        VariantT : Variant<VariantPropertiesT>,
+        VariantT : Variant,
         VariantPropertiesT : VariantProperties>(
             dslServices: DslServices,
             dslContainers: DslContainerProvider<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfig>

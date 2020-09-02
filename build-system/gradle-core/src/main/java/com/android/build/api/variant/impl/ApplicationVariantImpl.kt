@@ -33,11 +33,11 @@ open class ApplicationVariantImpl @Inject constructor(
     dslDependencyInfo: DependenciesInfo,
     variantConfiguration: ComponentIdentity,
     variantApiServices: VariantApiServices
-) : VariantImpl<ApplicationVariantProperties>(
+) : VariantImpl(
     variantDslInfo,
     variantConfiguration,
     variantApiServices
-), ApplicationVariant<ApplicationVariantProperties> {
+), ApplicationVariant {
 
     override val debuggable: Boolean
         get() = variantDslInfo.isDebuggable
@@ -64,14 +64,10 @@ open class ApplicationVariantImpl @Inject constructor(
         action.execute(dependenciesInfo)
     }
 
-    override fun executePropertiesActions(target: ApplicationVariantProperties) {
-        propertiesActions.executeActions(target)
-    }
-
     override fun createUserVisibleVariantObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledVariant<in ApplicationVariantProperties> =
+    ): AnalyticsEnabledVariant =
         projectServices.objectFactory.newInstance(
             AnalyticsEnabledApplicationVariant::class.java,
             this,

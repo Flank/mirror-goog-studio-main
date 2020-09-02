@@ -41,7 +41,7 @@ interface InternalCommonExtension<
         BuildTypeT : com.android.build.api.dsl.BuildType,
         DefaultConfigT : com.android.build.api.dsl.DefaultConfig,
         ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
-        VariantT : Variant<VariantPropertiesT>,
+        VariantT : Variant,
         VariantPropertiesT : VariantProperties> :
     CommonExtension<
         AndroidSourceSet,

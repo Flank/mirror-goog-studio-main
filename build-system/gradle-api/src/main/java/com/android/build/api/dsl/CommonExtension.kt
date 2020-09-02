@@ -37,7 +37,7 @@ interface CommonExtension<
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
-        VariantT : Variant<VariantPropertiesT>,
+        VariantT : Variant,
         VariantPropertiesT : VariantProperties> {
     // TODO(b/140406102)
 

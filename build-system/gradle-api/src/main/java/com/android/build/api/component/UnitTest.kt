@@ -22,5 +22,5 @@ import org.gradle.api.Incubating
  * Variant of the unit test artifact.
  */
 @Incubating
-interface UnitTest<PropertiesT: UnitTestProperties>: TestComponent<PropertiesT> {
+interface UnitTest: TestComponent {
 }

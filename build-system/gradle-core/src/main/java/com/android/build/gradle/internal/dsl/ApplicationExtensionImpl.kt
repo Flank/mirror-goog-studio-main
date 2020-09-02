@@ -19,14 +19,10 @@ package com.android.build.gradle.internal.dsl
 import com.android.build.api.component.GenericFilteredComponentActionRegistrar
 import com.android.build.api.component.impl.GenericFilteredComponentActionRegistrarImpl
 import com.android.build.api.dsl.ApplicationBuildFeatures
-import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.Bundle
 import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.ApplicationVariantProperties
-import com.android.build.gradle.api.AndroidSourceSet
-import com.android.build.gradle.internal.CompileOptions
-import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.Action
@@ -41,7 +37,7 @@ class ApplicationExtensionImpl(
             BuildType,
             DefaultConfig,
             ProductFlavor,
-            ApplicationVariant<ApplicationVariantProperties>,
+            ApplicationVariant,
             ApplicationVariantProperties>(
         dslServices,
         dslContainers
@@ -55,13 +51,13 @@ class ApplicationExtensionImpl(
     override var assetPacks: MutableSet<String> = mutableSetOf()
 
     @Suppress("UNCHECKED_CAST")
-    override val onVariants: GenericFilteredComponentActionRegistrar<ApplicationVariant<ApplicationVariantProperties>>
+    override val onVariants: GenericFilteredComponentActionRegistrar<ApplicationVariant>
         get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
             dslServices,
             variantOperations,
             ApplicationVariant::class.java
-        ) as GenericFilteredComponentActionRegistrar<ApplicationVariant<ApplicationVariantProperties>>
+        ) as GenericFilteredComponentActionRegistrar<ApplicationVariant>
     @Suppress("UNCHECKED_CAST")
     override val onVariantProperties: GenericFilteredComponentActionRegistrar<ApplicationVariantProperties>
         get() = dslServices.newInstance(

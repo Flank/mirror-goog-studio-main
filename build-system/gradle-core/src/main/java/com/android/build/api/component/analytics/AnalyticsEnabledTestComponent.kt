@@ -17,14 +17,13 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.TestComponent
-import com.android.build.api.component.TestComponentProperties
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 
 /**
  * Shim object for [TestComponent] that records all mutating accesses to the analytics.
  */
-abstract class AnalyticsEnabledTestComponent<PropertiesT: TestComponentProperties>(
-    delegate: TestComponent<PropertiesT>,
+abstract class AnalyticsEnabledTestComponent(
+    delegate: TestComponent,
     stats: GradleBuildVariant.Builder
-) : AnalyticsEnabledComponent<PropertiesT>(delegate, stats),
-    TestComponent<PropertiesT>
+) : AnalyticsEnabledComponent(delegate, stats),
+    TestComponent

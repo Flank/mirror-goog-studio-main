@@ -59,7 +59,7 @@ open class TestExtension(
     false
 ), TestAndroidConfig,
     InternalTestExtension by publicExtensionImpl,
-    ActionableVariantObjectOperationsExecutor<TestVariant<TestVariantProperties>, TestVariantProperties> by publicExtensionImpl {
+    ActionableVariantObjectOperationsExecutor<TestVariant, TestVariantProperties> by publicExtensionImpl {
 
     private val applicationVariantList: DomainObjectSet<ApplicationVariant> =
         dslServices.domainObjectSet(ApplicationVariant::class.java)

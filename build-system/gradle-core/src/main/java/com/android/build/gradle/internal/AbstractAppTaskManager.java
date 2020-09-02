@@ -20,13 +20,11 @@ import static com.android.build.api.transform.QualifiedContent.DefaultContentTyp
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
-import com.android.build.api.variant.VariantProperties;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
@@ -73,17 +71,13 @@ import org.gradle.api.tasks.compile.JavaCompile;
 
 /** TaskManager for creating tasks in an Android application project. */
 public abstract class AbstractAppTaskManager<
-                VariantT extends VariantImpl<? extends VariantProperties>,
-                VariantPropertiesT extends VariantPropertiesImpl>
+                VariantT extends VariantImpl, VariantPropertiesT extends VariantPropertiesImpl>
         extends TaskManager<VariantT, VariantPropertiesT> {
 
     protected AbstractAppTaskManager(
             @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> variants,
             @NonNull
-                    List<
-                                    ComponentInfo<
-                                            TestComponentImpl<? extends TestComponentProperties>,
-                                            TestComponentPropertiesImpl>>
+                    List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
                             testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,

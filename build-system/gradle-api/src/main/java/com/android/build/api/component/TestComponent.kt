@@ -19,5 +19,5 @@ package com.android.build.api.component
 import org.gradle.api.Incubating
 
 @Incubating
-interface TestComponent<PropertiesT: TestComponentProperties> : Component<PropertiesT> {
+interface TestComponent : Component {
 }

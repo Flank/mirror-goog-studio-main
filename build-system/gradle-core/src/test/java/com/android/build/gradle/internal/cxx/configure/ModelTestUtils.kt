@@ -64,7 +64,7 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
     val ndkHandler = Mockito.mock(NdkHandler::class.java)
     val ndkPlatform = NdkInstallStatus.Valid(Mockito.mock(NdkPlatform::class.java))
-    val variantImpl: VariantImpl<VariantPropertiesImpl> = Mockito.mock(VariantImpl::class.java) as VariantImpl<VariantPropertiesImpl>
+    val variantImpl: VariantImpl = Mockito.mock(VariantImpl::class.java) as VariantImpl
     val componentPropertiesImpl = Mockito.mock(VariantPropertiesImpl::class.java)
     val baseVariantData = Mockito.mock(BaseVariantData::class.java)
     val variantScope = Mockito.mock(VariantScope::class.java)

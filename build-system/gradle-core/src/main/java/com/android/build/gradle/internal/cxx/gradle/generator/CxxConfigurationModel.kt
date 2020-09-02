@@ -223,7 +223,7 @@ fun CxxConfigurationModel.abiJsonFile(abi : Abi): File {
  * was deserialized from the task graph.
  */
 fun tryCreateCxxConfigurationModel(
-    variant: VariantImpl<VariantPropertiesImpl>,
+    variant: VariantImpl,
     componentProperties: VariantPropertiesImpl,
     allDefaultAbis: Boolean = true
 ) : CxxConfigurationModel? {

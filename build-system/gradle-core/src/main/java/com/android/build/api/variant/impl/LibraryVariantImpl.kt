@@ -31,23 +31,20 @@ open class LibraryVariantImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity,
     variantApiServices: VariantApiServices
-) : VariantImpl<LibraryVariantProperties>(
+) : VariantImpl(
     variantDslInfo,
     variantConfiguration,
     variantApiServices
-), LibraryVariant<LibraryVariantProperties> {
+), LibraryVariant {
 
     override fun createUserVisibleVariantObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledVariant<in LibraryVariantProperties> =
+    ): AnalyticsEnabledVariant =
         projectServices.objectFactory.newInstance(
             AnalyticsEnabledLibraryVariant::class.java,
             this,
             stats
-        ) as AnalyticsEnabledVariant<in LibraryVariantProperties>
+        ) as AnalyticsEnabledVariant
 
-    override fun executePropertiesActions(target: LibraryVariantProperties) {
-        propertiesActions.executeActions(target)
-    }
 }

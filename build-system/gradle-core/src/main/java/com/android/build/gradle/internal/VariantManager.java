@@ -24,7 +24,6 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.component.ComponentIdentity;
-import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTestProperties;
 import com.android.build.api.component.analytics.AnalyticsEnabledUnitTestProperties;
 import com.android.build.api.component.analytics.AnalyticsEnabledVariant;
@@ -107,14 +106,13 @@ import org.gradle.api.model.ObjectFactory;
 
 /** Class to create, manage variants. */
 public class VariantManager<
-        VariantT extends VariantImpl<? extends VariantProperties>,
-        VariantPropertiesT extends VariantPropertiesImpl> {
+        VariantT extends VariantImpl, VariantPropertiesT extends VariantPropertiesImpl> {
 
     @NonNull private final Project project;
     @NonNull private final ProjectOptions projectOptions;
     @NonNull private final BaseExtension extension;
 
-    @NonNull private final OperationsRegistrar<Variant<VariantProperties>> operationsRegistrar;
+    @NonNull private final OperationsRegistrar<Variant> operationsRegistrar;
 
     @NonNull private final VariantFactory<VariantT, VariantPropertiesT> variantFactory;
 
@@ -133,10 +131,7 @@ public class VariantManager<
     private final List<ComponentInfo<VariantT, VariantPropertiesT>> variants = Lists.newArrayList();
 
     @NonNull
-    private final List<
-                    ComponentInfo<
-                            TestComponentImpl<? extends TestComponentProperties>,
-                            TestComponentPropertiesImpl>>
+    private final List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
             testComponents = Lists.newArrayList();
 
     @NonNull
@@ -156,7 +151,7 @@ public class VariantManager<
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull BaseExtension extension,
-            @NonNull OperationsRegistrar<Variant<VariantProperties>> operationsRegistrar,
+            @NonNull OperationsRegistrar<Variant> operationsRegistrar,
             @NonNull VariantFactory<VariantT, VariantPropertiesT> variantFactory,
             @NonNull VariantInputModel variantInputModel,
             @NonNull ProjectServices projectServices) {
@@ -193,11 +188,7 @@ public class VariantManager<
      * @see #createVariants(BuildFeatureValues)
      */
     @NonNull
-    public List<
-                    ComponentInfo<
-                            TestComponentImpl<? extends TestComponentProperties>,
-                            TestComponentPropertiesImpl>>
-            getTestComponents() {
+    public List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>> getTestComponents() {
         return testComponents;
     }
 
@@ -356,20 +347,15 @@ public class VariantManager<
         // HACK, we need access to the new type rather than the old. This will go away in the
         // future
         //noinspection unchecked
-        ActionableVariantObjectOperationsExecutor<Variant<VariantProperties>, VariantProperties>
-                commonExtension =
-                        (ActionableVariantObjectOperationsExecutor<
-                                        Variant<VariantProperties>, VariantProperties>)
-                                extension;
+        ActionableVariantObjectOperationsExecutor<Variant, VariantProperties> commonExtension =
+                (ActionableVariantObjectOperationsExecutor<Variant, VariantProperties>) extension;
 
-        AnalyticsEnabledVariant<? extends VariantProperties> userVisibleVariantObject =
+        AnalyticsEnabledVariant userVisibleVariantObject =
                 variant.createUserVisibleVariantObject(projectServices, profileBuilder);
-        commonExtension.executeVariantOperations(
-                (Variant<VariantProperties>) userVisibleVariantObject);
+        commonExtension.executeVariantOperations(userVisibleVariantObject);
 
         // execute the new API, simplify this horrific casting once nesting is removed.
-        operationsRegistrar.executeOperations(
-                (Variant<VariantProperties>) userVisibleVariantObject);
+        operationsRegistrar.executeOperations(userVisibleVariantObject);
 
         if (!variant.getEnabled()) {
             return null;
@@ -485,10 +471,6 @@ public class VariantManager<
                         .createUserVisibleVariantPropertiesObject(projectServices, profileBuilder);
         commonExtension.executeVariantPropertiesOperations(userVisibleVariantPropertiesObject);
 
-        // also execute the delayed actions registered on the Variant object itself
-        ((VariantImpl<VariantProperties>) variant)
-                .executePropertiesActions(userVisibleVariantPropertiesObject);
-
         return new ComponentInfo(
                 variant, variantProperties, profileBuilder, userVisibleVariantObject);
     }
@@ -525,15 +507,12 @@ public class VariantManager<
 
     /** Create a TestVariantData for the specified testedVariantData. */
     @Nullable
-    public ComponentInfo<
-                    TestComponentImpl<? extends TestComponentProperties>,
-                    TestComponentPropertiesImpl>
-            createTestComponents(
-                    @NonNull DimensionCombination dimensionCombination,
-                    @NonNull BuildTypeData<BuildType> buildTypeData,
-                    @NonNull List<ProductFlavorData<ProductFlavor>> productFlavorDataList,
-                    @NonNull ComponentInfo<VariantT, VariantPropertiesT> testedComponentInfo,
-                    @NonNull VariantType variantType) {
+    public ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl> createTestComponents(
+            @NonNull DimensionCombination dimensionCombination,
+            @NonNull BuildTypeData<BuildType> buildTypeData,
+            @NonNull List<ProductFlavorData<ProductFlavor>> productFlavorDataList,
+            @NonNull ComponentInfo<VariantT, VariantPropertiesT> testedComponentInfo,
+            @NonNull VariantType variantType) {
 
         // handle test variant
         // need a suppress warning because ProductFlavor.getTestSourceSet(type) is annotated
@@ -582,7 +561,7 @@ public class VariantManager<
         VariantDslInfoImpl variantDslInfo =
                 variantBuilder.createVariantDslInfo(project.getLayout().getBuildDirectory());
 
-        TestComponentImpl<? extends TestComponentProperties> component;
+        TestComponentImpl component;
 
         GradleBuildVariant.Builder apiAccessStats = testedComponentInfo.getStats();
         // this is ANDROID_TEST
@@ -716,11 +695,6 @@ public class VariantManager<
                         globalScope,
                         taskContainer);
 
-        // in order to call executePropertiesActions, we need a slightly different type....
-        //noinspection unchecked
-        TestComponentImpl<TestComponentPropertiesImpl> testComponent =
-                (TestComponentImpl<TestComponentPropertiesImpl>) component;
-
         TestComponentPropertiesImpl componentProperties;
 
         BuildFeatureValues buildFeatureValues =
@@ -750,8 +724,6 @@ public class VariantManager<
             AnalyticsEnabledAndroidTestProperties userVisibleVariantPropertiesObject =
                     androidTestProperties.createUserVisibleVariantPropertiesObject(
                             projectServices, apiAccessStats);
-            ((AndroidTestImpl) component)
-                    .executePropertiesActions(userVisibleVariantPropertiesObject);
             // or on the tested variant via unitTestProperties {}
             if (testedComponentInfo.getUserVisibleVariant() != null)
                 testedComponentInfo
@@ -782,7 +754,6 @@ public class VariantManager<
             AnalyticsEnabledUnitTestProperties userVisibleVariantPropertiesObject =
                     unitTestProperties.createUserVisibleVariantPropertiesObject(
                             projectServices, apiAccessStats);
-            ((UnitTestImpl) component).executePropertiesActions(userVisibleVariantPropertiesObject);
             // or on the tested variant via unitTestProperties {}
             if (testedComponentInfo.getUserVisibleVariant() != null)
                 testedComponentInfo
@@ -935,31 +906,25 @@ public class VariantManager<
 
                 if (variantFactory.getVariantType().getHasTestComponents()) {
                     if (buildTypeData == testBuildTypeData) {
-                        ComponentInfo<
-                                        TestComponentImpl<? extends TestComponentProperties>,
-                                        TestComponentPropertiesImpl>
-                                androidTest =
-                                        createTestComponents(
-                                                dimensionCombination,
-                                                buildTypeData,
-                                                productFlavorDataList,
-                                                variantInfo,
-                                                ANDROID_TEST);
+                        ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl> androidTest =
+                                createTestComponents(
+                                        dimensionCombination,
+                                        buildTypeData,
+                                        productFlavorDataList,
+                                        variantInfo,
+                                        ANDROID_TEST);
                         if (androidTest != null) {
                             addTestComponent(androidTest);
                         }
                     }
 
-                    ComponentInfo<
-                                    TestComponentImpl<? extends TestComponentProperties>,
-                                    TestComponentPropertiesImpl>
-                            unitTest =
-                                    createTestComponents(
-                                            dimensionCombination,
-                                            buildTypeData,
-                                            productFlavorDataList,
-                                            variantInfo,
-                                            UNIT_TEST);
+                    ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl> unitTest =
+                            createTestComponents(
+                                    dimensionCombination,
+                                    buildTypeData,
+                                    productFlavorDataList,
+                                    variantInfo,
+                                    UNIT_TEST);
                     if (unitTest != null) {
                         addTestComponent(unitTest);
                     }
@@ -973,11 +938,7 @@ public class VariantManager<
     }
 
     private void addTestComponent(
-            @NonNull
-                    ComponentInfo<
-                                    TestComponentImpl<? extends TestComponentProperties>,
-                                    TestComponentPropertiesImpl>
-                            testComponent) {
+            @NonNull ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl> testComponent) {
         testComponents.add(testComponent);
     }
 

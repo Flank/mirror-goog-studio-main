@@ -17,7 +17,6 @@
 package com.android.build.api.extension
 
 import com.android.build.api.component.Component
-import com.android.build.api.component.ComponentProperties
 import org.gradle.api.Incubating
 
 /**
@@ -29,7 +28,7 @@ import org.gradle.api.Incubating
  * @param VariantBuilderT the [Component] type produced by this variant.
  */
 @Incubating
-interface AndroidComponentsExtension<VariantBuilderT: Component<out ComponentProperties>> {
+interface AndroidComponentsExtension<VariantBuilderT: Component> {
 
     /**
      * Creates a [VariantSelector] instance that can be configured

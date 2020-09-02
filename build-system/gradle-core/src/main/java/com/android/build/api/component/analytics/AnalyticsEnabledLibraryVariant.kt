@@ -17,15 +17,14 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.LibraryVariant
-import com.android.build.api.variant.LibraryVariantProperties
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
 /**
  * Shim object for [LibraryVariant] that records all mutating accesses to the analytics.
  */
-open class AnalyticsEnabledLibraryVariant<PropertiesT: LibraryVariantProperties> @Inject constructor(
-    delegate: LibraryVariant<PropertiesT>,
+open class AnalyticsEnabledLibraryVariant @Inject constructor(
+    delegate: LibraryVariant,
     stats: GradleBuildVariant.Builder
-) : AnalyticsEnabledVariant<PropertiesT>(delegate, stats),
-    LibraryVariant<PropertiesT>
+) : AnalyticsEnabledVariant(delegate, stats),
+    LibraryVariant

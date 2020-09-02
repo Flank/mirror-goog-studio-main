@@ -17,12 +17,11 @@
 package com.android.build.api.extension.impl
 
 import com.android.build.api.component.Component
-import com.android.build.api.component.ComponentProperties
 import com.android.build.api.extension.AndroidComponentsExtension
 import com.android.build.api.extension.VariantSelector
 import com.android.build.gradle.internal.services.DslServices
 
-abstract class AndroidComponentsExtensionImpl<VariantBuilderT: Component<out ComponentProperties>>(
+abstract class AndroidComponentsExtensionImpl<VariantBuilderT: Component>(
         private val dslServices: DslServices,
         private val operations: OperationsRegistrar<VariantBuilderT>
 ): AndroidComponentsExtension<VariantBuilderT> {

@@ -19,13 +19,9 @@ package com.android.build.gradle.internal.dsl
 import com.android.build.api.component.GenericFilteredComponentActionRegistrar
 import com.android.build.api.component.impl.GenericFilteredComponentActionRegistrarImpl
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures
-import com.android.build.api.dsl.DynamicFeatureExtension
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.DynamicFeatureVariantProperties
-import com.android.build.gradle.api.AndroidSourceSet
-import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.services.DslServices
-import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 
 class DynamicFeatureExtensionImpl(
@@ -37,7 +33,7 @@ class DynamicFeatureExtensionImpl(
             BuildType,
             DefaultConfig,
             ProductFlavor,
-            DynamicFeatureVariant<DynamicFeatureVariantProperties>,
+            DynamicFeatureVariant,
             DynamicFeatureVariantProperties>(
         dslServices,
         dslContainers
@@ -48,13 +44,13 @@ class DynamicFeatureExtensionImpl(
         dslServices.newInstance(DynamicFeatureBuildFeaturesImpl::class.java)
 
     @Suppress("UNCHECKED_CAST")
-    override val onVariants: GenericFilteredComponentActionRegistrar<DynamicFeatureVariant<DynamicFeatureVariantProperties>>
+    override val onVariants: GenericFilteredComponentActionRegistrar<DynamicFeatureVariant>
         get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
             dslServices,
             variantOperations,
             DynamicFeatureVariant::class.java
-        ) as GenericFilteredComponentActionRegistrar<DynamicFeatureVariant<DynamicFeatureVariantProperties>>
+        ) as GenericFilteredComponentActionRegistrar<DynamicFeatureVariant>
     @Suppress("UNCHECKED_CAST")
     override val onVariantProperties: GenericFilteredComponentActionRegistrar<DynamicFeatureVariantProperties>
         get() = dslServices.newInstance(

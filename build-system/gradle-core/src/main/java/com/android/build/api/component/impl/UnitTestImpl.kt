@@ -27,12 +27,9 @@ open class UnitTestImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity,
     variantApiServices: VariantApiServices
-) : TestComponentImpl<UnitTestProperties>(
+) : TestComponentImpl(
     variantDslInfo,
     variantConfiguration,
     variantApiServices
-), UnitTest<UnitTestProperties> {
-    override fun executePropertiesActions(target: UnitTestProperties) {
-        propertiesActions.executeActions(target)
-    }
+), UnitTest {
 }

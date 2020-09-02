@@ -181,7 +181,7 @@ class ModelBuilderTest {
             DefaultConfig,
             ProductFlavor,
             SigningConfig,
-            ApplicationVariant<ApplicationVariantProperties>,
+            ApplicationVariant,
             ApplicationVariantProperties,
             ApplicationExtension<AndroidSourceSet, BuildType, DefaultConfig, ProductFlavor, SigningConfig>> {
 

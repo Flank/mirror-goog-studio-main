@@ -23,8 +23,8 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 /**
  * Shim object for [AndroidTest] that records all mutating accesses to the analytics.
  */
-class AnalyticsEnabledAndroidTest<PropertiesT: AndroidTestProperties>(
-    delegate: AndroidTest<PropertiesT>,
+class AnalyticsEnabledAndroidTest(
+    delegate: AndroidTest,
     stats: GradleBuildVariant.Builder
-) : AnalyticsEnabledComponent<PropertiesT>(delegate, stats),
-    AndroidTest<PropertiesT>
+) : AnalyticsEnabledComponent(delegate, stats),
+    AndroidTest

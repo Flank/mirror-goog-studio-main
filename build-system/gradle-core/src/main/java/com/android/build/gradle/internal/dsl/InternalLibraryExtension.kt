@@ -21,8 +21,6 @@ import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.api.AndroidSourceSet
-import com.android.build.gradle.internal.CompileOptions
-import com.android.build.gradle.internal.coverage.JacocoOptions
 
 /** See [InternalCommonExtension] */
 interface InternalLibraryExtension :
@@ -37,7 +35,7 @@ interface InternalLibraryExtension :
                 BuildType,
                 DefaultConfig,
                 ProductFlavor,
-                LibraryVariant<LibraryVariantProperties>,
+                LibraryVariant,
                 LibraryVariantProperties> {
     override var aidlPackagedList: MutableCollection<String>
 }

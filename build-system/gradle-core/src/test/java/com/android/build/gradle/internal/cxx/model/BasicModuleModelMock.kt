@@ -125,10 +125,10 @@ open class BasicModuleModelMock {
         throwUnmocked
     )
 
-    val component: VariantImpl<VariantPropertiesImpl> = mock(
+    val component: VariantImpl = mock(
         VariantImpl::class.java,
         throwUnmocked
-    ) as VariantImpl<VariantPropertiesImpl>
+    ) as VariantImpl
 
     val componentProperties: VariantPropertiesImpl = mock(
         VariantPropertiesImpl::class.java,

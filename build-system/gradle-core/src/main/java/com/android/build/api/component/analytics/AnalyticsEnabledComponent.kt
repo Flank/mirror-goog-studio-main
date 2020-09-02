@@ -17,17 +17,16 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.Component
-import com.android.build.api.component.ComponentProperties
 import com.android.tools.build.gradle.internal.profile.VariantMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 
 /**
  * Superclass for all analytics enabled implementations.
  */
-abstract class AnalyticsEnabledComponent<PropertiesT : ComponentProperties>(
-    open val delegate: Component<PropertiesT>,
+abstract class AnalyticsEnabledComponent(
+    open val delegate: Component,
     protected val stats: GradleBuildVariant.Builder
-) : Component<PropertiesT> {
+) : Component {
 
     override var enabled: Boolean
         get() = delegate.enabled
@@ -35,10 +34,6 @@ abstract class AnalyticsEnabledComponent<PropertiesT : ComponentProperties>(
             stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.ENABLED_VALUE
             delegate.enabled = value
         }
-
-    override fun onProperties(action: PropertiesT.() -> Unit) {
-        delegate.onProperties(action)
-    }
 
     override fun getName(): String =
         delegate.name

@@ -40,7 +40,7 @@ interface DynamicFeatureExtension<
             DefaultConfigT,
             ProductFlavorT,
             SigningConfigT,
-            DynamicFeatureVariant<DynamicFeatureVariantProperties>,
+            DynamicFeatureVariant,
             DynamicFeatureVariantProperties>,
     ApkExtension,
     TestedExtension {

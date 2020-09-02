@@ -35,15 +35,15 @@ import org.mockito.MockitoAnnotations
 class AnalyticsEnabledComponentTest {
 
     @Mock
-    lateinit var delegate: Component<ComponentProperties>
+    lateinit var delegate: Component
 
     private val stats = GradleBuildVariant.newBuilder()
-    private lateinit var proxy: AnalyticsEnabledComponent<ComponentProperties>
+    private lateinit var proxy: AnalyticsEnabledComponent
 
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
-        proxy = object: AnalyticsEnabledComponent<ComponentProperties>(delegate, stats) {}
+        proxy = object: AnalyticsEnabledComponent(delegate, stats) {}
     }
 
     @Test

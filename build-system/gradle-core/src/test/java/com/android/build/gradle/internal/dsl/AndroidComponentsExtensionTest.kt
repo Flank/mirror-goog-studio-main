@@ -41,91 +41,91 @@ class AndroidComponentsExtensionTest {
 
     @Test
     fun testApplicationModuleNoSelection() {
-        val operationsRegistrar = OperationsRegistrar<ApplicationVariant<ApplicationVariantProperties>>()
+        val operationsRegistrar = OperationsRegistrar<ApplicationVariant>()
         @Suppress("UNCHECKED_CAST")
-        testNoSelection<ApplicationVariant<ApplicationVariantProperties>>(
+        testNoSelection(
                 ApplicationAndroidComponentsExtensionImpl(
                         dslServices,
                         operationsRegistrar
                 ),
                 operationsRegistrar,
-                ApplicationVariant::class.java as Class<ApplicationVariant<ApplicationVariantProperties>>)
+                ApplicationVariant::class.java)
     }
 
     @Test
     fun testLibraryModuleNoSelection() {
-        val operationsRegistrar = OperationsRegistrar<LibraryVariant<LibraryVariantProperties>>()
+        val operationsRegistrar = OperationsRegistrar<LibraryVariant>()
         @Suppress("UNCHECKED_CAST")
-        testNoSelection<LibraryVariant<LibraryVariantProperties>>(
+        testNoSelection(
                 LibraryAndroidComponentsExtensionImpl(
                         dslServices,
                         operationsRegistrar
                 ),
                 operationsRegistrar,
-                LibraryVariant::class.java as Class<LibraryVariant<LibraryVariantProperties>>)
+                LibraryVariant::class.java)
     }
 
     @Test
     fun testDynamicFeatureModuleNoSelection() {
-        val operationsRegistrar = OperationsRegistrar<DynamicFeatureVariant<DynamicFeatureVariantProperties>>()
+        val operationsRegistrar = OperationsRegistrar<DynamicFeatureVariant>()
         @Suppress("UNCHECKED_CAST")
-        testNoSelection<DynamicFeatureVariant<DynamicFeatureVariantProperties>>(
+        testNoSelection(
                 DynamicFeatureAndroidComponentsExtensionImpl(dslServices, operationsRegistrar),
                 operationsRegistrar,
-                DynamicFeatureVariant::class.java as Class<DynamicFeatureVariant<DynamicFeatureVariantProperties>>)
+                DynamicFeatureVariant::class.java)
     }
 
     @Test
     fun testTestModuleNoSelection() {
-        val operationsRegistrar = OperationsRegistrar<TestVariant<TestVariantProperties>>()
+        val operationsRegistrar = OperationsRegistrar<TestVariant>()
         @Suppress("UNCHECKED_CAST")
-        testNoSelection<TestVariant<TestVariantProperties>>(
+        testNoSelection(
                 TestAndroidComponentsExtensionImpl(dslServices, operationsRegistrar),
                 operationsRegistrar,
-                TestVariant::class.java as Class<TestVariant<TestVariantProperties>>)
+                TestVariant::class.java)
     }
 
     @Test
     fun testApplicationModuleAllSelection() {
-        val operationsRegistrar = OperationsRegistrar<ApplicationVariant<ApplicationVariantProperties>>()
+        val operationsRegistrar = OperationsRegistrar<ApplicationVariant>()
         @Suppress("UNCHECKED_CAST")
-        testAllSelection<ApplicationVariant<ApplicationVariantProperties>>(
+        testAllSelection(
                 ApplicationAndroidComponentsExtensionImpl(dslServices, operationsRegistrar),
                 operationsRegistrar,
-                ApplicationVariant::class.java as Class<ApplicationVariant<ApplicationVariantProperties>>)
+                ApplicationVariant::class.java)
     }
 
     @Test
     fun testLibraryModuleAllSelection() {
-        val operationsRegistrar = OperationsRegistrar<LibraryVariant<LibraryVariantProperties>>()
+        val operationsRegistrar = OperationsRegistrar<LibraryVariant>()
         @Suppress("UNCHECKED_CAST")
-        testAllSelection<LibraryVariant<LibraryVariantProperties>>(
+        testAllSelection(
                 LibraryAndroidComponentsExtensionImpl(dslServices, operationsRegistrar),
                 operationsRegistrar,
-                LibraryVariant::class.java as Class<LibraryVariant<LibraryVariantProperties>>)
+                LibraryVariant::class.java)
     }
 
     @Test
     fun testDynamicFeatureModuleAllSelection() {
-        val operationsRegistrar = OperationsRegistrar<DynamicFeatureVariant<DynamicFeatureVariantProperties>>()
+        val operationsRegistrar = OperationsRegistrar<DynamicFeatureVariant>()
         @Suppress("UNCHECKED_CAST")
-        testAllSelection<DynamicFeatureVariant<DynamicFeatureVariantProperties>>(
+        testAllSelection(
                 DynamicFeatureAndroidComponentsExtensionImpl(dslServices, operationsRegistrar),
                 operationsRegistrar,
-                DynamicFeatureVariant::class.java as Class<DynamicFeatureVariant<DynamicFeatureVariantProperties>>)
+                DynamicFeatureVariant::class.java)
     }
 
     @Test
     fun testTestModuleAllSelection() {
-        val operationsRegistrar = OperationsRegistrar<TestVariant<TestVariantProperties>>()
+        val operationsRegistrar = OperationsRegistrar<TestVariant>()
         @Suppress("UNCHECKED_CAST")
-        testAllSelection<TestVariant<TestVariantProperties>>(
+        testAllSelection(
                 TestAndroidComponentsExtensionImpl(dslServices, operationsRegistrar),
                 operationsRegistrar,
-                TestVariant::class.java as Class<TestVariant<TestVariantProperties>>)
+                TestVariant::class.java)
     }
 
-    private fun  <VariantT: Variant<*>> testAllSelection(
+    private fun  <VariantT: Variant> testAllSelection(
             extension: AndroidComponentsExtensionImpl<VariantT>,
             operationsRegistrar: OperationsRegistrar<VariantT>,
             variantType: Class<VariantT>) {
@@ -138,7 +138,7 @@ class AndroidComponentsExtensionTest {
         assertThat(visitedVariants).hasSize(1)
     }
 
-    private fun <VariantT: Variant<*>> testNoSelection(
+    private fun <VariantT: Variant> testNoSelection(
             extension: AndroidComponentsExtensionImpl<VariantT>,
             operationsRegistrar: OperationsRegistrar<VariantT>,
             variantType: Class<VariantT>) {

@@ -62,7 +62,7 @@ open class LibraryExtension(
     false
 ),
    InternalLibraryExtension by publicExtensionImpl,
-    ActionableVariantObjectOperationsExecutor<com.android.build.api.variant.LibraryVariant<LibraryVariantProperties>, LibraryVariantProperties> by publicExtensionImpl {
+    ActionableVariantObjectOperationsExecutor<com.android.build.api.variant.LibraryVariant, LibraryVariantProperties> by publicExtensionImpl {
 
     private val libraryVariantList: DomainObjectSet<LibraryVariant> =
         dslServices.domainObjectSet(LibraryVariant::class.java)

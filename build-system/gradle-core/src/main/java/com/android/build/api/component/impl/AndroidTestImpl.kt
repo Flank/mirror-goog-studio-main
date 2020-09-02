@@ -27,12 +27,8 @@ open class AndroidTestImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity,
     variantApiServices: VariantApiServices
-) : TestComponentImpl<AndroidTestProperties>(
+) : TestComponentImpl(
     variantDslInfo,
     variantConfiguration,
     variantApiServices
-), AndroidTest<AndroidTestProperties> {
-    override fun executePropertiesActions(target: AndroidTestProperties) {
-        propertiesActions.executeActions(target)
-    }
-}
+), AndroidTest

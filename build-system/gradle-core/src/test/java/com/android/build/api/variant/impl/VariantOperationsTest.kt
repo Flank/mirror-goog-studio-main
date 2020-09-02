@@ -38,12 +38,12 @@ class VariantOperationsTest {
     @Test
     fun unfilteredActionsTest() {
         val counter = AtomicInteger(0)
-        val operations = VariantOperations<ApplicationVariant<ApplicationVariantProperties>>()
+        val operations = VariantOperations<ApplicationVariant>()
         for (i in 1..5) {
             operations.addAction(Action { counter.getAndAdd(10.0.pow(i - 1).toInt())})
         }
         @Suppress("UNCHECKED_CAST")
-        val variant = createVariant(ApplicationVariant::class.java) as ApplicationVariant<ApplicationVariantProperties>
+        val variant = createVariant(ApplicationVariant::class.java) as ApplicationVariant
 
         operations.executeActions(variant)
         Truth.assertThat(counter.get()).isEqualTo(11111)
@@ -52,16 +52,16 @@ class VariantOperationsTest {
     @Test
     fun singleFilteredActionTest() {
         val counter = AtomicInteger(0)
-        val operations = VariantOperations<ApplicationVariant<ApplicationVariantProperties>>()
+        val operations = VariantOperations<ApplicationVariant>()
         @Suppress("UNCHECKED_CAST")
         operations.addFilteredAction(
             FilteredComponentAction(
                 specificType = ApplicationVariant::class.java,
-                action = Action { counter.incrementAndGet() }) as FilteredComponentAction<ApplicationVariant<ApplicationVariantProperties>>
+                action = Action { counter.incrementAndGet() }) as FilteredComponentAction<ApplicationVariant>
         )
 
         @Suppress("UNCHECKED_CAST")
-        val variant = createVariant(ApplicationVariant::class.java) as ApplicationVariant<ApplicationVariantProperties>
+        val variant = createVariant(ApplicationVariant::class.java) as ApplicationVariant
         operations.executeActions(variant)
         Truth.assertThat(counter.get()).isEqualTo(1)
     }
@@ -69,7 +69,7 @@ class VariantOperationsTest {
     @Test
     fun multipleActionsTest() {
         val counter = AtomicInteger(0)
-        val operations = VariantOperations<Variant<*>>()
+        val operations = VariantOperations<Variant>()
 
         operations.addAction(Action { counter.incrementAndGet()})
 
@@ -96,7 +96,7 @@ class VariantOperationsTest {
     @Test
     fun actionsOrderTest() {
         val orderList = mutableListOf<Int>()
-        val operations = VariantOperations<Variant<*>>()
+        val operations = VariantOperations<Variant>()
 
         operations.addFilteredAction(
             FilteredComponentAction(
@@ -121,7 +121,7 @@ class VariantOperationsTest {
 
     @Test
     fun actionInvokedTooLate() {
-        val operations = VariantOperations<Variant<*>>()
+        val operations = VariantOperations<Variant>()
 
         operations.executeActions(Mockito.mock(Variant::class.java))
         try {
@@ -132,7 +132,7 @@ class VariantOperationsTest {
         }
     }
 
-    private fun <T : Variant<*>> createVariant(
+    private fun <T : Variant> createVariant(
         @Suppress("UNCHECKED_CAST") variantClass: Class<T> = Variant::class.java as Class<T>
     ): T {
         val variant = Mockito.mock(variantClass)

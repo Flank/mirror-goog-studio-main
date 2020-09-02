@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
-import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.extension.TestAndroidComponentsExtension;
@@ -135,10 +134,7 @@ public class TestPlugin
     protected TestApplicationTaskManager createTaskManager(
             @NonNull List<ComponentInfo<TestVariantImpl, TestVariantPropertiesImpl>> variants,
             @NonNull
-                    List<
-                                    ComponentInfo<
-                                            TestComponentImpl<? extends TestComponentProperties>,
-                                            TestComponentPropertiesImpl>>
+                    List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
                             testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,

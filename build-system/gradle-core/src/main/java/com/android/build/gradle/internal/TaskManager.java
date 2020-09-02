@@ -55,7 +55,6 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.Artifact.SingleArtifact;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
-import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
@@ -67,7 +66,6 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.variant.AndroidVersion;
-import com.android.build.api.variant.VariantProperties;
 import com.android.build.api.variant.impl.VariantApiExtensionsKt;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
@@ -272,8 +270,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 
 /** Manages tasks creation. */
 public abstract class TaskManager<
-        VariantT extends VariantImpl<? extends VariantProperties>,
-        VariantPropertiesT extends VariantPropertiesImpl> {
+        VariantT extends VariantImpl, VariantPropertiesT extends VariantPropertiesImpl> {
     private static final String MULTIDEX_VERSION = "1.0.2";
 
     private static final String COM_ANDROID_SUPPORT_MULTIDEX =
@@ -323,10 +320,7 @@ public abstract class TaskManager<
     @NonNull private final List<ComponentInfo<VariantT, VariantPropertiesT>> variants;
 
     @NonNull
-    private final List<
-                    ComponentInfo<
-                            TestComponentImpl<? extends TestComponentProperties>,
-                            TestComponentPropertiesImpl>>
+    private final List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
             testComponents;
 
     private final boolean hasFlavors;
@@ -349,10 +343,7 @@ public abstract class TaskManager<
     public TaskManager(
             @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> variants,
             @NonNull
-                    List<
-                                    ComponentInfo<
-                                            TestComponentImpl<? extends TestComponentProperties>,
-                                            TestComponentPropertiesImpl>>
+                    List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
                             testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,
@@ -409,10 +400,8 @@ public abstract class TaskManager<
         for (ComponentInfo<VariantT, VariantPropertiesT> variant : variants) {
             createTasksForVariant(variant, variants);
         }
-        for (ComponentInfo<
-                        TestComponentImpl<? extends TestComponentProperties>,
-                        TestComponentPropertiesImpl>
-                testComponent : testComponents) {
+        for (ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl> testComponent :
+                testComponents) {
             createTasksForTest(testComponent);
         }
 
@@ -513,11 +502,7 @@ public abstract class TaskManager<
 
     /** Create tasks for the specified variant. */
     private void createTasksForTest(
-            @NonNull
-                    ComponentInfo<
-                                    TestComponentImpl<? extends TestComponentProperties>,
-                                    TestComponentPropertiesImpl>
-                            testComponent) {
+            @NonNull ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl> testComponent) {
         final TestComponentPropertiesImpl componentProperties = testComponent.getProperties();
 
         createAssembleTask(componentProperties);
@@ -1542,8 +1527,7 @@ public abstract class TaskManager<
     public void createExternalNativeBuildJsonGenerators(
             @NonNull VariantT variant, @NonNull VariantPropertiesT variantProperties) {
         CxxConfigurationModel configurationModel =
-                tryCreateCxxConfigurationModel(
-                        (VariantImpl<VariantPropertiesImpl>) variant, variantProperties, false);
+                tryCreateCxxConfigurationModel(variant, variantProperties, false);
 
         if (configurationModel == null) {
             return;
@@ -1577,8 +1561,7 @@ public abstract class TaskManager<
         // Set up clean tasks
         TaskProvider<Task> cleanTask = taskFactory.named("clean");
         CxxConfigurationModel allAbisModel =
-                tryCreateCxxConfigurationModel(
-                        (VariantImpl<VariantPropertiesImpl>) component, componentProperties, true);
+                tryCreateCxxConfigurationModel(component, componentProperties, true);
         if (allAbisModel != null) {
             TaskProvider<ExternalNativeCleanTask> externalNativeCleanTask =
                     taskFactory.register(

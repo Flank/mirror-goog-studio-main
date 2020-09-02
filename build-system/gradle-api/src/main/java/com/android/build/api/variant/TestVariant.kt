@@ -20,4 +20,4 @@ import org.gradle.api.Incubating
  * [Variant] type for tests associated with a module.
  */
 @Incubating
-interface TestVariant<PropertiesT: TestVariantProperties>: Variant<PropertiesT>
+interface TestVariant: Variant
