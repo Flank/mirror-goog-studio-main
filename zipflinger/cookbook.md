@@ -113,3 +113,12 @@ try(ZipArchive zip = new ZipArchive("archive.zip")) {
   zip.add(new FullFileSource(p  , "x", c, perm));
 }
 ```
+
+# How to extract content from an archive
+```
+ try(ZipRepo repo = new ZipRepo("source.zip")) {
+   try(InputStream inputStream = repo.getContent("entryName")) {
+   ...
+   }
+ }
+```

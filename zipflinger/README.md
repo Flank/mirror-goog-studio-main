@@ -48,9 +48,8 @@ increase speed (by allowing multithreaded-compression) and simplify the overall 
 cost of not supporting files bigger than 2GiB.  
 
 ## ZipArchive
-ZipArchive is the interface to the users of the library. This is where an archive is created and/or
-modified. Typically an user will provide the path to an archive and request operations such as
-add/delete.
+ZipArchive is the interface to create/read/write an archive. Typically an user will provide the path
+to an archive and request operations such as add/delete.
 
 In the code sample below, an Android APK is "incrementally" updated. The AAPT2 output (recognizable
 to its file extension .apk_) is opened. Since the archive exists, it will be modified. Had it not
@@ -86,15 +85,21 @@ Entry name heuristic:
 - Deleting a non-existing entry will fail silently.
 - Adding an existing entry will not silently overwrite but will throw an exception instead.
 
-## Zipmapper
+## ZipMap
 The mapper only plays a part when opening an existing archive. The goal of the mapper is to locate
 all entries via the Central Directories and build a map of the LFHs (Local File Header) , CDRs
 (Central Directory Record) and compile these information into a list of Entry. This data is fed to
 the FreeStore to build a map of what is currently used in the file and where their is available
-space.
+space. It is also an efficient way to list entries in a zip archive if it is the only operation
+you need to perform.
 
 Note that if a zip contains several entries with the same name, the last entry in CD order
 (not top-down) order is kept.
+
+## ZipRepo
+If all operations needed are to list entries and read entries content, ZipRepo is the object to use.
+It is lightweight compared to a ZipArchive and allows to read entries via an InputStream to exceed
+the 2GiB limitation and reduce heap stress.
 
 ## Freestore
 The freestore behaves like a memory allocator except that is deals with file address space instead
