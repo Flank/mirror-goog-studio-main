@@ -305,6 +305,7 @@ open class VariantDslInfoImpl internal constructor(
             else -> {
                 dataProvider.manifestData.map {
                     it.packageName
+                        ?: applicationId.get()
                         ?: throw RuntimeException("Package Name not found in ${dataProvider.manifestLocation}")
                 }
             }
