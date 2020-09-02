@@ -101,7 +101,6 @@ private fun getProjectLocation(args: Array<String>): ProjectLocation {
 
     return ProjectLocation(
         location,
-        File(location, "build.gradle"),
         testLocation
     )
 }
