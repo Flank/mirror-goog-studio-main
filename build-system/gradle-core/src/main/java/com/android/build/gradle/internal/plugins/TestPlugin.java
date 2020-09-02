@@ -21,6 +21,9 @@ import com.android.annotations.NonNull;
 import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.extension.TestAndroidComponentsExtension;
+import com.android.build.api.extension.impl.OperationsRegistrar;
+import com.android.build.api.extension.impl.TestAndroidComponentsExtensionImpl;
 import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
@@ -40,7 +43,6 @@ import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.v2.ide.ProjectType;
-import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.util.List;
 import javax.inject.Inject;
@@ -51,7 +53,9 @@ import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'test' projects. */
-public class TestPlugin extends BasePlugin<TestVariantImpl, TestVariantPropertiesImpl> {
+public class TestPlugin
+        extends BasePlugin<
+                TestAndroidComponentsExtension, TestVariantImpl, TestVariantPropertiesImpl> {
     @Inject
     public TestPlugin(
             ToolingModelBuilderRegistry registry,
@@ -104,6 +108,20 @@ public class TestPlugin extends BasePlugin<TestVariantImpl, TestVariantPropertie
                         dslContainers.getSourceSetManager(),
                         extraModelInfo,
                         new TestExtensionImpl(dslServices, dslContainers));
+    }
+
+    @NonNull
+    @Override
+    protected TestAndroidComponentsExtension createComponentExtension(
+            @NonNull DslServices dslServices,
+            @NonNull OperationsRegistrar<TestVariantImpl> operationsRegistrar) {
+        return project.getExtensions()
+                .create(
+                        TestAndroidComponentsExtension.class,
+                        "androidComponents",
+                        TestAndroidComponentsExtensionImpl.class,
+                        dslServices,
+                        operationsRegistrar);
     }
 
     @NonNull

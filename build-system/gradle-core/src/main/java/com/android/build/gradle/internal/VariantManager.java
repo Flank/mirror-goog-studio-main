@@ -35,6 +35,7 @@ import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
+import com.android.build.api.extension.impl.OperationsRegistrar;
 import com.android.build.api.variant.Variant;
 import com.android.build.api.variant.VariantProperties;
 import com.android.build.api.variant.impl.VariantImpl;
@@ -112,6 +113,9 @@ public class VariantManager<
     @NonNull private final Project project;
     @NonNull private final ProjectOptions projectOptions;
     @NonNull private final BaseExtension extension;
+
+    @NonNull private final OperationsRegistrar<Variant<VariantProperties>> operationsRegistrar;
+
     @NonNull private final VariantFactory<VariantT, VariantPropertiesT> variantFactory;
 
     @NonNull
@@ -152,11 +156,13 @@ public class VariantManager<
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull BaseExtension extension,
+            @NonNull OperationsRegistrar<Variant<VariantProperties>> operationsRegistrar,
             @NonNull VariantFactory<VariantT, VariantPropertiesT> variantFactory,
             @NonNull VariantInputModel variantInputModel,
             @NonNull ProjectServices projectServices) {
         this.globalScope = globalScope;
         this.extension = extension;
+        this.operationsRegistrar = operationsRegistrar;
         this.project = project;
         this.projectOptions = projectOptions;
         this.variantFactory = variantFactory;
@@ -359,6 +365,10 @@ public class VariantManager<
         AnalyticsEnabledVariant<? extends VariantProperties> userVisibleVariantObject =
                 variant.createUserVisibleVariantObject(projectServices, profileBuilder);
         commonExtension.executeVariantOperations(
+                (Variant<VariantProperties>) userVisibleVariantObject);
+
+        // execute the new API, simplify this horrific casting once nesting is removed.
+        operationsRegistrar.executeOperations(
                 (Variant<VariantProperties>) userVisibleVariantObject);
 
         if (!variant.getEnabled()) {

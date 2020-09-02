@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.api.extension
 
-package com.android.build.gradle.internal.plugins
+import org.gradle.api.Incubating
 
 /**
- * extension to call afterEvaluate on a plugin directly. This also works around the
- * package visibility of createAndroidTasks for testing.
+ * Selector interface to reduce the number of variants that are of interests when calling any of the
+ * variant API like [AndroidComponentsExtension.beforeVariants].
  */
-fun BasePlugin<*, *,*>.runAfterEvaluate(force: Boolean = false) {
-    this.createAndroidTasks()
+@Incubating
+interface VariantSelector {
+
+    /**
+     * Creates a [VariantSelector] that includes all the variants for the current module.
+     *
+     * @return a [VariantSelector] for all variants.
+     */
+    fun all(): VariantSelector
 }

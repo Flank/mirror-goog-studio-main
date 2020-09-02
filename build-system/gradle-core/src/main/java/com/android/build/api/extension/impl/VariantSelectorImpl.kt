@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.plugins
+package com.android.build.api.extension.impl
 
-/**
- * extension to call afterEvaluate on a plugin directly. This also works around the
- * package visibility of createAndroidTasks for testing.
- */
-fun BasePlugin<*, *,*>.runAfterEvaluate(force: Boolean = false) {
-    this.createAndroidTasks()
+import com.android.build.api.extension.VariantSelector
+
+open class VariantSelectorImpl: VariantSelector {
+
+    // TODO: implement this.
+    // so far return this, implementation in a subsequent CL.
+    override fun all(): VariantSelector = this
+
+    // TODO: implement this.
+    fun <VariantBuilderT> appliesTo(variant: VariantBuilderT): Boolean {
+        return true;
+    }
 }

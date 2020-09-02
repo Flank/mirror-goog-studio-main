@@ -782,6 +782,15 @@ com.android.build.api.dsl.VectorDrawables.generatedDensities: void (java.lang.St
 com.android.build.api.dsl.VectorDrawables.getGeneratedDensities: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.VectorDrawables.getUseSupportLibrary: java.lang.Boolean ()
 com.android.build.api.dsl.VectorDrawables.setUseSupportLibrary: void (java.lang.Boolean)
+com.android.build.api.extension.AndroidComponentsExtension
+com.android.build.api.extension.AndroidComponentsExtension.beforeVariants: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super VariantBuilderT, kotlin.Unit>)
+com.android.build.api.extension.AndroidComponentsExtension.selector: com.android.build.api.extension.VariantSelector ()
+com.android.build.api.extension.ApplicationAndroidComponentsExtension implements com.android.build.api.extension.AndroidComponentsExtension
+com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension implements com.android.build.api.extension.AndroidComponentsExtension
+com.android.build.api.extension.LibraryAndroidComponentsExtension implements com.android.build.api.extension.AndroidComponentsExtension
+com.android.build.api.extension.TestAndroidComponentsExtension implements com.android.build.api.extension.AndroidComponentsExtension
+com.android.build.api.extension.VariantSelector
+com.android.build.api.extension.VariantSelector.all: com.android.build.api.extension.VariantSelector ()
 com.android.build.api.instrumentation.AsmClassVisitorFactory implements java.io.Serializable
 com.android.build.api.instrumentation.AsmClassVisitorFactory.createClassVisitor: org.objectweb.asm.ClassVisitor (com.android.build.api.instrumentation.ClassData, org.objectweb.asm.ClassVisitor)
 com.android.build.api.instrumentation.AsmClassVisitorFactory.getInstrumentationContext: com.android.build.api.instrumentation.InstrumentationContext ()

@@ -29,7 +29,7 @@ import org.gradle.api.Project
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
 class LintModuleLoader(
-    private val plugin: BasePlugin<*, *>,
+    private val plugin: BasePlugin<*, *, *>,
     private val registry: ToolingModelBuilderRegistry
 ) : LintModelModuleLoader {
     override fun getModule(library: LintModelDependency): LintModelModule? {

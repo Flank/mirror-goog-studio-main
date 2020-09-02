@@ -21,6 +21,9 @@ import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.dsl.ApplicationExtension;
+import com.android.build.api.extension.ApplicationAndroidComponentsExtension;
+import com.android.build.api.extension.impl.ApplicationAndroidComponentsExtensionImpl;
+import com.android.build.api.extension.impl.OperationsRegistrar;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
@@ -42,7 +45,6 @@ import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.v2.ide.ProjectType;
-import com.android.builder.profile.Recorder;
 import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -53,7 +55,10 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects, applied on the base application module */
 public class AppPlugin
-        extends AbstractAppPlugin<ApplicationVariantImpl, ApplicationVariantPropertiesImpl> {
+        extends AbstractAppPlugin<
+                ApplicationAndroidComponentsExtension,
+                ApplicationVariantImpl,
+                ApplicationVariantPropertiesImpl> {
     @Inject
     public AppPlugin(
             ToolingModelBuilderRegistry registry,
@@ -117,6 +122,20 @@ public class AppPlugin
                         dslContainers.getSourceSetManager(),
                         extraModelInfo,
                         new ApplicationExtensionImpl(dslServices, dslContainers));
+    }
+
+    @NonNull
+    @Override
+    protected ApplicationAndroidComponentsExtension createComponentExtension(
+            @NonNull DslServices dslServices,
+            @NonNull OperationsRegistrar<ApplicationVariantImpl> operationsRegistrar) {
+        return project.getExtensions()
+                .create(
+                        ApplicationAndroidComponentsExtension.class,
+                        "androidComponents",
+                        ApplicationAndroidComponentsExtensionImpl.class,
+                        dslServices,
+                        operationsRegistrar);
     }
 
     @NonNull
