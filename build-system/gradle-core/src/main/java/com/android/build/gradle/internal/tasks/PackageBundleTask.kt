@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
+import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -350,8 +350,8 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     /**
      * CreateAction for a Task that will pack the bundle artifact.
      */
-    class CreationAction(componentProperties: ApplicationVariantPropertiesImpl) :
-        VariantTaskCreationAction<PackageBundleTask, ApplicationVariantPropertiesImpl>(
+    class CreationAction(componentProperties: ApplicationVariantImpl) :
+        VariantTaskCreationAction<PackageBundleTask, ApplicationVariantImpl>(
             componentProperties
         ) {
         override val name: String

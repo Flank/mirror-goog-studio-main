@@ -18,12 +18,10 @@ package com.android.build.gradle.internal
 
 import com.android.build.api.attributes.BuildTypeAttr.Companion.ATTRIBUTE
 import com.android.build.api.attributes.ProductFlavorAttr
-import com.android.build.api.component.TestComponentProperties
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
-import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.VariantBuilderImpl
-import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform
@@ -553,7 +551,7 @@ class DependencyConfigurator(
     }
 
     /** Configure artifact transforms that require variant-specific attribute information.  */
-    fun <VariantT : VariantBuilderImpl, VariantPropertiesT : VariantPropertiesImpl>
+    fun <VariantT : VariantBuilderImpl, VariantPropertiesT : VariantImpl>
             configureVariantTransforms(
         variants: List<ComponentInfo<VariantT, VariantPropertiesT>>,
         testComponents: List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>

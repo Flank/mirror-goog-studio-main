@@ -24,7 +24,7 @@ import com.android.build.api.extension.ApplicationAndroidComponentsExtension;
 import com.android.build.api.extension.impl.ApplicationAndroidComponentsExtensionImpl;
 import com.android.build.api.extension.impl.OperationsRegistrar;
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
-import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
+import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.AppModelBuilder;
@@ -57,7 +57,7 @@ public class AppPlugin
         extends AbstractAppPlugin<
                 ApplicationAndroidComponentsExtension,
                 ApplicationVariantBuilderImpl,
-                ApplicationVariantPropertiesImpl> {
+                ApplicationVariantImpl> {
     @Inject
     public AppPlugin(
             ToolingModelBuilderRegistry registry,
@@ -141,10 +141,7 @@ public class AppPlugin
     @Override
     protected ApplicationTaskManager createTaskManager(
             @NonNull
-                    List<
-                                    ComponentInfo<
-                                            ApplicationVariantBuilderImpl,
-                                            ApplicationVariantPropertiesImpl>>
+                    List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>
                             variants,
             @NonNull
                     List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>

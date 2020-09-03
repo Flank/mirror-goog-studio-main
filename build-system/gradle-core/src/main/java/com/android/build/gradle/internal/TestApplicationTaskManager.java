@@ -23,7 +23,7 @@ import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.variant.impl.TestVariantBuilderImpl;
-import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
+import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.*;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -53,11 +53,10 @@ import org.gradle.api.tasks.TaskProvider;
  * application.
  */
 public class TestApplicationTaskManager
-        extends AbstractAppTaskManager<TestVariantBuilderImpl, TestVariantPropertiesImpl> {
+        extends AbstractAppTaskManager<TestVariantBuilderImpl, TestVariantImpl> {
 
     public TestApplicationTaskManager(
-            @NonNull
-                    List<ComponentInfo<TestVariantBuilderImpl, TestVariantPropertiesImpl>> variants,
+            @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> variants,
             @NonNull
                     List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
                             testComponents,
@@ -69,13 +68,11 @@ public class TestApplicationTaskManager
 
     @Override
     protected void doCreateTasksForVariant(
-            @NonNull ComponentInfo<TestVariantBuilderImpl, TestVariantPropertiesImpl> variant,
-            @NonNull
-                    List<ComponentInfo<TestVariantBuilderImpl, TestVariantPropertiesImpl>>
-                            allVariants) {
+            @NonNull ComponentInfo<TestVariantBuilderImpl, TestVariantImpl> variant,
+            @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> allVariants) {
         createCommonTasks(variant, allVariants);
 
-        TestVariantPropertiesImpl testVariantProperties = variant.getProperties();
+        TestVariantImpl testVariantProperties = variant.getProperties();
 
         Provider<Directory> testingApk =
                 testVariantProperties.getArtifacts().get(ArtifactType.APK.INSTANCE);
@@ -137,19 +134,15 @@ public class TestApplicationTaskManager
 
     @Override
     public void createLintTasks(
-            @NonNull TestVariantPropertiesImpl variantProperties,
-            @NonNull
-                    List<ComponentInfo<TestVariantBuilderImpl, TestVariantPropertiesImpl>>
-                            allVariants) {
+            @NonNull TestVariantImpl variantProperties,
+            @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> allVariants) {
         // do nothing
     }
 
     @Override
     public void maybeCreateLintVitalTask(
-            @NonNull TestVariantPropertiesImpl variant,
-            @NonNull
-                    List<ComponentInfo<TestVariantBuilderImpl, TestVariantPropertiesImpl>>
-                            allVariants) {
+            @NonNull TestVariantImpl variant,
+            @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> allVariants) {
         // do nothing
     }
 

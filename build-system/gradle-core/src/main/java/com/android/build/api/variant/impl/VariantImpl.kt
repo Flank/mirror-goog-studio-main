@@ -16,12 +16,12 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.analytics.AnalyticsEnabledVariantProperties
+import com.android.build.api.component.analytics.AnalyticsEnabledVariant
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.PackagingOptions
-import com.android.build.api.variant.VariantProperties
+import com.android.build.api.variant.Variant
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -42,7 +42,7 @@ import org.gradle.api.provider.Provider
 import org.objectweb.asm.Type
 import java.io.Serializable
 
-abstract class VariantPropertiesImpl(
+abstract class VariantImpl(
     override val variant: VariantBuilderImpl,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
@@ -70,7 +70,7 @@ abstract class VariantPropertiesImpl(
     variantPropertiesApiServices,
     taskCreationServices,
     globalScope
-), VariantProperties, ConsumableCreationConfig {
+), Variant, ConsumableCreationConfig {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -165,5 +165,5 @@ abstract class VariantPropertiesImpl(
     abstract override fun createUserVisibleVariantPropertiesObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledVariantProperties
+    ): AnalyticsEnabledVariant
 }

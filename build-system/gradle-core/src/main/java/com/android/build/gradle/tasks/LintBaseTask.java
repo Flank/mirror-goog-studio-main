@@ -33,7 +33,7 @@ import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.VariantOutputConfiguration;
 import com.android.build.api.variant.impl.BuiltArtifactsImpl;
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.LibraryExtension;
@@ -274,8 +274,8 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
                                 new ArtifactCollections(componentProperties, RUNTIME_CLASSPATH)
                                         .getAllCollections());
 
-        if (componentProperties instanceof VariantPropertiesImpl) {
-            VariantPropertiesImpl variantProperties = (VariantPropertiesImpl) componentProperties;
+        if (componentProperties instanceof VariantImpl) {
+            VariantImpl variantProperties = (VariantImpl) componentProperties;
 
             for (VariantType variantType : VariantType.Companion.getTestComponents()) {
                 ComponentPropertiesImpl testVariant =

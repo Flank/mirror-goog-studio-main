@@ -29,10 +29,10 @@ import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.SigningConfig
 import com.android.build.api.dsl.TestExtension
+import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
-import com.android.build.api.variant.VariantProperties
-import com.android.build.api.variant.impl.TestVariantPropertiesImpl
-import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.variant.impl.TestVariantImpl
+import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
@@ -101,7 +101,7 @@ class ModelBuilder<
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
         VariantT : VariantBuilder,
-        VariantPropertiesT : VariantProperties,
+        VariantPropertiesT : Variant,
         ExtensionT : CommonExtension<
                 AndroidSourceSetT,
                 BuildFeaturesT,
@@ -360,10 +360,10 @@ class ModelBuilder<
     }
 
     private fun createVariant(
-        variant: VariantPropertiesImpl,
+        variant: VariantImpl,
         features: BuildFeatureValues,
         instantAppResultMap: MutableMap<File, Boolean>
-    ): VariantImpl {
+    ): com.android.build.gradle.internal.ide.v2.VariantImpl {
         return VariantImpl(
             name = variant.name,
             displayName = variant.baseName,
@@ -400,7 +400,7 @@ class ModelBuilder<
         classesFolders.addAll(component.getCompiledRClasses(COMPILE_CLASSPATH).files)
 
         val testInfo: TestInfo? = when(component) {
-            is TestVariantPropertiesImpl, is AndroidTestPropertiesImpl -> {
+            is TestVariantImpl, is AndroidTestPropertiesImpl -> {
                 val runtimeApks: Collection<File> = globalScope
                     .project
                     .configurations

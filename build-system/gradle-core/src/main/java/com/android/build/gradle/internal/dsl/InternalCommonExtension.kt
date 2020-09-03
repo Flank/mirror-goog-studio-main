@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.VariantBuilder
-import com.android.build.api.variant.VariantProperties
+import com.android.build.api.variant.Variant
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.CompileOptions as CompileOptionsImpl
 import com.android.build.gradle.internal.coverage.JacocoOptions as JacocoOptionsImpl
@@ -42,7 +42,7 @@ interface InternalCommonExtension<
         DefaultConfigT : com.android.build.api.dsl.DefaultConfig,
         ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
         VariantT : VariantBuilder,
-        VariantPropertiesT : VariantProperties> :
+        VariantPropertiesT : Variant> :
     CommonExtension<
         AndroidSourceSet,
         BuildFeaturesT,

@@ -31,12 +31,12 @@ import com.google.common.collect.Lists
 
 /**
  * This class and subclasses are implementing methods defined in the CreationConfig
- * interfaces but should not be necessarily implemented by the VariantPropertiesImpl
+ * interfaces but should not be necessarily implemented by the VariantImpl
  * and subclasses. The reasons are usually because it makes more sense to implement
  * the method in a class hierarchy that follows the interface definition so to avoid
- * repeating implementation in various disparate VariantPropertiesImpl sub-classes.
+ * repeating implementation in various disparate VariantImpl sub-classes.
  *
- * Instead [com.android.build.api.variant.impl.VariantPropertiesImpl] will delegate
+ * Instead [com.android.build.api.variant.impl.VariantImpl] will delegate
  * to these objects for methods which are cross cutting across the VariantProperties
  * implementation hierarchy.
  */

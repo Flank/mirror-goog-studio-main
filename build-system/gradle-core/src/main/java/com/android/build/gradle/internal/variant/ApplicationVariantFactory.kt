@@ -24,7 +24,7 @@ import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl
-import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
+import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
@@ -60,7 +60,7 @@ import java.util.function.Consumer
 class ApplicationVariantFactory(
     projectServices: ProjectServices,
     globalScope: GlobalScope
-) : AbstractAppVariantFactory<ApplicationVariantBuilderImpl, ApplicationVariantPropertiesImpl>(
+) : AbstractAppVariantFactory<ApplicationVariantBuilderImpl, ApplicationVariantImpl>(
     projectServices,
     globalScope
 ) {
@@ -97,11 +97,11 @@ class ApplicationVariantFactory(
             transformManager: TransformManager,
             variantPropertiesApiServices: VariantPropertiesApiServices,
             taskCreationServices: TaskCreationServices
-    ): ApplicationVariantPropertiesImpl {
+    ): ApplicationVariantImpl {
         val variantProperties = projectServices
             .objectFactory
             .newInstance(
-                ApplicationVariantPropertiesImpl::class.java,
+                ApplicationVariantImpl::class.java,
                 variant,
                 buildFeatures,
                 variantDslInfo,
@@ -158,7 +158,7 @@ class ApplicationVariantFactory(
     }
 
     private fun computeOutputs(
-        variantProperties: ApplicationVariantPropertiesImpl,
+        variantProperties: ApplicationVariantImpl,
         variant: ApplicationVariantData
     ) {
         val extension = globalScope.extension

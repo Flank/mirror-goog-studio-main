@@ -30,7 +30,6 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.dsl.ApplicationExtension;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.BuildTypeData;
@@ -373,7 +372,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
 
         String defaultVariant = variantModel.getDefaultVariant();
-        for (VariantPropertiesImpl variantProperties : variantModel.getVariants()) {
+        for (com.android.build.api.variant.impl.VariantImpl variantProperties :
+                variantModel.getVariants()) {
             variantNames.add(variantProperties.getName());
             if (shouldBuildVariant) {
                 variants.add(createVariant(variantProperties));
@@ -564,7 +564,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         if (variantName == null) {
             throw new IllegalArgumentException("Variant name cannot be null.");
         }
-        for (VariantPropertiesImpl variantProperties : variantModel.getVariants()) {
+        for (com.android.build.api.variant.impl.VariantImpl variantProperties :
+                variantModel.getVariants()) {
             if (variantProperties.getName().equals(variantName)) {
                 VariantImpl variant = createVariant(variantProperties);
                 if (shouldScheduleSourceGeneration) {
@@ -656,8 +657,9 @@ public class ModelBuilder<Extension extends BaseExtension>
                                                 libraryDependencyCache))
                         .collect(Collectors.toList());
 
-        if (componentProperties instanceof VariantPropertiesImpl) {
-            VariantPropertiesImpl variantProperties = (VariantPropertiesImpl) componentProperties;
+        if (componentProperties instanceof com.android.build.api.variant.impl.VariantImpl) {
+            com.android.build.api.variant.impl.VariantImpl variantProperties =
+                    (com.android.build.api.variant.impl.VariantImpl) componentProperties;
 
             for (VariantType variantType : VariantType.Companion.getTestComponents()) {
                 ComponentPropertiesImpl testVariant =

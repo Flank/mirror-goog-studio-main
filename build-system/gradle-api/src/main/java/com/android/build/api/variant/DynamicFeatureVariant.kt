@@ -19,7 +19,7 @@ import org.gradle.api.Incubating
 import org.gradle.api.provider.Provider
 
 @Incubating
-interface DynamicFeatureVariantProperties : VariantProperties {
+interface DynamicFeatureVariant : Variant {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.

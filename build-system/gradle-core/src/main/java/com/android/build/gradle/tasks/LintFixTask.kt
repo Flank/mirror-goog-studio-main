@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.scope.GlobalScope
 import org.gradle.api.file.ConfigurableFileCollection
@@ -61,7 +61,7 @@ abstract class LintFixTask : LintBaseTask() {
     }
 
     class GlobalCreationAction(
-        globalScope: GlobalScope, private val components: Collection<VariantPropertiesImpl>
+        globalScope: GlobalScope, private val components: Collection<VariantImpl>
     ) : BaseCreationAction<LintFixTask>(globalScope) {
 
         override val name: String

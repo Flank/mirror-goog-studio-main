@@ -190,7 +190,7 @@ abstract class ComponentPropertiesImpl(
             }
 
     /**
-     * Returns the tested variant. This is null for [VariantPropertiesImpl] instances
+     * Returns the tested variant. This is null for [VariantImpl] instances
      *
 
      * This declares is again, even though the public interfaces only have it via

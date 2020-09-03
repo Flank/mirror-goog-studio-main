@@ -25,7 +25,7 @@ import com.android.build.api.component.analytics.AnalyticsEnabledVariantBuilder
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.VariantBuilder
-import com.android.build.api.variant.VariantProperties
+import com.android.build.api.variant.Variant
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices

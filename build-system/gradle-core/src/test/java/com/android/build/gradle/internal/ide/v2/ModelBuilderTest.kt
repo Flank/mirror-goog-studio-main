@@ -20,8 +20,8 @@ import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.variant.ApplicationVariantBuilder
-import com.android.build.api.variant.ApplicationVariantProperties
-import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.variant.ApplicationVariant
+import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dependency.SourceSetManager
@@ -170,7 +170,7 @@ class ModelBuilderTest {
         return modelClass.cast(buildAll(modelClass.name, project))
     }
 
-    private val variantList: MutableList<VariantPropertiesImpl> = mutableListOf()
+    private val variantList: MutableList<VariantImpl> = mutableListOf()
     private val testComponentList: MutableList<TestComponentPropertiesImpl> = mutableListOf()
 
     private fun createApplicationModelBuilder(
@@ -182,7 +182,7 @@ class ModelBuilderTest {
             ProductFlavor,
             SigningConfig,
             ApplicationVariantBuilder,
-            ApplicationVariantProperties,
+            ApplicationVariant,
             ApplicationExtension<AndroidSourceSet, BuildType, DefaultConfig, ProductFlavor, SigningConfig>> {
 
         // for now create an app extension

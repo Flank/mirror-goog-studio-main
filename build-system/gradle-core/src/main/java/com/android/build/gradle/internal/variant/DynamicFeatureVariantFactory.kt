@@ -21,7 +21,7 @@ import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures
 import com.android.build.api.variant.impl.DynamicFeatureVariantBuilderImpl
-import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl
+import com.android.build.api.variant.impl.DynamicFeatureVariantImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -44,7 +44,7 @@ import com.android.builder.core.VariantTypeImpl
 internal class DynamicFeatureVariantFactory(
     projectServices: ProjectServices,
     globalScope: GlobalScope
-) : AbstractAppVariantFactory<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantPropertiesImpl>(
+) : AbstractAppVariantFactory<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>(
     projectServices,
     globalScope
 ) {
@@ -78,11 +78,11 @@ internal class DynamicFeatureVariantFactory(
             transformManager: TransformManager,
             variantPropertiesApiServices: VariantPropertiesApiServices,
             taskCreationServices: TaskCreationServices
-    ): DynamicFeatureVariantPropertiesImpl {
+    ): DynamicFeatureVariantImpl {
         val variantProperties = projectServices
             .objectFactory
             .newInstance(
-                DynamicFeatureVariantPropertiesImpl::class.java,
+                DynamicFeatureVariantImpl::class.java,
                 variant,
                 buildFeatures,
                 variantDslInfo,

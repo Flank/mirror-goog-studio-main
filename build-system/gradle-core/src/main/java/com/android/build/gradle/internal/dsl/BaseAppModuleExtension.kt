@@ -20,7 +20,7 @@ import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ComposeOptions
 import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.variant.ApplicationVariantBuilder
-import com.android.build.api.variant.ApplicationVariantProperties
+import com.android.build.api.variant.ApplicationVariant
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
@@ -49,7 +49,7 @@ open class BaseAppModuleExtension(
     extraModelInfo,
     true
 ), InternalApplicationExtension by publicExtensionImpl,
-    ActionableVariantObjectOperationsExecutor<ApplicationVariantBuilder, ApplicationVariantProperties> by publicExtensionImpl {
+    ActionableVariantObjectOperationsExecutor<ApplicationVariantBuilder, ApplicationVariant> by publicExtensionImpl {
 
     override val viewBinding: ViewBindingOptions =
         dslServices.newInstance(

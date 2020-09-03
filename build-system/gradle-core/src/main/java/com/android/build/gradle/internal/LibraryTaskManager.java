@@ -33,8 +33,8 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.variant.impl.LibraryVariantBuilderImpl;
-import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.variant.impl.LibraryVariantImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
@@ -94,13 +94,10 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 /** TaskManager for creating tasks in an Android library project. */
-public class LibraryTaskManager
-        extends TaskManager<LibraryVariantBuilderImpl, LibraryVariantPropertiesImpl> {
+public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, LibraryVariantImpl> {
 
     public LibraryTaskManager(
-            @NonNull
-                    List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantPropertiesImpl>>
-                            variants,
+            @NonNull List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>> variants,
             @NonNull
                     List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
                             testComponents,
@@ -112,12 +109,12 @@ public class LibraryTaskManager
 
     @Override
     protected void doCreateTasksForVariant(
-            @NonNull ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantPropertiesImpl> variant,
+            @NonNull ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl> variant,
             @NonNull
-                    List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantPropertiesImpl>>
+                    List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>>
                             allVariants) {
 
-        LibraryVariantPropertiesImpl libVariantProperties = variant.getProperties();
+        LibraryVariantImpl libVariantProperties = variant.getProperties();
         BuildFeatureValues buildFeatures = libVariantProperties.getBuildFeatures();
 
         createAnchorTasks(libVariantProperties);
@@ -345,8 +342,7 @@ public class LibraryTaskManager
         createBundleTask(libVariantProperties);
     }
 
-    private void registerLibraryRClassTransformStream(
-            @NonNull VariantPropertiesImpl variantProperties) {
+    private void registerLibraryRClassTransformStream(@NonNull VariantImpl variantProperties) {
         if (!variantProperties.getBuildFeatures().getAndroidResources()) {
             return;
         }
@@ -365,7 +361,7 @@ public class LibraryTaskManager
                                 .build());
     }
 
-    private void createBundleTask(@NonNull VariantPropertiesImpl variantProperties) {
+    private void createBundleTask(@NonNull VariantImpl variantProperties) {
         TaskProvider<BundleAar> bundle =
                 taskFactory.register(new BundleAar.CreationAction(variantProperties));
 
@@ -430,9 +426,9 @@ public class LibraryTaskManager
     }
 
     private static class MergeResourceCallback implements TaskProviderCallback<MergeResources> {
-        @NonNull private final VariantPropertiesImpl variantProperties;
+        @NonNull private final VariantImpl variantProperties;
 
-        private MergeResourceCallback(@NonNull VariantPropertiesImpl variantProperties) {
+        private MergeResourceCallback(@NonNull VariantImpl variantProperties) {
             this.variantProperties = variantProperties;
         }
 
@@ -446,7 +442,7 @@ public class LibraryTaskManager
         }
     }
 
-    private void createMergeResourcesTasks(@NonNull VariantPropertiesImpl variantProperties) {
+    private void createMergeResourcesTasks(@NonNull VariantImpl variantProperties) {
         ImmutableSet<MergeResources.Flag> flags;
         if (variantProperties.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
             flags =
@@ -484,8 +480,7 @@ public class LibraryTaskManager
         taskFactory.register(new GenerateApiPublicTxtTask.CreationAction(variantProperties));
     }
 
-    private void createCompileLibraryResourcesTask(
-            @NonNull VariantPropertiesImpl variantProperties) {
+    private void createCompileLibraryResourcesTask(@NonNull VariantImpl variantProperties) {
         if (variantProperties.isPrecompileDependenciesResourcesEnabled()) {
             taskFactory.register(new CompileLibraryResourcesTask.CreationAction(variantProperties));
         }
@@ -509,12 +504,12 @@ public class LibraryTaskManager
                         creationConfig, AndroidArtifacts.PublishedConfigType.API_ELEMENTS));
     }
 
-    public void createLibraryAssetsTask(@NonNull VariantPropertiesImpl variantProperties) {
+    public void createLibraryAssetsTask(@NonNull VariantImpl variantProperties) {
         taskFactory.register(
                 new MergeSourceSetFolders.LibraryAssetCreationAction(variantProperties));
     }
 
-    public void createPrefabTasks(@NonNull LibraryVariantPropertiesImpl variantProperties) {
+    public void createPrefabTasks(@NonNull LibraryVariantImpl variantProperties) {
         if (!variantProperties.getBuildFeatures().getPrefabPublishing()) {
             return;
         }
@@ -571,7 +566,7 @@ public class LibraryTaskManager
         return true;
     }
 
-    public void createVerifyLibraryResTask(@NonNull VariantPropertiesImpl variantProperties) {
+    public void createVerifyLibraryResTask(@NonNull VariantImpl variantProperties) {
         TaskProvider<VerifyLibraryResourcesTask> verifyLibraryResources =
                 taskFactory.register(
                         new VerifyLibraryResourcesTask.CreationAction(variantProperties));
@@ -589,7 +584,7 @@ public class LibraryTaskManager
         // publish the local lint.jar to all the variants.
         // This takes the global jar (output of PrepareLintJar) and publishes to each variants
         // as we don't have variant-free publishing at the moment.
-        for (LibraryVariantPropertiesImpl variant : variantPropertiesList) {
+        for (LibraryVariantImpl variant : variantPropertiesList) {
             variant.getArtifacts()
                     .copy(
                             InternalArtifactType.LINT_PUBLISH_JAR.INSTANCE,

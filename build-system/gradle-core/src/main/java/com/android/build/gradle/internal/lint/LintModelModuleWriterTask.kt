@@ -21,7 +21,7 @@ import com.android.build.api.component.impl.AndroidTestPropertiesImpl
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.api.component.impl.UnitTestPropertiesImpl
-import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -370,7 +370,7 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
 
     class CreationAction(
         globalScope: GlobalScope,
-        private val variantPropertiesList: List<VariantPropertiesImpl>,
+        private val variantPropertiesList: List<VariantImpl>,
         private val testPropertiesList: List<TestComponentPropertiesImpl>,
         private val variantType: VariantType,
         private val buildFeatures: BuildFeatureValues
@@ -430,7 +430,7 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
         }
 
         private fun createVariantInput(
-            properties: VariantPropertiesImpl
+            properties: VariantImpl
         ): VariantInput {
             return globalScope.dslServices.newInstance(
                 VariantInput::class.java,
@@ -517,7 +517,7 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
         }
 
         private fun <T : TestComponentPropertiesImpl> getTestComponent(
-            variantProperties: VariantPropertiesImpl,
+            variantProperties: VariantImpl,
             targetClass: Class<T>
         ): T? = testPropertiesList
             .asSequence()

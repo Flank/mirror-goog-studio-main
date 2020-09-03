@@ -17,7 +17,7 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.TestComponentProperties
-import com.android.build.api.variant.VariantProperties
+import com.android.build.api.variant.Variant
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
@@ -29,7 +29,7 @@ open abstract class AnalyticsEnabledTestComponentProperties(
 ) : AnalyticsEnabledComponentProperties(
     delegate, stats, objectFactory
 ), TestComponentProperties {
-    override val testedVariant: VariantProperties
+    override val testedVariant: Variant
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.TESTED_VARIANT_VALUE

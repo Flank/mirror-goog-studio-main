@@ -29,7 +29,7 @@ import com.android.build.api.extension.AndroidComponentsExtension;
 import com.android.build.api.extension.impl.OperationsRegistrar;
 import com.android.build.api.variant.impl.GradleProperty;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AndroidBasePlugin;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -136,7 +136,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 public abstract class BasePlugin<
                 AndroidComponentsT extends AndroidComponentsExtension,
                 VariantT extends VariantBuilderImpl,
-                VariantPropertiesT extends VariantPropertiesImpl>
+                VariantPropertiesT extends VariantImpl>
         implements Plugin<Project>, LintModelModuleLoaderProvider {
 
     private BaseExtension extension;

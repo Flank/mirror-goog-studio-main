@@ -20,7 +20,7 @@ import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.JniLibsPackagingOptions
 import com.android.build.api.variant.PackagingOptions
 import com.android.build.api.variant.ResourcesPackagingOptions
-import com.android.build.api.variant.VariantProperties
+import com.android.build.api.variant.Variant
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
@@ -37,15 +37,15 @@ import java.io.Serializable
 class AnalyticsEnabledVariantPropertiesTest {
 
     @Mock
-    lateinit var delegate: VariantProperties
+    lateinit var delegate: Variant
 
     private val stats = GradleBuildVariant.newBuilder()
-    private lateinit var proxy: AnalyticsEnabledVariantProperties
+    private lateinit var proxy: AnalyticsEnabledVariant
 
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
-        proxy = object: AnalyticsEnabledVariantProperties(delegate, stats, FakeObjectFactory.factory) {}
+        proxy = object: AnalyticsEnabledVariant(delegate, stats, FakeObjectFactory.factory) {}
     }
 
     @Test

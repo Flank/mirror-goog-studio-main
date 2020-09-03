@@ -17,7 +17,6 @@ package com.android.build.gradle
 
 import com.android.build.api.dsl.LibraryBuildFeatures
 import com.android.build.api.dsl.PrefabPackagingOptions
-import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
@@ -62,7 +61,9 @@ open class LibraryExtension(
     false
 ),
    InternalLibraryExtension by publicExtensionImpl,
-    ActionableVariantObjectOperationsExecutor<com.android.build.api.variant.LibraryVariantBuilder, LibraryVariantProperties> by publicExtensionImpl {
+    ActionableVariantObjectOperationsExecutor<
+            com.android.build.api.variant.LibraryVariantBuilder,
+            com.android.build.api.variant.LibraryVariant> by publicExtensionImpl {
 
     private val libraryVariantList: DomainObjectSet<LibraryVariant> =
         dslServices.domainObjectSet(LibraryVariant::class.java)

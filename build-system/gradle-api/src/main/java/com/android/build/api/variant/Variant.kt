@@ -25,7 +25,7 @@ import java.io.Serializable
  * Parent interface for all types of variants.
  */
 @Incubating
-interface VariantProperties : ComponentProperties {
+interface Variant : ComponentProperties {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.

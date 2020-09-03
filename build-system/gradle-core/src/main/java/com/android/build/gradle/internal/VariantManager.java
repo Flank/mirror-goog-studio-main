@@ -26,8 +26,8 @@ import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTestProperties;
 import com.android.build.api.component.analytics.AnalyticsEnabledUnitTestProperties;
+import com.android.build.api.component.analytics.AnalyticsEnabledVariant;
 import com.android.build.api.component.analytics.AnalyticsEnabledVariantBuilder;
-import com.android.build.api.component.analytics.AnalyticsEnabledVariantProperties;
 import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
@@ -35,9 +35,9 @@ import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.extension.impl.OperationsRegistrar;
-import com.android.build.api.variant.VariantProperties;
+import com.android.build.api.variant.Variant;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestedAndroidConfig;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
@@ -105,7 +105,7 @@ import org.gradle.api.model.ObjectFactory;
 
 /** Class to create, manage variants. */
 public class VariantManager<
-        VariantT extends VariantBuilderImpl, VariantPropertiesT extends VariantPropertiesImpl> {
+        VariantT extends VariantBuilderImpl, VariantPropertiesT extends VariantImpl> {
 
     @NonNull private final Project project;
     @NonNull private final ProjectOptions projectOptions;
@@ -351,11 +351,10 @@ public class VariantManager<
         // future
         //noinspection unchecked
         ActionableVariantObjectOperationsExecutor<
-                        com.android.build.api.variant.VariantBuilder, VariantProperties>
+                        com.android.build.api.variant.VariantBuilder, Variant>
                 commonExtension =
                         (ActionableVariantObjectOperationsExecutor<
-                                        com.android.build.api.variant.VariantBuilder,
-                                        VariantProperties>)
+                                        com.android.build.api.variant.VariantBuilder, Variant>)
                                 extension;
 
         AnalyticsEnabledVariantBuilder userVisibleVariantObject =
@@ -474,8 +473,8 @@ public class VariantManager<
                         taskCreationServices);
 
         // Run the VariantProperties actions
-        AnalyticsEnabledVariantProperties userVisibleVariantPropertiesObject =
-                ((VariantPropertiesImpl) variantProperties)
+        AnalyticsEnabledVariant userVisibleVariantPropertiesObject =
+                ((VariantImpl) variantProperties)
                         .createUserVisibleVariantPropertiesObject(projectServices, profileBuilder);
         commonExtension.executeVariantPropertiesOperations(userVisibleVariantPropertiesObject);
 

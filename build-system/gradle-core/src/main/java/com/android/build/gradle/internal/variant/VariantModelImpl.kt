@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
-import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
@@ -33,11 +33,11 @@ import java.util.Comparator
 class VariantModelImpl(
     override val inputs: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>,
     private val testBuilderTypeProvider: () -> String?,
-    private val variantProvider: () -> List<VariantPropertiesImpl>,
+    private val variantProvider: () -> List<VariantImpl>,
     private val testComponentProvider: () -> List<TestComponentPropertiesImpl>,
     private val issueHandler: IssueReporter) : VariantModel {
 
-    override val variants: List<VariantPropertiesImpl>
+    override val variants: List<VariantImpl>
         get() = variantProvider()
 
     override val testComponents: List<TestComponentPropertiesImpl>
@@ -89,7 +89,7 @@ class VariantModelImpl(
         // Ignore test, base feature and feature variants.
         // * Test variants have corresponding production variants
         // * Hybrid feature variants have corresponding library variants.
-        val defaultComponent: VariantPropertiesImpl? = variants.minWith(preferredDefaultVariantScopeComparator)
+        val defaultComponent: VariantImpl? = variants.minWith(preferredDefaultVariantScopeComparator)
 
         return defaultComponent?.name
     }

@@ -18,7 +18,7 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.component.impl.FilteredComponentAction
 import com.android.build.api.variant.ApplicationVariantBuilder
-import com.android.build.api.variant.ApplicationVariantProperties
+import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.LibraryVariantBuilder
 import com.android.build.api.variant.VariantBuilder
 import com.google.common.truth.Truth

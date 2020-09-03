@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.DefaultConfig
+import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
-import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.services.DslServices
 
@@ -30,7 +30,7 @@ abstract class TestedExtensionImpl<
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
         VariantT : VariantBuilder,
-        VariantPropertiesT : VariantProperties>(
+        VariantPropertiesT : Variant>(
             dslServices: DslServices,
             dslContainers: DslContainerProvider<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfig>
         ) : CommonExtensionImpl<

@@ -24,10 +24,7 @@ import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ApkPackagingOptions
 import com.android.build.api.variant.SigningConfig
-import com.android.build.api.variant.impl.ApkPackagingOptionsImpl
-import com.android.build.api.variant.impl.ResValue
-import com.android.build.api.variant.impl.SigningConfigImpl
-import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.variant.impl.*
 import com.android.build.api.variant.impl.initializeAaptOptionsFromDsl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -62,7 +59,7 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
-    testedVariant: VariantPropertiesImpl,
+    testedVariant: VariantImpl,
     transformManager: TransformManager,
     variantPropertiesApiServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,

@@ -27,8 +27,8 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
@@ -58,8 +58,7 @@ import org.gradle.api.Project;
 
 /** Common superclass for all {@link VariantFactory} implementations. */
 public abstract class BaseVariantFactory<
-                VariantT extends VariantBuilderImpl,
-                VariantPropertiesT extends VariantPropertiesImpl>
+                VariantT extends VariantBuilderImpl, VariantPropertiesT extends VariantImpl>
         implements VariantFactory<VariantT, VariantPropertiesT> {
 
     private static final String ANDROID_APT_PLUGIN_NAME = "com.neenbedankt.android-apt";
@@ -114,7 +113,7 @@ public abstract class BaseVariantFactory<
             @NonNull ArtifactsImpl artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
-            @NonNull VariantPropertiesImpl testedVariantProperties,
+            @NonNull VariantImpl testedVariantProperties,
             @NonNull TransformManager transformManager,
             @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull TaskCreationServices taskCreationServices) {
@@ -156,7 +155,7 @@ public abstract class BaseVariantFactory<
             @NonNull ArtifactsImpl artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
-            @NonNull VariantPropertiesImpl testedVariantProperties,
+            @NonNull VariantImpl testedVariantProperties,
             @NonNull TransformManager transformManager,
             @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull TaskCreationServices taskCreationServices) {

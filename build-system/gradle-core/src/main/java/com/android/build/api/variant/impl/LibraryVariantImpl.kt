@@ -16,15 +16,15 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariantProperties
-import com.android.build.api.component.analytics.AnalyticsEnabledVariantProperties
+import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariant
+import com.android.build.api.component.analytics.AnalyticsEnabledVariant
 import com.android.build.api.component.impl.ConsumableCreationConfigImpl
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.LibraryPackagingOptions
-import com.android.build.api.variant.LibraryVariantProperties
+import com.android.build.api.variant.LibraryVariant
 import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -44,7 +44,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
-open class  LibraryVariantPropertiesImpl @Inject constructor(
+open class  LibraryVariantImpl @Inject constructor(
         override val variant: LibraryVariantBuilderImpl,
         buildFeatureValues: BuildFeatureValues,
         variantDslInfo: VariantDslInfo,
@@ -58,7 +58,7 @@ open class  LibraryVariantPropertiesImpl @Inject constructor(
         internalServices: VariantPropertiesApiServices,
         taskCreationServices: TaskCreationServices,
         globalScope: GlobalScope
-) : VariantPropertiesImpl(
+) : VariantImpl(
     variant,
     buildFeatureValues,
     variantDslInfo,
@@ -72,7 +72,7 @@ open class  LibraryVariantPropertiesImpl @Inject constructor(
     internalServices,
     taskCreationServices,
     globalScope
-), LibraryVariantProperties, LibraryCreationConfig {
+), LibraryVariant, LibraryCreationConfig {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -118,9 +118,9 @@ open class  LibraryVariantPropertiesImpl @Inject constructor(
     override fun createUserVisibleVariantPropertiesObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledVariantProperties =
+    ): AnalyticsEnabledVariant =
         projectServices.objectFactory.newInstance(
-            AnalyticsEnabledLibraryVariantProperties::class.java,
+            AnalyticsEnabledLibraryVariant::class.java,
             this,
             stats
         )

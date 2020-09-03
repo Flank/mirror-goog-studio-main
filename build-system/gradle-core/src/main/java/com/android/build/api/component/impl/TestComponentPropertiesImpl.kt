@@ -18,7 +18,7 @@ package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.TestComponentProperties
-import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -44,7 +44,7 @@ abstract class TestComponentPropertiesImpl @Inject constructor(
     artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
-    override val testedVariant: VariantPropertiesImpl,
+    override val testedVariant: VariantImpl,
     transformManager: TransformManager,
     variantPropertiesApiServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,

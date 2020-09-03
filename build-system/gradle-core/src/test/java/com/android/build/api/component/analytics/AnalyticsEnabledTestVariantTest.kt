@@ -18,9 +18,11 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.ApkPackagingOptions
-import com.android.build.api.variant.DynamicFeatureVariantProperties
 import com.android.build.api.variant.JniLibsApkPackagingOptions
 import com.android.build.api.variant.ResourcesPackagingOptions
+import com.android.build.api.variant.TestVariant
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
@@ -31,17 +33,30 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 
-class AnalyticsEnabledDynamicFeatureVariantPropertiesTest {
+class AnalyticsEnabledTestVariantPropertiesTest {
     @Mock
-    lateinit var delegate: DynamicFeatureVariantProperties
+    lateinit var delegate: TestVariant
 
     private val stats = GradleBuildVariant.newBuilder()
-    private lateinit var proxy: AnalyticsEnabledDynamicFeatureVariantProperties
+    private lateinit var proxy: AnalyticsEnabledTestVariant
 
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
-        proxy = AnalyticsEnabledDynamicFeatureVariantProperties(delegate, stats, FakeObjectFactory.factory)
+        proxy = AnalyticsEnabledTestVariant(delegate, stats, FakeObjectFactory.factory)
+    }
+
+    @Test
+    fun getApplicationId() {
+        Mockito.`when`(delegate.applicationId).thenReturn(FakeGradleProperty("myApp"))
+        Truth.assertThat(proxy.applicationId.get()).isEqualTo("myApp")
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.APPLICATION_ID_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .applicationId
     }
 
     @Test
@@ -69,6 +84,71 @@ class AnalyticsEnabledDynamicFeatureVariantPropertiesTest {
         ).isEqualTo(VariantPropertiesMethodType.AAPT_OPTIONS_ACTION_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
             .aaptOptions(function)
+    }
+
+    @Test
+    fun testedApplicationId() {
+        Mockito.`when`(delegate.testedApplicationId).thenReturn(FakeGradleProvider("myApp"))
+        Truth.assertThat(proxy.testedApplicationId.get()).isEqualTo("myApp")
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.TESTED_APPLICATION_ID_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .testedApplicationId
+    }
+
+    @Test
+    fun instrumentationRunner() {
+        Mockito.`when`(delegate.instrumentationRunner).thenReturn(FakeGradleProperty("my_runner"))
+        Truth.assertThat(proxy.instrumentationRunner.get()).isEqualTo("my_runner")
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.INSTRUMENTATION_RUNNER_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .instrumentationRunner
+    }
+
+    @Test
+    fun handleProfiling() {
+        Mockito.`when`(delegate.handleProfiling).thenReturn(FakeGradleProperty(true))
+        Truth.assertThat(proxy.handleProfiling.get()).isEqualTo(true)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.HANDLE_PROFILING_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .handleProfiling
+    }
+
+    @Test
+    fun functionalTest() {
+        Mockito.`when`(delegate.functionalTest).thenReturn(FakeGradleProperty(true))
+        Truth.assertThat(proxy.functionalTest.get()).isEqualTo(true)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.FUNCTIONAL_TEST_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .functionalTest
+    }
+
+    @Test
+    fun testLabel() {
+        Mockito.`when`(delegate.testLabel).thenReturn(FakeGradleProperty("some_label"))
+        Truth.assertThat(proxy.testLabel.get()).isEqualTo("some_label")
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.TEST_LABEL_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .testLabel
     }
 
     @Test

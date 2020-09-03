@@ -25,7 +25,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
-import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
+import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
@@ -725,8 +725,8 @@ public class PluginDslTest {
 
     public Map<String, ComponentPropertiesImpl> getComponentMap() {
         Map<String, ComponentPropertiesImpl> result = new HashMap<>();
-        for (ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantPropertiesImpl>
-                variant : plugin.getVariantManager().getMainComponents()) {
+        for (ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl> variant :
+                plugin.getVariantManager().getMainComponents()) {
             result.put(variant.getProperties().getName(), variant.getProperties());
         }
 

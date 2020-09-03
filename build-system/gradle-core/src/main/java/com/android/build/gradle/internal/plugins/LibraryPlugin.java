@@ -23,7 +23,7 @@ import com.android.build.api.extension.LibraryAndroidComponentsExtension;
 import com.android.build.api.extension.impl.LibraryAndroidComponentsExtensionImpl;
 import com.android.build.api.extension.impl.OperationsRegistrar;
 import com.android.build.api.variant.impl.LibraryVariantBuilderImpl;
-import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
+import com.android.build.api.variant.impl.LibraryVariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -53,9 +53,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 /** Gradle plugin class for 'library' projects. */
 public class LibraryPlugin
         extends BasePlugin<
-                LibraryAndroidComponentsExtension,
-                LibraryVariantBuilderImpl,
-                LibraryVariantPropertiesImpl> {
+                LibraryAndroidComponentsExtension, LibraryVariantBuilderImpl, LibraryVariantImpl> {
 
     @Inject
     public LibraryPlugin(
@@ -141,9 +139,7 @@ public class LibraryPlugin
     @NonNull
     @Override
     protected LibraryTaskManager createTaskManager(
-            @NonNull
-                    List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantPropertiesImpl>>
-                            variants,
+            @NonNull List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>> variants,
             @NonNull
                     List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
                             testComponents,

@@ -18,7 +18,7 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.JniLibsPackagingOptions
 import com.android.build.api.variant.LibraryPackagingOptions
-import com.android.build.api.variant.LibraryVariantProperties
+import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.ResourcesPackagingOptions
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
@@ -33,15 +33,15 @@ import org.mockito.MockitoAnnotations
 
 class AnalyticsEnabledLibraryVariantPropertiesTest {
     @Mock
-    lateinit var delegate: LibraryVariantProperties
+    lateinit var delegate: LibraryVariant
 
     private val stats = GradleBuildVariant.newBuilder()
-    private lateinit var proxy: AnalyticsEnabledLibraryVariantProperties
+    private lateinit var proxy: AnalyticsEnabledLibraryVariant
 
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
-        proxy = AnalyticsEnabledLibraryVariantProperties(delegate, stats, FakeObjectFactory.factory)
+        proxy = AnalyticsEnabledLibraryVariant(delegate, stats, FakeObjectFactory.factory)
     }
 
     @Test

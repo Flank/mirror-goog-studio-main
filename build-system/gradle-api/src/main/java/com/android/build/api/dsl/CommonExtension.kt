@@ -18,7 +18,7 @@ package com.android.build.api.dsl
 
 import com.android.build.api.component.GenericFilteredComponentActionRegistrar
 import com.android.build.api.variant.VariantBuilder
-import com.android.build.api.variant.VariantProperties
+import com.android.build.api.variant.Variant
 import org.gradle.api.Action
 import org.gradle.api.Incubating
 import org.gradle.api.NamedDomainObjectContainer
@@ -38,7 +38,7 @@ interface CommonExtension<
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
         VariantT : VariantBuilder,
-        VariantPropertiesT : VariantProperties> {
+        VariantPropertiesT : Variant> {
     // TODO(b/140406102)
 
     /**

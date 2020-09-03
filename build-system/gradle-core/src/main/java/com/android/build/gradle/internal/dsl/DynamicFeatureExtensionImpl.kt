@@ -20,7 +20,7 @@ import com.android.build.api.component.GenericFilteredComponentActionRegistrar
 import com.android.build.api.component.impl.GenericFilteredComponentActionRegistrarImpl
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures
 import com.android.build.api.variant.DynamicFeatureVariantBuilder
-import com.android.build.api.variant.DynamicFeatureVariantProperties
+import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 
@@ -34,7 +34,7 @@ class DynamicFeatureExtensionImpl(
             DefaultConfig,
             ProductFlavor,
             DynamicFeatureVariantBuilder,
-            DynamicFeatureVariantProperties>(
+            DynamicFeatureVariant>(
         dslServices,
         dslContainers
     ),
@@ -52,11 +52,11 @@ class DynamicFeatureExtensionImpl(
             DynamicFeatureVariantBuilder::class.java
         ) as GenericFilteredComponentActionRegistrar<DynamicFeatureVariantBuilder>
     @Suppress("UNCHECKED_CAST")
-    override val onVariantProperties: GenericFilteredComponentActionRegistrar<DynamicFeatureVariantProperties>
+    override val onVariantProperties: GenericFilteredComponentActionRegistrar<DynamicFeatureVariant>
         get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
             dslServices,
             variantPropertiesOperations,
-            DynamicFeatureVariantProperties::class.java
-        ) as GenericFilteredComponentActionRegistrar<DynamicFeatureVariantProperties>
+            DynamicFeatureVariant::class.java
+        ) as GenericFilteredComponentActionRegistrar<DynamicFeatureVariant>
 }

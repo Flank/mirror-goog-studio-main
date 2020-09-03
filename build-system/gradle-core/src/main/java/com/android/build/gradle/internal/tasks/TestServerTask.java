@@ -21,7 +21,7 @@ import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.testing.api.TestServer;
 import com.android.utils.StringHelper;
@@ -122,7 +122,7 @@ public abstract class TestServerTask extends NonIncrementalTask {
         public void configure(
                 @NonNull TestServerTask task) {
             super.configure(task);
-            VariantPropertiesImpl testedVariant = creationConfig.getTestedVariant();
+            VariantImpl testedVariant = creationConfig.getTestedVariant();
 
             final String variantName = creationConfig.getName();
             task.setDescription(

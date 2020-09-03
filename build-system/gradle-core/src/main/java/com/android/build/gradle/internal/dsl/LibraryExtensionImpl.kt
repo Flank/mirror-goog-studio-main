@@ -20,8 +20,8 @@ import com.android.build.api.component.GenericFilteredComponentActionRegistrar
 import com.android.build.api.component.impl.GenericFilteredComponentActionRegistrarImpl
 import com.android.build.api.dsl.LibraryBuildFeatures
 import com.android.build.api.dsl.PrefabPackagingOptions
+import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantBuilder
-import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import org.gradle.api.NamedDomainObjectContainer
@@ -37,7 +37,7 @@ class LibraryExtensionImpl(
             DefaultConfig,
             ProductFlavor,
             LibraryVariantBuilder,
-            LibraryVariantProperties>(
+            LibraryVariant>(
         dslServices,
         dslContainers
     ),
@@ -55,13 +55,13 @@ class LibraryExtensionImpl(
             LibraryVariantBuilder::class.java
         ) as GenericFilteredComponentActionRegistrar<LibraryVariantBuilder>
     @Suppress("UNCHECKED_CAST")
-    override val onVariantProperties: GenericFilteredComponentActionRegistrar<LibraryVariantProperties>
+    override val onVariantProperties: GenericFilteredComponentActionRegistrar<LibraryVariant>
         get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
             dslServices,
             variantPropertiesOperations,
-            LibraryVariantProperties::class.java
-        ) as GenericFilteredComponentActionRegistrar<LibraryVariantProperties>
+                LibraryVariant::class.java
+        ) as GenericFilteredComponentActionRegistrar<LibraryVariant>
 
     @get:Suppress("WrongTerminology")
     @set:Suppress("WrongTerminology")

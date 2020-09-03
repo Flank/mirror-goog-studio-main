@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
-import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.AndroidDependenciesRenderer
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Internal
@@ -30,7 +30,7 @@ open class DependencyReportTask : DefaultTask() {
     private val renderer = AndroidDependenciesRenderer()
 
     @get:Internal
-    lateinit var variants: List<VariantPropertiesImpl>
+    lateinit var variants: List<VariantImpl>
     @get:Internal
     lateinit var testComponents: List<TestComponentPropertiesImpl>
 

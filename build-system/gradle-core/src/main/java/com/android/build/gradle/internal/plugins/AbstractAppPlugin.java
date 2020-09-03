@@ -20,7 +20,7 @@ import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.extension.AndroidComponentsExtension;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
 import org.gradle.api.component.SoftwareComponentFactory;
@@ -31,7 +31,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 public abstract class AbstractAppPlugin<
                 AndroidComponentsT extends AndroidComponentsExtension<? super VariantT>,
                 VariantT extends VariantBuilderImpl,
-                VariantPropertiesT extends VariantPropertiesImpl>
+                VariantPropertiesT extends VariantImpl>
         extends BasePlugin<AndroidComponentsT, VariantT, VariantPropertiesT> {
 
     @Inject

@@ -20,10 +20,10 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 
 /**
- * [VariantProperties] for test-only modules.
+ * [Variant] for test-only modules.
  */
 @Incubating
-interface TestVariantProperties: VariantProperties {
+interface TestVariant: Variant {
     /**
      * Variant's application ID as present in the final manifest file of the APK.
      */

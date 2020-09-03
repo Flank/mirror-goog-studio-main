@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.api.variant.impl.VariantBuilderImpl
-import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
@@ -130,8 +130,8 @@ open class BasicModuleModelMock {
         throwUnmocked
     ) as VariantBuilderImpl
 
-    val componentProperties: VariantPropertiesImpl = mock(
-        VariantPropertiesImpl::class.java,
+    val componentProperties: VariantImpl = mock(
+        VariantImpl::class.java,
         throwUnmocked
     )
 

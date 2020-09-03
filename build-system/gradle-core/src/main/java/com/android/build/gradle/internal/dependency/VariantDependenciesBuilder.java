@@ -36,7 +36,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.attributes.BuildTypeAttr;
 import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.attributes.VariantAttr;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -107,7 +107,7 @@ public class VariantDependenciesBuilder {
     private final Set<Configuration> runtimeClasspaths = Sets.newLinkedHashSet();
     private final Set<Configuration> annotationConfigs = Sets.newLinkedHashSet();
     private final Set<Configuration> wearAppConfigs = Sets.newLinkedHashSet();
-    private VariantPropertiesImpl testedVariant;
+    private VariantImpl testedVariant;
 
     @Nullable private Set<String> featureList;
 
@@ -138,8 +138,7 @@ public class VariantDependenciesBuilder {
         return this;
     }
 
-    public VariantDependenciesBuilder setTestedVariant(
-            @NonNull VariantPropertiesImpl testedVariant) {
+    public VariantDependenciesBuilder setTestedVariant(@NonNull VariantImpl testedVariant) {
         this.testedVariant = testedVariant;
         return this;
     }

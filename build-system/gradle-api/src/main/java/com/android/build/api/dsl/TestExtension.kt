@@ -16,8 +16,8 @@
 
 package com.android.build.api.dsl
 
+import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.TestVariantBuilder
-import com.android.build.api.variant.TestVariantProperties
 import org.gradle.api.Incubating
 
 /**
@@ -41,7 +41,7 @@ interface TestExtension<
             ProductFlavorT,
             SigningConfigT,
             TestVariantBuilder,
-            TestVariantProperties> {
+            TestVariant> {
     // TODO(b/140406102)
     /**
      * The Gradle path of the project that this test project tests.

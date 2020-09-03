@@ -18,9 +18,9 @@ package com.android.build.api.variant
 import org.gradle.api.Incubating
 import org.gradle.api.provider.Provider
 
-/** [VariantProperties] for Library projects */
+/** [Variant] for Library projects */
 @Incubating
-interface LibraryVariantProperties : VariantProperties {
+interface LibraryVariant : Variant {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.

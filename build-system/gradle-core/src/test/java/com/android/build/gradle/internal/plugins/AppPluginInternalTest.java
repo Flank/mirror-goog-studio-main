@@ -23,8 +23,8 @@ import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
-import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.variant.impl.ApplicationVariantImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.internal.BadPluginException;
 import com.android.build.gradle.internal.VariantManager;
@@ -514,10 +514,10 @@ public class AppPluginInternalTest {
 
     public static List<ComponentPropertiesImpl> getComponents(
             @NonNull
-                    VariantManager<ApplicationVariantBuilderImpl, ApplicationVariantPropertiesImpl>
+                    VariantManager<ApplicationVariantBuilderImpl, ApplicationVariantImpl>
                             variantManager) {
 
-        List<VariantPropertiesImpl> variants =
+        List<VariantImpl> variants =
                 variantManager.getMainComponents().stream()
                         .map(ComponentInfo::getProperties)
                         .collect(Collectors.toList());

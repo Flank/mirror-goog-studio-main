@@ -18,17 +18,17 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.ApkPackagingOptions
-import com.android.build.api.variant.DynamicFeatureVariantProperties
+import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
 import javax.inject.Inject
 
-open class AnalyticsEnabledDynamicFeatureVariantProperties @Inject constructor(
-    override val delegate: DynamicFeatureVariantProperties,
+open class AnalyticsEnabledDynamicFeatureVariant @Inject constructor(
+    override val delegate: DynamicFeatureVariant,
     stats: GradleBuildVariant.Builder,
     objectFactory: ObjectFactory
-) : AnalyticsEnabledVariantProperties(delegate, stats, objectFactory), DynamicFeatureVariantProperties {
+) : AnalyticsEnabledVariant(delegate, stats, objectFactory), DynamicFeatureVariant {
     override val aaptOptions: AaptOptions
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =

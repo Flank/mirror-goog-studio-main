@@ -21,7 +21,7 @@ import com.android.build.api.component.UnitTestProperties
 import com.android.build.api.component.analytics.AnalyticsEnabledComponentProperties
 import com.android.build.api.component.analytics.AnalyticsEnabledUnitTestProperties
 import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -53,7 +53,7 @@ open class UnitTestPropertiesImpl @Inject constructor(
     artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
-    testedVariant: VariantPropertiesImpl,
+    testedVariant: VariantImpl,
     transformManager: TransformManager,
     internalServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,

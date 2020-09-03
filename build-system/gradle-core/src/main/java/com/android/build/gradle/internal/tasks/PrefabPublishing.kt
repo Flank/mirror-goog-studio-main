@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl
+import com.android.build.api.variant.impl.LibraryVariantImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
@@ -357,8 +357,8 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
             private val modules: List<PrefabModuleTaskData>,
             private val sdkComponentsBuildService: SdkComponentsBuildService,
             private val config : CxxConfigurationModel,
-            componentProperties: LibraryVariantPropertiesImpl
-    ) : VariantTaskCreationAction<PrefabPackageTask, LibraryVariantPropertiesImpl>(
+            componentProperties: LibraryVariantImpl
+    ) : VariantTaskCreationAction<PrefabPackageTask, LibraryVariantImpl>(
         componentProperties
     ) {
         override val name: String

@@ -27,7 +27,7 @@ import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.core.VariantDslInfo;
@@ -59,7 +59,7 @@ import org.gradle.api.Project;
  * provides variant type (app, lib) specific implementation.
  */
 public interface VariantFactory<
-        VariantT extends VariantBuilderImpl, VariantPropertiesT extends VariantPropertiesImpl> {
+        VariantT extends VariantBuilderImpl, VariantPropertiesT extends VariantImpl> {
 
     @NonNull
     VariantT createVariantObject(
@@ -106,7 +106,7 @@ public interface VariantFactory<
             @NonNull ArtifactsImpl artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
-            @NonNull VariantPropertiesImpl testedVariantProperties,
+            @NonNull VariantImpl testedVariantProperties,
             @NonNull TransformManager transformManager,
             @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull TaskCreationServices taskCreationServices);
@@ -122,7 +122,7 @@ public interface VariantFactory<
             @NonNull ArtifactsImpl artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
-            @NonNull VariantPropertiesImpl testedVariantProperties,
+            @NonNull VariantImpl testedVariantProperties,
             @NonNull TransformManager transformManager,
             @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull TaskCreationServices taskCreationServices);

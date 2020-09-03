@@ -17,20 +17,20 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.LibraryPackagingOptions
-import com.android.build.api.variant.LibraryVariantProperties
+import com.android.build.api.variant.LibraryVariant
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
-open class AnalyticsEnabledLibraryVariantProperties @Inject constructor(
-    override val delegate: LibraryVariantProperties,
+open class AnalyticsEnabledLibraryVariant @Inject constructor(
+    override val delegate: LibraryVariant,
     stats: GradleBuildVariant.Builder,
     objectFactory: ObjectFactory
-) : AnalyticsEnabledVariantProperties(
+) : AnalyticsEnabledVariant(
     delegate, stats, objectFactory
-), LibraryVariantProperties {
+), LibraryVariant {
     override val applicationId: Provider<String>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =

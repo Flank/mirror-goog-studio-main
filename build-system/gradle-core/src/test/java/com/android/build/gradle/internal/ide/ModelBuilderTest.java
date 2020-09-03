@@ -30,8 +30,8 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.DependenciesInfo;
-import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.variant.impl.ApplicationVariantImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.core.VariantDslInfo;
@@ -95,7 +95,7 @@ public class ModelBuilderTest {
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    private List<VariantPropertiesImpl> variantList = Lists.newArrayList();
+    private List<VariantImpl> variantList = Lists.newArrayList();
     private List<TestComponentPropertiesImpl> testComponentList = Lists.newArrayList();
 
     ModelBuilder modelBuilder;
@@ -166,7 +166,7 @@ public class ModelBuilderTest {
             @NonNull String dirName,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull Class<ComponentT> componentClass,
-            @Nullable VariantPropertiesImpl testedVariant) {
+            @Nullable VariantImpl testedVariant) {
         // prepare the objects required for the constructor
         final VariantType type = variantDslInfo.getVariantType();
         VariantPropertiesApiServices variantPropertiesApiServices =
@@ -220,7 +220,7 @@ public class ModelBuilderTest {
 
         assertThat(testedVariant).named("tested variant").isNull();
 
-        if (componentClass.equals(ApplicationVariantPropertiesImpl.class)) {
+        if (componentClass.equals(ApplicationVariantImpl.class)) {
             DependenciesInfo dependenciesInfo = Mockito.mock(DependenciesInfo.class);
 
             return variantPropertiesApiServices.newInstance(

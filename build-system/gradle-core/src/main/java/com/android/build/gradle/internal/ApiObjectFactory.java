@@ -22,7 +22,7 @@ import static com.android.builder.core.VariantTypeImpl.UNIT_TEST;
 import com.android.annotations.NonNull;
 import com.android.build.VariantOutput;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestedAndroidConfig;
 import com.android.build.gradle.internal.api.ApkVariantOutputImpl;
@@ -59,7 +59,7 @@ public class ApiObjectFactory {
         this.globalScope = globalScope;
     }
 
-    public BaseVariantImpl create(@NonNull VariantPropertiesImpl variantProperties) {
+    public BaseVariantImpl create(@NonNull VariantImpl variantProperties) {
         BaseVariantData variantData = variantProperties.getVariantData();
 
         BaseVariantImpl variantApi =

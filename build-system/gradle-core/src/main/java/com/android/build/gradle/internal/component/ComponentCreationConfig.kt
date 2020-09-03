@@ -23,7 +23,7 @@ import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.impl.VariantOutputList
-import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -112,7 +112,7 @@ interface ComponentCreationConfig : ComponentIdentity {
     fun computeTaskName(prefix: String, suffix: String = ""): String
 
     /**
-     * Returns the tested variant. This is null for [VariantPropertiesImpl] instances
+     * Returns the tested variant. This is null for [VariantImpl] instances
      *
 
      * This declares is again, even though the public interfaces only have it via

@@ -24,7 +24,7 @@ import com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension;
 import com.android.build.api.extension.impl.DynamicFeatureAndroidComponentsExtensionImpl;
 import com.android.build.api.extension.impl.OperationsRegistrar;
 import com.android.build.api.variant.impl.DynamicFeatureVariantBuilderImpl;
-import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl;
+import com.android.build.api.variant.impl.DynamicFeatureVariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
@@ -56,7 +56,7 @@ public class DynamicFeaturePlugin
         extends AbstractAppPlugin<
                 DynamicFeatureAndroidComponentsExtension,
                 DynamicFeatureVariantBuilderImpl,
-                DynamicFeatureVariantPropertiesImpl> {
+                DynamicFeatureVariantImpl> {
     @Inject
     public DynamicFeaturePlugin(
             ToolingModelBuilderRegistry registry,
@@ -140,10 +140,7 @@ public class DynamicFeaturePlugin
     @Override
     protected DynamicFeatureTaskManager createTaskManager(
             @NonNull
-                    List<
-                                    ComponentInfo<
-                                            DynamicFeatureVariantBuilderImpl,
-                                            DynamicFeatureVariantPropertiesImpl>>
+                    List<ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>>
                             variants,
             @NonNull
                     List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>

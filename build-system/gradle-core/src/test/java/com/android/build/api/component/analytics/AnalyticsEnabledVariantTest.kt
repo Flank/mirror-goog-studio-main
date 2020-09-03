@@ -16,7 +16,7 @@
  */
 package com.android.build.api.component.analytics
 import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.VariantProperties
+import com.android.build.api.variant.Variant
 import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.tools.build.gradle.internal.profile.VariantMethodType
 import com.google.common.truth.Truth

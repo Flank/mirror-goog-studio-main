@@ -68,7 +68,7 @@ import com.android.build.api.transform.Transform;
 import com.android.build.api.variant.AndroidVersion;
 import com.android.build.api.variant.impl.VariantApiExtensionsKt;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
@@ -270,7 +270,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 
 /** Manages tasks creation. */
 public abstract class TaskManager<
-        VariantT extends VariantBuilderImpl, VariantPropertiesT extends VariantPropertiesImpl> {
+        VariantT extends VariantBuilderImpl, VariantPropertiesT extends VariantImpl> {
     private static final String MULTIDEX_VERSION = "1.0.2";
 
     private static final String COM_ANDROID_SUPPORT_MULTIDEX =
@@ -507,7 +507,7 @@ public abstract class TaskManager<
 
         createAssembleTask(componentProperties);
 
-        VariantPropertiesImpl testedVariant = componentProperties.getTestedVariant();
+        VariantImpl testedVariant = componentProperties.getTestedVariant();
 
         VariantDslInfo variantDslInfo = componentProperties.getVariantDslInfo();
         VariantDependencies variantDependencies = componentProperties.getVariantDependencies();
@@ -1537,7 +1537,7 @@ public abstract class TaskManager<
     }
 
     public void createExternalNativeBuildTasks(
-            @NonNull VariantT component, @NonNull VariantPropertiesImpl componentProperties) {
+            @NonNull VariantT component, @NonNull VariantImpl componentProperties) {
         final MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
         CxxConfigurationModel configurationModel = taskContainer.getCxxConfigurationModel();
         if (configurationModel == null) {
@@ -1963,7 +1963,7 @@ public abstract class TaskManager<
 
     protected void createConnectedTestForVariant(
             @NonNull AndroidTestPropertiesImpl androidTestProperties) {
-        VariantPropertiesImpl testedVariant = androidTestProperties.getTestedVariant();
+        VariantImpl testedVariant = androidTestProperties.getTestedVariant();
 
         boolean isLibrary = testedVariant.getVariantType().isAar();
 

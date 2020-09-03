@@ -17,9 +17,9 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.variant.VariantBuilder
-import com.android.build.api.variant.VariantProperties
+import com.android.build.api.variant.Variant
 
-interface ActionableVariantObjectOperationsExecutor<VariantT: VariantBuilder, VariantPropertiesT: VariantProperties> {
+interface ActionableVariantObjectOperationsExecutor<VariantT: VariantBuilder, VariantPropertiesT: Variant> {
 
     fun executeVariantOperations(variant: VariantT)
 

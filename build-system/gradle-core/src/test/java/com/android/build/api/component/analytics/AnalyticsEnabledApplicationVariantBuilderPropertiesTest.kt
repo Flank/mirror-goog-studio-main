@@ -17,7 +17,7 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.AaptOptions
-import com.android.build.api.variant.ApplicationVariantProperties
+import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.ApkPackagingOptions
 import com.android.build.api.variant.JniLibsApkPackagingOptions
@@ -37,15 +37,15 @@ import org.mockito.MockitoAnnotations
 
 class AnalyticsEnabledApplicationVariantBuilderPropertiesTest {
     @Mock
-    lateinit var delegate: ApplicationVariantProperties
+    lateinit var delegate: ApplicationVariant
 
     private val stats = GradleBuildVariant.newBuilder()
-    private lateinit var proxy: AnalyticsEnabledApplicationVariantProperties
+    private lateinit var proxy: AnalyticsEnabledApplicationVariant
 
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
-        proxy = AnalyticsEnabledApplicationVariantProperties(delegate, stats, FakeObjectFactory.factory)
+        proxy = AnalyticsEnabledApplicationVariant(delegate, stats, FakeObjectFactory.factory)
     }
 
     @Test

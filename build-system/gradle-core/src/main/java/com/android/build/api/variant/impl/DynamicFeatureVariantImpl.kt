@@ -17,12 +17,12 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariantProperties
+import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariant
 import com.android.build.api.component.impl.ApkCreationConfigImpl
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackagingOptions
-import com.android.build.api.variant.DynamicFeatureVariantProperties
+import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -49,7 +49,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
-open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
+open class DynamicFeatureVariantImpl @Inject constructor(
     override val variant: DynamicFeatureVariantBuilderImpl,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
@@ -63,7 +63,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     internalServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
-) : VariantPropertiesImpl(
+) : VariantImpl(
     variant,
     buildFeatureValues,
     variantDslInfo,
@@ -77,7 +77,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     internalServices,
     taskCreationServices,
     globalScope
-), DynamicFeatureVariantProperties, DynamicFeatureCreationConfig {
+), DynamicFeatureVariant, DynamicFeatureCreationConfig {
 
     private val delegate by lazy { ApkCreationConfigImpl(this, globalScope, variantDslInfo) }
 
@@ -244,9 +244,9 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     override fun createUserVisibleVariantPropertiesObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledDynamicFeatureVariantProperties =
+    ): AnalyticsEnabledDynamicFeatureVariant =
         projectServices.objectFactory.newInstance(
-            AnalyticsEnabledDynamicFeatureVariantProperties::class.java,
+            AnalyticsEnabledDynamicFeatureVariant::class.java,
             this,
             stats
         )

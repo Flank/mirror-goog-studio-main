@@ -19,8 +19,8 @@ package com.android.build.gradle.internal.dsl
 import com.android.build.api.component.GenericFilteredComponentActionRegistrar
 import com.android.build.api.component.impl.GenericFilteredComponentActionRegistrarImpl
 import com.android.build.api.dsl.TestBuildFeatures
+import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.TestVariantBuilder
-import com.android.build.api.variant.TestVariantProperties
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.services.DslServices
 
@@ -35,7 +35,7 @@ class TestExtensionImpl(
             DefaultConfig,
             ProductFlavor,
             TestVariantBuilder,
-            TestVariantProperties>(
+            TestVariant>(
         dslServices,
         dslContainers
     ),
@@ -53,13 +53,13 @@ class TestExtensionImpl(
             TestVariantBuilder::class.java
         ) as GenericFilteredComponentActionRegistrar<TestVariantBuilder>
     @Suppress("UNCHECKED_CAST")
-    override val onVariantProperties: GenericFilteredComponentActionRegistrar<TestVariantProperties>
+    override val onVariantProperties: GenericFilteredComponentActionRegistrar<TestVariant>
         get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
             dslServices,
             variantPropertiesOperations,
-            TestVariantProperties::class.java
-        ) as GenericFilteredComponentActionRegistrar<TestVariantProperties>
+            TestVariant::class.java
+        ) as GenericFilteredComponentActionRegistrar<TestVariant>
 
     override var targetProjectPath: String? = null
 }

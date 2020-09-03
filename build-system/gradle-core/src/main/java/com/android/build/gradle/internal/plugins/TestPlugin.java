@@ -24,7 +24,7 @@ import com.android.build.api.extension.TestAndroidComponentsExtension;
 import com.android.build.api.extension.impl.OperationsRegistrar;
 import com.android.build.api.extension.impl.TestAndroidComponentsExtensionImpl;
 import com.android.build.api.variant.impl.TestVariantBuilderImpl;
-import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
+import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -54,7 +54,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 /** Gradle plugin class for 'test' projects. */
 public class TestPlugin
         extends BasePlugin<
-                TestAndroidComponentsExtension, TestVariantBuilderImpl, TestVariantPropertiesImpl> {
+                TestAndroidComponentsExtension, TestVariantBuilderImpl, TestVariantImpl> {
     @Inject
     public TestPlugin(
             ToolingModelBuilderRegistry registry,
@@ -132,8 +132,7 @@ public class TestPlugin
     @NonNull
     @Override
     protected TestApplicationTaskManager createTaskManager(
-            @NonNull
-                    List<ComponentInfo<TestVariantBuilderImpl, TestVariantPropertiesImpl>> variants,
+            @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> variants,
             @NonNull
                     List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
                             testComponents,

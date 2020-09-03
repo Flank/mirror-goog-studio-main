@@ -18,7 +18,7 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.ApkPackagingOptions
-import com.android.build.api.variant.ApplicationVariantProperties
+import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.SigningConfig
 import com.android.build.api.variant.VariantOutput
@@ -28,13 +28,13 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import javax.inject.Inject
 
-open class AnalyticsEnabledApplicationVariantProperties @Inject constructor(
-    override val delegate: ApplicationVariantProperties,
+open class AnalyticsEnabledApplicationVariant @Inject constructor(
+    override val delegate: ApplicationVariant,
     stats: GradleBuildVariant.Builder,
     objectFactory: ObjectFactory
-) : AnalyticsEnabledVariantProperties(
+) : AnalyticsEnabledVariant(
     delegate, stats, objectFactory
-), ApplicationVariantProperties {
+), ApplicationVariant {
     override val applicationId: Property<String>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =

@@ -17,7 +17,7 @@
 package com.android.build.api.dsl
 
 import com.android.build.api.variant.LibraryVariantBuilder
-import com.android.build.api.variant.LibraryVariantProperties
+import com.android.build.api.variant.LibraryVariant
 import org.gradle.api.Incubating
 import org.gradle.api.NamedDomainObjectContainer
 
@@ -42,7 +42,7 @@ interface LibraryExtension<
         ProductFlavorT,
         SigningConfigT,
         LibraryVariantBuilder,
-        LibraryVariantProperties>,
+        LibraryVariant>,
     TestedExtension {
     // TODO(b/140406102)
 

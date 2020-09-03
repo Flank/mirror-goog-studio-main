@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.coverage;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
@@ -216,7 +216,7 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
 
             task.setReportName(creationConfig.getName());
 
-            VariantPropertiesImpl testedVariant = creationConfig.getTestedVariant();
+            VariantImpl testedVariant = creationConfig.getTestedVariant();
 
             task.jacocoClasspath = jacocoAntConfiguration;
 

@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.core.Abi;
@@ -81,7 +81,7 @@ public interface VariantScope {
     /** Returns whether we need to create original java resource streams */
     boolean getNeedsJavaResStreams();
 
-    boolean isTestOnly(VariantPropertiesImpl variantProperties);
+    boolean isTestOnly(VariantImpl variantProperties);
 
     boolean isCoreLibraryDesugaringEnabled(ConsumableCreationConfig creationConfig);
 

@@ -17,7 +17,7 @@
 package com.android.build.api.dsl
 
 import com.android.build.api.variant.ApplicationVariantBuilder
-import com.android.build.api.variant.ApplicationVariantProperties
+import com.android.build.api.variant.ApplicationVariant
 import org.gradle.api.Incubating
 
 /**
@@ -41,7 +41,7 @@ interface ApplicationExtension<
             ProductFlavorT,
             SigningConfigT,
             ApplicationVariantBuilder,
-            ApplicationVariantProperties>,
+            ApplicationVariant>,
     ApkExtension,
     TestedExtension {
     // TODO(b/140406102)

@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.TestBuildFeatures
 import com.android.build.api.dsl.TestExtension
+import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.TestVariantBuilder
-import com.android.build.api.variant.TestVariantProperties
 import com.android.build.gradle.api.AndroidSourceSet
 
 /** See [InternalCommonExtension] */
@@ -36,4 +36,4 @@ interface InternalTestExtension :
                 DefaultConfig,
                 ProductFlavor,
                 TestVariantBuilder,
-                TestVariantProperties>
+                TestVariant>

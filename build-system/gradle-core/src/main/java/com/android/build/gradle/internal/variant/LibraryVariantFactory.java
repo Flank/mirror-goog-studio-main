@@ -25,7 +25,7 @@ import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.api.dsl.LibraryBuildFeatures;
 import com.android.build.api.variant.impl.LibraryVariantBuilderImpl;
-import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
+import com.android.build.api.variant.impl.LibraryVariantImpl;
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
@@ -58,7 +58,7 @@ import com.android.builder.errors.IssueReporter.Type;
 import com.google.common.collect.ImmutableList;
 
 public class LibraryVariantFactory
-        extends BaseVariantFactory<LibraryVariantBuilderImpl, LibraryVariantPropertiesImpl> {
+        extends BaseVariantFactory<LibraryVariantBuilderImpl, LibraryVariantImpl> {
 
     public LibraryVariantFactory(
             @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
@@ -82,7 +82,7 @@ public class LibraryVariantFactory
 
     @NonNull
     @Override
-    public LibraryVariantPropertiesImpl createVariantPropertiesObject(
+    public LibraryVariantImpl createVariantPropertiesObject(
             @NonNull LibraryVariantBuilderImpl variant,
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
@@ -96,11 +96,11 @@ public class LibraryVariantFactory
             @NonNull TransformManager transformManager,
             @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull TaskCreationServices taskCreationServices) {
-        LibraryVariantPropertiesImpl variantProperties =
+        LibraryVariantImpl variantProperties =
                 projectServices
                         .getObjectFactory()
                         .newInstance(
-                                LibraryVariantPropertiesImpl.class,
+                                LibraryVariantImpl.class,
                                 variant,
                                 buildFeatures,
                                 variantDslInfo,
