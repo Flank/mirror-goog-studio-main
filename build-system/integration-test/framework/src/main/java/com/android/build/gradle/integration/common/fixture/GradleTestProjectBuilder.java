@@ -83,6 +83,7 @@ public final class GradleTestProjectBuilder {
     private boolean withSdk = true;
     private boolean withAndroidGradlePlugin = true;
     private boolean withKotlinGradlePlugin = false;
+    private boolean withPluginManagementBlock = false;
     // list of included builds, relative to the main testDir
     private List<String> withIncludedBuilds = Lists.newArrayList();
 
@@ -166,6 +167,7 @@ public final class GradleTestProjectBuilder {
                 withSdk,
                 withAndroidGradlePlugin,
                 withKotlinGradlePlugin,
+                withPluginManagementBlock,
                 withIncludedBuilds,
                 null,
                 repoDirectories,
@@ -259,6 +261,11 @@ public final class GradleTestProjectBuilder {
 
     public GradleTestProjectBuilder withKotlinVersion(String kotlinVersion) {
         this.kotlinVersion = kotlinVersion;
+        return this;
+    }
+
+    public GradleTestProjectBuilder withPluginManagementBlock(boolean withPluginManagementBlock) {
+        this.withPluginManagementBlock = withPluginManagementBlock;
         return this;
     }
 

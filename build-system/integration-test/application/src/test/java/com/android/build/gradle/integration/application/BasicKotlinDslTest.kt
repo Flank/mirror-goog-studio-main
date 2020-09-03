@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.Version
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.testutils.TestUtils
 import org.junit.Rule
 import org.junit.Test
 
@@ -29,24 +29,12 @@ class BasicKotlinDslTest {
     @Rule
     val project = GradleTestProject.builder().fromTestApp(
             MinimalSubProject.app("com.example.app"))
+            .withPluginManagementBlock(TestUtils.runningFromBazel())
             .create()
 
     @Test
     fun testAbleToBuild() {
         project.buildFile.delete()
-        project.file("settings.gradle.kts").writeText("""
-            pluginManagement {
-                apply(from="../commonLocalRepo.gradle", to=this)
-
-                resolutionStrategy {
-                    eachPlugin {
-                        if(requested.id.namespace == "com.android") {
-                            useModule("com.android.tools.build:gradle:${Version.ANDROID_GRADLE_PLUGIN_VERSION}")
-                        }
-                    }
-                }
-            }
-        """.trimIndent())
 
         project.file("build.gradle.kts").writeText("""
             apply(from = "../commonHeader.gradle")
