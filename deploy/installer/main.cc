@@ -53,8 +53,8 @@ struct Parameters {
   int consumed = 0;
 };
 
-// In oneShot mode, the installer servers only one request and exists.
-static bool one_shot_mode = false;
+// In daemon mode, the installer servers requests continuously from stdin.
+static bool daemon_mode = false;
 static bool running = true;
 
 void ProcessRequest(std::unique_ptr<proto::InstallerRequest>, Workspace&);
@@ -71,8 +71,8 @@ Parameters ParseArgs(int argc, char** argv) {
       parameters.cmd_path = strtok(nullptr, "=");
     } else if (!strncmp("-pm", argv[index], 3)) {
       parameters.pm_path = strtok(nullptr, "=");
-    } else if (!strncmp("-oneshot", argv[index], 8)) {
-      one_shot_mode = true;
+    } else if (!strncmp("-daemon", argv[index], 8)) {
+      daemon_mode = true;
     } else if (!strncmp("-version", argv[index], 8)) {
       parameters.version = strtok(nullptr, "=");
     }
@@ -179,7 +179,7 @@ void ProcessRequest(std::unique_ptr<proto::InstallerRequest> request,
   ResetEvents();
   Phase p("Installer request:" + request->command_name());
 
-  if (one_shot_mode) {
+  if (!daemon_mode) {
     running = false;
   }
   

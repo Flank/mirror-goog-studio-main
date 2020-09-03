@@ -107,7 +107,7 @@ public class DeployerRunnerTest {
     private long startTime;
 
     private static final String INSTALLER_INVOCATION =
-            AdbInstaller.INSTALLER_PATH + " -version=$VERSION -oneshot";
+            AdbInstaller.INSTALLER_PATH + " -version=$VERSION";
 
     @BeforeClass
     public static void prepare() throws Exception {
