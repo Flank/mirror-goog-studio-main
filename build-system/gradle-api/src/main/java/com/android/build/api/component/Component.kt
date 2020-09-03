@@ -16,8 +16,6 @@
 
 package com.android.build.api.component
 
-import com.android.build.api.variant.VariantProperties
-import org.gradle.api.Action
 import org.gradle.api.Incubating
 
 /**

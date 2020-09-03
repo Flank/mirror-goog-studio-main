@@ -23,7 +23,7 @@ import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.FilterConfiguration
-import com.android.build.api.variant.impl.ApplicationVariantImpl
+import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
@@ -60,7 +60,7 @@ import java.util.function.Consumer
 class ApplicationVariantFactory(
     projectServices: ProjectServices,
     globalScope: GlobalScope
-) : AbstractAppVariantFactory<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>(
+) : AbstractAppVariantFactory<ApplicationVariantBuilderImpl, ApplicationVariantPropertiesImpl>(
     projectServices,
     globalScope
 ) {
@@ -69,13 +69,13 @@ class ApplicationVariantFactory(
         componentIdentity: ComponentIdentity,
         variantDslInfo: VariantDslInfo,
         variantApiServices: VariantApiServices
-    ): ApplicationVariantImpl {
+    ): ApplicationVariantBuilderImpl {
         val extension = globalScope.extension as BaseAppModuleExtension
 
         return projectServices
             .objectFactory
             .newInstance(
-                ApplicationVariantImpl::class.java,
+                ApplicationVariantBuilderImpl::class.java,
                 variantDslInfo,
                 extension.dependenciesInfo,
                 componentIdentity,
@@ -84,19 +84,19 @@ class ApplicationVariantFactory(
     }
 
     override fun createVariantPropertiesObject(
-        variant: ApplicationVariantImpl,
-        componentIdentity: ComponentIdentity,
-        buildFeatures: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo,
-        variantDependencies: VariantDependencies,
-        variantSources: VariantSources,
-        paths: VariantPathHelper,
-        artifacts: ArtifactsImpl,
-        variantScope: VariantScope,
-        variantData: BaseVariantData,
-        transformManager: TransformManager,
-        variantPropertiesApiServices: VariantPropertiesApiServices,
-        taskCreationServices: TaskCreationServices
+            variant: ApplicationVariantBuilderImpl,
+            componentIdentity: ComponentIdentity,
+            buildFeatures: BuildFeatureValues,
+            variantDslInfo: VariantDslInfo,
+            variantDependencies: VariantDependencies,
+            variantSources: VariantSources,
+            paths: VariantPathHelper,
+            artifacts: ArtifactsImpl,
+            variantScope: VariantScope,
+            variantData: BaseVariantData,
+            transformManager: TransformManager,
+            variantPropertiesApiServices: VariantPropertiesApiServices,
+            taskCreationServices: TaskCreationServices
     ): ApplicationVariantPropertiesImpl {
         val variantProperties = projectServices
             .objectFactory

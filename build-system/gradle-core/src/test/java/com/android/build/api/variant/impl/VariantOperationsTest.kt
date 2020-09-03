@@ -17,10 +17,10 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.impl.FilteredComponentAction
-import com.android.build.api.variant.ApplicationVariant
+import com.android.build.api.variant.ApplicationVariantBuilder
 import com.android.build.api.variant.ApplicationVariantProperties
-import com.android.build.api.variant.LibraryVariant
-import com.android.build.api.variant.Variant
+import com.android.build.api.variant.LibraryVariantBuilder
+import com.android.build.api.variant.VariantBuilder
 import com.google.common.truth.Truth
 import org.gradle.api.Action
 import org.junit.Test
@@ -38,12 +38,12 @@ class VariantOperationsTest {
     @Test
     fun unfilteredActionsTest() {
         val counter = AtomicInteger(0)
-        val operations = VariantOperations<ApplicationVariant>()
+        val operations = VariantOperations<ApplicationVariantBuilder>()
         for (i in 1..5) {
             operations.addAction(Action { counter.getAndAdd(10.0.pow(i - 1).toInt())})
         }
         @Suppress("UNCHECKED_CAST")
-        val variant = createVariant(ApplicationVariant::class.java) as ApplicationVariant
+        val variant = createVariant(ApplicationVariantBuilder::class.java) as ApplicationVariantBuilder
 
         operations.executeActions(variant)
         Truth.assertThat(counter.get()).isEqualTo(11111)
@@ -52,16 +52,16 @@ class VariantOperationsTest {
     @Test
     fun singleFilteredActionTest() {
         val counter = AtomicInteger(0)
-        val operations = VariantOperations<ApplicationVariant>()
+        val operations = VariantOperations<ApplicationVariantBuilder>()
         @Suppress("UNCHECKED_CAST")
         operations.addFilteredAction(
             FilteredComponentAction(
-                specificType = ApplicationVariant::class.java,
-                action = Action { counter.incrementAndGet() }) as FilteredComponentAction<ApplicationVariant>
+                specificType = ApplicationVariantBuilder::class.java,
+                action = Action { counter.incrementAndGet() }) as FilteredComponentAction<ApplicationVariantBuilder>
         )
 
         @Suppress("UNCHECKED_CAST")
-        val variant = createVariant(ApplicationVariant::class.java) as ApplicationVariant
+        val variant = createVariant(ApplicationVariantBuilder::class.java) as ApplicationVariantBuilder
         operations.executeActions(variant)
         Truth.assertThat(counter.get()).isEqualTo(1)
     }
@@ -69,25 +69,25 @@ class VariantOperationsTest {
     @Test
     fun multipleActionsTest() {
         val counter = AtomicInteger(0)
-        val operations = VariantOperations<Variant>()
+        val operations = VariantOperations<VariantBuilder>()
 
         operations.addAction(Action { counter.incrementAndGet()})
 
         operations.addFilteredAction(
             FilteredComponentAction(
-                specificType = LibraryVariant::class.java,
+                specificType = LibraryVariantBuilder::class.java,
                 action = Action { counter.getAndAdd(10) }
             )
         )
 
         operations.addFilteredAction(
             FilteredComponentAction(
-                specificType = ApplicationVariant::class.java,
+                specificType = ApplicationVariantBuilder::class.java,
                 action = Action { counter.getAndAdd(100) }
             )
         )
 
-        val variant = createVariant(ApplicationVariant::class.java)
+        val variant = createVariant(ApplicationVariantBuilder::class.java)
         operations.executeActions(variant)
 
         Truth.assertThat(counter.get()).isEqualTo(101)
@@ -96,11 +96,11 @@ class VariantOperationsTest {
     @Test
     fun actionsOrderTest() {
         val orderList = mutableListOf<Int>()
-        val operations = VariantOperations<Variant>()
+        val operations = VariantOperations<VariantBuilder>()
 
         operations.addFilteredAction(
             FilteredComponentAction(
-                specificType = ApplicationVariant::class.java,
+                specificType = ApplicationVariantBuilder::class.java,
                 action = Action { orderList.add(1) }
             )
         )
@@ -108,12 +108,12 @@ class VariantOperationsTest {
 
         operations.addFilteredAction(
             FilteredComponentAction(
-                specificType = ApplicationVariant::class.java,
+                specificType = ApplicationVariantBuilder::class.java,
                 action = Action { orderList.add(3) }
             )
         )
 
-        val variant = createVariant(ApplicationVariant::class.java)
+        val variant = createVariant(ApplicationVariantBuilder::class.java)
         operations.executeActions(variant)
 
         Truth.assertThat(orderList).isEqualTo(listOf(1, 2, 3))
@@ -121,9 +121,9 @@ class VariantOperationsTest {
 
     @Test
     fun actionInvokedTooLate() {
-        val operations = VariantOperations<Variant>()
+        val operations = VariantOperations<VariantBuilder>()
 
-        operations.executeActions(Mockito.mock(Variant::class.java))
+        operations.executeActions(Mockito.mock(VariantBuilder::class.java))
         try {
             operations.addAction( Action { variant -> println(variant.name) })
             fail("Expected exception not raised")
@@ -132,8 +132,8 @@ class VariantOperationsTest {
         }
     }
 
-    private fun <T : Variant> createVariant(
-        @Suppress("UNCHECKED_CAST") variantClass: Class<T> = Variant::class.java as Class<T>
+    private fun <T : VariantBuilder> createVariant(
+        @Suppress("UNCHECKED_CAST") variantClass: Class<T> = VariantBuilder::class.java as Class<T>
     ): T {
         val variant = Mockito.mock(variantClass)
         return variant

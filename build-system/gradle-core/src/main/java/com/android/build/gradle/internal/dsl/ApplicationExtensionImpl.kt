@@ -21,7 +21,7 @@ import com.android.build.api.component.impl.GenericFilteredComponentActionRegist
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.Bundle
 import com.android.build.api.dsl.DependenciesInfo
-import com.android.build.api.variant.ApplicationVariant
+import com.android.build.api.variant.ApplicationVariantBuilder
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.services.DslServices
@@ -37,7 +37,7 @@ class ApplicationExtensionImpl(
             BuildType,
             DefaultConfig,
             ProductFlavor,
-            ApplicationVariant,
+            ApplicationVariantBuilder,
             ApplicationVariantProperties>(
         dslServices,
         dslContainers
@@ -51,13 +51,13 @@ class ApplicationExtensionImpl(
     override var assetPacks: MutableSet<String> = mutableSetOf()
 
     @Suppress("UNCHECKED_CAST")
-    override val onVariants: GenericFilteredComponentActionRegistrar<ApplicationVariant>
+    override val onVariants: GenericFilteredComponentActionRegistrar<ApplicationVariantBuilder>
         get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
             dslServices,
             variantOperations,
-            ApplicationVariant::class.java
-        ) as GenericFilteredComponentActionRegistrar<ApplicationVariant>
+            ApplicationVariantBuilder::class.java
+        ) as GenericFilteredComponentActionRegistrar<ApplicationVariantBuilder>
     @Suppress("UNCHECKED_CAST")
     override val onVariantProperties: GenericFilteredComponentActionRegistrar<ApplicationVariantProperties>
         get() = dslServices.newInstance(

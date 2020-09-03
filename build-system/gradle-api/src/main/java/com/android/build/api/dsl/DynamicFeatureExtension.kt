@@ -16,7 +16,7 @@
 
 package com.android.build.api.dsl
 
-import com.android.build.api.variant.DynamicFeatureVariant
+import com.android.build.api.variant.DynamicFeatureVariantBuilder
 import com.android.build.api.variant.DynamicFeatureVariantProperties
 import org.gradle.api.Incubating
 
@@ -40,7 +40,7 @@ interface DynamicFeatureExtension<
             DefaultConfigT,
             ProductFlavorT,
             SigningConfigT,
-            DynamicFeatureVariant,
+            DynamicFeatureVariantBuilder,
             DynamicFeatureVariantProperties>,
     ApkExtension,
     TestedExtension {

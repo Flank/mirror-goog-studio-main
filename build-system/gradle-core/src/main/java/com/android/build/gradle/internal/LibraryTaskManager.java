@@ -32,7 +32,7 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
-import com.android.build.api.variant.impl.LibraryVariantImpl;
+import com.android.build.api.variant.impl.LibraryVariantBuilderImpl;
 import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
@@ -95,10 +95,12 @@ import org.gradle.api.tasks.compile.JavaCompile;
 
 /** TaskManager for creating tasks in an Android library project. */
 public class LibraryTaskManager
-        extends TaskManager<LibraryVariantImpl, LibraryVariantPropertiesImpl> {
+        extends TaskManager<LibraryVariantBuilderImpl, LibraryVariantPropertiesImpl> {
 
     public LibraryTaskManager(
-            @NonNull List<ComponentInfo<LibraryVariantImpl, LibraryVariantPropertiesImpl>> variants,
+            @NonNull
+                    List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantPropertiesImpl>>
+                            variants,
             @NonNull
                     List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
                             testComponents,
@@ -110,9 +112,9 @@ public class LibraryTaskManager
 
     @Override
     protected void doCreateTasksForVariant(
-            @NonNull ComponentInfo<LibraryVariantImpl, LibraryVariantPropertiesImpl> variant,
+            @NonNull ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantPropertiesImpl> variant,
             @NonNull
-                    List<ComponentInfo<LibraryVariantImpl, LibraryVariantPropertiesImpl>>
+                    List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantPropertiesImpl>>
                             allVariants) {
 
         LibraryVariantPropertiesImpl libVariantProperties = variant.getProperties();

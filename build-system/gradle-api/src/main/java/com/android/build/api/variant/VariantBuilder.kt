@@ -29,7 +29,7 @@ import org.gradle.api.Incubating
  * changes the build flow for the variant.
  */
 @Incubating
-interface Variant: Component, ActionableComponentObject {
+interface VariantBuilder: Component, ActionableComponentObject {
 
     fun unitTest(action: UnitTest.() -> Unit)
     fun unitTestProperties(action: UnitTestProperties.() -> Unit)

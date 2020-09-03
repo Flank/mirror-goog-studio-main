@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.gradle.generator
 
-import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.api.variant.impl.toSharedAndroidVersion
 import com.android.build.gradle.LibraryExtension
@@ -223,7 +223,7 @@ fun CxxConfigurationModel.abiJsonFile(abi : Abi): File {
  * was deserialized from the task graph.
  */
 fun tryCreateCxxConfigurationModel(
-    variant: VariantImpl,
+    variant: VariantBuilderImpl,
     componentProperties: VariantPropertiesImpl,
     allDefaultAbis: Boolean = true
 ) : CxxConfigurationModel? {

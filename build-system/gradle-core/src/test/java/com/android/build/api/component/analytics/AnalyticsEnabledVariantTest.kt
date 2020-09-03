@@ -30,13 +30,13 @@ import org.mockito.MockitoAnnotations
 
 class AnalyticsEnabledVariantTest {
     @Mock
-    lateinit var delegate: AnalyticsEnabledVariant
+    lateinit var delegate: AnalyticsEnabledVariantBuilder
     private val stats = GradleBuildVariant.newBuilder()
-    private lateinit var proxy: AnalyticsEnabledVariant
+    private lateinit var proxy: AnalyticsEnabledVariantBuilder
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
-        proxy = object: AnalyticsEnabledVariant(delegate, stats) {}
+        proxy = object: AnalyticsEnabledVariantBuilder(delegate, stats) {}
     }
     @Test
     fun setMinSdkVersion() {

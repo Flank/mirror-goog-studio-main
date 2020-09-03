@@ -20,11 +20,10 @@ import com.android.build.api.component.GenericFilteredComponentActionRegistrar
 import com.android.build.api.component.impl.GenericFilteredComponentActionRegistrarImpl
 import com.android.build.api.dsl.LibraryBuildFeatures
 import com.android.build.api.dsl.PrefabPackagingOptions
-import com.android.build.api.variant.LibraryVariant
+import com.android.build.api.variant.LibraryVariantBuilder
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.plugins.DslContainerProvider
-import com.google.common.collect.Lists
 import org.gradle.api.NamedDomainObjectContainer
 
 /** Internal implementation of the 'new' DSL interface */
@@ -37,7 +36,7 @@ class LibraryExtensionImpl(
             BuildType,
             DefaultConfig,
             ProductFlavor,
-            LibraryVariant,
+            LibraryVariantBuilder,
             LibraryVariantProperties>(
         dslServices,
         dslContainers
@@ -48,13 +47,13 @@ class LibraryExtensionImpl(
         dslServices.newInstance(LibraryBuildFeaturesImpl::class.java)
 
     @Suppress("UNCHECKED_CAST")
-    override val onVariants: GenericFilteredComponentActionRegistrar<LibraryVariant>
+    override val onVariants: GenericFilteredComponentActionRegistrar<LibraryVariantBuilder>
         get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
             dslServices,
             variantOperations,
-            LibraryVariant::class.java
-        ) as GenericFilteredComponentActionRegistrar<LibraryVariant>
+            LibraryVariantBuilder::class.java
+        ) as GenericFilteredComponentActionRegistrar<LibraryVariantBuilder>
     @Suppress("UNCHECKED_CAST")
     override val onVariantProperties: GenericFilteredComponentActionRegistrar<LibraryVariantProperties>
         get() = dslServices.newInstance(

@@ -26,7 +26,7 @@ import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTestProperties;
 import com.android.build.api.component.analytics.AnalyticsEnabledUnitTestProperties;
-import com.android.build.api.component.analytics.AnalyticsEnabledVariant;
+import com.android.build.api.component.analytics.AnalyticsEnabledVariantBuilder;
 import com.android.build.api.component.analytics.AnalyticsEnabledVariantProperties;
 import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
@@ -35,9 +35,8 @@ import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.extension.impl.OperationsRegistrar;
-import com.android.build.api.variant.Variant;
 import com.android.build.api.variant.VariantProperties;
-import com.android.build.api.variant.impl.VariantImpl;
+import com.android.build.api.variant.impl.VariantBuilderImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestedAndroidConfig;
@@ -106,13 +105,15 @@ import org.gradle.api.model.ObjectFactory;
 
 /** Class to create, manage variants. */
 public class VariantManager<
-        VariantT extends VariantImpl, VariantPropertiesT extends VariantPropertiesImpl> {
+        VariantT extends VariantBuilderImpl, VariantPropertiesT extends VariantPropertiesImpl> {
 
     @NonNull private final Project project;
     @NonNull private final ProjectOptions projectOptions;
     @NonNull private final BaseExtension extension;
 
-    @NonNull private final OperationsRegistrar<Variant> operationsRegistrar;
+    @NonNull
+    private final OperationsRegistrar<com.android.build.api.variant.VariantBuilder>
+            operationsRegistrar;
 
     @NonNull private final VariantFactory<VariantT, VariantPropertiesT> variantFactory;
 
@@ -151,7 +152,9 @@ public class VariantManager<
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull BaseExtension extension,
-            @NonNull OperationsRegistrar<Variant> operationsRegistrar,
+            @NonNull
+                    OperationsRegistrar<com.android.build.api.variant.VariantBuilder>
+                            operationsRegistrar,
             @NonNull VariantFactory<VariantT, VariantPropertiesT> variantFactory,
             @NonNull VariantInputModel variantInputModel,
             @NonNull ProjectServices projectServices) {
@@ -347,10 +350,15 @@ public class VariantManager<
         // HACK, we need access to the new type rather than the old. This will go away in the
         // future
         //noinspection unchecked
-        ActionableVariantObjectOperationsExecutor<Variant, VariantProperties> commonExtension =
-                (ActionableVariantObjectOperationsExecutor<Variant, VariantProperties>) extension;
+        ActionableVariantObjectOperationsExecutor<
+                        com.android.build.api.variant.VariantBuilder, VariantProperties>
+                commonExtension =
+                        (ActionableVariantObjectOperationsExecutor<
+                                        com.android.build.api.variant.VariantBuilder,
+                                        VariantProperties>)
+                                extension;
 
-        AnalyticsEnabledVariant userVisibleVariantObject =
+        AnalyticsEnabledVariantBuilder userVisibleVariantObject =
                 variant.createUserVisibleVariantObject(projectServices, profileBuilder);
         commonExtension.executeVariantOperations(userVisibleVariantObject);
 

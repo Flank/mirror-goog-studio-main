@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.variant
 
-import com.android.build.api.component.analytics.AnalyticsEnabledVariant
+import com.android.build.api.component.analytics.AnalyticsEnabledVariantBuilder
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -27,5 +27,5 @@ class ComponentInfo<
     val variant: ComponentT,
     val properties: ComponentPropertiesT,
     val stats: GradleBuildVariant.Builder,
-    val userVisibleVariant: AnalyticsEnabledVariant?
+    val userVisibleVariant: AnalyticsEnabledVariantBuilder?
 )

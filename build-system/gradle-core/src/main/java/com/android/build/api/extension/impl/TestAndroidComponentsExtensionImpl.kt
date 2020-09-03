@@ -17,14 +17,14 @@
 package com.android.build.api.extension.impl
 
 import com.android.build.api.extension.TestAndroidComponentsExtension
-import com.android.build.api.variant.TestVariant
+import com.android.build.api.variant.TestVariantBuilder
 import com.android.build.gradle.internal.services.DslServices
 
 open class TestAndroidComponentsExtensionImpl(
         dslServices: DslServices,
-        operations: OperationsRegistrar<TestVariant>
+        operations: OperationsRegistrar<TestVariantBuilder>
 ):
         TestAndroidComponentsExtension,
-        AndroidComponentsExtensionImpl<TestVariant>(
+        AndroidComponentsExtensionImpl<TestVariantBuilder>(
                 dslServices,
                 operations)

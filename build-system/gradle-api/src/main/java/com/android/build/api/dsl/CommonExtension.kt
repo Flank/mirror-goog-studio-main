@@ -17,7 +17,7 @@
 package com.android.build.api.dsl
 
 import com.android.build.api.component.GenericFilteredComponentActionRegistrar
-import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.VariantProperties
 import org.gradle.api.Action
 import org.gradle.api.Incubating
@@ -37,7 +37,7 @@ interface CommonExtension<
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
-        VariantT : Variant,
+        VariantT : VariantBuilder,
         VariantPropertiesT : VariantProperties> {
     // TODO(b/140406102)
 
@@ -380,7 +380,7 @@ interface CommonExtension<
      * Adds an [Action] to be performed on all [VariantPropertiesT] objects associated with this
      * module
      *
-     * This method is a shortcut for calling [onVariants] followed by [Variant.onProperties].
+     * This method is a shortcut for calling [onVariants] followed by [VariantBuilder.onProperties].
      *
      * @param action a lambda taking a [VariantProperties] as a parameter.
      */
@@ -390,7 +390,7 @@ interface CommonExtension<
      * Adds a lambda function to be performed on all [VariantPropertiesT] objects associated with
      * this module.
      *
-     * This method is a shortcut for calling [onVariants] followed by [Variant.onProperties].
+     * This method is a shortcut for calling [onVariants] followed by [VariantBuilder.onProperties].
      *
      * @param action a lambda taking a [VariantProperties] as a parameter.
      */

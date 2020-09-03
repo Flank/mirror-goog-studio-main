@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.ide.v2
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ApplicationExtension
-import com.android.build.api.variant.ApplicationVariant
+import com.android.build.api.variant.ApplicationVariantBuilder
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.api.AndroidSourceSet
@@ -181,7 +181,7 @@ class ModelBuilderTest {
             DefaultConfig,
             ProductFlavor,
             SigningConfig,
-            ApplicationVariant,
+            ApplicationVariantBuilder,
             ApplicationVariantProperties,
             ApplicationExtension<AndroidSourceSet, BuildType, DefaultConfig, ProductFlavor, SigningConfig>> {
 

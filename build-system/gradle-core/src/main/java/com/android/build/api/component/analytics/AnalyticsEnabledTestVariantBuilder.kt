@@ -16,15 +16,15 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.DynamicFeatureVariant
+import com.android.build.api.variant.TestVariantBuilder
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
 /**
- * Shim object for [DynamicFeatureVariant] that records all mutating accesses to the analytics.
+ * Shim object for [AnalyticsEnabledVariantBuilder] that records all mutating accesses to the analytics.
  */
-open class AnalyticsEnabledDynamicFeatureVariant @Inject constructor(
-    delegate: DynamicFeatureVariant,
-    stats: GradleBuildVariant.Builder
-) : AnalyticsEnabledVariant(delegate, stats),
-    DynamicFeatureVariant
+open class AnalyticsEnabledTestVariantBuilder @Inject constructor(
+        delegate: TestVariantBuilder,
+        stats: GradleBuildVariant.Builder
+) : AnalyticsEnabledVariantBuilder(delegate, stats),
+    TestVariantBuilder

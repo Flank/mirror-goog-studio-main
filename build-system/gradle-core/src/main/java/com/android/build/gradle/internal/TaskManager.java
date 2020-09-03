@@ -67,7 +67,7 @@ import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.variant.AndroidVersion;
 import com.android.build.api.variant.impl.VariantApiExtensionsKt;
-import com.android.build.api.variant.impl.VariantImpl;
+import com.android.build.api.variant.impl.VariantBuilderImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AndroidSourceSet;
@@ -270,7 +270,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 
 /** Manages tasks creation. */
 public abstract class TaskManager<
-        VariantT extends VariantImpl, VariantPropertiesT extends VariantPropertiesImpl> {
+        VariantT extends VariantBuilderImpl, VariantPropertiesT extends VariantPropertiesImpl> {
     private static final String MULTIDEX_VERSION = "1.0.2";
 
     private static final String COM_ANDROID_SUPPORT_MULTIDEX =

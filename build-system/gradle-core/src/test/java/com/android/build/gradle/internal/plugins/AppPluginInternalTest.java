@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
-import com.android.build.api.variant.impl.ApplicationVariantImpl;
+import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.AppExtension;
@@ -514,7 +514,7 @@ public class AppPluginInternalTest {
 
     public static List<ComponentPropertiesImpl> getComponents(
             @NonNull
-                    VariantManager<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>
+                    VariantManager<ApplicationVariantBuilderImpl, ApplicationVariantPropertiesImpl>
                             variantManager) {
 
         List<VariantPropertiesImpl> variants =

@@ -45,19 +45,19 @@ import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class  LibraryVariantPropertiesImpl @Inject constructor(
-    override val variant: LibraryVariantImpl,
-    buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo,
-    variantDependencies: VariantDependencies,
-    variantSources: VariantSources,
-    paths: VariantPathHelper,
-    artifacts: ArtifactsImpl,
-    variantScope: VariantScope,
-    variantData: BaseVariantData,
-    transformManager: TransformManager,
-    internalServices: VariantPropertiesApiServices,
-    taskCreationServices: TaskCreationServices,
-    globalScope: GlobalScope
+        override val variant: LibraryVariantBuilderImpl,
+        buildFeatureValues: BuildFeatureValues,
+        variantDslInfo: VariantDslInfo,
+        variantDependencies: VariantDependencies,
+        variantSources: VariantSources,
+        paths: VariantPathHelper,
+        artifacts: ArtifactsImpl,
+        variantScope: VariantScope,
+        variantData: BaseVariantData,
+        transformManager: TransformManager,
+        internalServices: VariantPropertiesApiServices,
+        taskCreationServices: TaskCreationServices,
+        globalScope: GlobalScope
 ) : VariantPropertiesImpl(
     variant,
     buildFeatureValues,

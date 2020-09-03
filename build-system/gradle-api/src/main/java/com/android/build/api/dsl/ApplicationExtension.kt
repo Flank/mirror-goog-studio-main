@@ -16,7 +16,7 @@
 
 package com.android.build.api.dsl
 
-import com.android.build.api.variant.ApplicationVariant
+import com.android.build.api.variant.ApplicationVariantBuilder
 import com.android.build.api.variant.ApplicationVariantProperties
 import org.gradle.api.Incubating
 
@@ -40,7 +40,7 @@ interface ApplicationExtension<
             DefaultConfigT,
             ProductFlavorT,
             SigningConfigT,
-            ApplicationVariant,
+            ApplicationVariantBuilder,
             ApplicationVariantProperties>,
     ApkExtension,
     TestedExtension {

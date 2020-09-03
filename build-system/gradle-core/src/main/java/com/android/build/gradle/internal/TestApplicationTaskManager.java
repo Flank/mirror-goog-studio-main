@@ -22,7 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
-import com.android.build.api.variant.impl.TestVariantImpl;
+import com.android.build.api.variant.impl.TestVariantBuilderImpl;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.*;
@@ -53,10 +53,11 @@ import org.gradle.api.tasks.TaskProvider;
  * application.
  */
 public class TestApplicationTaskManager
-        extends AbstractAppTaskManager<TestVariantImpl, TestVariantPropertiesImpl> {
+        extends AbstractAppTaskManager<TestVariantBuilderImpl, TestVariantPropertiesImpl> {
 
     public TestApplicationTaskManager(
-            @NonNull List<ComponentInfo<TestVariantImpl, TestVariantPropertiesImpl>> variants,
+            @NonNull
+                    List<ComponentInfo<TestVariantBuilderImpl, TestVariantPropertiesImpl>> variants,
             @NonNull
                     List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
                             testComponents,
@@ -68,8 +69,10 @@ public class TestApplicationTaskManager
 
     @Override
     protected void doCreateTasksForVariant(
-            @NonNull ComponentInfo<TestVariantImpl, TestVariantPropertiesImpl> variant,
-            @NonNull List<ComponentInfo<TestVariantImpl, TestVariantPropertiesImpl>> allVariants) {
+            @NonNull ComponentInfo<TestVariantBuilderImpl, TestVariantPropertiesImpl> variant,
+            @NonNull
+                    List<ComponentInfo<TestVariantBuilderImpl, TestVariantPropertiesImpl>>
+                            allVariants) {
         createCommonTasks(variant, allVariants);
 
         TestVariantPropertiesImpl testVariantProperties = variant.getProperties();
@@ -135,14 +138,18 @@ public class TestApplicationTaskManager
     @Override
     public void createLintTasks(
             @NonNull TestVariantPropertiesImpl variantProperties,
-            @NonNull List<ComponentInfo<TestVariantImpl, TestVariantPropertiesImpl>> allVariants) {
+            @NonNull
+                    List<ComponentInfo<TestVariantBuilderImpl, TestVariantPropertiesImpl>>
+                            allVariants) {
         // do nothing
     }
 
     @Override
     public void maybeCreateLintVitalTask(
             @NonNull TestVariantPropertiesImpl variant,
-            @NonNull List<ComponentInfo<TestVariantImpl, TestVariantPropertiesImpl>> allVariants) {
+            @NonNull
+                    List<ComponentInfo<TestVariantBuilderImpl, TestVariantPropertiesImpl>>
+                            allVariants) {
         // do nothing
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,32 +17,27 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariant
-import com.android.build.api.component.analytics.AnalyticsEnabledVariant
-import com.android.build.api.variant.DynamicFeatureVariant
+import com.android.build.api.component.analytics.AnalyticsEnabledTestVariantBuilder
+import com.android.build.api.variant.TestVariantBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
-open class DynamicFeatureVariantImpl @Inject constructor(
+open class TestVariantBuilderImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity,
     variantApiServices: VariantApiServices
-) : VariantImpl(
-    variantDslInfo,
-    variantConfiguration,
-    variantApiServices
-), DynamicFeatureVariant {
-
+) : VariantBuilderImpl(variantDslInfo, variantConfiguration, variantApiServices),
+    TestVariantBuilder {
     override fun createUserVisibleVariantObject(
-            projectServices: ProjectServices,
-            stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledVariant =
-            projectServices.objectFactory.newInstance(
-                    AnalyticsEnabledDynamicFeatureVariant::class.java,
-                    this,
-                    stats
-            )
+        projectServices: ProjectServices,
+        stats: GradleBuildVariant.Builder
+    ): AnalyticsEnabledTestVariantBuilder =
+        projectServices.objectFactory.newInstance(
+            AnalyticsEnabledTestVariantBuilder::class.java,
+            this,
+            stats
+        )
 }

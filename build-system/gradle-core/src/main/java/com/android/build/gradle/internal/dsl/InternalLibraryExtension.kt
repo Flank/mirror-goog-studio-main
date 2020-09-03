@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.LibraryBuildFeatures
 import com.android.build.api.dsl.LibraryExtension
-import com.android.build.api.variant.LibraryVariant
+import com.android.build.api.variant.LibraryVariantBuilder
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.api.AndroidSourceSet
 
@@ -35,7 +35,7 @@ interface InternalLibraryExtension :
                 BuildType,
                 DefaultConfig,
                 ProductFlavor,
-                LibraryVariant,
+                LibraryVariantBuilder,
                 LibraryVariantProperties> {
     override var aidlPackagedList: MutableCollection<String>
 }

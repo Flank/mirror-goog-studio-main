@@ -43,7 +43,7 @@ import org.objectweb.asm.Type
 import java.io.Serializable
 
 abstract class VariantPropertiesImpl(
-    override val variant: VariantImpl,
+    override val variant: VariantBuilderImpl,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,

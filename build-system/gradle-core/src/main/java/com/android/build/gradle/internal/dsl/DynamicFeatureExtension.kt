@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures
-import com.android.build.api.variant.DynamicFeatureVariant
+import com.android.build.api.variant.DynamicFeatureVariantBuilder
 import com.android.build.api.variant.DynamicFeatureVariantProperties
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.BaseVariantOutput
@@ -43,7 +43,7 @@ internal open class DynamicFeatureExtension(
      globalScope,
     buildOutputs, sourceSetManager, extraModelInfo, false
 ), InternalDynamicFeatureExtension by publicExtensionImpl,
-    ActionableVariantObjectOperationsExecutor<DynamicFeatureVariant, DynamicFeatureVariantProperties> by publicExtensionImpl {
+    ActionableVariantObjectOperationsExecutor<DynamicFeatureVariantBuilder, DynamicFeatureVariantProperties> by publicExtensionImpl {
 
     override val viewBinding: ViewBindingOptions =
         dslServices.newInstance(

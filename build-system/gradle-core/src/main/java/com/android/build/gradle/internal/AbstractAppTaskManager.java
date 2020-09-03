@@ -25,7 +25,7 @@ import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
-import com.android.build.api.variant.impl.VariantImpl;
+import com.android.build.api.variant.impl.VariantBuilderImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
@@ -71,7 +71,8 @@ import org.gradle.api.tasks.compile.JavaCompile;
 
 /** TaskManager for creating tasks in an Android application project. */
 public abstract class AbstractAppTaskManager<
-                VariantT extends VariantImpl, VariantPropertiesT extends VariantPropertiesImpl>
+                VariantT extends VariantBuilderImpl,
+                VariantPropertiesT extends VariantPropertiesImpl>
         extends TaskManager<VariantT, VariantPropertiesT> {
 
     protected AbstractAppTaskManager(

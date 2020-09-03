@@ -24,7 +24,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.api.dsl.LibraryBuildFeatures;
-import com.android.build.api.variant.impl.LibraryVariantImpl;
+import com.android.build.api.variant.impl.LibraryVariantBuilderImpl;
 import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
 import com.android.build.gradle.internal.BuildTypeData;
@@ -58,7 +58,7 @@ import com.android.builder.errors.IssueReporter.Type;
 import com.google.common.collect.ImmutableList;
 
 public class LibraryVariantFactory
-        extends BaseVariantFactory<LibraryVariantImpl, LibraryVariantPropertiesImpl> {
+        extends BaseVariantFactory<LibraryVariantBuilderImpl, LibraryVariantPropertiesImpl> {
 
     public LibraryVariantFactory(
             @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
@@ -67,14 +67,14 @@ public class LibraryVariantFactory
 
     @NonNull
     @Override
-    public LibraryVariantImpl createVariantObject(
+    public LibraryVariantBuilderImpl createVariantObject(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantApiServices variantApiServices) {
         return projectServices
                 .getObjectFactory()
                 .newInstance(
-                        LibraryVariantImpl.class,
+                        LibraryVariantBuilderImpl.class,
                         variantDslInfo,
                         componentIdentity,
                         variantApiServices);
@@ -83,7 +83,7 @@ public class LibraryVariantFactory
     @NonNull
     @Override
     public LibraryVariantPropertiesImpl createVariantPropertiesObject(
-            @NonNull LibraryVariantImpl variant,
+            @NonNull LibraryVariantBuilderImpl variant,
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,

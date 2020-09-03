@@ -29,7 +29,7 @@ import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.SigningConfig
 import com.android.build.api.dsl.TestExtension
-import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
@@ -100,7 +100,7 @@ class ModelBuilder<
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
-        VariantT : Variant,
+        VariantT : VariantBuilder,
         VariantPropertiesT : VariantProperties,
         ExtensionT : CommonExtension<
                 AndroidSourceSetT,

@@ -16,7 +16,7 @@
 
 package com.android.build.api.extension
 
-import com.android.build.api.variant.ApplicationVariant
+import com.android.build.api.variant.ApplicationVariantBuilder
 import org.gradle.api.Incubating
 
 /**
@@ -26,4 +26,4 @@ import org.gradle.api.Incubating
  * plugin.
  */
 @Incubating
-interface ApplicationAndroidComponentsExtension: AndroidComponentsExtension<ApplicationVariant>
+interface ApplicationAndroidComponentsExtension: AndroidComponentsExtension<ApplicationVariantBuilder>

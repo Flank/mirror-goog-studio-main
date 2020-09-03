@@ -22,7 +22,7 @@ import com.android.build.api.component.TestComponentProperties
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.api.variant.VariantProperties
-import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
@@ -553,7 +553,7 @@ class DependencyConfigurator(
     }
 
     /** Configure artifact transforms that require variant-specific attribute information.  */
-    fun <VariantT : VariantImpl, VariantPropertiesT : VariantPropertiesImpl>
+    fun <VariantT : VariantBuilderImpl, VariantPropertiesT : VariantPropertiesImpl>
             configureVariantTransforms(
         variants: List<ComponentInfo<VariantT, VariantPropertiesT>>,
         testComponents: List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>

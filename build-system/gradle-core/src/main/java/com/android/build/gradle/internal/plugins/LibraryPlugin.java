@@ -22,7 +22,7 @@ import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.extension.LibraryAndroidComponentsExtension;
 import com.android.build.api.extension.impl.LibraryAndroidComponentsExtensionImpl;
 import com.android.build.api.extension.impl.OperationsRegistrar;
-import com.android.build.api.variant.impl.LibraryVariantImpl;
+import com.android.build.api.variant.impl.LibraryVariantBuilderImpl;
 import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.LibraryExtension;
@@ -54,7 +54,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 public class LibraryPlugin
         extends BasePlugin<
                 LibraryAndroidComponentsExtension,
-                LibraryVariantImpl,
+                LibraryVariantBuilderImpl,
                 LibraryVariantPropertiesImpl> {
 
     @Inject
@@ -105,7 +105,7 @@ public class LibraryPlugin
     @Override
     protected LibraryAndroidComponentsExtension createComponentExtension(
             @NonNull DslServices dslServices,
-            @NonNull OperationsRegistrar<LibraryVariantImpl> operationsRegistrar) {
+            @NonNull OperationsRegistrar<LibraryVariantBuilderImpl> operationsRegistrar) {
         return project.getExtensions()
                 .create(
                         LibraryAndroidComponentsExtension.class,
@@ -141,7 +141,9 @@ public class LibraryPlugin
     @NonNull
     @Override
     protected LibraryTaskManager createTaskManager(
-            @NonNull List<ComponentInfo<LibraryVariantImpl, LibraryVariantPropertiesImpl>> variants,
+            @NonNull
+                    List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantPropertiesImpl>>
+                            variants,
             @NonNull
                     List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
                             testComponents,

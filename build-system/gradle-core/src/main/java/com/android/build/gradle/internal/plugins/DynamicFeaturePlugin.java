@@ -23,7 +23,7 @@ import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension;
 import com.android.build.api.extension.impl.DynamicFeatureAndroidComponentsExtensionImpl;
 import com.android.build.api.extension.impl.OperationsRegistrar;
-import com.android.build.api.variant.impl.DynamicFeatureVariantImpl;
+import com.android.build.api.variant.impl.DynamicFeatureVariantBuilderImpl;
 import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -55,7 +55,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 public class DynamicFeaturePlugin
         extends AbstractAppPlugin<
                 DynamicFeatureAndroidComponentsExtension,
-                DynamicFeatureVariantImpl,
+                DynamicFeatureVariantBuilderImpl,
                 DynamicFeatureVariantPropertiesImpl> {
     @Inject
     public DynamicFeaturePlugin(
@@ -126,7 +126,7 @@ public class DynamicFeaturePlugin
     @Override
     protected DynamicFeatureAndroidComponentsExtension createComponentExtension(
             @NonNull DslServices dslServices,
-            @NonNull OperationsRegistrar<DynamicFeatureVariantImpl> operationsRegistrar) {
+            @NonNull OperationsRegistrar<DynamicFeatureVariantBuilderImpl> operationsRegistrar) {
         return project.getExtensions()
                 .create(
                         DynamicFeatureAndroidComponentsExtension.class,
@@ -142,7 +142,7 @@ public class DynamicFeaturePlugin
             @NonNull
                     List<
                                     ComponentInfo<
-                                            DynamicFeatureVariantImpl,
+                                            DynamicFeatureVariantBuilderImpl,
                                             DynamicFeatureVariantPropertiesImpl>>
                             variants,
             @NonNull

@@ -35,7 +35,7 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 
-class AnalyticsEnabledApplicationVariantPropertiesTest {
+class AnalyticsEnabledApplicationVariantBuilderPropertiesTest {
     @Mock
     lateinit var delegate: ApplicationVariantProperties
 

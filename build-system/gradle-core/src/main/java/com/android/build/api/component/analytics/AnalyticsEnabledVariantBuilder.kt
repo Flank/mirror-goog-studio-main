@@ -23,17 +23,17 @@ import com.android.build.api.component.UnitTestProperties
 import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.DelayedActionExecutor
 import com.android.tools.build.gradle.internal.profile.VariantMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Action
 
-abstract class AnalyticsEnabledVariant(
-    override val delegate: Variant,
-    stats: GradleBuildVariant.Builder
+abstract class AnalyticsEnabledVariantBuilder(
+        override val delegate: VariantBuilder,
+        stats: GradleBuildVariant.Builder
 ) : AnalyticsEnabledComponent(delegate, stats),
-    Variant {
+    VariantBuilder {
 
     private val unitTestActions = DelayedActionExecutor<UnitTest>()
     private val unitTestPropertiesOperations = DelayedActionExecutor<UnitTestProperties>()

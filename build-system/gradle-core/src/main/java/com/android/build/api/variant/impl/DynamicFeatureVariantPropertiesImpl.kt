@@ -50,7 +50,7 @@ import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
-    override val variant: DynamicFeatureVariantImpl,
+    override val variant: DynamicFeatureVariantBuilderImpl,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,

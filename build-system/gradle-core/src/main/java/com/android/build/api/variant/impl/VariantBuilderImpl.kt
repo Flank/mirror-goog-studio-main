@@ -21,10 +21,10 @@ import com.android.build.api.component.AndroidTestProperties
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.UnitTestProperties
-import com.android.build.api.component.analytics.AnalyticsEnabledVariant
+import com.android.build.api.component.analytics.AnalyticsEnabledVariantBuilder
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
@@ -32,13 +32,13 @@ import com.android.build.gradle.internal.services.VariantApiServices
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Action
 
-abstract class VariantImpl(
+abstract class VariantBuilderImpl(
     variantDslInfo: VariantDslInfo,
     componentIdentity: ComponentIdentity,
     variantApiServices: VariantApiServices
 ) :
     ComponentImpl(variantDslInfo, componentIdentity, variantApiServices),
-    Variant {
+    VariantBuilder {
 
     private var _minSdkVersion= AndroidVersionImpl(
         variantDslInfo.minSdkVersion.apiLevel,
@@ -82,7 +82,7 @@ abstract class VariantImpl(
         throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
-    abstract fun createUserVisibleVariantObject(projectServices: ProjectServices, stats: GradleBuildVariant.Builder): AnalyticsEnabledVariant
+    abstract fun createUserVisibleVariantObject(projectServices: ProjectServices, stats: GradleBuildVariant.Builder): AnalyticsEnabledVariantBuilder
 
 
     override var renderscriptTargetApi: Int = -1

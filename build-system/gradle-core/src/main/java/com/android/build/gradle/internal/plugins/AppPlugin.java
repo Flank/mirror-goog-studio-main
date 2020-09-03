@@ -23,7 +23,7 @@ import com.android.build.api.dsl.ApplicationExtension;
 import com.android.build.api.extension.ApplicationAndroidComponentsExtension;
 import com.android.build.api.extension.impl.ApplicationAndroidComponentsExtensionImpl;
 import com.android.build.api.extension.impl.OperationsRegistrar;
-import com.android.build.api.variant.impl.ApplicationVariantImpl;
+import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -56,7 +56,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 public class AppPlugin
         extends AbstractAppPlugin<
                 ApplicationAndroidComponentsExtension,
-                ApplicationVariantImpl,
+                ApplicationVariantBuilderImpl,
                 ApplicationVariantPropertiesImpl> {
     @Inject
     public AppPlugin(
@@ -127,7 +127,7 @@ public class AppPlugin
     @Override
     protected ApplicationAndroidComponentsExtension createComponentExtension(
             @NonNull DslServices dslServices,
-            @NonNull OperationsRegistrar<ApplicationVariantImpl> operationsRegistrar) {
+            @NonNull OperationsRegistrar<ApplicationVariantBuilderImpl> operationsRegistrar) {
         return project.getExtensions()
                 .create(
                         ApplicationAndroidComponentsExtension.class,
@@ -141,7 +141,10 @@ public class AppPlugin
     @Override
     protected ApplicationTaskManager createTaskManager(
             @NonNull
-                    List<ComponentInfo<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>>
+                    List<
+                                    ComponentInfo<
+                                            ApplicationVariantBuilderImpl,
+                                            ApplicationVariantPropertiesImpl>>
                             variants,
             @NonNull
                     List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>

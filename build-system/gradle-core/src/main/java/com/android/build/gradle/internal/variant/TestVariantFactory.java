@@ -28,7 +28,7 @@ import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.api.dsl.TestBuildFeatures;
-import com.android.build.api.variant.impl.TestVariantImpl;
+import com.android.build.api.variant.impl.TestVariantBuilderImpl;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
@@ -61,7 +61,7 @@ import org.gradle.api.artifacts.dsl.DependencyHandler;
 
 /** Customization of {@link AbstractAppVariantFactory} for test-only projects. */
 public class TestVariantFactory
-        extends AbstractAppVariantFactory<TestVariantImpl, TestVariantPropertiesImpl> {
+        extends AbstractAppVariantFactory<TestVariantBuilderImpl, TestVariantPropertiesImpl> {
 
     public TestVariantFactory(
             @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
@@ -70,14 +70,14 @@ public class TestVariantFactory
 
     @NonNull
     @Override
-    public TestVariantImpl createVariantObject(
+    public TestVariantBuilderImpl createVariantObject(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantApiServices variantApiServices) {
         return projectServices
                 .getObjectFactory()
                 .newInstance(
-                        TestVariantImpl.class,
+                        TestVariantBuilderImpl.class,
                         variantDslInfo,
                         componentIdentity,
                         variantApiServices);
@@ -104,7 +104,7 @@ public class TestVariantFactory
     @NonNull
     @Override
     public TestVariantPropertiesImpl createVariantPropertiesObject(
-            @NonNull TestVariantImpl variant,
+            @NonNull TestVariantBuilderImpl variant,
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,

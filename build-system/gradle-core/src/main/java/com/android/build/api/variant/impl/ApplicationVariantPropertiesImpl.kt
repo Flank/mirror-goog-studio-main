@@ -48,20 +48,20 @@ import org.gradle.api.provider.Property
 import javax.inject.Inject
 
 open class ApplicationVariantPropertiesImpl @Inject constructor(
-    override val variant: ApplicationVariantImpl,
-    buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo,
-    variantDependencies: VariantDependencies,
-    variantSources: VariantSources,
-    paths: VariantPathHelper,
-    artifacts: ArtifactsImpl,
-    variantScope: VariantScope,
-    variantData: BaseVariantData,
-    variantDependencyInfo: DependenciesInfo,
-    transformManager: TransformManager,
-    internalServices: VariantPropertiesApiServices,
-    taskCreationServices: TaskCreationServices,
-    globalScope: GlobalScope
+        override val variant: ApplicationVariantBuilderImpl,
+        buildFeatureValues: BuildFeatureValues,
+        variantDslInfo: VariantDslInfo,
+        variantDependencies: VariantDependencies,
+        variantSources: VariantSources,
+        paths: VariantPathHelper,
+        artifacts: ArtifactsImpl,
+        variantScope: VariantScope,
+        variantData: BaseVariantData,
+        variantDependencyInfo: DependenciesInfo,
+        transformManager: TransformManager,
+        internalServices: VariantPropertiesApiServices,
+        taskCreationServices: TaskCreationServices,
+        globalScope: GlobalScope
 ) : VariantPropertiesImpl(
     variant,
     buildFeatureValues,

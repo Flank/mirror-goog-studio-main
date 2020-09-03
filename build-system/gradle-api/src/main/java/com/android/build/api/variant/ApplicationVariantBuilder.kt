@@ -30,7 +30,7 @@ import org.gradle.api.Incubating
  * representing the variant build flows must be created.
  */
 @Incubating
-interface ApplicationVariant : Variant {
+interface ApplicationVariantBuilder : VariantBuilder {
 
     val debuggable: Boolean
 

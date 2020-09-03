@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
-import com.android.build.api.variant.impl.ApplicationVariantImpl
+import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
@@ -44,12 +44,12 @@ import java.util.ArrayList
 import java.util.stream.Collectors
 
 class ApplicationTaskManager(
-    variants: List<ComponentInfo<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>>,
+    variants: List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantPropertiesImpl>>,
     testComponents: List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>,
     hasFlavors: Boolean,
     globalScope: GlobalScope,
     extension: BaseExtension
-) : AbstractAppTaskManager<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>(
+) : AbstractAppTaskManager<ApplicationVariantBuilderImpl, ApplicationVariantPropertiesImpl>(
     variants,
     testComponents,
     hasFlavors,
@@ -58,8 +58,8 @@ class ApplicationTaskManager(
 ) {
 
     override fun doCreateTasksForVariant(
-        variant: ComponentInfo<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>,
-        allVariants: MutableList<ComponentInfo<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>>
+        variant: ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantPropertiesImpl>,
+        allVariants: MutableList<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantPropertiesImpl>>
     ) {
         createCommonTasks(variant, allVariants)
 
@@ -242,7 +242,7 @@ class ApplicationTaskManager(
         }
     }
 
-    private fun createDynamicBundleTask(variant: ComponentInfo<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>) {
+    private fun createDynamicBundleTask(variant: ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantPropertiesImpl>) {
         val variantProperties = variant.properties
 
         // If namespaced resources are enabled, LINKED_RES_FOR_BUNDLE is not generated,

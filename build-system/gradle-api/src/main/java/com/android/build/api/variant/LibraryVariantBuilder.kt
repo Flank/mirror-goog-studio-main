@@ -17,7 +17,8 @@ package com.android.build.api.variant
 
 import org.gradle.api.Incubating
 
+/**
+ * [VariantBuilder] type for library projects
+ */
 @Incubating
-interface DynamicFeatureVariant : Variant {
-
-}
+interface LibraryVariantBuilder : VariantBuilder

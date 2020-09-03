@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.api.variant.impl.AndroidVersionImpl
-import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
@@ -125,10 +125,10 @@ open class BasicModuleModelMock {
         throwUnmocked
     )
 
-    val component: VariantImpl = mock(
-        VariantImpl::class.java,
+    val component: VariantBuilderImpl = mock(
+            VariantBuilderImpl::class.java,
         throwUnmocked
-    ) as VariantImpl
+    ) as VariantBuilderImpl
 
     val componentProperties: VariantPropertiesImpl = mock(
         VariantPropertiesImpl::class.java,
@@ -236,7 +236,7 @@ open class BasicModuleModelMock {
             throwUnmocked
         )
         val variantImpl = mock(
-            VariantImpl::class.java,
+            VariantBuilderImpl::class.java,
             throwUnmocked
         )
         val prefabArtifactCollection = mock(ArtifactCollection::class.java, throwUnmocked)

@@ -17,9 +17,9 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariant
-import com.android.build.api.component.analytics.AnalyticsEnabledVariant
-import com.android.build.api.variant.LibraryVariant
+import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariantBuilder
+import com.android.build.api.component.analytics.AnalyticsEnabledVariantBuilder
+import com.android.build.api.variant.LibraryVariantBuilder
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
@@ -27,24 +27,24 @@ import com.android.build.gradle.internal.services.VariantApiServices
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
-open class LibraryVariantImpl @Inject constructor(
+open class LibraryVariantBuilderImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity,
     variantApiServices: VariantApiServices
-) : VariantImpl(
+) : VariantBuilderImpl(
     variantDslInfo,
     variantConfiguration,
     variantApiServices
-), LibraryVariant {
+), LibraryVariantBuilder {
 
     override fun createUserVisibleVariantObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledVariant =
+    ): AnalyticsEnabledVariantBuilder =
         projectServices.objectFactory.newInstance(
-            AnalyticsEnabledLibraryVariant::class.java,
+            AnalyticsEnabledLibraryVariantBuilder::class.java,
             this,
             stats
-        ) as AnalyticsEnabledVariant
+        ) as AnalyticsEnabledVariantBuilder
 
 }
