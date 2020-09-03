@@ -139,11 +139,21 @@ std::unique_ptr<proto::InstallerRequest> GetRequestFromFD(int input_fd) {
   return ptr;
 }
 
+void CheckVersion(const std::string& version, Workspace& workspace) {
+  // Verify that this program is the version the caller expected.
+  if (version == GetVersion()) {
+    return;
+  }
+
+  // Wrong version!
+  std::string message =
+      "Version mismatch. Requested:"_s + version + " but have " + GetVersion();
+  Fail(proto::InstallerResponse::ERROR_WRONG_VERSION, workspace, message);
+  exit(EXIT_SUCCESS);
+}
+
 // Parse commandline parameters and impact workspace accordindly.
-// If a command was requested (e.g: dump packageName), it is converted
-// to a protobuffer InstallerRequest. Otherwise, returns nullptr.
-std::unique_ptr<proto::InstallerRequest> Init(int argc, char** argv,
-                                              Workspace* workspace) {
+void Init(int argc, char** argv, Workspace* workspace) {
   // Check and parse parameters
   Parameters parameters = ParseArgs(argc, argv);
 
@@ -160,18 +170,9 @@ std::unique_ptr<proto::InstallerRequest> Init(int argc, char** argv,
 
   workspace->Init();
 
-  if (parameters.command_name == kNoValue) {
-    return nullptr;
+  if (parameters.version != kNoValue) {
+    CheckVersion(parameters.version, *workspace);
   }
-
-  // Build a request just so we are compatible with old installer where
-  // version is passed as a command-line parameter to reply with an
-  // ERROR_WRONG_VERSION.
-  proto::InstallerRequest* p = new proto::InstallerRequest();
-  std::unique_ptr<proto::InstallerRequest> request(p);
-  request->set_version(parameters.version);
-  request->set_command_name(parameters.command_name);
-  return request;
 }
 
 void ProcessRequest(std::unique_ptr<proto::InstallerRequest> request,
@@ -182,15 +183,8 @@ void ProcessRequest(std::unique_ptr<proto::InstallerRequest> request,
   if (!daemon_mode) {
     running = false;
   }
-  
-  // Verify that this program is the version the caller expected.
-  if (request->version() != GetVersion()) {
-    std::string message = "Version mismatch. Requested:"_s +
-                          request->version() + " but have " + GetVersion();
-    Fail(proto::InstallerResponse::ERROR_WRONG_VERSION, workspace, message);
-    running = false;
-    return;
-  }
+
+  CheckVersion(request->version(), workspace);
 
   // Retrieve Command to be invoked.
   auto task = GetCommand(request->command_name().c_str(), workspace);
@@ -224,11 +218,7 @@ int main(int argc, char** argv) {
   ExecutorImpl executor;
   Workspace workspace(GetVersion(), &executor);
 
-  auto request = Init(argc, argv, &workspace);
-
-  if (request != nullptr) {
-    ProcessRequest(std::move(request), workspace);
-  }
+  Init(argc, argv, &workspace);
 
   while (running) {
     // Retrieve request from stdin.
