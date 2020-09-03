@@ -16,10 +16,9 @@
 
 package com.android.build.gradle.internal.lint
 
+import com.android.build.gradle.internal.ide.dependencies.ArtifactHandler
 import com.android.build.gradle.internal.ide.dependencies.DependencyModelBuilder
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact
-import com.android.builder.model.MavenCoordinates
-import com.android.ide.common.caching.CreatingCache
 import com.android.tools.lint.model.DefaultLintModelDependencies
 import com.android.tools.lint.model.DefaultLintModelDependency
 import com.android.tools.lint.model.DefaultLintModelDependencyGraph
@@ -33,11 +32,8 @@ import org.gradle.api.artifacts.component.ComponentIdentifier
 import java.io.File
 
 class LintDependencyModelBuilder(
-    localJarCache: CreatingCache<File, List<File>>,
-    mavenCoordinatesCache: CreatingCache<ResolvedArtifact, MavenCoordinates>
+    private val artifactHandler: ArtifactHandler<LintModelLibrary>
 ) : DependencyModelBuilder<LintModelDependencies> {
-
-    private val artifactHandler = LintModelArtifactHandler(localJarCache, mavenCoordinatesCache)
 
     private val libraryMap = mutableMapOf<String, LintModelLibrary>()
     private val libraryResolver = DefaultLintModelLibraryResolver(libraryMap)
