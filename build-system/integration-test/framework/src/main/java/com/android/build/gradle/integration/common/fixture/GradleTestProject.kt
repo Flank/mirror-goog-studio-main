@@ -106,6 +106,7 @@ class GradleTestProject @JvmOverloads internal constructor(
     private val withSdk: Boolean,
     private val withAndroidGradlePlugin: Boolean,
     private val withKotlinGradlePlugin: Boolean,
+    private val withPluginManagementBlock: Boolean,
     private val withIncludedBuilds: List<String>,
     private var mutableProjectLocation: ProjectLocation? = null,
     private val repoDirectories: List<Path>?,
@@ -416,6 +417,7 @@ apply from: "../commonLocalRepo.gradle"
             withSdk = rootProject.withSdk,
             withAndroidGradlePlugin = rootProject.withAndroidGradlePlugin,
             withKotlinGradlePlugin = rootProject.withKotlinGradlePlugin,
+            withPluginManagementBlock = rootProject.withPluginManagementBlock,
             withIncludedBuilds = ImmutableList.of(),
             mutableProjectLocation = rootProject.location.createSubProjectLocation(subProject),
             repoDirectories = rootProject.repoDirectories,
@@ -1354,19 +1356,42 @@ allprojects { proj ->
     }
 
     private fun createSettingsFile() {
+        var settingsContent = if (settingsFile.exists()) settingsFile.readText() else ""
+
+        if (withPluginManagementBlock) {
+            settingsContent = """
+            pluginManagement { t ->
+                apply from: "../commonLocalRepo.gradle", to: t
+
+                resolutionStrategy {
+                    eachPlugin {
+                        if(requested.id.namespace == "com.android") {
+                            useModule("com.android.tools.build:gradle:$ANDROID_GRADLE_PLUGIN_VERSION")
+                        }
+                    }
+                }
+            }
+
+        """.trimIndent() + settingsContent
+        }
+
         if (gradleBuildCacheDirectory != null) {
             val absoluteFile: File = if (gradleBuildCacheDirectory.isAbsolute)
                 gradleBuildCacheDirectory
             else
                 File(projectDir, gradleBuildCacheDirectory.path)
-            TestFileUtils.appendToFile(
-                settingsFile,
-                """buildCache {
+            settingsContent +=
+                """
+buildCache {
     local {
         directory = "${absoluteFile.path.replace("\\", "\\\\")}"
     }
-}"""
-            )
+}
+"""
+        }
+
+        if (settingsContent.isNotEmpty()) {
+            settingsFile.writeText(settingsContent)
         }
     }
 
