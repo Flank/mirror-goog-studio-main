@@ -204,6 +204,12 @@ enum class VariantTypeImpl(
         artifactName = AndroidProject.ARTIFACT_MAIN,
         artifactType = ArtifactMetaData.TYPE_ANDROID,
         analyticsVariantType = GradleBuildVariant.VariantType.TEST_APK),
+    JAVA_LIBRARY(
+        prefix = "",
+        suffix = "",
+        artifactName = AndroidProject.ARTIFACT_MAIN,
+        artifactType = ArtifactMetaData.TYPE_JAVA,
+        analyticsVariantType = GradleBuildVariant.VariantType.JAVA_LIBRARY),
     ANDROID_TEST(
         isApk = true,
         isForTesting = true,
