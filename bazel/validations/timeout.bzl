@@ -448,7 +448,6 @@ APPROVED_ETERNAL_TESTS = [
     "//tools/adt/idea/android:intellij.android.core.tests_tests__gradle.project.sync.snapshots",
     "//tools/adt/idea/android:intellij.android.core.tests_tests__gradle.project.sync",
     "//tools/adt/idea/android:intellij.android.core.tests_tests__gradle",
-    "//tools/adt/idea/android:intellij.android.core.tests_tests__AndroidLintCustomCheckTest",
 ]
 
 FAILURE_MESSAGE = """Test target {} has timeout set to eternal.
