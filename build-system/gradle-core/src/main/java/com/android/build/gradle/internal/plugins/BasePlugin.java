@@ -135,15 +135,15 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 /** Base class for all Android plugins */
 public abstract class BasePlugin<
                 AndroidComponentsT extends AndroidComponentsExtension,
-                VariantT extends VariantBuilderImpl,
-                VariantPropertiesT extends VariantImpl>
+                VariantBuilderT extends VariantBuilderImpl,
+                VariantT extends VariantImpl>
         implements Plugin<Project>, LintModelModuleLoaderProvider {
 
     private BaseExtension extension;
-    private AndroidComponentsExtension<VariantT> androidComponentsExtension;
+    private AndroidComponentsExtension<VariantBuilderT> androidComponentsExtension;
     private final OperationsRegistrar<VariantT> operationsRegistrar = new OperationsRegistrar<>();
 
-    private VariantManager<VariantT, VariantPropertiesT> variantManager;
+    private VariantManager<VariantBuilderT, VariantT> variantManager;
     private LegacyVariantInputManager variantInputModel;
 
     protected Project project;
@@ -153,7 +153,7 @@ public abstract class BasePlugin<
     protected GlobalScope globalScope;
     protected SyncIssueReporterImpl syncIssueReporter;
 
-    private VariantFactory<VariantT, VariantPropertiesT> variantFactory;
+    private VariantFactory<VariantBuilderT, VariantT> variantFactory;
 
     @NonNull private final ToolingModelBuilderRegistry registry;
     @NonNull private final LintModelModuleLoader lintModuleLoader;
@@ -203,12 +203,12 @@ public abstract class BasePlugin<
     protected abstract GradleBuildProject.PluginType getAnalyticsPluginType();
 
     @NonNull
-    protected abstract VariantFactory<VariantT, VariantPropertiesT> createVariantFactory(
+    protected abstract VariantFactory<VariantBuilderT, VariantT> createVariantFactory(
             @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope);
 
     @NonNull
-    protected abstract TaskManager<VariantT, VariantPropertiesT> createTaskManager(
-            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> variants,
+    protected abstract TaskManager<VariantBuilderT, VariantT> createTaskManager(
+            @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull
                     List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
                             testComponents,
@@ -222,7 +222,7 @@ public abstract class BasePlugin<
     protected abstract ProjectType getProjectTypeV2();
 
     @VisibleForTesting
-    public VariantManager<VariantT, VariantPropertiesT> getVariantManager() {
+    public VariantManager<VariantBuilderT, VariantT> getVariantManager() {
         return variantManager;
     }
 
@@ -645,10 +645,10 @@ public abstract class BasePlugin<
 
         variantManager.createVariants(buildFeatureValues);
 
-        List<ComponentInfo<VariantT, VariantPropertiesT>> variants =
+        List<ComponentInfo<VariantBuilderT, VariantT>> variants =
                 variantManager.getMainComponents();
 
-        TaskManager<VariantT, VariantPropertiesT> taskManager =
+        TaskManager<VariantBuilderT, VariantT> taskManager =
                 createTaskManager(
                         variants,
                         variantManager.getTestComponents(),
@@ -669,7 +669,7 @@ public abstract class BasePlugin<
         ApiObjectFactory apiObjectFactory =
                 new ApiObjectFactory(extension, variantFactory, globalScope);
 
-        for (ComponentInfo<VariantT, VariantPropertiesT> variant : variants) {
+        for (ComponentInfo<VariantBuilderT, VariantT> variant : variants) {
             apiObjectFactory.create(variant.getProperties());
         }
 
@@ -685,13 +685,13 @@ public abstract class BasePlugin<
 
         // now publish all variant artifacts for non test variants since
         // tests don't publish anything.
-        for (ComponentInfo<VariantT, VariantPropertiesT> component : variants) {
+        for (ComponentInfo<VariantBuilderT, VariantT> component : variants) {
             component.getProperties().publishBuildArtifacts();
         }
 
         checkSplitConfiguration();
         variantManager.setHasCreatedTasks(true);
-        for (ComponentInfo<VariantT, VariantPropertiesT> variant : variants) {
+        for (ComponentInfo<VariantBuilderT, VariantT> variant : variants) {
             variant.getProperties().getArtifacts().ensureAllOperationsAreSatisfied();
         }
         // notify our properties that configuration is over for us.

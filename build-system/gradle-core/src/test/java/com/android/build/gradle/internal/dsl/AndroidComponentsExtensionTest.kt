@@ -43,7 +43,7 @@ class AndroidComponentsExtensionTest {
     fun testApplicationModuleNoSelection() {
         val operationsRegistrar = OperationsRegistrar<ApplicationVariantBuilder>()
         @Suppress("UNCHECKED_CAST")
-        testNoSelection(
+        testNoSelection<ApplicationVariantBuilder>(
                 ApplicationAndroidComponentsExtensionImpl(
                         dslServices,
                         operationsRegistrar
@@ -125,25 +125,25 @@ class AndroidComponentsExtensionTest {
                 TestVariantBuilder::class.java)
     }
 
-    private fun  <VariantT: VariantBuilder> testAllSelection(
-            extension: AndroidComponentsExtensionImpl<VariantT>,
-            operationsRegistrar: OperationsRegistrar<VariantT>,
-            variantType: Class<VariantT>) {
-        val visitedVariants = mutableListOf<VariantT>()
+    private fun  <VariantBuilderT: VariantBuilder> testAllSelection(
+            extension: AndroidComponentsExtensionImpl<VariantBuilderT>,
+            operationsRegistrar: OperationsRegistrar<VariantBuilderT>,
+            variantType: Class<VariantBuilderT>) {
+        val visitedVariants = mutableListOf<VariantBuilderT>()
         extension.beforeVariants(extension.selector().all()) {
-            visitedVariants.add(this)
+            visitedVariants.add(it)
         }
         @Suppress("UNCHECKED_CAST")
         operationsRegistrar.executeOperations(Mockito.mock(variantType))
         assertThat(visitedVariants).hasSize(1)
     }
 
-    private fun <VariantT: VariantBuilder> testNoSelection(
-            extension: AndroidComponentsExtensionImpl<VariantT>,
-            operationsRegistrar: OperationsRegistrar<VariantT>,
-            variantType: Class<VariantT>) {
-        val visitedVariants = mutableListOf<VariantT>()
-        extension.beforeVariants { visitedVariants.add(this)}
+    private fun <VariantBuilderT: VariantBuilder> testNoSelection(
+            extension: AndroidComponentsExtensionImpl<VariantBuilderT>,
+            operationsRegistrar: OperationsRegistrar<VariantBuilderT>,
+            variantType: Class<VariantBuilderT>) {
+        val visitedVariants = mutableListOf<VariantBuilderT>()
+        extension.beforeVariants { variant -> visitedVariants.add(variant)}
         operationsRegistrar.executeOperations(Mockito.mock(variantType))
         assertThat(visitedVariants).hasSize(1)
     }

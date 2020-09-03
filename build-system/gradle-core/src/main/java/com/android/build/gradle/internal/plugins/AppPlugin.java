@@ -127,7 +127,7 @@ public class AppPlugin
     @Override
     protected ApplicationAndroidComponentsExtension createComponentExtension(
             @NonNull DslServices dslServices,
-            @NonNull OperationsRegistrar<ApplicationVariantBuilderImpl> operationsRegistrar) {
+            @NonNull OperationsRegistrar<ApplicationVariantImpl> operationsRegistrar) {
         return project.getExtensions()
                 .create(
                         ApplicationAndroidComponentsExtension.class,

@@ -48,8 +48,8 @@ import com.android.builder.errors.IssueReporter.Type;
  * <p>This can be an app project, or a test-only project, though the default behavior is app.
  */
 public abstract class AbstractAppVariantFactory<
-                VariantT extends VariantBuilderImpl, VariantPropertiesT extends VariantImpl>
-        extends BaseVariantFactory<VariantT, VariantPropertiesT> {
+                VariantBuilderT extends VariantBuilderImpl, VariantT extends VariantImpl>
+        extends BaseVariantFactory<VariantBuilderT, VariantT> {
 
     public AbstractAppVariantFactory(
             @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {

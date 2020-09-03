@@ -23,7 +23,7 @@ import kotlin.test.assertNotNull
 /**
  * Tests related to accessing [com.android.build.api.variant.VariantProperties]
  */
-class VariantPropertiesTest: VariantApiBaseTest(
+class VariantTest: VariantApiBaseTest(
     TestType.BuildSrc
 ) {
     @Test
@@ -132,7 +132,7 @@ class VariantPropertiesTest: VariantApiBaseTest(
                             mainOutput.versionName.set(versionNameTask.map { it.outputFile.get().asFile.readText() })
 
                             // finally add the verifier task that will check that the merged manifest
-                            // does contain the version code and version name from the tasks added 
+                            // does contain the version code and version name from the tasks added
                             // above.
                             project.tasks.register("verifierFor${'$'}{name}", VerifyManifestTask::class.java) {
                                 it.apkFolder.set(artifacts.get(ArtifactType.APK))

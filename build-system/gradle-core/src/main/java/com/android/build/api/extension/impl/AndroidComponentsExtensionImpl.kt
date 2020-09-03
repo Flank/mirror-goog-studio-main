@@ -26,7 +26,7 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: Component>(
         private val operations: OperationsRegistrar<VariantBuilderT>
 ): AndroidComponentsExtension<VariantBuilderT> {
 
-    override fun beforeVariants(selector: VariantSelector, callback: VariantBuilderT.() -> Unit) {
+    override fun beforeVariants(selector: VariantSelector, callback: (VariantBuilderT) -> Unit) {
         operations.addOperation(selector, callback)
     }
 

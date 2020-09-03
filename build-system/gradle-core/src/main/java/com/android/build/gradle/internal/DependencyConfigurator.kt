@@ -551,9 +551,9 @@ class DependencyConfigurator(
     }
 
     /** Configure artifact transforms that require variant-specific attribute information.  */
-    fun <VariantT : VariantBuilderImpl, VariantPropertiesT : VariantImpl>
+    fun <VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl>
             configureVariantTransforms(
-        variants: List<ComponentInfo<VariantT, VariantPropertiesT>>,
+        variants: List<ComponentInfo<VariantBuilderT, VariantT>>,
         testComponents: List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
     ): DependencyConfigurator {
         val allComponents: List<ComponentCreationConfig> =

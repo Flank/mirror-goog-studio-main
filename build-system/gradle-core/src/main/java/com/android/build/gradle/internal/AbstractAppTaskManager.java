@@ -71,11 +71,11 @@ import org.gradle.api.tasks.compile.JavaCompile;
 
 /** TaskManager for creating tasks in an Android application project. */
 public abstract class AbstractAppTaskManager<
-                VariantT extends VariantBuilderImpl, VariantPropertiesT extends VariantImpl>
-        extends TaskManager<VariantT, VariantPropertiesT> {
+                VariantBuilderT extends VariantBuilderImpl, VariantT extends VariantImpl>
+        extends TaskManager<VariantBuilderT, VariantT> {
 
     protected AbstractAppTaskManager(
-            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> variants,
+            @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull
                     List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
                             testComponents,
@@ -86,9 +86,9 @@ public abstract class AbstractAppTaskManager<
     }
 
     protected void createCommonTasks(
-            @NonNull ComponentInfo<VariantT, VariantPropertiesT> variant,
-            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> allComponentsWithLint) {
-        VariantPropertiesT appVariantProperties = variant.getProperties();
+            @NonNull ComponentInfo<VariantBuilderT, VariantT> variant,
+            @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> allComponentsWithLint) {
+        VariantT appVariantProperties = variant.getProperties();
         ApkCreationConfig apkCreationConfig = (ApkCreationConfig) appVariantProperties;
 
         createAnchorTasks(appVariantProperties);

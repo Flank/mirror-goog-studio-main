@@ -105,7 +105,7 @@ import org.gradle.api.model.ObjectFactory;
 
 /** Class to create, manage variants. */
 public class VariantManager<
-        VariantT extends VariantBuilderImpl, VariantPropertiesT extends VariantImpl> {
+        VariantBuilderT extends VariantBuilderImpl, VariantT extends VariantImpl> {
 
     @NonNull private final Project project;
     @NonNull private final ProjectOptions projectOptions;
@@ -115,7 +115,7 @@ public class VariantManager<
     private final OperationsRegistrar<com.android.build.api.variant.VariantBuilder>
             operationsRegistrar;
 
-    @NonNull private final VariantFactory<VariantT, VariantPropertiesT> variantFactory;
+    @NonNull private final VariantFactory<VariantBuilderT, VariantT> variantFactory;
 
     @NonNull
     private final VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
@@ -129,7 +129,7 @@ public class VariantManager<
     @NonNull private final VariantFilter variantFilter;
 
     @NonNull
-    private final List<ComponentInfo<VariantT, VariantPropertiesT>> variants = Lists.newArrayList();
+    private final List<ComponentInfo<VariantBuilderT, VariantT>> variants = Lists.newArrayList();
 
     @NonNull
     private final List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
@@ -155,7 +155,7 @@ public class VariantManager<
             @NonNull
                     OperationsRegistrar<com.android.build.api.variant.VariantBuilder>
                             operationsRegistrar,
-            @NonNull VariantFactory<VariantT, VariantPropertiesT> variantFactory,
+            @NonNull VariantFactory<VariantBuilderT, VariantT> variantFactory,
             @NonNull VariantInputModel variantInputModel,
             @NonNull ProjectServices projectServices) {
         this.globalScope = globalScope;
@@ -181,7 +181,7 @@ public class VariantManager<
      * @see #createVariants(BuildFeatureValues)
      */
     @NonNull
-    public List<ComponentInfo<VariantT, VariantPropertiesT>> getMainComponents() {
+    public List<ComponentInfo<VariantBuilderT, VariantT>> getMainComponents() {
         return variants;
     }
 
@@ -287,7 +287,7 @@ public class VariantManager<
     }
 
     @Nullable
-    private ComponentInfo<VariantT, VariantPropertiesT> createVariant(
+    private ComponentInfo<VariantBuilderT, VariantT> createVariant(
             @NonNull String projectPath,
             @NonNull DimensionCombination dimensionCombination,
             @NonNull BuildTypeData<BuildType> buildTypeData,
@@ -333,7 +333,7 @@ public class VariantManager<
 
         // create the Variant object so that we can run the action which may interrupt the creation
         // (in case of enabled = false)
-        VariantT variant =
+        VariantBuilderT variant =
                 variantFactory.createVariantObject(
                         componentIdentity, variantDslInfo, variantApiServices);
 
@@ -456,7 +456,7 @@ public class VariantManager<
                         taskContainer);
 
         // then the new VariantProperties which will contain the 2 old objects.
-        VariantPropertiesT variantProperties =
+        VariantT variantProperties =
                 variantFactory.createVariantPropertiesObject(
                         variant,
                         componentIdentity,
@@ -518,7 +518,7 @@ public class VariantManager<
             @NonNull DimensionCombination dimensionCombination,
             @NonNull BuildTypeData<BuildType> buildTypeData,
             @NonNull List<ProductFlavorData<ProductFlavor>> productFlavorDataList,
-            @NonNull ComponentInfo<VariantT, VariantPropertiesT> testedComponentInfo,
+            @NonNull ComponentInfo<VariantBuilderT, VariantT> testedComponentInfo,
             @NonNull VariantType variantType) {
 
         // handle test variant
@@ -833,7 +833,7 @@ public class VariantManager<
 
         if (!ignore) {
             // create the prod variant
-            ComponentInfo<VariantT, VariantPropertiesT> variantInfo =
+            ComponentInfo<VariantBuilderT, VariantT> variantInfo =
                     createVariant(
                             project.getPath(),
                             dimensionCombination,
@@ -844,7 +844,7 @@ public class VariantManager<
             if (variantInfo != null) {
                 addVariant(variantInfo);
 
-                VariantPropertiesT variantProperties = variantInfo.getProperties();
+                VariantT variantProperties = variantInfo.getProperties();
 
                 VariantDslInfo variantDslInfo = variantProperties.getVariantDslInfo();
                 VariantScope variantScope = variantProperties.getVariantScope();
@@ -940,7 +940,7 @@ public class VariantManager<
         }
     }
 
-    private void addVariant(@NonNull ComponentInfo<VariantT, VariantPropertiesT> variant) {
+    private void addVariant(@NonNull ComponentInfo<VariantBuilderT, VariantT> variant) {
         variants.add(variant);
     }
 

@@ -58,8 +58,8 @@ import org.gradle.api.Project;
 
 /** Common superclass for all {@link VariantFactory} implementations. */
 public abstract class BaseVariantFactory<
-                VariantT extends VariantBuilderImpl, VariantPropertiesT extends VariantImpl>
-        implements VariantFactory<VariantT, VariantPropertiesT> {
+                VariantBuilderT extends VariantBuilderImpl, VariantT extends VariantImpl>
+        implements VariantFactory<VariantBuilderT, VariantT> {
 
     private static final String ANDROID_APT_PLUGIN_NAME = "com.neenbedankt.android-apt";
 

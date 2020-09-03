@@ -270,7 +270,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 
 /** Manages tasks creation. */
 public abstract class TaskManager<
-        VariantT extends VariantBuilderImpl, VariantPropertiesT extends VariantImpl> {
+        VariantBuilderT extends VariantBuilderImpl, VariantT extends VariantImpl> {
     private static final String MULTIDEX_VERSION = "1.0.2";
 
     private static final String COM_ANDROID_SUPPORT_MULTIDEX =
@@ -317,7 +317,7 @@ public abstract class TaskManager<
 
     @NonNull protected final Project project;
     @NonNull protected final BaseExtension extension;
-    @NonNull private final List<ComponentInfo<VariantT, VariantPropertiesT>> variants;
+    @NonNull private final List<ComponentInfo<VariantBuilderT, VariantT>> variants;
 
     @NonNull
     private final List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
@@ -327,7 +327,7 @@ public abstract class TaskManager<
     @NonNull protected final GlobalScope globalScope;
     @NonNull private final Logger logger;
     @NonNull protected final TaskFactory taskFactory;
-    @NonNull protected final ImmutableList<VariantPropertiesT> variantPropertiesList;
+    @NonNull protected final ImmutableList<VariantT> variantPropertiesList;
     @NonNull private final ImmutableList<TestComponentPropertiesImpl> testComponentPropertiesList;
     @NonNull private final ImmutableList<ComponentCreationConfig> allPropertiesList;
 
@@ -341,7 +341,7 @@ public abstract class TaskManager<
      * @param extension the extension
      */
     public TaskManager(
-            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> variants,
+            @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull
                     List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
                             testComponents,
@@ -397,7 +397,7 @@ public abstract class TaskManager<
         createTopLevelTestTasks();
 
         // Create tasks for all variants (main and tests)
-        for (ComponentInfo<VariantT, VariantPropertiesT> variant : variants) {
+        for (ComponentInfo<VariantBuilderT, VariantT> variant : variants) {
             createTasksForVariant(variant, variants);
         }
         for (ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl> testComponent :
@@ -442,9 +442,9 @@ public abstract class TaskManager<
      * <p>This creates tasks common to all variant types.
      */
     private void createTasksForVariant(
-            @NonNull ComponentInfo<VariantT, VariantPropertiesT> variant,
-            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> variants) {
-        final VariantPropertiesT variantProperties = variant.getProperties();
+            @NonNull ComponentInfo<VariantBuilderT, VariantT> variant,
+            @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants) {
+        final VariantT variantProperties = variant.getProperties();
 
         final VariantType variantType = variantProperties.getVariantType();
 
@@ -490,15 +490,14 @@ public abstract class TaskManager<
     }
 
     /**
-     * Entry point for each specialized TaskManager to create the tasks for a given
-     * VariantPropertiesT
+     * Entry point for each specialized TaskManager to create the tasks for a given VariantT
      *
      * @param variant the variant for which to create the tasks
      * @param allVariants all the other variants. This is needed for lint.
      */
     protected abstract void doCreateTasksForVariant(
-            @NonNull ComponentInfo<VariantT, VariantPropertiesT> variant,
-            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> allVariants);
+            @NonNull ComponentInfo<VariantBuilderT, VariantT> variant,
+            @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> allVariants);
 
     /** Create tasks for the specified variant. */
     private void createTasksForTest(
@@ -1525,7 +1524,7 @@ public abstract class TaskManager<
     }
 
     public void createExternalNativeBuildJsonGenerators(
-            @NonNull VariantT variant, @NonNull VariantPropertiesT variantProperties) {
+            @NonNull VariantBuilderT variant, @NonNull VariantT variantProperties) {
         CxxConfigurationModel configurationModel =
                 tryCreateCxxConfigurationModel(variant, variantProperties, false);
 
@@ -1537,7 +1536,7 @@ public abstract class TaskManager<
     }
 
     public void createExternalNativeBuildTasks(
-            @NonNull VariantT component, @NonNull VariantImpl componentProperties) {
+            @NonNull VariantBuilderT component, @NonNull VariantImpl componentProperties) {
         final MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
         CxxConfigurationModel configurationModel = taskContainer.getCxxConfigurationModel();
         if (configurationModel == null) {
@@ -1805,8 +1804,8 @@ public abstract class TaskManager<
      * which runs on all variants.
      */
     public void createLintTasks(
-            @NonNull VariantPropertiesT variantProperties,
-            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> allVariants) {
+            @NonNull VariantT variantProperties,
+            @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> allVariants) {
         taskFactory.register(
                 new LintPerVariantTask.CreationAction(
                         variantProperties,
@@ -1824,8 +1823,8 @@ public abstract class TaskManager<
     }
 
     public void maybeCreateLintVitalTask(
-            @NonNull VariantPropertiesT variant,
-            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> allVariants) {
+            @NonNull VariantT variant,
+            @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> allVariants) {
         if (variant.getVariantDslInfo().isDebuggable()
                 || !extension.getLintOptions().isCheckReleaseBuilds()) {
             return;
@@ -2988,7 +2987,7 @@ public abstract class TaskManager<
 
     protected void createDependencyAnalyzerTask() {
 
-        for (VariantPropertiesT variant : variantPropertiesList) {
+        for (VariantT variant : variantPropertiesList) {
             taskFactory.register(new AnalyzeDependenciesTask.CreationAction(variant));
         }
 

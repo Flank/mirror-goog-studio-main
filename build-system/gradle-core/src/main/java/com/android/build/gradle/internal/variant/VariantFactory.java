@@ -59,10 +59,10 @@ import org.gradle.api.Project;
  * provides variant type (app, lib) specific implementation.
  */
 public interface VariantFactory<
-        VariantT extends VariantBuilderImpl, VariantPropertiesT extends VariantImpl> {
+        VariantBuilderT extends VariantBuilderImpl, VariantT extends VariantImpl> {
 
     @NonNull
-    VariantT createVariantObject(
+    VariantBuilderT createVariantObject(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantApiServices variantApiServices);
@@ -80,8 +80,8 @@ public interface VariantFactory<
             @NonNull VariantApiServices variantApiServices);
 
     @NonNull
-    VariantPropertiesT createVariantPropertiesObject(
-            @NonNull VariantT variant,
+    VariantT createVariantPropertiesObject(
+            @NonNull VariantBuilderT variant,
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,

@@ -100,8 +100,8 @@ class ModelBuilder<
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
-        VariantT : VariantBuilder,
-        VariantPropertiesT : Variant,
+        VariantBuilderT : VariantBuilder,
+        VariantT : Variant,
         ExtensionT : CommonExtension<
                 AndroidSourceSetT,
                 BuildFeaturesT,
@@ -109,8 +109,8 @@ class ModelBuilder<
                 DefaultConfigT,
                 ProductFlavorT,
                 SigningConfigT,
-                VariantT,
-                VariantPropertiesT>>(
+                VariantBuilderT,
+                VariantT>>(
     private val globalScope: GlobalScope,
     private val variantModel: VariantModel,
     private val extension: ExtensionT,

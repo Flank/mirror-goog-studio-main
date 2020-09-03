@@ -41,8 +41,8 @@ interface InternalCommonExtension<
         BuildTypeT : com.android.build.api.dsl.BuildType,
         DefaultConfigT : com.android.build.api.dsl.DefaultConfig,
         ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
-        VariantT : VariantBuilder,
-        VariantPropertiesT : Variant> :
+        VariantBuilderT : VariantBuilder,
+        VariantT : Variant> :
     CommonExtension<
         AndroidSourceSet,
         BuildFeaturesT,
@@ -50,8 +50,8 @@ interface InternalCommonExtension<
         DefaultConfigT,
         ProductFlavorT,
         SigningConfig,
-        VariantT,
-        VariantPropertiesT> {
+        VariantBuilderT,
+        VariantT> {
 
     override val aaptOptions: AaptOptionsImpl
 

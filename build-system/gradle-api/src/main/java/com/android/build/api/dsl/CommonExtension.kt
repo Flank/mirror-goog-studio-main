@@ -37,8 +37,8 @@ interface CommonExtension<
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
-        VariantT : VariantBuilder,
-        VariantPropertiesT : Variant> {
+        VariantBuilderT : VariantBuilder,
+        VariantT : Variant> {
     // TODO(b/140406102)
 
     /**
@@ -360,48 +360,44 @@ interface CommonExtension<
     fun testOptions(action: TestOptions.() -> Unit)
 
     /**
-     * Adds an [Action] to be performed on all [VariantT] objects associated with this module
+     * Adds an [Action] to be performed on all [VariantBuilderT] objects associated with this module
      */
-    fun onVariants(action: Action<VariantT>)
+    fun onVariants(action: Action<VariantBuilderT>)
 
     /**
-     * Adds a lambda function to be performed on all [VariantT] objects associated with this module
+     * Adds a lambda function to be performed on all [VariantBuilderT] objects associated with this module
      */
-    fun onVariants(action: VariantT.() -> Unit)
+    fun onVariants(action: VariantBuilderT.() -> Unit)
+
+    /**
+     * A registrar to apply actions on subsets of [VariantBuilderT] via filters.
+     *
+     * @return a [GenericFilteredComponentActionRegistrar] of [VariantBuilderT]
+     */
+    val onVariants: GenericFilteredComponentActionRegistrar<VariantBuilderT>
+
+    /**
+     * Adds an [Action] to be performed on all [VariantT] objects associated with this
+     * module
+     *
+     * @param action a lambda taking a [VariantBuilderT] as a parameter.
+     */
+    fun onVariantProperties(action: Action<VariantT>)
+
+    /**
+     * Adds a lambda function to be performed on all [VariantT] objects associated with
+     * this module.
+     *
+     * @param action a lambda taking a [Variant] as a parameter.
+     */
+    fun onVariantProperties(action: VariantT.() -> Unit)
 
     /**
      * A registrar to apply actions on subsets of [VariantT] via filters.
      *
-     * @return a [GenericFilteredComponentActionRegistrar] of [VariantT]
+     * @areturn a [GenericFilteredComponentActionRegistrar] of [VariantT]
      */
-    val onVariants: GenericFilteredComponentActionRegistrar<VariantT>
-
-    /**
-     * Adds an [Action] to be performed on all [VariantPropertiesT] objects associated with this
-     * module
-     *
-     * This method is a shortcut for calling [onVariants] followed by [VariantBuilder.onProperties].
-     *
-     * @param action a lambda taking a [VariantProperties] as a parameter.
-     */
-    fun onVariantProperties(action: Action<VariantPropertiesT>)
-
-    /**
-     * Adds a lambda function to be performed on all [VariantPropertiesT] objects associated with
-     * this module.
-     *
-     * This method is a shortcut for calling [onVariants] followed by [VariantBuilder.onProperties].
-     *
-     * @param action a lambda taking a [VariantProperties] as a parameter.
-     */
-    fun onVariantProperties(action: VariantPropertiesT.() -> Unit)
-
-    /**
-     * A registrar to apply actions on subsets of [VariantPropertiesT] via filters.
-     *
-     * @areturn a [GenericFilteredComponentActionRegistrar] of [VariantPropertiesT]
-     */
-    val onVariantProperties: GenericFilteredComponentActionRegistrar<VariantPropertiesT>
+    val onVariantProperties: GenericFilteredComponentActionRegistrar<VariantT>
 
     /**
      * Specifies configurations for

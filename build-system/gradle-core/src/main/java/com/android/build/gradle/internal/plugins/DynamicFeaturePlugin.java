@@ -126,7 +126,7 @@ public class DynamicFeaturePlugin
     @Override
     protected DynamicFeatureAndroidComponentsExtension createComponentExtension(
             @NonNull DslServices dslServices,
-            @NonNull OperationsRegistrar<DynamicFeatureVariantBuilderImpl> operationsRegistrar) {
+            @NonNull OperationsRegistrar<DynamicFeatureVariantImpl> operationsRegistrar) {
         return project.getExtensions()
                 .create(
                         DynamicFeatureAndroidComponentsExtension.class,
