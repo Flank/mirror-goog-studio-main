@@ -2674,6 +2674,26 @@ open class GradleDetector : Detector(), GradleScanner {
             moreInfo = "https://developer.android.com/kotlin/ktx"
         )
 
+        @JvmField
+        val JAVA_PLUGIN_LANGUAGE_LEVEL = Issue.create(
+            id = "JavaPluginLanguageLevel",
+            briefDescription = "No Explicit Java Language Level Given",
+            explanation =
+                """
+                In modules using plugins deriving from the Gradle `java` plugin (e.g. \
+                `java-library` or `application`), the java source and target compatibility \
+                default to the version of the JDK being used to run Gradle, which may cause \
+                compatibility problems with Android (or other) modules.
+
+                You can specify an explicit sourceCompatibility and targetCompatibility in this \
+                module to maintain compatibility no matter which JDK is used to run Gradle.
+            """,
+            category = Category.INTEROPERABILITY,
+            priority = 6,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION
+        )
+
         /** The Gradle plugin ID for Android applications */
         const val APP_PLUGIN_ID = "com.android.application"
 
