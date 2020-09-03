@@ -32,6 +32,7 @@ import com.android.tools.idea.wizard.template.impl.activities.basicActivity.src.
 import com.android.tools.idea.wizard.template.impl.activities.basicActivity.src.secondFragmentKt
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
+import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
 import com.android.tools.idea.wizard.template.impl.activities.common.generateAppBar
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
 import com.android.tools.idea.wizard.template.impl.activities.common.generateSimpleMenu
@@ -61,7 +62,7 @@ fun RecipeExecutor.generateBasicActivity(
   generateAppBar(
     moduleData, activityClass, packageName, contentLayoutName, layoutName, useAndroidX = useAndroidX
   )
-
+  addViewBindingSupport(moduleData.viewBindingSupport, true)
   addDependency("com.android.support:appcompat-v7:$appCompatVersion.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
 

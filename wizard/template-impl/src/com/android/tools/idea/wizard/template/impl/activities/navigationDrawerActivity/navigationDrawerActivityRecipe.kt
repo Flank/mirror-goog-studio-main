@@ -22,6 +22,7 @@ import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.classToResource
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
+import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
 import com.android.tools.idea.wizard.template.impl.activities.common.generateAppBar
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
 import com.android.tools.idea.wizard.template.impl.activities.common.generateSimpleMenu
@@ -66,6 +67,7 @@ fun RecipeExecutor.generateNavigationDrawer(
   addAllKotlinDependencies(data)
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
   addMaterialDependency(useAndroidX)
+  addViewBindingSupport(data.viewBindingSupport, true)
 
   generateManifest(
     data,

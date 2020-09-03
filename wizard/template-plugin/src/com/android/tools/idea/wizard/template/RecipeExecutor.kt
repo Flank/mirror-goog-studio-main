@@ -135,6 +135,12 @@ interface RecipeExecutor {
   fun setBuildFeature(name: String, value: Boolean)
 
   /**
+   * Sets the view binding support. This exists only for AGP 3.6 because syntax is different from
+   * AGP 3.6 and AGP 4.0+. View binding can be configured using [setBuildFeature] with AGP 4.0+.
+   */
+  fun setViewBinding(value: Boolean)
+
+  /**
    * Sets Compose Options field values
    */
   fun setComposeOptions(kotlinCompilerExtensionVersion: String?, kotlinCompilerVersion: String?)
