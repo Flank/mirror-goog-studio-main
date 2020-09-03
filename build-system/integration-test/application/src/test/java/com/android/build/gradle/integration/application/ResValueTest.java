@@ -252,7 +252,7 @@ public class ResValueTest {
             throws IOException {
         File outputFile =
                 new File(
-                        project.getTestDir(),
+                        project.getProjectDir(),
                         "build/generated/res/resValues/"
                                 + variantDir
                                 + "/values/"

@@ -189,21 +189,6 @@ public class FixStackFramesDelegateTest {
     }
 
     @Test
-    public void testUnresolvedType() throws Exception {
-        Path jar = getJarWithBrokenClasses("input.jar", ImmutableMap.of("test/A", "test/Base"));
-
-        Set<File> classesToFix = ImmutableSet.of(jar.toFile());
-
-        FixStackFramesDelegate delegate =
-                new FixStackFramesDelegate(ANDROID_JAR, classesToFix, ImmutableSet.of(), output);
-
-        delegate.doFullRun(executor, task, classesHierarchyBuildServiceProvider);
-
-        assertThat(readZipEntry(jar, "test/A.class"))
-                .isEqualTo(readZipEntry(singleOutput().toPath(), "test/A.class"));
-    }
-
-    @Test
     public void testOnlyClassesProcessed() throws Exception {
         Path jar = tmp.getRoot().toPath().resolve("input.jar");
 

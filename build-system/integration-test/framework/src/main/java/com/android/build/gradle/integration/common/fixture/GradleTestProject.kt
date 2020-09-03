@@ -19,8 +19,10 @@ import com.android.SdkConstants
 import com.android.Version
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl.Companion.loadFromFile
-import com.android.build.gradle.integration.BazelIntegrationTestsSuite
 import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder.MemoryRequirement
+import com.android.build.gradle.integration.common.fixture.gradle_project.BuildSystem
+import com.android.build.gradle.integration.common.fixture.gradle_project.ProjectLocation
+import com.android.build.gradle.integration.common.fixture.gradle_project.initializeProjectLocation
 import com.android.build.gradle.integration.common.truth.AarSubject
 import com.android.build.gradle.integration.common.truth.forEachLine
 import com.android.build.gradle.integration.common.utils.TestFileUtils
@@ -43,17 +45,13 @@ import com.android.testutils.truth.PathSubject
 import com.android.utils.FileUtils
 import com.android.utils.Pair
 import com.android.utils.combineAsCamelCase
-import com.google.common.base.Charsets
 import com.google.common.base.Joiner
 import com.google.common.base.MoreObjects
-import com.google.common.base.Preconditions
-import com.google.common.base.Splitter
 import com.google.common.base.Strings
 import com.google.common.base.Throwables
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Lists
-import com.google.common.hash.Hashing
 import com.google.common.truth.Truth
 import org.gradle.tooling.GradleConnectionException
 import org.gradle.tooling.GradleConnector
@@ -65,9 +63,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import java.io.File
-import java.net.URLClassLoader
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.Arrays
 import java.util.Comparator
 import java.util.Locale
@@ -91,6 +87,7 @@ import java.util.stream.Collectors
 class GradleTestProject @JvmOverloads internal constructor(
     /** Return the name of the test project.  */
     val name: String = DEFAULT_TEST_PROJECT_NAME,
+    private val buildFileName: String,
     private val testProject: TestProject? = null,
     private val targetGradleVersion: String,
     private val withDependencyChecker: Boolean,
@@ -110,7 +107,7 @@ class GradleTestProject @JvmOverloads internal constructor(
     private val withAndroidGradlePlugin: Boolean,
     private val withKotlinGradlePlugin: Boolean,
     private val withIncludedBuilds: List<String>,
-    var _testDir: File?,
+    private var mutableProjectLocation: ProjectLocation? = null,
     private val repoDirectories: List<Path>?,
     private val additionalMavenRepo: MavenRepoGenerator?,
     val androidSdkDir: File?,
@@ -131,28 +128,19 @@ class GradleTestProject @JvmOverloads internal constructor(
         // to start and reuse the daemon.
         const val GRADLE_DEAMON_IDLE_TIME_IN_SECONDS = 10
         @JvmField
-        var DEFAULT_COMPILE_SDK_VERSION: String
+        val DEFAULT_COMPILE_SDK_VERSION: String
         @JvmField
-        var DEFAULT_BUILD_TOOL_VERSION: String
+        val DEFAULT_BUILD_TOOL_VERSION: String
         const val DEFAULT_NDK_SIDE_BY_SIDE_VERSION: String = ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
         @JvmField
-        val APPLY_DEVICEPOOL_PLUGIN = java.lang.Boolean.parseBoolean(
-            System.getenv().getOrDefault("APPLY_DEVICEPOOL_PLUGIN", "false")
-        )
-        val USE_LATEST_NIGHTLY_GRADLE_VERSION = java.lang.Boolean
-            .parseBoolean(System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "false"))
+        val APPLY_DEVICEPOOL_PLUGIN = System.getenv("APPLY_DEVICEPOOL_PLUGIN")?.toBoolean() ?: false
+        val USE_LATEST_NIGHTLY_GRADLE_VERSION = System.getenv("USE_GRADLE_NIGHTLY")?.toBoolean() ?: false
         @JvmField
-        var GRADLE_TEST_VERSION: String? = null
-        var ANDROID_GRADLE_PLUGIN_VERSION: String? = null
+        val GRADLE_TEST_VERSION: String
+        private val ANDROID_GRADLE_PLUGIN_VERSION: String?
         const val DEVICE_TEST_TASK = "deviceCheck"
-        private const val MAX_TEST_NAME_DIR_WINDOWS = 50
 
-        @JvmField
-        val BUILD_DIR: File
-        var OUT_DIR: File? = null
-        private var GRADLE_USER_HOME: Path? = null
-        @JvmField
-        var ANDROID_PREFS_ROOT: File? = null
+        internal const val MAX_TEST_NAME_DIR_WINDOWS = 50
 
         /**
          * List of Apk file reference that should be closed and deleted once the TestRule is done. This
@@ -166,123 +154,41 @@ class GradleTestProject @JvmOverloads internal constructor(
         private const val COMMON_VERSIONS = "commonVersions.gradle"
         const val DEFAULT_TEST_PROJECT_NAME = "project"
 
-        fun getGradleUserHome(buildDir: File?): Path {
-            if (TestUtils.runningFromBazel()) {
-                return BazelIntegrationTestsSuite.GRADLE_USER_HOME
-            }
-            // Use a temporary directory, so that shards don't share daemons. Gradle builds are not
-            // hermetic anyway and Gradle does not clean up test runfiles, so use the same home
-            // across invocations to save disk space.
-            var gradle_user_home = buildDir!!.toPath().resolve("GRADLE_USER_HOME")
-            val worker = System.getProperty("org.gradle.test.worker")
-            if (worker != null) {
-                gradle_user_home = gradle_user_home.resolve(worker)
-            }
-            return gradle_user_home
-        }
-
         @JvmStatic
         fun builder(): GradleTestProjectBuilder {
             return GradleTestProjectBuilder()
         }
 
         /** Crawls the tools/external/gradle dir, and gets the latest gradle binary.  */
-        val latestGradleCheckedIn: String?
-            get() {
-                val gradleDir = TestUtils.getWorkspaceFile("tools/external/gradle")
+        private fun computeLatestGradleCheckedIn(): String? {
+            val gradleDir = TestUtils.getWorkspaceFile("tools/external/gradle")
 
-                // should match gradle-3.4-201612071523+0000-bin.zip, and gradle-3.2-bin.zip
-                val gradleVersion = Pattern.compile("^gradle-(\\d+.\\d+)(-.+)?-bin\\.zip$")
-                val revisionsCmp: Comparator<Pair<String, String>> =
-                    Comparator.nullsFirst(
-                        Comparator.comparing { it: Pair<String, String> ->
-                            GradleVersion.version(it.first)
-                        }
-                            .thenComparing { obj: Pair<String, String> -> obj.second }
-                    )
-                var highestRevision: Pair<String, String>? = null
-                gradleDir.listFiles()?.forEach { f ->
-                    val matcher = gradleVersion.matcher(f.name)
-                    if (matcher.matches()) {
-                        val current =
-                            Pair.of(matcher.group(1), Strings.nullToEmpty(matcher.group(2)))
-                        if (revisionsCmp.compare(highestRevision, current) < 0) {
-                            highestRevision = current
-                        }
+            // should match gradle-3.4-201612071523+0000-bin.zip, and gradle-3.2-bin.zip
+            val gradleVersion = Pattern.compile("^gradle-(\\d+.\\d+)(-.+)?-bin\\.zip$")
+            val revisionsCmp: Comparator<Pair<String, String>> =
+                Comparator.nullsFirst(
+                    Comparator.comparing { it: Pair<String, String> ->
+                        GradleVersion.version(it.first)
+                    }
+                        .thenComparing { obj: Pair<String, String> -> obj.second }
+                )
+            var highestRevision: Pair<String, String>? = null
+            gradleDir.listFiles()?.forEach { f ->
+                val matcher = gradleVersion.matcher(f.name)
+                if (matcher.matches()) {
+                    val current =
+                        Pair.of(matcher.group(1), Strings.nullToEmpty(matcher.group(2)))
+                    if (revisionsCmp.compare(highestRevision, current) < 0) {
+                        highestRevision = current
                     }
                 }
-
-                return if (highestRevision == null) {
-                    null
-                } else {
-                    highestRevision?.first + highestRevision?.second
-                }
             }
 
-        private fun computeTestDir(
-            testClass: Class<*>,
-            methodName: String?,
-            projectName: String
-        ): File {
-            var testDir = OUT_DIR
-            if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
-                && System.getenv("BUILDBOT_BUILDERNAME") == null
-            ) {
-                // On Windows machines, make sure the test directory's path is short enough to avoid
-                // running into path too long exceptions. Typically, on local Windows machines,
-                // OUT_DIR's path is long, whereas on Windows build bots, OUT_DIR's path is already
-                // short (see https://issuetracker.google.com/69271554).
-                // In the first case, let's move the test directory close to root (user home), and in
-                // the second case, let's use OUT_DIR directly.
-                var outDir = FileUtils.join(System.getProperty("user.home"), "android-tests")
-
-                // when sharding is on, use a private sharded folder as tests can be split along
-                // shards and files will get locked on Windows.
-                if (System.getenv("TEST_TOTAL_SHARDS") != null) {
-                    outDir = FileUtils.join(outDir, System.getenv("TEST_SHARD_INDEX"))
-                }
-                testDir = File(outDir)
+            return if (highestRevision == null) {
+                null
+            } else {
+                highestRevision?.first + highestRevision?.second
             }
-            var classDir = testClass.simpleName
-            var methodDir: String? = null
-
-            // Create separate directory based on test method name if @Rule is used.
-            // getMethodName() is null if this rule is used as a @ClassRule.
-            if (methodName != null) {
-                methodDir = methodName.replace("[^a-zA-Z0-9_]".toRegex(), "_")
-            }
-
-            // In Windows, make sure we do not exceed the limit for test class / name size.
-            if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
-            ) {
-                var totalLen = classDir.length
-                if (methodDir != null) {
-                    totalLen += methodDir.length
-                }
-                if (totalLen > MAX_TEST_NAME_DIR_WINDOWS) {
-                    val hash = Hashing.sha1()
-                        .hashString(classDir + methodDir, Charsets.US_ASCII)
-                        .toString()
-                    // take the first 10 characters of the method name, hopefully it will be enough
-                    // to disambiguate tests, and hash the rest.
-                    val testIdentifier = methodDir ?: classDir
-                    classDir =
-                        (testIdentifier.substring(0, Math.min(testIdentifier.length, 10))
-                                + hash.substring(
-                            0,
-                            Math.min(
-                                hash.length,
-                                MAX_TEST_NAME_DIR_WINDOWS - 10
-                            )
-                        ))
-                    methodDir = null
-                }
-            }
-            testDir = File(testDir, classDir)
-            if (methodDir != null) {
-                testDir = File(testDir, methodDir)
-            }
-            return File(testDir, projectName)
         }
 
         private fun generateRepoScript(repositories: List<Path>): String {
@@ -389,25 +295,8 @@ apply from: "../commonLocalRepo.gradle"
 
         init {
             try {
-                BUILD_DIR = when {
-                    System.getenv("TEST_TMPDIR") != null -> {
-                        File(System.getenv("TEST_TMPDIR"))
-                    }
-                    BuildSystem.get() === BuildSystem.IDEA -> {
-                        File(TestUtils.getWorkspaceRoot(), "out/gradle-integration-tests")
-                    }
-                    else -> {
-                        throw IllegalStateException("unable to determine location for BUILD_DIR")
-                    }
-                }
-                OUT_DIR = File(BUILD_DIR, "tests")
-                ANDROID_PREFS_ROOT = File(BUILD_DIR, "ANDROID_PREFS_ROOT")
-                GRADLE_USER_HOME = getGradleUserHome(BUILD_DIR)
                 GRADLE_TEST_VERSION = if (USE_LATEST_NIGHTLY_GRADLE_VERSION) {
-                    Preconditions.checkNotNull(
-                        latestGradleCheckedIn,
-                        "Failed to find latest nightly version."
-                    )
+                    computeLatestGradleCheckedIn() ?: error("Failed to find latest nightly version.")
                 } else {
                     VersionCheckPlugin.GRADLE_MIN_VERSION.toString()
                 }
@@ -442,20 +331,25 @@ apply from: "../commonLocalRepo.gradle"
         }
     }
 
-    private val ndkSymlinkPath = relativeNdkSymlinkPath?.let { BUILD_DIR.resolve(it).canonicalFile }
 
-    val androidNdkSxSRootSymlink: File? = ndkSymlinkPath?.resolve(SdkConstants.FD_NDK_SIDE_BY_SIDE)
+    private val ndkSymlinkPath: File? by lazy {
+        relativeNdkSymlinkPath?.let { location.testLocation.buildDir.resolve(it).canonicalFile }
+    }
 
-    private var _buildFile: File
+    val androidNdkSxSRootSymlink: File?
+        get() = ndkSymlinkPath?.resolve(SdkConstants.FD_NDK_SIDE_BY_SIDE)
+
+    val location: ProjectLocation
+        get() = mutableProjectLocation ?: error("Project location has not been initialized yet")
 
     val buildFile: File
-        get() = _buildFile
+        get() = File(location.projectDir, buildFileName)
+
+    val projectDir: File
+        get() = location.projectDir
 
     lateinit var localProp: File
         private set
-
-    val testDir: File
-        get() = _testDir ?: throw java.lang.RuntimeException("testDir called before the project was properly initialized.")
 
     /** Returns a path to NDK suitable for embedding in build.gradle. It has slashes escaped for Windows */
     val ndkPath: String
@@ -472,6 +366,7 @@ apply from: "../commonLocalRepo.gradle"
 
     /** Returns a Gradle project Connection  */
     private val projectConnection: ProjectConnection by lazy {
+
         val connector = GradleConnector.newConnector()
         (connector as DefaultGradleConnector)
             .daemonMaxIdleTime(
@@ -484,22 +379,14 @@ apply from: "../commonLocalRepo.gradle"
         PathSubject.assertThat(distributionZip).isFile()
         val connection = connector
             .useDistribution(distributionZip.toURI())
-            .useGradleUserHomeDir(GRADLE_USER_HOME!!.toFile())
-            .forProjectDirectory(testDir)
+            .useGradleUserHomeDir(location.testLocation.gradleUserHome.toFile())
+            .forProjectDirectory(location.projectDir)
             .connect()
         rootProject.openConnections?.add(connection)
 
         connection
     }
 
-    init {
-        /** Return the build.gradle of the test project.  */
-        _buildFile = if (_testDir != null) {
-            File(_testDir, "build.gradle")
-        } else {
-            File("")
-        }
-    }
     /**
      * Create a GradleTestProject representing a subProject of another GradleTestProject.
      *
@@ -512,6 +399,7 @@ apply from: "../commonLocalRepo.gradle"
     ) :
         this(
             name = subProject.substring(subProject.lastIndexOf(':') + 1),
+            buildFileName = rootProject.buildFileName, // FIXME this is problematic because that may not be what we want.
             testProject = null,
             targetGradleVersion = rootProject.targetGradleVersion,
             withDependencyChecker = rootProject.withDependencyChecker,
@@ -529,7 +417,7 @@ apply from: "../commonLocalRepo.gradle"
             withAndroidGradlePlugin = rootProject.withAndroidGradlePlugin,
             withKotlinGradlePlugin = rootProject.withKotlinGradlePlugin,
             withIncludedBuilds = ImmutableList.of(),
-            _testDir = File(rootProject.testDir, subProject.replace(":", "/")),
+            mutableProjectLocation = rootProject.location.createSubProjectLocation(subProject),
             repoDirectories = rootProject.repoDirectories,
             additionalMavenRepo = rootProject.additionalMavenRepo,
             androidSdkDir = rootProject.androidSdkDir,
@@ -543,8 +431,8 @@ apply from: "../commonLocalRepo.gradle"
         ) {
 
         Assert.assertTrue(
-            "No subproject dir at $testDir",
-            testDir.isDirectory
+            "No subproject dir at $projectDir",
+            projectDir.isDirectory
         )
     }
 
@@ -560,11 +448,12 @@ apply from: "../commonLocalRepo.gradle"
             rootProject.apply(base, description)
         } else object : Statement() {
             override fun evaluate() {
-                if (_testDir == null) {
-                    _testDir = computeTestDir(
-                        description.testClass, description.methodName, name
+                if (mutableProjectLocation == null) {
+                    mutableProjectLocation = initializeProjectLocation(
+                        description.testClass,
+                        description.methodName,
+                        name
                     )
-                    _buildFile = File(_testDir, "build.gradle")
                 }
                 populateTestDirectory()
                 var testFailed = false
@@ -620,23 +509,19 @@ apply from: "../commonLocalRepo.gradle"
     }
 
     private fun populateTestDirectory() {
-        val testDir = this._testDir ?: throw RuntimeException(
-            "populateTestDirectory() called while testDir is null, either set testDir in "
-                    + "GradleTestProjectBuilder.withTestDir or call "
-                    + "populateTestDirectory(Class<?>, String)")
+        val projectDir = projectDir
+        FileUtils.deleteRecursivelyIfExists(projectDir)
+        FileUtils.mkdirs(projectDir)
 
-        _buildFile = File(testDir, "build.gradle")
-        FileUtils.deleteRecursivelyIfExists(testDir)
-        FileUtils.mkdirs(testDir)
-
-        File(testDir.parent, COMMON_VERSIONS).writeText(generateVersions())
-        File(testDir.parent, COMMON_LOCAL_REPO).writeText(generateProjectRepoScript())
-        File(testDir.parent, COMMON_HEADER).writeText(generateCommonHeader())
-        File(testDir.parent, COMMON_BUILD_SCRIPT).writeText(generateCommonBuildScript())
+        val projectParentDir = projectDir.parent
+        File(projectParentDir, COMMON_VERSIONS).writeText(generateVersions())
+        File(projectParentDir, COMMON_LOCAL_REPO).writeText(generateProjectRepoScript())
+        File(projectParentDir, COMMON_HEADER).writeText(generateCommonHeader())
+        File(projectParentDir, COMMON_BUILD_SCRIPT).writeText(generateCommonBuildScript())
 
         if (testProject != null) {
             testProject.write(
-                testDir,
+                projectDir,
                 if (testProject.containsFullBuildScript()) "" else gradleBuildscript
             )
         } else {
@@ -689,7 +574,7 @@ apply from: "../commonLocalRepo.gradle"
             return null
         }
         if (additionalMavenRepoDir == null) {
-            val moreMavenRepoDir = testDir
+            val moreMavenRepoDir = projectDir
                 .toPath()
                 .parent
                 .resolve("additional_maven_repo")
@@ -759,42 +644,36 @@ allprojects { proj ->
 
     /** Return the path to the default Java main source dir.  */
     fun getMainSrcDir(language: String): File {
-        return FileUtils.join(testDir, "src", "main", language)
+        return FileUtils.join(projectDir, "src", "main", language)
     }
 
     /** Return the path to the default Java main resources dir.  */
     val mainJavaResDir: File
-        get() = FileUtils.join(testDir, "src", "main", "resources")
+        get() = FileUtils.join(projectDir, "src", "main", "resources")
 
     /** Return the path to the default main jniLibs dir.  */
     val mainJniLibsDir: File
-        get() = FileUtils.join(testDir, "src", "main", "jniLibs")
+        get() = FileUtils.join(projectDir, "src", "main", "jniLibs")
 
     /** Return the build.gradle of the test project.  */
     val settingsFile: File
-        get() = File(testDir, "settings.gradle")
+        get() = File(projectDir, "settings.gradle")
 
     /** Return the gradle.properties file of the test project.  */
     val gradlePropertiesFile: File
-        get() = File(testDir, "gradle.properties")
-
-    /** Change the build file used for execute. Should be run after @Before/@BeforeClass.  */
-    fun setBuildFile(buildFileName: String? = null) {
-        _buildFile = File(testDir, buildFileName ?: "build.gradle")
-        PathSubject.assertThat(_buildFile).exists()
-    }
+        get() = File(projectDir, "gradle.properties")
 
     val buildDir: File
-        get() = FileUtils.join(testDir, "build")
+        get() = FileUtils.join(projectDir, "build")
 
     /** Return the output directory from Android plugins.  */
     val outputDir: File
-        get() = FileUtils.join(testDir, "build", AndroidProject.FD_OUTPUTS)
+        get() = FileUtils.join(projectDir, "build", AndroidProject.FD_OUTPUTS)
 
     /** Return the output directory from Android plugins.  */
     val intermediatesDir: File
         get() = FileUtils
-            .join(testDir, "build", AndroidProject.FD_INTERMEDIATES)
+            .join(projectDir, "build", AndroidProject.FD_INTERMEDIATES)
 
     /** Return a File under the output directory from Android plugins.  */
     fun getOutputFile(vararg paths: String?): File {
@@ -812,7 +691,7 @@ allprojects { proj ->
     }
 
     val generatedDir: File
-        get() = FileUtils.join(testDir, "build", AndroidProject.FD_GENERATED)
+        get() = FileUtils.join(projectDir, "build", AndroidProject.FD_GENERATED)
 
     /**
      * Returns the directory in which profiles will be generated. A null value indicates that
@@ -823,7 +702,7 @@ allprojects { proj ->
         return if (profileDirectory == null || profileDirectory.isAbsolute) {
             profileDirectory
         } else {
-            rootProject.testDir.toPath().resolve(profileDirectory)
+            rootProject.projectDir.toPath().resolve(profileDirectory)
         }
     }
 
@@ -1438,14 +1317,14 @@ allprojects { proj ->
         return if (result.isAbsolute) {
             result
         } else {
-            File(testDir, path)
+            File(projectDir, path)
         }
     }
 
     private fun createLocalProp(): File {
-        val mainLocalProp = createLocalProp(testDir)
+        val mainLocalProp = createLocalProp(projectDir)
         for (includedBuild in withIncludedBuilds) {
-            createLocalProp(File(testDir, includedBuild))
+            createLocalProp(File(projectDir, includedBuild))
         }
         return mainLocalProp
     }
@@ -1466,124 +1345,12 @@ allprojects { proj ->
                 getCmakeVersionFolder(cmakeVersion).absolutePath
             )
         }
-        if (ndkSymlinkPath != null) {
-            localProp.setProperty(
-                ProjectProperties.PROPERTY_NDK_SYMLINKDIR,
-                ndkSymlinkPath.absolutePath
-            )
+        ndkSymlinkPath?.let {
+            localProp.setProperty(ProjectProperties.PROPERTY_NDK_SYMLINKDIR, it.absolutePath)
         }
+
         localProp.save()
         return localProp.file as File
-    }
-
-    private enum class BuildSystem {
-        GRADLE {
-            override val localRepositories: List<Path>
-                get() {
-                    val customRepo = System.getenv(ENV_CUSTOM_REPO)
-                    // TODO: support USE_EXTERNAL_REPO
-                    val repos = ImmutableList.builder<Path>()
-                    for (path in Splitter.on(File.pathSeparatorChar).split(customRepo)) {
-                        repos.add(Paths.get(path))
-                    }
-                    return repos.build()
-                }
-        },
-        BAZEL {
-            override val localRepositories: List<Path>
-                get() = BazelIntegrationTestsSuite.MAVEN_REPOS
-        },
-        IDEA {
-            override val localRepositories: List<Path>
-                // The classes build by idea and jars are added separately.
-                get() = ImmutableList.of(
-                    TestUtils
-                        .getWorkspaceFile("prebuilts/tools/common/m2/repository")
-                        .toPath()
-                )
-
-            override fun getCommonBuildScriptContent(
-                withAndroidGradlePlugin: Boolean,
-                withKotlinGradlePlugin: Boolean,
-                withDeviceProvider: Boolean
-            ): String {
-                val buildScript = StringBuilder(
-                    """
-def commonScriptFolder = buildscript.sourceFile.parent
-apply from: "${"$"}commonScriptFolder/commonVersions.gradle", to: rootProject.ext
-
-project.buildscript { buildscript ->
-    apply from: "${"$"}commonScriptFolder/commonLocalRepo.gradle", to:buildscript
-    dependencies {        classpath files("""
-                )
-                for (url in (GradleTestProject::class.java.classLoader as URLClassLoader).urLs) {
-                    buildScript.append("                '").append(url.file).append("',\n")
-                }
-                buildScript.append(
-                    """        )
-    }
-}"""
-                )
-                return buildScript.toString()
-            }
-        };
-
-        abstract val localRepositories: List<Path>
-
-        open fun getCommonBuildScriptContent(
-            withAndroidGradlePlugin: Boolean,
-            withKotlinGradlePlugin: Boolean,
-            withDeviceProvider: Boolean
-        ): String {
-            val script = StringBuilder()
-            script.append("def commonScriptFolder = buildscript.sourceFile.parent\n")
-            script.append(
-                "apply from: \"\$commonScriptFolder/commonVersions.gradle\", to: rootProject.ext\n\n"
-            )
-            script.append("project.buildscript { buildscript ->\n")
-            script.append(
-                "    apply from: \"\$commonScriptFolder/commonLocalRepo.gradle\", to:buildscript\n"
-            )
-            if (withKotlinGradlePlugin) {
-                // To get the Kotlin version
-                script.append("    apply from: '../commonHeader.gradle'\n")
-            }
-            script.append("    dependencies {\n")
-            if (withAndroidGradlePlugin) {
-                script.append(
-                    "        classpath \"com.android.tools.build:gradle:\$rootProject.buildVersion\"\n"
-                )
-            }
-            if (withKotlinGradlePlugin) {
-                script.append(
-                    "        classpath \"org.jetbrains.kotlin:kotlin-gradle-plugin:\$rootProject.kotlinVersion\"\n"
-                )
-            }
-            if (withDeviceProvider) {
-                script.append(
-                    "        classpath 'com.android.tools.internal.build.test:devicepool:0.1'\n"
-                )
-            }
-            script.append("    }\n")
-            script.append("}")
-            return script.toString()
-        }
-
-        companion object {
-            fun get(): BuildSystem {
-                return when {
-                    TestUtils.runningFromBazel() -> {
-                        BAZEL
-                    }
-                    System.getenv(ENV_CUSTOM_REPO) != null -> {
-                        GRADLE
-                    }
-                    else -> {
-                        IDEA
-                    }
-                }
-            }
-        }
     }
 
     private fun createSettingsFile() {
@@ -1591,7 +1358,7 @@ project.buildscript { buildscript ->
             val absoluteFile: File = if (gradleBuildCacheDirectory.isAbsolute)
                 gradleBuildCacheDirectory
             else
-                File(testDir, gradleBuildCacheDirectory.path)
+                File(projectDir, gradleBuildCacheDirectory.path)
             TestFileUtils.appendToFile(
                 settingsFile,
                 """buildCache {

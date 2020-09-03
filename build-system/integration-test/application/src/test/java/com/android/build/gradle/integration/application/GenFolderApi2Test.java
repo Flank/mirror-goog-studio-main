@@ -42,7 +42,7 @@ public class GenFolderApi2Test {
     @Test
     public void checkJavaFolderInModel() throws Exception {
         AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
-        File projectDir = project.getTestDir();
+        File projectDir = project.getProjectDir();
 
         File buildDir = new File(projectDir, "build");
 

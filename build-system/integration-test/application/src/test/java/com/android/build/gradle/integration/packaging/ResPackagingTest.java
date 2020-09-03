@@ -96,18 +96,18 @@ public class ResPackagingTest {
 
         // put some default files in the 4 projects, to check non incremental packaging as well,
         // and to provide files to change to test incremental support.
-        File appDir = appProject.getTestDir();
+        File appDir = appProject.getProjectDir();
         createOriginalResFile(appDir,  "main",        "file.txt",         "app:abcd");
         createOriginalResFile(appDir,  "androidTest", "filetest.txt",     "appTest:abcd");
 
-        File testDir = testProject.getTestDir();
+        File testDir = testProject.getProjectDir();
         createOriginalResFile(testDir, "main",        "file.txt",         "test:abcd");
 
-        File libDir = libProject.getTestDir();
+        File libDir = libProject.getProjectDir();
         createOriginalResFile(libDir,  "main",        "filelib.txt",      "library:abcd");
         createOriginalResFile(libDir,  "androidTest", "filelibtest.txt",  "libraryTest:abcd");
 
-        File lib2Dir = libProject2.getTestDir();
+        File lib2Dir = libProject2.getProjectDir();
         createOriginalResFile(lib2Dir, "main",        "filelib2.txt",     "library2:abcd");
         createOriginalResFile(lib2Dir, "androidTest", "filelib2test.txt", "library2Test:abcd");
     }

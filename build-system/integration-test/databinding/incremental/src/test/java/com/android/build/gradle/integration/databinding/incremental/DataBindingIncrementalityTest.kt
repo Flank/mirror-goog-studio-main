@@ -490,8 +490,8 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
 
     @Before
     fun setUp() {
-        val appDir = project.getSubproject(APP_MODULE).testDir
-        val libDir = project.getSubproject(LIB_MODULE).testDir
+        val appDir = project.getSubproject(APP_MODULE).projectDir
+        val libDir = project.getSubproject(LIB_MODULE).projectDir
 
         libData1JavaFile = File("$libDir/$SOURCE_DIR/${getPath(LIB_DATA_1_CLASS)}.java")
         libLoner1JavaFile = File("$libDir/$SOURCE_DIR/${getPath(LIB_LONER_1_CLASS)}.java")

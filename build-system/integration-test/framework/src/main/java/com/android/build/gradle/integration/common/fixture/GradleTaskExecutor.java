@@ -53,10 +53,9 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
             @NonNull ProjectConnection projectConnection) {
         super(
                 gradleTestProject,
+                gradleTestProject.getLocation(),
                 projectConnection,
                 gradleTestProject::setLastBuildResult,
-                gradleTestProject.getTestDir().toPath(),
-                gradleTestProject.getBuildFile().toPath(),
                 gradleTestProject.getProfileDirectory(),
                 gradleTestProject.getHeapSize(),
                 gradleTestProject.getWithConfigurationCaching());
@@ -154,7 +153,7 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
 
             String message =
                     "[GradleTestProject "
-                            + projectDirectory
+                            + projectLocation.getProjectDir()
                             + "] Executing tasks: \ngradle "
                             + Joiner.on(' ').join(args)
                             + " "

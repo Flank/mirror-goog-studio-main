@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.nativebuild
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
@@ -150,18 +149,18 @@ class CmakeExtensionsTest(
 
         if (alternateCacheFolder != null) {
             project.localProp.appendText("$CXX_LOCAL_PROPERTIES_CACHE_DIR=" +
-                    "${File(project.testDir, alternateCacheFolder).absolutePath.replace("\\", "\\\\")}\n")
+                    "${File(project.projectDir, alternateCacheFolder).absolutePath.replace("\\", "\\\\")}\n")
         }
     }
 
     private fun getAbiConfiguration() : CxxAbiModel {
-        val modelFile = join(project.testDir, ".cxx", "cmake", "debug", "x86_64", "build_model.json")
+        val modelFile = join(project.projectDir, ".cxx", "cmake", "debug", "x86_64", "build_model.json")
         return createCxxAbiModelFromJson(modelFile.readText())
     }
 
     @Test
     fun basicTest() {
-        val syncIssue = project.model().fetchAndroidProjects().onlyModelSyncIssues
+        val syncIssue = project.model().fetchAndroidProjectsAllowSyncIssues().onlyModelSyncIssues
         assertThat(syncIssue).hasSize(0)
         project.model()
             .with(ENABLE_NATIVE_COMPILER_SETTINGS_CACHE, true)
@@ -210,9 +209,9 @@ class CmakeExtensionsTest(
 
         // The first time, the cache should not be used.
         val cacheFolder = if (alternateCacheFolder != null) {
-            File(project.testDir, alternateCacheFolder)
+            File(project.projectDir, alternateCacheFolder)
         } else {
-            File(project.testDir, CXX_DEFAULT_CONFIGURATION_SUBFOLDER)
+            File(project.projectDir, CXX_DEFAULT_CONFIGURATION_SUBFOLDER)
         }
         assertThat(cacheFolder.isDirectory)
             .named(cacheFolder.toString())
@@ -227,8 +226,8 @@ class CmakeExtensionsTest(
         assertThat(cacheWrite.cacheWritten).isTrue()
 
         // Delete the .externalNativeBuild folder and sync
-        File(project.testDir, "$CXX_DEFAULT_CONFIGURATION_SUBFOLDER/cmake").deleteRecursively()
-        File(project.testDir, "$CXX_DEFAULT_CONFIGURATION_SUBFOLDER/gradle").deleteRecursively()
+        File(project.projectDir, "$CXX_DEFAULT_CONFIGURATION_SUBFOLDER/cmake").deleteRecursively()
+        File(project.projectDir, "$CXX_DEFAULT_CONFIGURATION_SUBFOLDER/gradle").deleteRecursively()
         val nativeProject2 = project.model()
             .with(ENABLE_NATIVE_COMPILER_SETTINGS_CACHE, true)
             .fetch(NativeAndroidProject::class.java)

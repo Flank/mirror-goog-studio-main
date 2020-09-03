@@ -32,7 +32,8 @@ fun RecipeExecutor.saveFragmentAndViewModel(
   language: Language,
   packageName: String,
   fragmentPrefix: String,
-  useAndroidX: Boolean = true
+  useAndroidX: Boolean = true,
+  isViewBindingSupported: Boolean
 ) {
   val firstFragmentClass = "${underscoreToCamelCase(fragmentPrefix)}Fragment"
   val viewModelClass = "${underscoreToCamelCase(fragmentPrefix)}ViewModel"
@@ -44,9 +45,21 @@ fun RecipeExecutor.saveFragmentAndViewModel(
   )
   save(
     if (generateKotlin)
-      firstFragmentKt(packageName, firstFragmentClass, fragmentPrefix, viewModelClass, useAndroidX)
+      firstFragmentKt(
+        packageName = packageName,
+        firstFragmentClass = firstFragmentClass,
+        navFragmentPrefix = fragmentPrefix,
+        navViewModelClass = viewModelClass,
+        useAndroidX = useAndroidX,
+        isViewBindingSupported = isViewBindingSupported)
     else
-      firstFragmentJava(packageName, firstFragmentClass, fragmentPrefix, viewModelClass, useAndroidX),
+      firstFragmentJava(
+        packageName = packageName,
+        firstFragmentClass = firstFragmentClass,
+        navFragmentPrefix = fragmentPrefix,
+        navViewModelClass = viewModelClass,
+        useAndroidX = useAndroidX,
+        isViewBindingSupported = isViewBindingSupported),
     srcOut.resolve("ui/${fragmentPrefix}/${underscoreToCamelCase(fragmentPrefix)}Fragment.${language.extension}")
   )
   save(

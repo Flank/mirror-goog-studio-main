@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatA
 import com.android.build.gradle.internal.res.shrinker.DummyContent
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
-import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
@@ -191,7 +190,7 @@ class CompileLibraryResourcesTest {
         // change me.raw
         FileUtils.writeToFile(
             FileUtils.join(
-                project.getSubproject(":library").testDir,
+                project.getSubproject(":library").projectDir,
                 "src",
                 "main",
                 "res",
@@ -220,7 +219,7 @@ class CompileLibraryResourcesTest {
         // Remove ic_launcher_background
         FileUtils.deleteIfExists(
             FileUtils.join(
-                project.getSubproject(":library").testDir,
+                project.getSubproject(":library").projectDir,
                 "src",
                 "main",
                 "res",
@@ -231,7 +230,7 @@ class CompileLibraryResourcesTest {
 
         FileUtils.writeToFile(
             FileUtils.join(
-                project.getSubproject(":app").testDir,
+                project.getSubproject(":app").projectDir,
                 "src",
                 "main",
                 "res",

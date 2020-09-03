@@ -15,13 +15,27 @@
  */
 package com.android.tools.idea.wizard.template.impl.activities.basicActivity.src
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
-
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
 
 fun firstFragmentJava(
-  packageName: String, useAndroidX: Boolean, firstFragmentClass: String, secondFragmentClass: String, firstFragmentLayoutName: String
-) =
-"""package ${packageName};
+  packageName: String,
+  useAndroidX: Boolean,
+  firstFragmentClass: String,
+  secondFragmentClass: String,
+  firstFragmentLayoutName: String,
+  isViewBindingSupported: Boolean
+): String {
+  val onCreateViewBlock = if (isViewBindingSupported) """
+      binding = ${layoutToViewBindingClass(firstFragmentLayoutName)}.inflate(inflater, container, false);
+      return binding.getRoot();
+  """ else "return inflater.inflate(R.layout.$firstFragmentLayoutName, container, false);"
+
+  return """package ${packageName};
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -31,22 +45,30 @@ import android.view.ViewGroup;
 import ${getMaterialComponentName("android.support.annotation.NonNull", useAndroidX)};
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)};
 import androidx.navigation.fragment.NavHostFragment;
+${importViewBindingClass(isViewBindingSupported, packageName, firstFragmentLayoutName)};
 
 public class ${firstFragmentClass} extends Fragment {
+
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(firstFragmentLayoutName)} binding;
+"""}}
 
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState
     ) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.${firstFragmentLayoutName}, container, false);
+        $onCreateViewBlock
     }
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        view.findViewById(R.id.button_first).setOnClickListener(new View.OnClickListener() {
+        ${findViewById(
+          Language.Java,
+          isViewBindingSupported,
+          id = "button_first",
+          parentView = "view")}.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 NavHostFragment.findNavController(${firstFragmentClass}.this)
@@ -54,6 +76,16 @@ public class ${firstFragmentClass} extends Fragment {
             }
         });
     }
+
+${renderIf(isViewBindingSupported) {"""
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+"""}}
+
 }
 
 """
+}

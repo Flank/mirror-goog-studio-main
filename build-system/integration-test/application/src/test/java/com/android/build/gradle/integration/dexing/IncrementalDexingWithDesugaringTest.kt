@@ -168,7 +168,7 @@ class IncrementalDexingWithDesugaringTest(
         // Add post-javac classes for the ANDROID_LIB_WITH_POST_JAVAC_CLASSES scenario
         if (scenario == ANDROID_LIB_WITH_POST_JAVAC_CLASSES) {
             TestInputsGenerator.jarWithEmptyClasses(
-                androidLib.testDir.resolve("post-javac-classes.jar").toPath(),
+                androidLib.projectDir.resolve("post-javac-classes.jar").toPath(),
                 setOf("post/javac/classes/SampleClass")
             )
             TestFileUtils.appendToFile(

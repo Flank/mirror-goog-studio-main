@@ -57,7 +57,7 @@ class CoreLibraryDesugarCachingTest {
 
     @Test
     fun testDifferentProjectLocations() {
-        val buildCacheDir = File(project.testDir.parent, GRADLE_BUILD_CACHE)
+        val buildCacheDir = File(project.projectDir.parent, GRADLE_BUILD_CACHE)
         FileUtils.deleteRecursivelyIfExists(buildCacheDir)
 
         // http://b/149978740 and http://b/146208910

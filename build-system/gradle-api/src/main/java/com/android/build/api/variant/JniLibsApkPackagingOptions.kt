@@ -28,5 +28,5 @@ interface JniLibsApkPackagingOptions : JniLibsPackagingOptions {
     /**
      * Whether to use the legacy convention of compressing all .so files in the APK.
      */
-    val legacyPackaging: Property<Boolean>
+    val useLegacyPackaging: Property<Boolean>
 }

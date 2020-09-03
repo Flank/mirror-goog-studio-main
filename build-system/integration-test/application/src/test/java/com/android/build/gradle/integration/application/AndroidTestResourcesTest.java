@@ -183,7 +183,7 @@ public class AndroidTestResourcesTest {
 
     private static void setUpProject(GradleTestProject project) throws IOException {
         Path layout =
-                project.getTestDir()
+                project.getProjectDir()
                         .toPath()
                         .resolve("src/androidTest/res/layout/test_layout_1.xml");
         Files.createDirectories(layout.getParent());
@@ -192,7 +192,7 @@ public class AndroidTestResourcesTest {
         // This class exists to prevent the resource from being automatically removed,
         // if we start filtering test resources by default.
         Path resourcesTest =
-                project.getTestDir()
+                project.getProjectDir()
                         .toPath()
                         .resolve(
                                 "src/androidTest/java/com/example/helloworld/HelloWorldResourceTest.java");

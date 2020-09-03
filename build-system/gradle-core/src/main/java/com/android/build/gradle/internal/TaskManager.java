@@ -172,6 +172,7 @@ import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.LegacyShrinkBundleModuleResourcesTask;
 import com.android.build.gradle.internal.transforms.ShrinkAppBundleResourcesTask;
 import com.android.build.gradle.internal.transforms.ShrinkResourcesNewShrinkerTask;
+import com.android.build.gradle.internal.utils.KgpUtils;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.ComponentInfo;
@@ -432,8 +433,8 @@ public abstract class TaskManager<
         // kapt tasks
         addBindingDependenciesIfNecessary(extension.getDataBinding());
 
-        // configure compose related tasks.
-        configureKotlinPluginTasksForComposeIfNecessary();
+        // configure Kotlin compilation if needed.
+        configureKotlinPluginTasksIfNecessary();
 
         // create the global lint task that depends on all the variants
         configureGlobalLintTask();
@@ -684,13 +685,15 @@ public abstract class TaskManager<
                                 .configure(task));
     }
 
-    private void configureKotlinPluginTasksForComposeIfNecessary() {
-
+    private void configureKotlinPluginTasksIfNecessary() {
         boolean composeIsEnabled =
                 allPropertiesList.stream()
                         .anyMatch(
                                 componentProperties ->
                                         componentProperties.getBuildFeatures().getCompose());
+        KgpUtils.recordIrBackendForAnalytics(
+                allPropertiesList, extension, globalScope.getProject(), composeIsEnabled);
+
         if (!composeIsEnabled) {
             return;
         }
@@ -738,10 +741,7 @@ public abstract class TaskManager<
         for (ComponentCreationConfig creationConfig : allPropertiesList) {
             try {
                 TaskProvider<Task> compileKotlin =
-                        globalScope
-                                .getProject()
-                                .getTasks()
-                                .named(creationConfig.computeTaskName("compile", "Kotlin"));
+                        KgpUtils.getKotlinCompile(globalScope.getProject(), creationConfig);
 
                 TaskProvider<PrepareKotlinCompileTask> prepareKotlinCompileTaskTaskProvider =
                         taskFactory.register(

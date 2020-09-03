@@ -2,7 +2,7 @@ package com.example.app;
 
 import android.support.annotation.NonNull;
 
-class DummyClassToTestAnnotationProcessing {
+class ClassToTestAnnotationProcessing {
 
     @NonNull
     public String getGreetings() {

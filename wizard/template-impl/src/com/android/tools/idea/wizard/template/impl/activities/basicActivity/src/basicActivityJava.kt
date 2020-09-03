@@ -15,7 +15,11 @@
  */
 package com.android.tools.idea.wizard.template.impl.activities.basicActivity.src
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.renderIf
 
 fun basicActivityJava(
@@ -26,7 +30,8 @@ fun basicActivityJava(
   activityClass: String,
   layoutName: String,
   menuName: String,
-  navHostFragmentId: String
+  navHostFragmentId: String,
+  isViewBindingSupported: Boolean
 ): String {
   val applicationPackageBlock = renderIf(applicationPackage != null) { "import $applicationPackage.R;" }
   val newProjectImportBlock = renderIf(isNewProject) {
@@ -62,6 +67,11 @@ import android.view.MenuItem;
     """
   }
 
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layoutName)}.inflate(getLayoutInflater());
+     setContentView(binding.getRoot());
+  """ else "setContentView(R.layout.$layoutName);"
+
   return """
 package ${(packageName)};
 
@@ -75,6 +85,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
 
 $newProjectImportBlock
 $applicationPackageBlock
@@ -82,20 +93,24 @@ $applicationPackageBlock
 public class ${activityClass} extends AppCompatActivity {
 
     private AppBarConfiguration appBarConfiguration;
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(layoutName)} binding;
+"""}}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.${layoutName});
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        $contentViewBlock
+        setSupportActionBar(${findViewById(Language.Java, isViewBindingSupported, id = "toolbar")});
 
         NavController navController = Navigation.findNavController(this, R.id.${navHostFragmentId});
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "fab")}.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)

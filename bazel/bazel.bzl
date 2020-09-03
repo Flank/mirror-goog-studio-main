@@ -694,7 +694,13 @@ def iml_module(
             exec_properties = exec_properties,
         )
 
-def _gen_split_tests(name, split_test_targets, test_tags = None, test_data = None, **kwargs):
+def _gen_split_tests(
+        name,
+        split_test_targets,
+        test_tags = None,
+        test_data = None,
+        timeout = None,
+        **kwargs):
     """Generates split test targets.
 
     A new test target is generated for each split_test_target, a test_suite containing all
@@ -708,6 +714,7 @@ def _gen_split_tests(name, split_test_targets, test_tags = None, test_data = Non
         split_test_targets: A dict of names to split_test_target definitions.
         test_tags: optional list of tags to include for test targets.
         test_data: optional list of data to include for test targets.
+        timeout: optional timeout that applies to this split test only (overriding target level).
     """
 
     # create a _tests__all target for local development with all test sources
@@ -725,6 +732,7 @@ def _gen_split_tests(name, split_test_targets, test_tags = None, test_data = Non
         shard_count = split_target.get("shard_count")
         tags = split_target.get("tags", default = [])
         data = split_target.get("data", default = [])
+        split_timeout = split_target.get("timeout", default = timeout)
         if "manual" not in tags:
             split_tests.append(test_name)
         if test_data:
@@ -737,6 +745,7 @@ def _gen_split_tests(name, split_test_targets, test_tags = None, test_data = Non
         coverage_java_test(
             name = test_name,
             shard_count = shard_count,
+            timeout = split_timeout,
             data = data,
             tags = tags,
             args = args,

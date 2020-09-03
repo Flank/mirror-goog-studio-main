@@ -34,7 +34,7 @@ class ParseLibraryResourcesPartialRTest() {
     fun `test incremental builds do not modify unnecessary partial r files`() {
         val executor = project.executor()
         executor.run("assembleDebug")
-        val partialRIntermediateDir = FileUtils.join(project.testDir,
+        val partialRIntermediateDir = FileUtils.join(project.projectDir,
                 "lib", "build", "intermediates", InternalArtifactType
                 .LOCAL_ONLY_PARTIAL_SYMBOL_DIRECTORY.getFolderName(), "debug", "partial-r")
         val partialRFiles = partialRIntermediateDir.listFiles()
@@ -52,7 +52,7 @@ class ParseLibraryResourcesPartialRTest() {
     @Test
     fun `test incremental builds modify partial r files when resource is modified`() {
         project.execute("assembleDebug")
-        val partialRIntermediateDir = FileUtils.join(project.testDir,
+        val partialRIntermediateDir = FileUtils.join(project.projectDir,
                 "lib", "build", "intermediates", InternalArtifactType.
         LOCAL_ONLY_PARTIAL_SYMBOL_DIRECTORY.getFolderName(), "debug", "partial-r")
         val partialRFiles =
@@ -62,7 +62,7 @@ class ParseLibraryResourcesPartialRTest() {
         // Layout (modified resource)
         val libLayoutPartialR =
                 FileUtils.join(partialRIntermediateDir, "layout_main.xml.flat-R.txt")
-        val libLayoutFile = FileUtils.join(project.testDir,
+        val libLayoutFile = FileUtils.join(project.projectDir,
                 "lib", "src", "main", "res", "layout", "main.xml")
         val libLayoutPartialROriginalTimestamp = libLayoutPartialR.lastModified()
         val modifiedLibLayout =  libLayoutFile.readText(Charset.defaultCharset())

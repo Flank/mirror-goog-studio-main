@@ -16,11 +16,15 @@
 
 package com.android.build.gradle.internal.instrumentation
 
+import org.gradle.api.logging.Logging
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
 
 /** ASM class writer that uses [ClassesHierarchyResolver] to resolve types. */
-class FixFramesClassWriter : ClassWriter {
+open class FixFramesClassWriter : ClassWriter {
+
+    private val objectClassInternalName = "java/lang/Object"
+    private val logger = Logging.getLogger(this::class.java)
 
     val classesHierarchyResolver: ClassesHierarchyResolver
 
@@ -29,9 +33,9 @@ class FixFramesClassWriter : ClassWriter {
     }
 
     constructor(
-        classReader: ClassReader,
-        flags: Int,
-        classesHierarchyResolver: ClassesHierarchyResolver
+            classReader: ClassReader,
+            flags: Int,
+            classesHierarchyResolver: ClassesHierarchyResolver
     ) : super(classReader, flags) {
         this.classesHierarchyResolver = classesHierarchyResolver
     }
@@ -47,15 +51,69 @@ class FixFramesClassWriter : ClassWriter {
                 otherTypeSuperClasses.contains(type)
     }
 
-    override fun getCommonSuperClass(firstType: String, secondType: String): String {
+    private fun getNumberOfCharInPrefix(string: String, char: Char): Int {
+        var count = 0
+        for (c in string) {
+            if (c != char) {
+                return count
+            }
+            count++
+        }
+        return count
+    }
+
+    private fun getCommonSuperClassForArrayTypes(firstType: String, secondType: String): String {
+        val firstTypeArrayNestingDepth = getNumberOfCharInPrefix(firstType, '[')
+        val secondTypeArrayNestingDepth = getNumberOfCharInPrefix(secondType, '[')
+
+        if (firstTypeArrayNestingDepth != secondTypeArrayNestingDepth) {
+            return objectClassInternalName
+        }
+
+        val firstComponentType =
+                firstType.substring(firstTypeArrayNestingDepth + 1, firstType.length - 1)
+        val secondComponentType =
+                secondType.substring(firstTypeArrayNestingDepth + 1, secondType.length - 1)
+
         val firstTypeInterfaces =
-            classesHierarchyResolver.getAllInterfacesInInternalForm(firstType, true)
+                classesHierarchyResolver.getAllInterfacesInInternalForm(firstComponentType)
         val firstTypeSuperClasses =
-            classesHierarchyResolver.getAllSuperClassesInInternalForm(firstType, true)
+                classesHierarchyResolver.getAllSuperClassesInInternalForm(firstComponentType)
         val secondTypeInterfaces =
-            classesHierarchyResolver.getAllInterfacesInInternalForm(secondType, true)
+                classesHierarchyResolver.getAllInterfacesInInternalForm(secondComponentType)
         val secondTypeSuperClasses =
-            classesHierarchyResolver.getAllSuperClassesInInternalForm(secondType, true)
+                classesHierarchyResolver.getAllSuperClassesInInternalForm(secondComponentType)
+
+        if (isAssignableFrom(firstComponentType,
+                        secondComponentType,
+                        secondTypeInterfaces,
+                        secondTypeSuperClasses)) {
+            return firstType
+        }
+
+        if (isAssignableFrom(secondComponentType,
+                        firstComponentType,
+                        firstTypeInterfaces,
+                        firstTypeSuperClasses)) {
+            return secondType
+        }
+
+        return objectClassInternalName
+    }
+
+    override fun getCommonSuperClass(firstType: String, secondType: String): String {
+        if (firstType.startsWith('[') || secondType.startsWith('[')) {
+            return getCommonSuperClassForArrayTypes(firstType, secondType)
+        }
+
+        val firstTypeInterfaces =
+                classesHierarchyResolver.getAllInterfacesInInternalForm(firstType)
+        val firstTypeSuperClasses =
+                classesHierarchyResolver.getAllSuperClassesInInternalForm(firstType)
+        val secondTypeInterfaces =
+                classesHierarchyResolver.getAllInterfacesInInternalForm(secondType)
+        val secondTypeSuperClasses =
+                classesHierarchyResolver.getAllSuperClassesInInternalForm(secondType)
 
         if (isAssignableFrom(firstType, secondType, secondTypeInterfaces, secondTypeSuperClasses)) {
             return firstType
@@ -67,16 +125,18 @@ class FixFramesClassWriter : ClassWriter {
 
         firstTypeSuperClasses.forEach { firstTypeSuperClass ->
             if (isAssignableFrom(
-                    firstTypeSuperClass,
-                    secondType,
-                    secondTypeInterfaces,
-                    secondTypeSuperClasses
-                )
+                            firstTypeSuperClass,
+                            secondType,
+                            secondTypeInterfaces,
+                            secondTypeSuperClasses
+                    )
             ) {
                 return firstTypeSuperClass
             }
         }
 
-        throw RuntimeException("Unable to find common super type for $firstType and $secondType.")
+        logger.warn("Unable to find common super type for $firstType and $secondType.")
+
+        return objectClassInternalName
     }
 }

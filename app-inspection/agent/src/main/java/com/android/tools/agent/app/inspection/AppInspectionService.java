@@ -22,8 +22,14 @@ import static com.android.tools.agent.app.inspection.NativeTransport.*;
 import androidx.inspection.ArtToolInterface;
 import androidx.inspection.ArtToolInterface.EntryHook;
 import androidx.inspection.ArtToolInterface.ExitHook;
+import com.android.tools.agent.app.inspection.version.VersionChecker;
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
@@ -53,6 +59,9 @@ public class AppInspectionService {
     private final Map<String, List<HookInfo<ExitHook>>> mExitTransforms = new ConcurrentHashMap<>();
     private final Map<String, List<HookInfo<EntryHook>>> mEntryTransforms =
             new ConcurrentHashMap<>();
+
+    private static final String INSPECTOR_ID_MISSING_ERROR =
+            "Argument inspectorId must not be null";
 
     // TODO: b/159250979
     // Special work around to support overloads and exit hooks
@@ -90,18 +99,29 @@ public class AppInspectionService {
      * @param inspectorId the unique id of the inspector being launched
      * @param dexPath the path to the .dex file of the inspector
      * @param projectName the name of the studio project that is trying to launch the inspector
+     * @param versionFileName the full name of the version file located in the APK's META-INF. Null
+     *     if inspector is not targeting any particular library (ex: DB inspector).
+     * @param minVersion the minimum version of the library this inspector is compatible with. Null
+     *     if inspector is not targeting any particular library (ex: DB inspector).
      * @param force if true, create the inspector even if one is already running
      * @param commandId unique id of this command in the context of app inspection service
      */
     public void createInspector(
-            String inspectorId, String dexPath, String projectName, boolean force, int commandId) {
-        if (failNull("inspectorId", inspectorId, commandId)) {
+            String inspectorId,
+            String dexPath,
+            String versionFileName,
+            String minVersion,
+            String projectName,
+            boolean force,
+            int commandId) {
+        if (inspectorId == null) {
+            sendCreateInspectorResponseError(commandId, INSPECTOR_ID_MISSING_ERROR);
             return;
         }
         if (mInspectorBridges.containsKey(inspectorId)) {
             if (!force) {
                 String alreadyLaunchedProjectName = mInspectorBridges.get(inspectorId).getProject();
-                sendServiceResponseError(
+                sendCreateInspectorResponseError(
                         commandId,
                         "Inspector with the given id "
                                 + inspectorId
@@ -111,11 +131,20 @@ public class AppInspectionService {
                 return;
             }
 
-            disposeInspector(inspectorId, commandId);
+            doDispose(inspectorId);
+        }
+
+        VersionTargetInfo versionTarget = null;
+        if (minVersion != null && versionFileName != null) {
+            versionTarget = new VersionTargetInfo(versionFileName, minVersion);
+        }
+        if (!doCheckVersion(commandId, versionTarget)) {
+            return;
         }
 
         if (!new File(dexPath).exists()) {
-            sendServiceResponseError(commandId, "Failed to find a file with path: " + dexPath);
+            sendCreateInspectorResponseError(
+                    commandId, "Failed to find a file with path: " + dexPath);
             return;
         }
 
@@ -127,33 +156,35 @@ public class AppInspectionService {
                 (error) -> {
                     if (error != null) {
                         mInspectorBridges.remove(inspectorId);
-                        sendServiceResponseError(commandId, error);
+                        sendCreateInspectorResponseError(commandId, error);
                     } else {
-                        sendServiceResponseSuccess(commandId);
+                        sendCreateInspectorResponseSuccess(commandId);
                     }
                 });
     }
 
     public void disposeInspector(String inspectorId, int commandId) {
-        if (failNull("inspectorId", inspectorId, commandId)) {
+        if (inspectorId == null) {
+            sendDisposeInspectorResponseError(commandId, INSPECTOR_ID_MISSING_ERROR);
             return;
         }
         if (!mInspectorBridges.containsKey(inspectorId)) {
-            sendServiceResponseError(
+            sendDisposeInspectorResponseError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
             return;
         }
         doDispose(inspectorId);
-        sendServiceResponseSuccess(commandId);
+        sendDisposeInspectorResponseSuccess(commandId);
     }
 
     public void sendCommand(String inspectorId, int commandId, byte[] rawCommand) {
-        if (failNull("inspectorId", inspectorId, commandId)) {
+        if (inspectorId == null) {
+            sendRawResponseError(commandId, INSPECTOR_ID_MISSING_ERROR);
             return;
         }
         InspectorBridge bridge = mInspectorBridges.get(inspectorId);
         if (bridge == null) {
-            sendServiceResponseError(
+            sendRawResponseError(
                     commandId, "Inspector with id " + inspectorId + " wasn't previously created");
             return;
         }
@@ -176,12 +207,41 @@ public class AppInspectionService {
         }
     }
 
-    private boolean failNull(String name, Object value, int commandId) {
-        boolean result = value == null;
-        if (result) {
-            sendServiceResponseError(commandId, "Argument " + name + " must not be null");
+    /**
+     * Checks whether the inspector we are trying to create is compatible with the library.
+     *
+     * <p>This will compare the provided minVersion with the version string located in the version
+     * file in the APK's META-INF directory.
+     *
+     * <p>In the case the provided version targeting information is null, return true because the
+     * inspector is targeting the Android framework.
+     *
+     * <p>Note, this method will send the appropriate response to the command if the check failed in
+     * any way. In other words, callers don't need to send a response if this method returns false.
+     *
+     * @param commandId the id of the command
+     * @param versionTarget contains the version compatibility and location of the library. Null if
+     *     inspector does not target any particular library.
+     * @return true if check passed. false if check failed for any reason.
+     */
+    private boolean doCheckVersion(int commandId, VersionTargetInfo versionTarget) {
+        if (versionTarget == null) {
+            return true;
         }
-        return result;
+        VersionChecker.Result versionResult =
+                VersionChecker.checkVersion(
+                        versionTarget.versionFileName, versionTarget.minVersion);
+        if (versionResult.status == VersionChecker.Result.Status.INCOMPATIBLE) {
+            sendCreateInspectorResponseVersionIncompatible(commandId, versionResult.message);
+            return false;
+        } else if (versionResult.status == VersionChecker.Result.Status.NOT_FOUND) {
+            sendCreateInspectorResponseLibraryMissing(commandId, versionResult.message);
+            return false;
+        } else if (versionResult.status == VersionChecker.Result.Status.ERROR) {
+            sendCreateInspectorResponseError(commandId, versionResult.message);
+            return false;
+        }
+        return true;
     }
 
     private static String createLabel(Class origin, String method) {
@@ -362,4 +422,14 @@ public class AppInspectionService {
 
     private static native void nativeRegisterExitHook(
             long servicePtr, Class<?> originClass, String originMethod);
+
+    private static class VersionTargetInfo {
+        String versionFileName;
+        String minVersion;
+
+        public VersionTargetInfo(String versionFileName, String minVersion) {
+            this.versionFileName = versionFileName;
+            this.minVersion = minVersion;
+        }
+    }
 }

@@ -120,8 +120,7 @@ public class CmakeTargetsTest {
         if (useV2NativeModel) {
             checkV2Model();
         } else {
-            project.model()
-                    .fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
+            project.model().fetchAndroidProjectsAllowSyncIssues();
             assertModel(project, project.model().fetch(NativeAndroidProject.class));
         }
     }
@@ -155,8 +154,7 @@ public class CmakeTargetsTest {
         if (useV2NativeModel) {
             checkV2Model();
         } else {
-            project.model()
-                    .fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
+            project.model().fetchAndroidProjectsAllowSyncIssues();
             assertModel(project, project.model().fetch(NativeAndroidProject.class));
         }
     }

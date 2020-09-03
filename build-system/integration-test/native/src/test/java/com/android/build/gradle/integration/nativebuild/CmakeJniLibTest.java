@@ -79,8 +79,8 @@ public class CmakeJniLibTest {
 
     @Before
     public void setUp() throws IOException {
-        new File(project.getTestDir(), "src/main/jni")
-                .renameTo(new File(project.getTestDir(), "src/main/cxx"));
+        new File(project.getProjectDir(), "src/main/jni")
+                .renameTo(new File(project.getProjectDir(), "src/main/cxx"));
         GradleTestProject lib = project.getSubproject("lib");
         TestFileUtils.appendToFile(
                 lib.getBuildFile(),
@@ -193,7 +193,7 @@ public class CmakeJniLibTest {
                                     + "< NativeModule");
         } else {
             // Make sure we can successfully get AndroidProject
-            project.model().fetchAndroidProjects().getOnlyModelMap().get(":app");
+            project.model().fetchAndroidProjectsAllowSyncIssues().getOnlyModelMap().get(":app");
 
             NativeAndroidProject model =
                     project.model().fetchMulti(NativeAndroidProject.class).get(":lib");

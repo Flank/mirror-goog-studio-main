@@ -301,7 +301,7 @@ public class MinifyTest {
 
     @Test
     public void testJavaResourcesArePackaged() throws IOException, InterruptedException {
-        Path javaRes = project.getTestDir().toPath().resolve("src/main/resources/my_res.txt");
+        Path javaRes = project.getProjectDir().toPath().resolve("src/main/resources/my_res.txt");
         Files.createDirectories(javaRes.getParent());
         Files.createFile(javaRes);
         project.executor()

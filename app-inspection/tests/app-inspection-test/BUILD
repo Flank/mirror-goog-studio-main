@@ -4,7 +4,9 @@ transport_test(
     name = "AppInspectionTest",
     size = "medium",
     srcs = glob(["testSrcs/**/*.java"]),
-    app_dexes = ["//tools/base/app-inspection/tests/test-app:test-app"],
+    # NOTE: use direct file reference instead of target reference (ex: .../test-app:test-app)
+    # Otherwise, the APK will not be included in the test.
+    app_dexes = ["//tools/base/app-inspection/tests/test-app:test-app.apk"],
     # Test inspector injected at runtime
     app_runtime_deps = ["//tools/base/app-inspection/tests/test-inspector:test-inspector"],
     jvm_flags = [

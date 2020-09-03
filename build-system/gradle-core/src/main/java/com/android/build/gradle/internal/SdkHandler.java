@@ -231,6 +231,29 @@ public class SdkHandler {
         this.sdkLibData = sdkLibData;
     }
 
+    /** Installs the given system image. */
+    @Nullable
+    public File installSystemImage(@NonNull String imageHash) {
+        SdkLoader loader = getSdkLoader();
+        if (loader == null) {
+            // If the loader is null it means we couldn't set-up one based on a local SDK.
+            // So we can't even try to installPackage something. This set up error will be
+            // reported during SdkHandler set-up.
+            return null;
+        }
+
+        try {
+            if (!sdkLibData.useSdkDownload()) {
+                return null;
+            }
+            // Initialize the loader.
+            loader.getSdkInfo(logger);
+            return loader.installSdkTool(sdkLibData, imageHash);
+        } catch (LicenceNotAcceptedException | InstallFailedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     /** Installs the NDK. */
     @Nullable
     public File installNdk(@NonNull Revision ndkRevision) {

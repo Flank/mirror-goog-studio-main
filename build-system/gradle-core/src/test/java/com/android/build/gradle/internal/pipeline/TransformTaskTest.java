@@ -2460,7 +2460,7 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(transformTask).isNotNull();
 
         // mimic an old __content__.json file with too many scopes from a previous build
-        File transformOutputFolder = transformTask.getStreamOutputFolder();
+        File transformOutputFolder = transformTask.getStreamOutputFolder().get().getAsFile();
         assertThat(transformOutputFolder).isNotNull();
         File subStreamFile = new File(transformOutputFolder, SubStream.FN_FOLDER_CONTENT);
         FileSubject.assertThat(subStreamFile).doesNotExist();

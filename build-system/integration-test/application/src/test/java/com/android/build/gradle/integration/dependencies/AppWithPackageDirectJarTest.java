@@ -99,7 +99,7 @@ public class AppWithPackageDirectJarTest {
 
         assertThat(packageItems.withType(MODULE).mapTo(COORDINATES))
                 .named("app sub-module package deps")
-                .containsExactly(project.getTestDir().getAbsolutePath() + "@@:jar");
+                .containsExactly(project.getProjectDir().getAbsolutePath() + "@@:jar");
         assertThat(packageItems.withType(JAVA).asList())
                 .named("app java package deps")
                 .isEmpty();

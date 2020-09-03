@@ -40,6 +40,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Internal
@@ -58,6 +59,7 @@ import javax.inject.Inject
  * path shortening and sparse encoding. If the optimized apk file size is less than before, then
  * the optimized resources content is made identical to [InternalArtifactType.PROCESSED_RES].
  */
+@CacheableTask
 abstract class OptimizeResourcesTask : NonIncrementalTask() {
 
     @get:InputDirectory

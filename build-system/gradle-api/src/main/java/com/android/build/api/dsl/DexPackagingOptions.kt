@@ -25,5 +25,5 @@ interface DexPackagingOptions {
      * Whether to use the legacy convention of compressing all dex files in the APK. If null, dex
      * files will be uncompressed when minSdk >= 28.
      */
-    var legacyPackaging: Boolean?
+    var useLegacyPackaging: Boolean?
 }

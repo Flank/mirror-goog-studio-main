@@ -22,7 +22,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +33,7 @@ class CentralDirectory {
 
     private final List<Location> deletedLocations = new ArrayList<>();
     private final Map<String, Entry> entries;
-    private final Map<String, CentralDirectoryRecord> addedEntries = new HashMap<>();
+    private final Map<String, CentralDirectoryRecord> addedEntries = new LinkedHashMap<>();
 
     CentralDirectory(@NonNull ByteBuffer buf, @NonNull Map<String, Entry> entries) {
         this.buf = buf;

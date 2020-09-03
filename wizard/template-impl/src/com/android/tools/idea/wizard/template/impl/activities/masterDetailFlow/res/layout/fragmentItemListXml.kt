@@ -27,17 +27,24 @@ fun fragmentItemListXml(
   useAndroidX: Boolean
 ) = """
 <?xml version="1.0" encoding="utf-8"?>
-<${getMaterialComponentName("android.support.v7.widget.RecyclerView",
-                            useAndroidX)} xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Adding the same root's ID for view binding as other layout configurations -->
+<${getMaterialComponentName("android.support.constraint.ConstraintLayout", useAndroidX)}
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/${itemListLayout}"
-    android:name="${packageName}.${collectionName}Fragment"
+    android:id="@+id/${itemListLayout}_container"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_marginLeft="16dp"
-    android:layout_marginRight="16dp"
-    app:layoutManager="LinearLayoutManager"
-    tools:context="${packageName}.${detailName}HostActivity"
-    tools:listitem="@layout/${itemListContentLayout}" />
+    android:layout_height="match_parent" >
+
+    <${getMaterialComponentName("android.support.v7.widget.RecyclerView", useAndroidX)}
+        android:id="@+id/${itemListLayout}"
+        android:name="${packageName}.${collectionName}Fragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        app:layoutManager="LinearLayoutManager"
+        tools:context="${packageName}.${detailName}HostActivity"
+        tools:listitem="@layout/${itemListContentLayout}" />
+</${getMaterialComponentName("android.support.constraint.ConstraintLayout", useAndroidX)}>
 """

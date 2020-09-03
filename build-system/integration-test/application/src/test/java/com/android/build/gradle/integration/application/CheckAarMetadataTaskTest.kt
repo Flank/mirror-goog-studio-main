@@ -56,7 +56,7 @@ class CheckAarMetadataTaskTest {
     fun testMinCompileSdkVersion_librarySubModule() {
         // Add resource requiring API level 28 to library
         FileUtils.join(
-            project.getSubproject("lib").testDir,
+            project.getSubproject("lib").projectDir,
             "src",
             "main",
             "res",
@@ -109,7 +109,7 @@ class CheckAarMetadataTaskTest {
     fun testMinCompileSdkVersion_aarFileDependency() {
         // Add resource requiring API level 28 to library
         FileUtils.join(
-            project.getSubproject("lib").testDir,
+            project.getSubproject("lib").projectDir,
             "src",
             "main",
             "res",
@@ -135,7 +135,7 @@ class CheckAarMetadataTaskTest {
         FileUtils.copyFile(
             project.getSubproject("lib").getOutputFile("aar", "lib-debug.aar"),
             File(
-                File(project.getSubproject("app").testDir, "libs").also { it.mkdirs() },
+                File(project.getSubproject("app").projectDir, "libs").also { it.mkdirs() },
                 "library.aar"
             )
         )
@@ -287,7 +287,7 @@ class CheckAarMetadataTaskTest {
         // Copy lib's .aar build output to the app's libs directory
         val aarFile =
             File(
-                File(project.getSubproject("app").testDir, "libs").also { it.mkdirs() },
+                File(project.getSubproject("app").projectDir, "libs").also { it.mkdirs() },
                 "library.aar"
             )
         FileUtils.copyFile(

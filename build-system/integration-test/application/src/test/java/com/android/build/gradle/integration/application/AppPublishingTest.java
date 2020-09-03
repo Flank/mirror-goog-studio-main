@@ -87,7 +87,7 @@ public class AppPublishingTest {
         project.execute("publishBundlePublicationToMavenRepository");
 
         // manually check that the app publishing worked.
-        File testRepo = new File(project.getTestDir(), "testrepo");
+        File testRepo = new File(project.getProjectDir(), "testrepo");
         File groupIdFolder = FileUtils.join(testRepo, "test", "densitysplit");
 
         File aabFile = FileUtils.join(groupIdFolder, "bundle", "1.0", "bundle-1.0.aab");
@@ -104,7 +104,7 @@ public class AppPublishingTest {
         project.execute("publishApkPublicationToMavenRepository");
 
         // manually check that the app publishing worked.
-        File testRepo = new File(project.getTestDir(), "testrepo");
+        File testRepo = new File(project.getProjectDir(), "testrepo");
         File groupIdFolder = FileUtils.join(testRepo, "test", "densitysplit");
 
         File aabFile = FileUtils.join(groupIdFolder, "apk", "1.0", "apk-1.0.zip");
@@ -129,7 +129,7 @@ public class AppPublishingTest {
         project.execute("publishApkPublicationToMavenRepository");
 
         // manually check that the app publishing worked.
-        File testRepo = new File(project.getTestDir(), "testrepo");
+        File testRepo = new File(project.getProjectDir(), "testrepo");
         File groupIdFolder = FileUtils.join(testRepo, "test", "densitysplit");
 
         File aabFile = FileUtils.join(groupIdFolder, "apk", "1.0", "apk-1.0.zip");

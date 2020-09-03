@@ -18,6 +18,7 @@ package com.android.ide.common.gradle.model.impl
 import com.android.ide.common.gradle.model.IdeLibrary
 import com.google.common.annotations.VisibleForTesting
 import java.io.File
+import java.io.Serializable
 
 /**
  * The implementation of IdeLibrary for Android libraries.
@@ -25,7 +26,7 @@ import java.io.File
 data class IdeAndroidLibrary(
   val core: IdeAndroidLibraryCore,
   override val isProvided: Boolean
-) : IdeLibrary by core {
+) : IdeLibrary by core, Serializable {
   @VisibleForTesting
   constructor(
     artifactAddress: String,
@@ -92,7 +93,7 @@ data class IdeAndroidLibraryCore(
   private val _publicResources: String,
   private val _artifact: String,
   private val _symbolFile: String
-) : IdeLibrary {
+) : IdeLibrary, Serializable {
 
   // Used for serialization by the IDE.
   internal constructor() : this(

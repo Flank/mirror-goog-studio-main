@@ -90,8 +90,9 @@ public class NdkBuildJniLibTest {
 
     @Before
     public void setUp() throws IOException {
-        new File(project.getTestDir(), "lib/src/main/jni")
-                .renameTo(new File(project.getTestDir(), "lib/src/main/cxx"));
+        new File(project.getProjectDir(), "lib/src/main/jni")
+                .renameTo(new File(project.getProjectDir(), "lib/src/main/cxx"));
+
         GradleTestProject lib = project.getSubproject("lib");
         TestFileUtils.appendToFile(
                 lib.getBuildFile(),
@@ -244,7 +245,7 @@ public class NdkBuildJniLibTest {
             }
         } else {
             // Make sure we can successfully get AndroidProject
-            project.model().fetchAndroidProjects().getOnlyModelMap().get(":app");
+            project.model().fetchAndroidProjectsAllowSyncIssues().getOnlyModelMap().get(":app");
 
             NativeAndroidProject model =
                     project.model().fetchMulti(NativeAndroidProject.class).get(":lib");

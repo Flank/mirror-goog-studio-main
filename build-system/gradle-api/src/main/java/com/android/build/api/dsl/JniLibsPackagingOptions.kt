@@ -25,7 +25,7 @@ interface JniLibsPackagingOptions {
      * Whether to use the legacy convention of compressing all .so files in the APK. If null, .so
      * files will be uncompressed and page-aligned when minSdk >= 23.
      */
-    var legacyPackaging: Boolean?
+    var useLegacyPackaging: Boolean?
 
     /**
      * The set of excluded patterns. Native libraries matching any of these patterns do not get

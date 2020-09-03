@@ -1,3 +1,5 @@
+load(":project.bzl", "PROJECT")
+
 def _fileset_impl(ctx):
     srcs = depset(order = "postorder", transitive = [src.files for src in ctx.attr.srcs])
 
@@ -262,3 +264,8 @@ replace_manifest = rule(
     fragments = ["java"],
     implementation = _replace_manifest_iml,
 )
+
+def select_project(dict):
+    if PROJECT not in dict:
+        fail("The project %s is not in the given dictionary")
+    return dict[PROJECT]

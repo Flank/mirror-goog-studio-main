@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
@@ -85,7 +84,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
          *
          * It should also show up in build/intermediates/res/merged/debug/raw/me.raw
          */
-        val libraryRaw = FileUtils.join(project.testDir, "library", "src", "main", "res", "raw")
+        val libraryRaw = FileUtils.join(project.projectDir, "library", "src", "main", "res", "raw")
         FileUtils.mkdirs(libraryRaw)
         Files.write(File(libraryRaw, "me.raw").toPath(), byteArrayOf(0, 1, 2))
 
@@ -98,7 +97,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
             .containsFileWithContent("res/raw/me.raw", byteArrayOf(0, 1, 2))
 
         val inIntermediate = FileUtils.join(
-            project.getSubproject("app").testDir,
+            project.getSubproject("app").projectDir,
             "build",
             "intermediates",
             "res",
@@ -107,7 +106,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
             "raw_me.raw.flat"
         )
         val inCompiledLocalResources = FileUtils.join(
-            project.getSubproject("library").testDir,
+            project.getSubproject("library").projectDir,
             "build",
             "intermediates",
             "compiled_local_resources",
@@ -135,7 +134,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
          * The change should also show up in build/intermediates/res/merged/debug/raw/me.raw
          */
 
-        val appRaw = FileUtils.join(project.testDir, "app", "src", "main", "res", "raw")
+        val appRaw = FileUtils.join(project.projectDir, "app", "src", "main", "res", "raw")
         FileUtils.mkdirs(appRaw)
         Files.write(File(appRaw, "me.raw").toPath(), byteArrayOf(3))
 
@@ -149,7 +148,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
          * Now, modify the library's and check that nothing changed.
          */
         val apUnderscore = FileUtils.join(
-            project.getSubproject("app").testDir,
+            project.getSubproject("app").projectDir,
             "build",
             "intermediates",
             "processed_res",
@@ -178,7 +177,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         /*
          * Add a resource file to the project and build it.
          */
-        val raw = FileUtils.join(project.testDir, "app", "src", "main", "res", "raw")
+        val raw = FileUtils.join(project.projectDir, "app", "src", "main", "res", "raw")
         FileUtils.mkdirs(raw)
         Files.write(File(raw, "me.raw").toPath(), byteArrayOf(0, 1, 2))
         project.executor().run(":app:assembleDebug")
@@ -187,7 +186,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
          * Check that the file is merged and in the apk.
          */
         val inIntermediate = FileUtils.join(
-            project.getSubproject("app").testDir,
+            project.getSubproject("app").projectDir,
             "build",
             "intermediates",
             "res",
@@ -198,7 +197,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         assertThat(inIntermediate).exists()
 
         val apUnderscore = FileUtils.join(
-            project.getSubproject("app").testDir,
+            project.getSubproject("app").projectDir,
             "build",
             "intermediates",
             "processed_res",
@@ -233,7 +232,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         /*
          * Add a resource file to the project and build it.
          */
-        val raw = FileUtils.join(project.testDir, "app", "src", "main", "res", "raw")
+        val raw = FileUtils.join(project.projectDir, "app", "src", "main", "res", "raw")
         FileUtils.mkdirs(raw)
         Files.write(File(raw, "me.raw").toPath(), byteArrayOf(0, 1, 2))
         project.executor().run(":app:assembleDebug")
@@ -242,7 +241,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
          * Check that the file is merged and in the apk.
          */
         val inIntermediate = FileUtils.join(
-            project.getSubproject("app").testDir,
+            project.getSubproject("app").projectDir,
             "build",
             "intermediates",
             "res",
@@ -253,7 +252,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         assertThat(inIntermediate).exists()
 
         val apUnderscore = FileUtils.join(
-            project.getSubproject("app").testDir,
+            project.getSubproject("app").projectDir,
             "build",
             "intermediates",
             "processed_res",
@@ -294,7 +293,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         /*
          * Add a resource file to the project and build it.
          */
-        val raw = FileUtils.join(project.testDir, "app", "src", "main", "res", "raw")
+        val raw = FileUtils.join(project.projectDir, "app", "src", "main", "res", "raw")
         FileUtils.mkdirs(raw)
         Files.write(File(raw, "me.raw").toPath(), byteArrayOf(0, 1, 2))
         project.executor().run(":app:assembleDebug")
@@ -303,7 +302,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
          * Check that the file is merged and in the apk.
          */
         val inIntermediate = FileUtils.join(
-            project.getSubproject("app").testDir,
+            project.getSubproject("app").projectDir,
             "build",
             "intermediates",
             "res",
@@ -314,7 +313,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         assertThat(inIntermediate).exists()
 
         val apUnderscore = FileUtils.join(
-            project.getSubproject("app").testDir,
+            project.getSubproject("app").projectDir,
             "build",
             "intermediates",
             "processed_res",
@@ -443,7 +442,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
             "dependencies { compile project(':library') }${System.lineSeparator()}"
         )
 
-        val libraryValues = FileUtils.join(project.testDir, "library", "src", "main", "res", "values")
+        val libraryValues = FileUtils.join(project.projectDir, "library", "src", "main", "res", "values")
         FileUtils.mkdirs(libraryValues)
         FileUtils.createFile(
             File(libraryValues, "lib_values.xml"),
@@ -454,7 +453,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
             .run("clean", ":app:assembleDebug")
 
         val inMergedDir = FileUtils.join(
-            project.getSubproject("app").testDir,
+            project.getSubproject("app").projectDir,
             "build",
             "intermediates",
             "incremental",
@@ -465,7 +464,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         )
 
         val smallMerge = FileUtils.join(
-            project.getSubproject("app").testDir,
+            project.getSubproject("app").projectDir,
             "build",
             "intermediates",
             "packaged_res",
@@ -501,7 +500,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         FileUtils.createFile(drawable24, "<vector>b</vector>")
         FileUtils.createFile(drawable28, "<vector>c</vector>")
 
-        val generatedPngs = FileUtils.join(appProject.testDir,
+        val generatedPngs = FileUtils.join(appProject.projectDir,
                 "build", "generated", "res", "pngs", "debug")
 
         project.executor()

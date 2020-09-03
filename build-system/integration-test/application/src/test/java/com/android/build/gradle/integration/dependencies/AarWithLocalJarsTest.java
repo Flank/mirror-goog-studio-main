@@ -67,7 +67,7 @@ public class AarWithLocalJarsTest {
     @BeforeClass
     public static void setUp() throws IOException {
         // Clean testRepo
-        File testRepo = new File(app.getTestDir(), "../testrepo");
+        File testRepo = new File(app.getProjectDir(), "../testrepo");
         if (testRepo.isDirectory()) {
             FileUtils.deleteDirectoryContents(testRepo);
         }
@@ -87,8 +87,8 @@ public class AarWithLocalJarsTest {
         util.execute("clean", "assemble");
 
         // copy it inside the baseLibrary
-        File from = FileUtils.join(util.getTestDir(), "build", "libs", "util.jar");
-        File to = FileUtils.join(baseLibrary.getTestDir(), "libs", "util.jar");
+        File from = FileUtils.join(util.getProjectDir(), "build", "libs", "util.jar");
+        File to = FileUtils.join(baseLibrary.getProjectDir(), "libs", "util.jar");
         FileUtils.mkdirs(to.getParentFile());
         Files.copy(from, to);
 

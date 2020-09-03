@@ -40,6 +40,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleTransformExecution
 import org.gradle.api.Project
 import org.gradle.api.execution.TaskExecutionGraph
+import org.gradle.api.internal.StartParameterInternal
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.tooling.events.FinishEvent
@@ -75,6 +76,7 @@ class AnalyticsResourceManager(
 
     @VisibleForTesting
     val executionSpans = ConcurrentLinkedQueue<GradleBuildProfileSpan>()
+    private val applicationIds = ConcurrentLinkedQueue<String>()
 
     private val nameAnonymizer = NameAnonymizer()
     private var lastRecordId: AtomicLong? = null
@@ -287,6 +289,11 @@ class AnalyticsResourceManager(
             .setMaxMemory(Runtime.getRuntime().maxMemory())
             .setGradleVersion(Strings.nullToEmpty(project.gradle.gradleVersion))
 
+        val configCachingEnabled = isConfigCachingEnabled(project.gradle)
+        if (configCachingEnabled != null) {
+            profileBuilder.configurationCachingEnabled = configCachingEnabled
+        }
+
         val anonymizedProjectId =
             try {
                 Anonymizer.anonymizeUtf8(
@@ -316,6 +323,10 @@ class AnalyticsResourceManager(
 
     fun recordEvent(event: AndroidStudioEvent.Builder) {
         otherEvents.add(event)
+    }
+
+    fun recordApplicationId(metadataFile: File) {
+        applicationIds.add(metadataFile.readText())
     }
 
     private fun getProjectId(projectPath: String) : Long {
@@ -396,7 +407,8 @@ class AnalyticsResourceManager(
             .setGcCount(endMemorySample.gcCount - initialMemorySample.gcCount)
             .setGcTime(endMemorySample.gcTimeMs - initialMemorySample.gcTimeMs)
 
-        //TODO(b/162715908) add raw application ids
+        profileBuilder.addAllRawProjectId(applicationIds.toSet().toList().sorted())
+
         return profileBuilder.build()
     }
 
@@ -433,6 +445,19 @@ class AnalyticsResourceManager(
             else -> {
                 null
             }
+        }
+    }
+
+    private fun isConfigCachingEnabled(gradle : Gradle): Boolean? {
+        return try {
+            //TODO(b/167384234) move away from using Gradle internal class when public API is available
+            val startParameters = gradle.startParameter as StartParameterInternal
+            startParameters.isConfigurationCache
+        } catch (e : Throwable) {
+            LoggerWrapper
+                .getLogger(AnalyticsResourceManager::class.java)
+                .warning("Unable to decide if config caching is enabled, details: %s", e.message)
+            return null
         }
     }
 }

@@ -20,6 +20,9 @@ package com.android.tools.build.debug.model
 import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder
 import com.android.build.gradle.integration.common.fixture.ModelBuilder
 import com.android.build.gradle.integration.common.fixture.ModelContainer
+import com.android.build.gradle.integration.common.fixture.gradle_project.ProjectLocation
+import com.android.build.gradle.integration.common.fixture.gradle_project.TestLocation
+import com.android.build.gradle.integration.common.fixture.gradle_project.initializeTestLocation
 import com.android.builder.model.AndroidProject
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.ProjectConnection
@@ -37,14 +40,15 @@ import java.io.File
 
 fun main(args : Array<String>) {
     val projectLocation = getProjectLocation(args)
-    val connection = getProjectConnection(projectLocation)
+    val connection = getProjectConnection(projectLocation.projectDir)
 
     try {
-        val modelBuilder = ModelBuilder(connection,
-                { _ -> },
-                projectLocation.toPath(),
-                null,
-                GradleTestProjectBuilder.MemoryRequirement.useDefault())
+        val modelBuilder = ModelBuilder(
+            projectLocation,
+            connection,
+            { },
+            GradleTestProjectBuilder.MemoryRequirement.useDefault()
+        )
 
         val models: ModelContainer<AndroidProject> = modelBuilder
             .withLocalPrefsRoot()
@@ -85,15 +89,18 @@ private fun getProjectConnection(projectLocation: File): ProjectConnection {
             .connect()
 }
 
-private fun getProjectLocation(args: Array<String>): File {
-    if (args.isEmpty()) {
-        val locStr = System.getenv()["ANDROID_PROJECT_LOC"]
-        if (locStr != null) {
-            return File(locStr)
-        }
+private fun getProjectLocation(args: Array<String>): ProjectLocation {
+    val testLocation: TestLocation  = initializeTestLocation()
 
-        throw RuntimeException("No args and no ANDROID_PROJECT_LOC env var set")
+    val location = if (args.isEmpty()) {
+        System.getenv("ANDROID_PROJECT_LOC")?.let { File(it)}
+            ?: throw RuntimeException("No args and no ANDROID_PROJECT_LOC env var set")
+    } else {
+        File(args[0])
     }
 
-    return File(args[0])
+    return ProjectLocation(
+        location,
+        testLocation
+    )
 }

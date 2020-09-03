@@ -253,7 +253,7 @@ class JetifierTest(private val withKotlin: Boolean) {
             gradle.taskGraph.whenReady {
                 beforeTaskExecutionPhase = false
             }
-            
+
             allprojects {
                 project.configurations.all {
                     it.incoming.beforeResolve { configuration ->
@@ -287,7 +287,7 @@ class JetifierTest(private val withKotlin: Boolean) {
         )
         TestFileUtils.searchAndReplace(
             project.getSubproject(":app")
-                .file("src/main/java/com/example/app/DummyClassToTestAnnotationProcessing.java"),
+                .file("src/main/java/com/example/app/ClassToTestAnnotationProcessing.java"),
             "import android.support.annotation.NonNull;",
             "import androidx.annotation.NonNull;"
         )

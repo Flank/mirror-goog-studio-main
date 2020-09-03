@@ -21,8 +21,6 @@ import static com.android.testutils.truth.FileSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -48,7 +46,7 @@ public class LintCustomRuleTest {
                         + "   This app should not have any activities.\n"
                         + "\n"
                         + "1 errors, 0 warnings";
-        File file = new File(project.getSubproject("app").getTestDir(), "lint-results.txt");
+        File file = new File(project.getSubproject("app").getProjectDir(), "lint-results.txt");
         assertThat(file).exists();
         assertThat(file).contentWithUnixLineSeparatorsIsExactly(expected);
     }

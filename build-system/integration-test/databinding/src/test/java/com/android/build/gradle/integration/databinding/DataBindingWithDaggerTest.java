@@ -39,8 +39,6 @@ public class DataBindingWithDaggerTest {
     @Rule
     public GradleTestProject project;
 
-    private final String buildSuffix;
-
     @Parameterized.Parameters(name = "specify_processor_class_{0}")
     public static List<Object[]> parameters() {
         return Arrays.asList(
@@ -50,20 +48,22 @@ public class DataBindingWithDaggerTest {
     }
 
     public DataBindingWithDaggerTest(boolean specifyProcessor) {
+        String buildSuffix;
         if (specifyProcessor) {
             buildSuffix = ".specifyprocessor.gradle";
         } else {
             buildSuffix = ".gradle";
         }
 
-        project = GradleTestProject.builder()
-                .fromTestProject("databindingAndDagger")
-                .create();
+        project =
+                GradleTestProject.builder()
+                        .fromTestProject("databindingAndDagger")
+                        .withBuildFileName("build" + buildSuffix)
+                        .create();
     }
 
     @Test
     public void testApp() throws Exception {
-        project.setBuildFile("build" + buildSuffix);
         project.execute("assembleDebug");
 
         DexSubject mainDex = assertThat(project.getApk("debug")).hasMainDexFile().that();

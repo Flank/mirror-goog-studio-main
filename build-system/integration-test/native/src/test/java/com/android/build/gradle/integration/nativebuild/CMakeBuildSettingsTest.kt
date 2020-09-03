@@ -200,10 +200,10 @@ class CMakeBuildSettingsTest(
 
     private fun debugBuildModelFiles(): List<File> {
         val x86ModelDebug = FileUtils.join(
-            project.testDir, ".cxx", "cmake", "debug", "x86_64", "build_model.json"
+            project.projectDir, ".cxx", "cmake", "debug", "x86_64", "build_model.json"
         )
         val armModelDebug = FileUtils.join(
-            project.testDir, ".cxx", "cmake", "debug", "armeabi-v7a", "build_model.json"
+            project.projectDir, ".cxx", "cmake", "debug", "armeabi-v7a", "build_model.json"
         )
 
         return listOf(x86ModelDebug, armModelDebug)

@@ -505,7 +505,7 @@
              < generatedSourceFolders
              - variantSourceProvider     = (null)
              - multiFlavorSourceProvider = (null)
-             - mockablePlatformJar       = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/android.jar{F}
+             - mockablePlatformJar       = {GRADLE_CACHE}/{CHECKSUM}/android.jar{F}
              - runtimeResourceFolder     = {PROJECT}/build/intermediates/java_res/debugUnitTest/out{!}
           < unitTestArtifact
           - testedTargetVariant    = (null)
@@ -561,7 +561,7 @@
              < generatedSourceFolders
              - variantSourceProvider     = (null)
              - multiFlavorSourceProvider = (null)
-             - mockablePlatformJar       = {GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/android.jar{F}
+             - mockablePlatformJar       = {GRADLE_CACHE}/{CHECKSUM}/android.jar{F}
              - runtimeResourceFolder     = {PROJECT}/build/intermediates/java_res/releaseUnitTest/out{!}
           < unitTestArtifact
           - testedTargetVariant    = (null)

@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.common.utils;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.testutils.TestUtils;
 import java.io.File;
 import java.io.IOException;
@@ -41,16 +40,15 @@ public class JacocoAgent {
         return attachJacoco != null;
     }
 
-    public static String getJvmArg() {
+    public static String getJvmArg(@NonNull File buildDir) {
         if (TestUtils.runningFromBazel()) {
             return getBazelJacocoAgentJvmArg();
         }
-        return getJvmArgGradle();
+        return getJvmArgGradle(buildDir);
     }
 
     @NonNull
-    private static String getJvmArgGradle() {
-        File buildDir = GradleTestProject.BUILD_DIR;
+    private static String getJvmArgGradle(@NonNull File buildDir) {
         File jacocoAgent = new File(buildDir, "jacoco/agent.jar");
         if (!jacocoAgent.isFile()) {
             try {

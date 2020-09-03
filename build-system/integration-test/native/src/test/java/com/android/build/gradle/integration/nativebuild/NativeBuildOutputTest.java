@@ -428,8 +428,7 @@ public class NativeBuildOutputTest {
                                     + "< NativeModule");
         } else {
             Collection<SyncIssue> syncIssues =
-                    project.model().fetchAndroidProjects().getOnlyModelSyncIssues();
-            assertThat(syncIssues).hasSize(0);
+                    project.model().fetchAndroidProjectsAllowSyncIssues().getOnlyModelSyncIssues();
             NativeAndroidProject nativeProject = project.model().fetch(NativeAndroidProject.class);
             // TODO: remove this if statement once a fresh CMake is deployed to buildbots.
             // Old behavior was to emit two targets: "hello-jni-Debug-x86" and

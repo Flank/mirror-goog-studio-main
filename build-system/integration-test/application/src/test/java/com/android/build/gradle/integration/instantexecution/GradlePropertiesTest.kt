@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.instantexecution
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
@@ -36,7 +35,7 @@ class GradlePropertiesTest {
 
     @Before
     fun setUp() {
-        project.testDir.resolve(".gradle/configuration-cache").deleteRecursively()
+        project.projectDir.resolve(".gradle/configuration-cache").deleteRecursively()
     }
 
     @Test

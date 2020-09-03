@@ -101,14 +101,14 @@ class DeterministicTaskOutputsTest {
         project1.executor().run("clean", "assembleDebug", "testDebugUnitTest")
         val snapshot1 = FileSnapshot.snapshot(
             fileToSnapshot = project1.getSubproject("app").buildDir,
-            baseDir = project1.testDir
+            baseDir = project1.projectDir
         )
 
         // Build the second project
         project2.executor().run("clean", "assembleDebug", "testDebugUnitTest")
         val snapshot2 = FileSnapshot.snapshot(
             fileToSnapshot = project2.getSubproject("app").buildDir,
-            baseDir = project2.testDir
+            baseDir = project2.projectDir
         )
 
         // Check that they have consistent outputs

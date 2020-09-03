@@ -85,23 +85,25 @@ public class VectorDrawableTest {
 
         // Check HDPI. Test project contains the hdpi png, it should be used instead of the
         // generated one.
-        File generatedPng = new File(
-                project.getTestDir(),
-                "build/generated/res/pngs/debug/drawable-hdpi/special_heart.png");
+        File generatedPng =
+                new File(
+                        project.getProjectDir(),
+                        "build/generated/res/pngs/debug/drawable-hdpi/special_heart.png");
         assertThat(generatedPng).doesNotExist();
         File pngToUse =
                 new File(
-                        project.getTestDir(),
+                        project.getProjectDir(),
                         "build/intermediates/res/merged/debug/drawable-hdpi_special_heart.png.flat");
         assertThat(pngToUse).exists();
 
         // Check XHDPI.
-        generatedPng = new File(
-                project.getTestDir(),
-                "build/generated/res/pngs/debug/drawable-xhdpi/special_heart.png");
+        generatedPng =
+                new File(
+                        project.getProjectDir(),
+                        "build/generated/res/pngs/debug/drawable-xhdpi/special_heart.png");
         pngToUse =
                 new File(
-                        project.getTestDir(),
+                        project.getProjectDir(),
                         "build/intermediates/res/merged/debug/drawable-xhdpi_special_heart.png.flat");
         assertThat(pngToUse).exists();
         assertThat(generatedPng).exists();
@@ -150,8 +152,9 @@ public class VectorDrawableTest {
         long xmlTimestamp = intermediatesXml.lastModified();
         long pngTimestamp = intermediatesHdpiPng.lastModified();
 
-        File heartXml = new File(project.getTestDir(), "src/main/res/drawable/heart.xml");
-        File heartXmlCopy = new File(project.getTestDir(), "src/main/res/drawable/heart_copy.xml");
+        File heartXml = new File(project.getProjectDir(), "src/main/res/drawable/heart.xml");
+        File heartXmlCopy =
+                new File(project.getProjectDir(), "src/main/res/drawable/heart_copy.xml");
         Files.copy(heartXml, heartXmlCopy);
 
         TestUtils.waitForFileSystemTick();
@@ -178,7 +181,7 @@ public class VectorDrawableTest {
 
         long timestamp = intermediatesIconPng.lastModified();
 
-        FileUtils.delete(new File(project.getTestDir(), "src/main/res/drawable/heart.xml"));
+        FileUtils.delete(new File(project.getProjectDir(), "src/main/res/drawable/heart.xml"));
 
         TestUtils.waitForFileSystemTick();
         project.executor().run("assembleDebug");
@@ -205,15 +208,15 @@ public class VectorDrawableTest {
 
         long xmlTimestamp = intermediatesXml.lastModified();
 
-        File generatedPng = new File(
-                project.getTestDir(),
-                "build/generated/res/pngs/debug/drawable-hdpi/special_heart.png");
-        File originalPng = new File(
-                project.getTestDir(),
-                "src/main/res/drawable-hdpi/special_heart.png");
+        File generatedPng =
+                new File(
+                        project.getProjectDir(),
+                        "build/generated/res/pngs/debug/drawable-hdpi/special_heart.png");
+        File originalPng =
+                new File(project.getProjectDir(), "src/main/res/drawable-hdpi/special_heart.png");
         File pngToUse =
                 new File(
-                        project.getTestDir(),
+                        project.getProjectDir(),
                         "build/intermediates/res/merged/debug/"
                                 + "drawable-hdpi_special_heart.png.flat");
 
@@ -240,23 +243,23 @@ public class VectorDrawableTest {
         assertThat(intermediatesXml).exists();
         long xmlTimestamp = intermediatesXml.lastModified();
 
-        File generatedPng = new File(
-                project.getTestDir(),
-                "build/generated/res/pngs/debug/drawable-xhdpi/special_heart.png");
+        File generatedPng =
+                new File(
+                        project.getProjectDir(),
+                        "build/generated/res/pngs/debug/drawable-xhdpi/special_heart.png");
         File pngToUse =
                 new File(
-                        project.getTestDir(),
+                        project.getProjectDir(),
                         "build/intermediates/res/merged/debug/"
                                 + "drawable-xhdpi_special_heart.png.flat");
         assertThat(pngToUse).exists();
         assertThat(generatedPng).exists();
 
-
         // Create a PNG file for XHDPI. It should be used instead of the generated one.
-        File hdpiPng = new File(project.getTestDir(),
-                "src/main/res/drawable-hdpi/special_heart.png");
-        File xhdpiPng = new File(project.getTestDir(),
-                "src/main/res/drawable-xhdpi/special_heart.png");
+        File hdpiPng =
+                new File(project.getProjectDir(), "src/main/res/drawable-hdpi/special_heart.png");
+        File xhdpiPng =
+                new File(project.getProjectDir(), "src/main/res/drawable-xhdpi/special_heart.png");
         Files.createParentDirs(xhdpiPng);
         Files.copy(hdpiPng, xhdpiPng);
 
@@ -278,18 +281,18 @@ public class VectorDrawableTest {
 
         File heartPngToUse =
                 new File(
-                        project.getTestDir(),
+                        project.getProjectDir(),
                         "build/intermediates/res/merged/debug/drawable-hdpi_heart.png.flat");
         File iconPngToUse =
                 new File(
-                        project.getTestDir(),
+                        project.getProjectDir(),
                         "build/intermediates/res/merged/debug/drawable_icon.png.flat");
 
         String oldHashCode = FileUtils.sha1(heartPngToUse);
         long heartPngModified = heartPngToUse.lastModified();
         long iconPngModified = iconPngToUse.lastModified();
 
-        File heartXml = new File(project.getTestDir(), "src/main/res/drawable/heart.xml");
+        File heartXml = new File(project.getProjectDir(), "src/main/res/drawable/heart.xml");
         String content = Files.toString(heartXml, UTF_8);
         // Change the heart to blue.
         Files.asCharSink(heartXml, UTF_8).write(content.replace("ff0000", "0000ff"));
@@ -314,7 +317,7 @@ public class VectorDrawableTest {
 
         long timestamp = intermediatesIconPng.lastModified();
 
-        File heartXml = new File(project.getTestDir(), "src/main/res/drawable/heart.xml");
+        File heartXml = new File(project.getProjectDir(), "src/main/res/drawable/heart.xml");
         Files.asCharSink(heartXml, UTF_8)
                 .write(
                         "<bitmap xmlns:android=\"http://schemas.android.com/apk/res/android\" "
@@ -334,7 +337,7 @@ public class VectorDrawableTest {
 
         File heartXmlToUse =
                 new File(
-                        project.getTestDir(),
+                        project.getProjectDir(),
                         "build/intermediates/res/merged/debug/drawable_heart.xml.flat");
         assertThat(heartXmlToUse).exists();
         assertThat(intermediatesIconPng).wasModifiedAt(timestamp);
@@ -342,7 +345,7 @@ public class VectorDrawableTest {
 
     @Test
     public void incrementalBuildReplaceBitmapAliasWithVectorDrawable() throws Exception {
-        File heartXml = new File(project.getTestDir(), "src/main/res/drawable/heart.xml");
+        File heartXml = new File(project.getProjectDir(), "src/main/res/drawable/heart.xml");
 
         String vectorDrawable = Files.toString(heartXml, UTF_8);
 
@@ -368,7 +371,7 @@ public class VectorDrawableTest {
 
         File heartXmlToUse =
                 new File(
-                        project.getTestDir(),
+                        project.getProjectDir(),
                         "build/intermediates/res/merged/debug/drawable_heart.xml.flat");
         assertThat(heartXmlToUse).exists();
 
@@ -562,7 +565,7 @@ public class VectorDrawableTest {
     @Test
     public void resourceReferences() throws Exception {
         Files.asCharSink(
-                        new File(project.getTestDir(), "src/main/res/drawable/heart.xml"),
+                        new File(project.getProjectDir(), "src/main/res/drawable/heart.xml"),
                         StandardCharsets.UTF_8)
                 .write(
                         "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"

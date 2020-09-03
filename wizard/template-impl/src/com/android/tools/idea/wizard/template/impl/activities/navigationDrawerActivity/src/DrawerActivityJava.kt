@@ -15,16 +15,32 @@
  */
 package com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.src
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
+import com.android.tools.idea.wizard.template.underscoreToLowerCamelCase
 
 fun drawerActivityJava(
   packageName: String,
   activityClass: String,
+  appBarLayoutName: String,
   layoutName: String,
   menuName: String,
   navHostFragmentId: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layoutName)}.inflate(getLayoutInflater());
+     setContentView(binding.getRoot());
+  """ else "setContentView(R.layout.$layoutName);"
+  val appBarMainBinding = underscoreToLowerCamelCase(appBarLayoutName)
+
+  return """
 package $packageName;
 
 import android.os.Bundle;
@@ -40,27 +56,37 @@ import androidx.navigation.ui.NavigationUI;
 import ${getMaterialComponentName("android.support.v4.widget.DrawerLayout", useAndroidX)};
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)};
 import ${getMaterialComponentName("android.support.v7.widget.Toolbar", useAndroidX)};
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
 
 public class ${activityClass} extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(layoutName)} binding;
+"""}}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.${layoutName});
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        $contentViewBlock
+        setSupportActionBar(${findViewById(
+          Language.Java, 
+          isViewBindingSupported, 
+          id = "toolbar", 
+          bindingName = "binding.${appBarMainBinding}")});
+        ${findViewById(
+          Language.Java, 
+          isViewBindingSupported, 
+          id = "fab", 
+          bindingName = "binding.${appBarMainBinding}")}.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         });
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        NavigationView navigationView = findViewById(R.id.nav_view);
+        DrawerLayout drawer = ${findViewById(Language.Java, isViewBindingSupported, id = "drawer_layout")};
+        NavigationView navigationView = ${findViewById(Language.Java, isViewBindingSupported, id = "nav_view")};
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
@@ -87,3 +113,4 @@ public class ${activityClass} extends AppCompatActivity {
     }
 } 
 """
+}

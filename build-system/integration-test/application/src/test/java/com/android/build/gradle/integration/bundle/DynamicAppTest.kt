@@ -344,7 +344,7 @@ class DynamicAppTest {
 
     @Test
     fun `test unsigned bundleRelease task with r8 dontminify`() {
-        project.getSubproject("app").testDir.resolve("proguard-rules.pro")
+        project.getSubproject("app").projectDir.resolve("proguard-rules.pro")
             .writeText("-dontobfuscate")
         val bundleTaskName = getBundleTaskName("release")
         project.executor().with(OptionalBooleanOption.ENABLE_R8, true).run("app:$bundleTaskName")
@@ -369,7 +369,7 @@ class DynamicAppTest {
         TestFileUtils.appendToFile(appProject.buildFile, "\nandroid.packagingOptions {\n" +
                 "  exclude 'foo.txt'\n" +
                 "}")
-        val fooTxt = FileUtils.join(appProject.testDir, "src", "main", "resources", "foo.txt")
+        val fooTxt = FileUtils.join(appProject.projectDir, "src", "main", "resources", "foo.txt")
         FileUtils.mkdirs(fooTxt.parentFile)
         Files.write(fooTxt.toPath(), "foo".toByteArray(Charsets.UTF_8))
 
@@ -802,7 +802,7 @@ class DynamicAppTest {
             val bundleFile = getApkFolderOutput("${flavor}Debug").bundleFile
             FileSubject.assertThat(
                 FileUtils.join(
-                    project.getSubproject(":app").testDir,
+                    project.getSubproject(":app").projectDir,
                     "out",
                     "test",
                     "my-bundle",
@@ -888,7 +888,7 @@ class DynamicAppTest {
 </vector>"""
 
         // Add some drawables in different configs.
-        val resDir = FileUtils.join(project.getSubproject(":app").testDir, "src", "main", "res")
+        val resDir = FileUtils.join(project.getSubproject(":app").projectDir, "src", "main", "res")
         val img1 = FileUtils.join(resDir, "drawable-mdpi", "density.xml")
         FileUtils.mkdirs(img1.parentFile)
         Files.write(img1.toPath(), content.toByteArray(Charsets.UTF_8))

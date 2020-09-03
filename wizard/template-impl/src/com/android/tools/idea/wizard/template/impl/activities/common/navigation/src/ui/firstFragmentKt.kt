@@ -15,8 +15,13 @@
  */
 package com.android.tools.idea.wizard.template.impl.activities.common.navigation.src.ui
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
 
 
 fun firstFragmentKt(
@@ -24,10 +29,18 @@ fun firstFragmentKt(
   firstFragmentClass: String,
   navFragmentPrefix: String,
   navViewModelClass: String,
-  useAndroidX: Boolean
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
 ): String {
   val viewModelInitializationBlock = if (useAndroidX) "ViewModelProvider(this).get(${navViewModelClass}::class.java)"
   else "ViewModelProvider(this, ViewModelProvider.NewInstanceFactory()).get(${navViewModelClass}::class.java)"
+
+  val layoutName = "fragment_${navFragmentPrefix}"
+  val onCreateViewBlock = if (isViewBindingSupported) """
+    _binding = ${layoutToViewBindingClass(layoutName)}.inflate(inflater, container, false)
+    val root: View = binding.root
+  """
+  else "View root = inflater.inflate(R.layout.$layoutName, container, false);"
 
   return """
 package ${packageName}.ui.${navFragmentPrefix}
@@ -41,10 +54,17 @@ import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX
 import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)}
 import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)}
 import ${escapeKotlinIdentifier(packageName)}.R
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
 
 class ${firstFragmentClass} : Fragment() {
 
   private lateinit var ${navFragmentPrefix}ViewModel: ${navViewModelClass}
+${renderIf(isViewBindingSupported) {"""
+  private var _binding: ${layoutToViewBindingClass(layoutName)}? = null
+  // This property is only valid between onCreateView and
+  // onDestroyView.
+  private val binding get() = _binding!!
+"""}}
 
   override fun onCreateView(
     inflater: LayoutInflater,
@@ -53,13 +73,25 @@ class ${firstFragmentClass} : Fragment() {
   ): View? {
     ${navFragmentPrefix}ViewModel =
             $viewModelInitializationBlock
-    val root = inflater.inflate(R.layout.fragment_${navFragmentPrefix}, container, false)
-    val textView: TextView = root.findViewById(R.id.text_${navFragmentPrefix})
+    $onCreateViewBlock
+    val textView: TextView = ${findViewById(
+      language = Language.Kotlin, 
+      isViewBindingSupported = isViewBindingSupported, 
+      id = "text_${navFragmentPrefix}",
+      className = "TextView",
+      parentView = "root")}
     ${navFragmentPrefix}ViewModel.text.observe(viewLifecycleOwner, Observer {
       textView.text = it
     })
     return root
   }
+
+${renderIf(isViewBindingSupported) {"""
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+"""}}
 }
 """
 }

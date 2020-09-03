@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -59,7 +59,7 @@ public class ZipArchive implements Archive {
             freestore = new FreeStore(map.getEntries());
         } else {
             zipInfo = new ZipInfo();
-            HashMap<String, Entry> entries = new HashMap<>();
+            Map<String, Entry> entries = new LinkedHashMap<>();
             cd = new CentralDirectory(ByteBuffer.allocate(0), entries);
             freestore = new FreeStore(entries);
         }

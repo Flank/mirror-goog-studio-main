@@ -17,7 +17,10 @@
 package com.android.tools.app.inspection;
 
 import static com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status.ERROR;
-import static com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status.SUCCESS;
+import static com.android.tools.app.inspection.AppInspection.CreateInspectorResponse.Status.GENERIC_SERVICE_ERROR;
+import static com.android.tools.app.inspection.AppInspection.CreateInspectorResponse.Status.LIBRARY_MISSING;
+import static com.android.tools.app.inspection.AppInspection.CreateInspectorResponse.Status.SUCCESS;
+import static com.android.tools.app.inspection.AppInspection.CreateInspectorResponse.Status.VERSION_INCOMPATIBLE;
 import static com.google.common.truth.Truth.assertThat;
 
 import androidx.annotation.NonNull;
@@ -81,38 +84,38 @@ public final class AppInspectionTest {
     @Test
     public void createThenDispose() throws Exception {
         String onDevicePath = injectInspectorDex();
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector("test.inspector", onDevicePath)),
                 SUCCESS);
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_CREATED);
-        assertResponseStatus(
+        assertDisposeInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(disposeInspector("test.inspector")),
-                SUCCESS);
+                Status.SUCCESS);
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_DISPOSED);
     }
 
     @Test
     public void doubleInspectorCreation() throws Exception {
         String onDevicePath = injectInspectorDex();
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector("test.inspector", onDevicePath)),
                 SUCCESS);
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_CREATED);
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector("test.inspector", onDevicePath)),
-                ERROR);
-        assertResponseStatus(
+                GENERIC_SERVICE_ERROR);
+        assertDisposeInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(disposeInspector("test.inspector")),
-                SUCCESS);
+                Status.SUCCESS);
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_DISPOSED);
     }
 
     @Test
     public void disposeNonexistent() throws Exception {
-        assertResponseStatus(
+        assertDisposeInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(disposeInspector("test.inspector")),
                 ERROR);
     }
@@ -120,23 +123,23 @@ public final class AppInspectionTest {
     @Test
     public void createFailsWithUnknownInspectorId() throws Exception {
         String onDevicePath = injectInspectorDex();
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(createInspector("foo", onDevicePath)),
-                ERROR);
+                GENERIC_SERVICE_ERROR);
     }
 
     @Test
     public void createFailsIfInspectorDexIsNonexistent() throws Exception {
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector("test.inspector", "random_file")),
-                ERROR);
+                GENERIC_SERVICE_ERROR);
     }
 
     @Test
     public void sendRawCommand() throws Exception {
         String onDevicePath = injectInspectorDex();
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector("reverse.echo.inspector", onDevicePath)),
                 SUCCESS);
@@ -157,7 +160,7 @@ public final class AppInspectionTest {
     @Test
     public void handleInspectorCrashDuringSendCommand() throws Exception {
         String inspectorId = "test.exception.inspector";
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector(inspectorId, injectInspectorDex())),
                 SUCCESS);
@@ -177,7 +180,7 @@ public final class AppInspectionTest {
     @Test
     public void tryToCreateExistingInspectorResultsInException() throws Exception {
         String inspectorId = "test.inspector";
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector(inspectorId, injectInspectorDex(), "project.A")),
                 SUCCESS);
@@ -194,7 +197,7 @@ public final class AppInspectionTest {
                                 + " already exists. It was launched by project: project.A");
 
         // If creation by force is requested, an exception will not be thrown
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector(inspectorId, injectInspectorDex(), "project.A", true)),
                 SUCCESS);
@@ -204,13 +207,13 @@ public final class AppInspectionTest {
     @Test
     public void sendCommandToNonExistentInspector() throws Exception {
         String onDevicePath = injectInspectorDex();
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector("test.inspector", onDevicePath)),
                 SUCCESS);
-        assertResponseStatus(
+        assertDisposeInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(disposeInspector("test.inspector")),
-                SUCCESS);
+                Status.SUCCESS);
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_DISPOSED);
         byte[] commandBytes = new byte[] {1, 2, 127};
         AppInspectionResponse response =
@@ -236,7 +239,7 @@ public final class AppInspectionTest {
         androidDriver.triggerMethod(TODO_ACTIVITY, "newItem");
 
         String inspectorId = "todo.inspector";
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector(inspectorId, injectInspectorDex())),
                 SUCCESS);
@@ -290,7 +293,7 @@ public final class AppInspectionTest {
     @Test
     public void exitHooksOverloadWork() throws Exception {
         String inspectorId = "todo.inspector";
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector(inspectorId, injectInspectorDex())),
                 SUCCESS);
@@ -322,7 +325,7 @@ public final class AppInspectionTest {
     @Test
     public void enterAndExitHooksWork() throws Exception {
         String inspectorId = "todo.inspector";
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector(inspectorId, injectInspectorDex())),
                 SUCCESS);
@@ -413,7 +416,7 @@ public final class AppInspectionTest {
         androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[4]
 
         String inspectorId = "todo.inspector";
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector(inspectorId, injectInspectorDex())),
                 SUCCESS);
@@ -471,7 +474,7 @@ public final class AppInspectionTest {
         androidDriver.triggerMethod(TODO_ACTIVITY, "newItem"); // Item[0]
 
         String inspectorId = "todo.inspector";
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector(inspectorId, injectInspectorDex())),
                 SUCCESS);
@@ -575,7 +578,7 @@ public final class AppInspectionTest {
     @Test
     public void entryHookWithHighRegisties() throws Exception {
         String inspectorId = "todo.inspector";
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector(inspectorId, injectInspectorDex())),
                 SUCCESS);
@@ -595,7 +598,7 @@ public final class AppInspectionTest {
     public void entryAndExitHooksDisposed() throws Exception {
         String inspectorId = "todo.inspector";
         androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup");
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector(inspectorId, injectInspectorDex())),
                 SUCCESS);
@@ -603,9 +606,9 @@ public final class AppInspectionTest {
         // doesn't fail
         androidDriver.triggerMethod(TODO_ACTIVITY, "selectFirstGroup");
 
-        assertResponseStatus(
+        assertDisposeInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(disposeInspector(inspectorId)),
-                SUCCESS);
+                Status.SUCCESS);
 
         // hooks will throw if they are called but inspection is disposed
         androidDriver.triggerMethod(TODO_ACTIVITY, "selectFirstGroup");
@@ -615,7 +618,7 @@ public final class AppInspectionTest {
     public void entryAndExitDoubleHooks() throws Exception {
         String inspectorId = "todo.inspector";
         androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup");
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector(inspectorId, injectInspectorDex())),
                 SUCCESS);
@@ -656,7 +659,7 @@ public final class AppInspectionTest {
     @Test
     public void handleCancellationCommand() throws Exception {
         String inspectorId = "test.cancellation.inspector";
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector(inspectorId, injectInspectorDex())),
                 SUCCESS);
@@ -708,7 +711,7 @@ public final class AppInspectionTest {
             TestExecutorsApi.Command completeCommand, TestExecutorsApi.Command failCommand)
             throws Exception {
         String inspectorId = "test.executors.inspector";
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector(inspectorId, injectInspectorDex())),
                 SUCCESS);
@@ -735,7 +738,7 @@ public final class AppInspectionTest {
     @Test
     public void ifInspectorFailsToReplyToCommandCallbackItCrashes() throws Exception {
         String inspectorId = "test.no.reply.inspector";
-        assertResponseStatus(
+        assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
                         createInspector(inspectorId, injectInspectorDex())),
                 SUCCESS);
@@ -765,6 +768,88 @@ public final class AppInspectionTest {
                         + " was never called");
     }
 
+    @Test
+    public void createInspectorForFramework() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        assertCreateInspectorResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(
+                                "test.inspector", onDevicePath, "test.project", null, null, false)),
+                SUCCESS);
+        appInspectionRule.assertInput(EXPECTED_INSPECTOR_CREATED);
+    }
+
+    @Test
+    public void createInspectorWithIncompatibleVersion() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        AppInspectionResponse response =
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(
+                                "test.inspector",
+                                onDevicePath,
+                                "test.project",
+                                "test.library_test.version",
+                                "3.0.0",
+                                false));
+        assertThat(response.getStatus()).isEqualTo(ERROR);
+        assertThat(response.getCreateInspectorResponse().getStatus())
+                .isEqualTo(AppInspection.CreateInspectorResponse.Status.VERSION_INCOMPATIBLE);
+    }
+
+    @Test
+    public void createInspectorWithInvalidVersionInput() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        AppInspectionResponse response =
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(
+                                "test.inspector",
+                                onDevicePath,
+                                "test.project",
+                                "test.library_test.version",
+                                "3.a",
+                                false));
+        assertThat(response.getStatus()).isEqualTo(ERROR);
+        assertThat(response.getErrorMessage())
+                .isEqualTo("Failed to parse provided min version 3.a");
+        assertThat(response.getCreateInspectorResponse().getStatus())
+                .isEqualTo(GENERIC_SERVICE_ERROR);
+    }
+
+    @Test
+    public void createInspectorWithNonExistentVersionFile() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        AppInspectionResponse response =
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(
+                                "test.inspector",
+                                onDevicePath,
+                                "test.project",
+                                "non-existent.version",
+                                "1.0.0",
+                                false));
+        assertThat(response.getStatus()).isEqualTo(ERROR);
+        assertThat(response.getErrorMessage()).startsWith("Failed to find version file");
+        assertThat(response.getCreateInspectorResponse().getStatus()).isEqualTo(LIBRARY_MISSING);
+    }
+
+    @Test
+    public void createInspectorWithInvalidVersionFile() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        AppInspectionResponse response =
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(
+                                "test.inspector",
+                                onDevicePath,
+                                "test.project",
+                                "test.invalid_test.version",
+                                "1.0.0",
+                                false));
+        assertThat(response.getStatus()).isEqualTo(ERROR);
+        assertThat(response.getErrorMessage()).startsWith("Failed to parse version string");
+        assertThat(response.getCreateInspectorResponse().getStatus())
+                .isEqualTo(VERSION_INCOMPATIBLE);
+    }
+
     @NonNull
     private static AppInspectionCommand rawCommandInspector(
             @NonNull String inspectorId, @NonNull byte[] commandData) {
@@ -788,30 +873,47 @@ public final class AppInspectionTest {
     }
 
     @NonNull
-    private static AppInspectionCommand createInspector(String inspectorId, String dexPath) {
+    private AppInspectionCommand createInspector(String inspectorId, String dexPath) {
         return createInspector(inspectorId, dexPath, "test.project");
     }
 
     @NonNull
-    private static AppInspectionCommand createInspector(
+    private AppInspectionCommand createInspector(
             String inspectorId, String dexPath, String project) {
         return createInspector(inspectorId, dexPath, project, false);
     }
 
     @NonNull
-    private static AppInspectionCommand createInspector(
-            String inspectorId, String dexPath, String project, boolean force) {
+    private AppInspectionCommand createInspector(
+            String inspectorId, String dexPath, String project, Boolean force) {
+        return createInspector(
+                inspectorId, dexPath, project, "test.library_test.version", "0.0.1", force);
+    }
 
+    @NonNull
+    private static AppInspectionCommand createInspector(
+            String inspectorId,
+            String dexPath,
+            String project,
+            String versionFile,
+            String minVersion,
+            boolean force) {
+
+        LaunchMetadata.Builder metadata =
+                LaunchMetadata.newBuilder().setLaunchedByName(project).setForce(force);
+        if (versionFile != null && minVersion != null) {
+            metadata.setVersionParams(
+                    AppInspection.VersionParams.newBuilder()
+                            .setVersionFileName(versionFile)
+                            .setMinVersion(minVersion)
+                            .build());
+        }
         return AppInspectionCommand.newBuilder()
                 .setInspectorId(inspectorId)
                 .setCreateInspectorCommand(
                         CreateInspectorCommand.newBuilder()
                                 .setDexPath(dexPath)
-                                .setLaunchMetadata(
-                                        LaunchMetadata.newBuilder()
-                                                .setLaunchedByName(project)
-                                                .setForce(force)
-                                                .build())
+                                .setLaunchMetadata(metadata)
                                 .build())
                 .build();
     }
@@ -824,9 +926,21 @@ public final class AppInspectionTest {
                 .build();
     }
 
-    private static void assertResponseStatus(
+    private static void assertCreateInspectorResponseStatus(
+            @NonNull AppInspection.AppInspectionResponse response,
+            @NonNull AppInspection.CreateInspectorResponse.Status expected) {
+        assertThat(response.hasCreateInspectorResponse()).isTrue();
+        assertThat(response.getCreateInspectorResponse().getStatus()).isEqualTo(expected);
+        if (expected == SUCCESS) {
+            assertThat(response.getStatus()).isEqualTo(Status.SUCCESS);
+        } else {
+            assertThat(response.getStatus()).isEqualTo(ERROR);
+        }
+    }
+
+    private static void assertDisposeInspectorResponseStatus(
             @NonNull AppInspection.AppInspectionResponse response, @NonNull Status expected) {
-        assertThat(response.hasServiceResponse()).isTrue();
+        assertThat(response.hasDisposeInspectorResponse()).isTrue();
         assertThat(response.getStatus()).isEqualTo(expected);
     }
 

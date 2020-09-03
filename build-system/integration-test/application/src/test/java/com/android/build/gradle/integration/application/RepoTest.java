@@ -73,7 +73,7 @@ public class RepoTest {
     @BeforeClass
     public static void setUp() throws IOException {
         // Clean testRepo
-        File testRepo = new File(app.getTestDir(), "../testrepo");
+        File testRepo = new File(app.getProjectDir(), "../testrepo");
         if (testRepo.isDirectory()) {
             FileUtils.deleteDirectoryContents(testRepo);
         }

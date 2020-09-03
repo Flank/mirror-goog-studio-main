@@ -36,7 +36,7 @@ class MissingSdkTest {
 
     @Test
     fun missingSdkSyncIssueCreated() {
-        val localPropertiesPath = File(testProject.testDir, FN_LOCAL_PROPERTIES).absolutePath
+        val localPropertiesPath = File(testProject.projectDir, FN_LOCAL_PROPERTIES).absolutePath
         val exception = testProject.executeExpectingFailure("assembleDebug")
         val rootCause = getRootCause(exception)
         assertThat(rootCause.message).isEqualTo(

@@ -64,7 +64,7 @@ public class NativeSoPackagingFromJarTest {
         appProject = project.getSubproject("app");
 
         // rewrite settings.gradle to remove un-needed modules
-        Files.asCharSink(new File(project.getTestDir(), "settings.gradle"), Charsets.UTF_8)
+        Files.asCharSink(new File(project.getProjectDir(), "settings.gradle"), Charsets.UTF_8)
                 .write("include \"app\"\ninclude \"library\"\n");
 
         // setup dependencies.
@@ -80,11 +80,10 @@ public class NativeSoPackagingFromJarTest {
 "  compile files(\"libs/bar.jar\")\n" +
 "}\n");
 
-
-        File appDir = appProject.getTestDir();
+        File appDir = appProject.getProjectDir();
         createJarWithNativeLib(new File(appDir, "libs"), "foo.jar", false);
 
-        File libDir = libProject.getTestDir();
+        File libDir = libProject.getProjectDir();
         createJarWithNativeLib(new File(libDir, "libs"), "bar.jar", true);
     }
 

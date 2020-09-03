@@ -21,13 +21,8 @@ import com.android.build.gradle.integration.common.fixture.ModelContainer
 import com.android.build.gradle.integration.common.utils.getVariantByName
 import com.android.build.gradle.integration.common.utils.testSubModuleDependencies
 import com.android.builder.model.AndroidProject
-import com.android.builder.model.Dependencies.ProjectIdentifier
-import com.android.builder.model.level2.GlobalLibraryMap
-import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
-import org.junit.BeforeClass
-import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -104,7 +99,7 @@ class MultiCompositeBuildTest {
             .level(modelLevel)
             .fetchAndroidProjects()
 
-        val rootDir = project.testDir
+        val rootDir = project.projectDir
 
         testCompositeApp = File(rootDir, "TestCompositeApp").absolutePath
         testCompositeLib1 = File(rootDir, "TestCompositeLib1").absolutePath

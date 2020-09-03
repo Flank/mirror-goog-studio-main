@@ -9,7 +9,6 @@ import com.android.build.gradle.integration.common.fixture.SourceSetContainerUti
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.SourceProviderHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
@@ -35,7 +34,7 @@ public class BasicMultiFlavorTest {
     public void checkSourceProviders() throws IOException {
         ModelContainer<AndroidProject> modelContainer = project.model().fetchAndroidProjects();
         AndroidProject model = modelContainer.getOnlyModel();
-        File projectDir = project.getTestDir();
+        File projectDir = project.getProjectDir();
         AndroidProjectUtils.testDefaultSourceSets(model, projectDir);
 
         // test the source provider for the flavor

@@ -416,7 +416,7 @@ coverage_report(
 coverage_report(
     name = "upgrade-assistant",
     srcpath_include = [
-        "tools/adt/idea/android/src/com/android/tools/idea/gradle/project/sync/setup/post/upgrade",
+        "tools/adt/idea/android/src/com/android/tools/idea/gradle/project/upgrade",
     ],
     tests = [
         "//tools/adt/idea/android:intellij.android.core.tests_tests",

@@ -93,7 +93,7 @@ public class CrashlyticsTest {
      */
     @NonNull
     public static File getCustomUserHomeForCrashlytics(@NonNull GradleTestProject project) {
-        File userHomeDir = new File(project.getTestDir(), "user-home");
+        File userHomeDir = new File(project.getProjectDir(), "user-home");
         FileUtils.mkdirs(userHomeDir);
 
         // On Mac, the Crashlytics plugin actually uses user-home/Library/Caches, so we need to

@@ -151,7 +151,7 @@ class NdkBuildBuildSettingsTest(useV2NativeModel: Boolean) {
 
     private fun debugBuildModelFiles(): List<File> {
         val arm64DebugModel = join(
-            project.testDir,
+            project.projectDir,
             ".cxx",
             "ndkBuild",
             "debug",
@@ -159,7 +159,7 @@ class NdkBuildBuildSettingsTest(useV2NativeModel: Boolean) {
             "build_model.json"
         )
         val armeabiDebugModel = join(
-            project.testDir,
+            project.projectDir,
             ".cxx",
             "ndkBuild",
             "debug",

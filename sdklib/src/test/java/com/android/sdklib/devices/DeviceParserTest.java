@@ -291,7 +291,7 @@ public class DeviceParserTest extends TestCase {
         try {
             Table<String, String, Device> devices = DeviceParser.parse(stream);
             assertEquals(
-                    "Parsing devices.xml produces the wrong number of devices", 2, devices.size());
+                    "Parsing devices.xml produces the wrong number of devices", 1, devices.size());
 
             Device device0 = devices.get("automotive_1024p_landscape", "Google");
             assertEquals(null, device0.getTagId());
@@ -302,13 +302,6 @@ public class DeviceParserTest extends TestCase {
                     device0.getDefaultHardware().getSupportedAbis().toString());
 
             assertTrue(!device0.getDefaultHardware().hasSdCard());
-
-            Device device1 = devices.get("polestar_2", "Volvo");
-            assertEquals("android-automotive", device1.getTagId());
-            assertEquals("Generic CPU", device1.getDefaultHardware().getCpu());
-            assertEquals("[x86]", device1.getDefaultHardware().getSupportedAbis().toString());
-
-            assertTrue(device1.getDefaultHardware().hasSdCard());
 
         } finally {
             stream.close();

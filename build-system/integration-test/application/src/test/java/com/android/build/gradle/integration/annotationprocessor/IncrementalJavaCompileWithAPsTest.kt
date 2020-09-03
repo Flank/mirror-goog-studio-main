@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.annotationprocessor
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor.ConfigurationCaching
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
@@ -422,7 +421,7 @@ class IncrementalJavaCompileWithAPsTest(
 
     @Before
     fun setUp() {
-        val appDir = project.getSubproject(APP_MODULE).testDir
+        val appDir = project.getSubproject(APP_MODULE).projectDir
         val appBuildFile = project.getSubproject(APP_MODULE).buildFile
 
         val generatedSourceDir = if (withKapt)

@@ -20,8 +20,10 @@ import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.FileDiff;
 import com.android.tools.idea.protobuf.ByteString;
+import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -44,16 +46,22 @@ class OptimisticApkInstaller {
     private final AdbClient adb;
     private final DeploymentCacheDatabase cache;
     private final MetricsRecorder metrics;
+    private final DeployerOption options;
+    private final ILogger logger;
 
     public OptimisticApkInstaller(
             Installer installer,
             AdbClient adb,
             DeploymentCacheDatabase cache,
-            MetricsRecorder metrics) {
+            MetricsRecorder metrics,
+            DeployerOption options,
+            ILogger logger) {
         this.installer = installer;
         this.adb = adb;
         this.cache = cache;
         this.metrics = metrics;
+        this.options = options;
+        this.logger = logger;
     }
 
     public OverlayId install(String packageName, List<Apk> apks) throws DeployerException {
@@ -87,10 +95,25 @@ class OptimisticApkInstaller {
 
         metrics.start(DIFF_METRIC);
         List<FileDiff> diffs = new ApkDiffer().specDiff(entry, apks);
+
+        // Ensure that we currently have IWI support enabled for every change; otherwise, throw an
+        // exception to cause a fallback to delta install. This has one exception - if a diff is
+        // present only because a resource is absent from the overlay, and resource support is
+        // disabled, we can simply throw away the diff.
+        List<FileDiff> filteredDiffs = new ArrayList<>();
+        for (FileDiff diff : diffs) {
+            ChangeType type = ChangeType.getType(diff);
+            if (options.optimisticInstallSupport.contains(type)) {
+                filteredDiffs.add(diff);
+            } else if (diff.status != FileDiff.Status.RESOURCE_NOT_IN_OVERLAY) {
+                logger.warning("File '%s' [%s] is not supported by IWI", diff.getName(), type);
+                throw DeployerException.changeNotSupportedByIWI(type);
+            }
+        }
         metrics.finish();
 
         metrics.start(EXTRACT_METRIC);
-        Map<ApkEntry, ByteString> overlayFiles = new ApkEntryExtractor().extract(diffs);
+        Map<ApkEntry, ByteString> overlayFiles = new ApkEntryExtractor().extract(filteredDiffs);
         metrics.finish();
 
         metrics.start(UPDATE_METRIC);

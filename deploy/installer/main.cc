@@ -188,6 +188,7 @@ void ProcessRequest(std::unique_ptr<proto::InstallerRequest> request,
     std::string message = "Version mismatch. Requested:"_s +
                           request->version() + " but have " + GetVersion();
     Fail(proto::InstallerResponse::ERROR_WRONG_VERSION, workspace, message);
+    running = false;
     return;
   }
 

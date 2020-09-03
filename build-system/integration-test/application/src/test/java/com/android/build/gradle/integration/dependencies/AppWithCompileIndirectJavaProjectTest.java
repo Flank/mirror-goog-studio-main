@@ -23,7 +23,6 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
@@ -165,7 +164,7 @@ public class AppWithCompileIndirectJavaProjectTest {
 
     @Test
     public void checkLevel4Model() throws Exception {
-        String rootProjectId = project.getTestDir().getAbsolutePath() + "@@";
+        String rootProjectId = project.getProjectDir().getAbsolutePath() + "@@";
 
         ModelContainer<AndroidProject> modelContainer =
                 project.model()

@@ -1,0 +1,709 @@
+// Signature format: 3.0
+package com.android.tools.lint.model {
+
+  public final class DefaultLintModelAndroidArtifact extends com.android.tools.lint.model.DefaultLintModelArtifact implements com.android.tools.lint.model.LintModelAndroidArtifact {
+    ctor public DefaultLintModelAndroidArtifact(String applicationId, java.util.Collection<? extends java.io.File> generatedResourceFolders, java.util.Collection<? extends java.io.File> generatedSourceFolders, java.util.List<? extends java.io.File> classOutputs, com.android.tools.lint.model.LintModelDependencies dependencies);
+    method public String getApplicationId();
+    method public java.util.Collection<java.io.File> getGeneratedResourceFolders();
+    method public java.util.Collection<java.io.File> getGeneratedSourceFolders();
+  }
+
+  public final class DefaultLintModelAndroidLibrary extends com.android.tools.lint.model.DefaultLintModelLibrary implements com.android.tools.lint.model.LintModelAndroidLibrary {
+    ctor public DefaultLintModelAndroidLibrary(java.util.List<? extends java.io.File> jarFiles, String artifactAddress, java.io.File manifest, java.io.File folder, java.io.File resFolder, java.io.File assetsFolder, java.io.File lintJar, java.io.File publicResources, java.io.File symbolFile, java.io.File externalAnnotations, java.io.File proguardRules, boolean provided, com.android.tools.lint.model.LintModelMavenName resolvedCoordinates);
+    method public String getArtifactAddress();
+    method public java.io.File getAssetsFolder();
+    method public java.io.File getExternalAnnotations();
+    method public java.io.File getFolder();
+    method public java.util.List<java.io.File> getJarFiles();
+    method public java.io.File getLintJar();
+    method public java.io.File getManifest();
+    method public java.io.File getProguardRules();
+    method public boolean getProvided();
+    method public java.io.File getPublicResources();
+    method public java.io.File getResFolder();
+    method public com.android.tools.lint.model.LintModelMavenName getResolvedCoordinates();
+    method public java.io.File getSymbolFile();
+  }
+
+  public class DefaultLintModelArtifact implements com.android.tools.lint.model.LintModelArtifact {
+    ctor public DefaultLintModelArtifact(com.android.tools.lint.model.LintModelDependencies dependencies, java.util.List<? extends java.io.File> classOutputs);
+    method public java.util.List<java.io.File> getClassOutputs();
+    method public com.android.tools.lint.model.LintModelDependencies getDependencies();
+  }
+
+  public final class DefaultLintModelBuildFeatures implements com.android.tools.lint.model.LintModelBuildFeatures {
+    ctor public DefaultLintModelBuildFeatures(boolean viewBinding, boolean coreLibraryDesugaringEnabled, com.android.tools.lint.model.LintModelNamespacingMode namespacingMode);
+    method public boolean getCoreLibraryDesugaringEnabled();
+    method public com.android.tools.lint.model.LintModelNamespacingMode getNamespacingMode();
+    method public boolean getViewBinding();
+  }
+
+  public final class DefaultLintModelDependencies implements com.android.tools.lint.model.LintModelDependencies {
+    ctor public DefaultLintModelDependencies(com.android.tools.lint.model.LintModelDependencyGraph compileDependencies, com.android.tools.lint.model.LintModelDependencyGraph packageDependencies, com.android.tools.lint.model.LintModelLibraryResolver libraryResolver);
+    method public com.android.tools.lint.model.LintModelDependencyGraph getCompileDependencies();
+    method public com.android.tools.lint.model.LintModelLibraryResolver getLibraryResolver();
+    method public com.android.tools.lint.model.LintModelDependencyGraph getPackageDependencies();
+  }
+
+  public class DefaultLintModelDependency implements com.android.tools.lint.model.LintModelDependency {
+    ctor public DefaultLintModelDependency(String artifactName, String artifactAddress, String? requestedCoordinates, java.util.List<? extends com.android.tools.lint.model.LintModelDependency> dependencies, com.android.tools.lint.model.LintModelLibraryResolver libraryResolver);
+    method public com.android.tools.lint.model.LintModelLibrary? findLibrary();
+    method public String getArtifactAddress();
+    method public String getArtifactName();
+    method public java.util.List<com.android.tools.lint.model.LintModelDependency> getDependencies();
+    method public String? getRequestedCoordinates();
+  }
+
+  public final class DefaultLintModelDependencyGraph implements com.android.tools.lint.model.LintModelDependencyGraph {
+    ctor public DefaultLintModelDependencyGraph(java.util.List<? extends com.android.tools.lint.model.LintModelDependency> roots, com.android.tools.lint.model.LintModelLibraryResolver libraryResolver);
+    method public com.android.tools.lint.model.LintModelLibrary? findLibrary(String mavenName, boolean direct);
+    method public java.util.List<com.android.tools.lint.model.LintModelDependency> getAllGraphItems();
+    method public java.util.List<com.android.tools.lint.model.LintModelLibrary> getAllLibraries();
+    method public java.util.List<com.android.tools.lint.model.LintModelDependency> getRoots();
+  }
+
+  public final class DefaultLintModelJavaArtifact extends com.android.tools.lint.model.DefaultLintModelArtifact implements com.android.tools.lint.model.LintModelJavaArtifact {
+    ctor public DefaultLintModelJavaArtifact(java.util.List<? extends java.io.File> classFolders, com.android.tools.lint.model.LintModelDependencies dependencies);
+  }
+
+  public final class DefaultLintModelJavaLibrary extends com.android.tools.lint.model.DefaultLintModelLibrary implements com.android.tools.lint.model.LintModelJavaLibrary {
+    ctor public DefaultLintModelJavaLibrary(String artifactAddress, java.util.List<? extends java.io.File> jarFiles, com.android.tools.lint.model.LintModelMavenName resolvedCoordinates, boolean provided);
+    method public String getArtifactAddress();
+    method public java.util.List<java.io.File> getJarFiles();
+    method public java.io.File? getLintJar();
+    method public boolean getProvided();
+    method public com.android.tools.lint.model.LintModelMavenName getResolvedCoordinates();
+    property public java.io.File? lintJar;
+  }
+
+  public abstract class DefaultLintModelLibrary implements com.android.tools.lint.model.LintModelLibrary {
+    ctor public DefaultLintModelLibrary();
+  }
+
+  public final class DefaultLintModelLibraryResolver implements com.android.tools.lint.model.LintModelLibraryResolver {
+    ctor public DefaultLintModelLibraryResolver(java.util.Map<java.lang.String,? extends com.android.tools.lint.model.LintModelLibrary> libraryMap);
+    method public java.util.Collection<com.android.tools.lint.model.LintModelLibrary> getAllLibraries();
+    method public com.android.tools.lint.model.LintModelLibrary? getLibrary(String artifactAddress);
+    method public java.util.Map<java.lang.String,com.android.tools.lint.model.LintModelLibrary> getLibraryMap();
+  }
+
+  public final class DefaultLintModelLintOptions implements com.android.tools.lint.model.LintModelLintOptions java.io.Serializable {
+    ctor public DefaultLintModelLintOptions(java.util.Set<java.lang.String> disable, java.util.Set<java.lang.String> enable, java.util.Set<java.lang.String>? check, boolean abortOnError, boolean absolutePaths, boolean noLines, boolean quiet, boolean checkAllWarnings, boolean ignoreWarnings, boolean warningsAsErrors, boolean checkTestSources, boolean ignoreTestSources, boolean checkGeneratedSources, boolean explainIssues, boolean showAll, java.io.File? lintConfig, boolean textReport, java.io.File? textOutput, boolean htmlReport, java.io.File? htmlOutput, boolean xmlReport, java.io.File? xmlOutput, boolean checkReleaseBuilds, boolean checkDependencies, java.io.File? baselineFile, java.util.Map<java.lang.String,? extends com.android.tools.lint.model.LintModelSeverity>? severityOverrides);
+    method public boolean getAbortOnError();
+    method public boolean getAbsolutePaths();
+    method public java.io.File? getBaselineFile();
+    method public java.util.Set<java.lang.String>? getCheck();
+    method public boolean getCheckAllWarnings();
+    method public boolean getCheckDependencies();
+    method public boolean getCheckGeneratedSources();
+    method public boolean getCheckReleaseBuilds();
+    method public boolean getCheckTestSources();
+    method public java.util.Set<java.lang.String> getDisable();
+    method public java.util.Set<java.lang.String> getEnable();
+    method public boolean getExplainIssues();
+    method public java.io.File? getHtmlOutput();
+    method public boolean getHtmlReport();
+    method public boolean getIgnoreTestSources();
+    method public boolean getIgnoreWarnings();
+    method public java.io.File? getLintConfig();
+    method public boolean getNoLines();
+    method public boolean getQuiet();
+    method public java.util.Map<java.lang.String,com.android.tools.lint.model.LintModelSeverity>? getSeverityOverrides();
+    method public boolean getShowAll();
+    method public java.io.File? getTextOutput();
+    method public boolean getTextReport();
+    method public boolean getWarningsAsErrors();
+    method public java.io.File? getXmlOutput();
+    method public boolean getXmlReport();
+  }
+
+  public final class DefaultLintModelMavenName implements com.android.tools.lint.model.LintModelMavenName {
+    ctor public DefaultLintModelMavenName(String groupId, String artifactId, String version);
+    method public String component1();
+    method public String component2();
+    method public String component3();
+    method public com.android.tools.lint.model.DefaultLintModelMavenName copy(String groupId, String artifactId, String version);
+    method public String getArtifactId();
+    method public String getGroupId();
+    method public String getVersion();
+  }
+
+  public final class DefaultLintModelModule implements com.android.tools.lint.model.LintModelModule {
+    ctor public DefaultLintModelModule(com.android.tools.lint.model.LintModelModuleLoader? loader, java.io.File dir, String modulePath, com.android.tools.lint.model.LintModelModuleType type, com.android.tools.lint.model.LintModelMavenName? mavenName, com.android.ide.common.repository.GradleVersion? gradleVersion, java.io.File buildFolder, com.android.tools.lint.model.LintModelLintOptions lintOptions, java.util.List<? extends java.io.File> lintRuleJars, String? resourcePrefix, java.util.Collection<java.lang.String> dynamicFeatures, java.util.List<? extends java.io.File> bootClassPath, String javaSourceLevel, String compileTarget, java.util.List<? extends com.android.tools.lint.model.LintModelVariant> variants, boolean neverShrinking, com.android.ide.common.gradle.model.IdeAndroidProject? oldProject);
+    method public java.util.List<java.io.File> getBootClassPath();
+    method public java.io.File getBuildFolder();
+    method public String getCompileTarget();
+    method public java.io.File getDir();
+    method public java.util.Collection<java.lang.String> getDynamicFeatures();
+    method public com.android.ide.common.repository.GradleVersion? getGradleVersion();
+    method public String getJavaSourceLevel();
+    method public com.android.tools.lint.model.LintModelLintOptions getLintOptions();
+    method public java.util.List<java.io.File> getLintRuleJars();
+    method public com.android.tools.lint.model.LintModelModuleLoader? getLoader();
+    method public com.android.tools.lint.model.LintModelMavenName? getMavenName();
+    method public String getModulePath();
+    method public com.android.ide.common.gradle.model.IdeAndroidProject? getOldProject();
+    method public String? getResourcePrefix();
+    method public com.android.tools.lint.model.LintModelModuleType getType();
+    method public java.util.List<com.android.tools.lint.model.LintModelVariant> getVariants();
+    method public boolean neverShrinking();
+  }
+
+  public final class DefaultLintModelModuleLibrary extends com.android.tools.lint.model.DefaultLintModelLibrary implements com.android.tools.lint.model.LintModelModuleLibrary {
+    ctor public DefaultLintModelModuleLibrary(String artifactAddress, String projectPath, java.io.File? lintJar, boolean provided);
+    method public String getArtifactAddress();
+    method public java.io.File? getLintJar();
+    method public String getProjectPath();
+    method public boolean getProvided();
+  }
+
+  public final class DefaultLintModelResourceField implements com.android.tools.lint.model.LintModelResourceField {
+    ctor public DefaultLintModelResourceField(String type, String name, String value);
+    method public String component1();
+    method public String component2();
+    method public String component3();
+    method public com.android.tools.lint.model.DefaultLintModelResourceField copy(String type, String name, String value);
+    method public String getName();
+    method public String getType();
+    method public String getValue();
+  }
+
+  public final class DefaultLintModelSourceProvider implements com.android.tools.lint.model.LintModelSourceProvider {
+    ctor public DefaultLintModelSourceProvider(java.io.File manifestFile, java.util.Collection<? extends java.io.File> javaDirectories, java.util.Collection<? extends java.io.File> resDirectories, java.util.Collection<? extends java.io.File> assetsDirectories, boolean debugOnly, boolean unitTestOnly, boolean instrumentationTestOnly);
+    method public java.util.Collection<java.io.File> getAssetsDirectories();
+    method public java.util.Collection<java.io.File> getJavaDirectories();
+    method public java.io.File getManifestFile();
+    method public java.util.Collection<java.io.File> getResDirectories();
+    method public boolean isDebugOnly();
+    method public boolean isInstrumentationTest();
+    method public boolean isUnitTest();
+  }
+
+  public final class DefaultLintModelVariant implements com.android.tools.lint.model.LintModelVariant {
+    ctor public DefaultLintModelVariant(com.android.tools.lint.model.LintModelModule module, String name, boolean useSupportLibraryVectorDrawables, com.android.tools.lint.model.LintModelAndroidArtifact mainArtifact, com.android.tools.lint.model.LintModelJavaArtifact? testArtifact, com.android.tools.lint.model.LintModelAndroidArtifact? androidTestArtifact, java.io.File? mergedManifest, java.io.File? manifestMergeReport, String? p, com.android.sdklib.AndroidVersion? minSdkVersion, com.android.sdklib.AndroidVersion? targetSdkVersion, java.util.Map<java.lang.String,? extends com.android.tools.lint.model.LintModelResourceField> resValues, java.util.Map<java.lang.String,java.lang.String> manifestPlaceholders, java.util.Collection<java.lang.String> resourceConfigurations, java.util.Collection<? extends java.io.File> proguardFiles, java.util.Collection<? extends java.io.File> consumerProguardFiles, java.util.List<? extends com.android.tools.lint.model.LintModelSourceProvider> sourceProviders, java.util.List<? extends com.android.tools.lint.model.LintModelSourceProvider> testSourceProviders, boolean debuggable, boolean shrinkable, com.android.tools.lint.model.LintModelBuildFeatures buildFeatures, com.android.tools.lint.model.LintModelLibraryResolver libraryResolver, com.android.ide.common.gradle.model.IdeVariant? oldVariant);
+    method public com.android.tools.lint.model.LintModelAndroidArtifact? getAndroidTestArtifact();
+    method public com.android.tools.lint.model.LintModelBuildFeatures getBuildFeatures();
+    method public java.util.Collection<java.io.File> getConsumerProguardFiles();
+    method public boolean getDebuggable();
+    method public com.android.tools.lint.model.LintModelLibraryResolver getLibraryResolver();
+    method public com.android.tools.lint.model.LintModelAndroidArtifact getMainArtifact();
+    method public java.io.File? getManifestMergeReport();
+    method public java.util.Map<java.lang.String,java.lang.String> getManifestPlaceholders();
+    method public java.io.File? getMergedManifest();
+    method public com.android.sdklib.AndroidVersion? getMinSdkVersion();
+    method public com.android.tools.lint.model.LintModelModule getModule();
+    method public String getName();
+    method public com.android.ide.common.gradle.model.IdeVariant? getOldVariant();
+    method public String? getPackage();
+    method public java.util.Collection<java.io.File> getProguardFiles();
+    method public java.util.Map<java.lang.String,com.android.tools.lint.model.LintModelResourceField> getResValues();
+    method public java.util.Collection<java.lang.String> getResourceConfigurations();
+    method public boolean getShrinkable();
+    method public java.util.List<com.android.tools.lint.model.LintModelSourceProvider> getSourceProviders();
+    method public com.android.sdklib.AndroidVersion? getTargetSdkVersion();
+    method public com.android.tools.lint.model.LintModelJavaArtifact? getTestArtifact();
+    method public java.util.List<com.android.tools.lint.model.LintModelSourceProvider> getTestSourceProviders();
+    method public boolean getUseSupportLibraryVectorDrawables();
+  }
+
+  public interface LintModelAndroidArtifact extends com.android.tools.lint.model.LintModelArtifact {
+    method public String getApplicationId();
+    method public java.util.Collection<java.io.File> getGeneratedResourceFolders();
+    method public java.util.Collection<java.io.File> getGeneratedSourceFolders();
+    property public abstract String applicationId;
+    property public abstract java.util.Collection<java.io.File> generatedResourceFolders;
+    property public abstract java.util.Collection<java.io.File> generatedSourceFolders;
+  }
+
+  public interface LintModelAndroidLibrary extends com.android.tools.lint.model.LintModelExternalLibrary {
+    method public java.io.File getAssetsFolder();
+    method public java.io.File getExternalAnnotations();
+    method public java.io.File getFolder();
+    method public java.io.File getManifest();
+    method public java.io.File getProguardRules();
+    method public java.io.File getPublicResources();
+    method public java.io.File getResFolder();
+    method public java.io.File getSymbolFile();
+    property public abstract java.io.File assetsFolder;
+    property public abstract java.io.File externalAnnotations;
+    property public abstract java.io.File folder;
+    property public abstract java.io.File manifest;
+    property public abstract java.io.File proguardRules;
+    property public abstract java.io.File publicResources;
+    property public abstract java.io.File resFolder;
+    property public abstract java.io.File symbolFile;
+  }
+
+  public interface LintModelArtifact {
+    method public default com.android.tools.lint.model.LintModelLibrary? findCompileDependency(String mavenName);
+    method public java.util.List<java.io.File> getClassOutputs();
+    method public com.android.tools.lint.model.LintModelDependencies getDependencies();
+    property public abstract java.util.List<java.io.File> classOutputs;
+    property public abstract com.android.tools.lint.model.LintModelDependencies dependencies;
+  }
+
+  public interface LintModelBuildFeatures {
+    method public boolean getCoreLibraryDesugaringEnabled();
+    method public com.android.tools.lint.model.LintModelNamespacingMode getNamespacingMode();
+    method public boolean getViewBinding();
+    property public abstract boolean coreLibraryDesugaringEnabled;
+    property public abstract com.android.tools.lint.model.LintModelNamespacingMode namespacingMode;
+    property public abstract boolean viewBinding;
+  }
+
+  public interface LintModelDependencies {
+    method public default java.util.List<com.android.tools.lint.model.LintModelLibrary> getAll();
+    method public com.android.tools.lint.model.LintModelDependencyGraph getCompileDependencies();
+    method public com.android.tools.lint.model.LintModelLibraryResolver getLibraryResolver();
+    method public com.android.tools.lint.model.LintModelDependencyGraph getPackageDependencies();
+    property public abstract com.android.tools.lint.model.LintModelDependencyGraph compileDependencies;
+    property public abstract com.android.tools.lint.model.LintModelDependencyGraph packageDependencies;
+  }
+
+  public interface LintModelDependency {
+    method public com.android.tools.lint.model.LintModelLibrary? findLibrary();
+    method public String getArtifactAddress();
+    method public default String getArtifactId();
+    method public String getArtifactName();
+    method public java.util.List<com.android.tools.lint.model.LintModelDependency> getDependencies();
+    method public String? getRequestedCoordinates();
+    property public abstract String artifactAddress;
+    property public abstract String artifactName;
+    property public abstract java.util.List<com.android.tools.lint.model.LintModelDependency> dependencies;
+    property public abstract String? requestedCoordinates;
+  }
+
+  public interface LintModelDependencyGraph {
+    method public com.android.tools.lint.model.LintModelLibrary? findLibrary(String mavenName, boolean direct = true);
+    method public java.util.List<com.android.tools.lint.model.LintModelDependency> getAllGraphItems();
+    method public java.util.List<com.android.tools.lint.model.LintModelLibrary> getAllLibraries();
+    method public java.util.List<com.android.tools.lint.model.LintModelDependency> getRoots();
+    property public abstract java.util.List<com.android.tools.lint.model.LintModelDependency> roots;
+  }
+
+  public interface LintModelExternalLibrary extends com.android.tools.lint.model.LintModelLibrary {
+    method public java.util.List<java.io.File> getJarFiles();
+    method public com.android.tools.lint.model.LintModelMavenName getResolvedCoordinates();
+    property public abstract java.util.List<java.io.File> jarFiles;
+    property public abstract com.android.tools.lint.model.LintModelMavenName resolvedCoordinates;
+  }
+
+  public final class LintModelFactory implements com.android.tools.lint.model.LintModelModuleLoader {
+    ctor public LintModelFactory();
+    method public com.android.tools.lint.model.LintModelModule create(java.io.File source);
+    method public com.android.tools.lint.model.LintModelModule create(com.android.ide.common.gradle.model.IdeAndroidProject project, java.util.Collection<? extends com.android.ide.common.gradle.model.IdeVariant> variants, java.io.File dir, boolean deep = true);
+    method public kotlin.jvm.functions.Function1<java.lang.String,java.util.List<java.io.File>>? getKotlinSourceFolderLookup();
+    method public static com.android.tools.lint.model.DefaultLintModelLintOptions getLintOptions(com.android.builder.model.LintOptions options);
+    method public static com.android.tools.lint.model.LintModelModuleType getModuleType(int typeId);
+    method public void setKotlinSourceFolderLookup(kotlin.jvm.functions.Function1<? super java.lang.String,? extends java.util.List<? extends java.io.File>>? p);
+    property public final kotlin.jvm.functions.Function1<java.lang.String,java.util.List<java.io.File>>? kotlinSourceFolderLookup;
+    field public static final com.android.tools.lint.model.LintModelFactory.Companion Companion;
+  }
+
+  public static final class LintModelFactory.Companion {
+    method public com.android.tools.lint.model.DefaultLintModelLintOptions getLintOptions(com.android.builder.model.LintOptions options);
+    method public com.android.tools.lint.model.LintModelModuleType getModuleType(int typeId);
+  }
+
+  public final class LintModelFactory.LazyLintModelModule implements com.android.tools.lint.model.LintModelModule {
+    ctor public LintModelFactory.LazyLintModelModule(com.android.tools.lint.model.LintModelModuleLoader loader, com.android.ide.common.gradle.model.IdeAndroidProject project, java.util.Collection<? extends com.android.ide.common.gradle.model.IdeVariant> projectVariants, java.io.File dir, com.android.ide.common.repository.GradleVersion? gradleVersion);
+    method public java.util.List<java.io.File> getBootClassPath();
+    method public java.io.File getBuildFolder();
+    method public String getCompileTarget();
+    method public java.io.File getDir();
+    method public java.util.Collection<java.lang.String> getDynamicFeatures();
+    method public com.android.ide.common.repository.GradleVersion? getGradleVersion();
+    method public String getJavaSourceLevel();
+    method public com.android.tools.lint.model.LintModelLintOptions getLintOptions();
+    method public java.util.List<java.io.File> getLintRuleJars();
+    method public com.android.tools.lint.model.LintModelModuleLoader getLoader();
+    method public com.android.tools.lint.model.LintModelMavenName? getMavenName();
+    method public String getModulePath();
+    method public com.android.ide.common.gradle.model.IdeAndroidProject? getOldProject();
+    method public String? getResourcePrefix();
+    method public com.android.tools.lint.model.LintModelModuleType getType();
+    method public java.util.List<com.android.tools.lint.model.LintModelVariant> getVariants();
+    method public boolean neverShrinking();
+    property public java.util.List<java.io.File> bootClassPath;
+    property public java.io.File buildFolder;
+    property public String compileTarget;
+    property public java.util.Collection<java.lang.String> dynamicFeatures;
+    property public String javaSourceLevel;
+    property public com.android.tools.lint.model.LintModelLintOptions lintOptions;
+    property public java.util.List<java.io.File> lintRuleJars;
+    property public com.android.tools.lint.model.LintModelMavenName? mavenName;
+    property public String modulePath;
+    property public com.android.ide.common.gradle.model.IdeAndroidProject? oldProject;
+    property public String? resourcePrefix;
+    property public com.android.tools.lint.model.LintModelModuleType type;
+    property public java.util.List<com.android.tools.lint.model.LintModelVariant> variants;
+  }
+
+  public final class LintModelFactory.LazyLintModelVariant implements com.android.tools.lint.model.LintModelVariant {
+    ctor public LintModelFactory.LazyLintModelVariant(com.android.tools.lint.model.LintModelModule module, com.android.ide.common.gradle.model.IdeAndroidProject project, com.android.ide.common.gradle.model.IdeVariant variant, com.android.tools.lint.model.LintModelLibraryResolver libraryResolver);
+    method public com.android.tools.lint.model.LintModelAndroidArtifact? getAndroidTestArtifact();
+    method public com.android.tools.lint.model.LintModelBuildFeatures getBuildFeatures();
+    method public java.util.Collection<java.io.File> getConsumerProguardFiles();
+    method public boolean getDebuggable();
+    method public com.android.tools.lint.model.LintModelLibraryResolver getLibraryResolver();
+    method public com.android.tools.lint.model.LintModelAndroidArtifact getMainArtifact();
+    method public java.io.File? getManifestMergeReport();
+    method public java.util.Map<java.lang.String,java.lang.String> getManifestPlaceholders();
+    method public java.io.File? getMergedManifest();
+    method public com.android.sdklib.AndroidVersion? getMinSdkVersion();
+    method public com.android.tools.lint.model.LintModelModule getModule();
+    method public String getName();
+    method public com.android.ide.common.gradle.model.IdeVariant? getOldVariant();
+    method public String? getPackage();
+    method public java.util.Collection<java.io.File> getProguardFiles();
+    method public java.util.Map<java.lang.String,com.android.tools.lint.model.LintModelResourceField> getResValues();
+    method public java.util.Collection<java.lang.String> getResourceConfigurations();
+    method public boolean getShrinkable();
+    method public java.util.List<com.android.tools.lint.model.LintModelSourceProvider> getSourceProviders();
+    method public com.android.sdklib.AndroidVersion? getTargetSdkVersion();
+    method public com.android.tools.lint.model.LintModelJavaArtifact? getTestArtifact();
+    method public java.util.List<com.android.tools.lint.model.LintModelSourceProvider> getTestSourceProviders();
+    method public boolean getUseSupportLibraryVectorDrawables();
+    property public com.android.tools.lint.model.LintModelAndroidArtifact? androidTestArtifact;
+    property public com.android.tools.lint.model.LintModelBuildFeatures buildFeatures;
+    property public java.util.Collection<java.io.File> consumerProguardFiles;
+    property public boolean debuggable;
+    property public com.android.tools.lint.model.LintModelAndroidArtifact mainArtifact;
+    property public java.io.File? manifestMergeReport;
+    property public java.util.Map<java.lang.String,java.lang.String> manifestPlaceholders;
+    property public java.io.File? mergedManifest;
+    property public com.android.sdklib.AndroidVersion? minSdkVersion;
+    property public String name;
+    property public com.android.ide.common.gradle.model.IdeVariant? oldVariant;
+    property public String? package;
+    property public java.util.Collection<java.io.File> proguardFiles;
+    property public java.util.Map<java.lang.String,com.android.tools.lint.model.LintModelResourceField> resValues;
+    property public java.util.Collection<java.lang.String> resourceConfigurations;
+    property public boolean shrinkable;
+    property public java.util.List<com.android.tools.lint.model.LintModelSourceProvider> sourceProviders;
+    property public com.android.sdklib.AndroidVersion? targetSdkVersion;
+    property public com.android.tools.lint.model.LintModelJavaArtifact? testArtifact;
+    property public java.util.List<com.android.tools.lint.model.LintModelSourceProvider> testSourceProviders;
+    property public boolean useSupportLibraryVectorDrawables;
+  }
+
+  public interface LintModelJavaArtifact extends com.android.tools.lint.model.LintModelArtifact {
+  }
+
+  public interface LintModelJavaLibrary extends com.android.tools.lint.model.LintModelExternalLibrary {
+  }
+
+  public interface LintModelLibrary extends java.lang.Comparable<com.android.tools.lint.model.LintModelLibrary> {
+    method public default int compareTo(com.android.tools.lint.model.LintModelLibrary other);
+    method public String getArtifactAddress();
+    method public java.io.File? getLintJar();
+    method public boolean getProvided();
+    property public abstract String artifactAddress;
+    property public abstract java.io.File? lintJar;
+    property public abstract boolean provided;
+  }
+
+  public interface LintModelLibraryResolver {
+    method public java.util.Collection<com.android.tools.lint.model.LintModelLibrary> getAllLibraries();
+    method public com.android.tools.lint.model.LintModelLibrary? getLibrary(String artifactAddress);
+  }
+
+  public interface LintModelLintOptions {
+    method public boolean getAbortOnError();
+    method public boolean getAbsolutePaths();
+    method public java.io.File? getBaselineFile();
+    method public java.util.Set<java.lang.String>? getCheck();
+    method public boolean getCheckAllWarnings();
+    method public boolean getCheckDependencies();
+    method public boolean getCheckGeneratedSources();
+    method public boolean getCheckReleaseBuilds();
+    method public boolean getCheckTestSources();
+    method public java.util.Set<java.lang.String> getDisable();
+    method public java.util.Set<java.lang.String> getEnable();
+    method public boolean getExplainIssues();
+    method public java.io.File? getHtmlOutput();
+    method public boolean getHtmlReport();
+    method public boolean getIgnoreTestSources();
+    method public boolean getIgnoreWarnings();
+    method public java.io.File? getLintConfig();
+    method public boolean getNoLines();
+    method public boolean getQuiet();
+    method public java.util.Map<java.lang.String,com.android.tools.lint.model.LintModelSeverity>? getSeverityOverrides();
+    method public boolean getShowAll();
+    method public java.io.File? getTextOutput();
+    method public boolean getTextReport();
+    method public boolean getWarningsAsErrors();
+    method public java.io.File? getXmlOutput();
+    method public boolean getXmlReport();
+    property public abstract boolean abortOnError;
+    property public abstract boolean absolutePaths;
+    property public abstract java.io.File? baselineFile;
+    property public abstract java.util.Set<java.lang.String>? check;
+    property public abstract boolean checkAllWarnings;
+    property public abstract boolean checkDependencies;
+    property public abstract boolean checkGeneratedSources;
+    property public abstract boolean checkReleaseBuilds;
+    property public abstract boolean checkTestSources;
+    property public abstract java.util.Set<java.lang.String> disable;
+    property public abstract java.util.Set<java.lang.String> enable;
+    property public abstract boolean explainIssues;
+    property public abstract java.io.File? htmlOutput;
+    property public abstract boolean htmlReport;
+    property public abstract boolean ignoreTestSources;
+    property public abstract boolean ignoreWarnings;
+    property public abstract java.io.File? lintConfig;
+    property public abstract boolean noLines;
+    property public abstract boolean quiet;
+    property public abstract java.util.Map<java.lang.String,com.android.tools.lint.model.LintModelSeverity>? severityOverrides;
+    property public abstract boolean showAll;
+    property public abstract java.io.File? textOutput;
+    property public abstract boolean textReport;
+    property public abstract boolean warningsAsErrors;
+    property public abstract java.io.File? xmlOutput;
+    property public abstract boolean xmlReport;
+  }
+
+  public interface LintModelMavenName extends java.lang.Comparable<com.android.tools.lint.model.LintModelMavenName> {
+    method public default int compareTo(com.android.tools.lint.model.LintModelMavenName other);
+    method public default operator String component1();
+    method public default operator String component2();
+    method public default operator String component3();
+    method public String getArtifactId();
+    method public String getGroupId();
+    method public String getVersion();
+    property public abstract String artifactId;
+    property public abstract String groupId;
+    property public abstract String version;
+    field public static final com.android.tools.lint.model.LintModelMavenName.Companion Companion;
+    field public static final String LOCAL_AARS = "__local_aars__";
+  }
+
+  public static final class LintModelMavenName.Companion {
+    method public com.android.tools.lint.model.DefaultLintModelMavenName getNONE();
+    method public com.android.tools.lint.model.LintModelMavenName? parse(String string);
+    property public final com.android.tools.lint.model.DefaultLintModelMavenName NONE;
+    field public static final String LOCAL_AARS = "__local_aars__";
+  }
+
+  public interface LintModelModule {
+    method public default com.android.tools.lint.model.LintModelVariant? defaultVariant();
+    method public default com.android.tools.lint.model.LintModelVariant? findVariant(String name);
+    method public java.util.List<java.io.File> getBootClassPath();
+    method public java.io.File getBuildFolder();
+    method public String getCompileTarget();
+    method public java.io.File getDir();
+    method public java.util.Collection<java.lang.String> getDynamicFeatures();
+    method public com.android.ide.common.repository.GradleVersion? getGradleVersion();
+    method public default java.util.List<com.android.tools.lint.model.LintModelSourceProvider> getInactiveSourceProviders(com.android.tools.lint.model.LintModelVariant active);
+    method public String getJavaSourceLevel();
+    method public com.android.tools.lint.model.LintModelLintOptions getLintOptions();
+    method public java.util.List<java.io.File> getLintRuleJars();
+    method public com.android.tools.lint.model.LintModelModuleLoader? getLoader();
+    method public com.android.tools.lint.model.LintModelMavenName? getMavenName();
+    method public String getModulePath();
+    method public com.android.ide.common.gradle.model.IdeAndroidProject? getOldProject();
+    method public String? getResourcePrefix();
+    method public com.android.tools.lint.model.LintModelModuleType getType();
+    method public java.util.List<com.android.tools.lint.model.LintModelVariant> getVariants();
+    method public boolean neverShrinking();
+    property public abstract java.util.List<java.io.File> bootClassPath;
+    property public abstract java.io.File buildFolder;
+    property public abstract String compileTarget;
+    property public abstract java.io.File dir;
+    property public abstract java.util.Collection<java.lang.String> dynamicFeatures;
+    property public abstract com.android.ide.common.repository.GradleVersion? gradleVersion;
+    property public abstract String javaSourceLevel;
+    property public abstract com.android.tools.lint.model.LintModelLintOptions lintOptions;
+    property public abstract java.util.List<java.io.File> lintRuleJars;
+    property public abstract com.android.tools.lint.model.LintModelModuleLoader? loader;
+    property public abstract com.android.tools.lint.model.LintModelMavenName? mavenName;
+    property public abstract String modulePath;
+    property public abstract com.android.ide.common.gradle.model.IdeAndroidProject? oldProject;
+    property public abstract String? resourcePrefix;
+    property public abstract com.android.tools.lint.model.LintModelModuleType type;
+    property public abstract java.util.List<com.android.tools.lint.model.LintModelVariant> variants;
+  }
+
+  public final class LintModelModuleKt {
+    method public static void writeModule(com.android.tools.lint.model.LintModelModule, java.io.File destination, String? createdBy = null);
+  }
+
+  public interface LintModelModuleLibrary extends com.android.tools.lint.model.LintModelLibrary {
+    method public String getProjectPath();
+    property public abstract String projectPath;
+  }
+
+  public interface LintModelModuleLoader {
+    method public default com.android.tools.lint.model.LintModelModule getModule(java.io.File folder);
+    method public default com.android.tools.lint.model.LintModelModule? getModule(com.android.tools.lint.model.LintModelDependency library);
+    method public default com.android.tools.lint.model.LintModelModule? getModule(String path, com.android.tools.lint.model.LintModelFactory? factory = null);
+  }
+
+  public interface LintModelModuleLoaderProvider {
+    method public com.android.tools.lint.model.LintModelModuleLoader getModuleLoader();
+  }
+
+  public enum LintModelModuleType {
+    method public static com.android.tools.lint.model.LintModelModuleType valueOf(String name) throws java.lang.IllegalArgumentException;
+    method public static com.android.tools.lint.model.LintModelModuleType[] values();
+    enum_constant public static final com.android.tools.lint.model.LintModelModuleType APP;
+    enum_constant public static final com.android.tools.lint.model.LintModelModuleType DYNAMIC_FEATURE;
+    enum_constant public static final com.android.tools.lint.model.LintModelModuleType FEATURE;
+    enum_constant public static final com.android.tools.lint.model.LintModelModuleType INSTANT_APP;
+    enum_constant public static final com.android.tools.lint.model.LintModelModuleType JAVA_LIBRARY;
+    enum_constant public static final com.android.tools.lint.model.LintModelModuleType LIBRARY;
+    enum_constant public static final com.android.tools.lint.model.LintModelModuleType TEST;
+  }
+
+  public enum LintModelNamespacingMode {
+    method public static com.android.tools.lint.model.LintModelNamespacingMode valueOf(String name) throws java.lang.IllegalArgumentException;
+    method public static com.android.tools.lint.model.LintModelNamespacingMode[] values();
+    enum_constant public static final com.android.tools.lint.model.LintModelNamespacingMode DISABLED;
+    enum_constant public static final com.android.tools.lint.model.LintModelNamespacingMode REQUIRED;
+  }
+
+  public interface LintModelResourceField {
+    method public default operator String component1();
+    method public default operator String component2();
+    method public default operator String component3();
+    method public String getName();
+    method public String getType();
+    method public String getValue();
+    property public abstract String name;
+    property public abstract String type;
+    property public abstract String value;
+  }
+
+  public final class LintModelSerialization implements com.android.tools.lint.model.LintModelModuleLoader {
+    method public com.android.tools.lint.model.LintModelDependencies readDependencies(java.io.File source, com.android.tools.lint.model.DefaultLintModelLibraryResolver? resolver = null, String? variantName = null, String? artifactName = null, java.util.List<? extends kotlin.Pair<java.lang.String,? extends java.io.File>> pathVariables = emptyList());
+    method public com.android.tools.lint.model.LintModelDependencies readDependencies(com.android.tools.lint.model.LintModelSerialization.LintModelSerializationAdapter reader, java.io.File? root, com.android.tools.lint.model.DefaultLintModelLibraryResolver? resolver = null, String? variantName = null, String? artifactName = null);
+    method public com.android.tools.lint.model.LintModelLibraryResolver readLibraries(java.io.File source, com.android.tools.lint.model.DefaultLintModelLibraryResolver? resolver = null, String? variantName = null, String? artifactName = null, java.util.List<? extends kotlin.Pair<java.lang.String,? extends java.io.File>> pathVariables = emptyList());
+    method public com.android.tools.lint.model.LintModelLibraryResolver readLibraries(com.android.tools.lint.model.LintModelSerialization.LintModelSerializationAdapter reader, com.android.tools.lint.model.DefaultLintModelLibraryResolver? resolver = null, String? variantName = null, String? artifactName = null);
+    method public com.android.tools.lint.model.LintModelModule readModule(java.io.File source, java.util.List<java.lang.String>? variantNames = null, boolean readDependencies = true, java.util.List<? extends kotlin.Pair<java.lang.String,? extends java.io.File>> pathVariables = emptyList());
+    method public com.android.tools.lint.model.LintModelModule readModule(com.android.tools.lint.model.LintModelSerialization.LintModelSerializationAdapter adapter, java.util.List<java.lang.String>? variantNames = null, boolean readDependencies = true);
+    method public void writeDependencies(com.android.tools.lint.model.LintModelDependencies dependencies, java.io.File destination, String variantName = "", String artifactName = "", java.util.List<? extends kotlin.Pair<java.lang.String,? extends java.io.File>> pathVariables = emptyList());
+    method public void writeDependencies(com.android.tools.lint.model.LintModelDependencies dependencies, com.android.tools.lint.model.LintModelSerialization.LintModelSerializationAdapter writer, String variantName = "", String artifactName = "");
+    method public void writeLibraries(com.android.tools.lint.model.LintModelLibraryResolver libraryResolver, java.io.File destination, String variantName = "", String artifactName = "", java.util.List<? extends kotlin.Pair<java.lang.String,? extends java.io.File>> pathVariables = emptyList());
+    method public void writeLibraries(com.android.tools.lint.model.LintModelLibraryResolver libraryResolver, com.android.tools.lint.model.LintModelSerialization.LintModelSerializationAdapter writer, String variantName = "", String artifactName = "");
+    method public void writeModule(com.android.tools.lint.model.LintModelModule module, com.android.tools.lint.model.LintModelSerialization.LintModelSerializationAdapter destination, java.util.List<? extends com.android.tools.lint.model.LintModelVariant>? writeVariants = module.variants, boolean writeDependencies = true, String? createdBy = null);
+    method public void writeModule(com.android.tools.lint.model.LintModelModule module, java.io.File destination, java.util.List<? extends com.android.tools.lint.model.LintModelVariant>? writeVariants = module.variants, boolean writeDependencies = true, java.util.List<? extends kotlin.Pair<java.lang.String,? extends java.io.File>> pathVariables = emptyList(), String? createdBy = null);
+    method public void writeVariant(com.android.tools.lint.model.LintModelVariant variant, com.android.tools.lint.model.LintModelSerialization.LintModelSerializationAdapter writer, boolean writeDependencies = true, String? createdBy = null);
+    method public void writeVariant(com.android.tools.lint.model.LintModelVariant variant, java.io.File destination, boolean writeDependencies = true, java.util.List<? extends kotlin.Pair<java.lang.String,? extends java.io.File>> pathVariables = emptyList(), String? createdBy = null);
+    field public static final com.android.tools.lint.model.LintModelSerialization INSTANCE;
+  }
+
+  public static interface LintModelSerialization.LintModelSerializationAdapter {
+    method public default java.io.File? file(com.android.tools.lint.model.LintModelSerialization.TargetFile target, String variantName = "", String artifactName = "");
+    method public default java.io.File fromPathString(String path, java.io.File? relativeTo = null);
+    method public java.util.List<kotlin.Pair<java.lang.String,java.io.File>> getPathVariables();
+    method public java.io.Reader getReader(com.android.tools.lint.model.LintModelSerialization.TargetFile target, String variantName = "", String artifactName = "");
+    method public java.io.File? getRoot();
+    method public java.io.Writer getWriter(com.android.tools.lint.model.LintModelSerialization.TargetFile target, String variantName = "", String artifactName = "");
+    method public default String toPathString(java.io.File file, java.io.File? relativeTo = root);
+    property public abstract java.util.List<kotlin.Pair<java.lang.String,java.io.File>> pathVariables;
+    property public abstract java.io.File? root;
+  }
+
+  public static final class LintModelSerialization.LintModelSerializationFileAdapter implements com.android.tools.lint.model.LintModelSerialization.LintModelSerializationAdapter {
+    ctor public LintModelSerialization.LintModelSerializationFileAdapter(java.io.File root, java.util.List<? extends kotlin.Pair<java.lang.String,? extends java.io.File>> pathVariables);
+    method public java.util.List<kotlin.Pair<java.lang.String,java.io.File>> getPathVariables();
+    method public java.io.Reader getReader(com.android.tools.lint.model.LintModelSerialization.TargetFile target, String variantName, String artifactName);
+    method public java.io.File getRoot();
+    method public java.io.Writer getWriter(com.android.tools.lint.model.LintModelSerialization.TargetFile target, String variantName, String artifactName);
+  }
+
+  public enum LintModelSerialization.TargetFile {
+    method public static com.android.tools.lint.model.LintModelSerialization.TargetFile valueOf(String name) throws java.lang.IllegalArgumentException;
+    method public static com.android.tools.lint.model.LintModelSerialization.TargetFile[] values();
+    enum_constant public static final com.android.tools.lint.model.LintModelSerialization.TargetFile DEPENDENCIES;
+    enum_constant public static final com.android.tools.lint.model.LintModelSerialization.TargetFile LIBRARY_TABLE;
+    enum_constant public static final com.android.tools.lint.model.LintModelSerialization.TargetFile MODULE;
+    enum_constant public static final com.android.tools.lint.model.LintModelSerialization.TargetFile VARIANT;
+  }
+
+  public final class LintModelSerializationKt {
+  }
+
+  public enum LintModelSeverity {
+    method public static final com.android.tools.lint.model.LintModelSeverity? fromName(String name);
+    method public static com.android.tools.lint.model.LintModelSeverity valueOf(String name) throws java.lang.IllegalArgumentException;
+    method public static com.android.tools.lint.model.LintModelSeverity[] values();
+    enum_constant public static final com.android.tools.lint.model.LintModelSeverity DEFAULT_ENABLED;
+    enum_constant public static final com.android.tools.lint.model.LintModelSeverity ERROR;
+    enum_constant public static final com.android.tools.lint.model.LintModelSeverity FATAL;
+    enum_constant public static final com.android.tools.lint.model.LintModelSeverity IGNORE;
+    enum_constant public static final com.android.tools.lint.model.LintModelSeverity INFORMATIONAL;
+    enum_constant public static final com.android.tools.lint.model.LintModelSeverity WARNING;
+    field public static final com.android.tools.lint.model.LintModelSeverity.Companion Companion;
+  }
+
+  public static final class LintModelSeverity.Companion {
+    method public com.android.tools.lint.model.LintModelSeverity? fromName(String name);
+  }
+
+  public interface LintModelSourceProvider {
+    method public java.util.Collection<java.io.File> getAssetsDirectories();
+    method public java.util.Collection<java.io.File> getJavaDirectories();
+    method public java.io.File getManifestFile();
+    method public java.util.Collection<java.io.File> getResDirectories();
+    method public boolean isDebugOnly();
+    method public boolean isInstrumentationTest();
+    method public default boolean isTest();
+    method public boolean isUnitTest();
+    property public abstract java.util.Collection<java.io.File> assetsDirectories;
+    property public abstract java.util.Collection<java.io.File> javaDirectories;
+    property public abstract java.io.File manifestFile;
+    property public abstract java.util.Collection<java.io.File> resDirectories;
+  }
+
+  public interface LintModelVariant {
+    method public com.android.tools.lint.model.LintModelAndroidArtifact? getAndroidTestArtifact();
+    method public com.android.tools.lint.model.LintModelBuildFeatures getBuildFeatures();
+    method public java.util.Collection<java.io.File> getConsumerProguardFiles();
+    method public boolean getDebuggable();
+    method public com.android.tools.lint.model.LintModelLibraryResolver getLibraryResolver();
+    method public com.android.tools.lint.model.LintModelAndroidArtifact getMainArtifact();
+    method public java.io.File? getManifestMergeReport();
+    method public java.util.Map<java.lang.String,java.lang.String> getManifestPlaceholders();
+    method public java.io.File? getMergedManifest();
+    method public com.android.sdklib.AndroidVersion? getMinSdkVersion();
+    method public com.android.tools.lint.model.LintModelModule getModule();
+    method public String getName();
+    method public com.android.ide.common.gradle.model.IdeVariant? getOldVariant();
+    method public String? getPackage();
+    method public java.util.Collection<java.io.File> getProguardFiles();
+    method public java.util.Map<java.lang.String,com.android.tools.lint.model.LintModelResourceField> getResValues();
+    method public java.util.Collection<java.lang.String> getResourceConfigurations();
+    method public boolean getShrinkable();
+    method public java.util.List<com.android.tools.lint.model.LintModelSourceProvider> getSourceProviders();
+    method public com.android.sdklib.AndroidVersion? getTargetSdkVersion();
+    method public com.android.tools.lint.model.LintModelJavaArtifact? getTestArtifact();
+    method public java.util.List<com.android.tools.lint.model.LintModelSourceProvider> getTestSourceProviders();
+    method public boolean getUseSupportLibraryVectorDrawables();
+    property public abstract com.android.tools.lint.model.LintModelAndroidArtifact? androidTestArtifact;
+    property public abstract com.android.tools.lint.model.LintModelBuildFeatures buildFeatures;
+    property public abstract java.util.Collection<java.io.File> consumerProguardFiles;
+    property public abstract boolean debuggable;
+    property public abstract com.android.tools.lint.model.LintModelLibraryResolver libraryResolver;
+    property public abstract com.android.tools.lint.model.LintModelAndroidArtifact mainArtifact;
+    property public abstract java.io.File? manifestMergeReport;
+    property public abstract java.util.Map<java.lang.String,java.lang.String> manifestPlaceholders;
+    property public abstract java.io.File? mergedManifest;
+    property public abstract com.android.sdklib.AndroidVersion? minSdkVersion;
+    property public abstract com.android.tools.lint.model.LintModelModule module;
+    property public abstract String name;
+    property public abstract com.android.ide.common.gradle.model.IdeVariant? oldVariant;
+    property public abstract String? package;
+    property public abstract java.util.Collection<java.io.File> proguardFiles;
+    property public abstract java.util.Map<java.lang.String,com.android.tools.lint.model.LintModelResourceField> resValues;
+    property public abstract java.util.Collection<java.lang.String> resourceConfigurations;
+    property public abstract boolean shrinkable;
+    property public abstract java.util.List<com.android.tools.lint.model.LintModelSourceProvider> sourceProviders;
+    property public abstract com.android.sdklib.AndroidVersion? targetSdkVersion;
+    property public abstract com.android.tools.lint.model.LintModelJavaArtifact? testArtifact;
+    property public abstract java.util.List<com.android.tools.lint.model.LintModelSourceProvider> testSourceProviders;
+    property public abstract boolean useSupportLibraryVectorDrawables;
+  }
+
+}
+

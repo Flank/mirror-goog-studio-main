@@ -67,23 +67,23 @@ class JniLibsApkPackagingOptionsImplTest {
     }
 
     @Test
-    fun testDefaultLegacyPackaging() {
+    fun testDefaultUseLegacyPackaging() {
         val jniLibsApkPackagingOptions =
             JniLibsApkPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices, M)
         val legacyJniLibsApkPackagingOptions =
             JniLibsApkPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices, M - 1)
 
-        assertThat(jniLibsApkPackagingOptions.legacyPackaging.get()).isFalse()
-        assertThat(legacyJniLibsApkPackagingOptions.legacyPackaging.get()).isTrue()
+        assertThat(jniLibsApkPackagingOptions.useLegacyPackaging.get()).isFalse()
+        assertThat(legacyJniLibsApkPackagingOptions.useLegacyPackaging.get()).isTrue()
     }
 
     @Test
-    fun testExplicitLegacyPackaging() {
-        dslPackagingOptions.jniLibs.legacyPackaging = true
+    fun testExplicitUseLegacyPackaging() {
+        dslPackagingOptions.jniLibs.useLegacyPackaging = true
 
         val jniLibsApkPackagingOptions =
             JniLibsApkPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices, M)
 
-        assertThat(jniLibsApkPackagingOptions.legacyPackaging.get()).isTrue()
+        assertThat(jniLibsApkPackagingOptions.useLegacyPackaging.get()).isTrue()
     }
 }

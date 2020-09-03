@@ -42,7 +42,7 @@ public class JacocoWithButterKnifeTest {
 
         File javaFile =
                 FileUtils.join(
-                        project.getTestDir(),
+                        project.getProjectDir(),
                         "build",
                         "generated",
                         "ap_generated_sources",

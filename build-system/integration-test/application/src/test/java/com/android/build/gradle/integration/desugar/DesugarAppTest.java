@@ -330,7 +330,7 @@ public class DesugarAppTest {
 
     @NonNull
     private List<String> createLibToDesugarAndGetClasses() throws IOException {
-        Path lib = project.getTestDir().toPath().resolve("libs/my-lib.jar");
+        Path lib = project.getProjectDir().toPath().resolve("libs/my-lib.jar");
         Files.createDirectories(lib.getParent());
         TestInputsGenerator.pathWithClasses(lib, Lists.newArrayList(TestClass.class));
 

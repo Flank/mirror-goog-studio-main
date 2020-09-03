@@ -256,8 +256,7 @@ public class NdkBuildTest {
                             fetchResult.getNormalizer()))
                     .containsExactly("{PROJECT}/src/main/jni/Android.mk{F}");
         } else {
-            project.model()
-                    .fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
+            project.model().fetchAndroidProjectsAllowSyncIssues();
             NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
             assertThat(model.getBuildSystems())
                     .containsExactly(NativeBuildSystem.NDK_BUILD.getTag());

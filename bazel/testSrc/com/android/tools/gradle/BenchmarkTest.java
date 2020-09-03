@@ -293,6 +293,8 @@ public class BenchmarkTest {
             gradle.addRepo(new File(data, "repo.zip"));
             gradle.addArgument("-Dcom.android.gradle.version=" + getLocalGradleVersion());
             gradle.addArgument("-Duser.home=" + home.getAbsolutePath());
+            // Potential fix for performance regression (b/163462113)
+            gradle.addArgument("-Dorg.gradle.jvmargs=-XX:+UseParallelGC");
             if (fromStudio) {
                 gradle.addArgument("-Pandroid.injected.invoked.from.ide=true");
                 gradle.addArgument("-Pandroid.injected.testOnly=true");

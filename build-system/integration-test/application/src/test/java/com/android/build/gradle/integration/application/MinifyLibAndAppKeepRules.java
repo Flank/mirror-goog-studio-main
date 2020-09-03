@@ -75,7 +75,7 @@ public class MinifyLibAndAppKeepRules {
         // add the proguard rule that should keep all the classes
         Files.asCharSink(
                         FileUtils.join(
-                                project.getSubproject("app").getTestDir(), "proguard-rules.pro"),
+                                project.getSubproject("app").getProjectDir(), "proguard-rules.pro"),
                         Charsets.UTF_8)
                 .write("-keep class *");
 
@@ -100,10 +100,10 @@ public class MinifyLibAndAppKeepRules {
     /** Regression test for b/119758914. */
     @Test
     public void testKeepRulesGeneratedCorrectly() throws Exception {
-        File confOutput = new File(project.getTestDir(), "conf.out");
+        File confOutput = new File(project.getProjectDir(), "conf.out");
         // add the proguard rule to print configuration
         TestFileUtils.appendToFile(
-                FileUtils.join(project.getSubproject("app").getTestDir(), "proguard-rules.pro"),
+                FileUtils.join(project.getSubproject("app").getProjectDir(), "proguard-rules.pro"),
                 "-printconfiguration \"" + confOutput + "\"");
 
         TestFileUtils.appendToFile(

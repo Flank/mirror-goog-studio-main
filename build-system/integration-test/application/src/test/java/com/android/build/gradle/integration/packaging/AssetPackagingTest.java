@@ -95,21 +95,21 @@ public class AssetPackagingTest {
 
         // put some default files in the 4 projects, to check non incremental packaging as well,
         // and to provide files to change to test incremental support.
-        File appDir = appProject.getTestDir();
+        File appDir = appProject.getProjectDir();
         createOriginalAsset(createAssetFile(appDir, "main", "file.txt"), "app:abcd");
         createOriginalAsset(createAssetFile(appDir, "main", "subdir", "file.txt"), "app:defg");
         createOriginalAsset(createAssetFile(appDir, "main", "_anotherdir", "file.txt"), "app:hijk");
         createOriginalAsset(createAssetFile(appDir, "androidTest", "filetest.txt"), "appTest:abcd");
 
-        File testDir = testProject.getTestDir();
+        File testDir = testProject.getProjectDir();
         createOriginalAsset(createAssetFile(testDir, "main", "file.txt"), "test:abcd");
 
-        File libDir = libProject.getTestDir();
+        File libDir = libProject.getProjectDir();
         createOriginalAsset(createAssetFile(libDir, "main", "filelib.txt"), "library:abcd");
         createOriginalAsset(
                 createAssetFile(libDir, "androidTest", "filelibtest.txt"), "libraryTest:abcd");
 
-        File lib2Dir = libProject2.getTestDir();
+        File lib2Dir = libProject2.getProjectDir();
         // Include a gzipped asset, which should be extracted.
         createOriginalGzippedAsset(
                 createAssetFile(lib2Dir, "main", "filelib2.txt.gz"),
@@ -606,10 +606,10 @@ public class AssetPackagingTest {
         byte[] baData = new byte[] { 'g' };
         byte[] bbData = new byte[] { 'h' };
 
-        File aaAsset = FileUtils.join(appProject.getTestDir(), "src", "main", "assets", "aa");
-        File abAsset = FileUtils.join(appProject.getTestDir(), "src", "main", "assets", "ab");
-        File baAsset = FileUtils.join(appProject.getTestDir(), "src", "main", "assets", "ba");
-        File bbAsset = FileUtils.join(appProject.getTestDir(), "src", "main", "assets", "bb");
+        File aaAsset = FileUtils.join(appProject.getProjectDir(), "src", "main", "assets", "aa");
+        File abAsset = FileUtils.join(appProject.getProjectDir(), "src", "main", "assets", "ab");
+        File baAsset = FileUtils.join(appProject.getProjectDir(), "src", "main", "assets", "ba");
+        File bbAsset = FileUtils.join(appProject.getProjectDir(), "src", "main", "assets", "bb");
 
         FileUtils.mkdirs(aaAsset.getParentFile());
         FileUtils.mkdirs(abAsset.getParentFile());

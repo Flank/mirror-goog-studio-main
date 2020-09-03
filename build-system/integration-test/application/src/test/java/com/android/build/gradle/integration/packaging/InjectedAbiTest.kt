@@ -46,7 +46,7 @@ class InjectedAbiTest {
 
     @Before
     fun setup() {
-        val appDir = project.testDir
+        val appDir = project.projectDir
         createOriginalSoFile(appDir, "x86", "libapp.so", "app:abcd")
         createOriginalSoFile(appDir, "arm64-v8a", "libapp.so", "app:abcd")
         createOriginalSoFile(appDir, "armeabi-v7a", "libapp.so", "app:abcd")
@@ -184,7 +184,7 @@ class InjectedAbiTest {
 
         // remove x86_64 .so files
         removeSoFiles(listOf("x86_64"))
-        val jniLibsDir = FileUtils.join(project.testDir, "src", "main", "jniLibs")
+        val jniLibsDir = FileUtils.join(project.projectDir, "src", "main", "jniLibs")
         assertThat(jniLibsDir).exists()
         assertThat(jniLibsDir.listFiles()?.toList()?.map { it.name }).doesNotContain("x86_64")
 
@@ -256,7 +256,7 @@ class InjectedAbiTest {
 
         // remove x86_64 .so files
         removeSoFiles(listOf("x86_64"))
-        val jniLibsDir = FileUtils.join(project.testDir, "src", "main", "jniLibs")
+        val jniLibsDir = FileUtils.join(project.projectDir, "src", "main", "jniLibs")
         assertThat(jniLibsDir).exists()
         assertThat(jniLibsDir.listFiles()?.toList()?.map { it.name }).doesNotContain("x86_64")
 
@@ -318,7 +318,7 @@ class InjectedAbiTest {
     private fun removeSoFiles(abis: List<String>) {
         abis.forEach {
             FileUtils.deleteRecursivelyIfExists(
-                FileUtils.join(project.testDir, "src", "main", "jniLibs", it)
+                FileUtils.join(project.projectDir, "src", "main", "jniLibs", it)
             )
         }
     }

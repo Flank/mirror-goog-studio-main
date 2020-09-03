@@ -60,7 +60,7 @@ public class MatchingFallbackTest {
         // add a resources file in the debug build type of the lib.
         File fooTxt =
                 FileUtils.join(
-                        project.getSubproject("library").getTestDir(),
+                        project.getSubproject("library").getProjectDir(),
                         "src",
                         "debug",
                         "resources",
@@ -221,7 +221,7 @@ public class MatchingFallbackTest {
         // add a resources file in the red flavor of the lib.
         File fooTxt =
                 FileUtils.join(
-                        project.getSubproject("library").getTestDir(),
+                        project.getSubproject("library").getProjectDir(),
                         "src",
                         "red",
                         "resources",

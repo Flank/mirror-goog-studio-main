@@ -214,7 +214,8 @@ public class CmakeStlMatrixTest {
                                     + "< NativeModule");
         } else {
             project.model()
-                    .fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
+                    .fetchAndroidProjectsAllowSyncIssues(); // Make sure we can successfully get
+            // AndroidProject
             NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
             assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.CMAKE.getTag());
             assertThat(model).hasExactBuildFilesShortNames("CMakeLists.txt");

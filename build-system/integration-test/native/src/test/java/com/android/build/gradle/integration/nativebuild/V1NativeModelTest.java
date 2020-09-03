@@ -601,7 +601,7 @@ public class V1NativeModelTest {
     @Test
     public void checkModel() throws Exception {
         Collection<SyncIssue> syncIssues =
-                project.model().fetchAndroidProjects().getOnlyModelSyncIssues();
+                project.model().fetchAndroidProjectsAllowSyncIssues().getOnlyModelSyncIssues();
         assertThat(syncIssues).hasSize(0);
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model).isNotNull();
@@ -1119,7 +1119,7 @@ public class V1NativeModelTest {
 
     private static File buildNativeBuildOutputPath(Config config, GradleTestProject project) {
         String nativeBuildOutputPath = config.nativeBuildOutputPath;
-        File projectDir = project.getTestDir();
+        File projectDir = project.getProjectDir();
 
         File outputDir = new File(nativeBuildOutputPath);
         if (!outputDir.isAbsolute()) {

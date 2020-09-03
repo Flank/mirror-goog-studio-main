@@ -122,8 +122,21 @@ data class ModuleTemplateData(
    * Info about base feature. Only present in dynamic feature project.
    */
   val baseFeature: BaseFeature?,
-  val apis: ApiTemplateData
+  val apis: ApiTemplateData,
+  val viewBindingSupport: ViewBindingSupport
 ): TemplateData() {
   val isDynamic: Boolean
     get() = baseFeature != null
+}
+
+/**
+ * enum class representing if a module supports view binding.
+ * Need to have different values for AGP3.6 and AGP4.0+ because they have different syntax.
+ */
+enum class ViewBindingSupport {
+  NOT_SUPPORTED,
+  SUPPORTED_3_6,
+  SUPPORTED_4_0_MORE;
+
+  fun isViewBindingSupported(): Boolean = this == SUPPORTED_3_6 || this == SUPPORTED_4_0_MORE
 }

@@ -41,7 +41,8 @@ class NoOpIncrementalBuildMinifyTest {
                 // Lint declares no outputs, so it's never up-to-date. It's probably for the
                 // better, because it's hard to declare all inputs (they include the SDK
                 // and contents of the Google maven repo).
-                ":lint"
+                ":lint",
+                ":analyticsRecordingRelease"
             ),
             UP_TO_DATE to setOf(
                 ":assembleDebugAndroidTest",
@@ -117,7 +118,8 @@ class NoOpIncrementalBuildMinifyTest {
                 ":processReleaseManifestForPackage",
                 ":processReleaseResources",
                 ":sdkReleaseDependencyData",
-                ":validateSigningDebugAndroidTest"
+                ":validateSigningDebugAndroidTest",
+                ":writeReleaseApplicationId"
             ),
             SKIPPED to setOf(
                 ":compileDebugAidl",

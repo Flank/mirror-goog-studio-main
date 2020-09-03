@@ -153,6 +153,10 @@ abstract class AnalyticsService :
         resourceManager.recordEvent(event)
     }
 
+    fun recordApplicationId(metadataFile: File) {
+        resourceManager.recordApplicationId(metadataFile)
+    }
+
     class RegistrationAction(project: Project)
         : ServiceRegistrationAction<AnalyticsService, Params>(
         project,

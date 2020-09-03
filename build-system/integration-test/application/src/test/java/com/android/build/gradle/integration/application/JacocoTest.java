@@ -98,7 +98,7 @@ public class JacocoTest {
     @Test
     public void testJarIsProceedByJacoco() throws Exception {
         TestInputsGenerator.jarWithEmptyClasses(
-                new File(project.getTestDir(), "generated-classes.jar").toPath(),
+                new File(project.getProjectDir(), "generated-classes.jar").toPath(),
                 Collections.singleton("test/A"));
 
         TestFileUtils.appendToFile(
@@ -173,7 +173,7 @@ public class JacocoTest {
     public void testChangedJars() throws Exception {
         project.executor().run("assembleDebug");
 
-        File strings = new File(project.getTestDir(), "src/main/res/values/strings.xml");
+        File strings = new File(project.getProjectDir(), "src/main/res/values/strings.xml");
         FileUtils.mkdirs(strings.getParentFile());
         String dataSrcContent =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"

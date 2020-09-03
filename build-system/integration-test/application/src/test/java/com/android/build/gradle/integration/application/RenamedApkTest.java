@@ -53,7 +53,7 @@ public class RenamedApkTest {
 
     @Test
     public void checkModelReflectsRenamedApk() throws Exception {
-        File projectDir = project.getTestDir();
+        File projectDir = project.getProjectDir();
         VariantBuildInformation variantBuildOutput =
                 ProjectBuildOutputUtils.getDebugVariantBuildOutput(model);
         Collection<String> outputFiles = ProjectBuildOutputUtils.getOutputFiles(variantBuildOutput);

@@ -78,7 +78,8 @@ public class FlavorlibTest {
 
     @Test
     public void checkExplodedAar() throws Exception {
-        File intermediates = FileUtils.join(project.getTestDir(), "app", "build", "intermediates");
+        File intermediates =
+                FileUtils.join(project.getProjectDir(), "app", "build", "intermediates");
         assertThat(intermediates).isDirectory();
         assertThat(new File(intermediates, "exploded-aar")).doesNotExist();
     }

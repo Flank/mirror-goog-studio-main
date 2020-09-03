@@ -76,7 +76,7 @@ class ProguardDesugaringTest {
             |  }
             |}""".trimMargin())
 
-        project.testDir.resolve("proguard-rules.pro").printWriter().use {
+        project.projectDir.resolve("proguard-rules.pro").printWriter().use {
             it.write("""
                 |-target 7
                 |-keep class ***""".trimMargin())

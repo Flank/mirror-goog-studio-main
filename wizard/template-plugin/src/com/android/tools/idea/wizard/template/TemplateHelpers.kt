@@ -214,8 +214,6 @@ private val kotlinKeywords = listOf(
   "package", "as", "typealias", "class", "this", "super", "val", "var", "fun", "for", "null", "true", "false", "is", "in",
   "throw", "return", "break", "continue", "object", "if", "try", "else", "while", "do", "when", "interface", "typeof")
 
-fun underlinesToCamelCase(string: String): String = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, string)
-
 fun extractLetters(string: String) = string.filter(Character::isLetter)
 
 /**

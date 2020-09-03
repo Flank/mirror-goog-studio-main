@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.instantexecution
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.LoggingLevel
@@ -52,7 +51,7 @@ class BasicInstantExecutionTest {
 
     @Before
     fun setUp() {
-        project.testDir.resolve(".gradle/configuration-cache").deleteRecursively()
+        project.projectDir.resolve(".gradle/configuration-cache").deleteRecursively()
 
         // Disable lint because of http://b/146208910
         listOf("app", "lib").forEach {
@@ -70,9 +69,9 @@ class BasicInstantExecutionTest {
     @Test
     fun testUpToDate() {
         executor().run("assemble")
-        assertThat(project.testDir.resolve(".gradle/configuration-cache")).isDirectory()
+        assertThat(project.projectDir.resolve(".gradle/configuration-cache")).isDirectory()
         val result = executor().run("assemble")
-        Truth.assertThat(result.didWorkTasks).isEmpty()
+        Truth.assertThat(result.didWorkTasks).containsExactly(":app:analyticsRecordingRelease")
     }
 
     @Test
@@ -88,7 +87,7 @@ class BasicInstantExecutionTest {
             .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
             .run("assemble")
 
-        assertThat(project.testDir.resolve(".gradle/configuration-cache")).isDirectory()
+        assertThat(project.projectDir.resolve(".gradle/configuration-cache")).isDirectory()
         executor().run("clean")
         executor()
             .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)

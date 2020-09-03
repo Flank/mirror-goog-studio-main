@@ -16,19 +16,30 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.layout
 
+import com.android.tools.idea.wizard.template.getMaterialComponentName
+
 
 fun fragmentItemDetailTwoPaneXml(
   detailName: String,
   detailNameLayout: String,
-  packageName: String
+  packageName: String,
+  useAndroidX: Boolean
 ) = """
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Adding the same root's ID for view binding as other layout configurations -->
+<${getMaterialComponentName("android.support.design.widget.CoordinatorLayout", useAndroidX)}
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/${detailNameLayout}"
-    style="?android:attr/textAppearanceLarge"
+    android:id="@+id/${detailNameLayout}_container"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="16dp"
-    android:textIsSelectable="true"
-    tools:context="${packageName}.${detailName}Fragment" />
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/${detailNameLayout}"
+        style="?android:attr/textAppearanceLarge"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp"
+        android:textIsSelectable="true"
+        tools:context="${packageName}.${detailName}Fragment" />
+</${getMaterialComponentName("android.support.design.widget.CoordinatorLayout", useAndroidX)}>
 """

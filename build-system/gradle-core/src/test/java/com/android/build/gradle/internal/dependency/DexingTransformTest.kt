@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Cat
 import com.android.build.gradle.internal.transforms.testdata.ClassUsingInterfaceWithDefaultMethod
-import com.android.build.gradle.internal.transforms.testdata.DummyStandAlone
+import com.android.build.gradle.internal.transforms.testdata.StandAloneClass
 import com.android.build.gradle.internal.transforms.testdata.InterfaceWithDefaultMethod
 import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.build.gradle.options.BooleanOption
@@ -227,7 +227,7 @@ class DexingTransformTest(private val incrementalDexingTransform: Boolean) {
             listOf(
                 InterfaceWithDefaultMethod::class.java,
                 ClassUsingInterfaceWithDefaultMethod::class.java,
-                DummyStandAlone::class.java
+                StandAloneClass::class.java
             )
         TestInputsGenerator.pathWithClasses(input.toPath(), classes)
         var dexingTransform = TestDexingTransform(
@@ -256,13 +256,13 @@ class DexingTransformTest(private val incrementalDexingTransform: Boolean) {
             TestInputsGenerator.getPath(InterfaceWithDefaultMethod::class.java)
         val classUsingInterfaceWithDefaultMethodClass =
             TestInputsGenerator.getPath(ClassUsingInterfaceWithDefaultMethod::class.java)
-        val dummyStandAloneClass = TestInputsGenerator.getPath(DummyStandAlone::class.java)
+        val standAloneClass = TestInputsGenerator.getPath(StandAloneClass::class.java)
 
         val interfaceWithDefaultMethodDex =
             interfaceWithDefaultMethodClass.replace(".class", ".dex")
         val classUsingInterfaceWithDefaultMethodDex =
             classUsingInterfaceWithDefaultMethodClass.replace(".class", ".dex")
-        val dummyStandAloneDex = dummyStandAloneClass.replace(".class", ".dex")
+        val standAloneClassDex = standAloneClass.replace(".class", ".dex")
 
         val interfaceWithDefaultMethodTimestampBefore = Files.getLastModifiedTime(
             outputs.outputDirectory.resolve(interfaceWithDefaultMethodDex).toPath()
@@ -270,8 +270,8 @@ class DexingTransformTest(private val incrementalDexingTransform: Boolean) {
         val classUsingInterfaceWithDefaultMethodTimestampBefore = Files.getLastModifiedTime(
             outputs.outputDirectory.resolve(classUsingInterfaceWithDefaultMethodDex).toPath()
         )
-        val dummyStandAloneTimestampBefore = Files.getLastModifiedTime(
-            outputs.outputDirectory.resolve(dummyStandAloneDex).toPath()
+        val standAloneClassTimestampBefore = Files.getLastModifiedTime(
+            outputs.outputDirectory.resolve(standAloneClassDex).toPath()
         )
 
         dexingTransform = TestDexingTransform(
@@ -309,8 +309,8 @@ class DexingTransformTest(private val incrementalDexingTransform: Boolean) {
         val classUsingInterfaceWithDefaultMethodTimestampAfter = Files.getLastModifiedTime(
             outputs.outputDirectory.resolve(classUsingInterfaceWithDefaultMethodDex).toPath()
         )
-        val dummyStandAloneTimestampAfter = Files.getLastModifiedTime(
-            outputs.outputDirectory.resolve(dummyStandAloneDex).toPath()
+        val standAloneClassTimestampAfter = Files.getLastModifiedTime(
+            outputs.outputDirectory.resolve(standAloneClassDex).toPath()
         )
 
         assertNotEquals(
@@ -321,7 +321,7 @@ class DexingTransformTest(private val incrementalDexingTransform: Boolean) {
             classUsingInterfaceWithDefaultMethodTimestampBefore,
             classUsingInterfaceWithDefaultMethodTimestampAfter
         )
-        assertEquals(dummyStandAloneTimestampBefore, dummyStandAloneTimestampAfter)
+        assertEquals(standAloneClassTimestampBefore, standAloneClassTimestampAfter)
     }
 
     private class TestDexingTransform(

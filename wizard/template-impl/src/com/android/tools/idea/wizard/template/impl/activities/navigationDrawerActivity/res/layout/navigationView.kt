@@ -35,6 +35,7 @@ fun navigationViewXml(
     tools:openDrawer="start">
 
     <include
+        android:id="@+id/${appBarLayoutName}"
         layout="@layout/${appBarLayoutName}"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

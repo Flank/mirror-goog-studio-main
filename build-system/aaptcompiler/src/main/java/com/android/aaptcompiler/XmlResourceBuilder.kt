@@ -169,7 +169,7 @@ class XmlResourceBuilder(val file: ResourceFile, val skipWhitespaceText: Boolean
       currentTextState = text
       return this
     }
-    currentTextState += " $text"
+    currentTextState += text
     return this
   }
 

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.fixture
 
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.testutils.AssumeUtil
 import com.google.common.truth.Truth
@@ -31,12 +32,14 @@ class FileNormalizerTest {
     private val normalizer = FileNormalizerImpl(
         buildId = BuildIdentifierImpl(File("/path/to/Project")),
         gradleUserHome = File("/path/to/Gradle"),
-        androidSdk = File("/path/to/Sdk"),
+        gradleCacheDir = File("/path/to/Gradle/caches/transforms-2/files-2.1"),
+        androidSdkDir = File("/path/to/Sdk"),
         androidPrefsDir = File("/path/to/Home"),
         androidNdkSxSRoot = File("/path/to/ndkSxSRoot"),
         localRepos = listOf(Paths.get("/path/to/localRepo1"), Paths.get("/path/to/localRepo2")),
         defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION
     )
+
     private val gson = Gson()
 
     @Test
@@ -62,12 +65,10 @@ class FileNormalizerTest {
 
     @Test
     fun `Test Gradle Transform Cache`() {
-        Truth.assertThat(
-            normalizer.normalize(
-                File("/path/to/Gradle/caches/transforms-2/files-2.1/12345678901234567890123456789012/foo")
-            )
-        )
-            .isEqualTo("{GRADLE}/caches/transforms-2/files-2.1/{CHECKSUM}/foo{!}")
+        Truth.assertThat(normalizer.normalize(
+            File("/path/to/Gradle/caches/transforms-2/files-2.1/12345678901234567890123456789012/foo")
+        ))
+            .isEqualTo("{GRADLE_CACHE}/{CHECKSUM}/foo{!}")
     }
 
     @Test
@@ -132,7 +133,8 @@ class FileNormalizerTest {
         val normalizer = FileNormalizerImpl(
             buildId = BuildIdentifierImpl(File("C:\\path\\to\\Project")),
             gradleUserHome = File("C:\\path\\to\\Gradle"),
-            androidSdk = File("C:\\path\\to\\Sdk"),
+            gradleCacheDir = File("C:\\path\\to\\Gradle\\caches\\transforms-2\\files-2.1"),
+            androidSdkDir = File("C:\\path\\to\\Sdk"),
             androidPrefsDir = File("C:\\path\\to\\Home"),
             androidNdkSxSRoot = File("C:\\path\\to\\ndkSxSRoot"),
             localRepos = listOf(

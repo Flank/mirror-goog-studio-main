@@ -194,17 +194,4 @@ public class HardwareConfigHelperTest extends TestCase {
                 "Automotive (1024p landscape) (1024 × 768, mdpi)",
                 getGenericLabel(automotive1024p));
     }
-
-    public void testAutomotiveNonGeneric() {
-        DeviceManager deviceManager = getDeviceManager();
-        Device polestar2 = deviceManager.getDevice("polestar_2", "Volvo");
-        assertNotNull(polestar2);
-        assertFalse(isWear(polestar2));
-        assertFalse(isTv(polestar2));
-        assertFalse(isMobile(polestar2));
-        assertTrue(isAutomotive(polestar2));
-        assertFalse(polestar2.isScreenRound());
-        assertFalse(isGeneric(polestar2));
-        assertEquals("Polestar 2 (1152 × 1536, mdpi)", getGenericLabel(polestar2));
-    }
 }

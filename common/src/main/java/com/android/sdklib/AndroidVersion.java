@@ -117,6 +117,9 @@ public final class AndroidVersion implements Comparable<AndroidVersion>, Seriali
     /** First version to support hinge foldable settings */
     public static final int MIN_HINGE_FOLDABLE_DEVICE_API = 30;
 
+    /** First version to support pixel 4a */
+    public static final int MIN_PIXEL_4A_DEVICE_API = 30;
+
     /**
      * Thrown when an {@link AndroidVersion} object could not be created.
      */

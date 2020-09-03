@@ -43,7 +43,7 @@ class LintNoJavaClassesTest {
     fun checkNoMissingClass() {
         project.execute("clean", ":app:lintDebug")
         val app = project.getSubproject("app")
-        val file = File(app.testDir, "lint-results.txt")
+        val file = File(app.projectDir, "lint-results.txt")
         assertThat(file).exists()
         assertThat(file).contentWithUnixLineSeparatorsIsExactly("No issues found.")
     }

@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.nativebuild;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -42,8 +41,8 @@ public class CmakeJniLibConnectedTest {
 
     @Before
     public void setUp() throws IOException, InterruptedException {
-        new File(project.getTestDir(), "src/main/jni")
-                .renameTo(new File(project.getTestDir(), "src/main/cxx"));
+        new File(project.getProjectDir(), "src/main/jni")
+                .renameTo(new File(project.getProjectDir(), "src/main/cxx"));
         GradleTestProject lib = project.getSubproject("lib");
         TestFileUtils.appendToFile(
                 lib.getBuildFile(),

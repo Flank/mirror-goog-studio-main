@@ -41,8 +41,9 @@ class CustomClassTransformTest {
     @Rule
     @JvmField
     val project =
-        GradleTestProject.builder().fromTestApp(
-            MinimalSubProject.app("com.example.test")).create()
+        GradleTestProject.builder().fromTestApp(MinimalSubProject.app("com.example.test"))
+                .setTargetGradleVersion("6.7-20200825220036+0000")
+                .create()
 
     @Test
     fun testCustomClassTransform() {
@@ -78,12 +79,12 @@ class CustomClassTransformTest {
 
     private fun createProfilersJar(): File {
         // Create a fake dependency jar file
-        val dependencyJarFile = project.testDir.resolve("fake_dependency.jar")
+        val dependencyJarFile = project.projectDir.resolve("fake_dependency.jar")
         TestInputsGenerator.pathWithClasses(
             dependencyJarFile.toPath(), listOf(TestDependency::class.java))
 
         // Create a fake dependency jar file with a native library
-        val nativeDependencyJarFile = project.testDir.resolve("fake_native_dependency.jar")
+        val nativeDependencyJarFile = project.projectDir.resolve("fake_native_dependency.jar")
         ZipOutputStream(FileOutputStream(nativeDependencyJarFile)).use { zip ->
             val e = ZipEntry("lib/x86/foo.so")
             zip.putNextEntry(e)
@@ -96,7 +97,7 @@ class CustomClassTransformTest {
         val entry = name.replace('.', '/') + ".class"
         val resource = "/$entry"
         val url = TestTransform::class.java.getResource(resource)
-        val jarFile = File(project.testDir, "transform.jar")
+        val jarFile = File(project.projectDir, "transform.jar")
         ZipOutputStream(FileOutputStream(jarFile)).use { zip ->
             var e = ZipEntry(entry)
             zip.putNextEntry(e)

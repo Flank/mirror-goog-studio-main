@@ -131,7 +131,7 @@ class CoreLibraryDesugarTest {
             """.trimIndent())
 
         TestFileUtils.addMethod(
-            FileUtils.join(app.testDir, "src/androidTest/java/com/example/helloworld/HelloWorldTest.java"),
+            FileUtils.join(app.projectDir, "src/androidTest/java/com/example/helloworld/HelloWorldTest.java"),
             """
                 @Test
                 public void testApiInvocation() {
@@ -499,7 +499,7 @@ class CoreLibraryDesugarTest {
             """.trimIndent())
 
         TestFileUtils.addMethod(
-            FileUtils.join(app.testDir, "src/androidTest/java/com/example/helloworld/HelloWorldTest.java"),
+            FileUtils.join(app.projectDir, "src/androidTest/java/com/example/helloworld/HelloWorldTest.java"),
             """
                 @Test
                 public void test() {

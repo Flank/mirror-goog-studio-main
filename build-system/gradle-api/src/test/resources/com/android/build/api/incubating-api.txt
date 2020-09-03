@@ -443,8 +443,8 @@ com.android.build.api.dsl.Device implements org.gradle.api.Named
 com.android.build.api.dsl.DeviceGroup implements org.gradle.api.Named
 com.android.build.api.dsl.DeviceGroup.getTargetDevices: org.gradle.api.DomainObjectSet<com.android.build.api.dsl.Device> ()
 com.android.build.api.dsl.DexPackagingOptions
-com.android.build.api.dsl.DexPackagingOptions.getLegacyPackaging: java.lang.Boolean ()
-com.android.build.api.dsl.DexPackagingOptions.setLegacyPackaging: void (java.lang.Boolean)
+com.android.build.api.dsl.DexPackagingOptions.getUseLegacyPackaging: java.lang.Boolean ()
+com.android.build.api.dsl.DexPackagingOptions.setUseLegacyPackaging: void (java.lang.Boolean)
 com.android.build.api.dsl.DynamicDelivery
 com.android.build.api.dsl.DynamicDelivery.getDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.dsl.DynamicDelivery.getInstantDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
@@ -502,9 +502,9 @@ com.android.build.api.dsl.JavaCompileOptions.getAnnotationProcessorOptions: com.
 com.android.build.api.dsl.JniLibsPackagingOptions
 com.android.build.api.dsl.JniLibsPackagingOptions.getExcludes: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.JniLibsPackagingOptions.getKeepDebugSymbols: java.util.Set<java.lang.String> ()
-com.android.build.api.dsl.JniLibsPackagingOptions.getLegacyPackaging: java.lang.Boolean ()
 com.android.build.api.dsl.JniLibsPackagingOptions.getPickFirsts: java.util.Set<java.lang.String> ()
-com.android.build.api.dsl.JniLibsPackagingOptions.setLegacyPackaging: void (java.lang.Boolean)
+com.android.build.api.dsl.JniLibsPackagingOptions.getUseLegacyPackaging: java.lang.Boolean ()
+com.android.build.api.dsl.JniLibsPackagingOptions.setUseLegacyPackaging: void (java.lang.Boolean)
 com.android.build.api.dsl.LibraryBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.LibraryVariantDimension
 com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.LibraryBuildFeatures.getAndroidResources: java.lang.Boolean ()
@@ -880,7 +880,7 @@ com.android.build.api.variant.FilterConfiguration.getIdentifier: java.lang.Strin
 com.android.build.api.variant.FilterConfiguration.hashCode: int ()
 com.android.build.api.variant.FilterConfiguration.toString: java.lang.String ()
 com.android.build.api.variant.JniLibsApkPackagingOptions implements com.android.build.api.variant.JniLibsPackagingOptions
-com.android.build.api.variant.JniLibsApkPackagingOptions.getLegacyPackaging: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.JniLibsApkPackagingOptions.getUseLegacyPackaging: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.JniLibsPackagingOptions
 com.android.build.api.variant.JniLibsPackagingOptions.getExcludes: org.gradle.api.provider.SetProperty<java.lang.String> ()
 com.android.build.api.variant.JniLibsPackagingOptions.getKeepDebugSymbols: org.gradle.api.provider.SetProperty<java.lang.String> ()

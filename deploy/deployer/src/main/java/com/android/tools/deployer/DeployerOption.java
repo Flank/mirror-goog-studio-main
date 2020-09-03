@@ -15,10 +15,12 @@
  */
 package com.android.tools.deployer;
 
+import java.util.EnumSet;
+
 public class DeployerOption {
     public final boolean useOptimisticSwap;
     public final boolean useOptimisticResourceSwap;
-    public final boolean useOptimisticInstall;
+    public final EnumSet<ChangeType> optimisticInstallSupport;
     public final boolean useStructuralRedefinition;
     public final boolean useVariableReinitialization;
     public final boolean fastRestartOnSwapFail;
@@ -26,13 +28,13 @@ public class DeployerOption {
     private DeployerOption(
             boolean useOptimisticSwap,
             boolean useOptimisticResourceSwap,
-            boolean useOptimisticInstall,
+            EnumSet<ChangeType> optimisticInstallSupport,
             boolean useStructuralRedefinition,
             boolean useVariableReinitialization,
             boolean fastRestartOnSwapFail) {
         this.useOptimisticSwap = useOptimisticSwap;
         this.useOptimisticResourceSwap = useOptimisticResourceSwap;
-        this.useOptimisticInstall = useOptimisticInstall;
+        this.optimisticInstallSupport = optimisticInstallSupport;
         this.useStructuralRedefinition = useStructuralRedefinition;
         this.useVariableReinitialization = useVariableReinitialization;
         this.fastRestartOnSwapFail = fastRestartOnSwapFail;
@@ -41,7 +43,7 @@ public class DeployerOption {
     public static class Builder {
         private boolean useOptimisticSwap;
         private boolean useOptimisticResourceSwap;
-        private boolean useOptimisticInstall;
+        private EnumSet<ChangeType> optimisticInstallSupport = EnumSet.noneOf(ChangeType.class);
         private boolean useStructuralRedefinition;
         private boolean useVariableReinitialization;
         private boolean fastRestartOnSwapFail;
@@ -56,8 +58,8 @@ public class DeployerOption {
             return this;
         }
 
-        public Builder setUseOptimisticInstall(boolean useOptimisticInstall) {
-            this.useOptimisticInstall = useOptimisticInstall;
+        public Builder setOptimisticInstallSupport(EnumSet<ChangeType> supportedChanges) {
+            this.optimisticInstallSupport = supportedChanges;
             return this;
         }
 
@@ -80,7 +82,7 @@ public class DeployerOption {
             return new DeployerOption(
                     useOptimisticSwap,
                     useOptimisticResourceSwap,
-                    useOptimisticInstall,
+                    optimisticInstallSupport,
                     useStructuralRedefinition,
                     useVariableReinitialization,
                     fastRestartOnSwapFail);

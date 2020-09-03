@@ -186,9 +186,9 @@ class CmakeSettingsTest(private val cmakeVersionInDsl: String, private val useV2
 
     private fun getMiniConfigs() : List<NativeBuildConfigValueMini> {
         val x86JsonFile =
-            join(project.testDir, ".cxx", "cmake", "debug", "x86_64", "build_model.json")
+            join(project.projectDir, ".cxx", "cmake", "debug", "x86_64", "build_model.json")
         val armJsonFile =
-            join(project.testDir, ".cxx", "cmake", "debug", "armeabi-v7a", "build_model.json")
+            join(project.projectDir, ".cxx", "cmake", "debug", "armeabi-v7a", "build_model.json")
 
         return listOf(x86JsonFile, armJsonFile)
             .filter { it.exists() }
