@@ -1354,20 +1354,41 @@ allprojects { proj ->
     }
 
     private fun createSettingsFile() {
+        var settingsContent = if (settingsFile.exists()) settingsFile.readText() else ""
+
+        if (TestUtils.runningFromBazel()) {
+            settingsContent = """
+            pluginManagement { t ->
+                apply from: "../commonLocalRepo.gradle", to: t
+
+                resolutionStrategy {
+                    eachPlugin {
+                        if(requested.id.namespace == "com.android") {
+                            useModule("com.android.tools.build:gradle:$ANDROID_GRADLE_PLUGIN_VERSION")
+                        }
+                    }
+                }
+            }
+
+        """.trimIndent() + settingsContent
+        }
+
         if (gradleBuildCacheDirectory != null) {
             val absoluteFile: File = if (gradleBuildCacheDirectory.isAbsolute)
                 gradleBuildCacheDirectory
             else
                 File(projectDir, gradleBuildCacheDirectory.path)
-            TestFileUtils.appendToFile(
-                settingsFile,
-                """buildCache {
+            settingsContent +=
+                """
+buildCache {
     local {
         directory = "${absoluteFile.path.replace("\\", "\\\\")}"
     }
-}"""
-            )
+}
+"""
         }
+
+        settingsFile.writeText(settingsContent)
     }
 
     private fun createGradleProp() {
