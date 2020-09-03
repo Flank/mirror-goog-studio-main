@@ -24,6 +24,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
+import com.android.ide.common.gradle.model.IdeAndroidLibrary;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeDependencies;
 import com.android.ide.common.gradle.model.IdeLibrary;
@@ -72,7 +73,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
     }
 
     public void testModelVersions() throws IOException {
-        IdeLibrary library =
+        IdeAndroidLibrary library =
                 createMockLibrary(
                         "com.android.tools:test-library:1.0.0",
                         ""
@@ -229,7 +230,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
     }
 
     public void testManager() throws IOException {
-        IdeLibrary library =
+        IdeAndroidLibrary library =
                 createMockLibrary(
                         "com.android.tools:test-library:1.0.0",
                         ""
@@ -371,7 +372,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
         return variant;
     }
 
-    public static IdeAndroidArtifact createMockArtifact(List<IdeLibrary> libraries) {
+    public static IdeAndroidArtifact createMockArtifact(List<IdeAndroidLibrary> libraries) {
         IdeDependencies dependencies = createNiceMock(IdeDependencies.class);
         expect(dependencies.getAndroidLibraries()).andReturn(libraries).anyTimes();
         expect(dependencies.getModuleDependencies()).andReturn(Collections.emptyList()).anyTimes();
@@ -384,7 +385,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
         return artifact;
     }
 
-    public static IdeLibrary createMockLibrary(
+    public static IdeAndroidLibrary createMockLibrary(
             String name, String allResources, String publicResources) throws IOException {
         // Identical to PrivateResourceDetectorTest, but these are in test modules that
         // can't access each other
@@ -396,7 +397,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
         if (publicResources != null) {
             Files.asCharSink(publicTxtFile, Charsets.UTF_8).write(publicResources);
         }
-        IdeLibrary library = mock(IdeLibrary.class);
+        IdeAndroidLibrary library = mock(IdeAndroidLibrary.class);
         when(library.getType()).thenReturn(IdeLibrary.LibraryType.LIBRARY_ANDROID);
         when(library.getPublicResources()).thenReturn(publicTxtFile.getPath());
         when(library.getSymbolFile()).thenReturn(rFile.getPath());

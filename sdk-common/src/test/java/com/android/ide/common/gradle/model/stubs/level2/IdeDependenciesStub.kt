@@ -15,21 +15,23 @@
  */
 package com.android.ide.common.gradle.model.stubs.level2
 
+import com.android.ide.common.gradle.model.IdeAndroidLibrary
 import com.android.ide.common.gradle.model.IdeDependencies
-import com.android.ide.common.gradle.model.IdeLibrary
+import com.android.ide.common.gradle.model.IdeJavaLibrary
+import com.android.ide.common.gradle.model.IdeModuleLibrary
 import java.io.File
 
 class IdeDependenciesStub(
-  override val androidLibraries : Collection<IdeLibrary>,
-  override val javaLibraries : Collection<IdeLibrary>,
-  override val moduleDependencies : Collection<IdeLibrary>,
+  override val androidLibraries : Collection<IdeAndroidLibrary>,
+  override val javaLibraries : Collection<IdeJavaLibrary>,
+  override val moduleDependencies : Collection<IdeModuleLibrary>,
   override val runtimeOnlyClasses : Collection<File>
 ) : IdeDependencies
 
 class IdeDependenciesStubBuilder(
-  var androidLibraries : Collection<IdeLibrary> = emptyList(),
-  var javaLibraries : Collection<IdeLibrary> = emptyList(),
-  var moduleDependencies : Collection<IdeLibrary> = emptyList(),
+  var androidLibraries : Collection<IdeAndroidLibrary> = emptyList(),
+  var javaLibraries : Collection<IdeJavaLibrary> = emptyList(),
+  var moduleDependencies : Collection<IdeModuleLibrary> = emptyList(),
   var runtimeOnlyClasses : Collection<File> = emptyList()
 ) {
   fun build() = IdeDependenciesStub(

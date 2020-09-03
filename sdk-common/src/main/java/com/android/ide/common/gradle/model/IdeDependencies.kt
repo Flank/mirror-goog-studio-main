@@ -17,31 +17,27 @@ package com.android.ide.common.gradle.model
 
 import java.io.File
 
-/**
- * Unified API for L1 ( [Dependencies] in pre-3.0 models) and L4 ([DependencyGraphs] in
- * 3.0+ models) dependencies.
- */
 interface IdeDependencies {
   /**
    * Returns the Android library dependencies, both direct and transitive.
    *
    * @return the list of libraries of type LIBRARY_ANDROID.
    */
-  val androidLibraries: Collection<IdeLibrary>
+  val androidLibraries: Collection<IdeAndroidLibrary>
 
   /**
    * Returns the Java library dependencies, both direct and transitive dependencies.
    *
    * @return the list of libraries of type LIBRARY_JAVA.
    */
-  val javaLibraries: Collection<IdeLibrary>
+  val javaLibraries: Collection<IdeJavaLibrary>
 
   /**
    * Returns the Module dependencies.
    *
    * @return the list of libraries of type LIBRARY_MODULE.
    */
-  val moduleDependencies: Collection<IdeLibrary>
+  val moduleDependencies: Collection<IdeModuleLibrary>
 
   /**
    * Returns the list of runtime only classes.

@@ -15,14 +15,16 @@
  */
 package com.android.ide.common.gradle.model.impl
 
+import com.android.ide.common.gradle.model.IdeAndroidLibrary
 import com.android.ide.common.gradle.model.IdeDependencies
-import com.android.ide.common.gradle.model.IdeLibrary
+import com.android.ide.common.gradle.model.IdeJavaLibrary
+import com.android.ide.common.gradle.model.IdeModuleLibrary
 import java.io.File
 import java.io.Serializable
 
 data class IdeDependenciesImpl(
-  override val androidLibraries: Collection<IdeLibrary>,
-  override val javaLibraries: Collection<IdeLibrary>,
-  override val moduleDependencies: Collection<IdeLibrary>,
+  override val androidLibraries: Collection<IdeAndroidLibrary>,
+  override val javaLibraries: Collection<IdeJavaLibrary>,
+  override val moduleDependencies: Collection<IdeModuleLibrary>,
   override val runtimeOnlyClasses: Collection<File>
 ) : IdeDependencies, Serializable

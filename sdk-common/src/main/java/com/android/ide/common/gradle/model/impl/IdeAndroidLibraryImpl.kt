@@ -15,7 +15,7 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.ide.common.gradle.model.IdeLibrary
+import com.android.ide.common.gradle.model.IdeAndroidLibrary
 import com.google.common.annotations.VisibleForTesting
 import java.io.File
 import java.io.Serializable
@@ -26,7 +26,7 @@ import java.io.Serializable
 data class IdeAndroidLibraryImpl(
   val core: IdeAndroidLibraryCore,
   override val isProvided: Boolean
-) : IdeLibrary by core, Serializable {
+) : IdeAndroidLibrary by core, Serializable {
   @VisibleForTesting
   constructor(
     artifactAddress: String,
@@ -93,7 +93,7 @@ data class IdeAndroidLibraryCore(
   private val _publicResources: String,
   private val _artifact: String,
   private val _symbolFile: String
-) : IdeLibrary, Serializable {
+) : IdeAndroidLibrary, Serializable {
 
   // Used for serialization by the IDE.
   internal constructor() : this(
@@ -135,9 +135,6 @@ data class IdeAndroidLibraryCore(
   override val publicResources: String get() = _publicResources.translate()
   override val artifact: File get() = File(_artifact.translate())
   override val symbolFile: String get() = _symbolFile.translate()
-
-  override val type: IdeLibrary.LibraryType
-    get() = IdeLibrary.LibraryType.LIBRARY_ANDROID
 
   override val variant: String?
     get() = throw unsupportedMethodForAndroidLibrary("getVariant")

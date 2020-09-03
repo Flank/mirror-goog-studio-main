@@ -15,7 +15,7 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.ide.common.gradle.model.IdeLibrary
+import com.android.ide.common.gradle.model.IdeModuleLibrary
 import com.google.common.annotations.VisibleForTesting
 import java.io.File
 import java.io.Serializable
@@ -26,7 +26,7 @@ import java.io.Serializable
 data class IdeModuleLibraryImpl(
   val core: IdeModuleLibraryCore,
   override val isProvided: Boolean
-) : IdeLibrary by core, Serializable {
+) : IdeModuleLibrary by core, Serializable {
   @VisibleForTesting
   constructor(
     projectPath: String,
@@ -43,7 +43,7 @@ data class IdeModuleLibraryCore(
   override val folder: File?,
   override val lintJar: String?
 
-) : IdeLibrary, Serializable {
+) : IdeModuleLibrary, Serializable {
 
   // Used for serialization by the IDE.
   constructor() : this(
@@ -67,9 +67,6 @@ data class IdeModuleLibraryCore(
     folder = null,
     lintJar = null
   )
-
-  override val type: IdeLibrary.LibraryType
-    get() = IdeLibrary.LibraryType.LIBRARY_MODULE
 
   override val artifact: File
     get() = throw unsupportedMethodForModuleLibrary("getArtifact()")
