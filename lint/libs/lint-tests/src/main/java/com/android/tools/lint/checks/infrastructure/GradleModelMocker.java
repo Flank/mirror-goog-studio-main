@@ -65,15 +65,15 @@ import com.android.ide.common.gradle.model.IdeSourceProviderContainer;
 import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions;
 import com.android.ide.common.gradle.model.IdeViewBindingOptions;
-import com.android.ide.common.gradle.model.impl.IdeAndroidLibrary;
 import com.android.ide.common.gradle.model.impl.IdeAndroidLibraryCore;
+import com.android.ide.common.gradle.model.impl.IdeAndroidLibraryImpl;
 import com.android.ide.common.gradle.model.impl.IdeDependenciesImpl;
-import com.android.ide.common.gradle.model.impl.IdeJavaLibrary;
 import com.android.ide.common.gradle.model.impl.IdeJavaLibraryCore;
+import com.android.ide.common.gradle.model.impl.IdeJavaLibraryImpl;
 import com.android.ide.common.gradle.model.impl.IdeLibraryDelegate;
 import com.android.ide.common.gradle.model.impl.IdeLintOptionsImpl;
-import com.android.ide.common.gradle.model.impl.IdeModuleLibrary;
 import com.android.ide.common.gradle.model.impl.IdeModuleLibraryCore;
+import com.android.ide.common.gradle.model.impl.IdeModuleLibraryImpl;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
@@ -2107,7 +2107,7 @@ public class GradleModelMocker {
             createEmptyJar(jar);
         }
         return createLibraryMock(
-                new IdeAndroidLibrary(
+                new IdeAndroidLibraryImpl(
                         new IdeAndroidLibraryCore(
                                 coordinate.toString(),
                                 dir,
@@ -2168,13 +2168,14 @@ public class GradleModelMocker {
         }
 
         return createLibraryMock(
-                new IdeJavaLibrary(new IdeJavaLibraryCore(coordinate.toString(), jar), isProvided));
+                new IdeJavaLibraryImpl(
+                        new IdeJavaLibraryCore(coordinate.toString(), jar), isProvided));
     }
 
     @NonNull
     private IdeLibrary createModuleLibrary(@NonNull String name) {
         return createLibraryMock(
-                new IdeModuleLibrary(
+                new IdeModuleLibraryImpl(
                         new IdeModuleLibraryCore(name, "artifacts:" + name, null), false));
     }
 

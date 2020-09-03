@@ -16,18 +16,18 @@
 @file:JvmName("GradleStubBuilderUtil")
 package com.android.ide.common.gradle.model.stubs
 
-import com.android.ide.common.gradle.model.impl.IdeAndroidLibrary
-import com.android.ide.common.gradle.model.impl.IdeJavaLibrary
-import com.android.ide.common.gradle.model.impl.IdeModuleLibrary
+import com.android.ide.common.gradle.model.impl.IdeAndroidLibraryImpl
+import com.android.ide.common.gradle.model.impl.IdeJavaLibraryImpl
+import com.android.ide.common.gradle.model.impl.IdeModuleLibraryImpl
 import java.io.File
 
-fun l2AndroidLibrary(address: String): IdeAndroidLibrary =
+fun l2AndroidLibrary(address: String): IdeAndroidLibraryImpl =
   AndroidLibraryStubBuilder(artifactAddress = address).build()
 
-fun l2JavaLibrary(address: String): IdeJavaLibrary =
+fun l2JavaLibrary(address: String): IdeJavaLibraryImpl =
   JavaLibraryStubBuilder(artifactAddress = address).build()
 
-fun l2ModuleLibrary(projectPath: String): IdeModuleLibrary =
+fun l2ModuleLibrary(projectPath: String): IdeModuleLibraryImpl =
   ModuleLibraryStubBuilder(projectPath = projectPath).build()
 
 class AndroidLibraryStubBuilder(
@@ -51,7 +51,7 @@ class AndroidLibraryStubBuilder(
   var symbolFile: String = "symbolFile",
   var isProvided: Boolean = false
 ) {
-  fun build() = IdeAndroidLibrary(
+  fun build() = IdeAndroidLibraryImpl(
     artifactAddress,
     folder,
     manifest,
@@ -79,7 +79,7 @@ class JavaLibraryStubBuilder(
   var artifactFile: File = File("artifactFile"),
   var isProvided: Boolean = false
 ) {
-  fun build() = IdeJavaLibrary(
+  fun build() = IdeJavaLibraryImpl(
     artifactAddress,
     artifactFile,
     isProvided
@@ -91,7 +91,7 @@ class ModuleLibraryStubBuilder @JvmOverloads constructor(
   var artifactAddress: String = "artifact:address:1.0",
   var buildId: String? = null
 ) {
-  fun build() = IdeModuleLibrary(
+  fun build() = IdeModuleLibraryImpl(
     projectPath,
     artifactAddress,
     buildId

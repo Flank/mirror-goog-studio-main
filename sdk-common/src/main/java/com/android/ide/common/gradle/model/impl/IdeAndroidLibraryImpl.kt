@@ -23,7 +23,7 @@ import java.io.Serializable
 /**
  * The implementation of IdeLibrary for Android libraries.
  **/
-data class IdeAndroidLibrary(
+data class IdeAndroidLibraryImpl(
   val core: IdeAndroidLibraryCore,
   override val isProvided: Boolean
 ) : IdeLibrary by core, Serializable {

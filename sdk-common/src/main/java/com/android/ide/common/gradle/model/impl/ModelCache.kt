@@ -344,7 +344,7 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
       lintJar = copyNewProperty(library::getLintJar)?.path
     )
     val isProvided = copyNewProperty(library::isProvided, false)
-    return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided)
+    return IdeModuleLibraryImpl(moduleLibraryCores.internCore(core), isProvided)
   }
 
   fun createIdeModuleLibrary(library: JavaLibrary, artifactAddress: String): IdeLibrary {
@@ -357,7 +357,7 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
       lintJar = null
     )
     val isProvided = copyNewProperty(library::isProvided, false)
-    return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided)
+    return IdeModuleLibraryImpl(moduleLibraryCores.internCore(core), isProvided)
   }
 
   fun mavenCoordinatesFrom(coordinates: MavenCoordinates): IdeMavenCoordinatesImpl {
@@ -480,7 +480,7 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
         deduplicate = { strings.getOrPut(this) { this } }
       )
       val isProvided = copyNewProperty(androidLibrary::isProvided, false)
-      IdeAndroidLibrary(androidLibraryCores.internCore(core), isProvided)
+      IdeAndroidLibraryImpl(androidLibraryCores.internCore(core), isProvided)
     }
   }
 
@@ -500,13 +500,13 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
               artifact = javaLibrary.jarFile
       )
       val isProvided = copyNewProperty(javaLibrary::isProvided, false)
-      IdeJavaLibrary(javaLibraryCores.internCore(core), isProvided)
+      IdeJavaLibraryImpl(javaLibraryCores.internCore(core), isProvided)
     }
   }
 
   fun libraryFrom(projectPath: String, artifactAddress: String, buildId: String?): IdeLibrary {
     val core = IdeModuleLibraryCore(projectPath, artifactAddress, buildId)
-    return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided = false)
+    return IdeModuleLibraryImpl(moduleLibraryCores.internCore(core), isProvided = false)
   }
 
   /** Call this method on level 1 Dependencies model.  */
