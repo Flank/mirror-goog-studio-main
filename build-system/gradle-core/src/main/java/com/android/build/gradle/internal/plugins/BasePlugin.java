@@ -48,7 +48,7 @@ import com.android.build.gradle.internal.SdkComponentsKt;
 import com.android.build.gradle.internal.SdkLocator;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
-import com.android.build.gradle.internal.attribution.AttributionListenerInitializer;
+import com.android.build.gradle.internal.attribution.BuildAttributionService;
 import com.android.build.gradle.internal.crash.CrashReporting;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -282,10 +282,15 @@ public abstract class BasePlugin<
         checkPathForErrors();
         checkModulesForErrors();
 
-        AttributionListenerInitializer.INSTANCE.init(
-                project, projectOptions.get(StringOption.IDE_ATTRIBUTION_FILE_LOCATION));
-
         AgpVersionChecker.enforceTheSamePluginVersions(project);
+
+        String attributionFileLocation =
+                projectOptions.get(StringOption.IDE_ATTRIBUTION_FILE_LOCATION);
+        if (attributionFileLocation != null) {
+            new BuildAttributionService.RegistrationAction(project).execute();
+            BuildAttributionService.Companion.init(
+                    project, attributionFileLocation, listenerRegistry);
+        }
 
         configuratorService.createAnalyticsService(project, listenerRegistry);
 
