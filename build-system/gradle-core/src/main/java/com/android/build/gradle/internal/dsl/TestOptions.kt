@@ -63,6 +63,9 @@ open class TestOptions @Inject constructor(dslServices: DslServices) :
             )!!
         }
 
+    override var failureRetention: com.android.build.api.dsl.FailureRetention =
+        dslServices.newInstance(FailureRetention::class.java, dslServices)
+
     init {
         devices.registerBinding(
             com.android.build.api.dsl.ManagedVirtualDevice::class.java,
