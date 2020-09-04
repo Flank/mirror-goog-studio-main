@@ -74,6 +74,14 @@ DeployerRunner -> DDMLIB -> FakeAdbServer -> FakeDeviceHandler | Fake sync (for 
                                                                                    | ...
                                                                                    | installer (external command)
 
+The installer executable is built and runs on the local machine. To work in a non-Android environment,
+two mechanisms are used:
+1- For filesystem operations, an IO system configured via FAKE_DEVICE_ROOT environment variable redirects all
+open/read/write/close/state to a test directory.
+2- For exec(3) operations, the workspace Executor is substituted to a RedirectExecutor which forward requests
+to a shell based on FAKE_DEVICE_SHELL environment variable.
+
+
 The DeployerRunner runs as is and the DeviceHandler records all sync/exec/shell commands received by the device.
 As the end of each test, the list of commands received is compared against the list of commands expected.
 
