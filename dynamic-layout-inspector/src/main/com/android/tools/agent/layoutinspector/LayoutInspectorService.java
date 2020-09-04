@@ -298,7 +298,8 @@ public class LayoutInspectorService {
     private native long freeSendRequest(long request);
 
     /** Initializes the request as a ComponentTree and returns an event handle */
-    private native long initComponentTree(long request, @NonNull long[] allIds);
+    private native long initComponentTree(
+            long request, @NonNull long[] allIds, int rootOffsetX, int rootOffsetY);
 
     /** Sends a component tree to Android Studio. */
     private native long sendComponentTree(
@@ -325,7 +326,13 @@ public class LayoutInspectorService {
             for (int i = 0; i < rootViews.size(); i++) {
                 rootViewIds[i] = rootViews.get(i).getUniqueDrawingId();
             }
-            long event = initComponentTree(request, rootViewIds);
+            // The offset of the root view from the origin of the surface. Will always be 0,0 for
+            // the
+            // main window, but can be positive for floating windows (e.g. dialogs).
+            int[] rootOffset = new int[2];
+            root.getLocationInSurface(rootOffset);
+
+            long event = initComponentTree(request, rootViewIds, rootOffset[0], rootOffset[1]);
             if (root != null) {
                 // The compose API must run on the UI thread.
                 // For now: Build the entire component tree on the UI thread.

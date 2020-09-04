@@ -63,7 +63,18 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
     }
     picture->ref();
 
-    TreeBuildingCanvas canvas(version, root, requested_node_info);
+    SkIRect rootBounds = SkIRect::MakeXYWH(0, 0, 1, 1);
+    std::map<long, SkIRect> requested_nodes;
+    for (const ::layoutinspector::proto::RequestedNodeInfo& node :
+         *requested_node_info) {
+      SkIRect rect =
+          SkIRect::MakeXYWH(node.x(), node.y(), node.width(), node.height());
+      rootBounds.join(rect);
+      requested_nodes.insert(std::make_pair(node.id(), rect));
+    }
+    TreeBuildingCanvas canvas(version, root, requested_node_info,
+                              rootBounds.width(), rootBounds.height(),
+                              requested_nodes);
     picture->playback(&canvas);
 
     picture->unref();
@@ -78,18 +89,21 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
   explicit TreeBuildingCanvas(
       int version, ::layoutinspector::proto::InspectorView* r,
       const ::google::protobuf::RepeatedPtrField<
-          ::layoutinspector::proto::RequestedNodeInfo>* requested_node_info)
-      : SkCanvasVirtualEnforcer<SkCanvas>() {
-    request_version = version;
-    root = r;
-    for (const ::layoutinspector::proto::RequestedNodeInfo& node :
-         *requested_node_info) {
-      requested_nodes.insert(std::make_pair(
-          node.id(),
-          SkIRect::MakeXYWH(node.x(), node.y(), node.width(), node.height())));
-    }
-
-    real_canvas = nullptr;
+          ::layoutinspector::proto::RequestedNodeInfo>* requested_node_info,
+      int width, int height, std::map<long, SkIRect> requested_nodes)
+      : SkCanvasVirtualEnforcer<SkCanvas>(),
+        request_version(version),
+        surface(SkSurface::MakeRaster(
+            SkImageInfo::Make(width, height, kBGRA_8888_SkColorType,
+                              kUnpremul_SkAlphaType, SkColorSpace::MakeSRGB()),
+            width * height * sizeof(int32_t), nullptr)),
+        root(r),
+        real_canvas(surface->getCanvas()),
+        requested_nodes(std::move(requested_nodes)) {
+#ifdef TREEBUILDINGCANVAS_DEBUG
+    printDebug("Create surface: %i x %i\n", width, height);
+    printDebug("Canvas %s null\n", real_canvas == nullptr ? "is" : "is not");
+#endif
   }
 
   void didConcat(const SkMatrix& matrix) override;
@@ -206,8 +220,10 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
                             SkCanvas::SrcRectConstraint constraint) override;
 
  private:
-  SkCanvas* real_canvas;
+  int request_version;
   sk_sp<SkSurface> surface;
+  ::layoutinspector::proto::InspectorView* root;
+  SkCanvas* real_canvas;
 
   void exitView(bool hasData);
 
@@ -217,8 +233,6 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
 
   std::deque<View> views;
 
-  int request_version;
-  ::layoutinspector::proto::InspectorView* root;
   std::map<long, SkIRect> requested_nodes;
 
   // Create a view tree node to go into the returned proto.
