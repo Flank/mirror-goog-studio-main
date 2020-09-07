@@ -16,7 +16,11 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.renderIf
 
 fun fullscreenActivityKt(
@@ -24,8 +28,15 @@ fun fullscreenActivityKt(
   applicationPackage: String?,
   layoutName: String,
   packageName: String,
-  superClassFqcn: String): String {
+  superClassFqcn: String,
+  isViewBindingSupported: Boolean
+): String {
   val applicationPackageBlock = renderIf(applicationPackage != null) {"import ${applicationPackage}.R"}
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layoutName)}.inflate(layoutInflater)
+     setContentView(binding.root)
+  """ else "setContentView(R.layout.$layoutName)"
+
   return """package ${escapeKotlinIdentifier(packageName)}
 
 import ${superClassFqcn}
@@ -37,6 +48,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
 $applicationPackageBlock
 
 /**
@@ -44,6 +56,10 @@ $applicationPackageBlock
  * status bar and navigation/system bar) with user interaction.
  */
 class ${activityClass} : AppCompatActivity() {
+
+${renderIf(isViewBindingSupported) {"""
+    private lateinit var binding: ${layoutToViewBindingClass(layoutName)}
+"""}}
     private lateinit var fullscreenContent: TextView
     private lateinit var fullscreenContentControls: LinearLayout
     private val hideHandler = Handler()
@@ -91,21 +107,31 @@ class ${activityClass} : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.${layoutName})
+        $contentViewBlock
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         isFullscreen = true
 
         // Set up the user interaction to manually show or hide the system UI.
-        fullscreenContent = findViewById(R.id.fullscreen_content)
+        fullscreenContent = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "fullscreen_content")}
         fullscreenContent.setOnClickListener { toggle() }
 
-        fullscreenContentControls = findViewById(R.id.fullscreen_content_controls)
+        fullscreenContentControls = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "fullscreen_content_controls")}
 
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        findViewById<Button>(R.id.dummy_button).setOnTouchListener(delayHideTouchListener)
+        ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "dummy_button",
+          className = "Button")}.setOnTouchListener(delayHideTouchListener)
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {

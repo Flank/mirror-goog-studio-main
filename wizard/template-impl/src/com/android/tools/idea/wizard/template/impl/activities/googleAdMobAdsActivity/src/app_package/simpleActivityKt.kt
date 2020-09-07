@@ -16,7 +16,11 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.googleAdMobAdsActivity.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.impl.fragments.googleAdMobAdsFragment.AdFormat
 import com.android.tools.idea.wizard.template.renderIf
 
@@ -27,7 +31,8 @@ fun simpleActivityKt(
   layoutName: String,
   menuName: String,
   packageName: String,
-  superClassFqcn: String
+  superClassFqcn: String,
+  isViewBindingSupported: Boolean
 ): String {
   val importBlock = when (adFormat) {
     AdFormat.Banner -> """
@@ -62,11 +67,17 @@ import android.widget.TextView
     """
     AdFormat.Interstitial -> """
         // Create the next level button, which tries to show an interstitial when clicked.
-        nextLevelButton = findViewById(R.id.next_level_button)
+        nextLevelButton = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "next_level_button")}
         nextLevelButton.isEnabled = false
         nextLevelButton.setOnClickListener { showInterstitial() }
 
-        levelTextView = findViewById(R.id.level)
+        levelTextView = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "level")}
         // Create the text view to show the level number.
         currentLevel = START_LEVEL
 
@@ -126,6 +137,11 @@ import android.widget.TextView
   """
   }
 
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layoutName)}.inflate(layoutInflater)
+     setContentView(binding.root)
+  """ else "setContentView(R.layout.$layoutName)"
+
   return """
 package ${escapeKotlinIdentifier(packageName)}
 
@@ -136,6 +152,7 @@ import ${superClassFqcn}
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
 
 // Remove the line below after defining your own ad unit ID.
@@ -146,13 +163,15 @@ private const val START_LEVEL = 1
 
 class ${activityClass} : AppCompatActivity() {
 
-$interstitialVariablesBlock
+    $interstitialVariablesBlock
+${renderIf(isViewBindingSupported) {"""
+    private lateinit var binding: ${layoutToViewBindingClass(layoutName)}
+"""}}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.${layoutName})
-
-$onCreateBlock
+        $contentViewBlock
+        $onCreateBlock
 
         // Toasts the test ad message on the screen. Remove this after defining your own ad unit ID.
         Toast.makeText(this, TOAST_TEXT, Toast.LENGTH_LONG).show()
@@ -171,7 +190,7 @@ $onCreateBlock
                 else -> super.onOptionsItemSelected(item)
             }
 
-$interstitialSpecificBlock
+    $interstitialSpecificBlock
 }
 """
 }

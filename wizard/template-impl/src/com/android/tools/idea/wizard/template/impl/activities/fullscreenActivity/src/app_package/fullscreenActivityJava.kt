@@ -16,6 +16,10 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.renderIf
 
 
@@ -25,9 +29,16 @@ fun fullscreenActivityJava(
   applicationPackage: String?,
   layoutName: String,
   packageName: String,
-  superClassFqcn: String): String {
+  superClassFqcn: String,
+  isViewBindingSupported: Boolean
+): String {
 
   val applicationPackageBlock = renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }
+
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layoutName)}.inflate(getLayoutInflater());
+     setContentView(binding.getRoot());
+  """ else "setContentView(R.layout.$layoutName);"
 
   return """package ${packageName};
 
@@ -38,6 +49,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
 $applicationPackageBlock
 
 /**
@@ -66,17 +78,25 @@ public class ${activityClass} extends AppCompatActivity {
     private View mContentView;
     private View mControlsView;
     private boolean mVisible;
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(layoutName)} binding;
+"""}}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.${layoutName});
+        $contentViewBlock
 
         mVisible = true;
-        mControlsView = findViewById(R.id.fullscreen_content_controls);
-        mContentView = findViewById(R.id.fullscreen_content);
-
+        mControlsView = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "fullscreen_content_controls")};
+        mContentView = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "fullscreen_content")};
 
         // Set up the user interaction to manually show or hide the system UI.
         mContentView.setOnClickListener(new View.OnClickListener() {
@@ -89,7 +109,10 @@ public class ${activityClass} extends AppCompatActivity {
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+        ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "dummy_button")}.setOnTouchListener(mDelayHideTouchListener);
     }
 
     @Override
