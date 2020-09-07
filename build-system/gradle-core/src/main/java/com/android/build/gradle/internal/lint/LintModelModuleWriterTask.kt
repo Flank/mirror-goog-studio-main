@@ -389,7 +389,7 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
                     taskProvider,
                     LintModelModuleWriterTask::outputDirectory
                 )
-                .on(InternalArtifactType.LINT_MODEL_MODULE)
+                .on(InternalArtifactType.LINT_PROJECT_GLOBAL_MODEL)
         }
 
         override fun configure(task: LintModelModuleWriterTask) {

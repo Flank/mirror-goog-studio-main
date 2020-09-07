@@ -174,7 +174,7 @@ abstract class LintModelDependenciesWriterTask : NonIncrementalTask() {
                     taskProvider,
                     LintModelDependenciesWriterTask::outputDirectory
                 )
-                .on(InternalArtifactType.LINT_MODEL_DEPENDENCIES)
+                .on(InternalArtifactType.LINT_VARIANT_DEPENDENCIES_MODEL)
         }
 
         override fun configure(task: LintModelDependenciesWriterTask) {
