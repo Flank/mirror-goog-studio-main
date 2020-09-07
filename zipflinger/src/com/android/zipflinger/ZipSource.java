@@ -36,6 +36,10 @@ public class ZipSource {
         this.map = map;
     }
 
+    public ZipSource(@NonNull ZipRepo repo) {
+        this(repo.getZipMap());
+    }
+
     public ZipSource(@NonNull File file) throws IOException {
         this(ZipMap.from(file, false));
     }
