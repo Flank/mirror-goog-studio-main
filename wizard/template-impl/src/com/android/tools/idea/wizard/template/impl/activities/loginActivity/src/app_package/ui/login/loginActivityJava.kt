@@ -16,14 +16,26 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.loginActivity.src.app_package.ui.login
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
 
 fun loginActivityJava(
   layoutName: String,
   packageName: String,
-  useAndroidX: Boolean) =
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
 
-  """package  ${packageName}.ui.login;
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layoutName)}.inflate(getLayoutInflater());
+     setContentView(binding.getRoot());
+  """ else "setContentView(R.layout.$layoutName);"
+
+  return """package  ${packageName}.ui.login;
 
 import android.app.Activity;
 import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)};
@@ -46,22 +58,38 @@ import android.widget.Toast;
 import ${packageName}.R;
 import ${packageName}.ui.login.LoginViewModel;
 import ${packageName}.ui.login.LoginViewModelFactory;
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
 
 public class LoginActivity extends AppCompatActivity {
 
     private LoginViewModel loginViewModel;
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(layoutName)} binding;
+"""}}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.${layoutName});
+        $contentViewBlock
         loginViewModel = new ViewModelProvider(this, new LoginViewModelFactory())
                 .get(LoginViewModel.class);
 
-        final EditText usernameEditText = findViewById(R.id.username);
-        final EditText passwordEditText = findViewById(R.id.password);
-        final Button loginButton = findViewById(R.id.login);
-        final ProgressBar loadingProgressBar = findViewById(R.id.loading);
+        final EditText usernameEditText = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "username")};
+        final EditText passwordEditText = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "password")};
+        final Button loginButton = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "login")};
+        final ProgressBar loadingProgressBar = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "loading")};
 
         loginViewModel.getLoginFormState().observe(this, new Observer<LoginFormState>() {
             @Override
@@ -151,3 +179,4 @@ public class LoginActivity extends AppCompatActivity {
     }
 }
 """
+}
