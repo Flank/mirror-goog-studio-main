@@ -147,9 +147,10 @@ public class JavaCompileTest {
                     @Override
                     public MapProperty<String, ProjectData> getProjects() {
                         Map<String, ProjectData> map = new HashMap<>();
-                        ProjectData projectData
-                                = new ProjectData(GradleBuildProject.newBuilder().setId(1L));
-                        projectData.getVariantBuilders()
+                        ProjectData projectData =
+                                new ProjectData(GradleBuildProject.newBuilder().setId(1L));
+                        projectData
+                                .getVariantBuilders()
                                 .put(VARIANT_NAME, GradleBuildVariant.newBuilder());
                         map.put(projectPath, projectData);
                         return FakeObjectFactory.getFactory()
@@ -174,6 +175,12 @@ public class JavaCompileTest {
                     public MapProperty<String, TaskMetadata> getTaskMetadata() {
                         return FakeObjectFactory.getFactory()
                                 .mapProperty(String.class, TaskMetadata.class);
+                    }
+
+                    @NotNull
+                    @Override
+                    public Property<String> getRootProjectPath() {
+                        return new FakeGradleProperty("/path");
                     }
                 };
             }

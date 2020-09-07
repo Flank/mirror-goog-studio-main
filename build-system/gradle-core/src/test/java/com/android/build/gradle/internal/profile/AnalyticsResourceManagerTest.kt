@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.profile
 import com.android.builder.profile.Recorder
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType
 import com.google.common.base.Joiner
-import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildProfile
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
@@ -35,7 +34,6 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
 import java.io.File
-import java.nio.file.Files
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
 import java.util.stream.Collectors
@@ -78,7 +76,8 @@ class AnalyticsResourceManagerTest {
             getProjects(),
             true,
             profileDir,
-            getTaskMetaData()
+            getTaskMetaData(),
+            null
         )
     }
 

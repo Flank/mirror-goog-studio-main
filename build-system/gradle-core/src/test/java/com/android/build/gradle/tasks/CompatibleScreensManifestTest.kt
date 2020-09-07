@@ -90,6 +90,7 @@ class CompatibleScreensManifestTest {
             it.parameters.projects.set(mutableMapOf())
             it.parameters.enableProfileJson.set(true)
             it.parameters.taskMetadata.set(mutableMapOf())
+            it.parameters.rootProjectPath.set("/path")
         }
         task = project.tasks.create("test", CompatibleScreensManifest::class.java)
 

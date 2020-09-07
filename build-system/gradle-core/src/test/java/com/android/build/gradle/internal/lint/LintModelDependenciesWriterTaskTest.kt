@@ -89,6 +89,7 @@ class LintModelDependenciesWriterTaskTest {
             it.projects.set(mutableMapOf())
             it.enableProfileJson.set(true)
             it.taskMetadata.set(mutableMapOf())
+            it.rootProjectPath.set("/path")
         }
     }
 }

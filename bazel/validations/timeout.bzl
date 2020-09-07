@@ -122,6 +122,7 @@ APPROVED_ETERNAL_TESTS = [
     "//tools/base/build-system/integration-test/application:PublishLegacyMultidexLibTest",
     "//tools/base/build-system/integration-test/application:PseudoLocalizationTest",
     "//tools/base/build-system/integration-test/application:ProjectNoJavaSourcesTest",
+    "//tools/base/build-system/integration-test/application:ProjectIdAnonymizationTest",  # this target should not need eternal timeout as it can finish in 15 minutes
     "//tools/base/build-system/integration-test/application:ProguardDesugaringTest",
     "//tools/base/build-system/integration-test/application:ProguardAarPackagingTest",
     "//tools/base/build-system/integration-test/application:ProfileContentTest",

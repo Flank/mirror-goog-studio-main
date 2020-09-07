@@ -69,7 +69,8 @@ class AnalyticsResourceManager(
     private val projects: ConcurrentHashMap<String, ProjectData>,
     private var enableProfileJson: Boolean,
     private var profileDir: File?,
-    private val taskMetadata: ConcurrentHashMap<String, TaskMetadata>
+    private val taskMetadata: ConcurrentHashMap<String, TaskMetadata>,
+    private var rootProjectPath: String?
 ) {
     var initialMemorySample = createMemorySample()
     val configurationSpans = ConcurrentLinkedQueue<GradleBuildProfileSpan>()
@@ -273,6 +274,7 @@ class AnalyticsResourceManager(
         params.enableProfileJson.set(enableProfileJson)
         params.profileDir.set(profileDir)
         params.taskMetadata.set(taskMetadata)
+        params.rootProjectPath.set(rootProjectPath)
     }
 
     fun recordGlobalProperties(project: Project) {
@@ -294,16 +296,7 @@ class AnalyticsResourceManager(
             profileBuilder.configurationCachingEnabled = configCachingEnabled
         }
 
-        val anonymizedProjectId =
-            try {
-                Anonymizer.anonymizeUtf8(
-                    LoggerWrapper(project.logger),
-                    project.rootProject.projectDir.absolutePath)
-            } catch (e: IOException) {
-                "*ANONYMIZATION_ERROR*"
-            }
-
-        profileBuilder.projectId = anonymizedProjectId
+        rootProjectPath = project.rootProject.projectDir.absolutePath
         enableProfileJson = projectOptions.get(BooleanOption.ENABLE_PROFILE_JSON)
         profileDir = getProfileDir(projectOptions, project.gradle)?.toFile()
     }
@@ -407,7 +400,17 @@ class AnalyticsResourceManager(
             .setGcCount(endMemorySample.gcCount - initialMemorySample.gcCount)
             .setGcTime(endMemorySample.gcTimeMs - initialMemorySample.gcTimeMs)
 
-        profileBuilder.addAllRawProjectId(applicationIds.toSet().toList().sorted())
+        val anonymizedProjectId =
+            try {
+                Anonymizer.anonymizeUtf8(
+                    LoggerWrapper.getLogger(AnalyticsResourceManager::class.java), rootProjectPath)
+            } catch (e: IOException) {
+                "*ANONYMIZATION_ERROR*"
+            }
+
+        profileBuilder
+            .addAllRawProjectId(applicationIds.toSet().toList().sorted())
+            .setProjectId(anonymizedProjectId)
 
         return profileBuilder.build()
     }

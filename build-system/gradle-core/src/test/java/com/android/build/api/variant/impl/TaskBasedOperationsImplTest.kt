@@ -294,6 +294,7 @@ class TaskBasedOperationsImplTest {
             val projects = mutableMapOf<String, ProjectData>()
             projects[projectPath] = ProjectData(GradleBuildProject.newBuilder().setId(1L))
             it.parameters.projects.set(projects)
+            it.parameters.rootProjectPath.set("/path")
         }
 
         val taskACreationAction = InternalApiTask.CreationAction(component)

@@ -16,6 +16,12 @@
 
 package com.android.build.gradle.internal.pipeline;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
@@ -41,14 +47,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
-import org.gradle.api.Project;
-import org.gradle.api.Task;
-import org.gradle.api.file.FileCollection;
-import org.gradle.testfixtures.ProjectBuilder;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
-import org.mockito.Mockito;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -62,12 +60,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.gradle.api.Project;
+import org.gradle.api.Task;
+import org.gradle.api.file.FileCollection;
+import org.gradle.testfixtures.ProjectBuilder;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
+import org.mockito.Mockito;
 
 /**
  * Base class for Junit-4 based tests that need to manually instantiate tasks to test them.
@@ -109,17 +109,21 @@ public class TaskTestUtils {
                                     syncIssue.toString()));
                 };
 
-        project.getGradle().getSharedServices().registerIfAbsent(
-                BuildServicesKt.getBuildServiceName(AnalyticsService.class),
-                AnalyticsService.class,
-                it -> {
-                    byte[] profile = GradleBuildProfile.newBuilder().build().toByteArray();
-                    it.getParameters().getProfile().set(Base64.getEncoder().encodeToString(profile));
-                    it.getParameters().getProjects().set(new HashMap());
-                    it.getParameters().getEnableProfileJson().set(true);
-                    it.getParameters().getTaskMetadata().set(new HashMap());
-                }
-        );
+        project.getGradle()
+                .getSharedServices()
+                .registerIfAbsent(
+                        BuildServicesKt.getBuildServiceName(AnalyticsService.class),
+                        AnalyticsService.class,
+                        it -> {
+                            byte[] profile = GradleBuildProfile.newBuilder().build().toByteArray();
+                            it.getParameters()
+                                    .getProfile()
+                                    .set(Base64.getEncoder().encodeToString(profile));
+                            it.getParameters().getProjects().set(new HashMap());
+                            it.getParameters().getEnableProfileJson().set(true);
+                            it.getParameters().getTaskMetadata().set(new HashMap());
+                            it.getParameters().getRootProjectPath().set("/path");
+                        });
     }
 
     protected StreamTester streamTester() {

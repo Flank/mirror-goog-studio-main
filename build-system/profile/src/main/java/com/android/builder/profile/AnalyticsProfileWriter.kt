@@ -120,7 +120,6 @@ class AnalyticsProfileWriter {
         eventLoop: ScheduledExecutorService,
         environment: Environment
     ) {
-        AnalyticsSettings.initialize(logger, null, environment)
         UsageTracker.initialize(eventLoop)
         UsageTracker.setMaxJournalTime(10, TimeUnit.MINUTES)
         UsageTracker.maxJournalSize = 1000
