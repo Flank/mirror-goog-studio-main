@@ -23,10 +23,10 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.model.dump
 import com.android.build.gradle.integration.common.fixture.model.filterByVariantName
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.internal.cxx.configure.BAKING_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_RUNTIME_OUTPUT_DIRECTORY
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
+import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.settings.Macro.ENV_WORKSPACE_ROOT
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CONFIGURATION_HASH
@@ -68,7 +68,7 @@ class CmakeSettingsSharedBuildTest(cmakeVersionInDsl: String) {
         fun data() = arrayOf(
           arrayOf("3.6.0"),
           arrayOf(DEFAULT_CMAKE_VERSION),
-          arrayOf(BAKING_CMAKE_VERSION)
+          arrayOf(OFF_STAGE_CMAKE_VERSION)
         )
     }
 

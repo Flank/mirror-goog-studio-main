@@ -135,14 +135,16 @@ val forkCmakeReportedVersion = Revision.parseRevision("3.6.0")
  * This is the default version of CMake to use for this Android Gradle Plugin if there was no
  * version defined in build.gradle.
  */
-const val DEFAULT_CMAKE_VERSION = "3.10.2"
+const val DEFAULT_CMAKE_VERSION = "3.18.1"
 val defaultCmakeVersion = Revision.parseRevision(DEFAULT_CMAKE_VERSION)
-const val DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION = "$DEFAULT_CMAKE_VERSION.4988404"
+const val DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION = DEFAULT_CMAKE_VERSION
 
 /**
- * This is the probable next CMake to be released. A subset of tests are run against it.
+ * This is the probable next CMake to be released or the last CMake released
+ * depending on where we are in the process of releasing the next version of CMake.
+ * A subset of tests are run against it.
  */
-const val BAKING_CMAKE_VERSION = "3.18.1"
+const val OFF_STAGE_CMAKE_VERSION = "3.10.2"
 
 /**
  * @return list of folders (as Files) retrieved from PATH environment variable and from Sdk

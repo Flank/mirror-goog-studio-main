@@ -25,7 +25,7 @@ import com.android.build.gradle.integration.common.fixture.model.recoverExisting
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.configure.BAKING_CMAKE_VERSION
+import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_FLAGS
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_C_FLAGS
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
@@ -64,7 +64,7 @@ class CmakeSettingsTest(private val cmakeVersionInDsl: String) {
         fun data() = arrayOf(
           // CMakeSettings.json doesn't work with fork CMake version 3.6.0
           arrayOf(DEFAULT_CMAKE_VERSION),
-          arrayOf(BAKING_CMAKE_VERSION)
+          arrayOf(OFF_STAGE_CMAKE_VERSION)
         )
     }
 

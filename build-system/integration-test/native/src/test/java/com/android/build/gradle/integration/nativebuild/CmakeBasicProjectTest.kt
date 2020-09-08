@@ -35,7 +35,7 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatA
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.ZipHelper
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.configure.BAKING_CMAKE_VERSION
+import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.model.jsonFile
@@ -75,7 +75,7 @@ class CmakeBasicProjectTest(
         @JvmStatic
         fun data() = arrayOf(
           arrayOf("3.6.0"),
-          arrayOf(BAKING_CMAKE_VERSION),
+          arrayOf(OFF_STAGE_CMAKE_VERSION),
           arrayOf(DEFAULT_CMAKE_VERSION)
         )
     }
