@@ -20,7 +20,6 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
-import com.android.tools.idea.wizard.template.impl.activities.common.addSupportWearableDependency
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.debugRes.values.googleMapsApiXml as debugGoogleMapsApiXml
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.releaseRes.values.googleMapsApiXml as releaseGoogleMapsApiXml
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.res.layout.activityMapXml
@@ -41,7 +40,6 @@ fun RecipeExecutor.googleMapsWearActivityRecipe(
 
   addDependency("com.google.android.gms:play-services-wearable:+")
   addDependency("com.google.android.gms:play-services-maps:+", toBase = moduleData.isDynamic)
-  addSupportWearableDependency()
   addDependency("com.android.support:wear:+")
 
   mergeXml(androidManifestXml(activityClass, isLauncher, moduleData.isLibrary, moduleData.isNewModule, packageName),
