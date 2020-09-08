@@ -16,16 +16,54 @@
 
 package com.android.build.api.extension.impl
 
+import com.android.build.api.component.ActionableComponentObject
+import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.extension.FilteredVariantSelector
+import com.android.build.api.extension.GenericVariantSelector
 import com.android.build.api.extension.VariantSelector
+import java.util.regex.Pattern
 
-open class VariantSelectorImpl: VariantSelector {
+open class VariantSelectorImpl<ComponentT>
+    : GenericVariantSelector<ComponentT>
+        where ComponentT: ActionableComponentObject,
+              ComponentT: ComponentIdentity {
 
-    // TODO: implement this.
-    // so far return this, implementation in a subsequent CL.
-    override fun all(): VariantSelector = this
+    override fun all(): VariantSelector<ComponentT> = this
 
-    // TODO: implement this.
-    fun <VariantBuilderT> appliesTo(variant: VariantBuilderT): Boolean {
+    // By default the selector applies to all variants.
+    internal open fun appliesTo(variant: ComponentT): Boolean {
         return true;
+    }
+
+    override fun <NewTypeT : ComponentT> withType(newType: Class<NewTypeT>): FilteredVariantSelector<NewTypeT> {
+        return object: VariantSelectorImpl<NewTypeT>() {
+            override fun appliesTo(variant: NewTypeT): Boolean {
+                return newType.isInstance(variant) && this@VariantSelectorImpl.appliesTo(variant)
+            }
+        }
+    }
+
+    override fun withBuildType(buildType: String): FilteredVariantSelector<ComponentT> {
+        return object: VariantSelectorImpl<ComponentT>() {
+            override fun appliesTo(variant: ComponentT): Boolean {
+                return buildType == variant.buildType && this@VariantSelectorImpl.appliesTo(variant)
+            }
+        }
+    }
+
+    override fun withFlavor(flavorToDimension: Pair<String, String>): FilteredVariantSelector<ComponentT> {
+        return object: VariantSelectorImpl<ComponentT>() {
+            override fun appliesTo(variant: ComponentT): Boolean {
+                return variant.productFlavors.contains(flavorToDimension) && this@VariantSelectorImpl.appliesTo(variant)
+            }
+        }
+    }
+
+    override fun withName(pattern: Pattern): VariantSelector<ComponentT> {
+        return object : VariantSelectorImpl<ComponentT>() {
+            override fun appliesTo(variant: ComponentT): Boolean {
+                return pattern.matcher(variant.name).matches() && this@VariantSelectorImpl.appliesTo(variant)
+            }
+        }
     }
 }

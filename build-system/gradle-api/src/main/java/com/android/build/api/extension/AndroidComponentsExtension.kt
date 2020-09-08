@@ -17,6 +17,7 @@
 package com.android.build.api.extension
 
 import com.android.build.api.component.Component
+import org.gradle.api.Action
 import org.gradle.api.Incubating
 
 /**
@@ -31,13 +32,13 @@ import org.gradle.api.Incubating
 interface AndroidComponentsExtension<VariantBuilderT: Component> {
 
     /**
-     * Creates a [VariantSelector] instance that can be configured
+     * Creates a [GenericVariantSelector] instance that can be configured
      * to reduce the set of [VariantBuilderT] instances participating in the [beforeVariants]
      * callback invocation.
      *
-     * @return [VariantSelector] to select the variants of interest.
+     * @return [GenericVariantSelector] to select the variants of interest.
      */
-    fun selector(): VariantSelector
+    fun selector(): GenericVariantSelector<VariantBuilderT>
 
     /**
      * Method to register a [callback] to be called with [VariantBuilderT] instances that
@@ -64,11 +65,18 @@ interface AndroidComponentsExtension<VariantBuilderT: Component> {
      *  }
      * '''
      *
-     * @param selector [VariantSelector] instance to select which instance of [VariantBuilderT] are
+     * @param selector [GenericVariantSelector] instance to select which instance of [VariantBuilderT] are
      * of interest. By default, all instances are of interest.
      * @param callback lambda to be called with each instance of [VariantBuilderT] of interest.
      */
     fun beforeVariants(
-            selector: VariantSelector = selector().all(),
+            selector: VariantSelector<VariantBuilderT> = selector().all(),
             callback: (VariantBuilderT) -> Unit)
+
+    /**
+     * [Action] based version of [beforeVariants] above.
+     */
+    fun beforeVariants(
+            selector: VariantSelector<VariantBuilderT> = selector().all(),
+            callback: Action<VariantBuilderT>)
 }

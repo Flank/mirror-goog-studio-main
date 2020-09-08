@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.build.api.extension
 
 import com.android.build.api.component.ActionableComponentObject
@@ -21,10 +20,28 @@ import com.android.build.api.component.ComponentIdentity
 import org.gradle.api.Incubating
 
 /**
- * Selector to reduce the number of variants that are of interests when calling any of the
+ * Selector interface to reduce the number of variants that are of interests when calling any of the
  * variant API like [AndroidComponentsExtension.beforeVariants].
  */
 @Incubating
-interface VariantSelector<ComponentT>
-        where ComponentT: ActionableComponentObject,
-              ComponentT: ComponentIdentity
+interface GenericVariantSelector<ComponentT> :
+    FilteredVariantSelector<ComponentT>
+    where ComponentT: ActionableComponentObject,
+          ComponentT: ComponentIdentity {
+
+    /**
+     * Creates a [VariantSelector] of [ComponentT]that includes all the variants for the current
+     * module.
+     *
+     * @return a [VariantSelector] for all variants.
+     */
+    fun all(): VariantSelector<ComponentT>
+
+    /**
+     * Creates a [VariantSelector] of [NewTypeT], including all variants that are a sub type of
+     * [NewTypeT], discarding all others.
+     *
+     * @param newType the sub type of [ComponentT] of interest.
+     */
+    fun <NewTypeT: ComponentT> withType(newType: Class<NewTypeT>): FilteredVariantSelector<NewTypeT>
+}

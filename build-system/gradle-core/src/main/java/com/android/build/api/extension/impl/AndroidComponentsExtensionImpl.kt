@@ -16,20 +16,25 @@
 
 package com.android.build.api.extension.impl
 
-import com.android.build.api.component.Component
 import com.android.build.api.extension.AndroidComponentsExtension
 import com.android.build.api.extension.VariantSelector
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.services.DslServices
+import org.gradle.api.Action
 
-abstract class AndroidComponentsExtensionImpl<VariantBuilderT: Component>(
+abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder>(
         private val dslServices: DslServices,
         private val operations: OperationsRegistrar<VariantBuilderT>
 ): AndroidComponentsExtension<VariantBuilderT> {
 
-    override fun beforeVariants(selector: VariantSelector, callback: (VariantBuilderT) -> Unit) {
+    override fun beforeVariants(selector: VariantSelector<VariantBuilderT>, callback: (VariantBuilderT) -> Unit) {
         operations.addOperation(selector, callback)
     }
 
-    override fun selector(): VariantSelectorImpl =
-            dslServices.newInstance(VariantSelectorImpl::class.java)
+    override fun beforeVariants(selector: VariantSelector<VariantBuilderT>, callback: Action<VariantBuilderT>) {
+        operations.addOperation(selector, callback)
+    }
+
+    override fun selector(): VariantSelectorImpl<VariantBuilderT> =
+            dslServices.newInstance(VariantSelectorImpl::class.java) as VariantSelectorImpl<VariantBuilderT>
 }

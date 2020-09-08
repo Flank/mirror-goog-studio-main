@@ -76,6 +76,4 @@ interface Artifacts {
      * @return A [TaskBasedOperation] object using the passed [TaskProvider] for all its operations.
      */
     fun <TaskT: Task> use(taskProvider: TaskProvider<TaskT>): TaskBasedOperation<TaskT>
-
-
 }
