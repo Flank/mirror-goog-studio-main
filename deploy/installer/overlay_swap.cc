@@ -65,7 +65,24 @@ proto::SwapRequest OverlaySwapCommand::PrepareAndBuildRequest(
   RunasExecutor run_as(package_name_, workspace_.GetExecutor());
   std::string error;
 
-  if (missing_files.find(startup_path) != missing_files.end() &&
+  bool missing_startup =
+      missing_files.find(startup_path) != missing_files.end();
+  bool missing_agent = missing_files.find(agent_path) != missing_files.end();
+
+  // Clean up other agents from the startup_agent directory. Because agents are
+  // versioned (agent-<version#>) we cannot simply copy our agent on top of the
+  // previous file. If the startup_agent directory exists but our agent cannot
+  // be found in it, we assume another agent is present and delete it.
+  if (!missing_startup && missing_agent) {
+    if (!run_as.Run("rm", {"-f", "-r", startup_path}, nullptr, &error)) {
+      response->set_status(proto::SwapResponse::SETUP_FAILED);
+      ErrEvent("Could not remove old agents: " + error);
+      return request;
+    }
+    missing_startup = true;
+  }
+
+  if (missing_startup &&
       !run_as.Run("mkdir", {startup_path}, nullptr, &error)) {
     response->set_status(proto::SwapResponse::SETUP_FAILED);
     ErrEvent("Could not create startup agent directory: " + error);
@@ -79,7 +96,7 @@ proto::SwapRequest OverlaySwapCommand::PrepareAndBuildRequest(
     return request;
   }
 
-  if (missing_files.find(agent_path) != missing_files.end() &&
+  if (missing_agent &&
       !run_as.Run("cp", {"-F", workspace_.GetTmpFolder() + agent, agent_path},
                   nullptr, &error)) {
     response->set_status(proto::SwapResponse::SETUP_FAILED);
