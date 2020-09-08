@@ -19,28 +19,40 @@ package com.android.build.gradle.integration.lint;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * Test ensuring that when we have multiple service-loaded lint jars, they're all included.
  * Regression test for https://issuetracker.google.com/143455360.
  */
+@RunWith(FilterableParameterized.class)
 public class LintMultipleLintJarsTest {
+    @Parameterized.Parameters(name = "{0}")
+    public static LintInvocationType[] getParams() {
+        return LintInvocationType.values();
+    }
+
     @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestProject("lintMultipleLintJars")
-                    // http://b/146208910
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                    .create();
+    public final GradleTestProject project;
+
+    public LintMultipleLintJarsTest(LintInvocationType lintInvocationType) {
+        this.project = lintInvocationType.testProjectBuilder()
+                .fromTestProject("lintMultipleLintJars")
+                .create();
+    }
 
     @Test
     public void checkBothErrorsFound() throws Exception {
-        project.executor().run("clean", ":app:lintDebug");
+        // Run twice to catch issues with configuration caching
+        project.execute("clean", ":app:lintDebug");
+        project.execute("clean", ":app:lintDebug");
+
         File file = new File(project.getSubproject("app").getProjectDir(), "lint-results.xml");
         assertThat(file).exists();
         assertThat(file).contains("id=\"ShortUniqueIdA\"");

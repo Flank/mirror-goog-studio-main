@@ -19,12 +19,13 @@ package com.android.build.gradle.integration.lint;
 
 import static com.android.testutils.truth.FileSubject.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import java.io.File;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * Integration test for running lint from gradle on a model with java (including indirect java)
@@ -37,23 +38,30 @@ import org.junit.Test;
  *     $ ./gradlew :base:build-system:integration-test:application:test -D:base:build-system:integration-test:application:test.single=LintDependencyModelTest
  * </pre>
  */
+@RunWith(FilterableParameterized.class)
 public class LintDependencyModelTest {
 
-    @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestProject("lintDeps")
-                    // http://b/146208910
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                    .create();
-
-    @Before
-    public void setUp() throws Exception {
-        project.execute("clean", ":app:lintDebug");
+    @Parameterized.Parameters(name = "{0}")
+    public static LintInvocationType[] getParams() {
+        return LintInvocationType.values();
     }
+
+    @Rule
+    public final GradleTestProject project;
+
+    public LintDependencyModelTest(LintInvocationType lintInvocationType) {
+        this.project = lintInvocationType.testProjectBuilder()
+                .fromTestProject("lintDeps")
+                .create();
+    }
+
 
     @Test
     public void checkFindNestedResult() throws Exception {
+        // Run twice to catch issues with configuration caching
+        project.execute("clean", ":app:lintDebug");
+        project.execute("clean", ":app:lintDebug");
+
         File lintReport = project.file("app/lint-report.xml");
         // Should have errors in all three libs
         assertThat(lintReport).contains("errorLine1=\"    String s = &quot;/sdcard/androidlib&quot;;\"");

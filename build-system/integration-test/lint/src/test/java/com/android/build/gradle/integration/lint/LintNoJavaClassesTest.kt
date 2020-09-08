@@ -16,11 +16,13 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.testutils.truth.FileSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 
 /**
@@ -30,17 +32,26 @@ import java.io.File
  * makes sure that we handle the classpath correctly such that type resolution to
  * Kotlin libraries works correctly.
  */
-class LintNoJavaClassesTest {
-    @Rule
-    @JvmField
-    var project = GradleTestProject.builder().fromTestProject("lintNoJavaClasses")
-        // http://b/146208910
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-        .create()
+@RunWith(FilterableParameterized::class)
+class LintNoJavaClassesTest(lintInvocationType: LintInvocationType) {
+
+    companion object {
+        @get:JvmStatic
+        @get:Parameterized.Parameters(name = "{0}")
+        val params get() = LintInvocationType.values()
+    }
+
+    @get:Rule
+    val project: GradleTestProject =
+        lintInvocationType.testProjectBuilder()
+            .fromTestProject("lintNoJavaClasses")
+            .create()
 
     @Test
     @Throws(Exception::class)
     fun checkNoMissingClass() {
+        // Run twice to catch issues with configuration caching
+        project.execute("clean", ":app:lintDebug")
         project.execute("clean", ":app:lintDebug")
         val app = project.getSubproject("app")
         val file = File(app.projectDir, "lint-results.txt")

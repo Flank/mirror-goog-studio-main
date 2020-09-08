@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.testutils.MavenRepoGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.truth.PathSubject.assertThat
+import com.android.tools.build.gradle.internal.profile.BooleanOption
 import com.google.common.truth.Truth.assertThat
 import com.google.wireless.android.sdk.stats.GradleBuildProfile
 import org.gradle.api.Project
@@ -48,6 +49,7 @@ class LintModelDependenciesWriterTaskTest {
     @Test
     fun doTaskAction() {
         val project = TestProjects.builder(temporaryFolder.newFolder("project").toPath())
+            .withProperty(com.android.build.gradle.options.BooleanOption.USE_NEW_LINT_MODEL, true)
             .withPlugin(TestProjects.Plugin.APP)
             .build()
 

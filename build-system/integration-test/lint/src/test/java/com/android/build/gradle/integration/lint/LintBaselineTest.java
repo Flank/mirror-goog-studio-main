@@ -19,29 +19,43 @@ package com.android.build.gradle.integration.lint;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import java.io.File;
 import kotlin.io.FilesKt;
 import kotlin.text.Charsets;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * Test for generating baselines for all variants, making sure we don't accidentally merge resources
  * files in different resource qualifiers; https://issuetracker.google.com/131073349
  */
+@RunWith(FilterableParameterized.class)
 public class LintBaselineTest {
+
+    @Parameterized.Parameters(name = "{0}")
+    public static LintInvocationType[] getParams() {
+        return LintInvocationType.values();
+    }
+
     @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("lintBaseline").create();
+    public final GradleTestProject project;
+
+    public LintBaselineTest(LintInvocationType lintInvocationType) {
+        this.project = lintInvocationType.testProjectBuilder()
+                .fromTestProject("lintBaseline")
+                .create();
+    }
 
     @Test
     public void checkMerging() throws Exception {
-        Throwable exception = project.executeExpectingFailure("clean", ":app:lint");
-        while (exception.getCause() != null && exception.getCause() != exception) {
-            exception = exception.getCause();
-        }
-        assertThat(exception.getMessage()).contains("Created baseline file");
+        GradleBuildResult result = project.executor().expectFailure().run("clean", ":app:lint");
+        ScannerSubject.assertThat(result.getStderr()).contains("Created baseline file");
 
         File baselineFile =
                 new File(project.getSubproject("app").getProjectDir(), "lint-baseline.xml");
@@ -75,5 +89,7 @@ public class LintBaselineTest {
                                 + "            column=\"6\"/>\n"
                                 + "    </issue>\n"
                                 + "\n");
+        // Check the written baseline means that a subsequent lint invocation passes.
+        project.executor().run("clean", ":app:lint");
     }
 }

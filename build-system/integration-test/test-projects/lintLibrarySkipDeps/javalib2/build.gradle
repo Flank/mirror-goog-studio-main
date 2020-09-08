@@ -1,8 +1,5 @@
 apply plugin: 'java-library'
-
-dependencies {
-    api fileTree(dir: 'libs', include: ['*.jar'])
-}
+apply plugin: 'com.android.lint'
 
 sourceCompatibility = "1.7"
 targetCompatibility = "1.7"

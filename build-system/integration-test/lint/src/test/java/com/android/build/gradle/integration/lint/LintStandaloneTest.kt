@@ -16,12 +16,14 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.testutils.truth.FileSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
 /**
  * Test for the standalone lint plugin.
@@ -29,15 +31,23 @@ import org.junit.Test
  * To run just this test:
  * ./gradlew :base:build-system:integration-test:application:test --tests LintStandaloneTest
  */
-class LintStandaloneTest {
-    @Rule @JvmField
-    var project = GradleTestProject.builder().fromTestProject("lintStandalone")
-        // http://b/146208910
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+@RunWith(FilterableParameterized::class)
+class LintStandaloneTest(lintInvocationType: LintInvocationType) {
+
+    companion object {
+        @get:JvmStatic
+        @get:Parameterized.Parameters(name = "{0}")
+        val params get() = LintInvocationType.values()
+    }
+
+    @Rule
+    @JvmField
+    var project = lintInvocationType
+        .testProjectBuilder()
+        .fromTestProject("lintStandalone")
         .create()
 
     @Test
-    @Throws(Exception::class)
     fun checkStandaloneLint() {
         project.execute("clean", "lint")
 
@@ -53,6 +63,8 @@ class LintStandaloneTest {
             "textOutput file(\"lint-results.txt\")",
             "textOutput file(\"lint-results2.txt\")"
         )
+        // Run twice to catch issues with configuration caching
+        project.execute("lint")
         project.execute("lint")
 
         val secondFile = project.file("lint-results2.txt")

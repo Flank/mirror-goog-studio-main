@@ -18,30 +18,41 @@ package com.android.build.gradle.integration.lint;
 
 import static com.android.testutils.truth.FileSubject.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * Assemble tests for lintLibraryModel.
  *
- * <p>To run just this test: ./gradlew :base:build-system:integration-test:application:test
- * -D:base:build-system:integration-test:application:test.single=LintSkipDependenciesTest
+ * <p>To run just this test: ./gradlew :base:build-system:integration-test:lint:test --tests
+ * LintSkipDependenciesTest
  */
+@RunWith(FilterableParameterized.class)
 public class LintSkipDependenciesTest {
+    @Parameterized.Parameters(name = "{0}")
+    public static LintInvocationType[] getParams() {
+        return LintInvocationType.values();
+    }
+
     @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestProject("lintLibrarySkipDeps")
-                    // http://b/146208910
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                    .create();
+    public final GradleTestProject project;
+
+    public LintSkipDependenciesTest(LintInvocationType lintInvocationType) {
+        this.project = lintInvocationType.testProjectBuilder()
+                .fromTestProject("lintLibrarySkipDeps")
+                .create();
+    }
 
     @Test
     public void checkLintDependenciesSkipped() throws IOException, InterruptedException {
+        // Run twice to catch issues with configuration caching
+        project.execute("clean", ":app:lintDebug");
         project.execute("clean", ":app:lintDebug");
         File file = new File(project.getSubproject("app").getProjectDir(), "lint-results.txt");
         assertThat(file).exists();
