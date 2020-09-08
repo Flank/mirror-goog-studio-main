@@ -89,12 +89,6 @@ public class KotlinCompiler extends JarOutputCompiler {
         args.add("-module-name");
         args.add(moduleName);
 
-        // workaround for https://youtrack.jetbrains.com/issue/KT-37435
-        args.add("-Xno-optimized-callable-references");
-        // workaround for https://github.com/Kotlin/dokka/issues/1272
-        // TODO: remove once everything is moved to Kotlin 1.4
-        args.add("-Xno-kotlin-nothing-value-exception");
-
         args.add("-Xjvm-default=enable");
         if (jvmTarget != null) {
             args.add("-jvm-target");
