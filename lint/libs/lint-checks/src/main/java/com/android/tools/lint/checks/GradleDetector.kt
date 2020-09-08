@@ -2942,7 +2942,10 @@ open class GradleDetector : Detector(), GradleScanner {
                 dependency.contains("androidx.lifecycle:lifecycle-compiler")
 
         private fun isCommonAnnotationProcessor(dependency: String): Boolean =
-            dependency.substring(0, dependency.lastIndexOf(":")) in commonAnnotationProcessors
+            when (val index = dependency.lastIndexOf(":")) {
+                -1 -> false
+                else -> dependency.substring(0, index) in commonAnnotationProcessors
+            }
 
         private enum class CompileConfiguration(
             private val compileConfigName: String
