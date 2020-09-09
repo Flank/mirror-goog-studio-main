@@ -192,9 +192,11 @@ You can examine the report in Chrome via about://tracing.
 
 Edit time (ms) on a 3Ghz machine with a PM981 NVMe drive.
 
+```
 APK Size     NumRes      SizeRes       NumDex       SizeDex       Time (ms)          
  120 MiB      5000       16 KiB         10            4 MiB          27
   60 MiB      2500       16 KiB         10            4 MiB          18
   49 MiB      2500        4 KiB         10            4 MiB          18
+```
   
 The edit time is dominated by the parsing time (itself dominated by the number of entries).  
