@@ -16,8 +16,12 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.scrollActivity.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.renderIf
 
 fun scrollActivityKt(
@@ -26,12 +30,14 @@ fun scrollActivityKt(
   layoutName: String,
   menuName: String,
   packageName: String,
-  useAndroidX: Boolean): String {
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
 
   val newModuleImportBlock = renderIf(isNewModule) {"""
 import android.view.Menu
 import android.view.MenuItem
-  """.trimIndent()}
+  """}
 
   val newModuleBlock = renderIf(isNewModule) {"""
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -50,7 +56,13 @@ import android.view.MenuItem
             else -> super.onOptionsItemSelected(item)
         }
     } 
-  """.trimIndent()}
+  """}
+
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layoutName)}.inflate(layoutInflater)
+     setContentView(binding.root)
+  """ else "setContentView(R.layout.$layoutName)"
+
   return """package ${escapeKotlinIdentifier(packageName)}
 
 import android.os.Bundle
@@ -59,15 +71,28 @@ import ${getMaterialComponentName("android.support.design.widget.FloatingActionB
 import ${getMaterialComponentName("android.support.design.widget.Snackbar", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
 $newModuleImportBlock
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
 
 class ${activityClass} : AppCompatActivity() {
 
+${renderIf(isViewBindingSupported) {"""
+    private lateinit var binding: ${layoutToViewBindingClass(layoutName)}
+"""}}
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.${layoutName})
+        $contentViewBlock
         setSupportActionBar(findViewById(R.id.toolbar))
-        findViewById<CollapsingToolbarLayout>(R.id.toolbar_layout).title = title
-        findViewById<FloatingActionButton>(R.id.fab).setOnClickListener { view ->
+        ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "toolbar_layout",
+          className = "CollapsingToolbarLayout")}.title = title
+        ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "fab",
+          className = "FloatingActionButton")}.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }
