@@ -16,15 +16,28 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
 
 fun mapActivityKt(
   activityClass: String,
   layoutName: String,
   packageName: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layoutName)}.inflate(layoutInflater)
+     setContentView(binding.root)
+  """ else "setContentView(R.layout.$layoutName)"
+
+  return """
 package ${escapeKotlinIdentifier(packageName)}
 
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -41,6 +54,7 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.Toast
 import ${getMaterialComponentName("android.support.wear.widget.SwipeDismissFrameLayout", useAndroidX)}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
 
 class ${activityClass} : Activity(), OnMapReadyCallback {
 
@@ -50,17 +64,23 @@ class ${activityClass} : Activity(), OnMapReadyCallback {
      */
     private lateinit var mMap: GoogleMap
     private lateinit var swipeDismissRootContainer: SwipeDismissFrameLayout
+${renderIf(isViewBindingSupported) {"""
+    private lateinit var binding: ${layoutToViewBindingClass(layoutName)}
+"""}}
 
     public override fun onCreate(savedState: Bundle?) {
         super.onCreate(savedState)
 
-        setContentView(R.layout.${layoutName})
+        $contentViewBlock
 
         // Enables the Swipe-To-Dismiss Gesture via the root layout (SwipeDismissFrameLayout).
         // Swipe-To-Dismiss is a standard pattern in Wear for closing an app and needs to be
         // manually enabled for any Google Maps Activity. For more information, review our docs:
         // https://developer.android.com/training/wearables/ui/exit.html
-        swipeDismissRootContainer = findViewById(R.id.swipe_dismiss_root_container)
+        swipeDismissRootContainer = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "swipe_dismiss_root_container")}
         swipeDismissRootContainer.addCallback(object : SwipeDismissFrameLayout.Callback() {
             override fun onDismissed(layout: SwipeDismissFrameLayout?) {
                 // Hides view before exit to avoid stutter.
@@ -72,7 +92,11 @@ class ${activityClass} : Activity(), OnMapReadyCallback {
         // Adjusts margins to account for the system window insets when they become available.
         swipeDismissRootContainer.setOnApplyWindowInsetsListener { _, insetsArg ->
             val insets = swipeDismissRootContainer.onApplyWindowInsets(insetsArg)
-            val mapContainer = findViewById<FrameLayout>(R.id.map_container)
+            val mapContainer = ${findViewById(
+              Language.Kotlin,
+              isViewBindingSupported = isViewBindingSupported,
+              id = "map_container",
+              className = "FrameLayout")}
             val params = mapContainer.layoutParams as FrameLayout.LayoutParams
 
             // Add Wearable insets to FrameLayout container holding map as margins
@@ -111,3 +135,4 @@ class ${activityClass} : Activity(), OnMapReadyCallback {
     }
 }
 """
+}

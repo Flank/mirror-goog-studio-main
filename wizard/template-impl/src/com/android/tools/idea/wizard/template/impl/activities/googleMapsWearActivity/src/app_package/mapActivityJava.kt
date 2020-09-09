@@ -16,14 +16,27 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
 
 fun mapActivityJava(
   activityClass: String,
   layoutName: String,
   packageName: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layoutName)}.inflate(getLayoutInflater());
+     setContentView(binding.getRoot());
+  """ else "setContentView(R.layout.$layoutName);"
+
+  return """
 package ${packageName};
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -41,6 +54,7 @@ import android.view.WindowInsets;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 import ${getMaterialComponentName("android.support.wear.widget.SwipeDismissFrameLayout", useAndroidX)};
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
 
 public class ${activityClass} extends Activity implements OnMapReadyCallback {
 
@@ -50,15 +64,24 @@ public class ${activityClass} extends Activity implements OnMapReadyCallback {
      * @see #onMapReady(com.google.android.gms.maps.GoogleMap)
      */
     private GoogleMap mMap;
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(layoutName)} binding;
+"""}}
 
     public void onCreate(Bundle savedState) {
         super.onCreate(savedState);
 
-        setContentView(R.layout.${layoutName});
+        $contentViewBlock
 
         final SwipeDismissFrameLayout swipeDismissRootFrameLayout =
-                (SwipeDismissFrameLayout) findViewById(R.id.swipe_dismiss_root_container);
-        final FrameLayout mapFrameLayout = (FrameLayout) findViewById(R.id.map_container);
+                ${findViewById(
+                  Language.Java,
+                  isViewBindingSupported = isViewBindingSupported,
+                  id = "swipe_dismiss_root_container")};
+        final FrameLayout mapFrameLayout = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "map_container")};
 
         // Enables the Swipe-To-Dismiss Gesture via the root layout (SwipeDismissFrameLayout).
         // Swipe-To-Dismiss is a standard pattern in Wear for closing an app and needs to be
@@ -120,3 +143,4 @@ public class ${activityClass} extends Activity implements OnMapReadyCallback {
     }
 }
 """
+}

@@ -26,6 +26,7 @@ import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.
 import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.src.app_package.blankActivityJava
 import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.src.app_package.blankActivityKt
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
 
 fun RecipeExecutor.blankWearActivityRecipe(
   moduleData: ModuleTemplateData,
@@ -38,6 +39,7 @@ fun RecipeExecutor.blankWearActivityRecipe(
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
+  addViewBindingSupport(moduleData.viewBindingSupport, true)
 
   mergeXml(androidManifestXml(activityClass, isLauncher, moduleData.isLibrary, moduleData.isNewModule, packageName),
            manifestOut.resolve("AndroidManifest.xml"))
@@ -49,9 +51,20 @@ fun RecipeExecutor.blankWearActivityRecipe(
   save(blankActivityXml(activityClass, packageName, useAndroidX), resOut.resolve("layout/${layoutName}.xml"))
   addDependency("com.android.support:wear:+")
 
+  val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()
   val blankActivity = when (projectData.language) {
-    Language.Java -> blankActivityJava(activityClass, layoutName, packageName)
-    Language.Kotlin -> blankActivityKt(activityClass, layoutName, packageName)
+    Language.Java -> blankActivityJava(
+      activityClass = activityClass,
+      layoutName = layoutName,
+      packageName = packageName,
+      isViewBindingSupported = isViewBindingSupported
+    )
+    Language.Kotlin -> blankActivityKt(
+      activityClass = activityClass,
+      layoutName = layoutName,
+      packageName = packageName,
+      isViewBindingSupported = isViewBindingSupported
+    )
   }
   save(blankActivity, srcOut.resolve("${activityClass}.${ktOrJavaExt}"))
 
