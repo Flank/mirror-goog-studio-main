@@ -9,6 +9,11 @@ plugins {
     id 'jacoco-tools-base'
     id 'license-report'
     id 'com.google.protobuf'
+    id 'idea'
+}
+
+idea.module {
+    generatedSourceDirs += new File(protobuf.generatedFilesBaseDir)
 }
 
 configurations {
