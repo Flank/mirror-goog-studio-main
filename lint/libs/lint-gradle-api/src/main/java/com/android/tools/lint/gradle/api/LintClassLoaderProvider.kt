@@ -68,6 +68,11 @@ open class LintClassLoaderProvider {
         for (url in gradleClassLoader.urLs) {
             val uri = url.toURI()
             val name = getLibrary(uri) ?: return null
+            if (name.startsWith("kotlin-stdlib") || name.startsWith("kotlin-reflect")) {
+                // Lint bundles its own Kotlin stdlib (to match the bundled Kotlin compiler).
+                // See DelegatingClassLoader.mustBeLoadedByDelegate.
+                continue
+            }
             uriMap.remove(name)
         }
 

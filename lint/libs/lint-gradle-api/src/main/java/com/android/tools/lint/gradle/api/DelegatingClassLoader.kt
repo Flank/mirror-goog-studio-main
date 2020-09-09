@@ -26,6 +26,10 @@ class DelegatingClassLoader(urls: Array<URL>) :
 
     @Throws(ClassNotFoundException::class)
     override fun findClass(name: String): Class<*> {
+        if (mustBeLoadedByDelegate(name)) {
+            return delegate.loadClass(name)
+        }
+
         return try {
             super.findClass(name)
         } catch (e: ClassNotFoundException) {
@@ -48,5 +52,40 @@ class DelegatingClassLoader(urls: Array<URL>) :
             return resources
         }
         return delegate.getResources(name)
+    }
+
+    // Lint bundles the Kotlin compiler, which requires a very recent version of Kotlin
+    // stdlib. Thus Lint sometimes needs to bundle a newer version of the Kotlin stdlib than the
+    // one that is used by Gradle. However, Lint calls Gradle/AGP APIs, and some of those APIs
+    // reference Kotlin stdlib classes (loaded by Gradle's classloader). This leads to LinkageErrors
+    // at runtime (loader constraint violations). To fix this, we load a subset of Kotlin stdlib
+    // classes (the ones appearing in API signatures) using the Gradle classloader.
+    // We assume that these classes don't change between Kotlin versions. Yes, this is hacky.
+    // It is inspired by PluginClassLoader.mustBeLoadedByPlatform in IntelliJ.
+    // TODO: This is a workaround for b/166661949. Remove this once Lint runs out-of-process.
+    private fun mustBeLoadedByDelegate(name: String): Boolean {
+        if (!name.startsWith("kotlin.")) {
+            return false
+        }
+
+        if (name.startsWith("kotlin.jvm.functions.") ||
+            name.startsWith("kotlin.reflect.") && name.indexOf('.', 15) < 0
+        ) {
+            return true
+        }
+
+        when (name) {
+            "kotlin.sequences.Sequence",
+            "kotlin.Lazy",
+            "kotlin.Unit",
+            "kotlin.Pair",
+            "kotlin.Triple",
+            "kotlin.jvm.internal.DefaultConstructorMarker",
+            "kotlin.jvm.internal.ClassBasedDeclarationContainer",
+            "kotlin.properties.ReadWriteProperty",
+            "kotlin.properties.ReadOnlyProperty" -> return true
+        }
+
+        return false
     }
 }
