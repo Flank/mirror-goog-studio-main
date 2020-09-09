@@ -16,8 +16,12 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.googleAdMobAdsFragment.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.renderIf
 
 fun adMobBannerAdFragmentKt(
@@ -25,8 +29,16 @@ fun adMobBannerAdFragmentKt(
   fragmentClass: String,
   layoutName: String,
   packageName: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+
+  val onCreateViewBlock = if (isViewBindingSupported) """
+      _binding = ${layoutToViewBindingClass(layoutName)}.inflate(inflater, container, false)
+      return binding.root
+  """ else "return inflater.inflate(R.layout.$layoutName, container, false)"
+
+  return """
 package ${escapeKotlinIdentifier(packageName)}
 
 import com.google.android.gms.ads.AdRequest
@@ -40,22 +52,34 @@ import android.view.ViewGroup
 import android.view.View
 import android.widget.Toast
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
 
 class ${fragmentClass} : Fragment() {
+
+${renderIf(isViewBindingSupported) {"""
+    private var _binding: ${layoutToViewBindingClass(layoutName)}? = null
+    // This property is only valid between onCreateView and
+    // onDestroyView.
+    private val binding get() = _binding!!
+"""}}
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.${layoutName}, container, false)
+        $onCreateViewBlock
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         // Load an ad into the AdMob banner view.
-        val adView: AdView = view.findViewById(R.id.adView)
+        val adView: AdView = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "ad_view",
+          parentView = "view")}
         val adRequest = AdRequest.Builder()
             .setRequestAgent("android_studio:ad_template").build()
         adView.loadAd(adRequest)
@@ -72,5 +96,13 @@ class ${fragmentClass} : Fragment() {
         private const val TOAST_TEXT =
             "Test ads are being shown. " + "To show live ads, replace the ad unit ID in res/values/strings.xml with your own ad unit ID."
     }
+
+${renderIf(isViewBindingSupported) {"""
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+"""}}
 }
 """
+}

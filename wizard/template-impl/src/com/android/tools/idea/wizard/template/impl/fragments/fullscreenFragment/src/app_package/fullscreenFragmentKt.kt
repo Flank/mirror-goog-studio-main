@@ -16,14 +16,27 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
 
 fun fullscreenFragmentKt(
   fragmentClass: String,
   layoutName: String,
   packageName: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+
+  val onCreateViewBlock = if (isViewBindingSupported) """
+      _binding = ${layoutToViewBindingClass(layoutName)}.inflate(inflater, container, false)
+      return binding.root
+  """ else "return inflater.inflate(R.layout.$layoutName, container, false)"
+
+  return """
 package ${packageName}
 
 import android.os.Bundle
@@ -35,6 +48,7 @@ import android.view.WindowManager
 import android.widget.Button
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
 
 /**
  * An example full-screen fragment that shows and hides the system UI (i.e.
@@ -81,12 +95,19 @@ class ${fragmentClass} : Fragment() {
     private var fullscreenContent: View? = null
     private var fullscreenContentControls: View? = null
 
+${renderIf(isViewBindingSupported) {"""
+    private var _binding: ${layoutToViewBindingClass(layoutName)}? = null
+    // This property is only valid between onCreateView and
+    // onDestroyView.
+    private val binding get() = _binding!!
+"""}}
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.${layoutName}, container, false)
+        $onCreateViewBlock
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -94,9 +115,21 @@ class ${fragmentClass} : Fragment() {
 
         visible = true
 
-        dummyButton = view.findViewById(R.id.dummy_button)
-        fullscreenContent = view.findViewById(R.id.fullscreen_content)
-        fullscreenContentControls = view.findViewById(R.id.fullscreen_content_controls)
+        dummyButton = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "dummy_button",
+          parentView = "view")}
+        fullscreenContent = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "fullscreen_content",
+          parentView = "view")}
+        fullscreenContentControls = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "fullscreen_content_controls",
+          parentView = "view")}
         // Set up the user interaction to manually show or hide the system UI.
         fullscreenContent?.setOnClickListener { toggle() }
 
@@ -192,5 +225,13 @@ class ${fragmentClass} : Fragment() {
          */
         private const val UI_ANIMATION_DELAY = 300
     }
+
+${renderIf(isViewBindingSupported) {"""
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+"""}}
 }
 """
+}

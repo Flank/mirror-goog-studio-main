@@ -16,14 +16,27 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
 
 fun fullscreenFragmentJava(
   fragmentClass: String,
   layoutName: String,
   packageName: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+
+  val onCreateViewBlock = if (isViewBindingSupported) """
+      binding = ${layoutToViewBindingClass(layoutName)}.inflate(inflater, container, false);
+      return binding.getRoot();
+  """ else "return inflater.inflate(R.layout.$layoutName, container, false);"
+
+  return """
 package ${packageName};
 
 import android.annotation.SuppressLint;
@@ -42,6 +55,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -129,12 +143,16 @@ public class ${fragmentClass} extends Fragment {
         }
     };
 
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(layoutName)} binding;
+"""}}
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.${layoutName}, container, false);
+        $onCreateViewBlock
     }
 
     @Override
@@ -142,8 +160,16 @@ public class ${fragmentClass} extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         mVisible = true;
 
-        mControlsView = view.findViewById(R.id.fullscreen_content_controls);
-        mContentView = view.findViewById(R.id.fullscreen_content);
+        mControlsView = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "fullscreen_content_controls",
+          parentView = "view")};
+        mContentView = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "fullscreen_content",
+          parentView = "view")};
 
         // Set up the user interaction to manually show or hide the system UI.
         mContentView.setOnClickListener(new View.OnClickListener() {
@@ -156,7 +182,11 @@ public class ${fragmentClass} extends Fragment {
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        view.findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+        ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "dummy_button",
+          parentView = "view")}.setOnTouchListener(mDelayHideTouchListener);
     }
 
     @Override
@@ -247,5 +277,14 @@ public class ${fragmentClass} extends Fragment {
         }
         return actionBar;
     }
+
+${renderIf(isViewBindingSupported) {"""
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+"""}}
 }
 """
+}
