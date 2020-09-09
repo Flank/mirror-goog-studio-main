@@ -1,6 +1,0 @@
-# Tests which are permitted to use the `flaky` bazel attribute.
-# Please contact android-devtools-infra@ if you wish to add tests here.
-#
-# Test targets should remain sorted.
-# b/149226404
-//tools/base/bazel/avd/sample:emulator_test
