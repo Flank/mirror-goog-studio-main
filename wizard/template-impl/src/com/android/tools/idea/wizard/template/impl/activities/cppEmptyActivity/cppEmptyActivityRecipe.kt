@@ -20,6 +20,7 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.PackageName
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
 import com.android.tools.idea.wizard.template.impl.activities.common.generateSimpleLayout
 import com.android.tools.idea.wizard.template.impl.activities.cppEmptyActivity.src.cppEmptyActivityJava
@@ -50,14 +51,28 @@ fun RecipeExecutor.generateCppEmptyActivity(
   )
 
   addAllKotlinDependencies(moduleData)
+  addViewBindingSupport(moduleData.viewBindingSupport, true)
 
   generateSimpleLayout(moduleData, activityClass, layoutName, includeCppSupport = true)
 
   val simpleActivityPath = srcOut.resolve("$activityClass.$ktOrJavaExt")
 
+  val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()
   val simpleActivity = when (projectData.language) {
-    Language.Kotlin -> cppEmptyActivityKt(packageName, activityClass, layoutName, useAndroidX)
-    Language.Java -> cppEmptyActivityJava(packageName, activityClass, layoutName, useAndroidX)
+    Language.Kotlin -> cppEmptyActivityKt(
+      packageName = packageName,
+      activityClass = activityClass,
+      layoutName = layoutName,
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported
+    )
+    Language.Java -> cppEmptyActivityJava(
+      packageName = packageName,
+      activityClass = activityClass,
+      layoutName = layoutName,
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported
+    )
   }
   save(simpleActivity, simpleActivityPath)
 

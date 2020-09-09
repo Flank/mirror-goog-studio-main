@@ -15,29 +15,50 @@
  */
 package com.android.tools.idea.wizard.template.impl.activities.cppEmptyActivity.src
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
 
 fun cppEmptyActivityJava(
   packageName: String,
   activityClass: String,
   layoutName: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layoutName)}.inflate(getLayoutInflater());
+     setContentView(binding.getRoot());
+  """ else "setContentView(R.layout.$layoutName);"
+
+  return """
 package ${packageName};
 
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)};
 import android.os.Bundle;
 import android.widget.TextView;
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
 
 public class ${activityClass} extends AppCompatActivity {
+
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(layoutName)} binding;
+"""}}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.${layoutName});
+        $contentViewBlock
 
         // Example of a call to a native method
-        TextView tv = findViewById(R.id.sample_text);
+        TextView tv = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "sample_text")};
         tv.setText(stringFromJNI());
     }
 
@@ -53,3 +74,4 @@ public class ${activityClass} extends AppCompatActivity {
     }
 }
 """
+}
