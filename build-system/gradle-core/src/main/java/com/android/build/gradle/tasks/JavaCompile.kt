@@ -119,6 +119,11 @@ class JavaCompileCreationAction(
         val javaSourcesFilter = PatternSet().include("**/*.java")
         task.source = task.project.files(sourcesToCompile).asFileTree.matching(javaSourcesFilter)
 
+        // Add this compiler argument to generate metadata for method parameters on class files,
+        // which Room annotation processor requires in order for it to be incremental (see bug
+        // 159501719).
+        task.options.compilerArgs.add(PARAMETERS)
+
         task.options.isIncremental = globalScope.extension.compileOptions.incremental
             ?: DEFAULT_INCREMENTAL_COMPILATION
 
@@ -243,3 +248,4 @@ private fun JavaCompile.recordAnnotationProcessors(
 }
 
 private const val AP_GENERATED_SOURCES_DIR_NAME = "out"
+private const val PARAMETERS = "-parameters"
