@@ -17,11 +17,8 @@ package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.fakeandroid.FakeAndroidDriver;
-
 import java.io.IOException;
-
 import java.util.Collection;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -58,7 +55,7 @@ public class LiveLiteralUpdateTest extends AgentTestBase {
     }
 
     @Test
-    public void testSimpleClassRedefinition() throws Exception {
+    public void testSimpleUpdate() throws Exception {
         android.loadDex(DEX_LOCATION);
         android.launchActivity(ACTIVITY_CLASS);
 
@@ -69,8 +66,8 @@ public class LiveLiteralUpdateTest extends AgentTestBase {
         installer.update(request);
 
         // TODO: Next step is to set up the reply.
-        // Deploy.AgentLiveLiteralUpdateResponse response = installer.getLiveLiteralAgentResponse();
-        // Assert.assertEquals(Deploy.AgentLiveLiteralUpdateResponse.Status.OK, response.getStatus());
+        Deploy.AgentLiveLiteralUpdateResponse response = installer.getLiveLiteralAgentResponse();
+        Assert.assertEquals(Deploy.AgentLiveLiteralUpdateResponse.Status.OK, response.getStatus());
 
         // TODO: For now we just check if the agent successfully received the request.
         Assert.assertTrue(android.waitForInput("Live Literal Update on VM", RETURN_VALUE_TIMEOUT));

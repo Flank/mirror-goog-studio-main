@@ -19,6 +19,8 @@ cc_binary(
         "hotswap.h",
         "instrumenter.cc",
         "instrumenter.h",
+        "live_literal.cc",
+        "live_literal.h",
         "native_callbacks.cc",
         "native_callbacks.h",
         "swapper.cc",
