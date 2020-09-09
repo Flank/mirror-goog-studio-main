@@ -16,7 +16,11 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.renderIf
 
 fun contentDetailFragmentJava(
@@ -26,8 +30,17 @@ fun contentDetailFragmentJava(
   detailNameLayout: String,
   objectKind: String,
   packageName: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+
+  val layoutName = "fragment_${detailNameLayout}"
+  val onCreateViewBlock = if (isViewBindingSupported) """
+      binding = ${layoutToViewBindingClass(layoutName)}.inflate(inflater, container, false);
+      View rootView = binding.getRoot();
+  """ else "View rootView = inflater.inflate(R.layout.fragment_${detailNameLayout}, container, false);"
+
+  return """
 package ${packageName};
 
 import android.os.Bundle;
@@ -41,6 +54,7 @@ import android.widget.TextView;
 import ${getMaterialComponentName("android.support.design.widget.CollapsingToolbarLayout", useAndroidX)};
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
 import ${packageName}.placeholder.PlaceholderContent;
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
 
 /**
  * A fragment representing a single ${objectKind} detail screen.
@@ -68,6 +82,10 @@ public class ${collection}DetailFragment extends Fragment {
     public ${collection}DetailFragment() {
     }
 
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(layoutName)} binding;
+"""}}
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,12 +101,16 @@ public class ${collection}DetailFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_${detailNameLayout}, container, false);
+        $onCreateViewBlock
         CollapsingToolbarLayout toolbarLayout = rootView.findViewById(R.id.toolbar_layout);
 
         // Show the placeholder content as text in a TextView & in the toolbar if available.
         if (mItem != null) {
-            ((TextView) rootView.findViewById(R.id.${detailNameLayout})).setText(mItem.details);
+            TextView textView = ${findViewById(
+              Language.Java,
+              isViewBindingSupported = isViewBindingSupported,
+              id = detailNameLayout)};
+            textView.setText(mItem.details);
             if (toolbarLayout != null) {
                 toolbarLayout.setTitle(mItem.content);
             }
@@ -96,5 +118,13 @@ public class ${collection}DetailFragment extends Fragment {
 
         return rootView;
     }
+${renderIf(isViewBindingSupported) {"""
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+"""}}
 }
 """
+}

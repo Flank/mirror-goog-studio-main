@@ -16,8 +16,12 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.renderIf
 
 fun contentListFragmentKt(
@@ -28,8 +32,38 @@ fun contentListFragmentKt(
   itemListContentLayout: String,
   itemListLayout: String,
   packageName: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+
+  val layoutName = "fragment_${itemListLayout}"
+  val onCreateViewBlock = if (isViewBindingSupported) """
+      _binding = ${layoutToViewBindingClass(layoutName)}.inflate(inflater, container, false)
+      return binding.root
+  """ else "return inflater.inflate(R.layout.$layoutName, container, false)"
+
+  val onCreateViewHolderBlock = if (isViewBindingSupported) """
+    val binding = ${layoutToViewBindingClass(itemListContentLayout)}.inflate(LayoutInflater.from(parent.context), parent, false)
+    return ViewHolder(binding)
+  """ else """
+    val view = LayoutInflater.from(parent.context)
+      .inflate(R.layout.${itemListContentLayout}, parent, false)
+    return ViewHolder(view)
+  """
+
+  val viewHolderBlock = if (isViewBindingSupported) """
+    inner class ViewHolder(binding: ${layoutToViewBindingClass(itemListContentLayout)}) : RecyclerView.ViewHolder(binding.root) {
+      val idView: TextView = binding.idText
+      val contentView: TextView = binding.content
+    }
+  """ else """
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+      val idView: TextView = view.findViewById(R.id.id_text)
+      val contentView: TextView = view.findViewById(R.id.content)
+    }
+  """
+
+  return """
 package ${escapeKotlinIdentifier(packageName)}
 
 import android.os.Build
@@ -46,6 +80,8 @@ import androidx.navigation.findNavController
 import ${getMaterialComponentName("android.support.v7.widget.RecyclerView", useAndroidX)}
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
 import ${packageName}.placeholder.PlaceholderContent;
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
+${importViewBindingClass(isViewBindingSupported, packageName, itemListContentLayout)}
 
 /**
  * A Fragment representing a list of Pings. This fragment
@@ -83,12 +119,18 @@ class ${collectionName}Fragment : Fragment() {
         false
     }
 
+${renderIf(isViewBindingSupported) {"""
+    private var _binding: ${layoutToViewBindingClass(layoutName)}? = null
+    // This property is only valid between onCreateView and
+    // onDestroyView.
+    private val binding get() = _binding!!
+"""}}
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_${itemListLayout}, container, false)
+        $onCreateViewBlock
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -96,7 +138,14 @@ class ${collectionName}Fragment : Fragment() {
 
         ViewCompat.addOnUnhandledKeyEventListener(view, unhandledKeyEventListenerCompat)
 
-        val recyclerView: RecyclerView = view.findViewById(R.id.${itemListLayout})
+        val recyclerView: RecyclerView = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = itemListLayout,
+          parentView = "view")}
+
+        // Leaving this not using view binding as it relies on if the view is visible the current
+        // layout configuration (layout, layout-sw600dp)
         val itemDetailFragmentContainer: View? = view.findViewById(R.id.${detailNameLayout}_nav_container)
 
         /** Click Listener to trigger navigation based on if you have
@@ -155,9 +204,7 @@ class ${collectionName}Fragment : Fragment() {
         RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.${itemListContentLayout}, parent, false)
-            return ViewHolder(view)
+            $onCreateViewHolderBlock
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -176,10 +223,15 @@ class ${collectionName}Fragment : Fragment() {
 
         override fun getItemCount() = values.size
 
-        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val idView: TextView = view.findViewById(R.id.id_text)
-            val contentView: TextView = view.findViewById(R.id.content)
-        }
+        $viewHolderBlock
     }
+
+${renderIf(isViewBindingSupported) {"""
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+"""}}
 }
 """
+}

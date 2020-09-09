@@ -16,8 +16,12 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.renderIf
 
 fun contentDetailFragmentKt(
@@ -27,8 +31,16 @@ fun contentDetailFragmentKt(
   detailNameLayout: String,
   objectKind: String,
   packageName: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+  val layoutName = "fragment_${detailNameLayout}"
+  val onCreateViewBlock = if (isViewBindingSupported) """
+      _binding = ${layoutToViewBindingClass(layoutName)}.inflate(inflater, container, false)
+      val rootView = binding.root
+  """ else "val rootView = inflater.inflate(R.layout.$layoutName, container, false)"
+
+  return """
 package ${escapeKotlinIdentifier(packageName)}
 
 import android.os.Bundle
@@ -40,6 +52,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
 import ${packageName}.placeholder.PlaceholderContent
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
 
 /**
  * A fragment representing a single ${objectKind} detail screen.
@@ -55,6 +68,13 @@ class ${detailName}Fragment : Fragment() {
     private var item: PlaceholderContent.PlaceholderItem? = null
 
     lateinit var itemDetailTextView: TextView
+
+${renderIf(isViewBindingSupported) {"""
+    private var _binding: ${layoutToViewBindingClass(layoutName)}? = null
+    // This property is only valid between onCreateView and
+    // onDestroyView.
+    private val binding get() = _binding!!
+"""}}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,11 +93,20 @@ class ${detailName}Fragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val rootView = inflater.inflate(R.layout.fragment_${detailNameLayout}, container, false)
+        $onCreateViewBlock
 
-        rootView.findViewById<CollapsingToolbarLayout>(R.id.toolbar_layout)?.title = item?.content
+        ${findViewById(
+           Language.Kotlin,
+           isViewBindingSupported = isViewBindingSupported,
+           id = "toolbar_layout",
+           parentView = "rootView",
+           className = "CollapsingToolbarLayout")}?.title = item?.content
 
-        itemDetailTextView = rootView.findViewById(R.id.${detailNameLayout})
+        itemDetailTextView = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = detailNameLayout,
+          parentView = "rootView")}
         // Show the placeholder content as text in a TextView.
         item?.let {
             itemDetailTextView.text = it.details
@@ -93,5 +122,13 @@ class ${detailName}Fragment : Fragment() {
          */
         const val ARG_ITEM_ID = "item_id"
     }
+
+${renderIf(isViewBindingSupported) {"""
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+"""}}
 }
 """
+}

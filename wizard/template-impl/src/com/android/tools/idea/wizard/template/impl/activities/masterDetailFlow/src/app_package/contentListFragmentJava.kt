@@ -16,7 +16,11 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.renderIf
 
 fun contentListFragmentJava(
@@ -28,8 +32,40 @@ fun contentListFragmentJava(
   itemListLayout: String,
   objectKindPlural: String,
   packageName: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+  val layoutName = "fragment_${itemListLayout}"
+  val onCreateViewBlock = if (isViewBindingSupported) """
+      binding = ${layoutToViewBindingClass(layoutName)}.inflate(inflater, container, false);
+      return binding.getRoot();
+  """ else "return inflater.inflate(R.layout.$layoutName, container, false);"
+
+  val onCreateViewHolderBlock = if (isViewBindingSupported) """
+    ${layoutToViewBindingClass(itemListContentLayout)} binding =
+      ${layoutToViewBindingClass(itemListContentLayout)}.inflate(LayoutInflater.from(parent.getContext()), parent, false);
+    return new ViewHolder(binding);
+  """ else """
+    View view = LayoutInflater.from(parent.getContext())
+      .inflate(R.layout.${itemListContentLayout}, parent, false);
+    return new ViewHolder(view);
+  """
+
+  val viewHolderBlock = if (isViewBindingSupported) """
+    ViewHolder(${layoutToViewBindingClass(itemListContentLayout)} binding) {
+      super(binding.getRoot());
+      mIdView = binding.idText;
+      mContentView = binding.content;
+    }
+  """ else """
+    ViewHolder(View view) {
+      super(view);
+      mIdView = view.findViewById(R.id.id_text);
+      mContentView = view.findViewById(R.id.content);
+    }
+  """
+
+  return """
 package ${packageName};
 
 import android.os.Build;
@@ -47,6 +83,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
+${importViewBindingClass(isViewBindingSupported, packageName, itemListContentLayout)};
 
 import ${packageName}.placeholder.PlaceholderContent;
 
@@ -68,7 +106,6 @@ public class ${collectionName}Fragment extends Fragment {
      * Currently provides a toast when Ctrl + Z and Ctrl + F
      * are triggered
      */
-
     ViewCompat.OnUnhandledKeyEventListenerCompat unhandledKeyEventListenerCompat = (v, event) -> {
         if (event.getKeyCode() == KeyEvent.KEYCODE_Z && event.isCtrlPressed()) {
             Toast.makeText(
@@ -88,9 +125,13 @@ public class ${collectionName}Fragment extends Fragment {
         return false;
     };
 
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(layoutName)} binding;
+"""}}
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_${itemListLayout}, container, false);
+        $onCreateViewBlock
     }
 
     @Override
@@ -99,11 +140,17 @@ public class ${collectionName}Fragment extends Fragment {
 
         ViewCompat.addOnUnhandledKeyEventListener(view, unhandledKeyEventListenerCompat);
 
-        RecyclerView recyclerView = view.findViewById(R.id.${itemListLayout});
+        RecyclerView recyclerView = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = itemListLayout,
+          parentView = "view")};
 
+        // Leaving this not using view binding as it relies on if the view is visible the current
+        // layout configuration (layout, layout-sw600dp)
         View itemDetailFragmentContainer = view.findViewById(R.id.${detailNameLayout}_nav_container);
 
-        /** Click Listener to trigger navigation based on if you have
+        /* Click Listener to trigger navigation based on if you have
          * a single pane layout or two pane layout
          */
         View.OnClickListener onClickListener = itemView -> {
@@ -119,7 +166,7 @@ public class ${collectionName}Fragment extends Fragment {
             }
         };
 
-        /**
+        /*
          * Context click listener to handle Right click events
          * from mice and trackpad input to provide a more native
          * experience on larger screen devices
@@ -168,9 +215,7 @@ public class ${collectionName}Fragment extends Fragment {
 
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.${itemListContentLayout}, parent, false);
-            return new ViewHolder(view);
+            $onCreateViewHolderBlock
         }
 
         @Override
@@ -194,13 +239,18 @@ public class ${collectionName}Fragment extends Fragment {
             final TextView mIdView;
             final TextView mContentView;
 
-            ViewHolder(View view) {
-                super(view);
-                mIdView = (TextView) view.findViewById(R.id.id_text);
-                mContentView = (TextView) view.findViewById(R.id.content);
-            }
+            $viewHolderBlock
         }
     }
+
+${renderIf(isViewBindingSupported) {"""
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+"""}}
 }
 
 """
+}

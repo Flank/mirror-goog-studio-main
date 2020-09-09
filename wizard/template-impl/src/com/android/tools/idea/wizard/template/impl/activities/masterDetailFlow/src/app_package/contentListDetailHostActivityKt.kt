@@ -17,14 +17,24 @@ package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.
 
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 
 fun contentListDetailHostActivityKt(
   packageName: String,
   collection: String,
   activityLayout: String,
   navHostFragmentId: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+  val layoutName = "activity_${activityLayout}"
+  val contentViewBlock = if (isViewBindingSupported) """
+     val binding = ${layoutToViewBindingClass(layoutName)}.inflate(layoutInflater)
+     setContentView(binding.root)
+  """ else "setContentView(R.layout.$layoutName)"
+
+  return """
 package ${escapeKotlinIdentifier(packageName)}
 
 
@@ -34,6 +44,7 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
 
 class ${collection}DetailHostActivity : AppCompatActivity() {
 
@@ -41,7 +52,7 @@ class ${collection}DetailHostActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_${activityLayout})
+        $contentViewBlock
 
         val navController = findNavController(R.id.${navHostFragmentId})
         appBarConfiguration = AppBarConfiguration(navController.graph)
@@ -55,3 +66,4 @@ class ${collection}DetailHostActivity : AppCompatActivity() {
     }
 }
   """
+}
