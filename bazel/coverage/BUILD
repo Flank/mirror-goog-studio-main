@@ -169,6 +169,17 @@ coverage_report(
 )
 
 coverage_report(
+    name = "workmanager-inspector",
+    srcpath_include = [
+        "tools/adt/idea/app-inspection/inspectors/workmanager",
+    ],
+    tests = [
+        "//tools/adt/idea/app-inspection/inspectors/workmanager/model:intellij.android.app-inspection.inspectors.workmanager.model_tests",
+        "//tools/adt/idea/app-inspection/inspectors/workmanager/view:intellij.android.app-inspection.inspectors.workmanager.view.tests_tests",
+    ],
+)
+
+coverage_report(
     name = "databinding",
     srcpath_include = [
         "tools/adt/idea/android-lang-databinding",
@@ -561,6 +572,7 @@ combine_report_definitions(
         "templates",
         "upgrade-assistant",
         "validation",
+        "workmanager-inspector",
     ],
 )
 
@@ -585,6 +597,8 @@ coverage_report(
         "//tools/adt/idea/apkanalyzer:intellij.android.apkanalyzer_tests",
         "//tools/adt/idea/app-inspection/api:intellij.android.app-inspection.api_tests",
         "//tools/adt/idea/app-inspection/ide:intellij.android.app-inspection.ide.tests_tests",
+        "//tools/adt/idea/app-inspection/inspectors/workmanager/model:intellij.android.app-inspection.inspectors.workmanager.model_tests",
+        "//tools/adt/idea/app-inspection/inspectors/workmanager/view:intellij.android.app-inspection.inspectors.workmanager.view.tests_tests",
         "//tools/adt/idea/assistant:assistant-test_tests",
         "//tools/adt/idea/build-attribution:intellij.android.build-attribution.tests_tests",
         "//tools/adt/idea/build-common:intellij.android.buildCommon_tests",
