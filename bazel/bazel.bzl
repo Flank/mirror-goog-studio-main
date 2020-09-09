@@ -737,6 +737,7 @@ def _gen_split_tests(
         tags = split_target.get("tags", default = [])
         data = split_target.get("data", default = [])
         split_timeout = split_target.get("timeout", default = timeout)
+        flaky = split_target.get("flaky")
         if "manual" not in tags:
             split_tests.append(test_name)
         if test_data:
@@ -750,6 +751,7 @@ def _gen_split_tests(
             name = test_name,
             shard_count = shard_count,
             timeout = split_timeout,
+            flaky = flaky,
             data = data,
             tags = tags,
             args = args,
