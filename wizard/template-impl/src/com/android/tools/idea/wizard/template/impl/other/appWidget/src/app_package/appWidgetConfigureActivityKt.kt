@@ -16,15 +16,26 @@
 
 package com.android.tools.idea.wizard.template.impl.other.appWidget.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.renderIf
-
 
 fun appWidgetConfigureActivityKt(
   applicationPackage: String?,
   className: String,
   layoutName: String,
-  packageName: String
-) = """
+  packageName: String,
+  isViewBindingSupported: Boolean
+): String {
+  val layout = "${layoutName}_configure"
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layout)}.inflate(layoutInflater)
+     setContentView(binding.root)
+  """ else "setContentView(R.layout.$layout)"
+
+  return """
 package ${packageName}
 
 import android.app.Activity
@@ -35,6 +46,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.EditText
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
+${importViewBindingClass(isViewBindingSupported, packageName, layout)}
 
 /**
  * The configuration screen for the [${className}] AppWidget.
@@ -43,7 +55,7 @@ class ${className}ConfigureActivity : Activity() {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
     private lateinit var appWidgetText: EditText
     private var onClickListener = View.OnClickListener {
-        val context = this@NewAppWidgetConfigureActivity
+        val context = this@${className}ConfigureActivity
 
         // When the button is clicked, store the string locally
         val widgetText = appWidgetText.text.toString()
@@ -59,6 +71,9 @@ class ${className}ConfigureActivity : Activity() {
         setResult(RESULT_OK, resultValue)
         finish()
     }
+${renderIf(isViewBindingSupported) {"""
+    private lateinit var binding: ${layoutToViewBindingClass(layout)}
+"""}}
 
     public override fun onCreate(icicle: Bundle?) {
         super.onCreate(icicle)
@@ -67,9 +82,17 @@ class ${className}ConfigureActivity : Activity() {
         // out of the widget placement if the user presses the back button.
         setResult(RESULT_CANCELED)
 
-        setContentView(R.layout.${layoutName}_configure)
-        appWidgetText = findViewById<View>(R.id.appwidget_text) as EditText
-        findViewById<View>(R.id.add_button).setOnClickListener(onClickListener)
+        $contentViewBlock
+        appWidgetText = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "appwidget_text",
+          className = "View")} as EditText
+        ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "add_button",
+          className = "View")}.setOnClickListener(onClickListener)
 
         // Find the widget id from the intent.
         val intent = intent
@@ -113,3 +136,4 @@ internal fun deleteTitlePref(context: Context, appWidgetId: Int) {
     prefs.remove(PREF_PREFIX_KEY + appWidgetId)
     prefs.apply()
 }"""
+}

@@ -16,15 +16,27 @@
 
 package com.android.tools.idea.wizard.template.impl.other.appWidget.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.renderIf
-
 
 fun appWidgetConfigureActivityJava(
   applicationPackage: String?,
   className: String,
   layoutName: String,
-  packageName: String
-) = """
+  packageName: String,
+  isViewBindingSupported: Boolean
+): String {
+
+  val layout = "${layoutName}_configure"
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layout)}.inflate(getLayoutInflater());
+     setContentView(binding.getRoot());
+  """ else "setContentView(R.layout.$layout);"
+
+  return """
 package ${packageName};
 
 import android.app.Activity;
@@ -36,6 +48,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
+${importViewBindingClass(isViewBindingSupported, packageName, layout)};
 
 /**
  * The configuration screen for the {@link ${className} ${className}} AppWidget.
@@ -46,6 +59,9 @@ public class ${className}ConfigureActivity extends Activity {
     EditText mAppWidgetText;
     private static final String PREFS_NAME = "${packageName}.${className}";
     private static final String PREF_PREFIX_KEY = "appwidget_";
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(layout)} binding;
+"""}}
 
     public ${className}ConfigureActivity() {
         super();
@@ -59,9 +75,15 @@ public class ${className}ConfigureActivity extends Activity {
         // out of the widget placement if the user presses the back button.
         setResult(RESULT_CANCELED);
 
-        setContentView(R.layout.${layoutName}_configure);
-        mAppWidgetText = (EditText)findViewById(R.id.appwidget_text);
-        findViewById(R.id.add_button).setOnClickListener(mOnClickListener);
+        $contentViewBlock
+        mAppWidgetText = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "appwidget_text")};
+        ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "add_button")}.setOnClickListener(mOnClickListener);
 
         // Find the widget id from the intent.
         Intent intent = getIntent();
@@ -127,3 +149,4 @@ public class ${className}ConfigureActivity extends Activity {
 }
 
 """
+}
