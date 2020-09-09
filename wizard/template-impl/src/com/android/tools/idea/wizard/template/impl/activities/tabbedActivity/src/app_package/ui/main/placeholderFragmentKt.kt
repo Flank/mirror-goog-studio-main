@@ -16,16 +16,27 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.src.app_package.ui.main
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
 
 fun placeholderFragmentKt(
   fragmentLayoutName: String,
   packageName: String,
-  useAndroidX: Boolean
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
 ): String {
 
   val viewModelInitializationBlock = if (useAndroidX) "pageViewModel = ViewModelProvider(this).get(PageViewModel::class.java)"
   else "pageViewModel = ViewModelProvider(this, ViewModelProvider.NewInstanceFactory()).get(PageViewModel::class.java)"
+
+  val onCreateViewBlock = if (isViewBindingSupported) """
+      _binding = ${layoutToViewBindingClass(fragmentLayoutName)}.inflate(inflater, container, false)
+      val root = binding.root
+  """ else "val root = inflater.inflate(R.layout.$fragmentLayoutName, container, false)"
 
   return """package ${packageName}.ui.main
 
@@ -38,6 +49,7 @@ import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX
 import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)}
 import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)}
 import ${packageName}.R
+${importViewBindingClass(isViewBindingSupported, packageName, fragmentLayoutName)}
 
 /**
  * A placeholder fragment containing a simple view.
@@ -45,6 +57,12 @@ import ${packageName}.R
 class PlaceholderFragment : Fragment() {
 
     private lateinit var pageViewModel: PageViewModel
+${renderIf(isViewBindingSupported) {"""
+    private var _binding: ${layoutToViewBindingClass(fragmentLayoutName)}? = null
+    // This property is only valid between onCreateView and
+    // onDestroyView.
+    private val binding get() = _binding!!
+"""}}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,8 +75,12 @@ class PlaceholderFragment : Fragment() {
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
-        val root = inflater.inflate(R.layout.${fragmentLayoutName}, container, false)
-        val textView: TextView = root.findViewById(R.id.section_label)
+        $onCreateViewBlock
+        val textView: TextView = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "section_label",
+          parentView = "root")}
         pageViewModel.text.observe(viewLifecycleOwner, Observer {
             textView.text = it
         })
@@ -85,5 +107,12 @@ class PlaceholderFragment : Fragment() {
             }
         }
     }
+
+${renderIf(isViewBindingSupported) {"""
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+"""}}
 }"""
 }

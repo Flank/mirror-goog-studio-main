@@ -22,6 +22,7 @@ import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.addLifecycleDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
+import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
 import com.android.tools.idea.wizard.template.impl.activities.common.generateNoActionBarStyles
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.res.layout.appBarActivityXml
@@ -56,6 +57,7 @@ fun RecipeExecutor.tabbedActivityRecipe(
   addDependency("com.android.support.constraint:constraint-layout:+")
   addLifecycleDependencies(useAndroidX)
   addMaterialDependency(useAndroidX)
+  addViewBindingSupport(moduleData.viewBindingSupport, true)
 
   generateManifest(
     moduleData, activityClass, activityClass, packageName, isLauncher, true,
@@ -77,9 +79,22 @@ fun RecipeExecutor.tabbedActivityRecipe(
   save(fragmentLayoutXml, resOut.resolve("layout/${fragmentLayoutName}.xml"))
 
   val ktOrJavaExt = projectData.language.extension
+  val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()
   val tabsActivity = when (projectData.language) {
-    Language.Java -> tabsActivityJava(activityClass, layoutName, packageName, useAndroidX)
-    Language.Kotlin -> tabsActivityKt(activityClass, layoutName, packageName, useAndroidX)
+    Language.Java -> tabsActivityJava(
+      activityClass = activityClass,
+      layoutName = layoutName,
+      packageName = packageName,
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported
+    )
+    Language.Kotlin -> tabsActivityKt(
+      activityClass = activityClass,
+      layoutName = layoutName,
+      packageName = packageName,
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported
+    )
   }
   save(tabsActivity, srcOut.resolve("${activityClass}.${ktOrJavaExt}"))
 
@@ -90,8 +105,18 @@ fun RecipeExecutor.tabbedActivityRecipe(
   save(pageViewModel, srcOut.resolve("ui/main/PageViewModel.${ktOrJavaExt}"))
 
   val placeholderFragment = when (projectData.language) {
-    Language.Java -> placeholderFragmentJava(fragmentLayoutName, packageName, useAndroidX)
-    Language.Kotlin -> placeholderFragmentKt(fragmentLayoutName, packageName, useAndroidX)
+    Language.Java -> placeholderFragmentJava(
+      fragmentLayoutName = fragmentLayoutName,
+      packageName = packageName,
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported
+    )
+    Language.Kotlin -> placeholderFragmentKt(
+      fragmentLayoutName = fragmentLayoutName,
+      packageName = packageName,
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported
+    )
   }
   save(placeholderFragment, srcOut.resolve("ui/main/PlaceholderFragment.${ktOrJavaExt}"))
 

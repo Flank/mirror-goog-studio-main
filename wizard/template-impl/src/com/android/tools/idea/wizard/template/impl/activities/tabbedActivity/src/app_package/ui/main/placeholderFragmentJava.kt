@@ -16,20 +16,32 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.src.app_package.ui.main
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
 
 fun placeholderFragmentJava(
   fragmentLayoutName: String,
   packageName: String,
-  useAndroidX: Boolean
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
 ): String {
 
   val viewModelInitializationBlock = if (useAndroidX) {
     "pageViewModel = new ViewModelProvider(this).get(PageViewModel.class);"
   } else {
-    """pageViewModel = new ViewModelProvider(this, 
+    """pageViewModel = new ViewModelProvider(this,
                new ViewModelProvider.NewInstanceFactory()).get(PageViewModel.class);"""
   }
+
+  val onCreateViewBlock = if (isViewBindingSupported) """
+      binding = ${layoutToViewBindingClass(fragmentLayoutName)}.inflate(inflater, container, false);
+      View root = binding.getRoot();
+  """ else "View root = inflater.inflate(R.layout.$fragmentLayoutName, container, false);"
+
   return """package ${packageName}.ui.main;
 
 import android.os.Bundle;
@@ -43,6 +55,7 @@ import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX
 import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)};
 import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)};
 import ${packageName}.R;
+${importViewBindingClass(isViewBindingSupported, packageName, fragmentLayoutName)};
 
 /**
  * A placeholder fragment containing a simple view.
@@ -52,6 +65,9 @@ public class PlaceholderFragment extends Fragment {
     private static final String ARG_SECTION_NUMBER = "section_number";
 
     private PageViewModel pageViewModel;
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(fragmentLayoutName)} binding;
+"""}}
 
     public static PlaceholderFragment newInstance(int index) {
         PlaceholderFragment fragment = new PlaceholderFragment();
@@ -76,8 +92,12 @@ public class PlaceholderFragment extends Fragment {
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.${fragmentLayoutName}, container, false);
-        final TextView textView = root.findViewById(R.id.section_label);
+        $onCreateViewBlock
+        final TextView textView = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "section_label",
+          parentView = "root")};
         pageViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
@@ -86,5 +106,13 @@ public class PlaceholderFragment extends Fragment {
         });
         return root;
     }
+
+${renderIf(isViewBindingSupported) {"""
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+"""}}
 }"""
 }
