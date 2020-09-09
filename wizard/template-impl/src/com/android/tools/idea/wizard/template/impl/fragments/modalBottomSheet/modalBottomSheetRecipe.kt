@@ -20,6 +20,7 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
+import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
 import com.android.tools.idea.wizard.template.impl.fragments.listFragment.ColumnCount
 import com.android.tools.idea.wizard.template.impl.fragments.modalBottomSheet.res.layout.fragmentItemListDialogItemXml
 import com.android.tools.idea.wizard.template.impl.fragments.modalBottomSheet.res.layout.fragmentItemListDialogXml
@@ -47,16 +48,36 @@ fun RecipeExecutor.modalBottomSheetRecipe(
   addDependency("com.android.support:design:${appCompatVersion}.+")
   addDependency("com.android.support:recyclerview-v7:${appCompatVersion}.+")
   addMaterialDependency(useAndroidX)
+  addViewBindingSupport(moduleData.viewBindingSupport, true)
 
   save(fragmentItemListDialogXml(fragmentClass, itemLayout, packageName, useAndroidX), resOut.resolve("layout/${listLayout}.xml"))
   save(fragmentItemListDialogItemXml(), resOut.resolve("layout/${itemLayout}.xml"))
 
   val columnCountNumber = columnCount.ordinal + 1
+  val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()
   val itemListDialogFragment = when (projectData.language) {
     Language.Java -> itemListDialogFragmentJava(
-      applicationPackage, columnCountNumber, fragmentClass, itemLayout, listLayout, objectKind, packageName, useAndroidX)
+      applicationPackage = applicationPackage,
+      columnCount = columnCountNumber,
+      fragmentClass = fragmentClass,
+      itemLayout = itemLayout,
+      listLayout = listLayout,
+      objectKind = objectKind,
+      packageName = packageName,
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported
+    )
     Language.Kotlin -> itemListDialogFragmentKt(
-      applicationPackage, columnCountNumber, fragmentClass, itemLayout, listLayout, objectKind, packageName, useAndroidX)
+      applicationPackage = applicationPackage,
+      columnCount = columnCountNumber,
+      fragmentClass = fragmentClass,
+      itemLayout = itemLayout,
+      listLayout = listLayout,
+      objectKind = objectKind,
+      packageName = packageName,
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported
+    )
   }
   save(itemListDialogFragment, srcOut.resolve("${fragmentClass}.${ktOrJavaExt}"))
 

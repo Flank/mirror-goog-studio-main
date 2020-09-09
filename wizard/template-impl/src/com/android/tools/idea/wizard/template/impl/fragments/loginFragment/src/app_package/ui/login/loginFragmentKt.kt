@@ -16,15 +16,28 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.loginFragment.src.app_package.ui.login
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
 
 fun loginFragmentKt(
   fragmentClass: String,
   layoutName: String,
   packageName: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+
+  val onCreateViewBlock = if (isViewBindingSupported) """
+      _binding = ${layoutToViewBindingClass(layoutName)}.inflate(inflater, container, false)
+      return binding.root
+  """ else "return inflater.inflate(R.layout.$layoutName, container, false)"
+
+  return """
 package ${escapeKotlinIdentifier(packageName)}.ui.login
 
 import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)}
@@ -42,19 +55,26 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.Toast
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
 
 import ${escapeKotlinIdentifier(packageName)}.R
 
 class ${fragmentClass} : Fragment() {
 
     private lateinit var loginViewModel: LoginViewModel
+${renderIf(isViewBindingSupported) {"""
+    private var _binding: ${layoutToViewBindingClass(layoutName)}? = null
+    // This property is only valid between onCreateView and
+    // onDestroyView.
+    private val binding get() = _binding!!
+"""}}
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.${layoutName}, container, false)
+        $onCreateViewBlock
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -62,10 +82,30 @@ class ${fragmentClass} : Fragment() {
         loginViewModel = ViewModelProvider(this, LoginViewModelFactory())
             .get(LoginViewModel::class.java)
 
-        val usernameEditText = view.findViewById<EditText>(R.id.username)
-        val passwordEditText = view.findViewById<EditText>(R.id.password)
-        val loginButton = view.findViewById<Button>(R.id.login)
-        val loadingProgressBar = view.findViewById<ProgressBar>(R.id.loading)
+        val usernameEditText = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "username",
+          parentView = "view",
+          className = "EditText")}
+        val passwordEditText = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "password",
+          parentView = "view",
+          className = "EditText")}
+        val loginButton = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "login",
+          parentView = "view",
+          className = "Button")}
+        val loadingProgressBar = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "loading",
+          parentView = "view",
+          className = "ProgressBar")}
 
         loginViewModel.loginFormState.observe(viewLifecycleOwner,
             Observer { loginFormState ->
@@ -141,5 +181,13 @@ class ${fragmentClass} : Fragment() {
         val appContext = context?.applicationContext ?: return
         Toast.makeText(appContext, errorString, Toast.LENGTH_LONG).show()
     }
+
+${renderIf(isViewBindingSupported) {"""
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+"""}}
 }
 """
+}

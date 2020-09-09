@@ -16,14 +16,27 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.loginFragment.src.app_package.ui.login
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
 
 fun loginFragmentJava(
   fragmentClass: String,
   layoutName: String,
   packageName: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+
+  val onCreateViewBlock = if (isViewBindingSupported) """
+      binding = ${layoutToViewBindingClass(layoutName)}.inflate(inflater, container, false);
+      return binding.getRoot();
+  """ else "return inflater.inflate(R.layout.$layoutName, container, false);"
+
+  return """
 package  ${packageName}.ui.login;
 
 import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)};
@@ -46,19 +59,23 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
 
 import ${packageName}.R;
 
 public class ${fragmentClass} extends Fragment {
 
     private LoginViewModel loginViewModel;
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(layoutName)} binding;
+"""}}
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.${layoutName}, container,false);
+        $onCreateViewBlock
     }
 
     @Override
@@ -67,10 +84,26 @@ public class ${fragmentClass} extends Fragment {
         loginViewModel = new ViewModelProvider(this, new LoginViewModelFactory())
                 .get(LoginViewModel.class);
 
-        final EditText usernameEditText = view.findViewById(R.id.username);
-        final EditText passwordEditText = view.findViewById(R.id.password);
-        final Button loginButton = view.findViewById(R.id.login);
-        final ProgressBar loadingProgressBar = view.findViewById(R.id.loading);
+        final EditText usernameEditText = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "username",
+          parentView = "view")};
+        final EditText passwordEditText = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "password",
+          parentView = "view")};
+        final Button loginButton = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "login",
+          parentView = "view")};
+        final ProgressBar loadingProgressBar = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "loading",
+          parentView = "view")};
 
         loginViewModel.getLoginFormState().observe(getViewLifecycleOwner(), new Observer<LoginFormState>() {
             @Override
@@ -161,5 +194,14 @@ public class ${fragmentClass} extends Fragment {
                     Toast.LENGTH_LONG).show();
         }
     }
+
+${renderIf(isViewBindingSupported) {"""
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+"""}}
 }
 """
+}

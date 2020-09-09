@@ -18,6 +18,8 @@ package com.android.tools.idea.wizard.template.impl.fragments.modalBottomSheet.s
 
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.renderIf
 
 fun itemListDialogFragmentKt(
@@ -28,7 +30,8 @@ fun itemListDialogFragmentKt(
   listLayout: String,
   objectKind: String,
   packageName: String,
-  useAndroidX: Boolean
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
 ): String {
   val layoutManagerImport =
     if (columnCount == 1) "import ${getMaterialComponentName("android.support.v7.widget.LinearLayoutManager", useAndroidX)}"
@@ -37,6 +40,31 @@ fun itemListDialogFragmentKt(
   val layoutManagerInstantiation =
     if (columnCount == 1) "activity?.findViewById<RecyclerView>(R.id.list)?.layoutManager = LinearLayoutManager(context)"
     else "list.layoutManager = GridLayoutManager(context, ${columnCount})"
+
+  val onCreateViewBlock = if (isViewBindingSupported) """
+      _binding = ${layoutToViewBindingClass(listLayout)}.inflate(inflater, container, false)
+      return binding.root
+  """ else "return inflater.inflate(R.layout.$listLayout, container, false)"
+
+  val viewHolderBlock = if (isViewBindingSupported) """
+    private inner class ViewHolder internal constructor(binding: ${layoutToViewBindingClass(itemLayout)})
+        : RecyclerView.ViewHolder(binding.root) {
+
+        internal val text: TextView = binding.text
+    }  
+  """ else """
+    private inner class ViewHolder internal constructor(inflater: LayoutInflater, parent: ViewGroup)
+        : RecyclerView.ViewHolder(inflater.inflate(R.layout.${itemLayout}, parent, false)) {
+
+        internal val text: TextView = itemView.findViewById(R.id.text)
+    } 
+  """
+
+  val onCreateViewHolderBlock = if (isViewBindingSupported) """
+    return ViewHolder(${layoutToViewBindingClass(itemLayout)}.inflate(LayoutInflater.from(parent.context), parent, false)) 
+  """ else """
+    return ViewHolder(LayoutInflater.from(parent.context), parent) 
+  """
 
   return """
 package ${escapeKotlinIdentifier(packageName)}
@@ -50,6 +78,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
+${importViewBindingClass(isViewBindingSupported, packageName, itemLayout)}
+${importViewBindingClass(isViewBindingSupported, packageName, listLayout)}
 
 // TODO: Customize parameter argument names
 const val ARG_ITEM_COUNT = "item_count"
@@ -65,9 +95,16 @@ const val ARG_ITEM_COUNT = "item_count"
  */
 class ${fragmentClass} : BottomSheetDialogFragment() {
 
+${renderIf(isViewBindingSupported) {"""
+    private var _binding: ${layoutToViewBindingClass(listLayout)}? = null
+    // This property is only valid between onCreateView and
+    // onDestroyView.
+    private val binding get() = _binding!!
+"""}}
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.${listLayout}, container, false)
+        $onCreateViewBlock
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -75,16 +112,12 @@ class ${fragmentClass} : BottomSheetDialogFragment() {
         activity?.findViewById<RecyclerView>(R.id.list)?.adapter = arguments?.getInt(ARG_ITEM_COUNT)?.let { ItemAdapter(it) }
     }
 
-    private inner class ViewHolder internal constructor(inflater: LayoutInflater, parent: ViewGroup)
-        : RecyclerView.ViewHolder(inflater.inflate(R.layout.${itemLayout}, parent, false)) {
-
-        internal val text: TextView = itemView.findViewById(R.id.text)
-    }
+    $viewHolderBlock 
 
     private inner class ${objectKind}Adapter internal constructor(private val mItemCount: Int) : RecyclerView.Adapter<ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            return ViewHolder(LayoutInflater.from(parent.context), parent)
+            $onCreateViewHolderBlock
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -107,6 +140,13 @@ class ${fragmentClass} : BottomSheetDialogFragment() {
                 }
 
     }
+
+${renderIf(isViewBindingSupported) {"""
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+"""}}
 }
 """
 }
