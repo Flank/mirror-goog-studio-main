@@ -101,8 +101,6 @@ import com.intellij.psi.PsiLiteral
 import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.annotations.Contract
 import org.jetbrains.kotlin.config.LanguageVersionSettings
-import org.jetbrains.kotlin.psi.KtLiteralStringTemplateEntry
-import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UCatchClause
@@ -114,7 +112,6 @@ import org.jetbrains.uast.expressions.UInjectionHost
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.java.JavaUFile
 import org.jetbrains.uast.java.JavaUImportStatement
-import org.jetbrains.uast.kotlin.KotlinUCatchClause
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode

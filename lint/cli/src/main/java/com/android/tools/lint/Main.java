@@ -110,6 +110,7 @@ public class Main {
     private static final String ARG_NO_LINES = "--nolines";
     private static final String ARG_HTML = "--html";
     private static final String ARG_SIMPLE_HTML = "--simplehtml";
+    private static final String ARG_SARIF = "--sarif";
     private static final String ARG_XML = "--xml";
     private static final String ARG_TEXT = "--text";
     private static final String ARG_CONFIG = "--config";
@@ -773,6 +774,33 @@ public class Main {
                             .add(
                                     Reporter.createXmlReporter(
                                             client, output, false, flags.isIncludeXmlFixes()));
+                } catch (IOException e) {
+                    log(e, null);
+                    return ERRNO_INVALID_ARGS;
+                }
+            } else if (arg.equals(ARG_SARIF)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing SARIF output file name");
+                    return ERRNO_INVALID_ARGS;
+                }
+                File output = getOutArgumentPath(args[++index]);
+                // Get an absolute path such that we can ask its parent directory for
+                // write permission etc.
+                output = output.getAbsoluteFile();
+
+                if (output.exists()) {
+                    boolean delete = output.delete();
+                    if (!delete) {
+                        System.err.println("Could not delete old " + output);
+                        return ERRNO_EXISTS;
+                    }
+                }
+                if (output.getParentFile() != null && !output.getParentFile().canWrite()) {
+                    System.err.println("Cannot write SARIF output file " + output);
+                    return ERRNO_EXISTS;
+                }
+                try {
+                    flags.getReporters().add(Reporter.createSarifReporter(client, output));
                 } catch (IOException e) {
                     log(e, null);
                     return ERRNO_INVALID_ARGS;
@@ -1641,6 +1669,8 @@ public class Main {
                             + VALUE_NONE,
                     ARG_XML + " <filename>",
                     "Create an XML report instead.",
+                    ARG_SARIF + " <filename>",
+                    "Create a SARIF report instead.",
                     ARG_TEXT + " <filename>",
                     "Write a text report to the given file. If the filename is just `stdout` (short "
                             + "for standard out), the report is written to the console.",

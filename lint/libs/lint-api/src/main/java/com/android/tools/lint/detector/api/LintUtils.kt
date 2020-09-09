@@ -663,6 +663,40 @@ fun getCommonParent(file1: File, file2: File): File? {
     return null
 }
 
+/** Returns true if the given [parentCandidate] path is a parent of the given [file] */
+fun isParent(parentCandidate: File?, file: File, strict: Boolean = true): Boolean {
+    parentCandidate ?: return false
+
+    val path = file.path
+    val parentPath = parentCandidate.path
+
+    val parentLength = parentPath.length
+    val pathLength = path.length
+    if (pathLength <= parentLength) {
+        if (pathLength == parentLength) {
+            return if (strict) false else path == parentPath
+        }
+        return false
+    } else if (!path.startsWith(parentPath)) {
+        return false
+    } else {
+        return path[parentLength] == '/' || path[parentLength] == '\\'
+    }
+}
+
+/** Returns a RFC3986 compliant URI for the given file */
+fun getFileUri(file: File): String {
+    return file.toURI().toURL().toString().let {
+        // Make URI comply with https://tools.ietf.org/html/rfc3986; the JDK
+        // uses file: instead of file:// prefixes
+        if (it.startsWith("file:") && !it.startsWith("file://")) {
+            "file://" + it.substring(5)
+        } else {
+            it
+        }
+    }
+}
+
 /**
  * Returns the encoded String for the given file. This is usually the same as `Files.toString(file, Charsets.UTF8`, but if there's a UTF byte order mark (for UTF8, UTF_16
  * or UTF_16LE), use that instead.

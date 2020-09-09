@@ -312,7 +312,7 @@ class XmlReporterTest {
             .issues(WakelockDetector.TIMEOUT)
             .run()
             .expectXml(
-                xmlPrologue + expected.trimIndent() + "\n",
+                xmlPrologue + expected.trimIndent(),
                 includeFixes = true
             )
     }
@@ -393,7 +393,7 @@ class XmlReporterTest {
             .issues(TypoDetector.ISSUE)
             .run()
             .expectXml(
-                xmlPrologue + expected.trimIndent() + "\n",
+                xmlPrologue + expected.trimIndent(),
                 includeFixes = true
             )
     }
@@ -470,7 +470,7 @@ class XmlReporterTest {
             .issues(EllipsizeMaxLinesDetector.ISSUE)
             .run()
             .expectXml(
-                xmlPrologue + expected.trimIndent() + "\n",
+                xmlPrologue + expected.trimIndent(),
                 includeFixes = true
             )
     }

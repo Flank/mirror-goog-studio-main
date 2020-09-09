@@ -369,7 +369,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                             "build.gradle:9: Warning: A newer version of $library than $version is available: $expectedVersion [GradleDependency]\n" +
                             "    $dependencyString\n" +
                             "    ${" ".repeat(configuration.length + 1)}" +
-                                "${"~".repeat(library.length + versionString.length + 3)}\n" +
+                            "${"~".repeat(library.length + versionString.length + 3)}\n" +
                             "0 errors, 1 warnings"
 
                         lint().files(source).issues(DEPENDENCY).run().expect(expected)

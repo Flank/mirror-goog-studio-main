@@ -121,12 +121,12 @@ abstract class Reporter protected constructor(
      * Write the given warnings into the report
      *
      * @param stats the vital statistics for the lint report
-     * @param issues the issues to be reported @throws IOException if an error occurs
+     * @param incidents the incidents to be reported @throws IOException if an error occurs
      */
     @Throws(IOException::class)
     abstract fun write(
         stats: LintStats,
-        issues: List<Incident>
+        incidents: List<Incident>
     )
 
     /**
@@ -256,6 +256,22 @@ abstract class Reporter protected constructor(
             return reporter
         }
 
+        /**
+         * Creates a new SARIF [Reporter]
+         *
+         * @param client the associated client
+         * @param output the output file
+         * @param flags the command line flags
+         * @throws IOException if an error occurs
+         */
+        @JvmStatic
+        @Throws(IOException::class)
+        fun createSarifReporter(
+            client: LintCliClient,
+            output: File
+        ): Reporter {
+            return SarifReporter(client, output)
+        }
         /** Encodes the given String as a safe URL substring, escaping spaces etc  */
         @JvmStatic
         fun encodeUrl(url: String): String {
