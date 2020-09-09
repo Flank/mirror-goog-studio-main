@@ -304,9 +304,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                     }
                 )
             task.targetSdkVersion.disallowChanges()
-            task.maxSdkVersion
-                .set(project.provider(creationConfig::maxSdkVersion))
-            task.maxSdkVersion.disallowChanges()
+            task.maxSdkVersion.setDisallowChanges(creationConfig.maxSdkVersion)
             task.mainSplit.set(project.provider { creationConfig.outputs.getMainSplit() })
             task.mainSplit.disallowChanges()
             task.isNamespaced =

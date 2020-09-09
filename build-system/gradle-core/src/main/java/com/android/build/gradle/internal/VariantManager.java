@@ -854,12 +854,12 @@ public class VariantManager<
             if (variantInfo != null) {
                 addVariant(variantInfo);
 
-                VariantT variantProperties = variantInfo.getProperties();
+                VariantT variant = variantInfo.getProperties();
 
-                VariantDslInfo variantDslInfo = variantProperties.getVariantDslInfo();
-                VariantScope variantScope = variantProperties.getVariantScope();
+                VariantDslInfo variantDslInfo = variant.getVariantDslInfo();
+                VariantScope variantScope = variant.getVariantScope();
 
-                int minSdkVersion = variantInfo.getVariant().getMinSdkVersion().getApiLevel();
+                int minSdkVersion = variant.getMinSdkVersion().getApiLevel();
                 int targetSdkVersion = variantDslInfo.getTargetSdkVersion().getApiLevel();
                 if (minSdkVersion > 0 && targetSdkVersion > 0 && minSdkVersion > targetSdkVersion) {
                     projectServices
@@ -874,25 +874,21 @@ public class VariantManager<
                                                     + " equal to targetSdkVersion.",
                                             minSdkVersion,
                                             targetSdkVersion,
-                                            variantProperties.getName()));
+                                            variant.getName()));
                 }
 
                 GradleBuildVariant.Builder variantBuilder = variantInfo.getStats();
                 variantBuilder
                         .setIsDebug(buildType.isDebuggable())
-                        .setMinSdkVersion(
-                                AnalyticsUtil.toProto(variantInfo.getVariant().getMinSdkVersion()))
-                        .setMinifyEnabled(variantProperties.getCodeShrinker() != null)
-                        .setUseMultidex(variantProperties.isMultiDexEnabled())
+                        .setMinSdkVersion(AnalyticsUtil.toProto(variant.getMinSdkVersion()))
+                        .setMinifyEnabled(variant.getCodeShrinker() != null)
+                        .setUseMultidex(variant.isMultiDexEnabled())
                         .setUseLegacyMultidex(
-                                DexingTypeKt.isLegacyMultiDexMode(
-                                        variantProperties.getDexingType()))
-                        .setVariantType(
-                                variantProperties.getVariantType().getAnalyticsVariantType())
+                                DexingTypeKt.isLegacyMultiDexMode(variant.getDexingType()))
+                        .setVariantType(variant.getVariantType().getAnalyticsVariantType())
                         .setDexBuilder(AnalyticsUtil.toProto(variantScope.getDexer()))
                         .setDexMerger(AnalyticsUtil.toProto(variantScope.getDexMerger()))
-                        .setCoreLibraryDesugaringEnabled(
-                                variantProperties.isCoreLibraryDesugaringEnabled())
+                        .setCoreLibraryDesugaringEnabled(variant.isCoreLibraryDesugaringEnabled())
                         .setTestExecution(
                                 AnalyticsUtil.toProto(
                                         globalScope
@@ -900,22 +896,21 @@ public class VariantManager<
                                                 .getTestOptions()
                                                 .getExecutionEnum()));
 
-                if (variantProperties.getCodeShrinker() != null) {
+                if (variant.getCodeShrinker() != null) {
                     variantBuilder.setCodeShrinker(
-                            AnalyticsUtil.toProto(variantProperties.getCodeShrinker()));
+                            AnalyticsUtil.toProto(variant.getCodeShrinker()));
                 }
 
                 if (variantDslInfo.getTargetSdkVersion().getApiLevel() > 0) {
                     variantBuilder.setTargetSdkVersion(
                             AnalyticsUtil.toProto(variantDslInfo.getTargetSdkVersion()));
                 }
-                if (variantDslInfo.getMaxSdkVersion() != null) {
+                if (variant.getMaxSdkVersion() != null) {
                     variantBuilder.setMaxSdkVersion(
-                            ApiVersion.newBuilder().setApiLevel(variantDslInfo.getMaxSdkVersion()));
+                            ApiVersion.newBuilder().setApiLevel(variant.getMaxSdkVersion()));
                 }
 
-                VariantScope.Java8LangSupport supportType =
-                        variantProperties.getJava8LangSupportType();
+                VariantScope.Java8LangSupport supportType = variant.getJava8LangSupportType();
                 if (supportType != VariantScope.Java8LangSupport.INVALID
                         && supportType != VariantScope.Java8LangSupport.UNUSED) {
                     variantBuilder.setJava8LangSupport(AnalyticsUtil.toProto(supportType));

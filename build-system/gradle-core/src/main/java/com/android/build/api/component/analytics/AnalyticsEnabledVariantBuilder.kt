@@ -49,6 +49,14 @@ abstract class AnalyticsEnabledVariantBuilder(
             delegate.minSdkVersion = value
         }
 
+    override var maxSdkVersion: Int?
+        get() = delegate.maxSdkVersion
+        set(value) {
+            stats.variantApiAccessBuilder.addVariantAccessBuilder().type =
+                VariantMethodType.MAX_SDK_VERSION_VALUE_VALUE
+            delegate.maxSdkVersion = value
+        }
+
     override var renderscriptTargetApi: Int
         get() = delegate.renderscriptTargetApi
         set(value) {

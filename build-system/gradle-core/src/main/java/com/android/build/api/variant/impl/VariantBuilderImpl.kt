@@ -49,6 +49,8 @@ abstract class VariantBuilderImpl(
             _minSdkVersion = AndroidVersionImpl(value.apiLevel, value.codename)
         }
 
+    override var maxSdkVersion: Int? = variantDslInfo.maxSdkVersion
+
     override fun unitTest(action: UnitTestBuilder.() -> Unit) {
         throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }

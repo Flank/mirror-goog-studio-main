@@ -35,6 +35,8 @@ interface VariantCreationConfig: ComponentCreationConfig {
     // TODO: move to ConsumableCreationConfig.
     val minSdkVersionWithTargetDeviceApi: AndroidVersion
 
+    val maxSdkVersion: Int?
+
     val isMultiDexEnabled: Boolean
 
     val isCoreLibraryDesugaringEnabled: Boolean

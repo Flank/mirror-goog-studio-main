@@ -48,4 +48,14 @@ class AnalyticsEnabledVariantBuilderTest {
         ).isEqualTo(VariantMethodType.MIN_SDK_VERSION_VALUE_VALUE)
         verify(delegate, times(1)).minSdkVersion = newAndroidVersion
     }
+
+    @Test
+    fun setMaxSdkVersion() {
+        proxy.maxSdkVersion = 23
+        Truth.assertThat(stats.variantApiAccess.variantAccessCount).isEqualTo(1)
+        Truth.assertThat(
+                stats.variantApiAccess.variantAccessList.first().type
+        ).isEqualTo(VariantMethodType.MAX_SDK_VERSION_VALUE_VALUE)
+        verify(delegate, times(1)).maxSdkVersion = 23
+    }
 }

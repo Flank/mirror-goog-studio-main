@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.IntegerOption
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.android.builder.dexing.DexingType
+import com.android.builder.model.ApiVersion
 import com.android.builder.model.CodeShrinker
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -248,6 +249,9 @@ open class AndroidTestImpl @Inject constructor(
 
     override val minSdkVersionWithTargetDeviceApi: AndroidVersion =
         testedVariant.minSdkVersionWithTargetDeviceApi
+    
+    override val maxSdkVersion: Int?
+        get() = testedVariant.maxSdkVersion
 
     override val isMultiDexEnabled: Boolean =
         testedVariant.isMultiDexEnabled

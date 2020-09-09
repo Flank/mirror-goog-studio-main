@@ -145,6 +145,10 @@ abstract class VariantImpl(
     override val minSdkVersion: AndroidVersion
         get() = variant.minSdkVersion
 
+
+    override val maxSdkVersion: Int?
+        get() = variant.maxSdkVersion
+
     private var _isMultiDexEnabled: Boolean? = variantDslInfo.isMultiDexEnabled
     override val isMultiDexEnabled: Boolean
         get() {

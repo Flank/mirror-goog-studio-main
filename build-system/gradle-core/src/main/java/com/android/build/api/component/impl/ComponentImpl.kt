@@ -138,9 +138,6 @@ abstract class ComponentImpl(
     override val variantType: VariantType
         get() = variantDslInfo.variantType
 
-    override val maxSdkVersion: Int?
-        get() = variantDslInfo.maxSdkVersion
-
     override val targetSdkVersion: ApiVersion
         get() = variantDslInfo.targetSdkVersion
 

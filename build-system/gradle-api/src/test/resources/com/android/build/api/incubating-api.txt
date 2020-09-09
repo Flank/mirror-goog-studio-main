@@ -945,8 +945,10 @@ com.android.build.api.variant.Variant.getPackagingOptions: com.android.build.api
 com.android.build.api.variant.VariantBuilder implements com.android.build.api.component.ComponentBuilder, com.android.build.api.component.ActionableComponentObject
 com.android.build.api.variant.VariantBuilder.androidTest: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTestBuilder, kotlin.Unit>)
 com.android.build.api.variant.VariantBuilder.androidTestProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTest, kotlin.Unit>)
+com.android.build.api.variant.VariantBuilder.getMaxSdkVersion: java.lang.Integer ()
 com.android.build.api.variant.VariantBuilder.getMinSdkVersion: com.android.build.api.variant.AndroidVersion ()
 com.android.build.api.variant.VariantBuilder.getRenderscriptTargetApi: int ()
+com.android.build.api.variant.VariantBuilder.setMaxSdkVersion: void (java.lang.Integer)
 com.android.build.api.variant.VariantBuilder.setMinSdkVersion: void (com.android.build.api.variant.AndroidVersion)
 com.android.build.api.variant.VariantBuilder.setRenderscriptTargetApi: void (int)
 com.android.build.api.variant.VariantBuilder.unitTest: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTestBuilder, kotlin.Unit>)

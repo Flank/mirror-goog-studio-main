@@ -83,7 +83,6 @@ interface ComponentCreationConfig : ComponentIdentity {
 
     // TODO : remove as it is now in Variant.
     val minSdkVersion: AndroidVersion
-    val maxSdkVersion: Int?
     val targetSdkVersion: ApiVersion
     val outputs: VariantOutputList
     val manifestArtifactType: InternalArtifactType<Directory>

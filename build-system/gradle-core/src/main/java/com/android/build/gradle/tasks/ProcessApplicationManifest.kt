@@ -373,9 +373,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                     }
                 )
             task.targetSdkVersion.disallowChanges()
-            task.maxSdkVersion
-                .set(project.provider(creationConfig::maxSdkVersion))
-            task.maxSdkVersion.disallowChanges()
+            task.maxSdkVersion.setDisallowChanges(creationConfig.maxSdkVersion)
             task.optionalFeatures.set(project.provider { getOptionalFeatures(creationConfig) })
             task.optionalFeatures.disallowChanges()
             task.jniLibsUseLegacyPackaging.setDisallowChanges(
