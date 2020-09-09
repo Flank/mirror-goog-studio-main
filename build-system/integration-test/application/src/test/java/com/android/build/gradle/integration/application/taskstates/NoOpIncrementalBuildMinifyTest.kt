@@ -132,6 +132,7 @@ class NoOpIncrementalBuildMinifyTest {
                 ":compileReleaseRenderscript",
                 ":compileReleaseShaders",
                 ":compileReleaseUnitTestJavaWithJavac",
+                ":extractReleaseNativeSymbolTables",
                 ":mergeReleaseNativeDebugMetadata",
                 ":mergeReleaseNativeLibs",
                 ":preDebugAndroidTestBuild",

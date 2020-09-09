@@ -93,10 +93,10 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
         }
 
         fun getNativeDebugMetadataFiles(
-            componentProperties: ComponentPropertiesImpl
+            componentProperties: ApplicationVariantPropertiesImpl
         ): FileCollection {
             val nativeDebugMetadataDirs = componentProperties.services.fileCollection()
-            when (componentProperties.variantDslInfo.ndkConfig.debugSymbolLevelEnum) {
+            when (componentProperties.nativeDebugSymbolLevel) {
                 DebugSymbolLevel.FULL -> {
                     nativeDebugMetadataDirs.from(
                         componentProperties.artifacts.get(

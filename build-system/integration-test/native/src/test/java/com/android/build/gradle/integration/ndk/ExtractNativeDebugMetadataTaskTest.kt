@@ -127,8 +127,9 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
                 null -> {
                     assertThat(zip.entries.map { it.toString() })
                         .containsNoneIn(expectedFullEntries)
+                    // the default debugSymbolLevel for release build is SYMBOL_TABLE
                     assertThat(zip.entries.map { it.toString() })
-                        .containsNoneIn(expectedSymbolTableEntries)
+                        .containsAtLeastElementsIn(expectedSymbolTableEntries)
                 }
                 NONE -> {
                     assertThat(zip.entries.map { it.toString() })
@@ -154,7 +155,7 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
 
     @Test
     fun testErrorIfCollidingNativeLibs() {
-        Assume.assumeTrue(debugSymbolLevel == SYMBOL_TABLE || debugSymbolLevel == FULL)
+        Assume.assumeTrue(debugSymbolLevel != NONE)
         // add native libs to app and feature modules
         listOf("app", "feature1").forEach {
             val subProject = project.getSubproject(":$it")
@@ -178,8 +179,9 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
         // first test that the task is skipped in all modules when there are no native libraries.
         val bundleTaskName = getBundleTaskName("release")
         val result1 = project.executor().run("app:$bundleTaskName")
-        // if mode is NONE or null, the task should not be part of the task graph at all.
-        if (debugSymbolLevel == null || debugSymbolLevel == NONE) {
+        // if mode is NONE, the task should not be part of the task graph at all.
+        // the default debugSymbolLevel is SYMBOL_TABLE for release builds.
+        if (debugSymbolLevel == NONE) {
             assertThat(result1.tasks).containsNoneIn(
                 listOf(
                     ":app:extractReleaseNativeDebugMetadata",
@@ -230,6 +232,29 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
             return
         }
         fail("expected error because of invalid debugSymbolLevel value.")
+    }
+
+    @Test
+    fun testNativeDebugMetadataInDefaultDebugBuild() {
+        // assert that debug build does not have a default debugSymbolLevel
+        Assume.assumeTrue(debugSymbolLevel == null)
+        val bundleTaskName = getBundleTaskName("debug")
+        createAbiFile(project.getSubproject(":feature1"), ABI_ARMEABI_V7A, "feature1.so")
+        val result = project.executor().run("app:$bundleTaskName")
+        val bundleFile = getApkFolderOutput("debug").bundleFile
+        assertThat(bundleFile).exists()
+        val bundleEntryPrefix = "/BUNDLE-METADATA/com.android.tools.build.debugsymbols"
+        Zip(bundleFile).use { zip ->
+            assertThat(zip.entries.map { it.toString() })
+                .containsNoneIn(
+                    listOf(
+                        "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature1.so.dbg",
+                        "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature1.so.sym"
+                    )
+                )
+        }
+        assertThat(result.didWorkTasks).doesNotContain(":feature1:extractDebugNativeSymbolTables")
+        assertThat(result.didWorkTasks).doesNotContain(":feature1:extractDebugNativeDebugMetadata")
     }
 
     private fun getBundleTaskName(name: String): String {

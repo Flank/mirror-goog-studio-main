@@ -48,6 +48,7 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -76,6 +77,7 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
     abstract val execOperations: ExecOperations
 
     @Input
+    @Optional
     fun getNdkRevision(): Provider<Revision> = sdkBuildService.flatMap { it.ndkRevisionProvider }
 
     @get:Input

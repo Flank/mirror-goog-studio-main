@@ -28,6 +28,8 @@ import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.dsl.NdkOptions
+import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -151,6 +153,15 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
             return services.projectOptions[StringOption.IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS]?.split(
                 ","
             ) ?: emptyList()
+        }
+
+    override val nativeDebugSymbolLevel: DebugSymbolLevel
+        get() {
+            val debugSymbolLevelOrNull =
+                NdkOptions.DEBUG_SYMBOL_LEVEL_CONVERTER.convert(
+                    variantDslInfo.ndkConfig.debugSymbolLevel
+                )
+            return debugSymbolLevelOrNull ?: if (debuggable) DebugSymbolLevel.NONE else DebugSymbolLevel.SYMBOL_TABLE
         }
 
     // ---------------------------------------------------------------------------------------------

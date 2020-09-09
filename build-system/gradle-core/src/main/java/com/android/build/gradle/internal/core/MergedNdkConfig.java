@@ -88,13 +88,6 @@ public class MergedNdkConfig implements CoreNdkOptions, MergedOptions<CoreNdkOpt
         return debugSymbolLevel;
     }
 
-    @NonNull
-    public DebugSymbolLevel getDebugSymbolLevelEnum() {
-        final DebugSymbolLevel debugSymbolLevelOrNull =
-                NdkOptions.DEBUG_SYMBOL_LEVEL_CONVERTER.convert(debugSymbolLevel);
-        return debugSymbolLevelOrNull == null ? DebugSymbolLevel.NONE : debugSymbolLevelOrNull;
-    }
-
     @Override
     public void append(@NonNull CoreNdkOptions ndkConfig) {
         // override

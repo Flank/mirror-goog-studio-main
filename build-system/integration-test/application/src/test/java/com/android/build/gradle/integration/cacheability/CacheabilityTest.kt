@@ -169,6 +169,7 @@ class CacheabilityTest {
                     ":app:compileReleaseRenderscript",
                     ":app:compileReleaseShaders",
                     ":app:compileReleaseSources",
+                    ":app:extractReleaseNativeSymbolTables",
                     ":app:mergeReleaseNativeDebugMetadata",
                     ":app:processReleaseJavaRes",
                     ":app:processReleaseUnitTestJavaRes",
