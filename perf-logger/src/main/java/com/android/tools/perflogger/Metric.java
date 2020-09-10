@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  *
  * <p>Currently, this is expected to be used in tests run via Bazel's test runners for logging
  * performance data. The data is output in JSON format at the location as specified by the
- * TEST_UNDECLARED_OUTPUT_DIR environment variable. At the end of the test(s), the output files are
+ * TEST_UNDECLARED_OUTPUTS_DIR environment variable. At the end of the test(s), the output files are
  * zipped and stored at WORKSPACE_ROOT/bazel-testlogs for external consumption. Also see
  * https://docs.bazel.build/versions/master/test-encyclopedia.html.
  *
