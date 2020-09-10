@@ -20,6 +20,7 @@ import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.testing.StaticTestData
+import com.android.build.gradle.internal.testing.utp.RetentionConfig
 import com.android.builder.testing.api.DeviceConnector
 import com.android.ide.common.process.JavaProcessExecutor
 import com.android.ide.common.process.JavaProcessInfo
@@ -41,7 +42,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyIterable
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
@@ -70,6 +70,7 @@ class UtpTestRunnerTest {
     @Mock lateinit var mockCoverageDir: File
     @Mock lateinit var mockLogger: ILogger
     @Mock lateinit var mockUtpConfigFactory: UtpConfigFactory
+    @Mock lateinit var mockRetentionConfig: RetentionConfig
 
     private val utpDependencies = object: UtpDependencies() {
         override val launcher = FakeConfigurableFileCollection(File("/pathToLAUNCHER.jar"))
@@ -89,6 +90,7 @@ class UtpTestRunnerTest {
         `when`(mockTestData.minSdkVersion).thenReturn(AndroidVersionImpl(28))
         `when`(mockTestData.testApk).thenReturn(mockTestApk)
         `when`(mockTestData.testedApkFinder).thenReturn { _, _ -> listOf(mockAppApk) }
+        `when`(mockRetentionConfig.enabled).thenReturn(false)
 
         var utpOutputDir: File? = null
         `when`(mockUtpConfigFactory.createRunnerConfigProto(
@@ -101,7 +103,7 @@ class UtpTestRunnerTest {
                 any(File::class.java),
                 any(File::class.java),
                 any(File::class.java),
-                anyBoolean())).then {
+                any(RetentionConfig::class.java))).then {
             utpOutputDir = it.getArgument<File>(5)
             RunnerConfigProto.RunnerConfig.getDefaultInstance()
         }
@@ -151,7 +153,7 @@ class UtpTestRunnerTest {
                 mockExecutorServiceAdapter,
                 utpDependencies,
                 mockSdkComponents,
-                false,
+                mockRetentionConfig,
                 mockUtpConfigFactory)
 
         runner.runTests(
