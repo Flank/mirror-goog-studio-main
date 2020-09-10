@@ -16,16 +16,28 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
 
 fun tabsActivityKt(
   activityClass: String,
   layoutName: String,
   packageName: String,
-  useAndroidX: Boolean) =
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
 
-  """package ${escapeKotlinIdentifier(packageName)}
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layoutName)}.inflate(layoutInflater)
+     setContentView(binding.root)
+  """ else "setContentView(R.layout.$layoutName)"
+
+  return """package ${escapeKotlinIdentifier(packageName)}
 
 import android.os.Bundle
 import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)}
@@ -36,18 +48,32 @@ import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", us
 import android.view.Menu
 import android.view.MenuItem
 import ${packageName}.ui.main.SectionsPagerAdapter
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
 
 class ${activityClass} : AppCompatActivity() {
 
+${renderIf(isViewBindingSupported) {"""
+    private lateinit var binding: ${layoutToViewBindingClass(layoutName)}
+"""}}
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.${layoutName})
+        $contentViewBlock
         val sectionsPagerAdapter = SectionsPagerAdapter(this, supportFragmentManager)
-        val viewPager: ViewPager = findViewById(R.id.view_pager)
+        val viewPager: ViewPager = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "view_pager")}
         viewPager.adapter = sectionsPagerAdapter
-        val tabs: TabLayout = findViewById(R.id.tabs)
+        val tabs: TabLayout = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "tabs")}
         tabs.setupWithViewPager(viewPager)
-        val fab: FloatingActionButton = findViewById(R.id.fab)
+        val fab: FloatingActionButton = ${findViewById(
+          Language.Kotlin,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "fab")}
 
         fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
@@ -55,3 +81,4 @@ class ${activityClass} : AppCompatActivity() {
         }
     }
 }"""
+}

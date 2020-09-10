@@ -34,7 +34,8 @@ const std::string kInstallServer = "install_server";
 
 namespace deploy {
 
-void OverlayInstallCommand::ParseParameters(const proto::InstallerRequest& request) {
+void OverlayInstallCommand::ParseParameters(
+    const proto::InstallerRequest& request) {
   if (!request.has_overlay_install()) {
     return;
   }
@@ -47,8 +48,15 @@ void OverlayInstallCommand::Run(proto::InstallerResponse* response) {
   proto::OverlayInstallResponse* overlay_response =
       response->mutable_overlay_install_response();
 
-  if (!ExtractBinaries(workspace_.GetTmpFolder(),
-                       {kAgent, kAgentAlt, kInstallServer})) {
+  // Determine which agent we need to use.
+#if defined(__aarch64__) || defined(__x86_64__)
+  std::string agent =
+      request_.arch() == proto::Arch::ARCH_64_BIT ? kAgent : kAgentAlt;
+#else
+  std::string agent = kAgent;
+#endif
+
+  if (!ExtractBinaries(workspace_.GetTmpFolder(), {agent, kInstallServer})) {
     overlay_response->set_status(proto::OverlayInstallResponse::SETUP_FAILED);
     ErrEvent("Extracting binaries failed");
     return;
@@ -66,7 +74,7 @@ void OverlayInstallCommand::Run(proto::InstallerResponse* response) {
     return;
   }
 
-  SetUpAgent(overlay_response);
+  SetUpAgent(agent, overlay_response);
   UpdateOverlay(overlay_response);
 
   proto::InstallServerResponse install_response;
@@ -83,20 +91,12 @@ void OverlayInstallCommand::Run(proto::InstallerResponse* response) {
 }
 
 void OverlayInstallCommand::SetUpAgent(
-    proto::OverlayInstallResponse* overlay_response) {
+    const std::string& agent, proto::OverlayInstallResponse* overlay_response) {
   Phase p("SetUpAgent");
 
   std::string version = workspace_.GetVersion() + "-";
   std::string code_cache =
       "/data/data/" + request_.package_name() + "/code_cache/";
-
-  // Determine which agent we need to use.
-#if defined(__aarch64__) || defined(__x86_64__)
-  std::string agent =
-      request_.arch() == proto::Arch::ARCH_64_BIT ? kAgent : kAgentAlt;
-#else
-  std::string agent = kAgent;
-#endif
 
   std::string startup_path = code_cache + "startup_agents/";
   std::string studio_path = code_cache + ".studio/";

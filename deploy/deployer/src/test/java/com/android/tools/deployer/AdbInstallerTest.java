@@ -43,7 +43,7 @@ import org.mockito.Mockito;
 public class AdbInstallerTest {
 
     private static final String INVOCATION =
-            AdbInstaller.INSTALLER_PATH + " -version=wrong_version_hash -oneshot";
+            AdbInstaller.INSTALLER_PATH + " -version=wrong_version_hash";
 
     private static final String INSTALLER_WORKSPACE =
             Deployer.INSTALLER_DIRECTORY + " " + Deployer.INSTALLER_TMP_DIRECTORY;

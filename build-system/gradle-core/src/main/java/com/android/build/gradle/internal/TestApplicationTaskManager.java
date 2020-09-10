@@ -29,6 +29,7 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.*;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.test.TestApplicationTestData;
@@ -118,7 +119,21 @@ public class TestApplicationTaskManager
 
     @Override
     protected void postJavacCreation(@NonNull ComponentCreationConfig creationConfig) {
-        // do nothing.
+        creationConfig
+                .getArtifacts()
+                .appendToAllClasses(
+                        creationConfig
+                                .getServices()
+                                .fileCollection(
+                                        creationConfig
+                                                .getArtifacts()
+                                                .get(InternalArtifactType.JAVAC.INSTANCE),
+                                        creationConfig
+                                                .getVariantData()
+                                                .getAllPreJavacGeneratedBytecode(),
+                                        creationConfig
+                                                .getVariantData()
+                                                .getAllPostJavacGeneratedBytecode()));
     }
 
     @Override

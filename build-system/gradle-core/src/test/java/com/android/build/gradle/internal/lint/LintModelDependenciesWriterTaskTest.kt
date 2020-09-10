@@ -36,8 +36,8 @@ import org.junit.rules.TemporaryFolder
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Base64
+import java.util.stream.Collectors
 import java.util.stream.Collectors.joining
-import java.util.stream.Collectors.toList
 
 /** Smoke test for the LintModelDependenciesWriterTask */
 class LintModelDependenciesWriterTaskTest {
@@ -68,11 +68,12 @@ class LintModelDependenciesWriterTaskTest {
         configureAnalyticsService(project)
         task.taskAction()
 
-        val outputDirectory = task.outputDirectory.get().asFile.toPath()
-        assertThat(outputDirectory).exists()
-        assertThat(Files.list(outputDirectory).use { it.collect(toList()) }).isNotEmpty()
-        assertThat(Files.lines(outputDirectory.resolve("debug--libraries.xml")).use { it.collect(joining("\n")) }).contains("com.example:jar:1")
-
+        val outputDirectory = task.outputDirectory.get().asFile
+        assertThat(outputDirectory).isDirectory()
+        assertThat(outputDirectory.list()?.toList())
+            .containsExactly("debug-mainArtifact-dependencies.xml", "debug-mainArtifact-libraries.xml")
+        assertThat(outputDirectory.resolve("debug-mainArtifact-libraries.xml").readText()).contains("com.example:jar:1")
+        assertThat(outputDirectory.resolve("debug-mainArtifact-dependencies.xml").readText()).contains("com.example:jar:1")
     }
 
     private fun configureAnalyticsService(project: Project) {
@@ -88,6 +89,7 @@ class LintModelDependenciesWriterTaskTest {
             it.projects.set(mutableMapOf())
             it.enableProfileJson.set(true)
             it.taskMetadata.set(mutableMapOf())
+            it.rootProjectPath.set("/path")
         }
     }
 }

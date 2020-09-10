@@ -46,10 +46,12 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiType;
+import com.intellij.psi.util.PsiTypesUtil;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -65,7 +67,6 @@ import org.jetbrains.uast.UParenthesizedExpression;
 import org.jetbrains.uast.UPolyadicExpression;
 import org.jetbrains.uast.UPrefixExpression;
 import org.jetbrains.uast.UQualifiedReferenceExpression;
-import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.USimpleNameReferenceExpression;
 import org.jetbrains.uast.USuperExpression;
 import org.jetbrains.uast.UThisExpression;
@@ -203,10 +204,11 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
         private void visitConstructorCallExpression(
                 @NonNull UCallExpression node, boolean isArray) {
             String typeName = null;
-            UReferenceExpression classReference = node.getClassReference();
             if (mCheckMaps || mCheckValueOf) {
-                if (classReference != null) {
-                    typeName = UastUtils.getQualifiedName(classReference);
+                // Note: cannot use node.getClassReference() currently due to KT-41290.
+                PsiClass classType = PsiTypesUtil.getPsiClass(node.getExpressionType());
+                if (classType != null) {
+                    typeName = classType.getQualifiedName();
                 }
             }
 

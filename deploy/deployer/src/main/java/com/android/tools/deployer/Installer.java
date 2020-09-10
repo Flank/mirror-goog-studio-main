@@ -34,6 +34,9 @@ public interface Installer {
     Deploy.OverlayInstallResponse overlayInstall(Deploy.OverlayInstallRequest request)
             throws IOException;
 
+    Deploy.LiveLiteralUpdateResponse updateLiveLiterals(
+            Deploy.LiveLiteralUpdateRequest liveLiterals) throws IOException;
+
     /**
      * Verify the App's current OverlayID. The app's OverlayID will not be change should it differs.
      */

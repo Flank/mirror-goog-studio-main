@@ -21,6 +21,7 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.debugRes.values.googleMapsApiXml as debugGoogleMapsApiXml
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.releaseRes.values.googleMapsApiXml as releaseGoogleMapsApiXml
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.res.layout.activityMapXml
@@ -43,6 +44,7 @@ fun RecipeExecutor.googleMapsActivityRecipe(
   val ktOrJavaExt = projectData.language.extension
   val simpleName = activityToLayout(activityClass)
   addAllKotlinDependencies(moduleData)
+  addViewBindingSupport(moduleData.viewBindingSupport, true)
 
   addDependency("com.google.android.gms:play-services-maps:+", toBase = moduleData.isDynamic)
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
@@ -68,10 +70,20 @@ fun RecipeExecutor.googleMapsActivityRecipe(
   }
 
   mergeXml(stringsXml(activityTitle, simpleName), finalResOut.resolve("values/strings.xml"))
-
+  val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()
   val mapActivity = when (projectData.language) {
-    Language.Java -> mapActivityJava(activityClass, layoutName, packageName, useAndroidX)
-    Language.Kotlin -> mapActivityKt(activityClass, layoutName, packageName, useAndroidX)
+    Language.Java -> mapActivityJava(
+      activityClass = activityClass,
+      layoutName = layoutName,
+      packageName = packageName,
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported)
+    Language.Kotlin -> mapActivityKt(
+      activityClass = activityClass,
+      layoutName = layoutName,
+      packageName = packageName,
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported)
   }
   save(mapActivity, srcOut.resolve("${activityClass}.${ktOrJavaExt}"))
 

@@ -100,14 +100,14 @@ class ResolveTest : TestCase() {
         assertEquals(
             """
             UFile (package = ) [import kotlin.reflect.full.declaredMemberFunctions...]
-                UImportStatement (isOnDemand = false) [import kotlin.reflect.full.declaredMemberFunctions] => <FAILED>
+                UImportStatement (isOnDemand = false) [import kotlin.reflect.full.declaredMemberFunctions] => PsiMethod:getDeclaredMemberFunctions
                 UClass (name = KotlinTest) [public final class KotlinTest {...}]
                     UMethod (name = test) [public final fun test() : void {...}]
                         UBlockExpression [{...}]
-                            UQualifiedReferenceExpression [KotlinTest.members] => <FAILED>
+                            UQualifiedReferenceExpression [KotlinTest.members] => PsiMethod:getMembers
                                 UClassLiteralExpression [KotlinTest]
                                 USimpleNameReferenceExpression (identifier = members) [members] => PsiMethod:getMembers
-                            UQualifiedReferenceExpression [KotlinTest.declaredMemberFunctions] => <FAILED>
+                            UQualifiedReferenceExpression [KotlinTest.declaredMemberFunctions] => PsiMethod:getDeclaredMemberFunctions
                                 UClassLiteralExpression [KotlinTest]
                                 USimpleNameReferenceExpression (identifier = declaredMemberFunctions) [declaredMemberFunctions] => PsiMethod:getDeclaredMemberFunctions
                     UMethod (name = KotlinTest) [public fun KotlinTest() = UastEmptyExpression]
@@ -140,7 +140,7 @@ class ResolveTest : TestCase() {
         assertEquals(
             """
             UFile (package = pkg) [package pkg...]
-                UImportStatement (isOnDemand = false) [import lib.Bar] => <FAILED>
+                UImportStatement (isOnDemand = false) [import lib.Bar] => PsiClass:Bar
                 UImportStatement (isOnDemand = false) [import lib.Bar2] => PsiClass:Bar2
                 UClass (name = TestKt) [public final class TestKt {...}]
                     UMethod (name = test) [public static final fun test() : void {...}]
@@ -155,7 +155,7 @@ class ResolveTest : TestCase() {
                                 ULocalVariable (name = bar2) [var bar2: lib.Bar2 = <init>("hello2")]
                                     UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 1)) [<init>("hello2")] => PsiMethod:Bar2
                                         UIdentifier (Identifier (Bar2)) [UIdentifier (Identifier (Bar2))]
-                                        USimpleNameReferenceExpression (identifier = <init>, resolvesTo = Bar2) [<init>] => PsiClass:Bar2
+                                        USimpleNameReferenceExpression (identifier = <init>, resolvesTo = Bar2) [<init>] => PsiMethod:Bar2
                                         ULiteralExpression (value = "hello2") ["hello2"]
             """.trimIndent().trim(),
             file?.asResolveString()?.trim()
@@ -204,6 +204,48 @@ class ResolveTest : TestCase() {
                                 ULiteralExpression (value = "hello2") ["hello2"]
             """.trimIndent().trim(),
             file?.asResolveString()?.trim()
+        )
+        Disposer.dispose(pair.second)
+    }
+
+    fun testKt40578() {
+        // Regression test for https://youtrack.jetbrains.com/issue/KT-40578:
+        // write accesses to Kotlin properties should resolve to setter.
+        val source = kotlin(
+            """
+            package test.pkg
+
+            class A {
+                var myField = 0
+                fun mutate() {
+                    myField = 42
+                }
+            }
+            """
+        ).indented()
+
+        val pair = LintUtilsTest.parse(source)
+
+        val uastFile = pair.first.uastFile
+        assertEquals(
+            """
+            UFile (package = test.pkg) [package test.pkg...]
+                UClass (name = A) [public final class A {...}]
+                    UField (name = myField) [@org.jetbrains.annotations.NotNull private var myField: int = 0]
+                        UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull] => <FAILED>
+                        ULiteralExpression (value = 0) [0]
+                    UMethod (name = getMyField) [public final fun getMyField() : int = UastEmptyExpression]
+                    UMethod (name = setMyField) [public final fun setMyField(@null p: int) : void = UastEmptyExpression]
+                        UParameter (name = p) [@null var p: int]
+                            UAnnotation (fqName = null) [@null] => <FAILED>
+                    UMethod (name = mutate) [public final fun mutate() : void {...}]
+                        UBlockExpression [{...}]
+                            UBinaryExpression (operator = =) [myField = 42]
+                                USimpleNameReferenceExpression (identifier = myField) [myField] => KtLightMethodImpl:setMyField
+                                ULiteralExpression (value = 42) [42]
+                    UMethod (name = A) [public fun A() = UastEmptyExpression]
+            """.trimIndent().trim(),
+            uastFile?.asResolveString()?.trim()
         )
         Disposer.dispose(pair.second)
     }

@@ -206,6 +206,17 @@ public class AdbInstaller implements Installer {
         return response;
     }
 
+    @Override
+    public Deploy.LiveLiteralUpdateResponse updateLiveLiterals(
+            Deploy.LiveLiteralUpdateRequest liveLiterals) throws IOException {
+        Deploy.InstallerRequest.Builder request = buildRequest("liveliteralupdate");
+        request.setLiveLiteralRequest(liveLiterals);
+        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
+        Deploy.LiveLiteralUpdateResponse response = installerResponse.getLiveLiteralResponse();
+        logger.verbose("installer liveliteralupdate: " + response.getStatus().toString());
+        return response;
+    }
+
     private Deploy.InstallerResponse sendInstallerRequest(Deploy.InstallerRequest request)
             throws IOException {
         return sendInstallerRequest(request, AdbClient.DEFAULT_TIMEOUT, AdbClient.DEFAULT_TIMEUNIT);

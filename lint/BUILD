@@ -28,8 +28,6 @@ kotlin_library(
         "libs/lint-model/src/main/java/**/*.kt",
         "libs/lint-model/src/main/java/**/*.java",
     ]),
-    # http://b/166582569
-    api_version = "1.3",
     module_name = "lint-model",
     pom = "lint-model.pom",
     resource_strip_prefix = "tools/base/lint/libs/lint-model",
@@ -153,8 +151,6 @@ kotlin_library(
         "libs/lint-api/src/main/java/**/*.kt",
         "libs/lint-api/src/main/java/**/*.java",
     ]),
-    # http://b/166582569
-    api_version = "1.3",
     module_name = "lint-api",
     pom = "lint-api.pom",
     resource_strip_prefix = "tools/base/lint/libs/lint-api",
@@ -264,8 +260,6 @@ kotlin_library(
         "libs/lint-checks/src/main/java/**/*.kt",
         "libs/lint-checks/src/main/java/**/*.java",
     ]),
-    # http://b/166582569
-    api_version = "1.3",
     lint_baseline = "libs/lint-checks/lint_baseline.xml",
     module_name = "lint-checks",
     pom = "lint-checks.pom",
@@ -309,8 +303,6 @@ kotlin_library(
         "libs/lint-gradle-api/src/main/java/**/*.kt",
         "libs/lint-gradle-api/src/main/java/**/*.java",
     ]),
-    # http://b/166582569
-    api_version = "1.3",
     lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
     module_name = "lint-gradle-api",
     pom = "lint-gradle-api.pom",
@@ -349,8 +341,6 @@ kotlin_library(
         "libs/lint-gradle/src/main/java/**/*.kt",
         "libs/lint-gradle/src/main/java/**/*.java",
     ]),
-    # http://b/166582569
-    api_version = "1.3",
     lint_baseline = "lint_baseline_gradle.xml",
     module_name = "lint-gradle",
     pom = "lint-gradle.pom",

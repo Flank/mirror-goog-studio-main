@@ -56,8 +56,6 @@ kotlin_library(
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
-    # http://b/166582569
-    api_version = "1.3",
     pom = ":pom",
     resource_strip_prefix = "tools/base/repository",
     resources = [":tools.resources"],

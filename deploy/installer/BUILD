@@ -150,6 +150,8 @@ cc_library(
         "dump.h",
         "executor/executor_impl.cc",
         "executor/redirect_executor.cc",
+        "live_literal_update.cc",
+        "live_literal_update.h",
         "oid_push.cc",
         "oid_push.h",
         "overlay/overlay.cc",

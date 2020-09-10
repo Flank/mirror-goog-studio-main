@@ -20,6 +20,7 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
 import com.android.tools.idea.wizard.template.impl.fragments.googleAdMobAdsFragment.res.layout.fragmentAdmobXml
 import com.android.tools.idea.wizard.template.impl.fragments.googleAdMobAdsFragment.res.values.dimensXml
 import com.android.tools.idea.wizard.template.impl.fragments.googleAdMobAdsFragment.res.values.stringsXml
@@ -40,6 +41,7 @@ fun RecipeExecutor.googleAdMobAdsFragmentRecipe(
   val ktOrJavaExt = projectData.language.extension
   val applicationPackage = projectData.applicationPackage
   addAllKotlinDependencies(moduleData)
+  addViewBindingSupport(moduleData.viewBindingSupport, true)
 
   addDependency("com.google.android.gms:play-services-ads:+", toBase = moduleData.isDynamic)
   addDependency("com.android.support.constraint:constraint-layout:+")
@@ -49,18 +51,47 @@ fun RecipeExecutor.googleAdMobAdsFragmentRecipe(
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
   save(fragmentAdmobXml(adFormat, fragmentClass, packageName, useAndroidX), resOut.resolve("layout/${layoutName}.xml"))
 
+  val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()
   when (adFormat) {
     AdFormat.Interstitial -> {
       val adMobInterstitialAdFragment = when (projectData.language) {
-        Language.Java -> adMobInterstitialAdFragmentJava(applicationPackage, fragmentClass, layoutName, packageName, useAndroidX)
-        Language.Kotlin -> adMobInterstitialAdFragmentKt(applicationPackage, fragmentClass, layoutName, packageName, useAndroidX)
+        Language.Java -> adMobInterstitialAdFragmentJava(
+          applicationPackage = applicationPackage,
+          fragmentClass = fragmentClass,
+          layoutName = layoutName,
+          packageName = packageName,
+          useAndroidX = useAndroidX,
+          isViewBindingSupported = isViewBindingSupported
+        )
+        Language.Kotlin -> adMobInterstitialAdFragmentKt(
+          applicationPackage = applicationPackage,
+          fragmentClass = fragmentClass,
+          layoutName = layoutName,
+          packageName = packageName,
+          useAndroidX = useAndroidX,
+          isViewBindingSupported = isViewBindingSupported
+        )
       }
       save(adMobInterstitialAdFragment, srcOut.resolve("${fragmentClass}.${ktOrJavaExt}"))
     }
     AdFormat.Banner -> {
       val adMobBannerAdFragment = when (projectData.language) {
-        Language.Java -> adMobBannerAdFragmentJava(applicationPackage, fragmentClass, layoutName, packageName, useAndroidX)
-        Language.Kotlin -> adMobBannerAdFragmentKt(applicationPackage, fragmentClass, layoutName, packageName, useAndroidX)
+        Language.Java -> adMobBannerAdFragmentJava(
+          applicationPackage = applicationPackage,
+          fragmentClass = fragmentClass,
+          layoutName = layoutName,
+          packageName = packageName,
+          useAndroidX = useAndroidX,
+          isViewBindingSupported = isViewBindingSupported
+        )
+        Language.Kotlin -> adMobBannerAdFragmentKt(
+          applicationPackage = applicationPackage,
+          fragmentClass = fragmentClass,
+          layoutName = layoutName,
+          packageName = packageName,
+          useAndroidX = useAndroidX,
+          isViewBindingSupported = isViewBindingSupported
+        )
       }
       save(adMobBannerAdFragment, srcOut.resolve("${fragmentClass}.${ktOrJavaExt}"))
     }

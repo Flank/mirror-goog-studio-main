@@ -33,7 +33,7 @@ fun activitySimpleXml(
 
     <!-- view for AdMob Banner Ad -->
     <com.google.android.gms.ads.AdView
-        android:id="@+id/adView"
+        android:id="@+id/ad_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"

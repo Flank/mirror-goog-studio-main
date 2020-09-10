@@ -16,9 +16,11 @@
 
 package com.android.build.gradle.internal.profile
 
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.profile.AnalyticsService.Params
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.builder.profile.Recorder
+import com.android.tools.analytics.AnalyticsSettings
 import com.android.tools.analytics.Environment
 import com.google.wireless.android.sdk.stats.AndroidStudioEvent
 import com.google.wireless.android.sdk.stats.GradleBuildMemorySample
@@ -62,6 +64,7 @@ abstract class AnalyticsService :
         val enableProfileJson: Property<Boolean>
         val profileDir: Property<File?>
         val taskMetadata: MapProperty<String, TaskMetadata>
+        val rootProjectPath: Property<String>
     }
 
     @get:Inject
@@ -72,10 +75,16 @@ abstract class AnalyticsService :
             ConcurrentHashMap(parameters.projects.get()),
             parameters.enableProfileJson.get(),
             parameters.profileDir.orNull,
-            ConcurrentHashMap(parameters.taskMetadata.get())
+            ConcurrentHashMap(parameters.taskMetadata.get()),
+            parameters.rootProjectPath.get()
         )
 
     private val gradleEnvironment: Environment = GradleAnalyticsEnvironment(provider)
+
+    init {
+        AnalyticsSettings.initialize(
+            LoggerWrapper.getLogger(AnalyticsService::class.java), null, gradleEnvironment)
+    }
 
     override fun close() {
         resourceManager.writeAndFinish(gradleEnvironment)

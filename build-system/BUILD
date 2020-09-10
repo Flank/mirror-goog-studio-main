@@ -209,7 +209,7 @@ maven_repo(
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-gradle-plugin",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-android-extensions-runtime",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-compiler-embeddable",
-        "//prebuilts/tools/common/m2/repository/androidx/compose/compose-compiler/1.0.0-alpha01:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/compose-compiler/1.0.0-alpha02:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions-runtime/1.3.70:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-build-common/1.3.70:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-daemon-client/1.3.70:jar",

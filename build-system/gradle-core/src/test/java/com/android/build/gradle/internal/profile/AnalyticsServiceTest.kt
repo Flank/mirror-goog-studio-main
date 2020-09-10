@@ -102,6 +102,8 @@ class AnalyticsServiceTest {
                         get() = FakeObjectFactory.factory.property(File::class.java).value(mProfileDir)
                     override val taskMetadata: MapProperty<String, TaskMetadata>
                         get() = getTaskMetaData()
+                    override val rootProjectPath: Property<String>
+                        get() = FakeGradleProperty("/path")
                 }
             }
 

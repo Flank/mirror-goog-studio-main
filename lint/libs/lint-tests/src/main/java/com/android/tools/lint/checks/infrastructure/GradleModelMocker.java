@@ -43,11 +43,11 @@ import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Library;
 import com.android.builder.model.LintOptions;
 import com.android.builder.model.MavenCoordinates;
-import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
 import com.android.ide.common.gradle.model.IdeAaptOptions;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
+import com.android.ide.common.gradle.model.IdeAndroidLibrary;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeApiVersion;
 import com.android.ide.common.gradle.model.IdeBuildType;
@@ -56,8 +56,10 @@ import com.android.ide.common.gradle.model.IdeClassField;
 import com.android.ide.common.gradle.model.IdeDependencies;
 import com.android.ide.common.gradle.model.IdeJavaArtifact;
 import com.android.ide.common.gradle.model.IdeJavaCompileOptions;
+import com.android.ide.common.gradle.model.IdeJavaLibrary;
 import com.android.ide.common.gradle.model.IdeLibrary;
 import com.android.ide.common.gradle.model.IdeLintOptions;
+import com.android.ide.common.gradle.model.IdeModuleLibrary;
 import com.android.ide.common.gradle.model.IdeProductFlavor;
 import com.android.ide.common.gradle.model.IdeProductFlavorContainer;
 import com.android.ide.common.gradle.model.IdeSourceProvider;
@@ -65,15 +67,17 @@ import com.android.ide.common.gradle.model.IdeSourceProviderContainer;
 import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions;
 import com.android.ide.common.gradle.model.IdeViewBindingOptions;
-import com.android.ide.common.gradle.model.impl.IdeAndroidLibrary;
 import com.android.ide.common.gradle.model.impl.IdeAndroidLibraryCore;
+import com.android.ide.common.gradle.model.impl.IdeAndroidLibraryDelegate;
+import com.android.ide.common.gradle.model.impl.IdeAndroidLibraryImpl;
 import com.android.ide.common.gradle.model.impl.IdeDependenciesImpl;
-import com.android.ide.common.gradle.model.impl.IdeJavaLibrary;
 import com.android.ide.common.gradle.model.impl.IdeJavaLibraryCore;
-import com.android.ide.common.gradle.model.impl.IdeLibraryDelegate;
+import com.android.ide.common.gradle.model.impl.IdeJavaLibraryDelegate;
+import com.android.ide.common.gradle.model.impl.IdeJavaLibraryImpl;
 import com.android.ide.common.gradle.model.impl.IdeLintOptionsImpl;
-import com.android.ide.common.gradle.model.impl.IdeModuleLibrary;
 import com.android.ide.common.gradle.model.impl.IdeModuleLibraryCore;
+import com.android.ide.common.gradle.model.impl.IdeModuleLibraryDelegate;
+import com.android.ide.common.gradle.model.impl.IdeModuleLibraryImpl;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
@@ -146,24 +150,24 @@ public class GradleModelMocker {
     private IdeAndroidProject project;
     private IdeVariant variant;
 
-    private List<IdeVariant> variants = new ArrayList<IdeVariant>();
-    private GlobalLibraryMap globalLibraryMap;
-    private final Map<IdeLibrary, IdeLibrary> libraryMocks = new HashMap<>();
+    private final List<IdeVariant> variants = new ArrayList<>();
+    private final Map<IdeAndroidLibrary, IdeAndroidLibrary> androidLibraryMocks = new HashMap<>();
+    private final Map<IdeJavaLibrary, IdeJavaLibrary> javaLibraryMocks = new HashMap<>();
+    private final Map<IdeModuleLibrary, IdeModuleLibrary> moduleLibraryMocks = new HashMap<>();
     private final List<IdeBuildType> buildTypes = Lists.newArrayList();
-    private final List<IdeLibrary> androidLibraries = Lists.newArrayList();
-    private final List<IdeLibrary> javaLibraries = Lists.newArrayList();
-    private final List<IdeLibrary> moduleLibraries = Lists.newArrayList();
-    private final List<IdeLibrary> testAndroidLibraries = Lists.newArrayList();
-    private final List<IdeLibrary> testJavaLibraries = Lists.newArrayList();
-    private final List<IdeLibrary> testModuleLibraries = Lists.newArrayList();
-    private final List<IdeLibrary> androidTestAndroidLibraries = Lists.newArrayList();
-    private final List<IdeLibrary> androidTestJavaLibraries = Lists.newArrayList();
-    private final List<IdeLibrary> androidTestModuleLibraries = Lists.newArrayList();
-    private final List<IdeLibrary> allJavaLibraries = Lists.newArrayList();
+    private final List<IdeAndroidLibrary> androidLibraries = Lists.newArrayList();
+    private final List<IdeJavaLibrary> javaLibraries = Lists.newArrayList();
+    private final List<IdeModuleLibrary> moduleLibraries = Lists.newArrayList();
+    private final List<IdeAndroidLibrary> testAndroidLibraries = Lists.newArrayList();
+    private final List<IdeJavaLibrary> testJavaLibraries = Lists.newArrayList();
+    private final List<IdeModuleLibrary> testModuleLibraries = Lists.newArrayList();
+    private final List<IdeAndroidLibrary> androidTestAndroidLibraries = Lists.newArrayList();
+    private final List<IdeJavaLibrary> androidTestJavaLibraries = Lists.newArrayList();
+    private final List<IdeModuleLibrary> androidTestModuleLibraries = Lists.newArrayList();
     private IdeProductFlavor mergedFlavor;
     private IdeProductFlavor defaultFlavor;
     private IdeLintOptions lintOptions;
-    private final HashMap<String, Integer> severityOverrides = new HashMap();
+    private final HashMap<String, Integer> severityOverrides = new HashMap<>();
     private final LintCliFlags flags = new LintCliFlags();
     private File projectDir = new File("");
     private final List<IdeProductFlavor> productFlavors = Lists.newArrayList();
@@ -298,12 +302,6 @@ public class GradleModelMocker {
     public Collection<IdeVariant> getVariants() {
         ensureInitialized();
         return variants;
-    }
-
-    @Nullable
-    public GlobalLibraryMap getGlobalLibraryMap() {
-        ensureInitialized();
-        return globalLibraryMap;
     }
 
     public void syncFlagsTo(LintCliFlags to) {
@@ -705,7 +703,7 @@ public class GradleModelMocker {
                                         path.substring(index + 13, jars - 1)
                                                 .replace("/", ":")
                                                 .replace("\\", ":");
-                                IdeLibrary library =
+                                IdeAndroidLibrary library =
                                         createAndroidLibrary(coordinateString, null, false, lib);
                                 androidLibraries.add(library);
                                 return;
@@ -716,12 +714,13 @@ public class GradleModelMocker {
                             index = path.indexOf(".aar\\");
                         }
                         if (index != -1) {
-                            IdeLibrary library =
+                            IdeAndroidLibrary library =
                                     createAndroidLibrary(coordinateString, null, false, lib);
                             androidLibraries.add(library);
                             return;
                         }
-                        IdeLibrary library = createJavaLibrary(coordinateString, null, false, lib);
+                        IdeJavaLibrary library =
+                                createJavaLibrary(coordinateString, null, false, lib);
                         javaLibraries.add(library);
                     }
                 }
@@ -1961,7 +1960,7 @@ public class GradleModelMocker {
                 addLibrary(dep, artifact);
             } else if (isJavaLibrary(declaration)) {
                 // Not found in dependency graphs: create a single Java library
-                IdeLibrary library = createJavaLibrary(declaration, isProvided);
+                IdeJavaLibrary library = createJavaLibrary(declaration, isProvided);
                 if (artifact == null || artifact.isEmpty()) {
                     javaLibraries.add(library);
                 } else if (artifact.equals("test")) {
@@ -1973,7 +1972,7 @@ public class GradleModelMocker {
                 }
             } else {
                 // Not found in dependency graphs: create a single Android library
-                IdeLibrary library = createAndroidLibrary(declaration, isProvided);
+                IdeAndroidLibrary library = createAndroidLibrary(declaration, isProvided);
                 if (artifact == null || artifact.isEmpty()) {
                     androidLibraries.add(library);
                 } else if (artifact.equals("test")) {
@@ -1994,9 +1993,9 @@ public class GradleModelMocker {
     }
 
     private void addLibrary(@NonNull Dep dep, String artifact) {
-        List<IdeLibrary> androidLibraries;
-        List<IdeLibrary> javaLibraries;
-        List<IdeLibrary> moduleLibraries;
+        List<IdeAndroidLibrary> androidLibraries;
+        List<IdeJavaLibrary> javaLibraries;
+        List<IdeModuleLibrary> moduleLibraries;
         if (artifact == null || artifact.isEmpty()) {
             androidLibraries = this.androidLibraries;
             javaLibraries = this.javaLibraries;
@@ -2017,16 +2016,19 @@ public class GradleModelMocker {
         Collection<IdeLibrary> libraries = dep.createLibrary();
         for (IdeLibrary library : libraries) {
             if (library.getType() == IdeLibrary.LibraryType.LIBRARY_ANDROID) {
-                if (!androidLibraries.contains(library)) {
-                    androidLibraries.add(library);
+                IdeAndroidLibrary androidLibrary = (IdeAndroidLibrary) library;
+                if (!androidLibraries.contains(androidLibrary)) {
+                    androidLibraries.add(androidLibrary);
                 }
             } else if (library.getType() == IdeLibrary.LibraryType.LIBRARY_JAVA) {
-                if (!javaLibraries.contains(library)) {
-                    javaLibraries.add(library);
+                IdeJavaLibrary javaLibrary = (IdeJavaLibrary) library;
+                if (!javaLibraries.contains(javaLibrary)) {
+                    javaLibraries.add(javaLibrary);
                 }
             } else {
-                if (!moduleLibraries.contains(library)) {
-                    moduleLibraries.add(library);
+                IdeModuleLibrary moduleLibrary = (IdeModuleLibrary) library;
+                if (!moduleLibraries.contains(moduleLibrary)) {
+                    moduleLibraries.add(moduleLibrary);
                 }
             }
         }
@@ -2063,11 +2065,11 @@ public class GradleModelMocker {
     }
 
     @NonNull
-    private IdeLibrary createAndroidLibrary(String coordinateString, boolean isProvided) {
+    private IdeAndroidLibrary createAndroidLibrary(String coordinateString, boolean isProvided) {
         return createAndroidLibrary(coordinateString, null, isProvided, null);
     }
 
-    private IdeLibrary createAndroidLibrary(
+    private IdeAndroidLibrary createAndroidLibrary(
             String coordinateString,
             @Nullable String promotedTo,
             boolean isProvided,
@@ -2107,7 +2109,7 @@ public class GradleModelMocker {
             createEmptyJar(jar);
         }
         return createLibraryMock(
-                new IdeAndroidLibrary(
+                new IdeAndroidLibraryImpl(
                         new IdeAndroidLibraryCore(
                                 coordinate.toString(),
                                 dir,
@@ -2131,12 +2133,12 @@ public class GradleModelMocker {
     }
 
     @NonNull
-    private IdeLibrary createJavaLibrary(@NonNull String coordinateString, boolean isProvided) {
+    private IdeJavaLibrary createJavaLibrary(@NonNull String coordinateString, boolean isProvided) {
         return createJavaLibrary(coordinateString, null, isProvided, null);
     }
 
     @NonNull
-    private IdeLibrary createJavaLibrary(
+    private IdeJavaLibrary createJavaLibrary(
             @NonNull String coordinateString,
             @Nullable String promotedTo,
             boolean isProvided,
@@ -2168,19 +2170,33 @@ public class GradleModelMocker {
         }
 
         return createLibraryMock(
-                new IdeJavaLibrary(new IdeJavaLibraryCore(coordinate.toString(), jar), isProvided));
+                new IdeJavaLibraryImpl(
+                        new IdeJavaLibraryCore(coordinate.toString(), jar), isProvided));
     }
 
     @NonNull
-    private IdeLibrary createModuleLibrary(@NonNull String name) {
+    private IdeModuleLibrary createModuleLibrary(@NonNull String name) {
         return createLibraryMock(
-                new IdeModuleLibrary(
+                new IdeModuleLibraryImpl(
                         new IdeModuleLibraryCore(name, "artifacts:" + name, null), false));
     }
 
     @NonNull
-    private IdeLibrary createLibraryMock(@NonNull IdeLibrary library) {
-        return libraryMocks.computeIfAbsent(library, it -> spy(new IdeLibraryDelegate(library)));
+    private IdeAndroidLibrary createLibraryMock(@NonNull IdeAndroidLibrary library) {
+        return androidLibraryMocks.computeIfAbsent(
+                library, it -> spy(new IdeAndroidLibraryDelegate(library)));
+    }
+
+    @NonNull
+    private IdeJavaLibrary createLibraryMock(@NonNull IdeJavaLibrary library) {
+        return javaLibraryMocks.computeIfAbsent(
+                library, it -> spy(new IdeJavaLibraryDelegate(library)));
+    }
+
+    @NonNull
+    private IdeModuleLibrary createLibraryMock(@NonNull IdeModuleLibrary library) {
+        return moduleLibraryMocks.computeIfAbsent(
+                library, it -> spy(new IdeModuleLibraryDelegate(library)));
     }
 
     @NonNull
@@ -2344,12 +2360,15 @@ public class GradleModelMocker {
         return new IdeDependenciesImpl(
                 result.stream()
                         .filter(it -> it.getType() == IdeLibrary.LibraryType.LIBRARY_ANDROID)
+                        .map(it -> (IdeAndroidLibrary) it)
                         .collect(toImmutableList()),
                 result.stream()
                         .filter(it -> it.getType() == IdeLibrary.LibraryType.LIBRARY_JAVA)
+                        .map(it -> (IdeJavaLibrary) it)
                         .collect(toImmutableList()),
                 result.stream()
                         .filter(it -> it.getType() == IdeLibrary.LibraryType.LIBRARY_MODULE)
+                        .map(it -> (IdeModuleLibrary) it)
                         .collect(toImmutableList()),
                 ImmutableList.of());
     }

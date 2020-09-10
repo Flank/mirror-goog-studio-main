@@ -20,6 +20,7 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
 import com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.res.layout.fragmentFullscreenXml
 import com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.res.values.fullScreenColorsXml
 import com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.res.values.fullscreenAttrs
@@ -40,8 +41,8 @@ fun RecipeExecutor.fullscreenFragmentRecipe(
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
+  addViewBindingSupport(moduleData.viewBindingSupport, true)
 
-  val themeName = moduleData.themesData.main.name
   mergeXml(stringsXml(), resOut.resolve("values/strings.xml"))
   mergeXml(fullscreenAttrs(), resOut.resolve("values/attrs.xml"))
   mergeXml(fullScreenColorsXml(), resOut.resolve("values/colors.xml"))
@@ -50,9 +51,22 @@ fun RecipeExecutor.fullscreenFragmentRecipe(
   mergeXml(fullscreenThemesNight(moduleData.themesData), resOut.resolve("values-night/themes.xml"))
   save(fragmentFullscreenXml(fragmentClass, packageName, moduleData.themesData), resOut.resolve("layout/${layoutName}.xml"))
 
+  val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()
   val fullscreenFragment = when (projectData.language) {
-    Language.Java -> fullscreenFragmentJava(fragmentClass, layoutName, packageName, useAndroidX)
-    Language.Kotlin -> fullscreenFragmentKt(fragmentClass, layoutName, packageName, useAndroidX)
+    Language.Java -> fullscreenFragmentJava(
+      fragmentClass = fragmentClass,
+      layoutName = layoutName,
+      packageName = packageName,
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported
+    )
+    Language.Kotlin -> fullscreenFragmentKt(
+      fragmentClass = fragmentClass,
+      layoutName = layoutName,
+      packageName = packageName,
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported
+    )
   }
   save(fullscreenFragment, srcOut.resolve("${fragmentClass}.${ktOrJavaExt}"))
 

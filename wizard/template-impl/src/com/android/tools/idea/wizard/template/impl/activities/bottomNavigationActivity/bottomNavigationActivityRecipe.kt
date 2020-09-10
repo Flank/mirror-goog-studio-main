@@ -28,6 +28,7 @@ import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationAc
 import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity.src.app_package.mainActivityKt
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
+import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
 import com.android.tools.idea.wizard.template.impl.activities.common.navigation.navigationDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.navigation.saveFragmentAndViewModel
@@ -52,6 +53,7 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
   addMaterialDependency(useAndroidX)
+  addViewBindingSupport(moduleData.viewBindingSupport, true)
 
   if (moduleData.apis.minApi.api < 21) {
     addDependency("com.android.support:support-vector-drawable:${appCompatVersion}.+")

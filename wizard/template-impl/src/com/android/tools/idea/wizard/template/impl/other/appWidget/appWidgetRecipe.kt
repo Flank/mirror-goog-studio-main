@@ -21,6 +21,7 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.camelCaseToUnderlines
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.layout.appwidgetConfigureXml
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.layout.appwidgetXml
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.attrsXml
@@ -51,6 +52,7 @@ fun RecipeExecutor.appWidgetRecipe(
   val layoutName = camelCaseToUnderlines(className)
   val themeName = moduleData.themesData.main.name
   addAllKotlinDependencies(moduleData)
+  addViewBindingSupport(moduleData.viewBindingSupport, true)
 
   mergeXml(androidManifestXml(className, configurable, layoutName, packageName), manifestOut.resolve("AndroidManifest.xml"))
 
@@ -79,9 +81,22 @@ fun RecipeExecutor.appWidgetRecipe(
   save(appWidget, srcOut.resolve("${className}.${ktOrJavaExt}"))
 
   if (configurable) {
+    val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()
     val appWidgetConfigureActivity = when (projectData.language) {
-      Language.Java -> appWidgetConfigureActivityJava(projectData.applicationPackage, className, layoutName, packageName)
-      Language.Kotlin -> appWidgetConfigureActivityKt(projectData.applicationPackage, className, layoutName, packageName)
+      Language.Java -> appWidgetConfigureActivityJava(
+        applicationPackage = projectData.applicationPackage,
+        className = className,
+        layoutName = layoutName,
+        packageName = packageName,
+        isViewBindingSupported = isViewBindingSupported
+      )
+      Language.Kotlin -> appWidgetConfigureActivityKt(
+        applicationPackage = projectData.applicationPackage,
+        className = className,
+        layoutName = layoutName,
+        packageName = packageName,
+        isViewBindingSupported = isViewBindingSupported
+      )
     }
     save(appWidgetConfigureActivity, srcOut.resolve("${className}ConfigureActivity.${ktOrJavaExt}"))
   }

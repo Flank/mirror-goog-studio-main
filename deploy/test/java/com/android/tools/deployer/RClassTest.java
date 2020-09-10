@@ -49,7 +49,7 @@ public class RClassTest extends AgentBasedClassRedefinerTestBase {
 
         Deploy.JvmtiError foo = null;
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(Deploy.AgentSwapResponse.Status.JVMTI_ERROR, response.getStatus());
 
         List<Deploy.JvmtiError.Details> details = response.getJvmtiError().getDetailsList();
@@ -77,7 +77,7 @@ public class RClassTest extends AgentBasedClassRedefinerTestBase {
         Deploy.SwapRequest request = createRequest("app.R$id", "app/R$id.dex", false);
         redefiner.redefine(request);
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
 
         // No need to verify the content of the id because those are inlined.
@@ -100,7 +100,7 @@ public class RClassTest extends AgentBasedClassRedefinerTestBase {
         Deploy.SwapRequest request =
                 createRequest("app.R$UnstableId", "app/R$UnstableId.dex", true, state);
         redefiner.redefine(request);
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(
                 Deploy.AgentSwapResponse.Status.UNSUPPORTED_REINIT_R_CLASS_VALUE_MODIFIED,
                 response.getStatus());

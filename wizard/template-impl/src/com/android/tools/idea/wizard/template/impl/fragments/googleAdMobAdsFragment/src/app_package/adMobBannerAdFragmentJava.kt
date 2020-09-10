@@ -16,7 +16,11 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.googleAdMobAdsFragment.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.renderIf
 
 fun adMobBannerAdFragmentJava(
@@ -24,8 +28,16 @@ fun adMobBannerAdFragmentJava(
   fragmentClass: String,
   layoutName: String,
   packageName: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+
+  val onCreateViewBlock = if (isViewBindingSupported) """
+      binding = ${layoutToViewBindingClass(layoutName)}.inflate(inflater, container, false);
+      return binding.getRoot();
+  """ else "return inflater.inflate(R.layout.$layoutName, container, false);"
+
+  return """
 package ${packageName};
 
 import com.google.android.gms.ads.AdRequest;
@@ -42,18 +54,23 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
 
 public class ${fragmentClass} extends Fragment {
     // Remove the below line after defining your own ad unit ID.
     private static final String TOAST_TEXT = "Test ads are being shown. "
             + "To show live ads, replace the ad unit ID in res/values/strings.xml with your own ad unit ID.";
 
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(layoutName)} binding;
+"""}}
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.${layoutName}, container, false);
+        $onCreateViewBlock
     }
 
     @Override
@@ -61,7 +78,11 @@ public class ${fragmentClass} extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         // Load an ad into the AdMob banner view.
-        AdView adView = view.findViewById(R.id.adView);
+        AdView adView = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "ad_view",
+          parentView = "view")};
         AdRequest adRequest = new AdRequest.Builder()
                 .setRequestAgent("android_studio:ad_template").build();
         adView.loadAd(adRequest);
@@ -76,4 +97,13 @@ public class ${fragmentClass} extends Fragment {
         // Remove this after defining your own ad unit ID.
         Toast.makeText(appContext, TOAST_TEXT, Toast.LENGTH_LONG).show();
     }
+
+${renderIf(isViewBindingSupported) {"""
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+"""}}
 }"""
+}

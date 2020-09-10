@@ -4,19 +4,18 @@ load(":maven.bzl", "maven_pom")
 load(":merge_archives.bzl", "merge_jars")
 load(":lint.bzl", "lint_test")
 
-def kotlin_compile(ctx, name, srcs, deps, friends, out, jre = [], api_version = None):
+def kotlin_compile(ctx, name, srcs, deps, friends, out, jre = []):
     """Runs kotlinc on the given source files.
 
     Args:
-        ctx:         the analysis context
-        name:        the name of the module being compiled
-        srcs:        a list of Java and Kotlin source files
-        deps:        a depset of compile-time jar dependencies
-        friends:     a list of friend jars (allowing access to 'internal' members)
-        jre:         a list of jars to put on the bootclasspath, *instead* of the
-                     default JRE determined by kotlinc
-        api_version: allow using declarations only from the specified version of bundled libraries
-        out:         the output jar file
+        ctx:      the analysis context
+        name:     the name of the module being compiled
+        srcs:     a list of Java and Kotlin source files
+        deps:     a depset of compile-time jar dependencies
+        friends:  a list of friend jars (allowing access to 'internal' members)
+        jre:      a list of jars to put on the bootclasspath, *instead* of the
+                    default JRE determined by kotlinc
+        out:      the output jar file
 
     Expects that ctx.files._kotlinc is defined.
 
@@ -35,8 +34,9 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre = [], api_version = 
         args.add("--friend_dir", friend.path)
     if jre:
         args.add("--no-jdk")
-    if api_version:
-        args.add("-api-version", api_version)
+
+    # b/166582569
+    args.add("-api-version", "1.3")
 
     # To enable persistent Bazel workers, all arguments must come in an argfile.
     args.use_param_file("@%s", use_always = True)
@@ -73,7 +73,6 @@ def _kotlin_jar_impl(ctx):
         srcs = ctx.files.srcs,
         deps = compile_deps,
         friends = ctx.files.friends,
-        api_version = ctx.attr.api_version,
         out = ctx.outputs.output_jar,
     )
 
@@ -91,7 +90,6 @@ _kotlin_jar = rule(
             allow_files = [".jar"],
         ),
         "module_name": attr.string(),
-        "api_version": attr.string(mandatory = False),
         "_kotlinc": attr.label(
             executable = True,
             cfg = "host",
@@ -127,8 +125,7 @@ def kotlin_library(
         lint_baseline = None,
         lint_classpath = [],
         lint_is_test_sources = False,
-        module_name = None,
-        api_version = None):
+        module_name = None):
     """Compiles a library jar from Java and Kotlin sources"""
     kotlins = [src for src in srcs if src.endswith(".kt")]
     javas = [src for src in srcs if src.endswith(".java")]
@@ -156,7 +153,6 @@ def kotlin_library(
             visibility = visibility,
             testonly = testonly,
             module_name = module_name,
-            api_version = api_version,
         )
 
     java_name = name + ".java"

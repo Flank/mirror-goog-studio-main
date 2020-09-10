@@ -51,8 +51,8 @@ public class AdbInstallerChannelManager {
         SocketChannel channel = null;
         List<String> parameters = new ArrayList<>();
         parameters.add("-version=" + version);
-        if (mode == AdbInstaller.Mode.ONE_SHOT) {
-            parameters.add("-oneshot");
+        if (mode == AdbInstaller.Mode.DAEMON) {
+            parameters.add("-daemon");
         }
 
         try {

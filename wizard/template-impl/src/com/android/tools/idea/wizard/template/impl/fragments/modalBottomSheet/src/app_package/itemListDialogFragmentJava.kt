@@ -17,6 +17,8 @@
 package com.android.tools.idea.wizard.template.impl.fragments.modalBottomSheet.src.app_package
 
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.renderIf
 
 fun itemListDialogFragmentJava(
@@ -27,7 +29,8 @@ fun itemListDialogFragmentJava(
   listLayout: String,
   objectKind: String,
   packageName: String,
-  useAndroidX: Boolean
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
 ): String {
   val layoutManagerImport =
     if (columnCount == 1) "import ${getMaterialComponentName("android.support.v7.widget.LinearLayoutManager", useAndroidX)};"
@@ -36,6 +39,30 @@ fun itemListDialogFragmentJava(
   val layoutManagerInstantiation =
     if (columnCount == 1) "recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));"
     else "recyclerView.setLayoutManager(new GridLayoutManager(getContext(), ${columnCount}));"
+
+  val onCreateViewBlock = if (isViewBindingSupported) """
+      binding = ${layoutToViewBindingClass(listLayout)}.inflate(inflater, container, false);
+      return binding.getRoot();
+  """ else "return inflater.inflate(R.layout.$listLayout, container, false);"
+
+  val viewHolderBlock = if (isViewBindingSupported) """
+    ViewHolder(${layoutToViewBindingClass(itemLayout)} binding) {
+      super(binding.getRoot());
+      text = binding.text;
+    }  
+  """ else """
+    ViewHolder(LayoutInflater inflater, ViewGroup parent) {
+      // TODO: Customize the item layout
+      super(inflater.inflate(R.layout.${itemLayout}, parent, false));
+      text = itemView.findViewById(R.id.text);
+    } 
+  """
+
+  val onCreateViewHolderBlock = if (isViewBindingSupported) """
+    return new ViewHolder(${layoutToViewBindingClass(itemLayout)}.inflate(LayoutInflater.from(parent.getContext()), parent, false)); 
+  """ else """
+    return new ViewHolder(LayoutInflater.from(parent.getContext()), parent); 
+  """
 
   return """
 package ${packageName};
@@ -51,7 +78,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
-
+${importViewBindingClass(isViewBindingSupported, packageName, itemLayout)};
+${importViewBindingClass(isViewBindingSupported, packageName, listLayout)};
 
 /**
  * <p>A fragment that shows a list of items as a modal bottom sheet.</p>
@@ -64,6 +92,9 @@ public class ${fragmentClass} extends BottomSheetDialogFragment {
 
     // TODO: Customize parameter argument names
     private static final String ARG_ITEM_COUNT = "item_count";
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(listLayout)} binding;
+"""}}
 
     // TODO: Customize parameters
     public static ${fragmentClass} newInstance(int itemCount) {
@@ -78,7 +109,7 @@ public class ${fragmentClass} extends BottomSheetDialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.${listLayout}, container, false);
+        $onCreateViewBlock
     }
 
     @Override
@@ -92,11 +123,7 @@ public class ${fragmentClass} extends BottomSheetDialogFragment {
 
         final TextView text;
 
-        ViewHolder(LayoutInflater inflater, ViewGroup parent) {
-            // TODO: Customize the item layout
-            super(inflater.inflate(R.layout.${itemLayout}, parent, false));
-            text = itemView.findViewById(R.id.text);
-        }
+        $viewHolderBlock 
     }
 
     private class ${objectKind}Adapter extends RecyclerView.Adapter<ViewHolder> {
@@ -110,7 +137,7 @@ public class ${fragmentClass} extends BottomSheetDialogFragment {
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new ViewHolder(LayoutInflater.from(parent.getContext()), parent);
+            $onCreateViewHolderBlock
         }
 
         @Override
@@ -125,6 +152,13 @@ public class ${fragmentClass} extends BottomSheetDialogFragment {
 
     }
 
+${renderIf(isViewBindingSupported) {"""
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+"""}}
 }
 """
 }

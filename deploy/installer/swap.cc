@@ -35,6 +35,7 @@
 #include "tools/base/deploy/common/socket.h"
 #include "tools/base/deploy/common/trace.h"
 #include "tools/base/deploy/common/utils.h"
+#include "tools/base/deploy/installer/binary_extract.h"
 #include "tools/base/deploy/installer/command_cmd.h"
 #include "tools/base/deploy/installer/executor/executor.h"
 #include "tools/base/deploy/installer/executor/runas_executor.h"
@@ -45,10 +46,6 @@ namespace {
 const std::string kAgentFilename = "agent.so";
 const std::string kAgentAltFilename = "agent-alt.so";
 const std::string kServerFilename = "server.so";
-const int kRwFileMode =
-    S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH;
-const int kRxFileMode =
-    S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 }  // namespace
 
 // Note: the use of shell commands for what would typically be regular stdlib
@@ -214,31 +211,6 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
     }
   }
 
-  return true;
-}
-
-bool SwapCommand::WriteArrayToDisk(const unsigned char* array,
-                                   uint64_t array_len,
-                                   const std::string& dst_path) const noexcept {
-  Phase p("WriteArrayToDisk");
-  int fd = IO::open(dst_path, O_WRONLY | O_CREAT, kRwFileMode);
-  if (fd == -1) {
-    ErrEvent("WriteArrayToDisk, open: "_s + strerror(errno));
-    return false;
-  }
-  int written = write(fd, array, array_len);
-  if (written == -1) {
-    ErrEvent("WriteArrayToDisk, write: "_s + strerror(errno));
-    return false;
-  }
-
-  int close_result = close(fd);
-  if (close_result == -1) {
-    ErrEvent("WriteArrayToDisk, close: "_s + strerror(errno));
-    return false;
-  }
-
-  IO::chmod(dst_path, kRxFileMode);
   return true;
 }
 

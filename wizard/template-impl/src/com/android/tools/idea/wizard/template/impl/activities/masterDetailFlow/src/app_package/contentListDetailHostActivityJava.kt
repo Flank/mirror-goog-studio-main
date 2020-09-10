@@ -16,14 +16,24 @@
 package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.src.app_package
 
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 
 fun contentListDetailHostActivityJava(
   packageName: String,
   collection: String,
   activityLayout: String,
   navHostFragmentId: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+  val layoutName = "activity_${activityLayout}"
+  val contentViewBlock = if (isViewBindingSupported) """
+     ${layoutToViewBindingClass(layoutName)} binding = ${layoutToViewBindingClass(layoutName)}.inflate(getLayoutInflater());
+     setContentView(binding.getRoot());
+  """ else "setContentView(R.layout.$layoutName);"
+
+  return """
 package ${packageName};
 
 import android.os.Bundle;
@@ -32,13 +42,14 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
 
 public class ${collection}DetailHostActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_${activityLayout});
+        $contentViewBlock
 
         NavController navController = Navigation.findNavController(this, R.id.${navHostFragmentId});
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.
@@ -55,3 +66,4 @@ public class ${collection}DetailHostActivity extends AppCompatActivity {
     }
 }
   """
+}

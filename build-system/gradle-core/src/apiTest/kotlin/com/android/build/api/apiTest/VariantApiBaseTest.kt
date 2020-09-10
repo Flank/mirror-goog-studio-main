@@ -133,11 +133,17 @@ allprojects {
             // https://github.com/gradle/gradle/issues/1055
             override fun configureBuildSrcBuildFile(globalRepos: List<String>, localRepos: List<String>) =
 """
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     kotlin("jvm") version "$kotlinVersion"
 }
 ${addRepositories(localRepos)}
 ${addGlobalRepositories(globalRepos)}
+
+tasks.withType<KotlinCompile>().configureEach {
+    kotlinOptions.apiVersion = "1.3"
+}
 
 dependencies {
     implementation("com.android.tools.build:gradle-api:${agpVersion}")

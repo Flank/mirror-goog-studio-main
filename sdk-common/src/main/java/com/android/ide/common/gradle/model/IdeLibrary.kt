@@ -190,3 +190,15 @@ interface IdeLibrary {
    */
   val isProvided: Boolean
 }
+
+interface IdeAndroidLibrary: IdeLibrary {
+  override val type: IdeLibrary.LibraryType get() = IdeLibrary.LibraryType.LIBRARY_ANDROID
+}
+
+interface IdeJavaLibrary: IdeLibrary {
+  override val type: IdeLibrary.LibraryType get() = IdeLibrary.LibraryType.LIBRARY_JAVA
+}
+
+interface IdeModuleLibrary: IdeLibrary {
+  override val type: IdeLibrary.LibraryType get() = IdeLibrary.LibraryType.LIBRARY_MODULE
+}

@@ -44,7 +44,8 @@ abstract class AnalyticsConfiguratorService : BuildService<BuildServiceParameter
         ConcurrentHashMap(),
         false,
         null,
-        ConcurrentHashMap()
+        ConcurrentHashMap(),
+        null
     )
 
     private enum class State {

@@ -221,6 +221,9 @@ def _iml_module_impl(ctx):
         if hasattr(this_dep, "module"):
             transitive_data = depset(transitive = [transitive_data, this_dep.module.transitive_data])
             form_deps += this_dep.module.forms
+        elif DefaultInfo in this_dep:
+            transitive_data = depset(transitive = [transitive_data, this_dep[DefaultInfo].default_runfiles.files])
+
         if java_common.provider in this_dep:
             java_deps, transitive_runtime_jars, transitive_compile_time_jars = accumulate_provider(
                 this_dep[java_common.provider],
@@ -553,6 +556,7 @@ def iml_module(
         test_tags = None,
         back_target = 0,
         iml_files = None,
+        data = [],
         bundle_data = [],
         test_main_class = None,
         lint_baseline = None,
@@ -598,7 +602,7 @@ def iml_module(
         deps = prod_deps + ["//tools/base/bazel:langtools"],
         test_deps = test_deps + ["//tools/base/bazel:langtools"],
         test_friends = test_friends,
-        data = bundle_data,
+        data = data + bundle_data,
         test_data = test_data,
         test_class = test_class,
         bundled_deps = bundled_deps,
@@ -733,6 +737,7 @@ def _gen_split_tests(
         tags = split_target.get("tags", default = [])
         data = split_target.get("data", default = [])
         split_timeout = split_target.get("timeout", default = timeout)
+        flaky = split_target.get("flaky")
         if "manual" not in tags:
             split_tests.append(test_name)
         if test_data:
@@ -746,6 +751,7 @@ def _gen_split_tests(
             name = test_name,
             shard_count = shard_count,
             timeout = split_timeout,
+            flaky = flaky,
             data = data,
             tags = tags,
             args = args,

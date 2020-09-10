@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.options.BooleanOption
@@ -30,12 +29,7 @@ import org.junit.Test
  */
 class DisabledSrcResGenTest {
     @get:Rule
-    val rootProject = GradleTestProject.builder()
-        .fromTestProject("applibtest")
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-        // b/166271208
-        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
-        .create()
+    val rootProject = GradleTestProject.builder().fromTestProject("applibtest").create()
 
     private lateinit var appProject: GradleTestProject
     private lateinit var libProject: GradleTestProject

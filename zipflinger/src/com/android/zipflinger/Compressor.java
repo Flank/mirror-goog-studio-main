@@ -86,5 +86,12 @@ public class Compressor {
         }
     }
 
+    // Is it the caller's responsibility to close() the returned InputStream.
+    @NonNull
+    static InputStream wrapToInflate(@NonNull InputStream inputStream) {
+        Inflater inflater = new Inflater(true);
+        return new InflaterInputStream(inputStream, inflater);
+    }
+
     private Compressor() {}
 }

@@ -17,14 +17,12 @@
 #include "tools/base/deploy/common/event.h"
 
 #include <sys/syscall.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include <mutex>
 #include <vector>
 
 #include "tools/base/deploy/common/log.h"
-#include "tools/base/deploy/common/utils.h"
 
 namespace deploy {
 

@@ -34,6 +34,11 @@ class ModelArtifactCompatibilityRule : AttributeCompatibilityRule<String> {
                     AndroidArtifacts.ArtifactType.JAR.type -> details.compatible()
                 }
             }
+            AndroidArtifacts.ArtifactType.LOCAL_EXPLODED_AAR_FOR_LINT.type -> {
+                when (producerValue) {
+                    AndroidArtifacts.ArtifactType.EXPLODED_AAR.type -> details.compatible()
+                }
+            }
         }
     }
 

@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.dsl.TestOptions
-import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
@@ -27,6 +27,8 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 
+private val DEVICE_PREFIX = "dev"
+private val DEVICE_DEVIDER = "_"
 private val SYSTEM_IMAGE_PREFIX = "system-images;"
 private val HASH_DIVIDER = ";"
 
@@ -43,7 +45,7 @@ private val HASH_DIVIDER = ";"
 abstract class ManagedDeviceSetupTask: NonIncrementalTask() {
 
     @get: Internal
-    abstract val sdkService: Property<SdkComponentsBuildService>
+    abstract val avdService: Property<AvdComponentsBuildService>
 
     @get: Input
     abstract val abi: Property<String>
@@ -54,30 +56,34 @@ abstract class ManagedDeviceSetupTask: NonIncrementalTask() {
     @get: Input
     abstract val systemImageVendor: Property<String>
 
+    @get: Input
+    abstract val hardwareProfile: Property<String>
+
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(ManagedDeviceSetupRunnable::class.java) {
-            it.sdkService.set(sdkService)
+            it.avdService.set(avdService)
             it.imageHash.set(computeImageHash())
+            it.deviceName.set(computeDeviceName())
+            it.hardwareProfile.set(hardwareProfile)
         }
     }
 
     abstract class ManagedDeviceSetupRunnable : ProfileAwareWorkAction<ManagedDeviceSetupParams>() {
         override fun run() {
-            val service = parameters.sdkService.get()
-            val imageDirectory = service.sdkImageDirectoryProvider(parameters.imageHash.get())
-            if (!imageDirectory.isPresent) {
-                throw RuntimeException(
-                    "Unable to find system image for packageId: \"${parameters.imageHash.get()}\"")
-            }
-            val systemImage = imageDirectory.get()
+            parameters.avdService.get().avdProvider(
+                parameters.imageHash.get(),
+                parameters.deviceName.get(),
+                parameters.hardwareProfile.get()).get()
 
-            // TODO: b/165626279 create the AVD config from the hardware profile.
+            // TODO(b/165626279) Expand the avd with the emulator command.
         }
     }
 
     abstract class ManagedDeviceSetupParams : ProfileAwareWorkAction.Parameters() {
-        abstract val sdkService: Property<SdkComponentsBuildService>
+        abstract val avdService: Property<AvdComponentsBuildService>
         abstract val imageHash: Property<String>
+        abstract val deviceName: Property<String>
+        abstract val hardwareProfile: Property<String>
     }
 
     private fun computeImageHash(): String {
@@ -85,6 +91,14 @@ abstract class ManagedDeviceSetupTask: NonIncrementalTask() {
                 computeVersionString() + HASH_DIVIDER +
                 computeVendorString() + HASH_DIVIDER +
                 abi.get()
+    }
+
+    private fun computeDeviceName(): String {
+        return DEVICE_PREFIX +
+                apiLevel.get() + DEVICE_DEVIDER +
+                systemImageVendor.get() + DEVICE_DEVIDER +
+                abi.get() + DEVICE_DEVIDER +
+                hardwareProfile.get().replace(' ', '_')
     }
 
     private fun computeVersionString() = "android-${apiLevel.get()}"
@@ -98,19 +112,35 @@ abstract class ManagedDeviceSetupTask: NonIncrementalTask() {
 
     class CreationAction(
         override val name: String,
-        private val sdkService: Provider<SdkComponentsBuildService>,
-        private val managedDevice: ManagedVirtualDevice
+        private val avdService: Provider<AvdComponentsBuildService>,
+        private val systemImageSource: String,
+        private val apiLevel: Int,
+        private val abi: String,
+        private val hardwareProfile: String
     ) : TaskCreationAction<ManagedDeviceSetupTask>() {
+
+        constructor(
+            name: String,
+            avdService: Provider<AvdComponentsBuildService>,
+            managedDevice: ManagedVirtualDevice
+        ): this(
+            name,
+            avdService,
+            managedDevice.systemImageSource,
+            managedDevice.apiLevel,
+            managedDevice.abi,
+            managedDevice.device)
 
         override val type: Class<ManagedDeviceSetupTask>
             get() = ManagedDeviceSetupTask::class.java
 
         override fun configure(task: ManagedDeviceSetupTask) {
-            task.sdkService.setDisallowChanges(sdkService)
+            task.avdService.setDisallowChanges(avdService)
 
-            task.systemImageVendor.setDisallowChanges(managedDevice.systemImageSource)
-            task.apiLevel.setDisallowChanges(managedDevice.apiLevel)
-            task.abi.setDisallowChanges(managedDevice.abi)
+            task.systemImageVendor.setDisallowChanges(systemImageSource)
+            task.apiLevel.setDisallowChanges(apiLevel)
+            task.abi.setDisallowChanges(abi)
+            task.hardwareProfile.setDisallowChanges(hardwareProfile)
         }
 
     }

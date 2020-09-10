@@ -16,15 +16,27 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
 
 fun tabsActivityJava(
   activityClass: String,
   layoutName: String,
   packageName: String,
-  useAndroidX: Boolean) =
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
 
-  """package ${packageName};
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layoutName)}.inflate(getLayoutInflater());
+     setContentView(binding.getRoot());
+  """ else "setContentView(R.layout.$layoutName);"
+
+  return """package ${packageName};
 
 import android.os.Bundle;
 import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)};
@@ -36,19 +48,33 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import ${packageName}.ui.main.SectionsPagerAdapter;
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
 
 public class ${activityClass} extends AppCompatActivity {
+
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(layoutName)} binding;
+"""}}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.${layoutName});
+        $contentViewBlock
         SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager());
-        ViewPager viewPager = findViewById(R.id.view_pager);
+        ViewPager viewPager = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "view_pager")};
         viewPager.setAdapter(sectionsPagerAdapter);
-        TabLayout tabs = findViewById(R.id.tabs);
+        TabLayout tabs = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "tabs")};
         tabs.setupWithViewPager(viewPager);
-        FloatingActionButton fab = findViewById(R.id.fab);
+        FloatingActionButton fab = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "fab")};
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -59,3 +85,4 @@ public class ${activityClass} extends AppCompatActivity {
         });
     }
 }"""
+}

@@ -136,15 +136,58 @@ message ClassDef {
 }
 
 message LiveLiteralUpdateRequest {
+  string package_name = 1;
+
+  // The processes to code swap.
+  repeated int32 process_ids = 2;
+
+  int32 extra_agents = 3;
+
+  Arch arch = 4;
+
+  repeated LiveLiteral updates = 5;
+}
+
+message LiveLiteral {
+ // The "Durable Key" that is used to refer to the variable.
+ string key = 1;
+
+ // The helper class where the value of the live literal resides in.
+ string helper_class = 2;
+
+ // JVM style primitive type name or Ljava/lang/String;
+ string type = 3;
+
+ // Value of the literal in a string format that is can be parsed using
+ // the respective "fromString" method.
+ string value = 4;
 }
 
 message LiveLiteralUpdateResponse {
   enum Status {
     UNKNOWN = 0;
     OK = 1;
-    ERROR = 2;
+    SETUP_FAILED = 2;
+    START_SERVER_FAILED = 3;
+    WRITE_TO_SERVER_FAILED = 4;
+    READ_FROM_SERVER_FAILED = 5;
+    START_SERVER_FAILED_USERDEBUG = 6;
+    READY_FOR_AGENTS_NOT_RECEIVED = 7;
+    AGENT_ATTACH_FAILED = 8;
+    AGENT_ERROR = 9;                      // One or more of the agents reported failure
+    PROCESS_CRASHING = 10;                // One of the processes is crashing
+    PROCESS_NOT_RESPONDING = 11;          // One of the processes is not responding
+    PROCESS_TERMINATED = 12;              // One of the processes terminated during swap
+    MISSING_AGENT_RESPONSES = 13;         // Not all agents responded
   }
   Status status = 1;
+
+  // Additional data to help display a better error message in studio
+  string extra = 2;
+
+  repeated AgentResponse failed_agents = 3;
+
+  repeated AgentExceptionLog agent_logs = 4;
 }
 
 message JvmtiError {
@@ -554,6 +597,7 @@ message InstallServerResponse {
     SERVER_STARTED = 1;
     SERVER_EXITED = 2;
     REQUEST_COMPLETED = 3;
+    ERROR = 4;
   }
 
   Status status = 1;

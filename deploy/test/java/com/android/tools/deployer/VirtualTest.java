@@ -49,7 +49,7 @@ public class VirtualTest extends AgentBasedClassRedefinerTestBase {
         Deploy.SwapRequest request = createRequest("app.Virtuals", "app/Virtuals.dex", false);
         redefiner.redefine(request);
 
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getVirtualsResult");

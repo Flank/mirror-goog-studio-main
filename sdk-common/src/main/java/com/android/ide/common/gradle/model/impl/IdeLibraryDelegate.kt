@@ -16,6 +16,10 @@
 
 package com.android.ide.common.gradle.model.impl
 
-import com.android.ide.common.gradle.model.IdeLibrary
+import com.android.ide.common.gradle.model.IdeAndroidLibrary
+import com.android.ide.common.gradle.model.IdeJavaLibrary
+import com.android.ide.common.gradle.model.IdeModuleLibrary
 
-open class IdeLibraryDelegate(private val delegate: IdeLibrary): IdeLibrary by delegate
+open class IdeAndroidLibraryDelegate(private val delegate: IdeAndroidLibrary): IdeAndroidLibrary by delegate
+open class IdeJavaLibraryDelegate(private val delegate: IdeJavaLibrary): IdeJavaLibrary by delegate
+open class IdeModuleLibraryDelegate(private val delegate: IdeModuleLibrary): IdeModuleLibrary by delegate

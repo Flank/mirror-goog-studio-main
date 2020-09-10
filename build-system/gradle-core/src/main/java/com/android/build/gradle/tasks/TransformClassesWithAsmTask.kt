@@ -40,8 +40,10 @@ import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.ChangeType
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import java.io.File
@@ -52,6 +54,7 @@ import java.io.File
 // TODO: Add parallelism
 @CacheableTask
 abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
+
     @get:Input
     abstract val asmApiVersion: Property<Int>
 
@@ -64,6 +67,12 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
     @get:Incremental
     @get:Classpath
     abstract val inputClassesDir: ConfigurableFileCollection
+
+    // This is used when jacoco instrumented jars are used as inputs
+    @get:Incremental
+    @get:Classpath
+    @get:Optional
+    abstract val inputJarsDir: DirectoryProperty
 
     @get:Nested
     abstract val inputJarsWithIdentity: JarsClasspathInputsWithIdentity
@@ -92,12 +101,12 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
             val instrumentationManager = getInstrumentationManager()
             inputClassesDir.files.filter(File::exists).forEach {
                 instrumentationManager.instrumentClassesFromDirectoryToDirectory(
-                    it,
-                    classesOutputDir.get().asFile
+                        it,
+                        classesOutputDir.get().asFile
                 )
             }
 
-            processJars(instrumentationManager, inputChanges)
+            processJars(instrumentationManager, inputChanges, false)
         }
     }
 
@@ -113,70 +122,92 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
         classesChanges.addedFiles.plus(classesChanges.modifiedFiles).forEach {
             val outputFile = classesOutputDir.get().asFile.resolve(it.normalizedPath)
             instrumentationManager.instrumentModifiedFile(
-                inputFile = it.file,
-                outputFile = outputFile,
-                packageName = it.normalizedPath.removeSuffix("/${it.file.name}")
-                    .replace('/', '.')
+                    inputFile = it.file,
+                    outputFile = outputFile,
+                    packageName = it.normalizedPath.removeSuffix("/${it.file.name}")
+                            .replace('/', '.')
             )
         }
 
-        processJars(instrumentationManager, inputChanges)
+        processJars(instrumentationManager, inputChanges, true)
     }
 
     private fun processJars(
-        instrumentationManager: AsmInstrumentationManager,
-        inputChanges: InputChanges
+            instrumentationManager: AsmInstrumentationManager,
+            inputChanges: InputChanges,
+            isIncremental: Boolean
     ) {
-        val mappingState = inputJarsWithIdentity.getMappingState(inputChanges)
-        if (mappingState.reprocessAll) {
-            FileUtils.deleteDirectoryContents(jarsOutputDir.get().asFile)
-        }
-        mappingState.jarsInfo.forEach { (file, info) ->
-            if (info.hasChanged) {
-                val instrumentedJar = File(jarsOutputDir.get().asFile, info.identity + DOT_JAR)
-                FileUtils.deleteIfExists(instrumentedJar)
-                instrumentationManager.instrumentClassesFromJarToJar(file, instrumentedJar)
+        if (inputJarsDir.isPresent) {
+            if (isIncremental) {
+                inputChanges.getFileChanges(inputJarsDir).forEach { inputJar ->
+                    val instrumentedJar = File(jarsOutputDir.get().asFile, inputJar.file.name)
+                    FileUtils.deleteIfExists(instrumentedJar)
+                    if (inputJar.changeType == ChangeType.ADDED ||
+                            inputJar.changeType == ChangeType.MODIFIED) {
+                        instrumentationManager.instrumentClassesFromJarToJar(inputJar.file,
+                                instrumentedJar)
+                    }
+                }
+            } else {
+                FileUtils.deleteDirectoryContents(jarsOutputDir.get().asFile)
+                inputJarsDir.get().asFile.listFiles()?.forEach { inputJar ->
+                    val instrumentedJar = File(jarsOutputDir.get().asFile, inputJar.name)
+                    instrumentationManager.instrumentClassesFromJarToJar(inputJar, instrumentedJar)
+                }
+            }
+        } else {
+            val mappingState = inputJarsWithIdentity.getMappingState(inputChanges)
+            if (mappingState.reprocessAll) {
+                FileUtils.deleteDirectoryContents(jarsOutputDir.get().asFile)
+            }
+            mappingState.jarsInfo.forEach { (file, info) ->
+                if (info.hasChanged) {
+                    val instrumentedJar = File(jarsOutputDir.get().asFile, info.identity + DOT_JAR)
+                    FileUtils.deleteIfExists(instrumentedJar)
+                    instrumentationManager.instrumentClassesFromJarToJar(file, instrumentedJar)
+                }
             }
         }
     }
 
     private fun getInstrumentationManager(): AsmInstrumentationManager {
         val classesHierarchyResolver =
-            classesHierarchyBuildService.get().getClassesHierarchyResolverBuilder()
-                .addSources(inputClassesDir.files)
-                .addSources(inputJarsWithIdentity.inputJars.files)
-                .addSources(runtimeClasspath.files)
-                .addSources(bootClasspath.files)
-                .build()
+                classesHierarchyBuildService.get().getClassesHierarchyResolverBuilder()
+                        .addSources(inputClassesDir.files)
+                        .addSources(inputJarsWithIdentity.inputJars.files)
+                        .addSources(runtimeClasspath.files)
+                        .addSources(bootClasspath.files)
+                        .build()
         return AsmInstrumentationManager(
-            visitors = visitorsList.get(),
-            apiVersion = asmApiVersion.get(),
-            classesHierarchyResolver = classesHierarchyResolver,
-            framesComputationMode = framesComputationMode.get()
+                visitors = visitorsList.get(),
+                apiVersion = asmApiVersion.get(),
+                classesHierarchyResolver = classesHierarchyResolver,
+                framesComputationMode = framesComputationMode.get()
         )
     }
 
     class CreationAction(
-        creationConfig: ComponentCreationConfig,
-        val isTestCoverageEnabled: Boolean
+            creationConfig: ComponentCreationConfig,
+            val isTestCoverageEnabled: Boolean
     ) : VariantTaskCreationAction<TransformClassesWithAsmTask, ComponentCreationConfig>(
-        creationConfig
+            creationConfig
     ) {
+
         override val name: String = computeTaskName("transform", "ClassesWithAsm")
         override val type: Class<TransformClassesWithAsmTask> =
-            TransformClassesWithAsmTask::class.java
+                TransformClassesWithAsmTask::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<TransformClassesWithAsmTask>) {
             super.handleProvider(taskProvider)
             creationConfig
-                .artifacts
-                .setInitialProvider(taskProvider) { it.classesOutputDir }
-                .on(InternalArtifactType.ASM_INSTRUMENTED_PROJECT_CLASSES)
+                    .artifacts
+                    .setInitialProvider(taskProvider) { it.classesOutputDir }
+                    .on(InternalArtifactType.ASM_INSTRUMENTED_PROJECT_CLASSES)
 
             creationConfig
-                .artifacts
-                .setInitialProvider(taskProvider) { it.jarsOutputDir }
-                .on(InternalArtifactType.ASM_INSTRUMENTED_PROJECT_JARS)
+                    .artifacts
+                    .setInitialProvider(taskProvider) { it.jarsOutputDir }
+                    .on(InternalArtifactType.ASM_INSTRUMENTED_PROJECT_JARS)
         }
 
         override fun configure(task: TransformClassesWithAsmTask) {
@@ -189,14 +220,13 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
 
             if (isTestCoverageEnabled) {
                 task.inputClassesDir.from(
-                    creationConfig.artifacts.get(
-                        InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES
-                    )
+                        creationConfig.artifacts.get(
+                                InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES
+                        )
                 )
-                task.inputJarsWithIdentity.inputJars.from(
-                    creationConfig.artifacts.get(
-                        InternalArtifactType.JACOCO_INSTRUMENTED_JARS
-                    )
+                creationConfig.artifacts.setTaskInputToFinalProduct(
+                        InternalArtifactType.JACOCO_INSTRUMENTED_JARS,
+                        task.inputJarsDir
                 )
             } else {
                 task.inputClassesDir.from(creationConfig.artifacts.getAllClasses().filter {
@@ -204,9 +234,9 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
                 })
 
                 task.inputJarsWithIdentity.inputJars.from(
-                    creationConfig.artifacts.getAllClasses().filter {
-                        it.name.endsWith(DOT_JAR)
-                    }
+                        creationConfig.artifacts.getAllClasses().filter {
+                            it.name.endsWith(DOT_JAR)
+                        }
                 )
             }
 
@@ -215,15 +245,15 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
             task.runtimeClasspath.from(creationConfig.variantScope.providedOnlyClasspath)
 
             task.runtimeClasspath.from(
-                creationConfig.variantDependencies.getArtifactFileCollection(
-                    AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                    AndroidArtifacts.ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.CLASSES_JAR
-                )
+                    creationConfig.variantDependencies.getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                            AndroidArtifacts.ArtifactScope.ALL,
+                            AndroidArtifacts.ArtifactType.CLASSES_JAR
+                    )
             )
 
             task.classesHierarchyBuildService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
+                    getBuildService(creationConfig.services.buildServiceRegistry)
             )
         }
     }

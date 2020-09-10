@@ -98,13 +98,13 @@ class StripDebugSymbolsTaskTest {
 
     @Test
     fun `test non-incremental`() {
-        val excludePatterns = listOf("**/doNotStrip.so")
+        val keepDebugSymbols = setOf("**/doNotStrip.so")
 
         StripDebugSymbolsDelegate(
             workers,
             inputDir,
             outputDir,
-            excludePatterns,
+            keepDebugSymbols,
             stripToolFinderProvider,
             null,
             instantiatorTask
@@ -149,7 +149,7 @@ class StripDebugSymbolsTaskTest {
         val changedInputs =
             mapOf(Pair(x86Foo, FileStatus.NEW), Pair(armeabiDoNotStrip, FileStatus.NEW))
 
-        val excludePatterns = listOf("**/doNotStrip.so")
+        val excludePatterns = setOf("**/doNotStrip.so")
 
         StripDebugSymbolsDelegate(
             workers,

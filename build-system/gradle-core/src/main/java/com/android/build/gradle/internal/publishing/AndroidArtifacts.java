@@ -82,6 +82,8 @@ public class AndroidArtifacts {
     private static final String TYPE_LINT_JAR = "android-lint";
     private static final String TYPE_LINT_MODULE = "android-lint-module";
     private static final String TYPE_LINT_DEPENDENCIES = "android-lint-dependencies";
+    private static final String TYPE_LOCAL_AAR_FOR_LINT = "android-lint-local-aar";
+    private static final String TYPE_LOCAL_EXPLODED_AAR_FOR_LINT = "android-lint-exploded-aar";
     private static final String TYPE_EXT_ANNOTATIONS = "android-ext-annot";
     private static final String TYPE_PUBLIC_RES = "android-public-res";
     private static final String TYPE_SYMBOL = "android-symbol";
@@ -362,6 +364,11 @@ public class AndroidArtifacts {
         LINT(TYPE_LINT_JAR),
         LINT_MODULE(TYPE_LINT_MODULE),
         LINT_DEPENDENCIES(TYPE_LINT_DEPENDENCIES),
+        // An AAR built from a library project for lint to consume.
+        LOCAL_AAR_FOR_LINT(TYPE_LOCAL_AAR_FOR_LINT),
+        // Exploded AARs from library projects for lint to consume when not run with check
+        // dependencies.
+        LOCAL_EXPLODED_AAR_FOR_LINT(TYPE_LOCAL_EXPLODED_AAR_FOR_LINT),
 
         APK_MAPPING(TYPE_MAPPING),
         APK_METADATA(TYPE_METADATA),

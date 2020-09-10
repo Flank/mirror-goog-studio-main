@@ -191,8 +191,10 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
                     private val field1: Int = 0
                     internal var field2: Int = 0
                     var field3: Int = 0
-                    private val field4 = 100
-                    private val field5 = arrayOfNulls<Inner>(100)
+                    private val field4: Int get() = 100
+                    private var field5 = 0
+                        get() = field
+                        set(newValue) { field = newValue }
 
 
                     private constructor()
@@ -214,11 +216,12 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
                             AccessTest2()   // ERROR
                             AccessTest2(42) // OK - package private
 
-                            val f1 = field1 // ERROR
+                            val f1 = field1 // OK
                             val f2 = field2 // OK - package private
                             val f3 = field3 // OK - public
-                            val f4 = field4 // OK (constants inlined)
+                            val f4 = field4 // ERROR
                             val f5 = field5 // ERROR
+                            field5 = 42 // ERROR
 
                             method1() // ERROR
                             method2() // OK - package private
@@ -238,14 +241,15 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
                     fun viaAnonymousInner() {
                         val btn = object : Any() {
                             fun method4() {
-                                AccessTest() // ERROR
-                                AccessTest(42) // OK - package private
+                                AccessTest2() // ERROR
+                                AccessTest2(42) // OK - package private
 
-                                val f1 = field1 // ERROR
+                                val f1 = field1 // OK
                                 val f2 = field2 // OK - package private
                                 val f3 = field3 // OK - public
-                                val f4 = field4 // OK (constants inlined)
+                                val f4 = field4 // ERROR
                                 val f5 = field5 // ERROR
+                                field5 = 42 // ERROR
 
                                 method1() // ERROR
                                 method2() // OK - package private
@@ -258,43 +262,78 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             """
-            src/test/pkg/AccessTest2.kt:29: Warning: Access to private constructor of class AccessTest2 requires synthetic accessor [SyntheticAccessor]
+            src/test/pkg/AccessTest2.kt:31: Warning: Access to private constructor of class AccessTest2 requires synthetic accessor [SyntheticAccessor]
                         AccessTest2()   // ERROR
                         ~~~~~~~~~~~
-            src/test/pkg/AccessTest2.kt:36: Warning: Access to private field field5 of class AccessTest2 requires synthetic accessor [SyntheticAccessor]
+            src/test/pkg/AccessTest2.kt:37: Warning: Access to private method getField4 of class AccessTest2 requires synthetic accessor [SyntheticAccessor]
+                        val f4 = field4 // ERROR
+                                 ~~~~~~
+            src/test/pkg/AccessTest2.kt:38: Warning: Access to private method getField5 of class AccessTest2 requires synthetic accessor [SyntheticAccessor]
                         val f5 = field5 // ERROR
                                  ~~~~~~
-            src/test/pkg/AccessTest2.kt:38: Warning: Access to private method method1 of class AccessTest2 requires synthetic accessor [SyntheticAccessor]
+            src/test/pkg/AccessTest2.kt:39: Warning: Access to private method setField5 of class AccessTest2 requires synthetic accessor [SyntheticAccessor]
+                        field5 = 42 // ERROR
+                        ~~~~~~
+            src/test/pkg/AccessTest2.kt:41: Warning: Access to private method method1 of class AccessTest2 requires synthetic accessor [SyntheticAccessor]
                         method1() // ERROR
                         ~~~~~~~
-            src/test/pkg/AccessTest2.kt:63: Warning: Access to private field field5 of class AccessTest2 requires synthetic accessor [SyntheticAccessor]
+            src/test/pkg/AccessTest2.kt:59: Warning: Access to private constructor of class AccessTest2 requires synthetic accessor [SyntheticAccessor]
+                            AccessTest2() // ERROR
+                            ~~~~~~~~~~~
+            src/test/pkg/AccessTest2.kt:65: Warning: Access to private method getField4 of class AccessTest2 requires synthetic accessor [SyntheticAccessor]
+                            val f4 = field4 // ERROR
+                                     ~~~~~~
+            src/test/pkg/AccessTest2.kt:66: Warning: Access to private method getField5 of class AccessTest2 requires synthetic accessor [SyntheticAccessor]
                             val f5 = field5 // ERROR
                                      ~~~~~~
-            src/test/pkg/AccessTest2.kt:65: Warning: Access to private method method1 of class AccessTest2 requires synthetic accessor [SyntheticAccessor]
+            src/test/pkg/AccessTest2.kt:67: Warning: Access to private method setField5 of class AccessTest2 requires synthetic accessor [SyntheticAccessor]
+                            field5 = 42 // ERROR
+                            ~~~~~~
+            src/test/pkg/AccessTest2.kt:69: Warning: Access to private method method1 of class AccessTest2 requires synthetic accessor [SyntheticAccessor]
                             method1() // ERROR
                             ~~~~~~~
-            0 errors, 5 warnings
+            0 errors, 10 warnings
             """
         ).expectFixDiffs(
             """
-                Fix for src/test/pkg/AccessTest2.kt line 29: Make internal:
-                @@ -13 +13
+                Fix for src/test/pkg/AccessTest2.kt line 31: Make internal:
+                @@ -15 +15
                 -     private constructor()
                 +     internal constructor()
-                Fix for src/test/pkg/AccessTest2.kt line 36: Make internal:
-                @@ -10 +10
-                -     private val field5 = arrayOfNulls<Inner>(100)
-                +     internal val field5 = arrayOfNulls<Inner>(100)
+                Fix for src/test/pkg/AccessTest2.kt line 37: Make internal:
+                @@ -9 +9
+                -     private val field4: Int get() = 100
+                +     internal val field4: Int get() = 100
                 Fix for src/test/pkg/AccessTest2.kt line 38: Make internal:
-                @@ -17 +17
+                @@ -10 +10
+                -     private var field5 = 0
+                +     internal var field5 = 0
+                Fix for src/test/pkg/AccessTest2.kt line 39: Make internal:
+                @@ -10 +10
+                -     private var field5 = 0
+                +     internal var field5 = 0
+                Fix for src/test/pkg/AccessTest2.kt line 41: Make internal:
+                @@ -19 +19
                 -     private fun method1() {
                 +     internal fun method1() {
-                Fix for src/test/pkg/AccessTest2.kt line 63: Make internal:
-                @@ -10 +10
-                -     private val field5 = arrayOfNulls<Inner>(100)
-                +     internal val field5 = arrayOfNulls<Inner>(100)
+                Fix for src/test/pkg/AccessTest2.kt line 59: Make internal:
+                @@ -15 +15
+                -     private constructor()
+                +     internal constructor()
                 Fix for src/test/pkg/AccessTest2.kt line 65: Make internal:
-                @@ -17 +17
+                @@ -9 +9
+                -     private val field4: Int get() = 100
+                +     internal val field4: Int get() = 100
+                Fix for src/test/pkg/AccessTest2.kt line 66: Make internal:
+                @@ -10 +10
+                -     private var field5 = 0
+                +     internal var field5 = 0
+                Fix for src/test/pkg/AccessTest2.kt line 67: Make internal:
+                @@ -10 +10
+                -     private var field5 = 0
+                +     internal var field5 = 0
+                Fix for src/test/pkg/AccessTest2.kt line 69: Make internal:
+                @@ -19 +19
                 -     private fun method1() {
                 +     internal fun method1() {
                 """

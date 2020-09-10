@@ -16,6 +16,10 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.googleAdMobAdsActivity.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.impl.fragments.googleAdMobAdsFragment.AdFormat
 import com.android.tools.idea.wizard.template.renderIf
 
@@ -26,7 +30,8 @@ fun simpleActivityJava(
   layoutName: String,
   menuName: String,
   packageName: String,
-  superClassFqcn: String
+  superClassFqcn: String,
+  isViewBindingSupported: Boolean
 ): String {
   val importBlock = when (adFormat) {
     AdFormat.Banner -> """
@@ -53,14 +58,20 @@ import com.google.android.gms.ads.InterstitialAd;
   val onCreateBlock = when (adFormat) {
     AdFormat.Banner -> """
         // Load an ad into the AdMob banner view.
-        AdView adView = (AdView) findViewById(R.id.adView);
+        AdView adView = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "ad_view")};
         AdRequest adRequest = new AdRequest.Builder()
                 .setRequestAgent("android_studio:ad_template").build();
         adView.loadAd(adRequest);
     """
     AdFormat.Interstitial -> """
         // Create the next level button, which tries to show an interstitial when clicked.
-        mNextLevelButton = ((Button) findViewById(R.id.next_level_button));
+        mNextLevelButton = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "next_level_button")};
         mNextLevelButton.setEnabled(false);
         mNextLevelButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -70,7 +81,10 @@ import com.google.android.gms.ads.InterstitialAd;
         });
 
         // Create the text view to show the level number.
-        mLevelTextView = (TextView) findViewById(R.id.level);
+        mLevelTextView = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "level")};
         mLevel = START_LEVEL;
 
         // Create the InterstitialAd and set the adUnitId (defined in values/strings.xml).
@@ -131,6 +145,11 @@ import com.google.android.gms.ads.InterstitialAd;
 """
   }
 
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layoutName)}.inflate(getLayoutInflater());
+     setContentView(binding.getRoot());
+  """ else "setContentView(R.layout.$layoutName);"
+
   return """
 package ${packageName};
 
@@ -144,10 +163,10 @@ ${renderIf(adFormat == AdFormat.Interstitial) {"""
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-"""
-  }}
+"""}}
 
 import android.widget.Toast;
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
 
 public class ${activityClass} extends AppCompatActivity {
@@ -155,14 +174,16 @@ public class ${activityClass} extends AppCompatActivity {
     private static final String TOAST_TEXT = "Test ads are being shown. "
             + "To show live ads, replace the ad unit ID in res/values/strings.xml with your own ad unit ID.";
 
-$interstitialVariablesBlock
+    $interstitialVariablesBlock
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(layoutName)} binding;
+"""}}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.${layoutName});
-
-$onCreateBlock
+        $contentViewBlock
+        $onCreateBlock
 
         // Toasts the test ad message on the screen. Remove this after defining your own ad unit ID.
         Toast.makeText(this, TOAST_TEXT, Toast.LENGTH_LONG).show();

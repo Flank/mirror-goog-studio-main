@@ -16,7 +16,11 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.googleAdMobAdsFragment.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.renderIf
 
 fun adMobInterstitialAdFragmentJava(
@@ -24,8 +28,16 @@ fun adMobInterstitialAdFragmentJava(
   fragmentClass: String,
   layoutName: String,
   packageName: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+
+  val onCreateViewBlock = if (isViewBindingSupported) """
+      binding = ${layoutToViewBindingClass(layoutName)}.inflate(inflater, container, false);
+      return binding.getRoot();
+  """ else "return inflater.inflate(R.layout.$layoutName, container, false);"
+
+  return """
 package ${packageName};
 
 import com.google.android.gms.ads.AdListener;
@@ -44,7 +56,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }} 
+${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
 
 public class ${fragmentClass} extends Fragment {
     // Remove the below line after defining your own ad unit ID.
@@ -56,13 +69,16 @@ public class ${fragmentClass} extends Fragment {
     private Button mNextLevelButton;
     private InterstitialAd mInterstitialAd;
     private TextView mLevelTextView;
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(layoutName)} binding;
+"""}}
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.${layoutName}, container, false);
+        $onCreateViewBlock
     }
 
     @Override
@@ -70,10 +86,18 @@ public class ${fragmentClass} extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         // Create the next level button, which tries to show an interstitial when clicked.
-        mNextLevelButton = view.findViewById(R.id.next_level_button);
+        mNextLevelButton = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "next_level_button",
+          parentView = "view")};
 
         // Create the text view to show the level number.
-        mLevelTextView = view.findViewById(R.id.level);
+        mLevelTextView = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "level",
+          parentView = "view")};
         mLevel = START_LEVEL;
     }
 
@@ -145,4 +169,13 @@ public class ${fragmentClass} extends Fragment {
         mInterstitialAd = newInterstitialAd(context);
         loadInterstitial();
     }
+
+${renderIf(isViewBindingSupported) {"""
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+"""}}
 }"""
+}

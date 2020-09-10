@@ -2810,28 +2810,6 @@ class LintDriver
                 return true
             }
         }
-
-        // Workaround: Kotlin AST is missing these annotations (IDEA-234749)
-        if (clause is KotlinUCatchClause) {
-            clause.sourcePsi.catchParameter?.annotationEntries?.forEach { annotation ->
-                if (annotation.shortName?.asString() == SUPPRESS_LINT) {
-                    for (arg in annotation.valueArguments) {
-                        val expression = arg.getArgumentExpression()
-                        if (expression is KtStringTemplateExpression) {
-                            for (entry in expression.entries) {
-                                if (entry is KtLiteralStringTemplateEntry) {
-                                    val text = entry.text
-                                    if (issue.id == text) {
-                                        return true
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         return false
     }
 

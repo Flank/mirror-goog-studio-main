@@ -16,13 +16,17 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.fixtures.FakeFileChange
+import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
+import com.android.build.gradle.internal.fixtures.FakeInputChanges
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
 import com.android.build.gradle.options.SyncOptions
+import com.android.build.gradle.tasks.toSerializable
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
 import com.android.builder.dexing.DexMergerTool
@@ -30,8 +34,13 @@ import com.android.builder.dexing.DexParameters
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.testutils.TestInputsGenerator
+import com.android.testutils.TestUtils
 import com.android.testutils.truth.DexSubject.assertThatDex
+import com.android.testutils.truth.FileSubject.assertThat
+import com.google.common.truth.Truth.assertThat
 import org.gradle.testfixtures.ProjectBuilder
+import org.gradle.work.ChangeType
+import org.gradle.work.InputChanges
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -45,9 +54,10 @@ class DexMergingTaskTest {
 
     @Test
     fun testMonoDex() {
-        val inputDirs = listOf(generateDexArchive("test/A", "test/B", "test/C"))
+        val inputDirs = listOf(generateDexArchive(listOf("test/A", "test/B", "test/C")))
         val outputDir = tmp.newFolder()
-        runDexMerging(inputDirs, outputDir, DexingType.MONO_DEX)
+
+        runDexMerging(inputDirs, outputDir, dexingType = DexingType.MONO_DEX)
 
         assertThatDex(outputDir.resolve("classes.dex")).containsExactlyClassesIn(
                 listOf("Ltest/A;", "Ltest/B;", "Ltest/C;")
@@ -56,10 +66,17 @@ class DexMergingTaskTest {
 
     @Test
     fun testLegacyMultiDex() {
-        val inputDirs = listOf(generateDexArchive("test/A", "test/B", "test/C"))
+        val inputDirs = listOf(generateDexArchive(listOf("test/A", "test/B", "test/C")))
         val mainDexListFile = tmp.newFile().apply { writeText("test/A.class") }
         val outputDir = tmp.newFolder()
-        runDexMerging(inputDirs, outputDir, DexingType.LEGACY_MULTIDEX, 19, mainDexListFile)
+
+        runDexMerging(
+                inputDirs,
+                outputDir,
+                dexingType = DexingType.LEGACY_MULTIDEX,
+                minSdkVersion = 19,
+                mainDexListFile = mainDexListFile
+        )
 
         assertThatDex(outputDir.resolve("classes.dex")).containsExactlyClassesIn(
                 listOf("Ltest/A;")
@@ -73,22 +90,245 @@ class DexMergingTaskTest {
     fun testNativeMultiDex() {
         val numInputDirs = 5
         val inputDirs = (0 until numInputDirs).map {
-            generateDexArchive("test/A$it")
+            generateDexArchive(listOf("test/A$it"))
         }
         val outputDir = tmp.newFolder()
-        runDexMerging(inputDirs, outputDir, DexingType.NATIVE_MULTIDEX)
+
+        runDexMerging(inputDirs, outputDir, dexingType = DexingType.NATIVE_MULTIDEX)
 
         assertThatDex(outputDir.resolve("classes.dex")).containsExactlyClassesIn(
                 (0 until numInputDirs).map { "Ltest/A$it;" })
     }
 
+    @Test
+    fun `test non-incremental build with buckets`() {
+        val inputDirs = (0 until 2).map {
+            generateDexArchive(listOf("package$it/Class0", "package$it/Class1"), outputToDir = true)
+        }
+        val inputJars = (2 until 4).map {
+            generateDexArchive(listOf("package$it/Class0", "package$it/Class1"), outputToDir = false)
+        }
+        val outputDir = tmp.newFolder()
+
+        runDexMerging(inputDirs + inputJars, outputDir, numberOfBuckets = 3)
+
+        // Check that dex files are put into buckets
+        assertThat(outputDir.listFiles()).hasLength(3)
+
+        // Also check that classes of the same package are put in the same bucket/merged dex
+        // file
+        val bucket0 = outputDir.resolve("0/classes.dex")
+        val bucket1 = outputDir.resolve("1/classes.dex")
+        val bucket2 = outputDir.resolve("2/classes.dex")
+        assertThat(bucket0).doesNotExist()
+        assertThatDex(bucket1).containsExactlyClassesIn(
+                listOf("Lpackage0/Class0;", "Lpackage0/Class1;", "Lpackage2/Class0;", "Lpackage2/Class1;"))
+        assertThatDex(bucket2).containsExactlyClassesIn(
+                listOf("Lpackage1/Class0;", "Lpackage1/Class1;", "Lpackage3/Class0;", "Lpackage3/Class1;"))
+    }
+
+    @Test
+    fun `test incremental build with changed dex file`() {
+        val inputDirs = (0 until 4).map {
+            generateDexArchive(listOf("package$it/Class$it"))
+        }
+        val outputDir = tmp.newFolder()
+
+        // Run full build
+        runDexMerging(inputDirs, outputDir, numberOfBuckets = 3)
+
+        val bucket0 = outputDir.resolve("0/classes.dex")
+        val bucket1 = outputDir.resolve("1/classes.dex")
+        val bucket2 = outputDir.resolve("2/classes.dex")
+        assertThat(bucket0).doesNotExist()
+        assertThatDex(bucket1).containsExactlyClassesIn(
+                listOf("Lpackage0/Class0;", "Lpackage2/Class2;"))
+        assertThatDex(bucket2).containsExactlyClassesIn(
+                listOf("Lpackage1/Class1;", "Lpackage3/Class3;"))
+        val bucket1Timestamp = bucket1.lastModified()
+        val bucket2Timestamp = bucket2.lastModified()
+
+        // Change a dex file
+        val inputChanges = FakeInputChanges(
+                incremental = true,
+                inputChanges = listOf(
+                        FakeFileChange(
+                                file = inputDirs[0].resolve("package0/Class0.dex"),
+                                normalizedPath = "package0/Class0.dex",
+                                changeType = ChangeType.MODIFIED
+                        )
+                )
+        )
+
+        // Run incremental build
+        TestUtils.waitForFileSystemTick()
+        runDexMerging(inputDirs, outputDir, numberOfBuckets = 3, inputChanges = inputChanges)
+
+        assertThat(bucket0).doesNotExist()
+        assertThatDex(bucket1).containsExactlyClassesIn(
+                listOf("Lpackage0/Class0;", "Lpackage2/Class2;"))
+        assertThatDex(bucket2).containsExactlyClassesIn(
+                listOf("Lpackage1/Class1;", "Lpackage3/Class3;"))
+
+        // Check that only the impacted bucket(s) are re-merged
+        assertThat(bucket1Timestamp).isLessThan(bucket1.lastModified())
+        assertThat(bucket2Timestamp).isEqualTo(bucket2.lastModified())
+    }
+
+    @Test
+    fun `test incremental build with added jar`() {
+        val inputJars = (0 until 4).map {
+            generateDexArchive(listOf("package$it/Class$it"), outputToDir = false)
+        }
+        val outputDir = tmp.newFolder()
+
+        // Run full build
+        runDexMerging(inputJars, outputDir, numberOfBuckets = 3)
+
+        val bucket0 = outputDir.resolve("0/classes.dex")
+        val bucket1 = outputDir.resolve("1/classes.dex")
+        val bucket2 = outputDir.resolve("2/classes.dex")
+        assertThat(bucket0).doesNotExist()
+        assertThatDex(bucket1).containsExactlyClassesIn(
+                listOf("Lpackage0/Class0;", "Lpackage2/Class2;"))
+        assertThatDex(bucket2).containsExactlyClassesIn(
+                listOf("Lpackage1/Class1;", "Lpackage3/Class3;"))
+        val bucket1Timestamp = bucket1.lastModified()
+        val bucket2Timestamp = bucket2.lastModified()
+
+        // Add a jar
+        val addedInputJar = generateDexArchive(listOf("package4/Class4"), outputToDir = false)
+        val inputChanges = FakeInputChanges(
+                incremental = true,
+                inputChanges = listOf(
+                        FakeFileChange(
+                                file = addedInputJar,
+                                normalizedPath = addedInputJar.name,
+                                changeType = ChangeType.ADDED
+                        )
+                )
+        )
+
+        // Run incremental build
+        TestUtils.waitForFileSystemTick()
+        runDexMerging(inputJars + addedInputJar, outputDir, numberOfBuckets = 3, inputChanges = inputChanges)
+
+        assertThat(bucket0).doesNotExist()
+        assertThatDex(bucket1).containsExactlyClassesIn(
+                listOf("Lpackage0/Class0;", "Lpackage2/Class2;", "Lpackage4/Class4;"))
+        assertThatDex(bucket2).containsExactlyClassesIn(
+                listOf("Lpackage1/Class1;", "Lpackage3/Class3;"))
+
+        // Check that only the impacted bucket(s) are re-merged
+        assertThat(bucket1Timestamp).isLessThan(bucket1.lastModified())
+        assertThat(bucket2Timestamp).isEqualTo(bucket2.lastModified())
+    }
+
+    @Test
+    fun `test incremental build with modified jar`() {
+        val inputJars = (0 until 4).map {
+            generateDexArchive(listOf("package$it/Class$it"), outputToDir = false)
+        }
+        val outputDir = tmp.newFolder()
+
+        // Run full build
+        runDexMerging(inputJars, outputDir, numberOfBuckets = 3)
+
+        val bucket0 = outputDir.resolve("0/classes.dex")
+        val bucket1 = outputDir.resolve("1/classes.dex")
+        val bucket2 = outputDir.resolve("2/classes.dex")
+        assertThat(bucket0).doesNotExist()
+        assertThatDex(bucket1).containsExactlyClassesIn(
+                listOf("Lpackage0/Class0;", "Lpackage2/Class2;"))
+        assertThatDex(bucket2).containsExactlyClassesIn(
+                listOf("Lpackage1/Class1;", "Lpackage3/Class3;"))
+        val bucket1Timestamp = bucket1.lastModified()
+        val bucket2Timestamp = bucket2.lastModified()
+
+        // Modify a jar
+        val inputChanges = FakeInputChanges(
+                incremental = true,
+                inputChanges = listOf(
+                        FakeFileChange(
+                                file = inputJars[0],
+                                normalizedPath = inputJars[0].name,
+                                changeType = ChangeType.MODIFIED
+                        )
+                )
+        )
+
+        // Run incremental build
+        TestUtils.waitForFileSystemTick()
+        runDexMerging(inputJars, outputDir, numberOfBuckets = 3, inputChanges = inputChanges)
+
+        assertThat(bucket0).doesNotExist()
+        assertThatDex(bucket1).containsExactlyClassesIn(
+                listOf("Lpackage0/Class0;", "Lpackage2/Class2;"))
+        assertThatDex(bucket2).containsExactlyClassesIn(
+                listOf("Lpackage1/Class1;", "Lpackage3/Class3;"))
+
+        // Check that all the buckets are re-merged
+        assertThat(bucket1Timestamp).isLessThan(bucket1.lastModified())
+        assertThat(bucket2Timestamp).isLessThan(bucket2.lastModified())
+    }
+
+    @Test
+    fun `test incremental build with removed jar`() {
+        val inputJars = (0 until 4).map {
+            generateDexArchive(listOf("package$it/Class$it"), outputToDir = false)
+        }
+        val outputDir = tmp.newFolder()
+
+        // Run full build
+        runDexMerging(inputJars, outputDir, numberOfBuckets = 3)
+
+        val bucket0 = outputDir.resolve("0/classes.dex")
+        val bucket1 = outputDir.resolve("1/classes.dex")
+        val bucket2 = outputDir.resolve("2/classes.dex")
+        assertThat(bucket0).doesNotExist()
+        assertThatDex(bucket1).containsExactlyClassesIn(
+                listOf("Lpackage0/Class0;", "Lpackage2/Class2;"))
+        assertThatDex(bucket2).containsExactlyClassesIn(
+                listOf("Lpackage1/Class1;", "Lpackage3/Class3;"))
+        val bucket1Timestamp = bucket1.lastModified()
+        val bucket2Timestamp = bucket2.lastModified()
+
+        // Remove a jar
+        val inputChanges = FakeInputChanges(
+                incremental = true,
+                inputChanges = listOf(
+                        FakeFileChange(
+                                file = inputJars[0],
+                                normalizedPath = inputJars[0].name,
+                                changeType = ChangeType.REMOVED
+                        )
+                )
+        )
+
+        // Run incremental build
+        TestUtils.waitForFileSystemTick()
+        runDexMerging(inputJars.drop(1), outputDir, numberOfBuckets = 3, inputChanges = inputChanges)
+
+        assertThat(bucket0).doesNotExist()
+        assertThatDex(bucket1).containsExactlyClassesIn(
+                listOf("Lpackage2/Class2;"))
+        assertThatDex(bucket2).containsExactlyClassesIn(
+                listOf("Lpackage1/Class1;", "Lpackage3/Class3;"))
+
+        // Check that all the buckets are re-merged
+        assertThat(bucket1Timestamp).isLessThan(bucket1.lastModified())
+        assertThat(bucket2Timestamp).isLessThan(bucket2.lastModified())
+    }
+
     @Suppress("UnstableApiUsage")
     private fun runDexMerging(
-            inputDirs: List<File>,
+            inputDirsOrJars: List<File>,
             outputDir: File,
-            dexingType: DexingType,
+            dexingType: DexingType = DexingType.NATIVE_MULTIDEX,
             minSdkVersion: Int = 21,
-            mainDexListFile: File? = null
+            mainDexListFile: File? = null,
+            numberOfBuckets: Int = 1,
+            inputChanges: InputChanges = FakeInputChanges()
     ) {
         val project = ProjectBuilder.builder().withProjectDir(tmp.newFolder()).build()
         object : DexMergingTaskDelegate() {
@@ -108,12 +348,17 @@ class DexMergingTaskTest {
                                                     .fileValue(mainDexListFile)
                                 })
                             }
-                    override val numberOfBuckets = FakeGradleProperty(1)
+                    override val numberOfBuckets = FakeGradleProperty(numberOfBuckets)
                     override val dexDirsOrJars =
                             FakeObjectFactory.factory.listProperty(File::class.java)
-                                    .value(inputDirs)
+                                    .value(inputDirsOrJars)
                     override val outputDir =
                             FakeObjectFactory.factory.directoryProperty().fileValue(outputDir)
+                    override val incremental = FakeGradleProperty(inputChanges.isIncremental)
+                    override val fileChanges = FakeGradleProperty(
+                            inputChanges.getFileChanges(
+                                    FakeFileCollection(dexDirsOrJars.get())).toSerializable()
+                    )
                     override val projectName = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
@@ -128,12 +373,25 @@ class DexMergingTaskTest {
         }.execute()
     }
 
-    private fun generateDexArchive(vararg classes: String): File {
-        val classesDir = tmp.newFolder().toPath().resolve("input")
-        TestInputsGenerator.dirWithEmptyClasses(classesDir, classes.toList())
-        val dexArchiveDir = tmp.newFolder()
+    private fun generateDexArchive(emptyClassNames: List<String>, outputToDir: Boolean = true)
+            : File {
+        val dexArchivePath = if (outputToDir) {
+            tmp.newFolder()
+        } else {
+            tmp.newFolder().resolve("file.jar")
+        }
+        generateDexArchive(emptyClassNames, dexArchivePath)
+        return dexArchivePath
+    }
 
-        // now convert to dex archive
+    private fun generateDexArchive(emptyClassNames: List<String>, dexArchivePath: File) {
+        val emptyClassesDir = tmp.newFolder().also {
+            TestInputsGenerator.dirWithEmptyClasses(it.toPath(), emptyClassNames)
+        }
+        generateDexArchive(emptyClassesDir, dexArchivePath)
+    }
+
+    private fun generateDexArchive(classesDirOrJar: File, dexArchivePath: File) {
         val builder = DexArchiveBuilder.createD8DexBuilder(
                 DexParameters(
                         minSdkVersion = 1,
@@ -147,13 +405,11 @@ class DexMergingTaskTest {
                         messageReceiver = NoOpMessageReceiver()
                 )
         )
-        ClassFileInputs.fromPath(classesDir).use { input ->
+        ClassFileInputs.fromPath(classesDirOrJar.toPath()).use { input ->
             builder.convert(
                     input.entries { _, _ -> true },
-                    dexArchiveDir.toPath()
+                    dexArchivePath.toPath()
             )
         }
-
-        return dexArchiveDir
     }
 }

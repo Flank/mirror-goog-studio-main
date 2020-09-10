@@ -163,6 +163,11 @@ class DependencyConfigurator(
             AndroidArtifacts.ArtifactType.PROCESSED_AAR,
             AndroidArtifacts.ArtifactType.EXPLODED_AAR
         )
+        registerTransform(
+            ExtractAarTransform::class.java,
+            AndroidArtifacts.ArtifactType.LOCAL_AAR_FOR_LINT,
+            AndroidArtifacts.ArtifactType.LOCAL_EXPLODED_AAR_FOR_LINT
+        )
         dependencies.registerTransform(
             MockableJarTransform::class.java
         ) { spec: TransformSpec<MockableJarTransform.Parameters> ->

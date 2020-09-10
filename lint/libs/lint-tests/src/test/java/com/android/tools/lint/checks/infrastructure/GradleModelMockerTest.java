@@ -28,12 +28,14 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
+import com.android.ide.common.gradle.model.IdeAndroidLibrary;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeBuildType;
 import com.android.ide.common.gradle.model.IdeBuildTypeContainer;
 import com.android.ide.common.gradle.model.IdeClassField;
 import com.android.ide.common.gradle.model.IdeDependencies;
 import com.android.ide.common.gradle.model.IdeJavaCompileOptions;
+import com.android.ide.common.gradle.model.IdeJavaLibrary;
 import com.android.ide.common.gradle.model.IdeLibrary;
 import com.android.ide.common.gradle.model.IdeProductFlavor;
 import com.android.ide.common.gradle.model.IdeProductFlavorContainer;
@@ -138,7 +140,7 @@ public class GradleModelMockerTest {
         assertThat(project.getProjectType()).isEqualTo(AndroidProjectTypes.PROJECT_TYPE_APP);
 
         assertThat(variant.getMergedFlavor().getVersionCode()).isNull(); // not Integer.valueOf(0)!
-        Collection<IdeLibrary> libraries =
+        Collection<IdeAndroidLibrary> libraries =
                 variant.getMainArtifact().getLevel2Dependencies().getAndroidLibraries();
         assertThat(libraries).hasSize(1);
         IdeLibrary library = libraries.iterator().next();
@@ -162,7 +164,7 @@ public class GradleModelMockerTest {
 
         assertThat(variant.getMergedFlavor().getVersionCode()).isNull();
 
-        Collection<IdeLibrary> testLibraries =
+        Collection<IdeAndroidLibrary> testLibraries =
                 variant.getExtraJavaArtifacts().stream()
                         .filter(a -> a.getName().equals(ARTIFACT_NAME_UNIT_TEST))
                         .findFirst()
@@ -173,7 +175,7 @@ public class GradleModelMockerTest {
         IdeLibrary testLibrary = testLibraries.iterator().next();
         assertThat(testLibrary.getArtifactAddress()).isEqualTo("my.group.id:mylib1:1.2.3-rc4@aar");
 
-        Collection<IdeLibrary> androidTestLibraries =
+        Collection<IdeAndroidLibrary> androidTestLibraries =
                 variant.getExtraAndroidArtifacts().stream()
                         .filter(a -> a.getName().equals(ARTIFACT_NAME_ANDROID_TEST))
                         .findFirst()
@@ -234,7 +236,7 @@ public class GradleModelMockerTest {
         assertThat(project.getProjectType()).isEqualTo(AndroidProjectTypes.PROJECT_TYPE_APP);
 
         assertThat(variant.getMergedFlavor().getVersionCode()).isNull(); // not Integer.valueOf(0)!
-        Collection<IdeLibrary> libraries =
+        Collection<IdeJavaLibrary> libraries =
                 variant.getMainArtifact().getLevel2Dependencies().getJavaLibraries();
         assertThat(libraries).hasSize(4);
 
@@ -375,7 +377,7 @@ public class GradleModelMockerTest {
         IdeAndroidProject project = mocker.getProject();
         assertThat(project.getProjectType()).isEqualTo(AndroidProjectTypes.PROJECT_TYPE_LIBRARY);
         IdeDependencies dependencies = variant.getMainArtifact().getLevel2Dependencies();
-        Collection<IdeLibrary> libraries = dependencies.getJavaLibraries();
+        Collection<IdeJavaLibrary> libraries = dependencies.getJavaLibraries();
         assertThat(libraries.size()).isEqualTo(1);
         IdeLibrary library = libraries.iterator().next();
         assertThat(library.getArtifactAddress())
@@ -397,7 +399,7 @@ public class GradleModelMockerTest {
 
         IdeVariant variant = mocker.getVariant();
         IdeDependencies dependencies = variant.getMainArtifact().getLevel2Dependencies();
-        Collection<IdeLibrary> libraries = dependencies.getJavaLibraries();
+        Collection<IdeJavaLibrary> libraries = dependencies.getJavaLibraries();
         assertThat(libraries.size()).isEqualTo(2);
 
         assertThat(libraries.stream().map(it -> it.getArtifactAddress()).collect(toList()))

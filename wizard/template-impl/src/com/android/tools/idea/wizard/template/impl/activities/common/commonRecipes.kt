@@ -20,6 +20,7 @@ import com.android.tools.idea.wizard.template.PackageName
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.ThemeData
 import com.android.tools.idea.wizard.template.ThemesData
+import com.android.tools.idea.wizard.template.ViewBindingSupport
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.impl.activities.common.res.layout.simpleLayoutXml
 import com.android.tools.idea.wizard.template.impl.activities.common.res.menu.simpleMenu
@@ -224,5 +225,17 @@ fun RecipeExecutor.addLifecycleDependencies(useAndroidX: Boolean) {
   } else {
     addDependency("android.arch.lifecycle:livedata:+")
     addDependency("android.arch.lifecycle:viewmodel:+")
+  }
+}
+
+fun RecipeExecutor.addViewBindingSupport(viewBindingSupport: ViewBindingSupport, value: Boolean) {
+  when (viewBindingSupport) {
+    ViewBindingSupport.SUPPORTED_3_6 -> {
+      setViewBinding(value)
+    }
+    ViewBindingSupport.SUPPORTED_4_0_MORE -> {
+      setBuildFeature("viewBinding", value)
+    }
+    else -> {}
   }
 }

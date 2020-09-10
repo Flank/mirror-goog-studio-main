@@ -42,7 +42,7 @@ class IdeLibraryFactoryTest {
   fun createFromJavaLibrary() {
     // Verify JavaLibrary of module dependency returns instance of IdeModuleLibrary.
     val moduleLibrary = modelCache.libraryFrom(JavaLibraryStub())
-    Truth.assertThat(moduleLibrary).isInstanceOf(IdeModuleLibrary::class.java)
+    Truth.assertThat(moduleLibrary).isInstanceOf(IdeModuleLibraryImpl::class.java)
 
     // Verify JavaLibrary of jar dependency returns instance of IdeJavaLibrary.
     val javaLibrary: JavaLibrary = object : JavaLibraryStub() {
@@ -50,13 +50,13 @@ class IdeLibraryFactoryTest {
         return null
       }
     }
-    Truth.assertThat(modelCache.libraryFrom(javaLibrary)).isInstanceOf(IdeJavaLibrary::class.java)
+    Truth.assertThat(modelCache.libraryFrom(javaLibrary)).isInstanceOf(IdeJavaLibraryImpl::class.java)
   }
 
   @Test
   fun createFromString() {
     Truth.assertThat(modelCache.libraryFrom("lib", ":lib@@:", "/rootDir/lib"))
-      .isInstanceOf(IdeModuleLibrary::class.java)
+      .isInstanceOf(IdeModuleLibraryImpl::class.java)
   }
 
   @Test

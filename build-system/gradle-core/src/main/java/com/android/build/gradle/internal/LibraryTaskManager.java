@@ -349,21 +349,9 @@ public class LibraryTaskManager
 
     private void registerLibraryRClassTransformStream(
             @NonNull VariantPropertiesImpl variantProperties) {
-
         if (!variantProperties.getBuildFeatures().getAndroidResources()) {
             return;
         }
-
-        QualifiedContent.ScopeType scopeType;
-        if (variantProperties.getCodeShrinker() != null) {
-            // Add the R class classes as production classes. They are then removed by the library
-            // jar transform.
-            // TODO(b/115974418): Can we stop adding the compilation-only R class as a local classes?
-            scopeType = Scope.PROJECT;
-        } else {
-            scopeType = Scope.PROVIDED_ONLY;
-        }
-
         FileCollection compileRClass =
                 project.files(
                         variantProperties
@@ -374,7 +362,7 @@ public class LibraryTaskManager
                 .addStream(
                         OriginalStream.builder("compile-only-r-class")
                                 .addContentTypes(TransformManager.CONTENT_CLASS)
-                                .addScope(scopeType)
+                                .addScope(Scope.PROVIDED_ONLY)
                                 .setFileCollection(compileRClass)
                                 .build());
     }

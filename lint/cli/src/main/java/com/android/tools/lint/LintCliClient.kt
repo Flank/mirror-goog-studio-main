@@ -74,11 +74,8 @@ import com.intellij.util.lang.UrlClassLoader
 import org.jetbrains.jps.model.java.impl.JavaSdkUtil
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys.PERF_MANAGER
 import org.jetbrains.kotlin.cli.common.CommonCompilerPerformanceManager
-import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
-import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.config.LanguageVersionSettings
-import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.util.PerformanceCounter.Companion.resetAllCounters
 import org.w3c.dom.Document
@@ -1139,15 +1136,6 @@ open class LintCliClient : LintClient {
                 if (kotlinLanguageLevel != null) {
                     env.kotlinCompilerConfig.languageVersionSettings = kotlinLanguageLevel
                 }
-
-                // TODO(b/162855232): remove this workaround once lint-psi is updated to Kotlin 1.4.
-                val config = env.kotlinCompilerConfig
-                if (config.languageVersionSettings.languageVersion < LanguageVersion.KOTLIN_1_4) {
-                    config.languageVersionSettings = LanguageVersionSettingsImpl(
-                        LanguageVersion.KOTLIN_1_4, ApiVersion.KOTLIN_1_4
-                    )
-                }
-
                 env.analyzeFiles(kotlinFiles)
             }
             val ok = super.prepare(contexts, javaLanguageLevel, kotlinLanguageLevel)

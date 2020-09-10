@@ -23,6 +23,7 @@ import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.addLifecycleDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
+import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifestStrings
 import com.android.tools.idea.wizard.template.impl.activities.common.generateThemeStyles
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.res.layout.activityLoginXml
@@ -69,6 +70,7 @@ fun RecipeExecutor.loginActivityRecipe(
   addDependency("com.android.support.constraint:constraint-layout:+")
   addLifecycleDependencies(useAndroidX)
   addMaterialDependency(useAndroidX)
+  addViewBindingSupport(moduleData.viewBindingSupport, true)
 
   val baseFeatureResOut = moduleData.baseFeature?.resDir
   val simpleName = activityToLayout(activityClass)
@@ -81,9 +83,21 @@ fun RecipeExecutor.loginActivityRecipe(
   mergeXml(stringsXml(simpleName, activityTitle, moduleData.isNewModule), resOut.resolve("values/strings.xml"))
   save(activityLoginXml(activityClass, packageName, useAndroidX, apis.minApi.api), resOut.resolve("layout/${layoutName}.xml"))
 
+  val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()
   val loginActivity = when (projectData.language) {
-    Language.Java -> loginActivityJava(layoutName, packageName, useAndroidX)
-    Language.Kotlin -> loginActivityKt(activityClass, packageName, useAndroidX)
+    Language.Java -> loginActivityJava(
+      layoutName = layoutName,
+      packageName = packageName,
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported
+    )
+    Language.Kotlin -> loginActivityKt(
+      activityClass = activityClass,
+      layoutName = layoutName,
+      packageName = packageName,
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported
+    )
   }
   save(loginActivity, srcOut.resolve("ui/login/${activityClass}.${ktOrJavaExt}"))
 

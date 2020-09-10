@@ -59,6 +59,8 @@ class FakeNoOpAnalyticsService : AnalyticsService() {
             override val taskMetadata: MapProperty<String, TaskMetadata>
                 get() = FakeObjectFactory.factory.mapProperty(
                     String::class.java, TaskMetadata::class.java)
+            override val rootProjectPath: Property<String>
+                get() = FakeGradleProperty("/path")
         }
     }
 

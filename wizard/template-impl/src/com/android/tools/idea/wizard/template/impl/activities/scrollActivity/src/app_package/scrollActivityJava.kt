@@ -16,7 +16,11 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.scrollActivity.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.renderIf
 
 fun scrollActivityJava(
@@ -26,11 +30,13 @@ fun scrollActivityJava(
   layoutName: String,
   menuName: String,
   packageName: String,
-  useAndroidX: Boolean): String {
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
   val newModuleImportBlock = renderIf(isNewModule) {"""
 import android.view.Menu;
 import android.view.MenuItem; 
-  """.trimIndent()}
+  """}
   val newModuleBlock = renderIf(isNewModule) {"""
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -52,8 +58,14 @@ import android.view.MenuItem;
         }
         return super.onOptionsItemSelected(item);
     } 
-  """.trimIndent()}
+  """}
   val applicationPackageBlock = renderIf(applicationPackage != null) {"import ${applicationPackage}.R;"}
+
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layoutName)}.inflate(getLayoutInflater());
+     setContentView(binding.getRoot());
+  """ else "setContentView(R.layout.$layoutName);"
+
   return """package ${packageName};
 
 import android.os.Bundle;
@@ -65,19 +77,33 @@ import ${getMaterialComponentName("android.support.v7.widget.Toolbar", useAndroi
 import android.view.View;
 $newModuleImportBlock
 $applicationPackageBlock
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
 
 public class ${activityClass} extends AppCompatActivity {
+
+${renderIf(isViewBindingSupported) {"""
+    private ${layoutToViewBindingClass(layoutName)} binding;
+"""}}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.${layoutName});
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        $contentViewBlock
+        Toolbar toolbar = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "toolbar")};
         setSupportActionBar(toolbar);
-        CollapsingToolbarLayout toolBarLayout = (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
+        CollapsingToolbarLayout toolBarLayout = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "toolbar_layout")};
         toolBarLayout.setTitle(getTitle());
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton fab = ${findViewById(
+          Language.Java,
+          isViewBindingSupported = isViewBindingSupported,
+          id = "fab")};
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

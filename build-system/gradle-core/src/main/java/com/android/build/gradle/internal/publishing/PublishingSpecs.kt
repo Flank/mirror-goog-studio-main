@@ -246,8 +246,14 @@ class PublishingSpecs {
 
                 runtime(LINT_MODEL_MODULE, ArtifactType.LINT_MODULE)
                 runtime(LINT_MODEL_DEPENDENCIES, ArtifactType.LINT_DEPENDENCIES)
+                runtime(
+                    com.android.build.api.artifact.ArtifactType.AAR,
+                    ArtifactType.LOCAL_AAR_FOR_LINT)
             }
 
+            // Publishing will be done manually from the lint standalone plugin for now.
+            // Eventually we should just unify the infrastructure to declare the publications here.
+            variantSpec(VariantTypeImpl.JAVA_LIBRARY)
             // empty specs
             variantSpec(VariantTypeImpl.TEST_APK)
             variantSpec(VariantTypeImpl.ANDROID_TEST)

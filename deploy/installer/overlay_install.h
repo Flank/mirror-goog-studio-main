@@ -38,7 +38,8 @@ class OverlayInstallCommand : public Command {
   proto::OverlayInstallRequest request_;
   std::unique_ptr<InstallClient> client_;
 
-  void SetUpAgent(proto::OverlayInstallResponse* overlay_response);
+  void SetUpAgent(const std::string& agent,
+                  proto::OverlayInstallResponse* overlay_response);
   void UpdateOverlay(proto::OverlayInstallResponse* overlay_response);
 
   // This method was lifted directly from base_swap.cc and should probably be

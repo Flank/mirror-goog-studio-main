@@ -157,6 +157,10 @@ void InstallServer::HandleRequest(const ServerRequest& request) {
       HandleGetAgentExceptionLog(request.log_request(),
                                  response.mutable_log_response());
       break;
+    case ServerRequest::MessageCase::MESSAGE_NOT_SET:
+      ErrEvent("Cannot process InstallServer request without message");
+      response.set_status(ServerResponse::ERROR);
+      break;
   }
 
   response.set_status(ServerResponse::REQUEST_COMPLETED);

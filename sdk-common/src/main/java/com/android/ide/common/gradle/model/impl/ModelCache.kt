@@ -63,13 +63,16 @@ import com.android.builder.model.v2.models.ndk.NativeVariant
 import com.android.ide.common.gradle.model.IdeAaptOptions
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput
 import com.android.ide.common.gradle.model.IdeAndroidGradlePluginProjectFlags
+import com.android.ide.common.gradle.model.IdeAndroidLibrary
 import com.android.ide.common.gradle.model.IdeAndroidProject
 import com.android.ide.common.gradle.model.IdeBuildTypeContainer
 import com.android.ide.common.gradle.model.IdeDependencies
 import com.android.ide.common.gradle.model.IdeDependenciesInfo
+import com.android.ide.common.gradle.model.IdeJavaLibrary
 import com.android.ide.common.gradle.model.IdeLibrary
 import com.android.ide.common.gradle.model.IdeLintOptions
 import com.android.ide.common.gradle.model.IdeMavenCoordinates
+import com.android.ide.common.gradle.model.IdeModuleLibrary
 import com.android.ide.common.gradle.model.IdeProductFlavorContainer
 import com.android.ide.common.gradle.model.IdeSigningConfig
 import com.android.ide.common.gradle.model.IdeTestOptions
@@ -344,7 +347,7 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
       lintJar = copyNewProperty(library::getLintJar)?.path
     )
     val isProvided = copyNewProperty(library::isProvided, false)
-    return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided)
+    return IdeModuleLibraryImpl(moduleLibraryCores.internCore(core), isProvided)
   }
 
   fun createIdeModuleLibrary(library: JavaLibrary, artifactAddress: String): IdeLibrary {
@@ -357,7 +360,7 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
       lintJar = null
     )
     val isProvided = copyNewProperty(library::isProvided, false)
-    return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided)
+    return IdeModuleLibraryImpl(moduleLibraryCores.internCore(core), isProvided)
   }
 
   fun mavenCoordinatesFrom(coordinates: MavenCoordinates): IdeMavenCoordinatesImpl {
@@ -480,7 +483,7 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
         deduplicate = { strings.getOrPut(this) { this } }
       )
       val isProvided = copyNewProperty(androidLibrary::isProvided, false)
-      IdeAndroidLibrary(androidLibraryCores.internCore(core), isProvided)
+      IdeAndroidLibraryImpl(androidLibraryCores.internCore(core), isProvided)
     }
   }
 
@@ -500,13 +503,13 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
               artifact = javaLibrary.jarFile
       )
       val isProvided = copyNewProperty(javaLibrary::isProvided, false)
-      IdeJavaLibrary(javaLibraryCores.internCore(core), isProvided)
+      IdeJavaLibraryImpl(javaLibraryCores.internCore(core), isProvided)
     }
   }
 
   fun libraryFrom(projectPath: String, artifactAddress: String, buildId: String?): IdeLibrary {
     val core = IdeModuleLibraryCore(projectPath, artifactAddress, buildId)
-    return IdeModuleLibrary(moduleLibraryCores.internCore(core), isProvided = false)
+    return IdeModuleLibraryImpl(moduleLibraryCores.internCore(core), isProvided = false)
   }
 
   /** Call this method on level 1 Dependencies model.  */
@@ -589,16 +592,17 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
       artifactAddresses: Collection<String>,
       runtimeOnlyJars: Collection<File>
     ): IdeDependencies {
-      val androidLibraries = ImmutableList.builder<IdeLibrary>()
-      val javaLibraries = ImmutableList.builder<IdeLibrary>()
-      val moduleDependencies = ImmutableList.builder<IdeLibrary>()
+      val androidLibraries = ImmutableList.builder<IdeAndroidLibrary>()
+      val javaLibraries = ImmutableList.builder<IdeJavaLibrary>()
+      val moduleDependencies = ImmutableList.builder<IdeModuleLibrary>()
       for (address in artifactAddresses) {
         val library = librariesById[address]!!
+        // TODO(solodkyy): Build typed collections directly in populate methods.
         @Suppress("REDUNDANT_ELSE_IN_WHEN")
         when (library.type) {
-          IdeLibrary.LibraryType.LIBRARY_ANDROID -> androidLibraries.add(library)
-          IdeLibrary.LibraryType.LIBRARY_JAVA -> javaLibraries.add(library)
-          IdeLibrary.LibraryType.LIBRARY_MODULE -> moduleDependencies.add(library)
+          IdeLibrary.LibraryType.LIBRARY_ANDROID -> androidLibraries.add(library as IdeAndroidLibrary)
+          IdeLibrary.LibraryType.LIBRARY_JAVA -> javaLibraries.add(library as IdeJavaLibrary)
+          IdeLibrary.LibraryType.LIBRARY_MODULE -> moduleDependencies.add(library as IdeModuleLibrary)
           else -> throw UnsupportedOperationException("Unknown library type " + library.type)
         }
       }
