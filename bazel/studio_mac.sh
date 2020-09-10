@@ -30,7 +30,7 @@ readonly config_options="--config=local --config=release --config=cloud_resultst
         --test_tag_filters=-no_mac,-no_test_mac,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate \
         --tool_tag=${script_name} \
         --define=meta_android_build_number=${build_number} \
-        --profile=${dist_dir}/mac-profile-${build_number}.json.gz \
+        --profile=${dist_dir}/profile-${build_number}.json.gz \
         -- \
         //tools/... \
         //tools/base/profiler/native/trace_processor_daemon \
