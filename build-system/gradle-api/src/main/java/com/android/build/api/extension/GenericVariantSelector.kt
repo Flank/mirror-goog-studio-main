@@ -26,8 +26,7 @@ import org.gradle.api.Incubating
 @Incubating
 interface GenericVariantSelector<ComponentT> :
     FilteredVariantSelector<ComponentT>
-    where ComponentT: ActionableComponentObject,
-          ComponentT: ComponentIdentity {
+    where ComponentT: ComponentIdentity {
 
     /**
      * Creates a [VariantSelector] of [ComponentT]that includes all the variants for the current

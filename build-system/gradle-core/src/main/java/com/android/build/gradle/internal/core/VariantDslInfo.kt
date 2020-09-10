@@ -41,7 +41,7 @@ import java.io.File
  *
  * This class allows querying for the values set via the DSL model.
  *
- * Use [VariantBuilder] to instantiate.
+ * Use [VariantDslInfoBuilder] to instantiate.
  *
  */
 interface VariantDslInfo {

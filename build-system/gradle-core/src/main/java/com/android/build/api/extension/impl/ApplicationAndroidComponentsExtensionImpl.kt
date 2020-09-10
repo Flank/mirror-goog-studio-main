@@ -17,15 +17,18 @@
 package com.android.build.api.extension.impl
 
 import com.android.build.api.extension.ApplicationAndroidComponentsExtension
+import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.ApplicationVariantBuilder
 import com.android.build.gradle.internal.services.DslServices
 import javax.inject.Inject
 
 open class ApplicationAndroidComponentsExtensionImpl @Inject constructor(
         dslServices: DslServices,
-        operations: OperationsRegistrar<ApplicationVariantBuilder>
+        variantBuilderOperations: OperationsRegistrar<ApplicationVariantBuilder>,
+        variantOperations: OperationsRegistrar<ApplicationVariant>
 ): ApplicationAndroidComponentsExtension,
-        AndroidComponentsExtensionImpl<ApplicationVariantBuilder>(
+        AndroidComponentsExtensionImpl<ApplicationVariantBuilder, ApplicationVariant>(
                 dslServices,
-                operations
+                variantBuilderOperations,
+                variantOperations
         )

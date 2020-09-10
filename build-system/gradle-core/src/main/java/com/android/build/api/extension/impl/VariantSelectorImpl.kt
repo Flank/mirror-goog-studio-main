@@ -25,8 +25,7 @@ import java.util.regex.Pattern
 
 open class VariantSelectorImpl<ComponentT>
     : GenericVariantSelector<ComponentT>
-        where ComponentT: ActionableComponentObject,
-              ComponentT: ComponentIdentity {
+        where ComponentT: ComponentIdentity {
 
     override fun all(): VariantSelector<ComponentT> = this
 

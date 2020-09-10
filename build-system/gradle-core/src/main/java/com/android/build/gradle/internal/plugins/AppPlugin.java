@@ -127,14 +127,18 @@ public class AppPlugin
     @Override
     protected ApplicationAndroidComponentsExtension createComponentExtension(
             @NonNull DslServices dslServices,
-            @NonNull OperationsRegistrar<ApplicationVariantImpl> operationsRegistrar) {
+            @NonNull
+                    OperationsRegistrar<ApplicationVariantBuilderImpl>
+                            variantBuilderOperationsRegistrar,
+            @NonNull OperationsRegistrar<ApplicationVariantImpl> variantOperationsRegistrar) {
         return project.getExtensions()
                 .create(
                         ApplicationAndroidComponentsExtension.class,
                         "androidComponents",
                         ApplicationAndroidComponentsExtensionImpl.class,
                         dslServices,
-                        operationsRegistrar);
+                        variantBuilderOperationsRegistrar,
+                        variantOperationsRegistrar);
     }
 
     @NonNull

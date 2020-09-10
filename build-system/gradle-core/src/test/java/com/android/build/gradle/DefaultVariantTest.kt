@@ -17,12 +17,9 @@
 package com.android.build.gradle
 
 import com.android.build.api.variant.VariantFilter
-import com.android.build.api.component.impl.ComponentIdentityImpl
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.api.variant.impl.VariantImpl
-import com.android.build.gradle.internal.VariantManager
-import com.android.build.gradle.internal.core.VariantBuilder
+import com.android.build.gradle.internal.core.VariantDslInfoBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.variant.AbstractVariantInputModelTest
 import com.android.build.gradle.internal.variant.TestVariantInputModel
@@ -489,7 +486,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
         val components = mutableListOf<VariantImpl>()
 
         for (variant in variantComputer.computeVariants()) {
-            val name = VariantBuilder.computeName(variant, variantType)
+            val name = VariantDslInfoBuilder.computeName(variant, variantType)
 
             val flavors = variant.productFlavors.map {
                 (given.productFlavors[it.second] ?: error("Cant find flavor ${it.second}")).productFlavor

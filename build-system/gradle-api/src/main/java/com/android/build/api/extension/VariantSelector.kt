@@ -26,5 +26,4 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface VariantSelector<ComponentT>
-        where ComponentT: ActionableComponentObject,
-              ComponentT: ComponentIdentity
+        where ComponentT: ComponentIdentity

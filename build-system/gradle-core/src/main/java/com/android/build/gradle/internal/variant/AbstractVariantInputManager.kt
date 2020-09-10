@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.variant
 import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
-import com.android.build.gradle.internal.core.VariantBuilder.Companion.computeSourceSetName
+import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.computeSourceSetName
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.SigningConfig

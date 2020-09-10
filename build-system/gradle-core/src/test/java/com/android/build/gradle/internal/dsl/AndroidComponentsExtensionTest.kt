@@ -41,25 +41,29 @@ class AndroidComponentsExtensionTest {
 
     @Test
     fun testApplicationModuleNoSelection() {
-        val operationsRegistrar = OperationsRegistrar<ApplicationVariantBuilder>()
+        val variantBuilderOperationsRegistrar = OperationsRegistrar<ApplicationVariantBuilder>()
+        val variantOperationsRegistrar = OperationsRegistrar<ApplicationVariant>()
         @Suppress("UNCHECKED_CAST")
-        testNoSelection<ApplicationVariantBuilder>(
+        testNoSelection(
                 ApplicationAndroidComponentsExtensionImpl(
                         dslServices,
-                        operationsRegistrar
+                        variantBuilderOperationsRegistrar,
+                        variantOperationsRegistrar
                 ),
-                operationsRegistrar,
+                variantBuilderOperationsRegistrar,
                 ApplicationVariantBuilder::class.java)
     }
 
     @Test
     fun testLibraryModuleNoSelection() {
         val operationsRegistrar = OperationsRegistrar<LibraryVariantBuilder>()
+        val variantBuilderOperationsRegistrar = OperationsRegistrar<LibraryVariant>()
         @Suppress("UNCHECKED_CAST")
         testNoSelection(
                 LibraryAndroidComponentsExtensionImpl(
                         dslServices,
-                        operationsRegistrar
+                        operationsRegistrar,
+                        variantBuilderOperationsRegistrar
                 ),
                 operationsRegistrar,
                 LibraryVariantBuilder::class.java)
@@ -68,9 +72,14 @@ class AndroidComponentsExtensionTest {
     @Test
     fun testDynamicFeatureModuleNoSelection() {
         val operationsRegistrar = OperationsRegistrar<DynamicFeatureVariantBuilder>()
+        val variantOperationsRegistrar = OperationsRegistrar<DynamicFeatureVariant>()
         @Suppress("UNCHECKED_CAST")
         testNoSelection(
-                DynamicFeatureAndroidComponentsExtensionImpl(dslServices, operationsRegistrar),
+                DynamicFeatureAndroidComponentsExtensionImpl(
+                        dslServices,
+                        operationsRegistrar,
+                        variantOperationsRegistrar
+                ),
                 operationsRegistrar,
                 DynamicFeatureVariantBuilder::class.java)
     }
@@ -78,9 +87,13 @@ class AndroidComponentsExtensionTest {
     @Test
     fun testTestModuleNoSelection() {
         val operationsRegistrar = OperationsRegistrar<TestVariantBuilder>()
+        val variantOperationsRegistrar = OperationsRegistrar<TestVariant>()
         @Suppress("UNCHECKED_CAST")
         testNoSelection(
-                TestAndroidComponentsExtensionImpl(dslServices, operationsRegistrar),
+                TestAndroidComponentsExtensionImpl(
+                        dslServices,
+                        operationsRegistrar,
+                        variantOperationsRegistrar),
                 operationsRegistrar,
                 TestVariantBuilder::class.java)
     }
@@ -88,9 +101,13 @@ class AndroidComponentsExtensionTest {
     @Test
     fun testApplicationModuleAllSelection() {
         val operationsRegistrar = OperationsRegistrar<ApplicationVariantBuilder>()
+        val variantOperationsRegistrar = OperationsRegistrar<ApplicationVariant>()
         @Suppress("UNCHECKED_CAST")
         testAllSelection(
-                ApplicationAndroidComponentsExtensionImpl(dslServices, operationsRegistrar),
+                ApplicationAndroidComponentsExtensionImpl(
+                        dslServices,
+                        operationsRegistrar,
+                        variantOperationsRegistrar),
                 operationsRegistrar,
                 ApplicationVariantBuilder::class.java)
     }
@@ -98,9 +115,14 @@ class AndroidComponentsExtensionTest {
     @Test
     fun testLibraryModuleAllSelection() {
         val operationsRegistrar = OperationsRegistrar<LibraryVariantBuilder>()
+        val variantOperationsRegistrar = OperationsRegistrar<LibraryVariant>()
         @Suppress("UNCHECKED_CAST")
         testAllSelection(
-                LibraryAndroidComponentsExtensionImpl(dslServices, operationsRegistrar),
+                LibraryAndroidComponentsExtensionImpl(
+                        dslServices,
+                        operationsRegistrar,
+                        variantOperationsRegistrar
+                ),
                 operationsRegistrar,
                 LibraryVariantBuilder::class.java)
     }
@@ -108,9 +130,14 @@ class AndroidComponentsExtensionTest {
     @Test
     fun testDynamicFeatureModuleAllSelection() {
         val operationsRegistrar = OperationsRegistrar<DynamicFeatureVariantBuilder>()
+        val variantOperationsRegistrar = OperationsRegistrar<DynamicFeatureVariant>()
         @Suppress("UNCHECKED_CAST")
         testAllSelection(
-                DynamicFeatureAndroidComponentsExtensionImpl(dslServices, operationsRegistrar),
+                DynamicFeatureAndroidComponentsExtensionImpl(
+                        dslServices,
+                        operationsRegistrar,
+                        variantOperationsRegistrar
+                ),
                 operationsRegistrar,
                 DynamicFeatureVariantBuilder::class.java)
     }
@@ -118,19 +145,24 @@ class AndroidComponentsExtensionTest {
     @Test
     fun testTestModuleAllSelection() {
         val operationsRegistrar = OperationsRegistrar<TestVariantBuilder>()
+        val variantOperationsRegistrar = OperationsRegistrar<TestVariant>()
         @Suppress("UNCHECKED_CAST")
         testAllSelection(
-                TestAndroidComponentsExtensionImpl(dslServices, operationsRegistrar),
+                TestAndroidComponentsExtensionImpl(
+                        dslServices,
+                        operationsRegistrar,
+                        variantOperationsRegistrar
+                ),
                 operationsRegistrar,
                 TestVariantBuilder::class.java)
     }
 
-    private fun  <VariantBuilderT: VariantBuilder> testAllSelection(
-            extension: AndroidComponentsExtensionImpl<VariantBuilderT>,
+    private fun  <VariantBuilderT: VariantBuilder, VariantT: Variant> testAllSelection(
+            extension: AndroidComponentsExtensionImpl<VariantBuilderT, VariantT>,
             operationsRegistrar: OperationsRegistrar<VariantBuilderT>,
             variantType: Class<VariantBuilderT>) {
         val visitedVariants = mutableListOf<VariantBuilderT>()
-        extension.beforeVariants(extension.selector().all()) {
+        extension.beforeVariants(extension.selector<VariantBuilderT>().all()) {
             visitedVariants.add(it)
         }
         @Suppress("UNCHECKED_CAST")
@@ -138,8 +170,8 @@ class AndroidComponentsExtensionTest {
         assertThat(visitedVariants).hasSize(1)
     }
 
-    private fun <VariantBuilderT: VariantBuilder> testNoSelection(
-            extension: AndroidComponentsExtensionImpl<VariantBuilderT>,
+    private fun <VariantBuilderT: VariantBuilder, VariantT: Variant> testNoSelection(
+            extension: AndroidComponentsExtensionImpl<VariantBuilderT, VariantT>,
             operationsRegistrar: OperationsRegistrar<VariantBuilderT>,
             variantType: Class<VariantBuilderT>) {
         val visitedVariants = mutableListOf<VariantBuilderT>()

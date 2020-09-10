@@ -53,10 +53,13 @@ class GetApksTest: VariantApiBaseTest(TestType.Script) {
             ${testingElements.getDisplayApksTask()}
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
-                onVariantProperties {
-                    project.tasks.register<DisplayApksTask>("${ '$' }{name}DisplayApks") {
-                        apkFolder.set(artifacts.get(ArtifactType.APK))
-                        builtArtifactsLoader.set(artifacts.getBuiltArtifactsLoader())
+            }
+
+            androidComponents {
+                onVariants { variant ->
+                    project.tasks.register<DisplayApksTask>("${ '$' }{variant.name}DisplayApks") {
+                        apkFolder.set(variant.artifacts.get(ArtifactType.APK))
+                        builtArtifactsLoader.set(variant.artifacts.getBuiltArtifactsLoader())
                     }
                 }
             }

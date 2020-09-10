@@ -103,14 +103,18 @@ public class LibraryPlugin
     @Override
     protected LibraryAndroidComponentsExtension createComponentExtension(
             @NonNull DslServices dslServices,
-            @NonNull OperationsRegistrar<LibraryVariantImpl> operationsRegistrar) {
+            @NonNull
+                    OperationsRegistrar<LibraryVariantBuilderImpl>
+                            variantBuilderOperationsRegistrar,
+            @NonNull OperationsRegistrar<LibraryVariantImpl> variantOperationsRegistrar) {
         return project.getExtensions()
                 .create(
                         LibraryAndroidComponentsExtension.class,
                         "androidComponents",
                         LibraryAndroidComponentsExtensionImpl.class,
                         dslServices,
-                        operationsRegistrar);
+                        variantBuilderOperationsRegistrar,
+                        variantOperationsRegistrar);
     }
 
     @NonNull

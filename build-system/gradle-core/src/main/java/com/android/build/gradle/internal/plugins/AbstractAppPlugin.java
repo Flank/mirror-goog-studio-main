@@ -29,7 +29,8 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects. */
 public abstract class AbstractAppPlugin<
-                AndroidComponentsT extends AndroidComponentsExtension<? super VariantBuilderT>,
+                AndroidComponentsT extends
+                        AndroidComponentsExtension<? super VariantBuilderT, ? super VariantT>,
                 VariantBuilderT extends VariantBuilderImpl,
                 VariantT extends VariantImpl>
         extends BasePlugin<AndroidComponentsT, VariantBuilderT, VariantT> {

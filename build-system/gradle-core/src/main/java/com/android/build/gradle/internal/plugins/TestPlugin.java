@@ -113,14 +113,16 @@ public class TestPlugin
     @Override
     protected TestAndroidComponentsExtension createComponentExtension(
             @NonNull DslServices dslServices,
-            @NonNull OperationsRegistrar<TestVariantImpl> operationsRegistrar) {
+            @NonNull OperationsRegistrar<TestVariantBuilderImpl> variantBuilderOperationsRegistrar,
+            @NonNull OperationsRegistrar<TestVariantImpl> variantOperationsRegistrar) {
         return project.getExtensions()
                 .create(
                         TestAndroidComponentsExtension.class,
                         "androidComponents",
                         TestAndroidComponentsExtensionImpl.class,
                         dslServices,
-                        operationsRegistrar);
+                        variantBuilderOperationsRegistrar,
+                        variantOperationsRegistrar);
     }
 
     @NonNull

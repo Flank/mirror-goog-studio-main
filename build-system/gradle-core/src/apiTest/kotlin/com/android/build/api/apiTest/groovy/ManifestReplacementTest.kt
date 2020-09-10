@@ -37,11 +37,14 @@ class ManifestReplacementTest: VariantApiBaseTest(TestType.Script, ScriptingLang
             ${testingElements.getManifestProducerTask()}
 
             import com.android.build.api.artifact.ArtifactType
-    
+
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
-    
-                onVariantProperties {
+            }
+
+            androidComponents {
+
+                onVariants(selector().all(), {
                     TaskProvider gitVersionProvider = tasks.register(it.getName() + 'GitVersionProvider', GitVersionTask) {
                         task ->
                             task.gitVersionOutputFile.set(
@@ -57,7 +60,7 @@ class ManifestReplacementTest: VariantApiBaseTest(TestType.Script, ScriptingLang
                     it.artifacts.use(manifestProducer)
                         .wiredWith({ it.outputManifest })
                         .toCreate(ArtifactType.MERGED_MANIFEST.INSTANCE)
-                }
+                })
             }
             """.trimIndent()
 

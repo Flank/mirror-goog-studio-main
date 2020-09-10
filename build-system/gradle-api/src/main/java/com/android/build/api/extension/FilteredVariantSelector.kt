@@ -26,8 +26,7 @@ import java.util.regex.Pattern
 
 @Incubating
 interface FilteredVariantSelector<ComponentT> : VariantSelector<ComponentT>
-        where ComponentT: ActionableComponentObject,
-              ComponentT: ComponentIdentity {
+        where ComponentT: ComponentIdentity {
     /**
      * Returns a new selector for [ComponentT] objects with a given build type.
      *

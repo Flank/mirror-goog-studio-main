@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.core
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.ComponentIdentityImpl
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
-import com.android.build.gradle.internal.core.VariantBuilder.Companion.getBuilder
+import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
@@ -33,7 +33,6 @@ import com.android.builder.core.VariantType
 import com.android.builder.model.SourceProvider
 import com.android.utils.appendCapitalized
 import com.android.utils.combineAsCamelCase
-import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 
 /** Builder for [VariantDslInfo].
@@ -43,7 +42,7 @@ import org.gradle.api.file.DirectoryProperty
  *
  * Use [getBuilder] as an entry point.
  */
-class VariantBuilder private constructor(
+class VariantDslInfoBuilder private constructor(
     private val dimensionCombination: DimensionCombination,
     val variantType: VariantType,
     private val defaultConfig: DefaultConfig,
@@ -72,8 +71,8 @@ class VariantBuilder private constructor(
             manifestDataProvider: ManifestDataProvider,
             dslServices: DslServices,
             variantPropertiesApiServices: VariantPropertiesApiServices
-        ): VariantBuilder {
-            return VariantBuilder(
+        ): VariantDslInfoBuilder {
+            return VariantDslInfoBuilder(
                 dimensionCombination,
                 variantType,
                 defaultConfig,

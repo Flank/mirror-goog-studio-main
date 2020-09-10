@@ -17,17 +17,20 @@
 package com.android.build.api.extension.impl
 
 import com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension
+import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.DynamicFeatureVariantBuilder
 import com.android.build.gradle.internal.services.DslServices
 
 open class DynamicFeatureAndroidComponentsExtensionImpl(
         dslServices: DslServices,
-        operations: OperationsRegistrar<DynamicFeatureVariantBuilder>
+        variantBuilderOperations: OperationsRegistrar<DynamicFeatureVariantBuilder>,
+        variantOperations: OperationsRegistrar<DynamicFeatureVariant>
 
 ):
         DynamicFeatureAndroidComponentsExtension,
-        AndroidComponentsExtensionImpl<DynamicFeatureVariantBuilder>(
+        AndroidComponentsExtensionImpl<DynamicFeatureVariantBuilder, DynamicFeatureVariant>(
                 dslServices,
-                operations
+                variantBuilderOperations,
+                variantOperations
         )
 

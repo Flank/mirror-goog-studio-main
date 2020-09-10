@@ -16,25 +16,41 @@
 
 package com.android.build.api.extension.impl
 
+import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.extension.AndroidComponentsExtension
 import com.android.build.api.extension.VariantSelector
+import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.Action
 
-abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder>(
+abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, VariantT: Variant>(
         private val dslServices: DslServices,
-        private val operations: OperationsRegistrar<VariantBuilderT>
-): AndroidComponentsExtension<VariantBuilderT> {
+        private val variantBuilderOperations: OperationsRegistrar<VariantBuilderT>,
+        private val variantOperations: OperationsRegistrar<VariantT>
+): AndroidComponentsExtension<VariantBuilderT, VariantT> {
 
     override fun beforeVariants(selector: VariantSelector<VariantBuilderT>, callback: (VariantBuilderT) -> Unit) {
-        operations.addOperation(selector, callback)
+        variantBuilderOperations.addOperation(selector, Action {
+            callback.invoke(it)
+        })
     }
 
     override fun beforeVariants(selector: VariantSelector<VariantBuilderT>, callback: Action<VariantBuilderT>) {
-        operations.addOperation(selector, callback)
+        variantBuilderOperations.addOperation(selector, callback)
     }
 
-    override fun selector(): VariantSelectorImpl<VariantBuilderT> =
-            dslServices.newInstance(VariantSelectorImpl::class.java) as VariantSelectorImpl<VariantBuilderT>
+    override fun onVariants(selector: VariantSelector<VariantT>, callback: (VariantT) -> Unit) {
+        variantOperations.addOperation(selector, Action {
+            callback.invoke(it)
+        })
+    }
+
+    override fun onVariants(selector: VariantSelector<VariantT>, callback: Action<VariantT>) {
+        variantOperations.addOperation(selector, callback)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T: ComponentIdentity> selector(): VariantSelectorImpl<T> =
+            dslServices.newInstance(VariantSelectorImpl::class.java) as VariantSelectorImpl<T>
 }
