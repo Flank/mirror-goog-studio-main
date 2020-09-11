@@ -53,8 +53,8 @@ open class ApkCreationConfigImpl(
                 // Consider runtime API passed from the IDE only if multi-dex is enabled and the app is
                 // debuggable.
                 val minVersion: Int =
-                        if (variantDslInfo.targetSdkVersion.apiLevel > 1) Integer.min(
-                                variantDslInfo.targetSdkVersion.apiLevel,
+                        if (config.targetSdkVersion.apiLevel > 1) Integer.min(
+                                config.targetSdkVersion.apiLevel,
                                 targetApiLevel
                         ) else targetApiLevel
                 AndroidVersionImpl(minVersion)

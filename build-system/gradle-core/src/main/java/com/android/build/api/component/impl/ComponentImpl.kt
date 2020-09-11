@@ -141,9 +141,6 @@ abstract class ComponentImpl(
     override val variantType: VariantType
         get() = variantDslInfo.variantType
 
-    override val targetSdkVersion: ApiVersion
-        get() = variantDslInfo.targetSdkVersion
-
     override val dirName: String
         get() = variantDslInfo.dirName
 

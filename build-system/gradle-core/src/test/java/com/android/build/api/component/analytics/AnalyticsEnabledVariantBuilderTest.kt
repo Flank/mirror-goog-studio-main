@@ -58,4 +58,15 @@ class AnalyticsEnabledVariantBuilderTest {
         ).isEqualTo(VariantMethodType.MAX_SDK_VERSION_VALUE_VALUE)
         verify(delegate, times(1)).maxSdkVersion = 23
     }
+
+    @Test
+    fun setTargetSdkVersion() {
+        val newAndroidVersion = AndroidVersion(23)
+        proxy.targetSdkVersion = newAndroidVersion
+        Truth.assertThat(stats.variantApiAccess.variantAccessCount).isEqualTo(1)
+        Truth.assertThat(
+                stats.variantApiAccess.variantAccessList.first().type
+        ).isEqualTo(VariantMethodType.TARGET_SDK_VERSION_VALUE_VALUE)
+        verify(delegate, times(1)).targetSdkVersion = newAndroidVersion
+    }
 }

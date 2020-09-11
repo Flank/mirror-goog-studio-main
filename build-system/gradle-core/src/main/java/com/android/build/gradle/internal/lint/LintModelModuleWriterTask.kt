@@ -450,7 +450,7 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
                 variantInput.packageName.setDisallowChanges(variant.packageName)
 
                 variantInput.minSdkVersion.setDisallowChanges(variant.variantBuilder.minSdkVersion.convert())
-                variantInput.targetSdkVersion.setDisallowChanges(variant.variantDslInfo.targetSdkVersion.convert())
+                variantInput.targetSdkVersion.setDisallowChanges(variant.variantBuilder.targetSdkVersion.convert())
 
                 // FIXME resvalue
                 if (variant is ApkCreationConfig) {

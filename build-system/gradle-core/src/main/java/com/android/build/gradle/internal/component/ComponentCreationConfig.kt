@@ -79,13 +79,14 @@ interface ComponentCreationConfig : ComponentIdentity {
     val debuggable: Boolean
 
 
+    val minSdkVersion: AndroidVersion
+
     // ---------------------------------------------------------------------------------------------
-    // TODO figure out whether these properties are needed by all
     // ---------------------------------------------------------------------------------------------
 
+    // TODO figure out whether these properties are needed by all
     // TODO : remove as it is now in Variant.
-    val minSdkVersion: AndroidVersion
-    val targetSdkVersion: ApiVersion
+    // ---------------------------------------------------------------------------------------------
     val outputs: VariantOutputList
     val manifestArtifactType: InternalArtifactType<Directory>
 

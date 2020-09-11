@@ -48,6 +48,11 @@ interface VariantBuilder: ComponentBuilder, ActionableComponentObject {
     var maxSdkVersion: Int?
 
     /**
+     * Gets the target SDK version for this variant.
+     */
+    var targetSdkVersion: AndroidVersion
+
+    /**
      * Specifies the bytecode version to be generated. We recommend you set this value to the
      * lowest API level able to provide all the functionality you are using
      *

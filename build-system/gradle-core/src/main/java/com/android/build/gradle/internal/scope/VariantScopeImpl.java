@@ -329,7 +329,7 @@ public class VariantScopeImpl implements VariantScope {
                 || projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API) != null
                 || isPreviewTargetPlatform()
                 || variant.getVariantBuilder().getMinSdkVersion().getCodename() != null
-                || variantDslInfo.getTargetSdkVersion().getCodename() != null;
+                || variant.getVariantBuilder().getTargetSdkVersion().getCodename() != null;
     }
 
     private boolean isPreviewTargetPlatform() {

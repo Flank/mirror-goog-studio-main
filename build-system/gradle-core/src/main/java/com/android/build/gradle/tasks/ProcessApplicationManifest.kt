@@ -369,7 +369,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                     project.provider {
                         val targetSdk =
                             creationConfig.targetSdkVersion
-                        if (targetSdk.apiLevel < 1) null else targetSdk.apiString
+                        if (targetSdk.apiLevel < 1) null else targetSdk.getApiString()
                     }
                 )
             task.targetSdkVersion.disallowChanges()

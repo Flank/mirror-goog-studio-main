@@ -300,7 +300,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                         if (targetSdkVersion.apiLevel < 0) {
                             return@provider null
                         }
-                        targetSdkVersion.apiString
+                        targetSdkVersion.getApiString()
                     }
                 )
             task.targetSdkVersion.disallowChanges()

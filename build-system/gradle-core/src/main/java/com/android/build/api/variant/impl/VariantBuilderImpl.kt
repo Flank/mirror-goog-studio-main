@@ -48,6 +48,15 @@ abstract class VariantBuilderImpl(
             _minSdkVersion = AndroidVersionImpl(value.apiLevel, value.codename)
         }
 
+    private var _targetSdkVersion= AndroidVersionImpl(
+            variantDslInfo.targetSdkVersion.apiLevel,
+            variantDslInfo.targetSdkVersion.codename
+    )
+    override var targetSdkVersion: AndroidVersion
+        get() = _targetSdkVersion
+        set(value) {
+            _targetSdkVersion = AndroidVersionImpl(value.apiLevel, value.codename)
+        }
     override var maxSdkVersion: Int? = variantDslInfo.maxSdkVersion
 
     override fun unitTest(action: UnitTestBuilder.() -> Unit) {

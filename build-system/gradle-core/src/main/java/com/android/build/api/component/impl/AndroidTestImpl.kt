@@ -248,7 +248,10 @@ open class AndroidTestImpl @Inject constructor(
         testedVariant.minSdkVersionWithTargetDeviceApi
 
     override val maxSdkVersion: Int?
-        get() = testedVariant.maxSdkVersion
+        get() = testedVariant.variantBuilder.maxSdkVersion
+
+    override val targetSdkVersion: AndroidVersion
+        get() = testedVariant.variantBuilder.targetSdkVersion
 
     override val isMultiDexEnabled: Boolean =
         testedVariant.isMultiDexEnabled

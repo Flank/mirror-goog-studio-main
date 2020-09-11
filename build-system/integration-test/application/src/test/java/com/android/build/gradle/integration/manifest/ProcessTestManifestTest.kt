@@ -18,11 +18,11 @@ package com.android.build.gradle.integration.manifest
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
+import com.android.build.gradle.integration.common.truth.ApkSubject.getManifestContent
 import com.android.utils.FileUtils
+import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
-import java.util.regex.Pattern
 
 class ProcessTestManifestTest {
     @JvmField @Rule
@@ -32,6 +32,17 @@ class ProcessTestManifestTest {
 
     @Test
     fun build() {
+        project.buildFile.appendText("""
+            import com.android.build.api.variant.AndroidVersion
+
+            androidComponents {
+                beforeVariants(selector().all(), { variant ->
+                    variant.minSdkVersion = new AndroidVersion(21, null)
+                    variant.maxSdkVersion = 29
+                    variant.targetSdkVersion = new AndroidVersion(22, null)
+                })
+            }
+        """.trimIndent())
         FileUtils.createFile(
             project.file("src/androidTest/java/com/example/helloworld/TestReceiver.java"),
             """
@@ -88,6 +99,7 @@ class ProcessTestManifestTest {
                             package="com.example.helloworld"
                             android:versionCode="1"
                             android:versionName="1.0">
+
                     <application android:label="@string/app_name">
                         <activity android:name=".HelloWorld"
                                   android:label="@string/app_name">
@@ -105,8 +117,16 @@ class ProcessTestManifestTest {
 
         project.executor().run("assembleDebugAndroidTest")
 
-        assertThat(project.testApk).hasManifestContent(Pattern.compile(".*TestReceiver.*"))
+        val manifestContent = getManifestContent(project.testApk.file)
+        assertManifestContent(manifestContent, "com.example.helloworld.TestReceiver")
+        assertManifestContent(manifestContent, "com.example.helloworld.MainReceiver")
+        assertManifestContent(manifestContent, "A: http://schemas.android.com/apk/res/android:minSdkVersion(0x0101020c)=21")
+        assertManifestContent(manifestContent, "A: http://schemas.android.com/apk/res/android:targetSdkVersion(0x01010270)=22")
+        assertManifestContent(manifestContent, "A: http://schemas.android.com/apk/res/android:maxSdkVersion(0x01010271)=29")
+    }
 
-        assertThat(project.testApk).hasManifestContent(Pattern.compile(".*MainReceiver.*"))
+    fun assertManifestContent(manifestContent: Iterable<String>, stringToAssert: String) {
+        manifestContent.forEach { if (it.trim().contains(stringToAssert)) return }
+        fail("Cannot find $stringToAssert in ${manifestContent.joinToString(separator = "\n")}")
     }
 }

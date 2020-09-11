@@ -114,6 +114,9 @@ open class UnitTestImpl @Inject constructor(
     override val minSdkVersion: AndroidVersion
         get() = testedVariant.variantBuilder.minSdkVersion
 
+    override val targetSdkVersion: AndroidVersion
+        get() = testedVariant.variantBuilder.targetSdkVersion
+
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,

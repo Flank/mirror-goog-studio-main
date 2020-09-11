@@ -447,7 +447,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             task.minSdkVersion.disallowChanges()
             task.targetSdkVersion
                 .set(
-                    project.provider { variantDslInfo.targetSdkVersion.apiString }
+                    project.provider { creationConfig.targetSdkVersion.getApiString() }
                 )
             task.targetSdkVersion.disallowChanges()
 
