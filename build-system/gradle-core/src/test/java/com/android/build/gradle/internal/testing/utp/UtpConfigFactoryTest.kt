@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.testing.StaticTestData
-import com.android.build.gradle.internal.testing.utp.RetentionConfig
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.BuildToolInfo
 import com.google.common.truth.Truth.assertThat
