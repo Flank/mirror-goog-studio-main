@@ -31,8 +31,9 @@ namespace profiler {
 namespace perfetto {
 namespace {
 
-typedef proto::QueryParameters::CountersParameters CountersParameters;
-typedef proto::CountersResult CountersResult;
+typedef proto::QueryParameters::ProcessCountersParameters
+    ProcessCountersParameters;
+typedef proto::ProcessCountersResult ProcessCountersResult;
 
 typedef ::perfetto::trace_processor::TraceProcessor TraceProcessor;
 typedef ::perfetto::trace_processor::Config Config;
@@ -63,10 +64,10 @@ TEST(CountersRequestHandlerTest, PopulateCounters) {
   auto tp = LoadTrace(TESTDATA_PATH);
   auto handler = CountersRequestHandler(tp.get());
 
-  CountersParameters params_proto;
+  ProcessCountersParameters params_proto;
   params_proto.set_process_id(TANK_PROCESS_PID);
 
-  CountersResult result;
+  ProcessCountersResult result;
   handler.PopulateCounters(params_proto, &result);
 
   EXPECT_EQ(result.process_id(), TANK_PROCESS_PID);
@@ -122,9 +123,9 @@ TEST(CountersRequestHandlerTest, PopulateCountersNoProcessId) {
   auto tp = LoadTrace(TESTDATA_PATH);
   auto handler = CountersRequestHandler(tp.get());
 
-  CountersParameters params_proto;
+  ProcessCountersParameters params_proto;
 
-  CountersResult result;
+  ProcessCountersResult result;
   handler.PopulateCounters(params_proto, &result);
 
   EXPECT_EQ(result.process_id(), 0);

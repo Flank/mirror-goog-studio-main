@@ -18,14 +18,15 @@
 
 using namespace profiler::perfetto;
 using profiler::perfetto::proto::Counter;
-using profiler::perfetto::proto::CountersResult;
 using profiler::perfetto::proto::CpuCoreCountersResult;
+using profiler::perfetto::proto::ProcessCountersResult;
 using profiler::perfetto::proto::QueryParameters;
 
-typedef QueryParameters::CountersParameters CountersParameters;
+typedef QueryParameters::CpuCoreCountersParameters CpuCoreCountersParameters;
+typedef QueryParameters::ProcessCountersParameters ProcessCountersParameters;
 
-void CountersRequestHandler::PopulateCounters(CountersParameters params,
-                                              CountersResult* result) {
+void CountersRequestHandler::PopulateCounters(ProcessCountersParameters params,
+                                              ProcessCountersResult* result) {
   if (result == nullptr || params.process_id() == 0) {
     return;
   }
@@ -70,8 +71,7 @@ void CountersRequestHandler::PopulateCounters(CountersParameters params,
 }
 
 void CountersRequestHandler::PopulateCpuCoreCounters(
-    QueryParameters::CpuCoreCountersParameters params,
-    CpuCoreCountersResult* result) {
+    CpuCoreCountersParameters params, CpuCoreCountersResult* result) {
   if (result == nullptr) {
     return;
   }

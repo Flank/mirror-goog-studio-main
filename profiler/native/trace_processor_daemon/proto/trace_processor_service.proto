@@ -71,7 +71,7 @@ message QueryParameters {
     TraceEventsParameters trace_events_request = 102;
     SchedulingEventsParameters sched_request = 103;
     AllocationDataRequest memory_request = 104;
-    CountersParameters counters_request = 105;
+    ProcessCountersParameters process_counters_request = 105;
     CpuCoreCountersParameters cpu_core_counters_request = 106;
   }
 
@@ -105,7 +105,8 @@ message QueryParameters {
   }
 
   // Returns all process counters for the process identified by process_id.
-  message CountersParameters {
+  // See https://perfetto.dev/docs/analysis/sql-tables#process_counter_track.
+  message ProcessCountersParameters {
     int64 process_id = 1;
   }
 
@@ -137,7 +138,7 @@ message QueryResult {
     TraceEventsResult trace_events_result = 102;
     SchedulingEventsResult sched_result = 103;
     NativeAllocationContext memory_events = 104;
-    CountersResult counters_result = 105;
+    ProcessCountersResult process_counters_result = 105;
     CpuCoreCountersResult cpu_core_counters_result = 106;
   }
 
@@ -236,7 +237,7 @@ message SchedulingEventsResult {
   }
 }
 
-message CountersResult {
+message ProcessCountersResult {
   // The id of the process from which these counters belongs to.
   int64 process_id = 1;
 

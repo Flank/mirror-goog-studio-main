@@ -131,10 +131,11 @@ grpc::Status TraceProcessorServiceImpl::QueryBatch(
         MemoryRequestHandler handler(tp_.get());
         handler.PopulateEvents(query_result->mutable_memory_events());
       } break;
-      case QueryParameters::kCountersRequest: {
+      case QueryParameters::kProcessCountersRequest: {
         CountersRequestHandler handler(tp_.get());
-        handler.PopulateCounters(request.counters_request(),
-                                 query_result->mutable_counters_result());
+        handler.PopulateCounters(
+            request.process_counters_request(),
+            query_result->mutable_process_counters_result());
       } break;
       case QueryParameters::kCpuCoreCountersRequest: {
         CountersRequestHandler handler(tp_.get());
