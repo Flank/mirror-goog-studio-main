@@ -13,62 +13,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.variant
 
-package com.android.build.gradle.internal.variant;
-
-import static com.android.builder.core.BuilderConstants.DEBUG;
-import static com.android.builder.core.BuilderConstants.RELEASE;
-
-import com.android.annotations.NonNull;
-import com.android.build.api.artifact.impl.ArtifactsImpl;
-import com.android.build.api.component.ComponentIdentity;
-import com.android.build.api.variant.impl.VariantBuilderImpl;
-import com.android.build.api.variant.impl.VariantImpl;
-import com.android.build.gradle.internal.BuildTypeData;
-import com.android.build.gradle.internal.ProductFlavorData;
-import com.android.build.gradle.internal.api.BaseVariantImpl;
-import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantSources;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
-import com.android.build.gradle.internal.dsl.BuildType;
-import com.android.build.gradle.internal.dsl.DefaultConfig;
-import com.android.build.gradle.internal.dsl.ProductFlavor;
-import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.plugins.DslContainerProvider;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.build.gradle.internal.services.ProjectServices;
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
-import com.android.builder.errors.IssueReporter;
-import com.android.builder.errors.IssueReporter.Type;
+import com.android.build.api.variant.impl.VariantBuilderImpl
+import com.android.build.api.component.ComponentIdentity
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.build.gradle.internal.api.BaseVariantImpl
+import com.android.builder.errors.IssueReporter
+import com.android.build.gradle.internal.api.ApplicationVariantImpl
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.DefaultConfig
+import com.android.build.gradle.internal.dsl.ProductFlavor
+import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.plugins.DslContainerProvider
+import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.services.ProjectServices
+import com.android.builder.core.BuilderConstants
 
 /**
  * An implementation of VariantFactory for a project that generates APKs.
  *
- * <p>This can be an app project, or a test-only project, though the default behavior is app.
+ *
+ * This can be an app project, or a test-only project, though the default behavior is app.
  */
-public abstract class AbstractAppVariantFactory<
-                VariantBuilderT extends VariantBuilderImpl, VariantT extends VariantImpl>
-        extends BaseVariantFactory<VariantBuilderT, VariantT> {
+abstract class AbstractAppVariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl>(
+        projectServices: ProjectServices,
+        globalScope: GlobalScope
+) : BaseVariantFactory<VariantBuilderT, VariantT>(
+        projectServices,
+        globalScope
+) {
 
-    public AbstractAppVariantFactory(
-            @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
-        super(projectServices, globalScope);
-    }
-
-    @Override
-    @NonNull
-    public BaseVariantData createVariantData(
-            @NonNull ComponentIdentity componentIdentity,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantDependencies variantDependencies,
-            @NonNull VariantSources variantSources,
-            @NonNull VariantPathHelper paths,
-            @NonNull ArtifactsImpl artifacts,
-            @NonNull VariantPropertiesApiServices services,
-            @NonNull GlobalScope globalScope,
-            @NonNull MutableTaskContainer taskContainer) {
-        return new ApplicationVariantData(
+    override fun createVariantData(
+            componentIdentity: ComponentIdentity,
+            variantDslInfo: VariantDslInfo,
+            variantDependencies: VariantDependencies,
+            variantSources: VariantSources,
+            paths: VariantPathHelper,
+            artifacts: ArtifactsImpl,
+            services: VariantPropertiesApiServices,
+            globalScope: GlobalScope,
+            taskContainer: MutableTaskContainer): BaseVariantData {
+        return ApplicationVariantData(
                 componentIdentity,
                 variantDslInfo,
                 variantDependencies,
@@ -77,135 +69,110 @@ public abstract class AbstractAppVariantFactory<
                 artifacts,
                 services,
                 globalScope,
-                taskContainer);
+                taskContainer)
     }
 
-    @Override
-    @NonNull
-    public Class<? extends BaseVariantImpl> getVariantImplementationClass(
-            @NonNull BaseVariantData variantData) {
-        return com.android.build.gradle.internal.api.ApplicationVariantImpl.class;
-    }
+    override val variantImplementationClass: Class<out BaseVariantImpl?>
+        get() {
+            return ApplicationVariantImpl::class.java
+        }
 
-    @Override
-    public void validateModel(
-            @NonNull
-                    VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
-                            model) {
-        super.validateModel(model);
-
-        validateVersionCodes(model);
-
-        if (!getVariantType().isDynamicFeature()) {
-            return;
+    override fun validateModel(
+            model: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>) {
+        super.validateModel(model)
+        validateVersionCodes(model)
+        if (!variantType.isDynamicFeature) {
+            return
         }
 
         // below is for dynamic-features only.
-
-        IssueReporter issueReporter = projectServices.getIssueReporter();
-        for (BuildTypeData<BuildType> buildType : model.getBuildTypes().values()) {
-            if (buildType.getBuildType().isMinifyEnabled()) {
+        val issueReporter: IssueReporter = projectServices.issueReporter
+        for (buildType in model.buildTypes.values) {
+            if (buildType.buildType.isMinifyEnabled) {
                 issueReporter.reportError(
-                        Type.GENERIC,
-                        "Dynamic feature modules cannot set minifyEnabled to true. "
-                                + "minifyEnabled is set to true in build type '"
-                                + buildType.getBuildType().getName()
-                                + "'.\nTo enable minification for a dynamic feature "
-                                + "module, set minifyEnabled to true in the base module.");
+                        IssueReporter.Type.GENERIC,
+                        """
+                            Dynamic feature modules cannot set minifyEnabled to true. minifyEnabled is set to true in build type '${buildType.buildType.name}'.
+                            To enable minification for a dynamic feature module, set minifyEnabled to true in the base module.
+                            """.trimIndent())
             }
         }
 
         // check if any of the build types or flavors have a signing config.
-        String message =
-                "Signing configuration should not be declared in build types of "
-                        + "dynamic-feature. Dynamic-features use the signing configuration "
-                        + "declared in the application module.";
-        for (BuildTypeData<BuildType> buildType : model.getBuildTypes().values()) {
-            if (buildType.getBuildType().getSigningConfig() != null) {
+        var message = ("Signing configuration should not be declared in build types of "
+                + "dynamic-feature. Dynamic-features use the signing configuration "
+                + "declared in the application module.")
+        for (buildType in model.buildTypes.values) {
+            if (buildType.buildType.signingConfig != null) {
                 issueReporter.reportWarning(
-                        Type.SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE, message);
+                        IssueReporter.Type.SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE, message)
             }
         }
-
-        message =
-                "Signing configuration should not be declared in product flavors of "
-                        + "dynamic-feature. Dynamic-features use the signing configuration "
-                        + "declared in the application module.";
-        for (ProductFlavorData<ProductFlavor> productFlavor : model.getProductFlavors().values()) {
-            if (productFlavor.getProductFlavor().getSigningConfig() != null) {
-
+        message = ("Signing configuration should not be declared in product flavors of "
+                + "dynamic-feature. Dynamic-features use the signing configuration "
+                + "declared in the application module.")
+        for (productFlavor in model.productFlavors.values) {
+            if (productFlavor.productFlavor.signingConfig != null) {
                 issueReporter.reportWarning(
-                        Type.SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE, message);
+                        IssueReporter.Type.SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE, message)
             }
         }
 
         // check if the default config or any of the build types or flavors try to set abiFilters.
         message =
-                "abiFilters should not be declared in dynamic-features. Dynamic-features use the "
-                        + "abiFilters declared in the application module.";
-        if (!model.getDefaultConfigData()
-                .getDefaultConfig()
-                .getNdkConfig()
-                .getAbiFilters()
-                .isEmpty()) {
-            issueReporter.reportWarning(Type.GENERIC, message);
+                ("abiFilters should not be declared in dynamic-features. Dynamic-features use the "
+                        + "abiFilters declared in the application module.")
+        if (!model.defaultConfigData
+                        .defaultConfig
+                        .ndkConfig
+                        .abiFilters
+                        .isEmpty()) {
+            issueReporter.reportWarning(IssueReporter.Type.GENERIC, message)
         }
-        for (BuildTypeData<BuildType> buildType : model.getBuildTypes().values()) {
-            if (!buildType.getBuildType().getNdkConfig().getAbiFilters().isEmpty()) {
-                issueReporter.reportWarning(Type.GENERIC, message);
+        for (buildType in model.buildTypes.values) {
+            if (buildType.buildType.ndkConfig.abiFilters.isNotEmpty()) {
+                issueReporter.reportWarning(IssueReporter.Type.GENERIC, message)
             }
         }
-        for (ProductFlavorData<ProductFlavor> productFlavor : model.getProductFlavors().values()) {
-            if (!productFlavor.getProductFlavor().getNdkConfig().getAbiFilters().isEmpty()) {
-                issueReporter.reportWarning(Type.GENERIC, message);
+        for (productFlavor in model.productFlavors.values) {
+            if (productFlavor.productFlavor.ndkConfig.abiFilters.isNotEmpty()) {
+                issueReporter.reportWarning(IssueReporter.Type.GENERIC, message)
             }
         }
     }
 
-    @Override
-    public void createDefaultComponents(
-            @NonNull
-                    DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
-                            dslContainers) {
+    override fun createDefaultComponents(
+            dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>) {
         // must create signing config first so that build type 'debug' can be initialized
         // with the debug signing config.
-        dslContainers.getSigningConfigContainer().create(DEBUG);
-        dslContainers.getBuildTypeContainer().create(DEBUG);
-        dslContainers.getBuildTypeContainer().create(RELEASE);
+        dslContainers.signingConfigContainer.create(BuilderConstants.DEBUG)
+        dslContainers.buildTypeContainer.create(BuilderConstants.DEBUG)
+        dslContainers.buildTypeContainer.create(BuilderConstants.RELEASE)
     }
 
-    private void validateVersionCodes(
-            @NonNull
-                    VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
-                            model) {
-        IssueReporter issueReporter = projectServices.getIssueReporter();
-
-        Integer versionCode = model.getDefaultConfigData().getDefaultConfig().getVersionCode();
+    private fun validateVersionCodes(
+            model: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>) {
+        val issueReporter: IssueReporter = projectServices.issueReporter
+        val versionCode = model.defaultConfigData.defaultConfig.versionCode
         if (versionCode != null && versionCode < 1) {
             issueReporter.reportError(
-                    Type.GENERIC,
-                    "android.defaultConfig.versionCode is set to "
-                            + versionCode
-                            + ", but it should be a positive integer.\n"
-                            + "See https://developer.android.com/studio/publish/versioning#appversioning"
-                            + " for more information.");
-            return;
+                    IssueReporter.Type.GENERIC,
+                    """
+                        android.defaultConfig.versionCode is set to $versionCode, but it should be a positive integer.
+                        See https://developer.android.com/studio/publish/versioning#appversioning for more information.
+                        """.trimIndent())
+            return
         }
-
-        for (ProductFlavorData<ProductFlavor> flavorData : model.getProductFlavors().values()) {
-            Integer flavorVersionCode = flavorData.getProductFlavor().getVersionCode();
+        for (flavorData in model.productFlavors.values) {
+            val flavorVersionCode = flavorData.productFlavor.versionCode
             if (flavorVersionCode == null || flavorVersionCode > 0) {
-                return;
+                return
             }
             issueReporter.reportError(
-                    Type.GENERIC,
-                    "versionCode is set to "
-                            + flavorVersionCode
-                            + " in product flavor "
-                            + flavorData.getProductFlavor().getName()
-                            + ", but it should be a positive integer.\n"
-                            + "See https://developer.android.com/studio/publish/versioning#appversioning"
-                            + " for more information.");
+                    IssueReporter.Type.GENERIC,
+                    ("versionCode is set to $flavorVersionCode in product flavor " +
+                            "${flavorData.productFlavor.name}, but it should be a positive integer. " +
+                            "See https://developer.android.com/studio/publish/versioning#appversioning for more information."))
         }
     }
 }

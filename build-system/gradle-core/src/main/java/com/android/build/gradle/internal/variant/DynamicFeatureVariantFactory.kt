@@ -136,7 +136,6 @@ internal class DynamicFeatureVariantFactory(
         )
     }
 
-    override fun getVariantType(): VariantType {
-        return VariantTypeImpl.OPTIONAL_APK
-    }
+    override val variantType
+        get() = VariantTypeImpl.OPTIONAL_APK
 }

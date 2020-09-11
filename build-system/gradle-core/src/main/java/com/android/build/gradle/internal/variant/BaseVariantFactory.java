@@ -196,7 +196,7 @@ public abstract class BaseVariantFactory<
             @NonNull BaseVariantData variantData,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
         Class<? extends BaseVariantImpl> implementationClass =
-                getVariantImplementationClass(variantData);
+                getVariantImplementationClass();
 
         return projectServices
                 .getObjectFactory()

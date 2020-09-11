@@ -13,163 +13,126 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.variant
 
-package com.android.build.gradle.internal.variant;
+import com.android.build.api.variant.impl.LibraryVariantBuilderImpl
+import com.android.build.api.component.ComponentIdentity
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.services.VariantApiServices
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.builder.core.BuilderConstants
+import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
+import com.android.build.api.dsl.BuildFeatures
+import com.android.build.gradle.options.ProjectOptions
+import com.android.build.api.dsl.LibraryBuildFeatures
+import com.android.build.api.variant.impl.LibraryVariantImpl
+import java.lang.RuntimeException
+import com.android.build.gradle.internal.api.BaseVariantImpl
+import com.android.builder.core.VariantTypeImpl
+import com.android.builder.errors.IssueReporter
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.dsl.*
+import com.android.build.gradle.internal.plugins.DslContainerProvider
+import com.android.build.gradle.internal.scope.*
+import com.android.build.gradle.internal.services.ProjectServices
+import com.google.common.collect.ImmutableList
 
-import static com.android.builder.core.BuilderConstants.DEBUG;
-import static com.android.builder.core.BuilderConstants.RELEASE;
+class LibraryVariantFactory(
+        projectServices: ProjectServices, globalScope: GlobalScope) : BaseVariantFactory<LibraryVariantBuilderImpl, LibraryVariantImpl>(
+        projectServices,
+        globalScope) {
 
-import com.android.annotations.NonNull;
-import com.android.build.api.artifact.impl.ArtifactsImpl;
-import com.android.build.api.component.ComponentIdentity;
-import com.android.build.api.dsl.BuildFeatures;
-import com.android.build.api.dsl.LibraryBuildFeatures;
-import com.android.build.api.variant.impl.LibraryVariantBuilderImpl;
-import com.android.build.api.variant.impl.LibraryVariantImpl;
-import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
-import com.android.build.gradle.internal.BuildTypeData;
-import com.android.build.gradle.internal.ProductFlavorData;
-import com.android.build.gradle.internal.api.BaseVariantImpl;
-import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantSources;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
-import com.android.build.gradle.internal.dsl.BuildType;
-import com.android.build.gradle.internal.dsl.DataBindingOptions;
-import com.android.build.gradle.internal.dsl.DefaultConfig;
-import com.android.build.gradle.internal.dsl.ProductFlavor;
-import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.plugins.DslContainerProvider;
-import com.android.build.gradle.internal.scope.BuildFeatureValues;
-import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.services.ProjectServices;
-import com.android.build.gradle.internal.services.TaskCreationServices;
-import com.android.build.gradle.internal.services.VariantApiServices;
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
-import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.core.BuilderConstants;
-import com.android.builder.core.VariantType;
-import com.android.builder.core.VariantTypeImpl;
-import com.android.builder.errors.IssueReporter;
-import com.android.builder.errors.IssueReporter.Type;
-import com.google.common.collect.ImmutableList;
-
-public class LibraryVariantFactory
-        extends BaseVariantFactory<LibraryVariantBuilderImpl, LibraryVariantImpl> {
-
-    public LibraryVariantFactory(
-            @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
-        super(projectServices, globalScope);
-    }
-
-    @NonNull
-    @Override
-    public LibraryVariantBuilderImpl createVariantObject(
-            @NonNull ComponentIdentity componentIdentity,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantApiServices variantApiServices) {
+    override fun createVariantObject(
+            componentIdentity: ComponentIdentity,
+            variantDslInfo: VariantDslInfo,
+            variantApiServices: VariantApiServices): LibraryVariantBuilderImpl {
         return projectServices
-                .getObjectFactory()
+                .objectFactory
                 .newInstance(
-                        LibraryVariantBuilderImpl.class,
+                        LibraryVariantBuilderImpl::class.java,
                         variantDslInfo,
                         componentIdentity,
-                        variantApiServices);
+                        variantApiServices)
     }
 
-    @NonNull
-    @Override
-    public LibraryVariantImpl createVariantPropertiesObject(
-            @NonNull LibraryVariantBuilderImpl variant,
-            @NonNull ComponentIdentity componentIdentity,
-            @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantDependencies variantDependencies,
-            @NonNull VariantSources variantSources,
-            @NonNull VariantPathHelper paths,
-            @NonNull ArtifactsImpl artifacts,
-            @NonNull VariantScope variantScope,
-            @NonNull BaseVariantData variantData,
-            @NonNull TransformManager transformManager,
-            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
-            @NonNull TaskCreationServices taskCreationServices) {
-        LibraryVariantImpl variantProperties =
-                projectServices
-                        .getObjectFactory()
-                        .newInstance(
-                                LibraryVariantImpl.class,
-                                variant,
-                                buildFeatures,
-                                variantDslInfo,
-                                variantDependencies,
-                                variantSources,
-                                paths,
-                                artifacts,
-                                variantScope,
-                                variantData,
-                                transformManager,
-                                variantPropertiesApiServices,
-                                taskCreationServices,
-                                globalScope);
+    override fun createVariantPropertiesObject(
+            variant: LibraryVariantBuilderImpl,
+            componentIdentity: ComponentIdentity,
+            buildFeatures: BuildFeatureValues,
+            variantDslInfo: VariantDslInfo,
+            variantDependencies: VariantDependencies,
+            variantSources: VariantSources,
+            paths: VariantPathHelper,
+            artifacts: ArtifactsImpl,
+            variantScope: VariantScope,
+            variantData: BaseVariantData,
+            transformManager: TransformManager,
+            variantPropertiesApiServices: VariantPropertiesApiServices,
+            taskCreationServices: TaskCreationServices): LibraryVariantImpl {
+        val variantProperties = projectServices
+                .objectFactory
+                .newInstance(
+                        LibraryVariantImpl::class.java,
+                        variant,
+                        buildFeatures,
+                        variantDslInfo,
+                        variantDependencies,
+                        variantSources,
+                        paths,
+                        artifacts,
+                        variantScope,
+                        variantData,
+                        transformManager,
+                        variantPropertiesApiServices,
+                        taskCreationServices,
+                        globalScope)
 
         // create default output
-        String name =
-                globalScope.getProjectBaseName()
-                        + "-"
-                        + variantProperties.getBaseName()
-                        + "."
-                        + BuilderConstants.EXT_LIB_ARCHIVE;
+        val name = "${globalScope.projectBaseName}-${variantProperties.baseName}.${BuilderConstants.EXT_LIB_ARCHIVE}"
         variantProperties.addVariantOutput(
-                new VariantOutputConfigurationImpl(false, ImmutableList.of()), name);
-
-        return variantProperties;
+                VariantOutputConfigurationImpl(false, ImmutableList.of()), name)
+        return variantProperties
     }
 
-    @NonNull
-    @Override
-    public BuildFeatureValues createBuildFeatureValues(
-            @NonNull BuildFeatures buildFeatures, @NonNull ProjectOptions projectOptions) {
-
-        if (buildFeatures instanceof LibraryBuildFeatures) {
-            return new BuildFeatureValuesImpl(
+    override fun createBuildFeatureValues(
+            buildFeatures: BuildFeatures, projectOptions: ProjectOptions): BuildFeatureValues {
+        return if (buildFeatures is LibraryBuildFeatures) {
+            BuildFeatureValuesImpl(
                     buildFeatures,
                     projectOptions,
                     null /*dataBindingOverride*/,
-                    null /*mlModelBindingOverride*/);
+                    null /*mlModelBindingOverride*/)
         } else {
-            throw new RuntimeException("buildFeatures not of type DynamicFeatureBuildFeatures");
+            throw RuntimeException("buildFeatures not of type DynamicFeatureBuildFeatures")
         }
     }
 
-    @NonNull
-    @Override
-    public BuildFeatureValues createTestBuildFeatureValues(
-            @NonNull BuildFeatures buildFeatures,
-            @NonNull DataBindingOptions dataBindingOptions,
-            @NonNull ProjectOptions projectOptions) {
-        return new BuildFeatureValuesImpl(
+    override fun createTestBuildFeatureValues(
+            buildFeatures: BuildFeatures,
+            dataBindingOptions: DataBindingOptions,
+            projectOptions: ProjectOptions): BuildFeatureValues {
+        return BuildFeatureValuesImpl(
                 buildFeatures,
                 projectOptions,
-                null, /* dataBindingOverride */
-                false /* mlModelBindingOverride */);
+                null,  /* dataBindingOverride */
+                false /* mlModelBindingOverride */)
     }
 
-    @NonNull
-    @Override
-    public BaseVariantData createVariantData(
-            @NonNull ComponentIdentity componentIdentity,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantDependencies variantDependencies,
-            @NonNull VariantSources variantSources,
-            @NonNull VariantPathHelper paths,
-            @NonNull ArtifactsImpl artifacts,
-            @NonNull VariantPropertiesApiServices services,
-            @NonNull GlobalScope globalScope,
-            @NonNull MutableTaskContainer taskContainer) {
-        return new LibraryVariantData(
+    override fun createVariantData(
+            componentIdentity: ComponentIdentity,
+            variantDslInfo: VariantDslInfo,
+            variantDependencies: VariantDependencies,
+            variantSources: VariantSources,
+            paths: VariantPathHelper,
+            artifacts: ArtifactsImpl,
+            services: VariantPropertiesApiServices,
+            globalScope: GlobalScope,
+            taskContainer: MutableTaskContainer): BaseVariantData {
+        return LibraryVariantData(
                 componentIdentity,
                 variantDslInfo,
                 variantDependencies,
@@ -178,110 +141,78 @@ public class LibraryVariantFactory
                 artifacts,
                 services,
                 globalScope,
-                taskContainer);
+                taskContainer)
     }
 
+    override val variantImplementationClass: Class<out BaseVariantImpl?>
+        get() {
+            return com.android.build.gradle.internal.api.LibraryVariantImpl::class.java
+        }
 
-    @Override
-    @NonNull
-    public Class<? extends BaseVariantImpl> getVariantImplementationClass(
-            @NonNull BaseVariantData variantData) {
-        return com.android.build.gradle.internal.api.LibraryVariantImpl.class;
-    }
+    override val variantType
+        get() = VariantTypeImpl.LIBRARY
 
-    @NonNull
-    @Override
-    public VariantType getVariantType() {
-        return VariantTypeImpl.LIBRARY;
-    }
-
-    /** * Prevent customization of applicationId or applicationIdSuffix. */
-    @Override
-    public void validateModel(
-            @NonNull
-                    VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
-                            model) {
-        super.validateModel(model);
-
-        IssueReporter issueReporter = projectServices.getIssueReporter();
-        DefaultConfig defaultConfig = model.getDefaultConfigData().getDefaultConfig();
-
-        if (defaultConfig.getApplicationId() != null) {
-            String applicationId = defaultConfig.getApplicationId();
+    /** * Prevent customization of applicationId or applicationIdSuffix.  */
+    override fun validateModel(
+            model: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>) {
+        super.validateModel(model)
+        val issueReporter: IssueReporter = projectServices.issueReporter
+        val defaultConfig = model.defaultConfigData.defaultConfig
+        if (defaultConfig.applicationId != null) {
+            val applicationId = defaultConfig.applicationId!!
             issueReporter.reportError(
-                    Type.GENERIC,
-                    "Library projects cannot set applicationId. "
-                            + "applicationId is set to '"
-                            + applicationId
-                            + "' in default config.",
-                    applicationId);
+                    IssueReporter.Type.GENERIC,
+                    "Library projects cannot set applicationId. applicationId is set to" +
+                            " '$applicationId' in default config.",
+                    applicationId)
         }
-
-        if (defaultConfig.getApplicationIdSuffix() != null) {
-            String applicationIdSuffix = defaultConfig.getApplicationIdSuffix();
+        if (defaultConfig.applicationIdSuffix != null) {
+            val applicationIdSuffix = defaultConfig.applicationIdSuffix!!
             issueReporter.reportError(
-                    Type.GENERIC,
-                    "Library projects cannot set applicationIdSuffix. "
-                            + "applicationIdSuffix is set to '"
-                            + applicationIdSuffix
-                            + "' in default config.",
-                    applicationIdSuffix);
+                    IssueReporter.Type.GENERIC,
+                    "Library projects cannot set applicationIdSuffix. applicationIdSuffix is " +
+                            "set to '$applicationIdSuffix' in default config.",
+                    applicationIdSuffix)
         }
-
-        for (BuildTypeData<BuildType> buildType : model.getBuildTypes().values()) {
-            if (buildType.getBuildType().getApplicationIdSuffix() != null) {
-                String applicationIdSuffix = buildType.getBuildType().getApplicationIdSuffix();
+        for (buildType in model.buildTypes.values) {
+            if (buildType.buildType.applicationIdSuffix != null) {
+                val applicationIdSuffix = buildType.buildType.applicationIdSuffix!!
                 issueReporter.reportError(
-                        Type.GENERIC,
-                        "Library projects cannot set applicationIdSuffix. "
-                                + "applicationIdSuffix is set to '"
-                                + applicationIdSuffix
-                                + "' in build type '"
-                                + buildType.getBuildType().getName()
-                                + "'.",
-                        applicationIdSuffix);
+                        IssueReporter.Type.GENERIC,
+                        "Library projects cannot set applicationIdSuffix. applicationIdSuffix " +
+                                "is set to '$applicationIdSuffix' in build type " +
+                                "'${buildType.buildType.name}'.",
+                        applicationIdSuffix)
             }
         }
-        for (ProductFlavorData<ProductFlavor> productFlavor : model.getProductFlavors().values()) {
-            if (productFlavor.getProductFlavor().getApplicationId() != null) {
-                String applicationId = productFlavor.getProductFlavor().getApplicationId();
+        for (productFlavor in model.productFlavors.values) {
+            if (productFlavor.productFlavor.applicationId != null) {
+                val applicationId = productFlavor.productFlavor.applicationId!!
                 issueReporter.reportError(
-                        Type.GENERIC,
-                        "Library projects cannot set applicationId. "
-                                + "applicationId is set to '"
-                                + applicationId
-                                + "' in flavor '"
-                                + productFlavor.getProductFlavor().getName()
-                                + "'.",
-                        applicationId);
+                        IssueReporter.Type.GENERIC,
+                        "Library projects cannot set applicationId. applicationId is set to " +
+                                "'$applicationId' in flavor '${productFlavor.productFlavor.name}'.",
+                        applicationId)
             }
-
-            if (productFlavor.getProductFlavor().getApplicationIdSuffix() != null) {
-                String applicationIdSuffix =
-                        productFlavor.getProductFlavor().getApplicationIdSuffix();
+            if (productFlavor.productFlavor.applicationIdSuffix != null) {
+                val applicationIdSuffix = productFlavor.productFlavor.applicationIdSuffix!!
                 issueReporter.reportError(
-                        Type.GENERIC,
-                        "Library projects cannot set applicationIdSuffix. "
-                                + "applicationIdSuffix is set to '"
-                                + applicationIdSuffix
-                                + "' in flavor '"
-                                + productFlavor.getProductFlavor().getName()
-                                + "'.",
-                        applicationIdSuffix);
+                        IssueReporter.Type.GENERIC,
+                        "Library projects cannot set applicationIdSuffix. applicationIdSuffix " +
+                                "is set to '$applicationIdSuffix' in flavor" +
+                                " '${productFlavor.productFlavor.name}'.",
+                        applicationIdSuffix)
             }
         }
     }
 
-    @Override
-    public void createDefaultComponents(
-            @NonNull
-                    DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
-                            dslContainers) {
+    override fun createDefaultComponents(
+            dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>) {
         // must create signing config first so that build type 'debug' can be initialized
         // with the debug signing config.
-        SigningConfig signingConfig = dslContainers.getSigningConfigContainer().create(DEBUG);
-        dslContainers.getBuildTypeContainer().create(DEBUG);
-        dslContainers.getBuildTypeContainer().create(RELEASE);
-        dslContainers.getDefaultConfig().setSigningConfig(signingConfig);
+        val signingConfig = dslContainers.signingConfigContainer.create(BuilderConstants.DEBUG)
+        dslContainers.buildTypeContainer.create(BuilderConstants.DEBUG)
+        dslContainers.buildTypeContainer.create(BuilderConstants.RELEASE)
+        dslContainers.defaultConfig.signingConfig = signingConfig
     }
 }

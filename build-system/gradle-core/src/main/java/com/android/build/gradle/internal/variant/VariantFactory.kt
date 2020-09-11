@@ -13,18 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.variant
 
-package com.android.build.gradle.internal.variant;
-
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.ComponentIdentity;
-import com.android.build.api.component.impl.AndroidTestBuilderImpl;
-import com.android.build.api.component.impl.AndroidTestImpl;
-import com.android.build.api.component.impl.ComponentImpl;
-import com.android.build.api.component.impl.UnitTestBuilderImpl;
-import com.android.build.api.component.impl.UnitTestImpl;
+import com.android.build.api.component.impl.*
 import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
 import com.android.build.api.variant.impl.VariantImpl;
@@ -55,116 +48,101 @@ import org.gradle.api.Project;
 /**
  * Interface for Variant Factory.
  *
- * <p>While VariantManager is the general variant management, implementation of this interface
+ *
+ * While VariantManager is the general variant management, implementation of this interface
  * provides variant type (app, lib) specific implementation.
  */
-public interface VariantFactory<
-        VariantBuilderT extends VariantBuilderImpl, VariantT extends VariantImpl> {
+interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl> {
 
-    @NonNull
-    VariantBuilderT createVariantObject(
-            @NonNull ComponentIdentity componentIdentity,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantApiServices variantApiServices);
+    fun createVariantObject(
+            componentIdentity: ComponentIdentity,
+            variantDslInfo: VariantDslInfo,
+            variantApiServices: VariantApiServices): VariantBuilderT
 
-    @NonNull
-    UnitTestBuilderImpl createUnitTestObject(
-            @NonNull ComponentIdentity componentIdentity,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantApiServices variantApiServices);
+    fun createUnitTestObject(
+            componentIdentity: ComponentIdentity,
+            variantDslInfo: VariantDslInfo,
+            variantApiServices: VariantApiServices): UnitTestBuilderImpl
 
-    @NonNull
-    AndroidTestBuilderImpl createAndroidTestObject(
-            @NonNull ComponentIdentity componentIdentity,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantApiServices variantApiServices);
+    fun createAndroidTestObject(
+            componentIdentity: ComponentIdentity,
+            variantDslInfo: VariantDslInfo,
+            variantApiServices: VariantApiServices): AndroidTestBuilderImpl
 
-    @NonNull
-    VariantT createVariantPropertiesObject(
-            @NonNull VariantBuilderT variant,
-            @NonNull ComponentIdentity componentIdentity,
-            @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantDependencies variantDependencies,
-            @NonNull VariantSources variantSources,
-            @NonNull VariantPathHelper paths,
-            @NonNull ArtifactsImpl artifacts,
-            @NonNull VariantScope variantScope,
-            @NonNull BaseVariantData variantData,
-            @NonNull TransformManager transformManager,
-            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
-            @NonNull TaskCreationServices taskCreationServices);
+    fun createVariantPropertiesObject(
+            variant: VariantBuilderT,
+            componentIdentity: ComponentIdentity,
+            buildFeatures: BuildFeatureValues,
+            variantDslInfo: VariantDslInfo,
+            variantDependencies: VariantDependencies,
+            variantSources: VariantSources,
+            paths: VariantPathHelper,
+            artifacts: ArtifactsImpl,
+            variantScope: VariantScope,
+            variantData: BaseVariantData,
+            transformManager: TransformManager,
+            variantPropertiesApiServices: VariantPropertiesApiServices,
+            taskCreationServices: TaskCreationServices): VariantT
 
-    @NonNull
-    UnitTestImpl createUnitTestProperties(
-            @NonNull UnitTestBuilderImpl componentIdentity,
-            @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantDependencies variantDependencies,
-            @NonNull VariantSources variantSources,
-            @NonNull VariantPathHelper paths,
-            @NonNull ArtifactsImpl artifacts,
-            @NonNull VariantScope variantScope,
-            @NonNull TestVariantData variantData,
-            @NonNull VariantImpl testedVariantProperties,
-            @NonNull TransformManager transformManager,
-            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
-            @NonNull TaskCreationServices taskCreationServices);
+    fun createUnitTestProperties(
+            componentIdentity: UnitTestBuilderImpl,
+            buildFeatures: BuildFeatureValues,
+            variantDslInfo: VariantDslInfo,
+            variantDependencies: VariantDependencies,
+            variantSources: VariantSources,
+            paths: VariantPathHelper,
+            artifacts: ArtifactsImpl,
+            variantScope: VariantScope,
+            variantData: TestVariantData,
+            testedVariantProperties: VariantImpl,
+            transformManager: TransformManager,
+            variantPropertiesApiServices: VariantPropertiesApiServices,
+            taskCreationServices: TaskCreationServices): UnitTestImpl
 
-    @NonNull
-    AndroidTestImpl createAndroidTestProperties(
-            @NonNull AndroidTestBuilderImpl componentIdentity,
-            @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantDependencies variantDependencies,
-            @NonNull VariantSources variantSources,
-            @NonNull VariantPathHelper paths,
-            @NonNull ArtifactsImpl artifacts,
-            @NonNull VariantScope variantScope,
-            @NonNull TestVariantData variantData,
-            @NonNull VariantImpl testedVariantProperties,
-            @NonNull TransformManager transformManager,
-            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
-            @NonNull TaskCreationServices taskCreationServices);
+    fun createAndroidTestProperties(
+            componentIdentity: AndroidTestBuilderImpl,
+            buildFeatures: BuildFeatureValues,
+            variantDslInfo: VariantDslInfo,
+            variantDependencies: VariantDependencies,
+            variantSources: VariantSources,
+            paths: VariantPathHelper,
+            artifacts: ArtifactsImpl,
+            variantScope: VariantScope,
+            variantData: TestVariantData,
+            testedVariantProperties: VariantImpl,
+            transformManager: TransformManager,
+            variantPropertiesApiServices: VariantPropertiesApiServices,
+            taskCreationServices: TaskCreationServices): AndroidTestImpl
 
-    @NonNull
-    BaseVariantData createVariantData(
-            @NonNull ComponentIdentity componentIdentity,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantDependencies variantDependencies,
-            @NonNull VariantSources variantSources,
-            @NonNull VariantPathHelper paths,
-            @NonNull ArtifactsImpl artifacts,
-            @NonNull VariantPropertiesApiServices services,
-            @NonNull GlobalScope globalScope,
-            @NonNull MutableTaskContainer taskContainer);
+    fun createVariantData(
+            componentIdentity: ComponentIdentity,
+            variantDslInfo: VariantDslInfo,
+            variantDependencies: VariantDependencies,
+            variantSources: VariantSources,
+            paths: VariantPathHelper,
+            artifacts: ArtifactsImpl,
+            services: VariantPropertiesApiServices,
+            globalScope: GlobalScope,
+            taskContainer: MutableTaskContainer): BaseVariantData
 
-    @NonNull
-    BuildFeatureValues createBuildFeatureValues(
-            @NonNull BuildFeatures buildFeatures, @NonNull ProjectOptions projectOptions);
+    fun createBuildFeatureValues(
+            buildFeatures: BuildFeatures, projectOptions: ProjectOptions): BuildFeatureValues
 
-    @NonNull
-    BuildFeatureValues createTestBuildFeatureValues(
-            @NonNull BuildFeatures buildFeatures,
-            @NonNull DataBindingOptions dataBindingOptions,
-            @NonNull ProjectOptions projectOptions);
+    fun createTestBuildFeatureValues(
+            buildFeatures: BuildFeatures,
+            dataBindingOptions: DataBindingOptions,
+            projectOptions: ProjectOptions): BuildFeatureValues
 
-    @NonNull
-    Class<? extends BaseVariantImpl> getVariantImplementationClass(
-            @NonNull BaseVariantData variantData);
+    val variantImplementationClass: Class<out BaseVariantImpl?>
 
-    @Nullable
-    BaseVariantImpl createVariantApi(
-            @NonNull GlobalScope globalScope,
-            @NonNull ComponentImpl componentProperties,
-            @NonNull BaseVariantData variantData,
-            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider);
+    fun createVariantApi(
+            globalScope: GlobalScope,
+            componentProperties: ComponentImpl,
+            variantData: BaseVariantData,
+            readOnlyObjectProvider: ReadOnlyObjectProvider): BaseVariantImpl?
 
-    @NonNull
-    BaseServices getServicesForOldVariantObjectsOnly();
-
-    @NonNull
-    VariantType getVariantType();
+    val servicesForOldVariantObjectsOnly: BaseServices
+    val variantType: VariantType
 
     /**
      * Fail if the model is configured incorrectly.
@@ -172,15 +150,10 @@ public interface VariantFactory<
      * @param model the non-null model to validate, as implemented by the VariantManager.
      * @throws org.gradle.api.GradleException when the model does not validate.
      */
-    void validateModel(
-            @NonNull
-                    VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
-                            model);
+    fun validateModel(
+            model: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>)
 
-    void preVariantWork(Project project);
-
-    void createDefaultComponents(
-            @NonNull
-                    DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
-                            dslContainers);
+    fun preVariantWork(project: Project?)
+    fun createDefaultComponents(
+            dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>)
 }

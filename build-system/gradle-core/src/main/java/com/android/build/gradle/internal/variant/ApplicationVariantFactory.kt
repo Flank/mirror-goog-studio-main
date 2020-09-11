@@ -153,9 +153,8 @@ class ApplicationVariantFactory(
         )
     }
 
-    override fun getVariantType(): VariantType {
-        return VariantTypeImpl.BASE_APK
-    }
+    override val variantType
+        get() = VariantTypeImpl.BASE_APK
 
     private fun computeOutputs(
         variantProperties: ApplicationVariantImpl,
