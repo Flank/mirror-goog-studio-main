@@ -3,6 +3,7 @@ apply plugin: 'com.android.lint'
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation project(':indirectlib')
 }
 
 sourceCompatibility = "1.7"

@@ -21,19 +21,16 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.model.LintModelLintOptions
 import com.android.tools.lint.model.LintModelSeverity
-import java.io.File
 
 /**
  * Consult the lint.xml file, but override with the suitable flags configured via
  * [LintModelLintOptions].
  */
 open class LintOptionsConfiguration(
-    client: LintClient,
-    lintFile: File,
-    dir: File,
+    configurations: ConfigurationHierarchy,
     private val lintOptions: LintModelLintOptions,
     private val fatalOnly: Boolean = false
-) : FlagConfiguration(client, lintFile, dir) {
+) : FlagConfiguration(configurations) {
 
     private var disabledIds: Set<String>
     private var disabledCategories: Set<Category>

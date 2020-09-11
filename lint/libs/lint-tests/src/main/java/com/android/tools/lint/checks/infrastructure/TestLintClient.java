@@ -64,11 +64,13 @@ import com.android.tools.lint.TextReporter;
 import com.android.tools.lint.checks.ApiLookup;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
+import com.android.tools.lint.client.api.ConfigurationHierarchy;
 import com.android.tools.lint.client.api.GradleVisitor;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintRequest;
+import com.android.tools.lint.client.api.LintXmlConfiguration;
 import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.client.api.XmlParser;
 import com.android.tools.lint.detector.api.Context;
@@ -87,6 +89,7 @@ import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.model.LintModelExternalLibrary;
 import com.android.tools.lint.model.LintModelFactory;
 import com.android.tools.lint.model.LintModelLibrary;
+import com.android.tools.lint.model.LintModelLintOptions;
 import com.android.tools.lint.model.LintModelMavenName;
 import com.android.tools.lint.model.LintModelModule;
 import com.android.tools.lint.model.LintModelSourceProvider;
@@ -123,7 +126,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
 import org.jetbrains.uast.UFile;
 import org.w3c.dom.Attr;
@@ -604,7 +606,7 @@ public class TestLintClient extends LintCliClient {
     }
 
     @Override
-    public boolean isProjectDirectory(@NotNull File dir) {
+    public boolean isProjectDirectory(@NonNull File dir) {
         if (task.dirToProjectDescription.containsKey(dir)) {
             return true;
         }
@@ -933,22 +935,51 @@ public class TestLintClient extends LintCliClient {
 
     @NonNull
     @Override
-    public Configuration getConfiguration(@NonNull Project project, @Nullable LintDriver driver) {
+    public Configuration getConfiguration(
+            @NonNull com.android.tools.lint.detector.api.Project project,
+            @Nullable final LintDriver driver) {
         return getConfigurations()
                 .getConfigurationForProject(
                         project,
-                        (client, file) ->
-                                (project.getBuildModule() != null)
-                                        ? new TestLintOptionsConfiguration(
-                                                task,
-                                                client,
-                                                project.getBuildModule()
-                                                        .getLintOptions()
-                                                        .getLintConfig(),
-                                                project.getDir(),
-                                                project.getBuildModule().getLintOptions(),
-                                                false)
-                                        : new TestConfiguration(task, client, project));
+                        (file, defaultConfiguration) ->
+                                createConfiguration(project, defaultConfiguration));
+    }
+
+    private Configuration createConfiguration(
+            @NonNull com.android.tools.lint.detector.api.Project project,
+            @NonNull Configuration defaultConfiguration) {
+        // Ensure that we have a fallback configuration which disables everything
+        // except the relevant issues
+        LintModelModule model = project.getBuildModule();
+        final ConfigurationHierarchy configurations = getConfigurations();
+        if (model != null) {
+            LintModelLintOptions options = model.getLintOptions();
+            return configurations.createLintOptionsConfiguration(
+                    project,
+                    options,
+                    false,
+                    defaultConfiguration,
+                    () ->
+                            new TestLintOptionsConfiguration(
+                                    task, project, configurations, options, false));
+        } else {
+            return configurations.createChainedConfigurations(
+                    project,
+                    null,
+                    () -> new TestConfiguration(task, configurations),
+                    () -> {
+                        File lintConfigXml =
+                                ConfigurationHierarchy.Companion.getLintXmlFile(project.getDir());
+                        if (lintConfigXml.isFile()) {
+                            LintXmlConfiguration configuration =
+                                    LintXmlConfiguration.create(configurations, lintConfigXml);
+                            configuration.setFileLevel(false);
+                            return configuration;
+                        } else {
+                            return null;
+                        }
+                    });
+        }
     }
 
     @Override
@@ -1241,9 +1272,9 @@ public class TestLintClient extends LintCliClient {
         return testSourceFolders;
     }
 
-    @NotNull
+    @NonNull
     @Override
-    public List<File> getExternalAnnotations(@NotNull Collection<? extends Project> projects) {
+    public List<File> getExternalAnnotations(@NonNull Collection<? extends Project> projects) {
         List<File> externalAnnotations = Lists.newArrayList(super.getExternalAnnotations(projects));
 
         for (Project project : projects) {

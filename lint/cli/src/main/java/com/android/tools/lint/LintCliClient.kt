@@ -35,7 +35,6 @@ import com.android.tools.lint.LintCliFlags.ERRNO_ERRORS
 import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
 import com.android.tools.lint.LintStats.Companion.create
 import com.android.tools.lint.checks.HardcodedValuesDetector
-import com.android.tools.lint.client.api.Configuration
 import com.android.tools.lint.client.api.GradleVisitor
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintBaseline
@@ -81,6 +80,7 @@ import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.util.PerformanceCounter.Companion.resetAllCounters
+import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import org.w3c.dom.Document
 import org.xml.sax.SAXException
 import java.io.File
@@ -139,16 +139,12 @@ open class LintCliClient : LintClient {
     lateinit var driver: LintDriver
         protected set
 
-    /** Returns the configuration used by this client as a fallback */
-    open val defaultConfiguration: Configuration? = null
-
     /** Flags configuring the lint runs */
     val flags: LintCliFlags
 
     private var validatedIds = false
     private var kotlinPerformanceManager: LintCliKotlinPerformanceManager? = null
     private var jdkHome: File? = null
-    protected var overrideConfiguration: Configuration? = null
     var uastEnvironment: UastEnvironment? = null
     val ideaProject: MockProject? get() = uastEnvironment?.ideaProject
     protected val incidents: MutableList<Incident> = ArrayList()
@@ -157,6 +153,11 @@ open class LintCliClient : LintClient {
     protected var warningCount = 0
 
     private fun initialize() {
+        addGlobalXmlFallbackConfiguration()
+    }
+
+    /** Allow configuration override to be injected with a system property */
+    private fun addGlobalXmlFallbackConfiguration() {
         var configuration = System.getenv(LINT_OVERRIDE_CONFIGURATION_ENV_VAR)
         if (configuration == null) {
             configuration = System.getProperty(LINT_CONFIGURATION_OVERRIDE_PROP)
@@ -164,7 +165,11 @@ open class LintCliClient : LintClient {
         if (configuration != null) {
             val file = File(configuration)
             if (file.exists()) {
-                overrideConfiguration = createConfigurationFromFile(file)
+                val xmlConfiguration = LintXmlConfiguration.create(configurations, file)
+                // This XML configuration is not associated with its location so remove its
+                // directory scope
+                xmlConfiguration.dir = null
+                configurations.addGlobalConfigurations(fallback = xmlConfiguration)
                 println("Overriding configuration from $file")
             } else {
                 log(
@@ -461,13 +466,6 @@ open class LintCliClient : LintClient {
 
     override val xmlParser: XmlParser
         get() = LintCliXmlParser(this)
-
-    override fun getConfiguration(project: Project, driver: LintDriver?): Configuration {
-        return configurations.getConfigurationForProject(project) { _, _ ->
-            overrideConfiguration
-                ?: CliConfiguration(this, flags, project, flags.isFatalOnly)
-        }
-    }
 
     /** File content cache  */
     private val fileContentCache: MutableMap<File, CharSequence> = HashMap(100)
@@ -779,13 +777,6 @@ open class LintCliClient : LintClient {
         return flags.enabledIds.contains(issue.id)
     }
 
-    fun createConfigurationFromFile(file: File): Configuration {
-        return configurations.getConfigurationForFile(file) { _, _ ->
-            val dir = file.parentFile ?: File(".")
-            CliConfiguration(this, flags, file, dir, flags.isFatalOnly)
-        }
-    }
-
     public override fun initializeProjects(knownProjects: Collection<Project>) {
         // Initialize the associated idea project to use
         val includeTests = !flags.isIgnoreTestSources
@@ -921,67 +912,66 @@ open class LintCliClient : LintClient {
         super.disposeProjects(knownProjects)
     }
 
-    val isOverridingConfiguration: Boolean
-        get() = overrideConfiguration != null
-
     /** Synchronizes any options specified in lint.xml with the [LintCliFlags] object  */
     fun syncConfigOptions() {
-        val configuration = defaultConfiguration
-        if (configuration is LintXmlConfiguration) {
-            val config = configuration
-            val checkAllWarnings = config.getCheckAllWarnings()
-            if (checkAllWarnings != null) {
-                flags.isCheckAllWarnings = checkAllWarnings
-            }
-            val ignoreWarnings = config.getIgnoreWarnings()
-            if (ignoreWarnings != null) {
-                flags.isIgnoreWarnings = ignoreWarnings
-            }
-            val warningsAsErrors = config.getWarningsAsErrors()
-            if (warningsAsErrors != null) {
-                flags.isWarningsAsErrors = warningsAsErrors
-            }
-            val fatalOnly = config.getFatalOnly()
-            if (fatalOnly != null) {
-                flags.isFatalOnly = fatalOnly
-            }
-            val checkTestSources = config.getCheckTestSources()
-            if (checkTestSources != null) {
-                flags.isCheckTestSources = checkTestSources
-            }
-            val ignoreTestSources = config.getIgnoreTestSources()
-            if (ignoreTestSources != null) {
-                flags.isIgnoreTestSources = ignoreTestSources
-            }
-            val checkGeneratedSources = config.getCheckGeneratedSources()
-            if (checkGeneratedSources != null) {
-                flags.isCheckGeneratedSources = checkGeneratedSources
-            }
-            val checkDependencies = config.getCheckDependencies()
-            if (checkDependencies != null) {
-                flags.isCheckDependencies = checkDependencies
-            }
-            val explainIssues = config.getExplainIssues()
-            if (explainIssues != null) {
-                flags.isExplainIssues = explainIssues
-            }
-            val removeFixedBaselineIssues = config.getRemoveFixedBaselineIssues()
-            if (removeFixedBaselineIssues != null) {
-                flags.setRemovedFixedBaselineIssues(removeFixedBaselineIssues)
-            }
-            val abortOnError = config.getAbortOnError()
-            if (abortOnError != null) {
-                flags.isSetExitCode = abortOnError
-            }
-            val baselineFile = config.baselineFile
-            if (baselineFile != null) {
-                flags.baselineFile =
-                    if (baselineFile.path == SdkConstants.VALUE_NONE) null else baselineFile
-            }
-            val applySuggestions = config.getApplySuggestions()
-            if (applySuggestions != null && applySuggestions) {
-                flags.isAutoFix = true
-            }
+        val configs = generateSequence(configurations.fallback) {
+            configurations.getParentConfiguration(it)
+        }
+        val config = configs.firstIsInstanceOrNull<LintXmlConfiguration>()
+            ?: return
+
+        val checkAllWarnings = config.getCheckAllWarnings()
+        if (checkAllWarnings != null) {
+            flags.isCheckAllWarnings = checkAllWarnings
+        }
+        val ignoreWarnings = config.getIgnoreWarnings()
+        if (ignoreWarnings != null) {
+            flags.isIgnoreWarnings = ignoreWarnings
+        }
+        val warningsAsErrors = config.getWarningsAsErrors()
+        if (warningsAsErrors != null) {
+            flags.isWarningsAsErrors = warningsAsErrors
+        }
+        val fatalOnly = config.getFatalOnly()
+        if (fatalOnly != null) {
+            flags.isFatalOnly = fatalOnly
+        }
+        val checkTestSources = config.getCheckTestSources()
+        if (checkTestSources != null) {
+            flags.isCheckTestSources = checkTestSources
+        }
+        val ignoreTestSources = config.getIgnoreTestSources()
+        if (ignoreTestSources != null) {
+            flags.isIgnoreTestSources = ignoreTestSources
+        }
+        val checkGeneratedSources = config.getCheckGeneratedSources()
+        if (checkGeneratedSources != null) {
+            flags.isCheckGeneratedSources = checkGeneratedSources
+        }
+        val checkDependencies = config.getCheckDependencies()
+        if (checkDependencies != null) {
+            flags.isCheckDependencies = checkDependencies
+        }
+        val explainIssues = config.getExplainIssues()
+        if (explainIssues != null) {
+            flags.isExplainIssues = explainIssues
+        }
+        val removeFixedBaselineIssues = config.getRemoveFixedBaselineIssues()
+        if (removeFixedBaselineIssues != null) {
+            flags.setRemovedFixedBaselineIssues(removeFixedBaselineIssues)
+        }
+        val abortOnError = config.getAbortOnError()
+        if (abortOnError != null) {
+            flags.isSetExitCode = abortOnError
+        }
+        val baselineFile = config.baselineFile
+        if (baselineFile != null) {
+            flags.baselineFile =
+                if (baselineFile.path == SdkConstants.VALUE_NONE) null else baselineFile
+        }
+        val applySuggestions = config.getApplySuggestions()
+        if (applySuggestions != null && applySuggestions) {
+            flags.isAutoFix = true
         }
     }
 

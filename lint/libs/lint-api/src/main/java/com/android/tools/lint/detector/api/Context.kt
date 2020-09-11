@@ -75,7 +75,7 @@ open class Context(
 
     /** The current configuration controlling which checks are enabled etc  */
     val configuration: Configuration = client.getConfiguration(file)
-        ?: client.getConfiguration(project, driver)
+        ?: project.getConfiguration(driver)
 
     /** Whether this file contains any suppress markers (null means not yet determined)  */
     private var containsCommentSuppress: Boolean? = null

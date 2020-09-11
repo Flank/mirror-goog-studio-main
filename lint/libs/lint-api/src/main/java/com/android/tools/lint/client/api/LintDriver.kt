@@ -146,23 +146,21 @@ import kotlin.system.measureTimeMillis
 /**
  * Analyzes Android projects and files
  *
- *
  * **NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.**
  */
 @Beta
-class LintDriver
-/**
- * Creates a new [LintDriver]
- *
- * @param registry The registry containing issues to be checked
- *
- * @param request The request which points to the original files to be checked,
- * the original scope, the original [LintClient], as well as the release mode.
- *
- * @param client the tool wrapping the analyzer, such as an IDE or a CLI
- */
-(var registry: IssueRegistry, client: LintClient, val request: LintRequest) {
+class LintDriver(
+    /** The [registry] containing issues to be checked */
+    var registry: IssueRegistry,
+    /** The tool wrapping the analyzer, such as an IDE or a CLI */
+    client: LintClient,
+    /**
+     * The request which points to the original files to be checked,
+     * the original scope, the original [LintClient], as well as the release mode.
+     */
+    val request: LintRequest
+) {
     /** The original client (not the wrapped one intended to pass to detectors */
     private val realClient: LintClient = client
 
@@ -398,7 +396,7 @@ class LintDriver
         // See if the lint.xml file specifies a baseline and we're not in incremental mode
         if (baseline == null && scope.size > 2) {
             val lastProject = Iterables.getLast(projects)
-            val mainConfiguration = client.getConfiguration(lastProject, this)
+            val mainConfiguration = lastProject.getConfiguration(this)
             val baselineFile = mainConfiguration.baselineFile
             if (baselineFile != null) {
                 baseline = LintBaseline(client, baselineFile)
@@ -875,9 +873,22 @@ class LintDriver
 
         // Set up inheritance of configurations from the library project to the main project
         val projectConfiguration = project.getConfiguration(this)
+        val leaf: Configuration?
+        val leafPrevParent: Configuration?
         if (main !== project) {
+            // Note that libraryConfig can have one or more parents who are also
+            // part of this library (e.g. for a Gradle library we can have one
+            // configuration for the DSL flags, another for the XML file it links
+            // via the lintConfig property, and finally a lint.xml in the project
+            // directory) so skip to the most distant parent that is still referencing
+            // this library
+            leaf = client.configurations.getScopeLeaf(projectConfiguration)
+            leafPrevParent = projectConfiguration.parent
             val mainConfiguration = main.getConfiguration(this)
-            client.configurations.setParent(projectConfiguration, mainConfiguration)
+            projectConfiguration.setParent(mainConfiguration)
+        } else {
+            leaf = null
+            leafPrevParent = null
         }
 
         val projectContext = Context(this, project, null, projectDir)
@@ -901,33 +912,9 @@ class LintDriver
         runDelayedRunnables()
 
         if (checkDependencies && !Scope.checkSingleFile(scope)) {
-            val libraries = project.allLibraries
-            for (library in libraries) {
-                // Set up configuration inheritance from the library project into the depending
-                // project
-                if (library.reportIssues) {
-                    val libraryConfiguration = library.getConfiguration(this)
-                    client.configurations.setParent(libraryConfiguration, projectConfiguration)
-                }
-
-                val libraryContext = Context(this, library, project, projectDir)
-                fireEvent(EventType.SCANNING_LIBRARY_PROJECT, libraryContext)
-                currentProject = library
-
-                for (check in applicableDetectors) {
-                    check.beforeCheckEachProject(libraryContext)
-                }
-                assert(currentProject === library)
-
-                runFileDetectors(library, main)
-                assert(currentProject === library)
-
-                runDelayedRunnables()
-
-                for (check in applicableDetectors) {
-                    check.afterCheckEachProject(libraryContext)
-                }
-            }
+            val libraries = project.directLibraries
+            val seen = HashSet<Project>(project.allLibraries.size)
+            analyzeDependencies(libraries, projectConfiguration, project, main, seen)
         }
 
         currentProject = project
@@ -942,6 +929,70 @@ class LintDriver
         }
 
         currentProjects = null
+
+        if (leaf != null) {
+            client.configurations.setParent(leaf, leafPrevParent)
+        }
+    }
+
+    private fun analyzeDependencies(
+        libraries: List<Project>,
+        projectConfiguration: Configuration?,
+        project: Project,
+        main: Project,
+        seen: MutableSet<Project>
+    ) {
+        for (library in libraries) {
+            if (!seen.add(library)) {
+                continue
+            }
+
+            // Set up configuration inheritance from the library project into the depending
+            // project.
+            if (projectConfiguration != null && library.reportIssues) {
+                val libraryConfig = library.getConfiguration(this)
+                val libraryConfigLeaf = client.configurations.getScopeLeaf(libraryConfig)
+                val libraryConfigPrevParent = libraryConfigLeaf.parent
+                libraryConfigLeaf.setParent(projectConfiguration)
+                try {
+                    analyzeLibraryProject(library, project, main)
+                    analyzeDependencies(
+                        library.directLibraries, libraryConfig, library, main, seen
+                    )
+                } finally {
+                    client.configurations.setParent(libraryConfigLeaf, libraryConfigPrevParent)
+                }
+            } else {
+                analyzeLibraryProject(library, project, main)
+                analyzeDependencies(
+                    library.directLibraries, null, library, main, seen
+                )
+            }
+        }
+    }
+
+    private fun analyzeLibraryProject(
+        library: Project,
+        project: Project,
+        main: Project
+    ) {
+        val libraryContext = Context(this, library, project, library.dir)
+        fireEvent(EventType.SCANNING_LIBRARY_PROJECT, libraryContext)
+        currentProject = library
+
+        for (check in applicableDetectors) {
+            check.beforeCheckEachProject(libraryContext)
+        }
+        assert(currentProject === library)
+
+        runFileDetectors(library, main)
+        assert(currentProject === library)
+
+        runDelayedRunnables()
+
+        for (check in applicableDetectors) {
+            check.afterCheckEachProject(libraryContext)
+        }
     }
 
     // The UAST source list of the last project analyzed.
@@ -1389,7 +1440,7 @@ class LintDriver
             } catch (t: Throwable) {
                 client.log(
                     null,
-                    "Error processing ${entry.path()}: broken class file? (${t.message})"
+                    "Error processing ${entry.path()}: broken class file? ($t)"
                 )
                 continue
             }
@@ -1522,7 +1573,7 @@ class LintDriver
             } catch (t: Throwable) {
                 client.log(
                     null,
-                    "Error processing ${classFile.path}: broken class file? (${t.message})"
+                    "Error processing ${classFile.path}: broken class file? ($t)"
                 )
             }
         }
@@ -1577,7 +1628,7 @@ class LintDriver
         }
 
         // Even if checkGeneratedSources == false, we must include generated sources
-        // in our context list such that the source files are found by the Kotin analyzer
+        // in our context list such that the source files are found by the Kotlin analyzer
         sources.clear()
         for (folder in project.generatedSourceFolders) {
             gatherJavaFiles(folder, sources)
@@ -2159,10 +2210,6 @@ class LintDriver
             return delegate.getConfiguration(file)
         }
 
-        override fun getParentConfiguration(configuration: Configuration): Configuration? {
-            return delegate.getParentConfiguration(configuration)
-        }
-
         override fun log(
             severity: Severity,
             exception: Throwable?,
@@ -2213,11 +2260,6 @@ class LintDriver
 
         override val xmlParser: XmlParser
             get() = delegate.xmlParser
-
-        override fun replaceDetector(
-            detectorClass: Class<out Detector>
-        ): Class<out Detector> =
-            delegate.replaceDetector(detectorClass)
 
         override fun getSdkInfo(project: Project): SdkInfo = delegate.getSdkInfo(project)
 

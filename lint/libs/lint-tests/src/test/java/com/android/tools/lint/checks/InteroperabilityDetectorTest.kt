@@ -180,6 +180,8 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                             };
                         }
                     }
+                    @Deprecated
+                    public Float error8;
                 }
                 """
             ).indented(),
@@ -208,7 +210,10 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
             src/test/pkg/Test.java:19: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
                 protected Float error7;
                           ~~~~~
-            0 errors, 7 warnings
+            src/test/pkg/Test.java:34: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
+                public Float error8;
+                       ~~~~~
+            0 errors, 8 warnings
             """
         ).expectFixDiffs(
             // The unit testing infrastructure doesn't support shortening identifiers so
@@ -272,8 +277,116 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
             @@ -19 +19
             -     protected Float error7;
             +     @Nullable protected Float error7;
+            Fix for src/test/pkg/Test.java line 34: Annotate @NonNull:
+            @@ -33 +33
+            -     @Deprecated
+            +     @NonNull @Deprecated
+            Fix for src/test/pkg/Test.java line 34: Annotate @Nullable:
+            @@ -33 +33
+            -     @Deprecated
+            +     @Nullable @Deprecated
             """
         )
+    }
+
+    fun testNullnessWithoutDeprecatedElements() {
+        // Normally everything is flagged, but via options (and envvars) you can
+        // filter out deprecated elements; this tests that
+        lint().files(
+            xml(
+                "lint.xml",
+                """
+                <lint>
+                    <issue id="UnknownNullness">
+                        <option name="ignore-deprecated" value="true" />
+                    </issue>
+                </lint>
+                """
+            ).indented(),
+            xml(
+                "src/other/pkg/lint.xml",
+                """
+                <lint>
+                    <issue id="TooManyViews">
+                        <option name="maxCount" value="20" />
+                    </issue>
+                </lint>
+                """
+            ).indented(),
+            java(
+                """
+                package other.pkg;
+
+                import android.support.annotation.NonNull;
+                import android.support.annotation.Nullable;
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class Test2 {
+                    @Deprecated
+                    public Object error1(Integer error2, @Deprecated int[] error3) { return null; }
+                    @Deprecated
+                    public Float error4;
+                    /** @deprecated */
+                    public Float error5;
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).issues(InteroperabilityDetector.PLATFORM_NULLNESS).run().expectClean()
+    }
+
+    fun testNullnessWithoutDeprecatedElementsOldTestDSL() {
+        PLATFORM_NULLNESS.setEnabledByDefault(true)
+
+        // Like testNullnessWithoutDeprecatedElements, but uses the old Lint Test API.
+        // This is less a test of the detector and more a test of lint's test infrastructure;
+        // all the old tests have been used, but this test verifies that things still work.
+        @Suppress("DEPRECATION")
+        assertEquals(
+            "No warnings.",
+            lintProject(
+                xml(
+                    "lint.xml",
+                    """
+                    <lint>
+                        <issue id="UnknownNullness">
+                            <option name="ignore-deprecated" value="true" />
+                        </issue>
+                    </lint>
+                    """
+                ).indented(),
+                xml(
+                    "src/other/pkg/lint.xml",
+                    """
+                    <lint>
+                        <issue id="TooManyViews">
+                            <option name="maxCount" value="20" />
+                        </issue>
+                    </lint>
+                    """
+                ).indented(),
+                java(
+                    """
+                    package other.pkg;
+                    import android.support.annotation.NonNull;
+                    import android.support.annotation.Nullable;
+                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                    public class Test2 {
+                        @Deprecated
+                        public Object error1(Integer error2, @Deprecated int[] error3) { return null; }
+                        @Deprecated
+                        public Float error4;
+                        /** @deprecated */
+                        public Float error5;
+                    }
+                    """
+                ).indented(),
+                SUPPORT_ANNOTATIONS_CLASS_PATH,
+                SUPPORT_ANNOTATIONS_JAR
+            )
+        )
+
+        PLATFORM_NULLNESS.setEnabledByDefault(false)
     }
 
     fun testPropertyAccess() {

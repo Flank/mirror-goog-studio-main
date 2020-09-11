@@ -46,7 +46,6 @@ import com.android.sdklib.SdkVersionInfo
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Desugaring
-import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
@@ -141,13 +140,6 @@ abstract class LintClient {
         configurations.getConfigurationForFolder(file.parentFile)
 
     /**
-     * Returns the parent configuration to inherit from for the given
-     * [configuration], if any.
-     */
-    open fun getParentConfiguration(configuration: Configuration): Configuration? =
-        configurations.getParentConfiguration(configuration)
-
-    /**
      * Report the given issue. This method will only be called if the configuration
      * provided by [.getConfiguration] has reported the corresponding
      * issue as enabled and has not filtered out the issue with its
@@ -235,19 +227,6 @@ abstract class LintClient {
      * Returns a visitor to use to analyze Gradle build scripts
      */
     abstract fun getGradleVisitor(): GradleVisitor
-
-    /**
-     * Returns an optimal detector, if applicable. By default, just returns the
-     * original detector, but tools can replace detectors using this hook with a version
-     * that takes advantage of native capabilities of the tool.
-     *
-     * @param detectorClass the class of the detector to be replaced
-     *
-     * @return the new detector class, or just the original detector (not null)
-     */
-    open fun replaceDetector(
-        detectorClass: Class<out Detector>
-    ): Class<out Detector> = detectorClass
 
     /**
      * Reads the given text file and returns the content as a string
@@ -834,6 +813,18 @@ abstract class LintClient {
         val project = createProject(dir, referenceDir)
         dirToProject[canonicalDir] = project
         return project
+    }
+
+    /** Returns true if this is a known project directory */
+    fun isKnownProjectDir(dir: File): Boolean {
+        val canonicalDir =
+            try {
+                // See getProject()
+                dir.canonicalFile
+            } catch (ioe: IOException) {
+                dir
+            }
+        return dirToProject[canonicalDir] != null
     }
 
     /**

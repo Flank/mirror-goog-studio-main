@@ -31,6 +31,8 @@ import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintBaseline
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.LintClient.Companion.clientName
+import com.android.tools.lint.client.api.LintOptionsConfiguration
+import com.android.tools.lint.client.api.LintXmlConfiguration
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.gradle.api.LintExecutionRequest
 import com.android.tools.lint.gradle.api.VariantInputs
@@ -212,6 +214,19 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
                 fatalOnly,
                 allowFix
             )
+
+            if (!isAndroid) {
+                // We won't be able to load a project model here so use an override
+                // configuration instead
+                val configurations = client.configurations
+                val override = LintOptionsConfiguration(configurations, lintOptions, fatalOnly)
+                val lintConfig = lintOptions.lintConfig
+                val fallback = if (lintConfig != null && lintConfig.exists())
+                    LintXmlConfiguration.create(configurations, lintConfig)
+                else
+                    null
+                configurations.addGlobalConfigurations(fallback = fallback, override = override)
+            }
         } else {
             // Set up some default reporters
             flags.reporters.add(

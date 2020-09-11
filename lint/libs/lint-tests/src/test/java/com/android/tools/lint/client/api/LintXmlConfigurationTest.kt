@@ -23,6 +23,7 @@ import com.android.tools.lint.checks.ApiDetector
 import com.android.tools.lint.checks.ChromeOsDetector
 import com.android.tools.lint.checks.FieldGetterDetector
 import com.android.tools.lint.checks.HardcodedValuesDetector
+import com.android.tools.lint.checks.IconDetector
 import com.android.tools.lint.checks.InteroperabilityDetector
 import com.android.tools.lint.checks.ObsoleteLayoutParamsDetector
 import com.android.tools.lint.checks.SdCardDetector
@@ -30,6 +31,7 @@ import com.android.tools.lint.checks.TooManyViewsDetector
 import com.android.tools.lint.checks.TypoDetector
 import com.android.tools.lint.checks.UnusedResourceDetector
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry
+import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Location.Companion.create
@@ -56,7 +58,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
     <!-- Possible severities: ignore, information, warning, error, fatal -->
     <issue id="ValidActionsXml" severity="error" />
     <issue id="ObsoleteLayoutParam">
-        <!-- The <ignore> tag has two possible attributes: path and regexp. -->
+        <!-- The <ignore> tag has two possible attributes: path and regexp (see below) -->
         <ignore path="res/layout-xlarge/activation.xml" />
         <!-- You can use globbing patterns in the path strings -->
         <ignore path="**/layout-x*/onclick.xml" />
@@ -777,7 +779,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
         lintFile.writeText(xml)
         create(lintFile)
         val configuration = client.configurations.getConfigurationForFile(lintFile)
-        configuration.projectLevel = projectLevel
+        configuration.fileLevel = !projectLevel
         return configuration as LintXmlConfiguration
     }
 
@@ -1037,6 +1039,98 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
                 ""
             )
         )
+    }
+
+    fun testWriteConfig() {
+        // Make sure that when we have a placeholder configuration in a project (which we
+        // expect at the root of a project which does not specify a lint.xml), attempting to
+        // update a configuration setting will create and write a file in that directory
+        // as we expect
+        checkConfiguration(
+            check = {
+                _, project, configuration ->
+                assertNull(configuration.parent)
+                assertFalse(configuration.fileLevel)
+
+                assertTrue(configuration.javaClass.simpleName.equals("ProjectPlaceholderConfiguration"))
+                val dir = configuration.dir
+                println(dir)
+                assertNull(configuration.getDefinedSeverity(ApiDetector.UNSUPPORTED))
+                val file = File(project.dir, "lint.xml")
+                assertFalse(file.exists())
+                configuration.setSeverity(ApiDetector.UNSUPPORTED, Severity.FATAL)
+                configuration.ignore(IconDetector.DUPLICATES_NAMES, File("name.xml"))
+                assertSame(Severity.FATAL, configuration.getDefinedSeverity(ApiDetector.UNSUPPORTED))
+                assertEquals(
+                    """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <lint>
+                    <issue id="IconDuplicates">
+                        <ignore path="name.xml" />
+                    </issue>
+                    <issue id="NewApi" severity="fatal" />
+                </lint>
+                    """.trimIndent(),
+                    file.readText()
+                )
+            }
+        )
+    }
+
+    /**
+     * Test support for reading and writing configurations; this builds on top of
+     * a normal lint run in order to make it easy to set up configurations etc without
+     * having to manually configure a lot of state, as used to be the case
+     */
+    private fun checkConfiguration(
+        projectName: String? = null,
+        check: (LintDriver, Project, Configuration) -> Unit = { _, _, _ -> },
+        expected: String = "No warnings.",
+        vararg testFiles: com.android.tools.lint.checks.infrastructure.TestFile
+    ) {
+
+        lint().files(
+            *testFiles,
+            // To make sure we have at least one project
+            kotlin(
+                """
+                package test.pkg1.subpkg1
+                class PlaceholderFile {
+                }
+                """
+            ).indented(),
+            // Trigger src/main/java source sets
+            gradle("")
+        )
+            .client(object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
+                override fun getConfiguration(
+                    project: Project,
+                    driver: LintDriver?
+                ): Configuration {
+                    // Make sure we don't pick up the special TestConfiguration; we want the
+                    // real configuration lint would create in production
+                    return configurations.getConfigurationForProject(project)
+                }
+            })
+            .checkProjects(object : TestLintTask.ProjectInspector {
+                override fun inspect(driver: LintDriver, knownProjects: List<Project>) {
+                    val project = knownProjects.find {
+                        it.name == projectName || projectName == null
+                    } ?: run {
+                        if (projectName != null) {
+                            assertNotNull("Did not find project $projectName")
+                        } else {
+                            fail("Did not find any projects")
+                        }
+                        error("Can't reach here")
+                    }
+
+                    val configuration = project.getConfiguration(driver)
+                    check(driver, project, configuration)
+                }
+            })
+            .run()
+            .expect(expected)
     }
 
     private val mOnclick = xml("res/layout/onclick.xml", LAYOUT_XML)

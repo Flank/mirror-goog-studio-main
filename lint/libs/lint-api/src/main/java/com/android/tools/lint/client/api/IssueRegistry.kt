@@ -156,7 +156,7 @@ protected constructor() {
             }
 
             val implementation = issue.implementation
-            var detectorClass: Class<out Detector> = implementation.detectorClass
+            val detectorClass: Class<out Detector> = implementation.detectorClass
             val issueScope = implementation.scope
             if (!detectorClasses.contains(detectorClass)) {
                 // Determine if the issue is enabled
@@ -164,8 +164,8 @@ protected constructor() {
                     continue
                 }
 
+                //noinspection ExpensiveAssertion
                 assert(implementation.isAdequate(scope)) // Ensured by getIssuesForScope above
-                detectorClass = client.replaceDetector(detectorClass)
                 detectorClasses.add(detectorClass)
             }
 

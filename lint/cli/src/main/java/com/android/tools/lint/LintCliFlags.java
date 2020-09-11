@@ -70,7 +70,8 @@ public class LintCliFlags {
     private String compileSdkVersion;
     private File baselineFile;
 
-    private File defaultConfiguration;
+    private File lintConfig;
+    private File lintOverrideConfig;
     private boolean showAll;
     private boolean removedFixedBaselineIssues;
     private boolean writeBaselineIfMissing = true;
@@ -361,20 +362,33 @@ public class LintCliFlags {
         this.showAll = showAll;
     }
 
-    /** Returns the default configuration file to use as a fallback */
+    /** Returns the default XML configuration file to use as a fallback */
     @Nullable
-    public File getDefaultConfiguration() {
-        return defaultConfiguration;
+    public File getLintConfig() {
+        return lintConfig;
     }
 
     /**
-     * Sets the default config file to use as a fallback. This corresponds to a {@code lint.xml}
-     * file with severities etc to use when a project does not have more specific information. To
-     * construct a configuration from a {@link java.io.File}, use {@link
-     * LintCliClient#createConfigurationFromFile(java.io.File)}.
+     * Sets the default XML config file to use as an override. This corresponds to a {@code
+     * lint.xml} file with severities etc to always consult first, even for projects that have more
+     * specific information in lint.xml files.
      */
-    public void setDefaultConfiguration(@Nullable File defaultConfiguration) {
-        this.defaultConfiguration = defaultConfiguration;
+    public void setLintConfig(@Nullable File lintConfig) {
+        this.lintConfig = lintConfig;
+    }
+
+    /** Returns the default XML configuration file to use as an override */
+    @Nullable
+    public File getOverrideLintConfig() {
+        return lintOverrideConfig;
+    }
+
+    /**
+     * Sets the default XML config file to use as a fallback. This corresponds to a {@code lint.xml}
+     * file with severities etc to use when a project does not have more specific information.
+     */
+    public void setOverrideLintConfig(@Nullable File lintConfig) {
+        this.lintOverrideConfig = lintConfig;
     }
 
     /**

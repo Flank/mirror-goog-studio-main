@@ -23,7 +23,6 @@ import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.google.common.annotations.Beta
 import java.io.File
-import java.lang.NumberFormatException
 
 /**
  * Lint configuration for an Android project such as which specific rules to include,
@@ -33,9 +32,40 @@ import java.lang.NumberFormatException
  * to adjust your code for the next tools release.**
  */
 @Beta
-abstract class Configuration {
-    /** The "scope" of this configuration */
-    abstract val dir: File
+abstract class Configuration(
+    val configurations: ConfigurationHierarchy
+) {
+    val client: LintClient get() = configurations.client
+
+    /** Returns the parent configuration, if any */
+    val parent: Configuration? get() = configurations.getParentConfiguration(this)
+
+    /**
+     * Whether this configuration applies below the project level, e.g. typically
+     * for a source folder.
+     */
+    open var fileLevel: Boolean = true
+
+    /**
+     * Whether this configuration is an overriding configuration. This isn't just true
+     * for [ConfigurationHierarchy.overrides] but any parent configuration of it as well
+     */
+    var isOverriding: Boolean = false
+
+    /**
+     * Returns the overriding configuration, if any. Returns null when called on
+     * the overriding configuration itself (or any of its parents)
+     */
+    protected val overrides: Configuration?
+        get() = if (isOverriding) null else client.configurations.overrides
+
+    /**
+     * The "scope" of this configuration. Will be null for configurations
+     * that aren't associated with a specific scope, such as a fallback
+     * configuration (--config) or an override configuration (always applies
+     * first).
+     */
+    var dir: File? = null
 
     /**
      * The baseline file to use, if any. The baseline file is
@@ -67,7 +97,7 @@ abstract class Configuration {
         location: Location?,
         message: String
     ): Boolean {
-        return false
+        return parent?.isIgnored(context, issue, location, message) ?: false
     }
 
     /**
@@ -82,26 +112,60 @@ abstract class Configuration {
     }
 
     /**
+     * Return the severity configured for this [issue] by this configuration
+     * or any configurations it inherits from, or null if the given issue
+     * has not been configured. The [source] is the original configuration
+     * this is requested for.
+     */
+    open fun getDefinedSeverity(issue: Issue, source: Configuration = this): Severity? {
+        return null
+    }
+
+    /**
+     * The default severity of an issue; should be ignore for disabled issues, not
+     * its severity when it's enabled
+     */
+    protected open fun getDefaultSeverity(issue: Issue): Severity {
+        return if (!issue.isEnabledByDefault()) Severity.IGNORE else issue.defaultSeverity
+    }
+
+    /**
      * Returns the severity for a given issue. This is the same as the
      * [Issue.defaultSeverity] unless the user has selected a custom
      * severity (which is tool context dependent).
      *
+     * If the issue is not configured by this configuration (or configurations
+     * it inherits from), this will return the default severity. To get
+     * the severity only if it's configured, use [getDefinedSeverity].
+     *
      * @param issue the issue to look up the severity from
      * @return the severity use for issues for the given detector
      */
-    open fun getSeverity(issue: Issue): Severity {
-        return issue.defaultSeverity
+    fun getSeverity(issue: Issue): Severity {
+        overrides?.getDefinedSeverity(issue, this)?.let {
+            return it
+        }
+
+        return getDefinedSeverity(issue, this) ?: getDefaultSeverity(issue)
     }
 
     /**
      * Returns the value for the given option, or the default value (normally null)
      * if it has not been specified.
      */
-    abstract fun getOption(
+    open fun getOption(
         issue: Issue,
         name: String,
         default: String? = null
-    ): String?
+    ): String? {
+        // Using null as the default here: if not defined in the override
+        // configuration, we don't want to just return the default, we want
+        // to proceed with the non-override configurations
+        overrides?.getOption(issue, name, null)?.let {
+            return it
+        }
+        return parent?.getOption(issue, name, default) ?: default
+    }
 
     /**
      * Returns the value for the given option as an int, or the default value if
@@ -132,11 +196,13 @@ abstract class Configuration {
      * [getOption] where a value is defined, and therefore how to interpret the
      * relative path.
      */
-    abstract fun getOptionAsFile(
+    open fun getOptionAsFile(
         issue: Issue,
         name: String,
         default: File? = null
-    ): File?
+    ): File? {
+        return parent?.getOptionAsFile(issue, name, default) ?: default
+    }
 
     // Editing configurations
 
@@ -211,15 +277,12 @@ abstract class Configuration {
         project: Project,
         registry: IssueRegistry
     ) {
+        parent?.validateIssueIds(client, driver, project, registry)
     }
 
     /** Returns a list of lint jar files to include in the analysis */
-    open fun getLintJars(): List<File> = emptyList()
+    open fun getLintJars(): List<File> = parent?.getLintJars() ?: emptyList()
 
-    /**
-     * Whether this configuration corresponds to a project folder or higher.
-     * Certain configuration is not allowed in individual source file folders,
-     * such as enabling disabled lint checks.
-     */
-    open var projectLevel: Boolean = false
+    /** Sets the given configuration as the parent of this one */
+    fun setParent(parent: Configuration) = configurations.setParent(this, parent)
 }

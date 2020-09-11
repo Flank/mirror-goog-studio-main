@@ -17,8 +17,9 @@
 package com.android.tools.lint.client.api
 
 import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.Project
+import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Severity
 import java.io.File
 
@@ -26,17 +27,7 @@ import java.io.File
  * Consult the lint.xml file, but override with the --enable and --disable flags supplied on the
  * command line (as well as any other applicable flags)
  */
-open class FlagConfiguration : LintXmlConfiguration {
-    constructor(
-        client: LintClient,
-        project: Project
-    ) : super(client, project)
-
-    constructor(
-        client: LintClient,
-        lintFile: File,
-        dir: File
-    ) : super(client, lintFile, dir, true)
+open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configuration(configurations) {
 
     open fun fatalOnly(): Boolean = false
     open fun isWarningsAsErrors(): Boolean = false
@@ -51,12 +42,32 @@ open class FlagConfiguration : LintXmlConfiguration {
     open fun exactCategories(): Set<Category>? = null
     open fun severityOverride(issue: Issue): Severity? = null
 
-    override fun getSeverity(issue: Issue): Severity {
+    override fun getDefinedSeverity(issue: Issue, source: Configuration): Severity? {
         if (issue.suppressNames != null) {
             return getDefaultSeverity(issue)
         }
-        var severity = computeSeverity(issue)
-        if (fatalOnly() && severity !== Severity.FATAL) {
+        var severity = computeSeverity(issue, source)
+        if (fatalOnly()) {
+            if (severity == null) {
+                val configuredSeverity =
+                    client.configurations.getDefinedSeverityWithoutOverride(source, issue)
+                if (configuredSeverity != null && configuredSeverity == Severity.FATAL) {
+                    return configuredSeverity
+                } else if (configuredSeverity != null) {
+                    return Severity.IGNORE
+                } else if (issue.defaultSeverity !== Severity.FATAL) {
+                    return Severity.IGNORE
+                }
+            } else if (severity !== Severity.FATAL) {
+                return Severity.IGNORE
+            }
+        }
+
+        if (fatalOnly() && (
+            severity == null && issue.defaultSeverity !== Severity.FATAL ||
+                severity != null && severity !== Severity.FATAL
+            )
+        ) {
             return Severity.IGNORE
         }
         if (isWarningsAsErrors() && severity === Severity.WARNING) {
@@ -73,6 +84,28 @@ open class FlagConfiguration : LintXmlConfiguration {
         return severity
     }
 
+    private fun unsupported(): Nothing {
+        error("This method should not be invoked on a synthetic (non XML) configuration")
+    }
+
+    override fun ignore(context: Context, issue: Issue, location: Location?, message: String) {
+        unsupported()
+    }
+
+    override fun ignore(issue: Issue, file: File) {
+        unsupported()
+    }
+
+    override fun ignore(issueId: String, file: File) {
+        unsupported()
+    }
+
+    override fun setSeverity(issue: Issue, severity: Severity?) {
+        unsupported()
+    }
+
+    override var baselineFile: File? = parent?.baselineFile
+
     override fun getDefaultSeverity(issue: Issue): Severity {
         return if (isCheckAllWarnings()) {
             // Exclude the inter-procedural check from the "enable all warnings" flag;
@@ -85,17 +118,20 @@ open class FlagConfiguration : LintXmlConfiguration {
         } else super.getDefaultSeverity(issue)
     }
 
-    private fun computeSeverity(issue: Issue): Severity {
+    private fun computeSeverity(issue: Issue, source: Configuration): Severity? {
         if (issue.suppressNames != null && !allowSuppress()) {
             return getDefaultSeverity(issue)
         }
-        val severity = super.getSeverity(issue)
+
+        val severity = parent?.getDefinedSeverity(issue, source)
+
         // Issue not allowed to be suppressed?
         val id = issue.id
         val suppress = disabledIds()
         if (suppress.contains(id)) {
             return Severity.IGNORE
         }
+
         val disabledCategories: Set<Category>? = disabledCategories()
         if (disabledCategories != null) {
             val category = issue.category
@@ -105,10 +141,12 @@ open class FlagConfiguration : LintXmlConfiguration {
                 return Severity.IGNORE
             }
         }
+
         val manual = severityOverride(issue)
         if (manual != null) {
             return manual
         }
+
         val enabled = enabledIds()
         val exact = exactCheckedIds()
         val enabledCategories = enabledCategories()
@@ -116,7 +154,7 @@ open class FlagConfiguration : LintXmlConfiguration {
         val category = issue.category
         if (exact != null) {
             if (exact.contains(id)) {
-                return getVisibleSeverity(issue, severity)
+                return getVisibleSeverity(issue, severity, source)
             } else if (category !== Category.LINT) {
                 return Severity.IGNORE
             }
@@ -125,7 +163,7 @@ open class FlagConfiguration : LintXmlConfiguration {
             if (exactCategories.contains(category) ||
                 category.parent != null && exactCategories.contains(category.parent)
             ) {
-                return getVisibleSeverity(issue, severity)
+                return getVisibleSeverity(issue, severity, source)
             } else if (category !== Category.LINT ||
                 disabledCategories()?.contains(Category.LINT) == true
             ) {
@@ -138,18 +176,32 @@ open class FlagConfiguration : LintXmlConfiguration {
                     category.parent != null && enabledCategories.contains(category.parent)
                 )
         ) {
-            getVisibleSeverity(issue, severity)
+            getVisibleSeverity(issue, severity, source)
         } else severity
     }
 
-    /** Returns the given severity, but if not visible, use the default  */
-    private fun getVisibleSeverity(issue: Issue, severity: Severity): Severity {
+    /**
+     * Returns the given severity, but if not visible, use the default. If an override
+     * [severity] is configured (from an inherited override configuration) use it, otherwise
+     * try to compute the severity from the [source] configuration (without applying overrides),
+     * and finally use default severity of the issue.
+     */
+    private fun getVisibleSeverity(
+        issue: Issue,
+        severity: Severity?,
+        source: Configuration
+    ): Severity {
+        val configuredSeverity = client.configurations.getDefinedSeverityWithoutOverride(source, issue)
+        if (configuredSeverity != null && configuredSeverity != Severity.IGNORE) {
+            return configuredSeverity
+        }
+
         // Overriding default
         // Detectors shouldn't be returning ignore as a default severity,
         // but in case they do, force it up to warning here to ensure that
         // it's run
         var visibleSeverity = severity
-        if (visibleSeverity === Severity.IGNORE) {
+        if (visibleSeverity == null || visibleSeverity === Severity.IGNORE) {
             visibleSeverity = issue.defaultSeverity
             if (visibleSeverity === Severity.IGNORE) {
                 visibleSeverity = Severity.WARNING

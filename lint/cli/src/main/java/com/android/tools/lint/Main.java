@@ -32,10 +32,12 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.Configuration;
+import com.android.tools.lint.client.api.ConfigurationHierarchy;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintRequest;
+import com.android.tools.lint.client.api.LintXmlConfiguration;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
@@ -78,7 +80,6 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.kotlin.config.ApiVersion;
 import org.jetbrains.kotlin.config.LanguageVersion;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
@@ -118,6 +119,7 @@ public class Main {
     private static final String ARG_XML = "--xml";
     private static final String ARG_TEXT = "--text";
     private static final String ARG_CONFIG = "--config";
+    private static final String ARG_OVERRIDE_CONFIG = "--override-config";
     private static final String ARG_URL = "--url";
     private static final String ARG_VERSION = "--version";
     private static final String ARG_EXIT_CODE = "--exitcode";
@@ -269,63 +271,19 @@ public class Main {
                     @Override
                     public Configuration getConfiguration(
                             @NonNull final Project project, @Nullable LintDriver driver) {
-                        return getConfigurations()
-                                .getConfigurationForProject(
-                                        project,
-                                        (client, file) -> createConfiguration(project, driver));
-                    }
-
-                    private Configuration flagConfiguration = null;
-
-                    @Nullable
-                    @Override
-                    public Configuration getDefaultConfiguration() {
-                        Configuration overrideConfiguration = getOverrideConfiguration();
-                        if (overrideConfiguration != null) {
-                            return overrideConfiguration;
-                        }
-                        if (flagConfiguration == null) {
-                            File configFile = flags.getDefaultConfiguration();
-                            if (configFile != null) {
-                                if (!configFile.exists()) {
-                                    if (ourAlreadyWarned != null
-                                            && ourAlreadyWarned.contains(configFile)) {
-                                        return null;
-                                    }
-                                    if (ourAlreadyWarned == null) {
-                                        ourAlreadyWarned = new HashSet<>();
-                                    }
-                                    log(
-                                            Severity.ERROR,
-                                            null,
-                                            "Warning: Configuration file %1$s does not exist",
-                                            configFile);
-                                    ourAlreadyWarned.add(configFile);
-                                } else {
-                                    flagConfiguration = createConfigurationFromFile(configFile);
-                                }
-                            }
-                        }
-                        return flagConfiguration;
-                    }
-
-                    @NonNull
-                    private Configuration createConfiguration(
-                            @NonNull final Project project, @Nullable LintDriver driver) {
-                        Configuration overrideConfiguration = getOverrideConfiguration();
-                        if (overrideConfiguration != null) {
-                            return overrideConfiguration;
-                        }
-
                         if (project.isGradleProject()) {
                             // Don't report any issues when analyzing a Gradle project from the
                             // non-Gradle runner; they are likely to be false, and will hide the
-                            // real problem reported above
-                            //noinspection ReturnOfInnerClass
-                            return new CliConfiguration(this, flags, project, true) {
+                            // real problem reported above. We also need to turn off overrides
+                            // and fallbacks such that we don't inherit any re-enabled issues etc.
+                            ConfigurationHierarchy configurations = getConfigurations();
+                            configurations.setOverrides(null);
+                            configurations.setFallback(null);
+                            return new CliConfiguration(configurations, flags, true) {
                                 @NonNull
                                 @Override
-                                public Severity getSeverity(@NonNull Issue issue) {
+                                public Severity getDefinedSeverity(
+                                        @NonNull Issue issue, @NonNull Configuration source) {
                                     return issue == IssueRegistry.LINT_ERROR
                                             ? Severity.FATAL
                                             : Severity.IGNORE;
@@ -354,6 +312,7 @@ public class Main {
                                 }
                             };
                         }
+
                         return super.getConfiguration(project, driver);
                     }
 
@@ -425,7 +384,7 @@ public class Main {
                     private ProjectMetadata metadata;
 
                     @Override
-                    protected void configureLintRequest(@NotNull LintRequest request) {
+                    protected void configureLintRequest(@NonNull LintRequest request) {
                         File descriptor = flags.getProjectDescriptorOverride();
                         if (descriptor != null) {
                             metadata = ProjectInitializerKt.computeMetadata(this, descriptor);
@@ -697,7 +656,7 @@ public class Main {
                 } else {
                     urlMap = map;
                 }
-            } else if (arg.equals(ARG_CONFIG)) {
+            } else if (arg.equals(ARG_CONFIG) || arg.equals(ARG_OVERRIDE_CONFIG)) {
                 if (index == args.length - 1 || !endsWith(args[index + 1], DOT_XML)) {
                     System.err.println("Missing XML configuration file argument");
                     return ERRNO_INVALID_ARGS;
@@ -707,7 +666,11 @@ public class Main {
                     System.err.println(file.getAbsolutePath() + " does not exist");
                     return ERRNO_INVALID_ARGS;
                 }
-                flags.setDefaultConfiguration(file);
+                if (arg.equals(ARG_CONFIG)) {
+                    flags.setLintConfig(file);
+                } else {
+                    flags.setOverrideLintConfig(file);
+                }
             } else if (arg.equals(ARG_HTML) || arg.equals(ARG_SIMPLE_HTML)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing HTML output file name");
@@ -1195,6 +1158,18 @@ public class Main {
             return ERRNO_INVALID_ARGS;
         }
 
+        ConfigurationHierarchy configurations = client.getConfigurations();
+
+        File overrideConfig = flags.getOverrideLintConfig();
+        if (overrideConfig != null) {
+            Configuration config = LintXmlConfiguration.create(configurations, overrideConfig);
+            configurations.addGlobalConfigurations(null, config);
+        }
+
+        CliConfiguration override =
+                new CliConfiguration(configurations, flags, flags.isFatalOnly());
+        File defaultConfiguration = flags.getLintConfig();
+        configurations.addGlobalConfigurationFromFile(defaultConfiguration, override);
         client.syncConfigOptions();
 
         List<Reporter> reporters = flags.getReporters();
@@ -1675,6 +1650,11 @@ public class Main {
                     "Use the given configuration file to "
                             + "determine whether issues are enabled or disabled. If a project contains "
                             + "a lint.xml file, then this config file will be used as a fallback.",
+                    ARG_OVERRIDE_CONFIG + " <filename>",
+                    "Like "
+                            + ARG_CONFIG
+                            + ", but instead of being a fallback, this "
+                            + "configuration overrides any local configuration files",
                     ARG_BASELINE,
                     "Use (or create) the given baseline file to filter out known issues.",
                     ARG_ALLOW_SUPPRESS,

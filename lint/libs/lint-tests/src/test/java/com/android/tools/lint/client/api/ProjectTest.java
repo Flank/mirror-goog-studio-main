@@ -94,6 +94,16 @@ public class ProjectTest extends AbstractCheckTest {
                 checkLint(Arrays.asList(main, library)));
     }
 
+    public void testNonCanonicalPaths() {
+        TestClient client = new TestClient();
+        // path which should trigger IO exception in File.canonicalFile
+        File dir = new File("project/\u0000");
+        Project project1 = Project.create(client, dir, dir);
+        client.registerProject(dir, project1);
+        assertNotNull(client.getProject(dir, dir));
+        assertTrue(client.isKnownProjectDir(dir));
+    }
+
     public void testInvalidLibraryReferences1() {
         TestClient client = new TestClient();
         File dir = new File("project");

@@ -555,7 +555,7 @@ document.getElementById(id).style.display = 'none';
             incident.project?.let { projects.add(it) }
             seen.add(incident.issue)
         }
-        val cliConfiguration = client.defaultConfiguration
+        val cliConfiguration = client.configurations.fallback
         val map: MutableMap<Issue, String> = Maps.newHashMap()
         val issues = client.registry?.issues ?: return map
         for (issue in issues) {

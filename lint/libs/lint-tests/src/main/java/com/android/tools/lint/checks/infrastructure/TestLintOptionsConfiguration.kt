@@ -15,59 +15,54 @@
  */
 package com.android.tools.lint.checks.infrastructure
 
-import com.android.tools.lint.client.api.IssueRegistry
-import com.android.tools.lint.client.api.LintClient
+import com.android.tools.lint.client.api.Configuration
+import com.android.tools.lint.client.api.ConfigurationHierarchy
 import com.android.tools.lint.client.api.LintOptionsConfiguration
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.model.LintModelLintOptions
 import org.junit.Assert
-import java.io.File
 
 class TestLintOptionsConfiguration(
     private val task: TestLintTask,
-    client: LintClient,
-    lintFile: File?,
-    dir: File,
+    private val project: Project,
+    configurations: ConfigurationHierarchy,
     lintOptions: LintModelLintOptions,
     fatalOnly: Boolean
 ) : LintOptionsConfiguration(
-    client,
-    lintFile ?: File(dir, CONFIG_FILE_NAME),
-    dir,
+    configurations,
     lintOptions,
     fatalOnly
 ) {
+    override fun getDefinedSeverity(issue: Issue, source: Configuration): Severity? {
+        val override = overrideSeverity(task, issue)
+        if (override != null) {
+            return override
+        }
+        val severity = super.getDefinedSeverity(issue, source)
+        if (severity != null) {
+            return severity
+        }
 
-    override fun getDefaultSeverity(issue: Issue): Severity {
+        val parentSeverity = parent?.getDefinedSeverity(issue, source)
+        if (parentSeverity != null) {
+            return parentSeverity
+        }
+
         // In unit tests, include issues that are ignored by default
-        val severity = super.getDefaultSeverity(issue)
-        if (severity == Severity.IGNORE) {
-            if (issue.defaultSeverity != Severity.IGNORE) {
-                return issue.defaultSeverity
-            }
-            return Severity.WARNING
-        }
-        return severity
-    }
-
-    override fun isEnabled(issue: Issue): Boolean {
-        when {
-            issue == IssueRegistry.LINT_ERROR ->
-                return task.allowSystemErrors ||
-                    !task.allowCompilationErrors
-            issue == IssueRegistry.PARSER_ERROR -> return !task.allowSystemErrors
-            issue == IssueRegistry.OBSOLETE_LINT_CHECK -> return !task.allowObsoleteLintChecks
-            task.issueIds != null -> for (id in task.issueIds!!) {
-                if (issue.id == id) {
-                    return true
-                }
+        for (id in task.issueIds ?: emptyArray()) {
+            if (issue.id == id) {
+                return getNonIgnoredSeverity(issue.defaultSeverity, issue)
             }
         }
 
-        return task.checkedIssues.contains(issue)
+        return if (task.checkedIssues.contains(issue))
+            getNonIgnoredSeverity(issue.defaultSeverity, issue)
+        else
+            Severity.IGNORE
     }
 
     override fun ignore(
@@ -79,4 +74,8 @@ class TestLintOptionsConfiguration(
 
     override fun setSeverity(issue: Issue, severity: Severity?) =
         Assert.fail("Not supported in tests.")
+
+    override fun toString(): String {
+        return this.javaClass.simpleName + " for " + project.dir
+    }
 }

@@ -25,4 +25,5 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:' + rootProject.supportLibVersion
     api project(':indirectlib')
+    api project(':indirectlib2')
 }

@@ -16,12 +16,13 @@
 
 package com.android.build.gradle.integration.lint;
 
-
-import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import java.io.File;
+import kotlin.io.FilesKt;
+import kotlin.text.Charsets;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +36,7 @@ import org.junit.runners.Parameterized;
  *
  * <pre>
  *     $ cd tools
- *     $ ./gradlew :base:build-system:integration-test:application:test -D:base:build-system:integration-test:application:test.single=LintDependencyModelTest
+ *     $ ./gradlew :base:build-system:integration-test:lint:test --tests=LintDependencyModelTest
  * </pre>
  */
 @RunWith(FilterableParameterized.class)
@@ -57,15 +58,42 @@ public class LintDependencyModelTest {
 
 
     @Test
-    public void checkFindNestedResult() throws Exception {
+    public void checkFindNestedResult() {
         // Run twice to catch issues with configuration caching
         project.execute("clean", ":app:lintDebug");
         project.execute("clean", ":app:lintDebug");
 
-        File lintReport = project.file("app/lint-report.xml");
-        // Should have errors in all three libs
-        assertThat(lintReport).contains("errorLine1=\"    String s = &quot;/sdcard/androidlib&quot;;\"");
-        assertThat(lintReport).contains("errorLine1=\"    String s = &quot;/sdcard/javalib&quot;;\"");
-        assertThat(lintReport).contains("errorLine1=\"    String s = &quot;/sdcard/indirectlib&quot;;\"");
+        File textReportFile = project.file("app/lint-report.txt");
+        String textReport =
+                FilesKt.readText(textReportFile, Charsets.UTF_8)
+                        // Allow searching for substrings in Windows file reports as well
+                        .replace("\\", "/");
+
+        // Library dependency graph:
+        //    app +----> androidlib +----> indirectlib2
+        //        |                 |
+        //        +----> javalib ---+----> indirectlib
+        //        +----> javalib2
+
+        // Should have SdCatdPath errors in all five libs.
+        // The javalib/lint.xml file which turns SdCardPath into an error should
+        // apply in javalib and its dependency (indirectlib2), but indirectlib
+        // is directly depended on by multiple upstream projects so it's ambiguous
+        // which should apply.
+
+        // We've configured SdCardPath to be an error, so we expect to see it
+        // in androidlib and indirectlib2 as error; in indirectlib1 there's more
+        // ambiguity since it's imported from two contexts and either is fine.
+
+        assertThat(textReport).contains("androidlib/src/main/java/com/example/mylibrary/MyClass.java:4: Information: Do not hardcode");
+        assertThat(textReport).contains("javalib/src/main/java/com/example/MyClass.java:4: Warning: Do not hardcode");
+        assertThat(textReport).contains("javalib2/src/main/java/com/example2/MyClass.java:4: Warning: Do not hardcode");
+        assertThat(textReport).contains("indirectlib/src/main/java/com/example/MyClass2.java:4: Information: Do not hardcode");
+        assertThat(textReport).contains("indirectlib2/src/main/java/com/example2/MyClass2.java:4: Information: Do not hardcode");
+
+        // This issue is turned off in javalib but still returns to (default) enabled when processing
+        // its sibling
+        assertThat(textReport).contains("javalib2/src/main/java/com/example2/MyClass.java:5: Warning: Use Boolean.valueOf(false)");
+        assertThat(textReport).doesNotContain("javalib/src/main/java/com/example/MyClass.java:5: Warning: Use Boolean.valueOf(false)");
     }
 }
