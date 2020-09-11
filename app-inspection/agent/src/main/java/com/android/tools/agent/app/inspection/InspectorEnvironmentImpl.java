@@ -17,20 +17,20 @@
 package com.android.tools.agent.app.inspection;
 
 import androidx.annotation.NonNull;
-import androidx.inspection.ArtToolInterface;
+import androidx.inspection.ArtTooling;
 import androidx.inspection.InspectorEnvironment;
 import androidx.inspection.InspectorExecutors;
 
 class InspectorEnvironmentImpl implements InspectorEnvironment {
     private final InspectorExecutors mExecutors;
 
-    private final ArtToolInterface mArtTooling;
+    private final ArtTooling mArtTooling;
 
     InspectorEnvironmentImpl(
             long mAppInspectionServicePtr,
             @NonNull String inspectorId,
             @NonNull InspectorExecutors executors) {
-        mArtTooling = new ArtToolInterfaceImpl(mAppInspectionServicePtr, inspectorId);
+        mArtTooling = new ArtToolingImpl(mAppInspectionServicePtr, inspectorId);
         mExecutors = executors;
     }
 
@@ -42,7 +42,7 @@ class InspectorEnvironmentImpl implements InspectorEnvironment {
 
     @NonNull
     @Override
-    public ArtToolInterface artTI() {
+    public ArtTooling artTooling() {
         return mArtTooling;
     }
 }

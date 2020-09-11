@@ -17,15 +17,15 @@
 package com.android.tools.agent.app.inspection;
 
 import androidx.annotation.NonNull;
-import androidx.inspection.ArtToolInterface;
+import androidx.inspection.ArtTooling;
 import java.util.Arrays;
 import java.util.List;
 
-class ArtToolInterfaceImpl implements ArtToolInterface {
+class ArtToolingImpl implements ArtTooling {
     private final long mAppInspectionServicePtr;
     private final String inspectorId;
 
-    ArtToolInterfaceImpl(long mAppInspectionServicePtr, @NonNull String inspectorId) {
+    ArtToolingImpl(long mAppInspectionServicePtr, @NonNull String inspectorId) {
         this.mAppInspectionServicePtr = mAppInspectionServicePtr;
         this.inspectorId = inspectorId;
     }

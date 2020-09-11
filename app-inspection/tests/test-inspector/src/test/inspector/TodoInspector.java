@@ -18,9 +18,9 @@ package test.inspector;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.inspection.ArtToolInterface;
-import androidx.inspection.ArtToolInterface.EntryHook;
-import androidx.inspection.ArtToolInterface.ExitHook;
+import androidx.inspection.ArtTooling;
+import androidx.inspection.ArtTooling.EntryHook;
+import androidx.inspection.ArtTooling.ExitHook;
 import androidx.inspection.Connection;
 import androidx.inspection.InspectorEnvironment;
 import java.nio.ByteBuffer;
@@ -64,7 +64,7 @@ public final class TodoInspector extends TestInspector {
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
-        ArtToolInterface artTooling = environment.artTI();
+        ArtTooling artTooling = environment.artTooling();
         artTooling.registerEntryHook(
                 classActivity,
                 "newGroup()" + SIGNATURE_TODO_GROUP,
@@ -361,11 +361,11 @@ public final class TodoInspector extends TestInspector {
                 switch (command) {
                     case COUNT_TODO_GROUPS:
                         return new byte[] {
-                            (byte) environment.artTI().findInstances(classGroup).size()
+                            (byte) environment.artTooling().findInstances(classGroup).size()
                         };
                     case COUNT_TODO_ITEMS:
                         return new byte[] {
-                            (byte) environment.artTI().findInstances(classItem).size()
+                            (byte) environment.artTooling().findInstances(classItem).size()
                         };
                 }
                 break;

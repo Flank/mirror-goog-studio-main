@@ -19,9 +19,9 @@ package com.android.tools.agent.app.inspection;
 import static com.android.tools.agent.app.inspection.InspectorContext.CrashListener;
 import static com.android.tools.agent.app.inspection.NativeTransport.*;
 
-import androidx.inspection.ArtToolInterface;
-import androidx.inspection.ArtToolInterface.EntryHook;
-import androidx.inspection.ArtToolInterface.ExitHook;
+import androidx.inspection.ArtTooling;
+import androidx.inspection.ArtTooling.EntryHook;
+import androidx.inspection.ArtTooling.ExitHook;
 import com.android.tools.agent.app.inspection.version.VersionChecker;
 import java.io.File;
 import java.util.Arrays;
@@ -272,7 +272,7 @@ public class AppInspectionService {
     }
 
     public static void addExitHook(
-            String inspectorId, Class origin, String method, ArtToolInterface.ExitHook<?> hook) {
+            String inspectorId, Class origin, String method, ArtTooling.ExitHook<?> hook) {
         if (sInstance.mExitTransformsFullLabels.add(createFullLabel(origin, method))) {
             nativeRegisterExitHook(sInstance.mNativePtr, origin, method);
         }
