@@ -434,22 +434,15 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                 .set(project.provider(variantSources::mainManifestIfExists))
             task.testManifestFile.disallowChanges()
             task.apkData.set(creationConfig.outputs.getMainSplit())
-            task.variantType.set(creationConfig.variantType.toString())
-            task.variantType.disallowChanges()
+            task.variantType.setDisallowChanges(creationConfig.variantType.toString())
             task.tmpDir = FileUtils.join(
                 creationConfig.paths.intermediatesDir,
                 "tmp",
                 "manifest",
                 creationConfig.dirName
             )
-            task.minSdkVersion
-                .set(project.provider { creationConfig.minSdkVersion.getApiString() })
-            task.minSdkVersion.disallowChanges()
-            task.targetSdkVersion
-                .set(
-                    project.provider { creationConfig.targetSdkVersion.getApiString() }
-                )
-            task.targetSdkVersion.disallowChanges()
+            task.minSdkVersion.setDisallowChanges(creationConfig.minSdkVersion.getApiString())
+            task.targetSdkVersion.setDisallowChanges(creationConfig.targetSdkVersion.getApiString())
 
             task.testApplicationId.setDisallowChanges(creationConfig.applicationId)
             task.testedApplicationId.setDisallowChanges(creationConfig.testedApplicationId)
@@ -466,7 +459,6 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     AndroidArtifacts.ArtifactType.MANIFEST
                 )
             task.placeholdersValues.setDisallowChanges(creationConfig.manifestPlaceholders)
-            task.placeholdersValues.disallowChanges()
             if (!creationConfig.globalScope.extension.aaptOptions.namespaced) {
                 task.navigationJsons = project.files(
                     creationConfig

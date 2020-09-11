@@ -361,18 +361,13 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             task.applicationId.disallowChanges()
             task.variantType.set(creationConfig.variantType.toString())
             task.variantType.disallowChanges()
-            task.minSdkVersion
-                .set(project.provider { creationConfig.minSdkVersion.getApiString() })
-            task.minSdkVersion.disallowChanges()
+            task.minSdkVersion.setDisallowChanges(creationConfig.minSdkVersion.getApiString())
             task.targetSdkVersion
-                .set(
-                    project.provider {
-                        val targetSdk =
-                            creationConfig.targetSdkVersion
-                        if (targetSdk.apiLevel < 1) null else targetSdk.getApiString()
-                    }
+                .setDisallowChanges(
+                        if (creationConfig.targetSdkVersion.apiLevel < 1)
+                            null
+                        else creationConfig.targetSdkVersion.getApiString()
                 )
-            task.targetSdkVersion.disallowChanges()
             task.maxSdkVersion.setDisallowChanges(creationConfig.maxSdkVersion)
             task.optionalFeatures.set(project.provider { getOptionalFeatures(creationConfig) })
             task.optionalFeatures.disallowChanges()
