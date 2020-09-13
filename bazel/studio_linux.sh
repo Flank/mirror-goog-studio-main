@@ -35,10 +35,6 @@ readonly invocation_id="$(uuidgen)"
 mv "${script_dir}/project.bzl" "${script_dir}/project.bzl.bak"
 echo "PROJECT = \"unb\"" > "${script_dir}/project.bzl"
 
-test_failures=(
-      -//tools/adt/idea/lint/...
-)
-
 # Run Bazel
 # --keep_going \
 "${script_dir}/bazel" \
@@ -66,8 +62,7 @@ test_failures=(
   //tools/adt/idea/studio:searchable_options_test \
   //tools/... \
   //prebuilts/tools/... \
-  //prebuilts/studio/... \
-  ${test_failures[@]}
+  //prebuilts/studio/...
 
 # $(< "${script_dir}/targets") contains:
   # @blaze//:aswb_tests \
