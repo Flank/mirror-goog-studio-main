@@ -310,6 +310,11 @@ public class TestUtils {
         return getWorkspaceFile(getRelativeSdk());
     }
 
+    @NonNull
+    public static File getMockJdk() {
+        return getWorkspaceFile("prebuilts/studio/jdk/mock-jdk17");
+    }
+
     /**
      * Returns the path to checked-in NDK.
      *
