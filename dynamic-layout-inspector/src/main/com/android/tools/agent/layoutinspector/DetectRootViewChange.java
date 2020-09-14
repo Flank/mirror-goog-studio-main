@@ -64,6 +64,11 @@ class DetectRootViewChange {
         return myHandler;
     }
 
+    @VisibleForTesting
+    List<View> getRoots() {
+        return myRoots;
+    }
+
     private void checkRoots() {
         try {
             List<View> newRoots = new ArrayList<>(myService.getRootViews());
@@ -81,10 +86,12 @@ class DetectRootViewChange {
                     for (View added : newlyAdded) {
                         myService.startLayoutInspector(added);
                     }
-                    // If we just removed a window make sure we send an update so the new window
-                    // list is captured. Otherwise if none of the other windows happen to be updated
-                    // the removed window will still be shown.
-                    if (!myRoots.isEmpty() && newlyAdded.isEmpty()) {
+                    // If we just removed a window without adding another, we need to trigger an
+                    // update to the Studio side.
+                    //  - If there are any windows left: do this by invalidating one of them.
+                    //  - If no windows are left: we need to do something different.
+                    // TODO: Notify the Studio side if this is the last window closed.
+                    if (!newRoots.isEmpty() && newlyAdded.isEmpty()) {
                         View root = newRoots.get(0);
                         root.post(root::invalidate);
                     }
