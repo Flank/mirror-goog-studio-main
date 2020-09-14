@@ -73,6 +73,52 @@ coverage_report(
     ],
 )
 
+# Coverage report for CMake vNext feature
+coverage_report(
+    name = "cmake-vnext",
+    srcpath_include = [
+        "tools/base/build-system/gradle-core/src/main/java/com/android/build/gradle/tasks/CmakeFileApiMetadataGenerator.kt",
+        "tools/base/build-system/gradle-core/src/main/java/com/android/build/gradle/internal/cxx/cmake/CmakeFileApiCacheDataV2.kt",
+        "tools/base/build-system/gradle-core/src/main/java/com/android/build/gradle/internal/cxx/cmake/CmakeFileApiV1.kt",
+        "tools/base/build-system/gradle-core/src/main/java/com/android/build/gradle/internal/cxx/cmake/CmakeFileApiIndexData.kt",
+        "tools/base/build-system/gradle-core/src/main/java/com/android/build/gradle/internal/cxx/cmake/CmakeFileApiCmakeFilesDataV1.kt",
+        "tools/base/build-system/gradle-core/src/main/java/com/android/build/gradle/internal/cxx/cmake/CmakeFileApiTargetData.kt",
+        "tools/base/build-system/gradle-core/src/main/java/com/android/build/gradle/internal/cxx/cmake/CmakeFileApiCodeModelDataV2.kt",
+    ],
+    tests = [
+        "//tools/base/build-system/gradle-core:tests.test",
+        "//tools/base/build-system/integration-test/native:CmakeBasicProjectTest",
+        "//tools/base/build-system/integration-test/native:CmakeExtensionsTest",
+        "//tools/base/build-system/integration-test/native:CmakeGradleTargetsTest",
+        "//tools/base/build-system/integration-test/native:CmakeInjectedAbiSplitTest",
+        "//tools/base/build-system/integration-test/native:CmakeJniLibTest",
+        "//tools/base/build-system/integration-test/native:CmakeMultiModuleTest",
+        "//tools/base/build-system/integration-test/native:CmakeStlMatrixTest",
+        "//tools/base/build-system/integration-test/native:CmakeSysrootTest",
+        "//tools/base/build-system/integration-test/native:CmakeTargetsTest",
+        "//tools/base/build-system/integration-test/native:CombinedAbiDensitySplits",
+        "//tools/base/build-system/integration-test/native:HeaderInCmakeListsTest",
+        "//tools/base/build-system/integration-test/native:InjectedAbiNativeLibraryTest",
+        "//tools/base/build-system/integration-test/native:NativeBuildOutputTest",
+        "//tools/base/build-system/integration-test/native:NdkBuildAndroidMkLibraryTest",
+        "//tools/base/build-system/integration-test/native:NdkBuildJniLibTest",
+        "//tools/base/build-system/integration-test/native:NdkBuildTargetsTest",
+        "//tools/base/build-system/integration-test/native:NdkBuildTest",
+        "//tools/base/build-system/integration-test/native:NdkJniLibTest",
+        "//tools/base/build-system/integration-test/native:NdkLibPrebuiltsTest",
+        "//tools/base/build-system/integration-test/native:NdkPrebuiltsTest",
+        "//tools/base/build-system/integration-test/native:NdkSanAngelesTest",
+        "//tools/base/build-system/integration-test/native:NoSplitNdkVariantsTest",
+        "//tools/base/build-system/integration-test/native:Pre21SplitTest",
+        "//tools/base/build-system/integration-test/native:RenderscriptNdkTest",
+        "//tools/base/build-system/integration-test/native:RsEnabledAnnotationTest",
+        "//tools/base/build-system/integration-test/native:RsSupportModeTest",
+        "//tools/base/build-system/integration-test/native:V1NativeModelTest",
+        "//tools/base/build-system/integration-test/native:V2NativeModelTest",
+        "//tools/base/build-system/integration-test/native:VulkanTest",
+    ],
+)
+
 coverage_report(
     name = "android-apk",
     srcpath_include = [
@@ -489,6 +535,7 @@ combine_report_definitions(
         "android-apk",
         "app-inspection",
         "build-attribution",
+        "cmake-vnext",
         "custom-views-preview",
         "dagger-editing",
         "database-inspector",
