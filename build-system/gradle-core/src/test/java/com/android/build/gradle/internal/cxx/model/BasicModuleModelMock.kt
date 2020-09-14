@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
+import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
 import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateCxxConfigurationModel
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -183,6 +184,7 @@ open class BasicModuleModelMock {
     val allPlatformsProjectRootDir = join(projects, "MyProject")
     val projectRootDir = join(allPlatformsProjectRootDir,  "Source", "Android")
     val sdkDir = join(home, "Library", "Android", "sdk")
+    val cmakeDir = join(sdkDir, "cmake", DEFAULT_CMAKE_VERSION, "bin")
     val ndkHandler = mock(
         NdkHandler::class.java,
         throwUnmocked
@@ -296,6 +298,7 @@ open class BasicModuleModelMock {
             val ndkFolder = join(sdkDir, "ndk", ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)
             val meta = join(ndkFolder, "meta")
             meta.mkdirs()
+            cmakeDir.mkdirs()
             File(meta, "platforms.json").writeText(platformsJson)
             File(meta, "abis.json").writeText(abisJson)
             val osName = System.getProperty("os.name").toLowerCase(Locale.ENGLISH)

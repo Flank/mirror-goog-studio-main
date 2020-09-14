@@ -65,7 +65,6 @@ public class CmakeUtils {
     }
 
     @NonNull
-    @VisibleForTesting
     public static String keepWhileNumbersAndDots(String versionString) {
         String stripped = "";
         for (char c : versionString.toCharArray()) {
