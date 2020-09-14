@@ -17,11 +17,11 @@ IF "%BUILDNUMBER:~0,1%"=="P" (
 )
 
 @REM Run tests multiple times to aid flake detection.
-IF "$DETECT_FLAKES"=="--detect_flakes" (
+IF "%DETECT_FLAKES%"=="--detect_flakes" (
   set RUNS=--runs_per_test=20
   set DETECT_FLAKES=--runs_per_test_detects_flakes
   set NOCACHE=--nocache_test_results
-  set DETECT_FLAKE_ARGS="%RUNS% %DETECT_FLAKES% %NOCACHE%"
+  set DETECT_FLAKE_ARGS=!RUNS! !DETECT_FLAKES! !NOCACHE!
 )
 
 set TESTTAGFILTERS=-no_windows,-no_test_windows,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate
