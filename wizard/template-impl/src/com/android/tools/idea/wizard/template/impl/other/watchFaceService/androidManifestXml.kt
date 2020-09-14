@@ -48,9 +48,20 @@ fun androidManifestXml(
             android:name="${packageName}.${serviceClass}"
             $labelBlock
             android:permission="android.permission.BIND_WALLPAPER" >
+            <!--
+            By default, Watchfaces on rectangular devices will be run in a emulation mode where they
+            are provided a square surface to draw the watchface (allows watchfaces built for
+            circular and square devices to work well).
+
+            For this watchface, we explicitly enable rectangular devices, so we get the complete
+            surface.
+            -->
             <meta-data
-                    android:name="android.service.wallpaper"
-                    android:resource="@xml/watch_face" />
+                android:name="android.service.wallpaper.square_mode"
+                android:value="false" />
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/watch_face" />
             <meta-data
                 android:name="com.google.android.wearable.watchface.preview"
                 $previewBlock
