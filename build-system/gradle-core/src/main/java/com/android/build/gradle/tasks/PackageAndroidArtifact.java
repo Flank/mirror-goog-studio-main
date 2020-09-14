@@ -77,6 +77,7 @@ import com.android.builder.files.ZipCentralDirectory;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.model.CodeShrinker;
+import com.android.builder.packaging.DexPackagingMode;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.builder.utils.ZipEntryUtils;
 import com.android.ide.common.resources.FileStatus;
@@ -233,6 +234,10 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     @Input
     public abstract Property<Boolean> getJniLibsUseLegacyPackaging();
 
+    @NonNull
+    @Input
+    public abstract Property<Boolean> getDexUseLegacyPackaging();
+
     protected String projectBaseName;
 
     @Nullable protected String buildTargetAbi;
@@ -316,7 +321,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                         PackagingUtils
                                                 .getDexPackagingMode(
                                                         parser.getUseEmbeddedDex(),
-                                                        getMinSdkVersion().get())
+                                                        getDexUseLegacyPackaging().get())
                                                 .toString();
                                 listBuilder.add(dexPackagingMode);
                             }
@@ -483,6 +488,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             parameter.getManifestDirectory().set(getManifests());
             parameter.getAaptOptionsNoCompress().set(getAaptOptionsNoCompress().get());
             parameter.getJniLibsUseLegacyPackaging().set(getJniLibsUseLegacyPackaging().get());
+            parameter.getDexUseLegacyPackaging().set(getDexUseLegacyPackaging().get());
             parameter.getCreatedBy().set(getCreatedBy().get());
             parameter.getMinSdkVersion().set(getMinSdkVersion().get());
 
@@ -602,6 +608,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         @NonNull
         public abstract Property<Boolean> getJniLibsUseLegacyPackaging();
+
+        @NonNull
+        public abstract Property<Boolean> getDexUseLegacyPackaging();
 
         @Optional
         @NonNull
@@ -750,6 +759,17 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             }
         }
 
+        Boolean useEmbeddedDex = manifestData.getUseEmbeddedDex();
+        DexPackagingMode dexPackagingMode =
+                PackagingUtils.getDexPackagingMode(
+                        useEmbeddedDex, params.getDexUseLegacyPackaging().get());
+        if (params.getDexUseLegacyPackaging().get() && Boolean.TRUE.equals(useEmbeddedDex)) {
+            // TODO (b/149770867) make this an error in future AGP versions.
+            logger.warning(
+                    "PackagingOptions.dex.useLegacyPackaging should be set to false because "
+                            + "android:useEmbeddedDex is set to \"true\" in AndroidManifest.xml.");
+        }
+
         byte[] dependencyData =
                 params.getDependencyDataFile().isPresent()
                         ? Files.readAllBytes(
@@ -769,8 +789,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                 PackagingUtils.getNoCompressPredicate(
                                         params.getAaptOptionsNoCompress().get(),
                                         nativeLibsPackagingMode,
-                                        manifestData.getUseEmbeddedDex(),
-                                        params.getMinSdkVersion().get()))
+                                        dexPackagingMode))
                         .withIntermediateDir(incrementalDirForSplit)
                         .withDebuggableBuild(params.getIsDebuggableBuild().get())
                         .withDeterministicEntryOrder(!params.getIsInvokedFromIde().get())
@@ -1091,6 +1110,15 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                     .getJniLibs()
                                     .getUseLegacyPackaging());
             packageAndroidArtifact.getJniLibsUseLegacyPackaging().disallowChanges();
+
+            packageAndroidArtifact
+                    .getDexUseLegacyPackaging()
+                    .set(
+                            creationConfig
+                                    .getPackagingOptions()
+                                    .getDex()
+                                    .getUseLegacyPackaging());
+            packageAndroidArtifact.getDexUseLegacyPackaging().disallowChanges();
 
             packageAndroidArtifact.getManifests().set(manifests);
 

@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ApkSubject
+import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.sdklib.AndroidVersion.VersionCodes.O
 import com.android.sdklib.AndroidVersion.VersionCodes.P
 import com.google.common.truth.Truth.assertThat
@@ -34,25 +35,41 @@ import java.util.zip.ZipFile
  * sourceManifestvalue and expectedMergedManifestValue refer to the value of
  * android:useEmbeddedDex in the source and merged manifests, respectively. If null, no such
  * attribute is written or expected in the manifests.
+ *
+ * useLegacyPackaging refers to the value of PackagingOptions.dex.useLegacyPackaging specified via
+ * the DSL. If null, no such value is specified.
  */
 @RunWith(FilterableParameterized::class)
 class UseEmbeddedDexPackagingTest(
-    sourceManifestValue: Boolean?,
-    minSdk: Int,
+    private val sourceManifestValue: Boolean?,
+    private val minSdk: Int,
+    private val useLegacyPackaging: Boolean?,
     private val expectedMergedManifestValue: Boolean?,
     private val expectedCompression: Int
 ) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "useEmbeddedDex_{0}_minSdk_{1}")
+        @Parameterized.Parameters(name = "useEmbeddedDex_{0}_minSdk_{1}_useLegacyPackaging_{2}")
         fun parameters() = listOf(
-            arrayOf(true, O, true, ZipEntry.STORED),
-            arrayOf(true, P, true, ZipEntry.STORED),
-            arrayOf(false, O, false, ZipEntry.DEFLATED),
-            arrayOf(false, P, false, ZipEntry.STORED),
-            arrayOf(null, O, null, ZipEntry.DEFLATED),
-            arrayOf(null, P, null, ZipEntry.STORED)
+            arrayOf(true, O, true, true, ZipEntry.STORED),
+            arrayOf(true, O, false, true, ZipEntry.STORED),
+            arrayOf(true, O, null, true, ZipEntry.STORED),
+            arrayOf(true, P, true, true, ZipEntry.STORED),
+            arrayOf(true, P, false, true, ZipEntry.STORED),
+            arrayOf(true, P, null, true, ZipEntry.STORED),
+            arrayOf(false, O, true, false, ZipEntry.DEFLATED),
+            arrayOf(false, O, false, false, ZipEntry.STORED),
+            arrayOf(false, O, null, false, ZipEntry.DEFLATED),
+            arrayOf(false, P, true, false, ZipEntry.DEFLATED),
+            arrayOf(false, P, false, false, ZipEntry.STORED),
+            arrayOf(false, P, null, false, ZipEntry.STORED),
+            arrayOf(null, O, true, null, ZipEntry.DEFLATED),
+            arrayOf(null, O, false, null, ZipEntry.STORED),
+            arrayOf(null, O, null, null, ZipEntry.DEFLATED),
+            arrayOf(null, P, true, null, ZipEntry.DEFLATED),
+            arrayOf(null, P, false, null, ZipEntry.STORED),
+            arrayOf(null, P, null, null, ZipEntry.STORED)
         )
     }
 
@@ -60,6 +77,12 @@ class UseEmbeddedDexPackagingTest(
         null -> ""
         false -> "android:useEmbeddedDex=\"false\""
         true -> "android:useEmbeddedDex=\"true\""
+    }
+
+    private val useLegacyPackagingString = when (useLegacyPackaging) {
+        true -> "android.packagingOptions.dex.useLegacyPackaging = true"
+        false -> "android.packagingOptions.dex.useLegacyPackaging = false"
+        null -> ""
     }
 
     @get:Rule
@@ -76,6 +99,7 @@ class UseEmbeddedDexPackagingTest(
                                 minSdk = $minSdk
                             }
                         }
+                        $useLegacyPackagingString
                     """.trimIndent()
                 )
                 .withFile(
@@ -93,7 +117,16 @@ class UseEmbeddedDexPackagingTest(
 
     @Test
     fun testDexIsPackagedCorrectly() {
-        project.executor().run("assembleDebug")
+        project.executor().run("assembleDebug").stdout.use {
+            val resolvedUseLegacyPackaging: Boolean = useLegacyPackaging ?: (minSdk < P)
+            if (resolvedUseLegacyPackaging && expectedCompression == ZipEntry.STORED) {
+                assertThat(it).contains(
+                    "PackagingOptions.dex.useLegacyPackaging should be set to false"
+                )
+            } else {
+                assertThat(it).doesNotContain("PackagingOptions.dex.useLegacyPackaging")
+            }
+        }
         val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
 
         // check merged manifest

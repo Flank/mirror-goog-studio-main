@@ -129,10 +129,7 @@ public class PackagingUtils {
     public static Predicate<String> getNoCompressPredicate(
             @Nullable Collection<String> aaptOptionsNoCompress,
             @NonNull NativeLibrariesPackagingMode nativeLibsPackagingMode,
-            @Nullable Boolean useEmbeddedDex,
-            int minSdk) {
-        DexPackagingMode dexPackagingMode = getDexPackagingMode(useEmbeddedDex, minSdk);
-
+            @NonNull DexPackagingMode dexPackagingMode) {
         return getNoCompressPredicateForExtensions(
                 getAllNoCompressExtensions(
                         aaptOptionsNoCompress, nativeLibsPackagingMode, dexPackagingMode));
@@ -242,16 +239,14 @@ public class PackagingUtils {
 
     @NonNull
     public static DexPackagingMode getDexPackagingMode(
-            @Nullable Boolean useEmbeddedDex, int minSdk) {
+            @Nullable Boolean useEmbeddedDex, boolean useLegacyPackaging) {
         if (Boolean.TRUE.equals(useEmbeddedDex)) {
             // If useEmbeddedDex is true, dex files must be uncompressed.
             return DexPackagingMode.UNCOMPRESSED;
-        } else if (minSdk >= AndroidVersion.VersionCodes.P) {
-            // Even if useEmbeddedDex isn't true, uncompressed dex files yield smaller installation
-            // sizes on P+ because ART doesn't need to store an extra uncompressed copy on disk.
-            return DexPackagingMode.UNCOMPRESSED;
-        } else {
+        } else if (useLegacyPackaging) {
             return DexPackagingMode.COMPRESSED;
+        } else {
+            return DexPackagingMode.UNCOMPRESSED;
         }
     }
 

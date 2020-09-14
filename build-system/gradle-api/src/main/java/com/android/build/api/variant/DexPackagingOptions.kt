@@ -17,21 +17,18 @@
 package com.android.build.api.variant
 
 import org.gradle.api.Incubating
+import org.gradle.api.provider.Property
 
 /**
- * Defines an APK variant's packaging options.
+ * Defines an APK variant's packaging options for dex files.
  */
 @Incubating
-interface ApkPackagingOptions : PackagingOptions {
+interface DexPackagingOptions {
 
-    /** PackagingOptions for dex files. Initialized from the corresponding DSL. */
-    val dex: DexPackagingOptions
-
-    /** PackagingOptions for dex files. Initialized from the corresponding DSL. */
-    fun dex(action: DexPackagingOptions.() -> Unit)
-
-    override val jniLibs: JniLibsApkPackagingOptions
-
-    /** PackagingOptions for native libraries. Initialized from the corresponding DSL. */
-    fun jniLibs(action: JniLibsApkPackagingOptions.() -> Unit)
+    /**
+     * Whether to use the legacy convention of compressing all dex files in the APK.
+     *
+     * This property does not affect dex file compression in APKs produced from app bundles.
+     */
+    val useLegacyPackaging: Property<Boolean>
 }

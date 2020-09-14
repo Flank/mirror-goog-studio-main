@@ -589,13 +589,6 @@ open class VariantDslInfoImpl internal constructor(
             return dataProvider.manifestData.map { it.testLabel }
         }
 
-    val useEmbeddedDex: Provider<Boolean?>
-        get() {
-            // there is actually no DSL value for this, also we should add one
-            // FIXME b/149770867
-            return dataProvider.manifestData.map { it.useEmbeddedDex }
-        }
-
     /**
      * Return the minSdkVersion for this variant.
      *

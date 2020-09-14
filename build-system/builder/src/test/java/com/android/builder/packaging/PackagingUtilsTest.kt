@@ -16,8 +16,6 @@
 
 package com.android.builder.packaging
 
-import com.android.sdklib.AndroidVersion.VersionCodes.O
-import com.android.sdklib.AndroidVersion.VersionCodes.P
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
@@ -148,12 +146,11 @@ class PackagingUtilsTest {
     @Test
     fun testGetNoCompressPredicate_doNotCompressNativeLibsOrDex() {
         val nativeLibsPackagingMode = NativeLibrariesPackagingMode.UNCOMPRESSED_AND_ALIGNED
-        val useEmbeddedDex = true
+        val dexPackagingMode = DexPackagingMode.UNCOMPRESSED
         PackagingUtils.getNoCompressPredicate(
             listOf("oo"),
             nativeLibsPackagingMode,
-            useEmbeddedDex,
-            1
+            dexPackagingMode
         ).run {
             // check aaptOptionsNoCompress
             assertThatTest("foo").isTrue()
@@ -169,12 +166,11 @@ class PackagingUtilsTest {
     @Test
     fun testGetNoCompressPredicate_compressNativeLibsAndDex() {
         val nativeLibsPackagingMode = NativeLibrariesPackagingMode.COMPRESSED
-        val useEmbeddedDex = false
+        val dexPackagingMode = DexPackagingMode.COMPRESSED
         PackagingUtils.getNoCompressPredicate(
             listOf("oo"),
             nativeLibsPackagingMode,
-            useEmbeddedDex,
-            1
+            dexPackagingMode
         ).run {
             // check aaptOptionsNoCompress
             assertThatTest("foo").isTrue()
@@ -184,34 +180,6 @@ class PackagingUtilsTest {
             assertThatTest("picture.jpg").isTrue()
             assertThatTest("native.so").isFalse()
             assertThatTest("classes.dex").isFalse()
-        }
-    }
-
-    @Test
-    fun testGetNoCompressPredicate_compressDexWhenMinSdkO() {
-        val nativeLibsPackagingMode = NativeLibrariesPackagingMode.UNCOMPRESSED_AND_ALIGNED
-        val useEmbeddedDex = null
-        PackagingUtils.getNoCompressPredicate(
-            listOf(),
-            nativeLibsPackagingMode,
-            useEmbeddedDex,
-            O
-        ).run {
-            assertThatTest("classes.dex").isFalse()
-        }
-    }
-
-    @Test
-    fun testGetNoCompressPredicate_doNotCompressDexWhenMinSdkP() {
-        val nativeLibsPackagingMode = NativeLibrariesPackagingMode.UNCOMPRESSED_AND_ALIGNED
-        val useEmbeddedDex = null
-        PackagingUtils.getNoCompressPredicate(
-            listOf(),
-            nativeLibsPackagingMode,
-            useEmbeddedDex,
-            P
-        ).run {
-            assertThatTest("classes.dex").isTrue()
         }
     }
 
