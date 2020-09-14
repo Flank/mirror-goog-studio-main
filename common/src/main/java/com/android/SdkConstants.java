@@ -1752,6 +1752,7 @@ public final class SdkConstants {
     public static final String ATTR_CONSTRAINT_SET_START = "constraintSetStart";
     public static final String ATTR_CONSTRAINT_SET_END = "constraintSetEnd";
     public static final String ATTR_DERIVE_CONSTRAINTS_FROM = "deriveConstraintsFrom";
+    public static final String ATTR_LAYOUT_CONSTRAINT_TAG = "layout_constraintTag";
 
     public static final String ATTR_GUIDELINE_ORIENTATION_HORIZONTAL = "horizontal"; //$NON-NLS-1$
     public static final String ATTR_GUIDELINE_ORIENTATION_VERTICAL = "vertical"; //$NON-NLS-1$
