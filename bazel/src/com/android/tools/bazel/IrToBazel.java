@@ -115,6 +115,13 @@ public class IrToBazel {
                 // to indicate all files in the directory.
                 iml.addExclude(pkg.getRelativePath(file) + (file.isDirectory() ? "/*" : ""));
             }
+
+            String compilerOptions = bazelModule.getCompilerOptions();
+            if (compilerOptions != null) {
+                for (String javacOption : compilerOptions.split("\\s+")) {
+                    iml.addJavacOption(javacOption);
+                }
+            }
         }
 
         // 2nd pass: Dependencies.
