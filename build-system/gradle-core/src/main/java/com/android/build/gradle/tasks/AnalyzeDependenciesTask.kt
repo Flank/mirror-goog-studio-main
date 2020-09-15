@@ -57,11 +57,11 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    val externalAars: FileCollection get() = externalAarsCollection.artifactFiles
+    val externalResources: FileCollection get() = resourceSymbolsArtifactCollection.artifactFiles
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    val externalJars: FileCollection get() = externalJarsCollection.artifactFiles
+    val externalClasses: FileCollection get() = classListArtifactCollection.artifactFiles
 
     @get:InputFile
     @get:Optional
@@ -71,8 +71,8 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
-    private lateinit var externalAarsCollection: ArtifactCollection
-    private lateinit var externalJarsCollection : ArtifactCollection
+    private lateinit var resourceSymbolsArtifactCollection: ArtifactCollection
+    private lateinit var classListArtifactCollection : ArtifactCollection
     // Don't need to be marked as input as they are represented in externalArtifacts
     private var apiDirectDependenciesConfiguration: Configuration? = null
     private lateinit var allDirectDependencies: Collection<Dependency>
@@ -84,18 +84,18 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
                 allDirectDependencies,
                 apiDirectDependenciesConfiguration?.allDependencies)
         val variantClassHolder = VariantClassesHolder(variantArtifact)
-        val classFinder = ClassFinder(arrayListOf(externalAarsCollection, externalJarsCollection))
+        val classFinder = ClassFinder(classListArtifactCollection)
         val resourcesFinder = ResourcesFinder(
-                mergedManifest.orNull?.asFile , resourceSourceSets.toList(), externalAarsCollection)
-
+                mergedManifest.orNull?.asFile,
+                resourceSourceSets.files,
+                resourceSymbolsArtifactCollection
+        )
         val depsUsageFinder =
             DependencyUsageFinder(classFinder, variantClassHolder, variantDepsHolder)
 
         val compileClasspathConfig = project.configurations.getAt("${variantName}CompileClasspath")
         if (compileClasspathConfig.isCanBeResolved) {
-            val graphAnalyzer = DependencyGraphAnalyzer(
-                compileClasspathConfig,
-                depsUsageFinder)
+            val graphAnalyzer = DependencyGraphAnalyzer(compileClasspathConfig, depsUsageFinder)
 
             val reporter = DependencyUsageReporter(
                 variantClassHolder,
@@ -106,9 +106,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
                 graphAnalyzer)
 
             reporter.writeUnusedDependencies(
-                File(
-                    outputDirectory.asFile.get(),
-                    "dependenciesReport.json"))
+                File(outputDirectory.asFile.get(), "dependenciesReport.json"))
 
             // Report misconfigured dependencies only for library modules
             if (isVariantLibrary == true) {
@@ -198,13 +196,13 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
 
             task.variantArtifact.from(creationConfig.artifacts.getAllClasses())
 
-            task.externalAarsCollection = creationConfig
+            task.resourceSymbolsArtifactCollection = creationConfig
                 .variantDependencies.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.AAR_CLASS_LIST_AND_RES_SYMBOLS)
+                    AndroidArtifacts.ArtifactType.ANDROID_RES_SYMBOLS)
 
-            task.externalJarsCollection = creationConfig
+            task.classListArtifactCollection = creationConfig
                     .variantDependencies.getArtifactCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,

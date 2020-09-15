@@ -431,9 +431,9 @@ public class AndroidArtifacts {
         PROCESSED_AAR(TYPE_PROCESSED_AAR),
         EXPLODED_AAR(TYPE_EXPLODED_AAR),
         AAR_OR_JAR(TYPE_AAR_OR_JAR), // See ArtifactUtils for how this is used.
-        // A directory containing a two files; a txt file containing all AAR .class filepaths
-        // containing unique AAR resource symbols.
-        AAR_CLASS_LIST_AND_RES_SYMBOLS(TYPE_AAR_ClASS_LIST_AND_RES_SYMBOLS),
+        // A file containing unique resource symbols from ANDROID_RES.
+        ANDROID_RES_SYMBOLS(TYPE_AAR_ClASS_LIST_AND_RES_SYMBOLS),
+        // A file containing classpaths from CLASSES_JAR.
         JAR_CLASS_LIST(TYPE_JAR_ClASS_LIST),
 
         NAVIGATION_JSON(TYPE_NAVIGATION_JSON),

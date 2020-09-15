@@ -13,16 +13,15 @@ import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 
 /**
- * Tests for [LibraryDependencyAnalyzerJarTransform]
+ * Tests for [CollectClassesTransform]
  */
-internal class LibraryDependencyAnalyzerJarTransformTest {
+internal class CollectClassesTransformTest {
 
     @get:Rule
     val temporaryFolder = TemporaryFolder()
@@ -43,10 +42,7 @@ internal class LibraryDependencyAnalyzerJarTransformTest {
 
         transform.transform(transformOutputs)
 
-        val outputClassesFile =
-                FileUtils.join(transformOutputs.outputDirectory, "classes${SdkConstants.DOT_TXT}")
-
-        assertThat(outputClassesFile.readLines()).containsExactlyElementsIn(
+        assertThat(transformOutputs.outputFile.readLines()).containsExactlyElementsIn(
                 listOf(
                         "com/android/build/gradle/internal/transforms/testdata/EnumClass.class",
                         "com/android/build/gradle/internal/transforms/testdata/OuterClass.class",
@@ -65,9 +61,9 @@ internal class LibraryDependencyAnalyzerJarTransformTest {
         return jarFile
     }
 
-    private fun getTestTransform(jarFile: File): LibraryDependencyAnalyzerJarTransform {
-        return object : LibraryDependencyAnalyzerJarTransform() {
-            override val inputArtifact: Provider<FileSystemLocation>
+    private fun getTestTransform(jarFile: File): CollectClassesTransform {
+        return object : CollectClassesTransform() {
+            override val inputJarArtifact: Provider<FileSystemLocation>
                 get() = FakeGradleProvider(FakeGradleRegularFile(jarFile))
 
             override fun getParameters(): GenericTransformParameters = object :
