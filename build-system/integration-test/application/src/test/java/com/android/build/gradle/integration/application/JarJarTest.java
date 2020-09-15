@@ -33,7 +33,6 @@ public class JarJarTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("jarjarIntegration")
-                    .setTargetGradleVersion("6.7-20200825220036+0000")
                     .create();
 
     @AfterClass

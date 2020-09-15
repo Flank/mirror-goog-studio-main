@@ -25,6 +25,10 @@ import com.android.build.gradle.integration.common.fixture.ProfileCapturer
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp
 import com.google.common.collect.Iterables
 import com.google.wireless.android.sdk.stats.GradleBuildProject
+import com.google.wireless.android.sdk.stats.GradleBuildProject.GradlePlugin.ORG_JETBRAINS_KOTLIN_GRADLE_PLUGIN_KOTLINANDROIDPLUGINWRAPPER
+import com.google.wireless.android.sdk.stats.GradleBuildProject.GradlePlugin.ORG_GRADLE_API_PLUGINS_HELPTASKSPLUGIN
+import com.google.wireless.android.sdk.stats.GradleBuildProject.GradlePlugin.ORG_GRADLE_API_PLUGINS_BASEPLUGIN
+import com.google.wireless.android.sdk.stats.GradleBuildProject.GradlePlugin.COM_ANDROID_BUILD_GRADLE_APPPLUGIN
 import java.util.HashSet
 import org.junit.Rule
 import org.junit.Test
@@ -63,13 +67,12 @@ class ProfileContentTest {
             assertThat(gbp.kotlinPluginVersion).isEqualTo(project.kotlinVersion)
             assertThat<GradleBuildProject.GradlePlugin,
                     Iterable<GradleBuildProject.GradlePlugin>>(gbp.pluginList)
-                .contains(
-                    GradleBuildProject.GradlePlugin
-                        .ORG_JETBRAINS_KOTLIN_GRADLE_PLUGIN_KOTLINANDROIDPLUGINWRAPPER
+                .containsAtLeast(
+                        ORG_JETBRAINS_KOTLIN_GRADLE_PLUGIN_KOTLINANDROIDPLUGINWRAPPER,
+                        ORG_GRADLE_API_PLUGINS_HELPTASKSPLUGIN,
+                        ORG_GRADLE_API_PLUGINS_BASEPLUGIN,
+                        COM_ANDROID_BUILD_GRADLE_APPPLUGIN
                 )
-            assertThat<GradleBuildProject.GradlePlugin,
-                    Iterable<GradleBuildProject.GradlePlugin>>(gbp.pluginList)
-                .doesNotContain(GradleBuildProject.GradlePlugin.UNKNOWN_GRADLE_PLUGIN)
             assertThat(gbp.variantCount).isGreaterThan(0)
             val gbv = gbp.getVariant(0)
             assertThat(gbv.minSdkVersion.apiLevel).isEqualTo(SUPPORT_LIB_MIN_SDK)

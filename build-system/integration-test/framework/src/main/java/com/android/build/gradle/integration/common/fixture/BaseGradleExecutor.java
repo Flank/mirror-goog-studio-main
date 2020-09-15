@@ -52,6 +52,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.io.output.TeeOutputStream;
@@ -244,7 +245,8 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         if (offline) {
             arguments.add("--offline");
         }
-        if (failOnWarning) {
+        // Avoid fail on warning if Kotlin is applied - b/169842093.
+        if (failOnWarning && !ifAppliesKotlinPlugin(project)) {
             arguments.add("--warning-mode=fail");
         }
 
@@ -290,6 +292,27 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         }
 
         return arguments;
+    }
+
+    /*
+     * A good-enough heuristic to check if the Kotlin plugin is applied.
+     * This is needed because of b/169842093.
+     */
+    private boolean ifAppliesKotlinPlugin(GradleTestProject testProject) throws IOException {
+        GradleTestProject rootProject = testProject.getRootProject();
+
+        for (File buildFile :
+                FileUtils.find(rootProject.getProjectDir(), Pattern.compile("build\\.gradle"))) {
+            if (Files.readAllLines(buildFile.toPath()).stream()
+                    .anyMatch(
+                            s ->
+                                    s.contains("apply plugin: 'kotlin'")
+                                            || s.contains("apply plugin: 'kotlin-android'"))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** Location of the Android Preferences folder (normally in ~/.android) */
