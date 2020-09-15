@@ -12,31 +12,23 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-#ifndef LIVE_LITERAL_H
-#define LIVE_LITERAL_H
+package androidx.compose.runtime.internal;
 
-#include <jni.h>
-#include <jvmti.h>
+/**
+ * Mock of JetPack Compose's Runtime.
+ *
+ * In particular, updateLiveLiteralValue is creawted to print out its inputs.
+ */
+public final class LiveLiteralKt {
 
-#include "tools/base/deploy/agent/native/class_finder.h"
-#include "tools/base/deploy/proto/deploy.pb.h"
-
-namespace deploy {
-
-class LiveLiteral {
- public:
-  LiveLiteral(jvmtiEnv* jvmti, JNIEnv* jni)
-      : jvmti_(jvmti), jni_(jni), class_finder_(jvmti, jni) {}
-  proto::AgentLiveLiteralUpdateResponse Update(
-      const proto::LiveLiteralUpdateRequest& request);
-
- private:
-  ClassFinder class_finder_;
-  jvmtiEnv* jvmti_;
-  JNIEnv* jni_;
-};
-
-}  // namespace deploy
-#endif
+    public static final void updateLiveLiteralValue(String name, Object value) {
+        System.out.print("updateLiveLiteralValue(");
+        System.out.print(name);
+        System.out.print(", ");
+        System.out.print(value.getClass());
+        System.out.print(", ");
+        System.out.print(value);
+        System.out.println(")");
+    }
+}

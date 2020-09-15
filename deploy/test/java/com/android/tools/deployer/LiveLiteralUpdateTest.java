@@ -62,22 +62,27 @@ public class LiveLiteralUpdateTest extends AgentTestBase {
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
         Assert.assertTrue(android.waitForInput("NOT SWAPPED", RETURN_VALUE_TIMEOUT));
 
-        Deploy.LiveLiteralUpdateRequest request = createRequest();
+        Deploy.LiveLiteralUpdateRequest request =
+                createRequest("key1", "Ljava/lang/String;", "value1");
         installer.update(request);
 
-        // TODO: Next step is to set up the reply.
         Deploy.AgentLiveLiteralUpdateResponse response = installer.getLiveLiteralAgentResponse();
         Assert.assertEquals(Deploy.AgentLiveLiteralUpdateResponse.Status.OK, response.getStatus());
 
-        // TODO: For now we just check if the agent successfully received the request.
-        Assert.assertTrue(android.waitForInput("Live Literal Update on VM", RETURN_VALUE_TIMEOUT));
+        Assert.assertTrue(android.waitForInput(
+                "updateLiveLiteralValue(key1, class java.lang.String, value1)",
+                RETURN_VALUE_TIMEOUT));
     }
 
-
-    protected Deploy.LiveLiteralUpdateRequest createRequest() {
-        // PLACEHOLDER REQUEST FOR NOW.
+    protected Deploy.LiveLiteralUpdateRequest createRequest(String key, String type, String value) {
         Deploy.LiveLiteralUpdateRequest request =
-                Deploy.LiveLiteralUpdateRequest.newBuilder().build();
+                Deploy.LiveLiteralUpdateRequest.newBuilder()
+                        .addUpdates(
+                                Deploy.LiveLiteral.newBuilder()
+                                        .setKey(key)
+                                        .setType(type)
+                                        .setValue(value))
+                        .build();
         return request;
     }
 

@@ -16,20 +16,46 @@
  */
 #include "tools/base/deploy/agent/native/live_literal.h"
 
+#include "tools/base/deploy/agent/native/jni/jni_class.h"
+#include "tools/base/deploy/common/log.h"
+
 namespace deploy {
 
 proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
     const proto::LiveLiteralUpdateRequest& request) {
   proto::AgentLiveLiteralUpdateResponse response;
-  // TODO: For now just do a printf and the test will verify if we get to this
-  // stage.
-  jclass syscls = jni_->FindClass("java/lang/System");
-  jfieldID fid = jni_->GetStaticFieldID(syscls, "out", "Ljava/io/PrintStream;");
-  jobject out = jni_->GetStaticObjectField(syscls, fid);
-  jclass pscls = jni_->FindClass("java/io/PrintStream");
-  jmethodID mid = jni_->GetMethodID(pscls, "println", "(Ljava/lang/String;)V");
-  jni_->CallVoidMethod(out, mid,
-                       jni_->NewStringUTF("Live Literal Update on VM"));
+
+  jclass klass = class_finder_.FindInClassLoader(
+      class_finder_.GetApplicationClassLoader(),
+      "androidx/compose/runtime/internal/LiveLiteralKt");
+  if (klass == nullptr) {
+    jni_->ExceptionClear();
+    Log::V(
+        "LiveLiteralKt Not found. Not Starting JetPack Compose Live Literal "
+        "Update");
+  } else {
+    Log::V("LiveLiteralKt found. Starting JetPack Compose Live Literal Update");
+  }
+  JniClass live_literal_kt(jni_, klass);
+
+  for (auto update : request.updates()) {
+    jobject key = jni_->NewStringUTF(update.key().c_str());
+    jvalue args[2];
+    args[0].l = key;
+
+    if (update.type() == "Ljava/lang/String;") {
+      Log::V("Live Literal Update with String");
+      jobject value = jni_->NewStringUTF(update.value().c_str());
+      args[1].l = value;
+      live_literal_kt.CallStaticMethod<void>(
+          {"updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V"},
+          args);
+    } else {
+      // TODO: Strings for now.
+      Log::V("Live Literal Update with Unknown Type");
+    }
+  }
+
   response.set_status(proto::AgentLiveLiteralUpdateResponse::OK);
   return response;
 }
