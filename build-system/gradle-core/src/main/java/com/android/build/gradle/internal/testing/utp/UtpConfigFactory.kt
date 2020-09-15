@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.testing.utp
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_LOCAL
+import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_VIRTUAL
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DRIVER_INSTRUMENTATION
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_DEVICE_INFO_PLUGIN
@@ -34,7 +35,10 @@ import com.google.testing.platform.proto.api.config.EnvironmentProto
 import com.google.testing.platform.proto.api.config.ExecutorProto
 import com.google.testing.platform.proto.api.config.FixtureProto
 import com.google.testing.platform.proto.api.config.LocalAndroidDeviceProviderProto
+import com.google.testing.platform.proto.api.config.NetworkTypeProto
+import com.google.testing.platform.proto.api.config.OpenGlDriverProto
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
+import com.google.testing.platform.proto.api.config.VirtualAndroidDeviceProviderConfigProto
 import com.google.testing.platform.proto.api.core.ExtensionProto
 import com.google.testing.platform.proto.api.core.LabelProto
 import com.google.testing.platform.proto.api.core.PathProto
@@ -54,6 +58,11 @@ private const val UTP_SERVER_ADDRESS = "localhost:20000"
 // Emulator gRPC address
 private const val DEFAULT_EMULATOR_GRPC_ADDRESS = "localhost"
 
+// Default port for adb.
+private const val DEFAULT_ADB_SERVER_PORT = 5037
+
+private const val DEFAULT_LONG_PRESS_TIMEOUT = 1000L
+
 /**
  * A factory class to construct UTP runner and server configuration protos.
  */
@@ -63,7 +72,7 @@ class UtpConfigFactory {
      * Creates a runner config proto which you can pass into the Unified Test Platform's
      * test executor.
      */
-    fun createRunnerConfigProto(
+    fun createRunnerConfigProtoForLocalDevice(
         device: DeviceConnector,
         testData: StaticTestData,
         apks: Iterable<File>,
@@ -79,12 +88,50 @@ class UtpConfigFactory {
             addDevice(createLocalDevice(device, testData, utpDependencies))
             addTestFixture(
                 createTestFixture(
-                    device, apks, testData, utpDependencies, sdkComponents,
+                    findGrpcPort(device.serialNumber),
+                    apks,
+                    testData,
+                    utpDependencies,
+                    sdkComponents,
+                    outputDir,
+                    tmpDir,
+                    testLogDir,
+                    testRunLogDir,
+                    retentionConfig
+                )
+            )
+            singleDeviceExecutor = createSingleDeviceExecutor(device.serialNumber)
+        }.build()
+    }
+
+    /**
+     * Creates a runner config proto which you can pass into the Unified Test Platform's
+     * test executor.
+     *
+     * This is for devices managed by the Gradle Plugin for Android as defined in the dsl.
+     */
+    fun createRunnerConfigProtoForManagedDevice(
+        device: UtpManagedDevice,
+        testData: StaticTestData,
+        apks: Iterable<File>,
+        utpDependencies: UtpDependencies,
+        sdkComponents: SdkComponentsBuildService,
+        outputDir: File,
+        tmpDir: File,
+        testLogDir: File,
+        testRunLogDir: File,
+        retentionConfig: RetentionConfig
+    ): RunnerConfigProto.RunnerConfig {
+        return RunnerConfigProto.RunnerConfig.newBuilder().apply {
+            addDevice(createVirtualDevice(device, testData, utpDependencies))
+            addTestFixture(
+                createTestFixture(
+                    null, apks, testData, utpDependencies, sdkComponents,
                     outputDir, tmpDir, testLogDir, testRunLogDir,
                     retentionConfig
                 )
             )
-            singleDeviceExecutor = createSingleDeviceExecutor(device)
+            singleDeviceExecutor = createSingleDeviceExecutor(device.id)
         }.build()
     }
 
@@ -132,8 +179,69 @@ class UtpConfigFactory {
         }.build()
     }
 
+    private fun createVirtualDevice(
+        managedDevice: UtpManagedDevice,
+        testData: StaticTestData,
+        utpDependencies: UtpDependencies
+    ): DeviceProto.Device {
+        return DeviceProto.Device.newBuilder().apply {
+            deviceIdBuilder.apply {
+                id = managedDevice.id
+            }
+            provider = createVirtualDeviceProvider(managedDevice, utpDependencies)
+        }.build()
+    }
+
+    private fun createVirtualDeviceProvider(
+        deviceInfo: UtpManagedDevice,
+        utpDependencies: UtpDependencies
+    ): ExtensionProto.Extension {
+        return ExtensionProto.Extension.newBuilder().apply {
+            label = LabelProto.Label.newBuilder().apply {
+                label = "virtual_android_device_provider_config"
+            }.build()
+            className = ANDROID_DEVICE_PROVIDER_VIRTUAL.mainClass
+            addAllJar(utpDependencies.deviceProviderVirtual.files.map {
+                PathProto.Path.newBuilder().apply {
+                    path = it.absolutePath
+                }.build()
+            })
+            config =
+                Any.pack(
+                    VirtualAndroidDeviceProviderConfigProto.VirtualAndroidDeviceProviderConfig
+                        .newBuilder().apply {
+                            enableConsoleAuth = true
+                            runDex2OatOnCloud = true
+                            emulatorLauncherPath = PathProto.Path.newBuilder().apply {
+                                path = deviceInfo.emulatorLauncherPath
+                            }.build()
+                            adbServerPort = DEFAULT_ADB_SERVER_PORT
+                            networkType = NetworkTypeProto.NetworkType.FASTNET
+                            // TODO(b/168606024): find or retrieve kvm_device path
+                            kvmDevice = PathProto.Path.newBuilder().apply {
+                                path = "usr/bin/kvm"
+                            }.build()
+                            // TODO(b/168606029): customize initial_locale
+                            initialLocale = "en_US"
+                            // TODO(b/168606029): customize initial_ime
+                            // TODO(b/168606029): customize extra certs
+                            longPressTimeout = DEFAULT_LONG_PRESS_TIMEOUT
+                            openGlDriver = OpenGlDriverProto.OpenGlDriver.SWIFTSHADER_INDIRECT
+                            launcherTimeout = 70
+                            logcatPath = PathProto.Path.newBuilder().apply {
+                                path = deviceInfo.logcatPath
+                            }.build()
+                            // TODO(b/168606029): customize system apks to install
+                            grantRuntimePermissions = true
+                            exportLaunchMetadataPath = PathProto.Path.newBuilder().apply {
+                                path = deviceInfo.launchMetadataPath
+                            }.build()
+                        }.build())
+        }.build()
+    }
+
     private fun createTestFixture(
-        device: DeviceConnector,
+        grpcPort: Int?,
         apks: Iterable<File>,
         testData: StaticTestData,
         utpDependencies: UtpDependencies,
@@ -167,40 +275,44 @@ class UtpConfigFactory {
             )
 
             if (retentionConfig.enabled) {
-                var retentionTestData = testData.copy(
-                    instrumentationRunnerArguments = testData.instrumentationRunnerArguments
-                        .toMutableMap()
-                        .apply { put("debug", "true") })
-                testDriver = createTestDriver(retentionTestData, utpDependencies)
-                addHostPlugin(ExtensionProto.Extension.newBuilder().apply {
-                    label = LabelProto.Label.newBuilder().apply {
-                        label = "icebox_plugin"
-                    }.build()
-                    className = ANDROID_TEST_PLUGIN_HOST_RETENTION.mainClass
-                    config = Any.pack(IceboxPlugin.newBuilder().apply {
-                        appPackage = testData.testedApplicationId
-                        // TODO(155308548): query device for the following fields
-                        emulatorGrpcAddress = DEFAULT_EMULATOR_GRPC_ADDRESS
-                        emulatorGrpcPort = findGrpcPort(device.serialNumber)
-                        snapshotCompression = if (retentionConfig.compressSnapshots) {
-                            IceboxPluginProto.Compression.TARGZ
-                        } else {
-                            IceboxPluginProto.Compression.NONE
-                        }
-                        skipSnapshot = false
-                        maxSnapshotNumber = if (retentionConfig.retainAll) {
-                            0
-                        } else {
-                            retentionConfig.maxSnapshots
-                        }
+                if (grpcPort == null) {
+                    // TODO: log warning here.
+                } else {
+                    val retentionTestData = testData.copy(
+                        instrumentationRunnerArguments = testData.instrumentationRunnerArguments
+                            .toMutableMap()
+                            .apply { put("debug", "true") })
+                    testDriver = createTestDriver(retentionTestData, utpDependencies)
+                    addHostPlugin(ExtensionProto.Extension.newBuilder().apply {
+                        label = LabelProto.Label.newBuilder().apply {
+                            label = "icebox_plugin"
+                        }.build()
+                        className = ANDROID_TEST_PLUGIN_HOST_RETENTION.mainClass
+                        config = Any.pack(IceboxPlugin.newBuilder().apply {
+                            appPackage = testData.testedApplicationId
+                            // TODO(155308548): query device for the following fields
+                            emulatorGrpcAddress = DEFAULT_EMULATOR_GRPC_ADDRESS
+                            emulatorGrpcPort = grpcPort
+                            snapshotCompression = if (retentionConfig.compressSnapshots) {
+                                IceboxPluginProto.Compression.TARGZ
+                            } else {
+                                IceboxPluginProto.Compression.NONE
+                            }
+                            skipSnapshot = false
+                            maxSnapshotNumber = if (retentionConfig.retainAll) {
+                                0
+                            } else {
+                                retentionConfig.maxSnapshots
+                            }
+                        }.build())
+                        addAllJar(
+                            utpDependencies.testPluginHostRetention.files.map {
+                                PathProto.Path.newBuilder().apply {
+                                    path = it.absolutePath
+                                }.build()
+                            })
                     }.build())
-                    addAllJar(
-                        utpDependencies.testPluginHostRetention.files.map {
-                            PathProto.Path.newBuilder().apply {
-                                path = it.absolutePath
-                            }.build()
-                        })
-                }.build())
+                }
             } else {
                 testDriver = createTestDriver(testData, utpDependencies)
             }
@@ -308,11 +420,11 @@ class UtpConfigFactory {
         }.build()
     }
 
-    private fun createSingleDeviceExecutor(device: DeviceConnector): ExecutorProto.SingleDeviceExecutor {
+    private fun createSingleDeviceExecutor(identifier: String): ExecutorProto.SingleDeviceExecutor {
         return ExecutorProto.SingleDeviceExecutor.newBuilder().apply {
             deviceExecutionBuilder.apply {
                 deviceIdBuilder.apply {
-                    id = device.serialNumber
+                    id = identifier
                 }
                 testFixtureIdBuilder.apply {
                     id = UTP_TEST_FIXTURE_ID

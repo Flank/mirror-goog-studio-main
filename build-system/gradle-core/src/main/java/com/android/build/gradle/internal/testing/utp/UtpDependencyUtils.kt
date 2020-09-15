@@ -45,6 +45,9 @@ enum class UtpDependency(
     ANDROID_DEVICE_PROVIDER_LOCAL(
             "android-device-provider-local",
             "com.google.testing.platform.runtime.android.provider.local.LocalAndroidDeviceProvider"),
+    ANDROID_DEVICE_PROVIDER_VIRTUAL(
+            "android-device-provider-virtual",
+            "com.google.testing.platform.runtime.android.provider.virtual.VirtualAndroidDeviceProvider"),
     ANDROID_DRIVER_INSTRUMENTATION(
             "android-driver-instrumentation",
             "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"),
@@ -76,6 +79,9 @@ abstract class UtpDependencies {
     @get:Optional
     @get:Classpath
     abstract val deviceProviderLocal: ConfigurableFileCollection
+    @get:Optional
+    @get:Classpath
+    abstract val deviceProviderVirtual: ConfigurableFileCollection
     @get:Optional
     @get:Classpath
     abstract val driverInstrumentation: ConfigurableFileCollection

@@ -20,7 +20,6 @@ import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.testing.StaticTestData
-import com.android.build.gradle.internal.testing.utp.RetentionConfig
 import com.android.builder.testing.api.DeviceConnector
 import com.android.ide.common.process.JavaProcessExecutor
 import com.android.ide.common.process.JavaProcessInfo
@@ -76,6 +75,7 @@ class UtpTestRunnerTest {
         override val launcher = FakeConfigurableFileCollection(File("/pathToLAUNCHER.jar"))
         override val core = FakeConfigurableFileCollection(File("/pathToCORE.jar"))
         override val deviceProviderLocal = FakeConfigurableFileCollection(File(""))
+        override val deviceProviderVirtual = FakeConfigurableFileCollection(File(""))
         override val driverInstrumentation = FakeConfigurableFileCollection(File(""))
         override val testDeviceInfoPlugin = FakeConfigurableFileCollection(File(""))
         override val testPlugin = FakeConfigurableFileCollection(File(""))
@@ -92,7 +92,7 @@ class UtpTestRunnerTest {
         `when`(mockRetentionConfig.enabled).thenReturn(false)
 
         var utpOutputDir: File? = null
-        `when`(mockUtpConfigFactory.createRunnerConfigProto(
+        `when`(mockUtpConfigFactory.createRunnerConfigProtoForLocalDevice(
                 any(DeviceConnector::class.java),
                 any(StaticTestData::class.java),
                 anyIterable(),
