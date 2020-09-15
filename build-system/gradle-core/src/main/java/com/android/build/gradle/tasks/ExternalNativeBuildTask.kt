@@ -288,8 +288,6 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
 
                 for (runtimeFile in library.runtimeFiles) {
                     val dest = join(variant.objFolder, abi.tag, runtimeFile.name)
-                    // Dependencies within the same project will also show up as runtimeFiles, and
-                    // will have the same source and destination. Can skip those.
                     hardLinkOrCopy(runtimeFile, dest)
                 }
             }
@@ -322,6 +320,8 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
      * Hard link [source] to [destination].
      */
     private fun hardLinkOrCopy(source:File, destination:File) {
+        // Dependencies within the same project will also show up as runtimeFiles, and
+        // will have the same source and destination. Can skip those.
         if (isSameFile(source, destination)) {
             // This happens if source and destination are lexically the same
             // --or-- if one is a hard link to the other.
@@ -331,6 +331,14 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
 
         if(destination.exists()) {
             destination.delete()
+        }
+
+        // CMake can report runtime files that it doesn't later produce.
+        // Don't try to copy these. Also, don't warn because hard-link/copy
+        // is not the correct location to diagnose why the *original*
+        // runtime file was not created.
+        if(!source.exists()) {
+            return
         }
 
         try {
