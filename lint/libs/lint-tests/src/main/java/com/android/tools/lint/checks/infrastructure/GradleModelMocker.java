@@ -462,18 +462,14 @@ public class GradleModelMocker {
         when(artifact.getApplicationId()).thenReturn(applicationId);
         when(androidTestArtifact.getApplicationId()).thenReturn(applicationId);
 
-        List<IdeJavaArtifact> extraJavaArtifacts = Collections.singletonList(testArtifact);
-        List<IdeAndroidArtifact> extraAndroidArtifacts =
-                Collections.singletonList(androidTestArtifact);
-
         //noinspection deprecation
         when(artifact.getLevel2Dependencies()).thenReturn(dependencies);
         when(testArtifact.getLevel2Dependencies()).thenReturn(testDependencies);
         when(androidTestArtifact.getLevel2Dependencies()).thenReturn(androidTestDependencies);
 
         when(variant.getMainArtifact()).thenReturn(artifact);
-        when(variant.getExtraJavaArtifacts()).thenReturn(extraJavaArtifacts);
-        when(variant.getExtraAndroidArtifacts()).thenReturn(extraAndroidArtifacts);
+        when(variant.getUnitTestArtifact()).thenReturn(testArtifact);
+        when(variant.getAndroidTestArtifact()).thenReturn(androidTestArtifact);
 
         /*
         if (modelVersion.isAtLeast(2, 5, 0, "alpha", 1, false)) {
@@ -671,8 +667,8 @@ public class GradleModelMocker {
                     when(dependencies.getAndroidLibraries()).thenReturn(Collections.emptyList());
                     when(artifact.getLevel2Dependencies()).thenReturn(dependencies);
                     when(newVariant.getMainArtifact()).thenReturn(artifact);
-                    when(newVariant.getExtraJavaArtifacts()).thenReturn(Collections.emptyList());
-                    when(newVariant.getExtraAndroidArtifacts()).thenReturn(Collections.emptyList());
+                    when(newVariant.getUnitTestArtifact()).thenReturn(null);
+                    when(newVariant.getAndroidTestArtifact()).thenReturn(null);
 
                     variants.add(newVariant);
                 }

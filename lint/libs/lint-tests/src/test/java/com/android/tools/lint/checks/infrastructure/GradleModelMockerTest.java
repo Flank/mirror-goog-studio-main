@@ -15,8 +15,6 @@
  */
 package com.android.tools.lint.checks.infrastructure;
 
-import static com.android.projectmodel.VariantUtil.ARTIFACT_NAME_ANDROID_TEST;
-import static com.android.projectmodel.VariantUtil.ARTIFACT_NAME_UNIT_TEST;
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.fail;
@@ -165,23 +163,13 @@ public class GradleModelMockerTest {
         assertThat(variant.getMergedFlavor().getVersionCode()).isNull();
 
         Collection<IdeAndroidLibrary> testLibraries =
-                variant.getExtraJavaArtifacts().stream()
-                        .filter(a -> a.getName().equals(ARTIFACT_NAME_UNIT_TEST))
-                        .findFirst()
-                        .get()
-                        .getLevel2Dependencies()
-                        .getAndroidLibraries();
+                variant.getUnitTestArtifact().getLevel2Dependencies().getAndroidLibraries();
         assertThat(testLibraries).hasSize(1);
         IdeLibrary testLibrary = testLibraries.iterator().next();
         assertThat(testLibrary.getArtifactAddress()).isEqualTo("my.group.id:mylib1:1.2.3-rc4@aar");
 
         Collection<IdeAndroidLibrary> androidTestLibraries =
-                variant.getExtraAndroidArtifacts().stream()
-                        .filter(a -> a.getName().equals(ARTIFACT_NAME_ANDROID_TEST))
-                        .findFirst()
-                        .get()
-                        .getLevel2Dependencies()
-                        .getAndroidLibraries();
+                variant.getAndroidTestArtifact().getLevel2Dependencies().getAndroidLibraries();
         assertThat(androidTestLibraries).hasSize(1);
         IdeLibrary library = androidTestLibraries.iterator().next();
         assertThat(library.getArtifactAddress()).isEqualTo("my.group.id:mylib2:4.5.6-SNAPSHOT@aar");
