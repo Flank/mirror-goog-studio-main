@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.build.api.component.impl
+package com.android.build.api.component
 
-import com.android.build.api.component.Component
-import com.android.build.api.component.ComponentIdentity
-import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.services.VariantApiServices
+import org.gradle.api.Incubating
 
-abstract class ComponentImpl(
-    protected val variantDslInfo: VariantDslInfo,
-    variantConfiguration: ComponentIdentity,
-    protected val variantApiServices: VariantApiServices
-) :
-    Component, ComponentIdentity by variantConfiguration {
+/**
+ * Component object that contains properties that must be set during configuration time as it
+ * changes the build flow for the variant.
+ */
+@Incubating
+interface ComponentBuilder: ComponentIdentity,
+    ActionableComponentObject {
 
-    override var enabled: Boolean = true
+    /**
+     * Set to `true` if the variant is active and should be configured, false otherwise.
+     */
+    var enabled: Boolean
 }

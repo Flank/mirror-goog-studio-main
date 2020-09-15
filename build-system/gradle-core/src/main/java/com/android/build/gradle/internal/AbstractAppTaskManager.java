@@ -21,7 +21,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
-import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
@@ -77,7 +77,7 @@ public abstract class AbstractAppTaskManager<
     protected AbstractAppTaskManager(
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull
-                    List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
+                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl>>
                             testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,

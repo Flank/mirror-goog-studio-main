@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.build.api.component
+package com.android.build.api.component.analytics
 
-import org.gradle.api.Incubating
+import com.android.build.api.component.AndroidTestBuilder
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 
 /**
- * Variant of the unit test artifact.
+ * Shim object for [AndroidTestBuilder] that records all mutating accesses to the analytics.
  */
-@Incubating
-interface UnitTest: TestComponent {
-}
+class AnalyticsEnabledAndroidTestBuilder(
+    delegate: AndroidTestBuilder,
+    stats: GradleBuildVariant.Builder
+) : AnalyticsEnabledComponentBuilder(delegate, stats),
+    AndroidTestBuilder

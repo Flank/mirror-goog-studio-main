@@ -22,8 +22,8 @@ import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.Component;
-import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.ComponentBuilder;
+import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.extension.AndroidComponentsExtension;
@@ -137,13 +137,13 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 /** Base class for all Android plugins */
 public abstract class BasePlugin<
                 AndroidComponentsT extends
-                        AndroidComponentsExtension<? extends Component, ? extends Variant>,
+                        AndroidComponentsExtension<? extends ComponentBuilder, ? extends Variant>,
                 VariantBuilderT extends VariantBuilderImpl,
                 VariantT extends VariantImpl>
         implements Plugin<Project>, LintModelModuleLoaderProvider {
 
     private BaseExtension extension;
-    private AndroidComponentsExtension<? extends Component, ? extends Variant>
+    private AndroidComponentsExtension<? extends ComponentBuilder, ? extends Variant>
             androidComponentsExtension;
     private final OperationsRegistrar<VariantBuilderT> variantBuilderOperations =
             new OperationsRegistrar<>();
@@ -217,7 +217,7 @@ public abstract class BasePlugin<
     protected abstract TaskManager<VariantBuilderT, VariantT> createTaskManager(
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull
-                    List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
+                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl>>
                             testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,

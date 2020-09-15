@@ -65,6 +65,7 @@ com.android.build.api.artifact.TaskBasedOperation.wiredWith: com.android.build.a
 com.android.build.api.artifact.TaskBasedOperation.wiredWithDirectories: com.android.build.api.artifact.InAndOutDirectoryOperationRequest<TaskT> (kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.DirectoryProperty>, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.DirectoryProperty>)
 com.android.build.api.artifact.TaskBasedOperation.wiredWithFiles: com.android.build.api.artifact.InAndOutFileOperationRequest (kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.RegularFileProperty>, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.RegularFileProperty>)
 com.android.build.api.component.ActionableComponentObject
+com.android.build.api.component.AndroidTestBuilder implements com.android.build.api.component.TestComponentBuilder
 com.android.build.api.component.AndroidTestProperties implements com.android.build.api.component.TestComponentProperties
 com.android.build.api.component.AndroidTestProperties.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.AaptOptions, kotlin.Unit>)
 com.android.build.api.component.AndroidTestProperties.addResValue: void (java.lang.String, java.lang.String, java.lang.String, java.lang.String)
@@ -86,9 +87,9 @@ com.android.build.api.component.BuildTypedComponentActionRegistrar
 com.android.build.api.component.BuildTypedComponentActionRegistrar.withFlavor: com.android.build.api.component.BuildTypedComponentActionRegistrar<ComponentT> (kotlin.Pair<java.lang.String, java.lang.String>)
 com.android.build.api.component.BuildTypedComponentActionRegistrar.withFlavor: void (kotlin.Pair<java.lang.String, java.lang.String>, kotlin.jvm.functions.Function1<? super ComponentT, kotlin.Unit>)
 com.android.build.api.component.BuildTypedComponentActionRegistrar.withFlavor: void (kotlin.Pair<java.lang.String, java.lang.String>, org.gradle.api.Action<ComponentT>)
-com.android.build.api.component.Component implements com.android.build.api.component.ComponentIdentity, com.android.build.api.component.ActionableComponentObject
-com.android.build.api.component.Component.getEnabled: boolean ()
-com.android.build.api.component.Component.setEnabled: void (boolean)
+com.android.build.api.component.ComponentBuilder implements com.android.build.api.component.ComponentIdentity, com.android.build.api.component.ActionableComponentObject
+com.android.build.api.component.ComponentBuilder.getEnabled: boolean ()
+com.android.build.api.component.ComponentBuilder.setEnabled: void (boolean)
 com.android.build.api.component.ComponentIdentity implements org.gradle.api.Named
 com.android.build.api.component.ComponentIdentity.getBuildType: java.lang.String ()
 com.android.build.api.component.ComponentIdentity.getFlavorName: java.lang.String ()
@@ -115,9 +116,10 @@ com.android.build.api.component.GenericFilteredComponentActionRegistrar implemen
 com.android.build.api.component.GenericFilteredComponentActionRegistrar.withType: com.android.build.api.component.FilteredComponentActionRegistrar<NewTypeT> (java.lang.Class<NewTypeT>)
 com.android.build.api.component.GenericFilteredComponentActionRegistrar.withType: void (java.lang.Class<NewTypeT>, kotlin.jvm.functions.Function1<? super NewTypeT, kotlin.Unit>)
 com.android.build.api.component.GenericFilteredComponentActionRegistrar.withType: void (java.lang.Class<NewTypeT>, org.gradle.api.Action<NewTypeT>)
-com.android.build.api.component.TestComponent implements com.android.build.api.component.Component
+com.android.build.api.component.TestComponentBuilder implements com.android.build.api.component.ComponentBuilder
 com.android.build.api.component.TestComponentProperties implements com.android.build.api.component.ComponentProperties
 com.android.build.api.component.TestComponentProperties.getTestedVariant: com.android.build.api.variant.Variant ()
+com.android.build.api.component.UnitTestBuilder implements com.android.build.api.component.TestComponentBuilder
 com.android.build.api.component.UnitTestProperties implements com.android.build.api.component.TestComponentProperties
 com.android.build.api.dsl.AaptOptions
 com.android.build.api.dsl.AaptOptions.additionalParameters: void (java.lang.String)
@@ -954,14 +956,14 @@ com.android.build.api.variant.Variant.getBuildConfigFields: org.gradle.api.provi
 com.android.build.api.variant.Variant.getManifestPlaceholders: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.String> ()
 com.android.build.api.variant.Variant.getPackageName: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.Variant.getPackagingOptions: com.android.build.api.variant.PackagingOptions ()
-com.android.build.api.variant.VariantBuilder implements com.android.build.api.component.Component, com.android.build.api.component.ActionableComponentObject
-com.android.build.api.variant.VariantBuilder.androidTest: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTest, kotlin.Unit>)
+com.android.build.api.variant.VariantBuilder implements com.android.build.api.component.ComponentBuilder, com.android.build.api.component.ActionableComponentObject
+com.android.build.api.variant.VariantBuilder.androidTest: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTestBuilder, kotlin.Unit>)
 com.android.build.api.variant.VariantBuilder.androidTestProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTestProperties, kotlin.Unit>)
 com.android.build.api.variant.VariantBuilder.getMinSdkVersion: com.android.build.api.variant.AndroidVersion ()
 com.android.build.api.variant.VariantBuilder.getRenderscriptTargetApi: int ()
 com.android.build.api.variant.VariantBuilder.setMinSdkVersion: void (com.android.build.api.variant.AndroidVersion)
 com.android.build.api.variant.VariantBuilder.setRenderscriptTargetApi: void (int)
-com.android.build.api.variant.VariantBuilder.unitTest: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTest, kotlin.Unit>)
+com.android.build.api.variant.VariantBuilder.unitTest: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTestBuilder, kotlin.Unit>)
 com.android.build.api.variant.VariantBuilder.unitTestProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTestProperties, kotlin.Unit>)
 com.android.build.api.variant.VariantInfo
 com.android.build.api.variant.VariantInfo.getBuildTypeName: java.lang.String ()

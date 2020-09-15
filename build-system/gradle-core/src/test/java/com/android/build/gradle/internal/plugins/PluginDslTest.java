@@ -22,7 +22,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.SdkConstants;
 import com.android.Version;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
-import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
@@ -730,7 +730,7 @@ public class PluginDslTest {
             result.put(variant.getProperties().getName(), variant.getProperties());
         }
 
-        for (ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl> testComponent :
+        for (ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl> testComponent :
                 plugin.getVariantManager().getTestComponents()) {
             result.put(testComponent.getProperties().getName(), testComponent.getProperties());
         }

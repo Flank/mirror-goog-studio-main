@@ -57,7 +57,7 @@ import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
-import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.transform.QualifiedContent;
@@ -320,7 +320,7 @@ public abstract class TaskManager<
     @NonNull private final List<ComponentInfo<VariantBuilderT, VariantT>> variants;
 
     @NonNull
-    private final List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
+    private final List<ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl>>
             testComponents;
 
     private final boolean hasFlavors;
@@ -343,7 +343,7 @@ public abstract class TaskManager<
     public TaskManager(
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull
-                    List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
+                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl>>
                             testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,
@@ -400,7 +400,7 @@ public abstract class TaskManager<
         for (ComponentInfo<VariantBuilderT, VariantT> variant : variants) {
             createTasksForVariant(variant, variants);
         }
-        for (ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl> testComponent :
+        for (ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl> testComponent :
                 testComponents) {
             createTasksForTest(testComponent);
         }
@@ -501,7 +501,9 @@ public abstract class TaskManager<
 
     /** Create tasks for the specified variant. */
     private void createTasksForTest(
-            @NonNull ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl> testComponent) {
+            @NonNull
+                    ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl>
+                            testComponent) {
         final TestComponentPropertiesImpl componentProperties = testComponent.getProperties();
 
         createAssembleTask(componentProperties);

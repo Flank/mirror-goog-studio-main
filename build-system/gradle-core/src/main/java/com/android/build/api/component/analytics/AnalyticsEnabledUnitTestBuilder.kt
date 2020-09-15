@@ -16,14 +16,14 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.component.UnitTest
+import com.android.build.api.component.UnitTestBuilder
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 
 /**
- * Shim object for [AnalyticsEnabledTestComponent] that records all mutating accesses to the analytics.
+ * Shim object for [AnalyticsEnabledTestComponentBuilder] that records all mutating accesses to the analytics.
  */
-class AnalyticsEnabledUnitTest(
-    delegate: UnitTest,
+class AnalyticsEnabledUnitTestBuilder(
+    delegate: UnitTestBuilder,
     stats: GradleBuildVariant.Builder
-) : AnalyticsEnabledTestComponent(delegate, stats),
-    UnitTest
+) : AnalyticsEnabledTestComponentBuilder(delegate, stats),
+    UnitTestBuilder

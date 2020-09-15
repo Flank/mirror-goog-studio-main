@@ -16,10 +16,10 @@
 
 package com.android.build.api.variant
 
-import com.android.build.api.component.AndroidTest
+import com.android.build.api.component.AndroidTestBuilder
 import com.android.build.api.component.AndroidTestProperties
-import com.android.build.api.component.Component
-import com.android.build.api.component.UnitTest
+import com.android.build.api.component.ComponentBuilder
+import com.android.build.api.component.UnitTestBuilder
 import com.android.build.api.component.UnitTestProperties
 import com.android.build.api.component.ActionableComponentObject
 import org.gradle.api.Incubating
@@ -29,12 +29,12 @@ import org.gradle.api.Incubating
  * changes the build flow for the variant.
  */
 @Incubating
-interface VariantBuilder: Component, ActionableComponentObject {
+interface VariantBuilder: ComponentBuilder, ActionableComponentObject {
 
-    fun unitTest(action: UnitTest.() -> Unit)
+    fun unitTest(action: UnitTestBuilder.() -> Unit)
     fun unitTestProperties(action: UnitTestProperties.() -> Unit)
 
-    fun androidTest(action: AndroidTest.() -> Unit)
+    fun androidTest(action: AndroidTestBuilder.() -> Unit)
     fun androidTestProperties(action: AndroidTestProperties.() -> Unit)
 
     /**

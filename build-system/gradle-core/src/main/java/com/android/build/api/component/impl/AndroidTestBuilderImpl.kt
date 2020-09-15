@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.build.api.component.analytics
+package com.android.build.api.component.impl
 
-import com.android.build.api.component.AndroidTest
-import com.android.build.api.component.AndroidTestProperties
-import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import com.android.build.api.component.AndroidTestBuilder
+import com.android.build.api.component.ComponentIdentity
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.services.VariantApiServices
+import javax.inject.Inject
 
-/**
- * Shim object for [AndroidTest] that records all mutating accesses to the analytics.
- */
-class AnalyticsEnabledAndroidTest(
-    delegate: AndroidTest,
-    stats: GradleBuildVariant.Builder
-) : AnalyticsEnabledComponent(delegate, stats),
-    AndroidTest
+open class AndroidTestBuilderImpl @Inject constructor(
+    variantDslInfo: VariantDslInfo,
+    variantConfiguration: ComponentIdentity,
+    variantApiServices: VariantApiServices
+) : TestComponentBuilderImpl(
+    variantDslInfo,
+    variantConfiguration,
+    variantApiServices
+), AndroidTestBuilder

@@ -17,12 +17,12 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.build.api.component.analytics.AnalyticsEnabledVariantBuilder
-import com.android.build.api.component.impl.ComponentImpl
+import com.android.build.api.component.impl.ComponentBuilderImpl
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 
 class ComponentInfo<
-        ComponentT : ComponentImpl,
+        ComponentT : ComponentBuilderImpl,
         ComponentPropertiesT : ComponentPropertiesImpl>(
     val variant: ComponentT,
     val properties: ComponentPropertiesT,

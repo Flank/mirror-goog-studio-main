@@ -16,7 +16,7 @@
 
 package com.android.build.api.extension
 
-import com.android.build.api.component.Component
+import com.android.build.api.component.ComponentBuilder
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
@@ -29,7 +29,7 @@ import org.gradle.api.Incubating
  * Each component has a type, like application or library and will have a dedicated extension with
  * methods that are related to the particular component type.
  *
- * @param VariantBuilderT the [Component] type produced by this variant.
+ * @param VariantBuilderT the [ComponentBuilder] type produced by this variant.
  */
 @Incubating
 interface AndroidComponentsExtension<
@@ -37,7 +37,7 @@ interface AndroidComponentsExtension<
 
     /**
      * Creates a [GenericVariantSelector] instance that can be configured
-     * to reduce the set of [Component] instances participating in the [beforeVariants]
+     * to reduce the set of [ComponentBuilder] instances participating in the [beforeVariants]
      * and [onVariants] callback invocation.
      *
      * @return [GenericVariantSelector] to select the variants of interest.

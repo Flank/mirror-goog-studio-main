@@ -18,7 +18,6 @@ package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.UnitTestProperties
-import com.android.build.api.component.analytics.AnalyticsEnabledComponentProperties
 import com.android.build.api.component.analytics.AnalyticsEnabledUnitTestProperties
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.impl.VariantImpl
@@ -35,7 +34,6 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
-import com.android.builder.dexing.DexingType
 import com.google.common.collect.ImmutableList
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.file.ConfigurableFileTree
@@ -44,7 +42,7 @@ import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class UnitTestPropertiesImpl @Inject constructor(
-    componentIdentity: UnitTestImpl,
+    componentIdentity: UnitTestBuilderImpl,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,

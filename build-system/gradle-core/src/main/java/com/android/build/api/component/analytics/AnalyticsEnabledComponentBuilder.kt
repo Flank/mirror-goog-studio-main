@@ -16,17 +16,17 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.component.Component
+import com.android.build.api.component.ComponentBuilder
 import com.android.tools.build.gradle.internal.profile.VariantMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 
 /**
  * Superclass for all analytics enabled implementations.
  */
-abstract class AnalyticsEnabledComponent(
-    open val delegate: Component,
+abstract class AnalyticsEnabledComponentBuilder(
+    open val delegate: ComponentBuilder,
     protected val stats: GradleBuildVariant.Builder
-) : Component {
+) : ComponentBuilder {
 
     override var enabled: Boolean
         get() = delegate.enabled

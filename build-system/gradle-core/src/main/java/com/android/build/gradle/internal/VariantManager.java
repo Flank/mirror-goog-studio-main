@@ -28,11 +28,11 @@ import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTestProp
 import com.android.build.api.component.analytics.AnalyticsEnabledUnitTestProperties;
 import com.android.build.api.component.analytics.AnalyticsEnabledVariant;
 import com.android.build.api.component.analytics.AnalyticsEnabledVariantBuilder;
-import com.android.build.api.component.impl.AndroidTestImpl;
+import com.android.build.api.component.impl.AndroidTestBuilderImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
-import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
-import com.android.build.api.component.impl.UnitTestImpl;
+import com.android.build.api.component.impl.UnitTestBuilderImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.extension.impl.OperationsRegistrar;
 import com.android.build.api.variant.Variant;
@@ -136,7 +136,7 @@ public class VariantManager<
     private final List<ComponentInfo<VariantBuilderT, VariantT>> variants = Lists.newArrayList();
 
     @NonNull
-    private final List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>>
+    private final List<ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl>>
             testComponents = Lists.newArrayList();
 
     @NonNull
@@ -199,7 +199,8 @@ public class VariantManager<
      * @see #createVariants(BuildFeatureValues)
      */
     @NonNull
-    public List<ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl>> getTestComponents() {
+    public List<ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl>>
+            getTestComponents() {
         return testComponents;
     }
 
@@ -524,12 +525,13 @@ public class VariantManager<
 
     /** Create a TestVariantData for the specified testedVariantData. */
     @Nullable
-    public ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl> createTestComponents(
-            @NonNull DimensionCombination dimensionCombination,
-            @NonNull BuildTypeData<BuildType> buildTypeData,
-            @NonNull List<ProductFlavorData<ProductFlavor>> productFlavorDataList,
-            @NonNull ComponentInfo<VariantBuilderT, VariantT> testedComponentInfo,
-            @NonNull VariantType variantType) {
+    public ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl>
+            createTestComponents(
+                    @NonNull DimensionCombination dimensionCombination,
+                    @NonNull BuildTypeData<BuildType> buildTypeData,
+                    @NonNull List<ProductFlavorData<ProductFlavor>> productFlavorDataList,
+                    @NonNull ComponentInfo<VariantBuilderT, VariantT> testedComponentInfo,
+                    @NonNull VariantType variantType) {
 
         // handle test variant
         // need a suppress warning because ProductFlavor.getTestSourceSet(type) is annotated
@@ -578,12 +580,12 @@ public class VariantManager<
         VariantDslInfoImpl variantDslInfo =
                 variantDslInfoBuilder.createVariantDslInfo(project.getLayout().getBuildDirectory());
 
-        TestComponentImpl component;
+        TestComponentBuilderImpl component;
 
         GradleBuildVariant.Builder apiAccessStats = testedComponentInfo.getStats();
         // this is ANDROID_TEST
         if (variantType.isApk()) {
-            AndroidTestImpl androidTestVariant =
+            AndroidTestBuilderImpl androidTestVariant =
                     variantFactory.createAndroidTestObject(
                             variantDslInfo.getComponentIdentity(),
                             variantDslInfo,
@@ -598,7 +600,7 @@ public class VariantManager<
             component = androidTestVariant;
         } else {
             // this is UNIT_TEST
-            UnitTestImpl unitTestVariant =
+            UnitTestBuilderImpl unitTestVariant =
                     variantFactory.createUnitTestObject(
                             variantDslInfo.getComponentIdentity(),
                             variantDslInfo,
@@ -722,7 +724,7 @@ public class VariantManager<
         if (variantType.isApk()) {
             AndroidTestPropertiesImpl androidTestProperties =
                     variantFactory.createAndroidTestProperties(
-                            (AndroidTestImpl) component,
+                            (AndroidTestBuilderImpl) component,
                             buildFeatureValues,
                             variantDslInfo,
                             variantDependencies,
@@ -752,7 +754,7 @@ public class VariantManager<
             // this is UNIT_TEST
             UnitTestPropertiesImpl unitTestProperties =
                     variantFactory.createUnitTestProperties(
-                            (UnitTestImpl) component,
+                            (UnitTestBuilderImpl) component,
                             buildFeatureValues,
                             variantDslInfo,
                             variantDependencies,
@@ -923,19 +925,20 @@ public class VariantManager<
 
                 if (variantFactory.getVariantType().getHasTestComponents()) {
                     if (buildTypeData == testBuildTypeData) {
-                        ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl> androidTest =
-                                createTestComponents(
-                                        dimensionCombination,
-                                        buildTypeData,
-                                        productFlavorDataList,
-                                        variantInfo,
-                                        ANDROID_TEST);
+                        ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl>
+                                androidTest =
+                                        createTestComponents(
+                                                dimensionCombination,
+                                                buildTypeData,
+                                                productFlavorDataList,
+                                                variantInfo,
+                                                ANDROID_TEST);
                         if (androidTest != null) {
                             addTestComponent(androidTest);
                         }
                     }
 
-                    ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl> unitTest =
+                    ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl> unitTest =
                             createTestComponents(
                                     dimensionCombination,
                                     buildTypeData,
@@ -955,7 +958,9 @@ public class VariantManager<
     }
 
     private void addTestComponent(
-            @NonNull ComponentInfo<TestComponentImpl, TestComponentPropertiesImpl> testComponent) {
+            @NonNull
+                    ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl>
+                            testComponent) {
         testComponents.add(testComponent);
     }
 

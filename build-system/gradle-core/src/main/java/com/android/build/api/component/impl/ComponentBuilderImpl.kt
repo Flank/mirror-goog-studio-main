@@ -16,16 +16,17 @@
 
 package com.android.build.api.component.impl
 
+import com.android.build.api.component.ComponentBuilder
 import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.component.TestComponent
-import com.android.build.api.component.TestComponentProperties
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.VariantApiServices
 
-abstract class TestComponentImpl(
-    variantDslInfo: VariantDslInfo,
+abstract class ComponentBuilderImpl(
+    protected val variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity,
-    variantApiServices: VariantApiServices
-) : ComponentImpl(variantDslInfo, variantConfiguration, variantApiServices),
-    TestComponent {
+    protected val variantApiServices: VariantApiServices
+) :
+    ComponentBuilder, ComponentIdentity by variantConfiguration {
+
+    override var enabled: Boolean = true
 }

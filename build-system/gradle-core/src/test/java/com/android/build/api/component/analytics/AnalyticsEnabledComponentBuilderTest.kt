@@ -16,8 +16,7 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.component.Component
-import com.android.build.api.component.ComponentProperties
+import com.android.build.api.component.ComponentBuilder
 import com.android.tools.build.gradle.internal.profile.VariantMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -30,20 +29,20 @@ import org.mockito.Mockito.times
 import org.mockito.MockitoAnnotations
 
 /**
- * Tests for [AnalyticsEnabledComponent]
+ * Tests for [AnalyticsEnabledComponentBuilder]
  */
-class AnalyticsEnabledComponentTest {
+class AnalyticsEnabledComponentBuilderTest {
 
     @Mock
-    lateinit var delegate: Component
+    lateinit var delegate: ComponentBuilder
 
     private val stats = GradleBuildVariant.newBuilder()
-    private lateinit var proxy: AnalyticsEnabledComponent
+    private lateinit var proxy: AnalyticsEnabledComponentBuilder
 
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
-        proxy = object: AnalyticsEnabledComponent(delegate, stats) {}
+        proxy = object: AnalyticsEnabledComponentBuilder(delegate, stats) {}
     }
 
     @Test

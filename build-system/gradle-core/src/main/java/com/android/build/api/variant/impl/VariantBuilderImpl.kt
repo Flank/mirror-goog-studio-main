@@ -16,16 +16,15 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.component.AndroidTest
+import com.android.build.api.component.AndroidTestBuilder
 import com.android.build.api.component.AndroidTestProperties
 import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.component.UnitTest
+import com.android.build.api.component.UnitTestBuilder
 import com.android.build.api.component.UnitTestProperties
 import com.android.build.api.component.analytics.AnalyticsEnabledVariantBuilder
-import com.android.build.api.component.impl.ComponentImpl
+import com.android.build.api.component.impl.ComponentBuilderImpl
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.VariantBuilder
-import com.android.build.api.variant.Variant
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices
@@ -37,7 +36,7 @@ abstract class VariantBuilderImpl(
     componentIdentity: ComponentIdentity,
     variantApiServices: VariantApiServices
 ) :
-    ComponentImpl(variantDslInfo, componentIdentity, variantApiServices),
+    ComponentBuilderImpl(variantDslInfo, componentIdentity, variantApiServices),
     VariantBuilder {
 
     private var _minSdkVersion= AndroidVersionImpl(
@@ -50,11 +49,11 @@ abstract class VariantBuilderImpl(
             _minSdkVersion = AndroidVersionImpl(value.apiLevel, value.codename)
         }
 
-    override fun unitTest(action: UnitTest.() -> Unit) {
+    override fun unitTest(action: UnitTestBuilder.() -> Unit) {
         throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
-    fun unitTest(action: Action<UnitTest>) {
+    fun unitTest(action: Action<UnitTestBuilder>) {
         throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
@@ -66,11 +65,11 @@ abstract class VariantBuilderImpl(
         throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
-    override fun androidTest(action: AndroidTest.() -> Unit) {
+    override fun androidTest(action: AndroidTestBuilder.() -> Unit) {
         throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
-    fun androidTest(action: Action<AndroidTest>) {
+    fun androidTest(action: Action<AndroidTestBuilder>) {
         throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 

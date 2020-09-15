@@ -50,7 +50,7 @@ import java.io.Serializable
 import javax.inject.Inject
 
 open class AndroidTestPropertiesImpl @Inject constructor(
-    override val variant: AndroidTestImpl,
+    override val variant: AndroidTestBuilderImpl,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,

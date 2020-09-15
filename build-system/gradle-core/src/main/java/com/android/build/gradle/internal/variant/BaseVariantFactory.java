@@ -21,10 +21,10 @@ import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.ComponentIdentity;
-import com.android.build.api.component.impl.AndroidTestImpl;
+import com.android.build.api.component.impl.AndroidTestBuilderImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
-import com.android.build.api.component.impl.UnitTestImpl;
+import com.android.build.api.component.impl.UnitTestBuilderImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
 import com.android.build.api.variant.impl.VariantImpl;
@@ -76,26 +76,29 @@ public abstract class BaseVariantFactory<
 
     @NonNull
     @Override
-    public UnitTestImpl createUnitTestObject(
+    public UnitTestBuilderImpl createUnitTestObject(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantApiServices variantApiServices) {
         return projectServices
                 .getObjectFactory()
                 .newInstance(
-                        UnitTestImpl.class, variantDslInfo, componentIdentity, variantApiServices);
+                        UnitTestBuilderImpl.class,
+                        variantDslInfo,
+                        componentIdentity,
+                        variantApiServices);
     }
 
     @NonNull
     @Override
-    public AndroidTestImpl createAndroidTestObject(
+    public AndroidTestBuilderImpl createAndroidTestObject(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantApiServices variantApiServices) {
         return projectServices
                 .getObjectFactory()
                 .newInstance(
-                        AndroidTestImpl.class,
+                        AndroidTestBuilderImpl.class,
                         variantDslInfo,
                         componentIdentity,
                         variantApiServices);
@@ -104,7 +107,7 @@ public abstract class BaseVariantFactory<
     @NonNull
     @Override
     public UnitTestPropertiesImpl createUnitTestProperties(
-            @NonNull UnitTestImpl componentIdentity,
+            @NonNull UnitTestBuilderImpl componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
@@ -146,7 +149,7 @@ public abstract class BaseVariantFactory<
     @NonNull
     @Override
     public AndroidTestPropertiesImpl createAndroidTestProperties(
-            @NonNull AndroidTestImpl componentIdentity,
+            @NonNull AndroidTestBuilderImpl componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,

@@ -22,5 +22,5 @@ import org.gradle.api.Incubating
  * Variant of the android test artifact.
  */
 @Incubating
-interface AndroidTest : TestComponent {
+interface AndroidTestBuilder : TestComponentBuilder {
 }
