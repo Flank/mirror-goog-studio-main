@@ -3519,35 +3519,41 @@ class GradleDetectorTest : AbstractCheckTest() {
     }
 
     fun testJavaLanguageLevelNoDirectives() {
-        lint().files(
-            gradle(
-                """
-                    plugins {
-                       id 'java'
-                    }
-                """.trimIndent()
-            ).indented()
+        val plugins = listOf(
+            "java", "java-library", "application",
+            "org.gradle.java", "org.gradle.java-library", "org.gradle.application"
         )
-            .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
-            .run()
-            .expect(
-                """
+        plugins.forEach { plugin ->
+            lint().files(
+                gradle(
+                    """
+                    plugins {
+                       id '$plugin'
+                    }
+                    """.trimIndent()
+                ).indented()
+            )
+                .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
+                .run()
+                .expect(
+                    """
                     build.gradle:2: Warning: no Java language level directives [JavaPluginLanguageLevel]
-                       id 'java'
-                       ~~~~~~~~~
+                       id '$plugin'
+                       ${"~".repeat(plugin.length + 5)}
                     0 errors, 1 warnings
                 """
-            )
-            .expectFixDiffs(
-                """
+                )
+                .expectFixDiffs(
+                    """
                     Fix for build.gradle line 2: Insert JDK8 language level directives:
                     @@ -4 +4
                     + java {
                     +     sourceCompatibility = JavaVersion.VERSION_1_8
                     +     targetCompatibility = JavaVersion.VERSION_1_8
                     + }
-                """.trimIndent()
-            )
+                    """.trimIndent()
+                )
+        }
     }
 
     fun testJavaLanguageLevelCleanKts() {
@@ -3648,35 +3654,41 @@ class GradleDetectorTest : AbstractCheckTest() {
     }
 
     fun testJavaLanguageLevelNoDirectivesKts() {
-        lint().files(
-            kts(
-                """
-                    plugins {
-                       id("java")
-                    }
-                """.trimIndent()
-            ).indented()
+        val plugins = listOf(
+            "java", "java-library", "application",
+            "org.gradle.java", "org.gradle.java-library", "org.gradle.application"
         )
-            .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
-            .run()
-            .expect(
-                """
+        plugins.forEach { plugin ->
+            lint().files(
+                kts(
+                    """
+                    plugins {
+                       id("$plugin")
+                    }
+                    """.trimIndent()
+                ).indented()
+            )
+                .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
+                .run()
+                .expect(
+                    """
                     build.gradle.kts:2: Warning: no Java language level directives [JavaPluginLanguageLevel]
-                       id("java")
-                       ~~~~~~~~~~
+                       id("$plugin")
+                       ${"~".repeat(plugin.length + 6)}
                     0 errors, 1 warnings
                 """
-            )
-            .expectFixDiffs(
-                """
+                )
+                .expectFixDiffs(
+                    """
                     Fix for build.gradle.kts line 2: Insert JDK8 language level directives:
                     @@ -4 +4
                     + java {
                     +     sourceCompatibility = JavaVersion.VERSION_1_8
                     +     targetCompatibility = JavaVersion.VERSION_1_8
                     + }
-                """.trimIndent()
-            )
+                    """.trimIndent()
+                )
+        }
     }
 
     // -------------------------------------------------------------------------------------------
