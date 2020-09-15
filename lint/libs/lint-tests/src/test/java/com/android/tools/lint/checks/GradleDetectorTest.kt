@@ -1294,41 +1294,41 @@ class GradleDetectorTest : AbstractCheckTest() {
 
     fun testPreviewVersionsKts() {
         val expected = "" +
-                "build.gradle.kts:7: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is " +
-                GRADLE_PLUGIN_RECOMMENDED_VERSION +
-                " [GradlePluginVersion]\n" +
-                "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
-                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "build.gradle.kts:8: Warning: A newer version of com.android.tools.build:gradle than 1.0.0 is available: " +
-                GRADLE_PLUGIN_RECOMMENDED_VERSION +
-                " [AndroidGradlePluginVersion]\n" +
-                "        classpath(\"com.android.tools.build:gradle:1.0.0\")\n" +
-                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "build.gradle.kts:9: Warning: A newer version of com.android.tools.build:gradle than 2.0.0-alpha4 is available: 3.5.0-alpha10 [AndroidGradlePluginVersion]\n" +
-                "        classpath(\"com.android.tools.build:gradle:2.0.0-alpha4\")\n" +
-                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "1 errors, 2 warnings\n"
+            "build.gradle.kts:7: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is " +
+            GRADLE_PLUGIN_RECOMMENDED_VERSION +
+            " [GradlePluginVersion]\n" +
+            "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "build.gradle.kts:8: Warning: A newer version of com.android.tools.build:gradle than 1.0.0 is available: " +
+            GRADLE_PLUGIN_RECOMMENDED_VERSION +
+            " [AndroidGradlePluginVersion]\n" +
+            "        classpath(\"com.android.tools.build:gradle:1.0.0\")\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "build.gradle.kts:9: Warning: A newer version of com.android.tools.build:gradle than 2.0.0-alpha4 is available: 3.5.0-alpha10 [AndroidGradlePluginVersion]\n" +
+            "        classpath(\"com.android.tools.build:gradle:2.0.0-alpha4\")\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 2 warnings\n"
 
         lint().files(
             kts(
                 "" +
-                        "buildscript {\n" +
-                        "    repositories {\n" +
-                        "        google()\n" +
-                        "        jcenter()\n" +
-                        "    }\n" +
-                        "    dependencies {\n" +
-                        "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
-                        "        classpath(\"com.android.tools.build:gradle:1.0.0\")\n" +
-                        "        classpath(\"com.android.tools.build:gradle:2.0.0-alpha4\")\n" +
-                        "    }\n" +
-                        "}\n" +
-                        "\n" +
-                        "allprojects {\n" +
-                        "    repositories {\n" +
-                        "        jcenter()\n" +
-                        "    }\n" +
-                        "}\n"
+                    "buildscript {\n" +
+                    "    repositories {\n" +
+                    "        google()\n" +
+                    "        jcenter()\n" +
+                    "    }\n" +
+                    "    dependencies {\n" +
+                    "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
+                    "        classpath(\"com.android.tools.build:gradle:1.0.0\")\n" +
+                    "        classpath(\"com.android.tools.build:gradle:2.0.0-alpha4\")\n" +
+                    "    }\n" +
+                    "}\n" +
+                    "\n" +
+                    "allprojects {\n" +
+                    "    repositories {\n" +
+                    "        jcenter()\n" +
+                    "    }\n" +
+                    "}\n"
             )
         ).issues(AGP_DEPENDENCY, GRADLE_PLUGIN_COMPATIBILITY).run().expect(expected)
     }
@@ -1374,32 +1374,32 @@ class GradleDetectorTest : AbstractCheckTest() {
         // 0-argument calls, even if it's unrealistic that any .build.kts file suffers from this
         // precise problem.
         val expected = "" +
-                "build.gradle.kts:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is " +
-                GRADLE_PLUGIN_RECOMMENDED_VERSION +
-                " [GradlePluginVersion]\n" +
-                "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
-                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "1 errors, 0 warnings\n"
+            "build.gradle.kts:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is " +
+            GRADLE_PLUGIN_RECOMMENDED_VERSION +
+            " [GradlePluginVersion]\n" +
+            "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings\n"
 
         lint().files(
             kts(
                 "" +
-                        "buildscript {\n" +
-                        "    repositories {\n" +
-                        "        jcenter()\n" +
-                        "    }\n" +
-                        "    dependencies {\n" +
-                        "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
-                        "        classpath(\"com.android.tools.build:gradle:1.0.0\")\n" +
-                        "        classpath(\"com.android.tools.build:gradle:2.0.0-alpha4\")\n" +
-                        "    }\n" +
-                        "}\n" +
-                        "\n" +
-                        "allprojects {\n" +
-                        "    repositories {\n" +
-                        "        jcenter()\n" +
-                        "    }\n" +
-                        "}\n"
+                    "buildscript {\n" +
+                    "    repositories {\n" +
+                    "        jcenter()\n" +
+                    "    }\n" +
+                    "    dependencies {\n" +
+                    "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
+                    "        classpath(\"com.android.tools.build:gradle:1.0.0\")\n" +
+                    "        classpath(\"com.android.tools.build:gradle:2.0.0-alpha4\")\n" +
+                    "    }\n" +
+                    "}\n" +
+                    "\n" +
+                    "allprojects {\n" +
+                    "    repositories {\n" +
+                    "        jcenter()\n" +
+                    "    }\n" +
+                    "}\n"
             )
         ).issues(DEPENDENCY, GRADLE_PLUGIN_COMPATIBILITY).run()
             .expect(expected)
@@ -3432,8 +3432,9 @@ class GradleDetectorTest : AbstractCheckTest() {
                            plugins {
                                id 'java'
                            }
-                        """.trimIndent() + "\n${sc}\n${tc}"
-                    ).indented())
+                        """.trimIndent() + "\n${sc}\n$tc"
+                    ).indented()
+                )
                     .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
                     .run()
                     .expectClean()
@@ -3456,8 +3457,9 @@ class GradleDetectorTest : AbstractCheckTest() {
                         plugins {
                            id 'java'
                         }
-                    """.trimIndent() + "\n${tc}"
-                ).indented())
+                    """.trimIndent() + "\n$tc"
+                ).indented()
+            )
                 .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
                 .run()
                 .expect(
@@ -3466,13 +3468,15 @@ class GradleDetectorTest : AbstractCheckTest() {
                            id 'java'
                            ~~~~~~~~~
                         0 errors, 1 warnings
-                    """)
+                    """
+                )
                 .expectFixDiffs(
                     """
                         Fix for build.gradle line 2: Insert sourceCompatibility directive for JDK8:
                         @@ -5 +5
                         + java.sourceCompatibility = JavaVersion.VERSION_1_8
-                    """.trimIndent())
+                    """.trimIndent()
+                )
         }
     }
 
@@ -3491,8 +3495,9 @@ class GradleDetectorTest : AbstractCheckTest() {
                         plugins {
                            id 'java'
                         }
-                    """.trimIndent() + "\n${sc}"
-                ).indented())
+                    """.trimIndent() + "\n$sc"
+                ).indented()
+            )
                 .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
                 .run()
                 .expect(
@@ -3501,13 +3506,15 @@ class GradleDetectorTest : AbstractCheckTest() {
                            id 'java'
                            ~~~~~~~~~
                         0 errors, 1 warnings
-                    """)
+                    """
+                )
                 .expectFixDiffs(
                     """
                         Fix for build.gradle line 2: Insert targetCompatibility directive for JDK8:
                         @@ -5 +5
                         + java.targetCompatibility = JavaVersion.VERSION_1_8
-                    """.trimIndent())
+                    """.trimIndent()
+                )
         }
     }
 
@@ -3519,7 +3526,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                        id 'java'
                     }
                 """.trimIndent()
-            ).indented())
+            ).indented()
+        )
             .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
             .run()
             .expect(
@@ -3528,7 +3536,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                        id 'java'
                        ~~~~~~~~~
                     0 errors, 1 warnings
-                """)
+                """
+            )
             .expectFixDiffs(
                 """
                     Fix for build.gradle line 2: Insert JDK8 language level directives:
@@ -3537,7 +3546,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                     +     sourceCompatibility = JavaVersion.VERSION_1_8
                     +     targetCompatibility = JavaVersion.VERSION_1_8
                     + }
-                """.trimIndent())
+                """.trimIndent()
+            )
     }
 
     fun testJavaLanguageLevelCleanKts() {
@@ -3557,8 +3567,9 @@ class GradleDetectorTest : AbstractCheckTest() {
                            plugins {
                                id("java")
                            }
-                        """.trimIndent() + "\n${sc}\n${tc}"
-                    ).indented())
+                        """.trimIndent() + "\n${sc}\n$tc"
+                    ).indented()
+                )
                     .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
                     .run()
                     .expectClean()
@@ -3578,8 +3589,9 @@ class GradleDetectorTest : AbstractCheckTest() {
                         plugins {
                            id("java")
                         }
-                    """.trimIndent() + "\n${tc}"
-                ).indented())
+                    """.trimIndent() + "\n$tc"
+                ).indented()
+            )
                 .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
                 .run()
                 .expect(
@@ -3588,13 +3600,15 @@ class GradleDetectorTest : AbstractCheckTest() {
                            id("java")
                            ~~~~~~~~~~
                         0 errors, 1 warnings
-                    """)
+                    """
+                )
                 .expectFixDiffs(
                     """
                         Fix for build.gradle.kts line 2: Insert sourceCompatibility directive for JDK8:
                         @@ -5 +5
                         + java.sourceCompatibility = JavaVersion.VERSION_1_8
-                    """.trimIndent())
+                    """.trimIndent()
+                )
         }
     }
 
@@ -3610,8 +3624,9 @@ class GradleDetectorTest : AbstractCheckTest() {
                         plugins {
                            id("java")
                         }
-                    """.trimIndent() + "\n${sc}"
-                ).indented())
+                    """.trimIndent() + "\n$sc"
+                ).indented()
+            )
                 .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
                 .run()
                 .expect(
@@ -3620,13 +3635,15 @@ class GradleDetectorTest : AbstractCheckTest() {
                            id("java")
                            ~~~~~~~~~~
                         0 errors, 1 warnings
-                    """)
+                    """
+                )
                 .expectFixDiffs(
                     """
                         Fix for build.gradle.kts line 2: Insert targetCompatibility directive for JDK8:
                         @@ -5 +5
                         + java.targetCompatibility = JavaVersion.VERSION_1_8
-                    """.trimIndent())
+                    """.trimIndent()
+                )
         }
     }
 
@@ -3638,7 +3655,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                        id("java")
                     }
                 """.trimIndent()
-            ).indented())
+            ).indented()
+        )
             .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
             .run()
             .expect(
@@ -3647,7 +3665,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                        id("java")
                        ~~~~~~~~~~
                     0 errors, 1 warnings
-                """)
+                """
+            )
             .expectFixDiffs(
                 """
                     Fix for build.gradle.kts line 2: Insert JDK8 language level directives:
@@ -3656,7 +3675,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                     +     sourceCompatibility = JavaVersion.VERSION_1_8
                     +     targetCompatibility = JavaVersion.VERSION_1_8
                     + }
-                """.trimIndent())
+                """.trimIndent()
+            )
     }
 
     // -------------------------------------------------------------------------------------------
