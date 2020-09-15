@@ -125,13 +125,13 @@ public class MainTest extends AbstractCheckTest {
                 // Expected output
                 "\n"
                         + "Scanning MainTest_testArguments: .\n"
-                        + "res/layout/accessibility.xml:4: Warning: Missing contentDescription attribute on image [ContentDescription]\n"
+                        + "res/layout/accessibility.xml:4: Error: Missing contentDescription attribute on image [ContentDescription]\n"
                         + "    <ImageView android:id=\"@+id/android_logo\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
                         + "     ~~~~~~~~~\n"
-                        + "res/layout/accessibility.xml:5: Warning: Missing contentDescription attribute on image [ContentDescription]\n"
+                        + "res/layout/accessibility.xml:5: Error: Missing contentDescription attribute on image [ContentDescription]\n"
                         + "    <ImageButton android:importantForAccessibility=\"yes\" android:id=\"@+id/android_logo2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
                         + "     ~~~~~~~~~~~\n"
-                        + "0 errors, 2 warnings\n",
+                        + "2 errors, 0 warnings\n",
 
                 // Expected error
                 "",
@@ -142,6 +142,8 @@ public class MainTest extends AbstractCheckTest {
                 // Args
                 new String[] {
                     "--check",
+                    "ContentDescription",
+                    "--error",
                     "ContentDescription",
                     "--disable",
                     "LintError",
@@ -459,13 +461,13 @@ public class MainTest extends AbstractCheckTest {
                 // Expected output
                 "\n"
                         + "Scanning MainTest_testUpdateBaseline: .\n"
-                        + "res/layout/accessibility.xml:4: Warning: Missing contentDescription attribute on image [ContentDescription]\n"
+                        + "res/layout/accessibility.xml:4: Information: Missing contentDescription attribute on image [ContentDescription]\n"
                         + "    <ImageView android:id=\"@+id/android_logo\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
                         + "     ~~~~~~~~~\n"
-                        + "res/layout/accessibility.xml:5: Warning: Missing contentDescription attribute on image [ContentDescription]\n"
+                        + "res/layout/accessibility.xml:5: Information: Missing contentDescription attribute on image [ContentDescription]\n"
                         + "    <ImageButton android:importantForAccessibility=\"yes\" android:id=\"@+id/android_logo2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
                         + "     ~~~~~~~~~~~\n"
-                        + "0 errors, 2 warnings\n",
+                        + "0 errors, 0 warnings\n",
 
                 // Expected error
                 "",
@@ -476,6 +478,8 @@ public class MainTest extends AbstractCheckTest {
                 // Args
                 new String[] {
                     "--check",
+                    "ContentDescription",
+                    "--info",
                     "ContentDescription",
                     "--baseline",
                     baseline.getPath(),

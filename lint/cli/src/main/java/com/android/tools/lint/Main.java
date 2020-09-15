@@ -100,6 +100,10 @@ public class Main {
     private static final String ARG_CHECK = "--check";
     private static final String ARG_AUTO_FIX = "--apply-suggestions";
     private static final String ARG_DESCRIBE_FIXES = "--describe-suggestions";
+    private static final String ARG_FATAL = "--fatal";
+    private static final String ARG_ERROR = "--error";
+    private static final String ARG_WARNING = "--warning";
+    private static final String ARG_INFO = "--info";
     private static final String ARG_IGNORE = "--ignore";
     private static final String ARG_LIST_IDS = "--list";
     private static final String ARG_SHOW = "--show";
@@ -119,7 +123,7 @@ public class Main {
     private static final String ARG_EXIT_CODE = "--exitcode";
     private static final String ARG_SDK_HOME = "--sdk-home";
     private static final String ARG_JDK_HOME = "--jdk-home";
-    private static final String ARG_FATAL = "--fatalOnly";
+    private static final String ARG_FATAL_ONLY = "--fatalOnly";
     private static final String ARG_PROJECT = "--project";
     private static final String ARG_LINT_MODEL = "--lint-model";
     private static final String ARG_VARIANT = "--variant";
@@ -675,7 +679,7 @@ public class Main {
                 flags.setShowSourceLines(false);
             } else if (arg.equals(ARG_EXIT_CODE)) {
                 flags.setSetExitCode(true);
-            } else if (arg.equals(ARG_FATAL)) {
+            } else if (arg.equals(ARG_FATAL_ONLY)) {
                 flags.setFatalOnly(true);
             } else if (arg.equals(ARG_VERSION)) {
                 printVersion(client);
@@ -846,49 +850,21 @@ public class Main {
                     closeWriter = true;
                 }
                 flags.getReporters().add(new TextReporter(client, flags, writer, closeWriter));
-            } else if (arg.equals(ARG_DISABLE) || arg.equals(ARG_IGNORE)) {
+            } else if (arg.equals(ARG_DISABLE) || arg.equals(ARG_IGNORE) || arg.equals("--hide")) {
                 if (index == args.length - 1) {
                     System.err.println("Missing categories or id's to disable");
                     return ERRNO_INVALID_ARGS;
                 }
                 IssueRegistry registry = getGlobalRegistry(client);
-                String[] ids = args[++index].split(",");
-                for (String id : ids) {
-                    if (registry.isCategoryName(id)) {
-                        // Suppress all issues with the given category
-                        String category = id;
-                        for (Issue issue : registry.getIssues()) {
-                            // Check prefix such that filtering on the "Usability" category
-                            // will match issue category "Usability:Icons" etc.
-                            if (issue.getCategory().getName().startsWith(category)
-                                    || issue.getCategory().getFullName().startsWith(category)) {
-                                flags.getSuppressedIds().add(issue.getId());
-                            }
-                        }
-                    } else {
-                        flags.getSuppressedIds().add(id);
-                    }
-                }
+                String idString = args[++index];
+                setSeverity(flags, registry, idString, flags.getSuppressedIds(), null);
             } else if (arg.equals(ARG_ENABLE)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing categories or id's to enable");
                     return ERRNO_INVALID_ARGS;
                 }
                 IssueRegistry registry = getGlobalRegistry(client);
-                String[] ids = args[++index].split(",");
-                for (String id : ids) {
-                    if (registry.isCategoryName(id)) {
-                        // Enable all issues with the given category
-                        String category = id;
-                        for (Issue issue : registry.getIssues()) {
-                            if (issue.getCategory().getName().startsWith(category)
-                                    || issue.getCategory().getFullName().startsWith(category)) {
-                                flags.getEnabledIds().add(issue.getId());
-                            }
-                        }
-                        flags.getEnabledIds().add(id);
-                    }
-                }
+                setSeverity(flags, registry, args[++index], flags.getEnabledIds(), null);
             } else if (arg.equals(ARG_CHECK)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing categories or id's to check");
@@ -900,23 +876,37 @@ public class Main {
                     flags.setExactCheckedIds(checkedIds);
                 }
                 IssueRegistry registry = getGlobalRegistry(client);
-                String[] ids = args[++index].split(",");
-                for (String id : ids) {
-                    if (registry.isCategoryName(id)) {
-                        // Check all issues with the given category
-                        String category = id;
-                        for (Issue issue : registry.getIssues()) {
-                            // Check prefix such that filtering on the "Usability" category
-                            // will match issue category "Usability:Icons" etc.
-                            if (issue.getCategory().getName().startsWith(category)
-                                    || issue.getCategory().getFullName().startsWith(category)) {
-                                checkedIds.add(issue.getId());
-                            }
-                        }
-                    } else {
-                        checkedIds.add(id);
-                    }
+                setSeverity(flags, registry, args[++index], checkedIds, null);
+            } else if (arg.equals(ARG_FATAL)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing categories or id's to set to fatal severity");
+                    return ERRNO_INVALID_ARGS;
                 }
+                IssueRegistry registry = getGlobalRegistry(client);
+                setSeverity(flags, registry, args[++index], null, Severity.FATAL);
+            } else if (arg.equals(ARG_ERROR)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing categories or id's to set to error severity");
+                    return ERRNO_INVALID_ARGS;
+                }
+                IssueRegistry registry = getGlobalRegistry(client);
+                setSeverity(flags, registry, args[++index], null, Severity.ERROR);
+            } else if (arg.equals(ARG_WARNING)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing categories or id's to set to warning severity");
+                    return ERRNO_INVALID_ARGS;
+                }
+                IssueRegistry registry = getGlobalRegistry(client);
+                setSeverity(flags, registry, args[++index], null, Severity.WARNING);
+            } else if (arg.equals(ARG_INFO)
+                    || arg.equals("--information")
+                    || arg.equals("--informational")) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing categories or id's to set to info severity");
+                    return ERRNO_INVALID_ARGS;
+                }
+                IssueRegistry registry = getGlobalRegistry(client);
+                setSeverity(flags, registry, args[++index], null, Severity.INFORMATIONAL);
             } else if (arg.equals(ARG_NO_WARN_1) || arg.equals(ARG_NO_WARN_2)) {
                 flags.setIgnoreWarnings(true);
             } else if (arg.equals(ARG_WARN_ALL)) {
@@ -1288,6 +1278,46 @@ public class Main {
         }
     }
 
+    private static void setSeverity(
+            @NonNull LintCliFlags flags,
+            @NonNull IssueRegistry registry,
+            @NonNull String idString,
+            @Nullable Set<String> targetSet,
+            @Nullable Severity severity) {
+        String[] ids = idString.split(",");
+        for (String id : ids) {
+            if (registry.isCategoryName(id)) {
+                // Suppress all issues with the given category
+                for (Issue issue : registry.getIssues()) {
+                    // Check prefix such that filtering on the "Usability" category
+                    // will match issue category "Usability:Icons" etc.
+                    if (issue.getCategory().getName().startsWith(id)
+                            || issue.getCategory().getFullName().startsWith(id)) {
+                        setSeverity(flags, id, targetSet, severity);
+                    }
+                }
+            } else {
+                setSeverity(flags, id, targetSet, severity);
+            }
+        }
+    }
+
+    private static void setSeverity(
+            @NonNull LintCliFlags flags,
+            @NonNull String id,
+            @Nullable Set<String> targetSet,
+            @Nullable Severity severity) {
+        if (targetSet != null) {
+            assert severity == null;
+            targetSet.add(id);
+        } else {
+            assert severity != null;
+            Map<String, Severity> map = new HashMap<>(flags.getSeverityOverrides());
+            map.put(id, severity);
+            flags.setSeverityOverrides(map);
+        }
+    }
+
     private IssueRegistry getGlobalRegistry(LintCliClient client) {
         if (globalIssueRegistry == null) {
             globalIssueRegistry = client.addCustomLintRules(new BuiltinIssueRegistry());
@@ -1609,7 +1639,7 @@ public class Main {
                     "List available issues along with full explanations.",
                     ARG_SHOW + " <ids>",
                     "Show full explanations for the given list of issue id's.",
-                    ARG_FATAL,
+                    ARG_FATAL_ONLY,
                     "Only check for fatal severity issues",
                     ARG_AUTO_FIX,
                     "Apply suggestions to the source code (for safe fixes)",
@@ -1627,6 +1657,14 @@ public class Main {
                     "Only check the specific list of issues. "
                             + "This will disable everything and re-enable the given list of issues. "
                             + "The list should be a comma-separated list of issue id's or categories.",
+                    ARG_FATAL + " <list>",
+                    "Sets the default severity of the given issue to fatal",
+                    ARG_ERROR + " <list>",
+                    "Sets the default severity of the given issue to error",
+                    ARG_WARNING + " <list>",
+                    "Sets the default severity of the given issue to warning",
+                    ARG_INFO + " <list>",
+                    "Sets the default severity of the given issue to info",
                     ARG_NO_WARN_1 + ", " + ARG_NO_WARN_2,
                     "Only check for errors (ignore warnings)",
                     ARG_WARN_ALL,
