@@ -62,7 +62,7 @@ public class AppliedPluginTest {
     public void testAppliedPlugin() throws IOException {
         Project project =
                 ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build();
-        TestProjects.loadGradleProperties(project, ImmutableMap.of());
+        TestProjects.prepareProject(project, ImmutableMap.of());
         project.getPluginManager().apply(pluginName);
         assertThat(project.getPlugins().findPlugin(pluginName)).isNotNull();
         assertThat(project.getPlugins().findPlugin(pluginClass)).isNotNull();

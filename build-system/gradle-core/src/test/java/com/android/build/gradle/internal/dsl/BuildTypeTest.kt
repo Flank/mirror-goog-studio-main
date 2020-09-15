@@ -24,8 +24,6 @@ import com.android.sdklib.SdkVersionInfo
 import com.android.testutils.internal.CopyOfTester
 import com.google.common.collect.ImmutableMap
 import org.gradle.api.Project
-import org.gradle.api.internal.project.DefaultProject
-import org.gradle.initialization.GradlePropertiesController
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Assert
 import org.junit.Before
@@ -40,7 +38,7 @@ class BuildTypeTest {
     @Throws(Exception::class)
     fun setUp() {
         project = ProjectBuilder.builder().build()
-        TestProjects.loadGradleProperties(project, ImmutableMap.of())
+        TestProjects.prepareProject(project, ImmutableMap.of())
     }
 
     @Test
