@@ -22,6 +22,7 @@
 
 #include <string>
 
+#include "tools/base/deploy/agent/native/class_finder.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 #define STRUCTRUAL_REDEFINE_EXTENSION \
@@ -51,7 +52,8 @@ struct SwapResult {
 
 class HotSwap {
  public:
-  HotSwap(jvmtiEnv* jvmti, JNIEnv* jni) : jvmti_(jvmti), jni_(jni) {}
+  HotSwap(jvmtiEnv* jvmti, JNIEnv* jni)
+      : jvmti_(jvmti), jni_(jni), class_finder_(jvmti_, jni_) {}
 
   // Invokes JVMTI RedefineClasses with class definitions in the message.
   SwapResult DoHotSwap(const proto::SwapRequest& message) const;
@@ -59,15 +61,7 @@ class HotSwap {
  private:
   jvmtiEnv* jvmti_;
   JNIEnv* jni_;
-
-  // Finds a class definition.
-  jclass FindClass(const std::string& name) const;
-
-  // Finds a class definition by searching the specified class loader.
-  jclass FindInClassLoader(jobject class_loader, const std::string& name) const;
-
-  // Finds a class definition by enumerating all loaded classes in the VM.
-  jclass FindInLoadedClasses(const std::string& name) const;
+  ClassFinder class_finder_;
 
   // Adds new classes to the application class loader.
   void DefineNewClasses(const proto::SwapRequest& message) const;
