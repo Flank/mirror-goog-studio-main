@@ -267,8 +267,8 @@ public class ZipArchive implements Archive {
 
     private void writeSource(@NonNull Source source) throws IOException {
         modified = true;
-        source.prepare();
         validateName(source);
+        source.prepare();
 
         // Calculate the size we need (header + payload)
         LocalFileHeader lfh = new LocalFileHeader(source);
