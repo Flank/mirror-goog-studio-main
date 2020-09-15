@@ -203,10 +203,7 @@ class LintModelFactory : LintModelModuleLoader {
         }
     }
 
-    private fun getGraphItem(
-        library: IdeLibrary,
-        skipProvided: Boolean
-    ): LintModelDependency {
+    private fun getGraphItem(library: IdeLibrary): LintModelDependency {
         val artifactAddress = library.getMavenArtifactAddress()
 
         val lintLibrary = libraryResolverMap[artifactAddress]
@@ -230,26 +227,29 @@ class LintModelFactory : LintModelModuleLoader {
         val dependencies = artifact.level2Dependencies
         for (dependency in dependencies.androidLibraries) {
             if (dependency.isValid()) {
-                compileItems.add(getGraphItem(dependency, skipProvided = false))
+                val lintModelDependency = getGraphItem(dependency)
+                compileItems.add(lintModelDependency)
                 if (!dependency.isProvided) {
-                    packagedItems.add(getGraphItem(dependency, skipProvided = true))
+                    packagedItems.add(lintModelDependency)
                 }
             }
         }
         for (dependency in dependencies.javaLibraries) {
             if (dependency.isValid()) {
-                compileItems.add(getGraphItem(dependency, skipProvided = false))
+                val lintModelDependency = getGraphItem(dependency)
+                compileItems.add(lintModelDependency)
                 if (!dependency.isProvided) {
-                    packagedItems.add(getGraphItem(dependency, skipProvided = true))
+                    packagedItems.add(lintModelDependency)
                 }
             }
         }
 
         for (dependency in dependencies.moduleDependencies) {
             if (dependency.isValid()) {
-                compileItems.add(getGraphItem(dependency, skipProvided = false))
+                val lintModelDependency = getGraphItem(dependency)
+                compileItems.add(lintModelDependency)
                 if (!dependency.isProvided) {
-                    packagedItems.add(getGraphItem(dependency, skipProvided = true))
+                    packagedItems.add(lintModelDependency)
                 }
             }
         }
