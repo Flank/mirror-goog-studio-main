@@ -661,14 +661,18 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
                 writer.indent(indent++).write("\"deletedRegion\": {\n")
                 writer.indent(indent).write("\"startLine\": $startLine,\n")
                 writer.indent(indent).write("\"startColumn\": $startColumn,\n")
-                writer.indent(indent).write("\"charOffset\": $startOffset,\n")
+                writer.indent(indent).write("\"charOffset\": $startOffset")
                 if (endOffset > startOffset) {
+                    writer.write(",\n")
                     val endLine = getLineNumber(source, endOffset, startOffset, startLine)
                     val endColumn = getColumn(source, endOffset)
                     writer.indent(indent).write("\"endLine\": $endLine,\n")
                     writer.indent(indent).write("\"endColumn\": $endColumn,\n")
                     writer.indent(indent).write("\"charLength\": ${endOffset - startOffset}\n")
-                } // else: not deleting anything, just setting offset for insert
+                } else {
+                    // else: not deleting anything, just setting offset for insert
+                    writer.write("\n")
+                }
 
                 writer.indent(--indent).write("},\n")
                 writer.indent(indent++).write("\"insertedContent\": {\n")

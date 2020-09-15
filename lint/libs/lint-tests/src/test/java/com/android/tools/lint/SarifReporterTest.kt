@@ -585,7 +585,7 @@ class SarifReporterTest {
                                                         "deletedRegion": {
                                                             "startLine": 9,
                                                             "startColumn": 14,
-                                                            "charOffset": 387,
+                                                            "charOffset": 387
                                                         },
                                                         "insertedContent": {
                                                             "text": "android:autofillHints=\"\" \n"
@@ -610,7 +610,7 @@ class SarifReporterTest {
                                                         "deletedRegion": {
                                                             "startLine": 10,
                                                             "startColumn": 14,
-                                                            "charOffset": 419,
+                                                            "charOffset": 419
                                                         },
                                                         "insertedContent": {
                                                             "text": "android:importantForAutofill=\"no\" \n"
@@ -749,7 +749,7 @@ class SarifReporterTest {
                                                         "deletedRegion": {
                                                             "startLine": 4,
                                                             "startColumn": 10,
-                                                            "charOffset": 174,
+                                                            "charOffset": 174
                                                         },
                                                         "insertedContent": {
                                                             "text": "android:showAsAction=\"never\" \n"
