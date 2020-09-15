@@ -3543,11 +3543,11 @@ class GradleDetectorTest : AbstractCheckTest() {
     fun testJavaLanguageLevelCleanKts() {
         val sourceCompatibility = listOf(
             "java.sourceCompatibility = JavaVersion.VERSION_1_8",
-            "java { sourceCompatibility = JavaVersion.VERSION_1_8 }",
+            "java { sourceCompatibility = JavaVersion.VERSION_1_8 }"
         )
         val targetCompatibility = listOf(
             "java.targetCompatibility = JavaVersion.VERSION_1_8",
-            "java { targetCompatibility = JavaVersion.VERSION_1_8 }",
+            "java { targetCompatibility = JavaVersion.VERSION_1_8 }"
         )
         sourceCompatibility.forEach { sc ->
             targetCompatibility.forEach { tc ->
@@ -3569,7 +3569,7 @@ class GradleDetectorTest : AbstractCheckTest() {
     fun testJavaLanguageLevelNoSourceCompatibilityKts() {
         val targetCompatibility = listOf(
             "java.targetCompatibility = JavaVersion.VERSION_1_8",
-            "java { targetCompatibility = JavaVersion.VERSION_1_8 }",
+            "java { targetCompatibility = JavaVersion.VERSION_1_8 }"
         )
         targetCompatibility.forEach { tc ->
             lint().files(
@@ -3601,7 +3601,7 @@ class GradleDetectorTest : AbstractCheckTest() {
     fun testJavaLanguageLevelNoTargetCompatibilityKts() {
         val sourceCompatibility = listOf(
             "java.sourceCompatibility = JavaVersion.VERSION_1_8",
-            "java { sourceCompatibility = JavaVersion.VERSION_1_8 }",
+            "java { sourceCompatibility = JavaVersion.VERSION_1_8 }"
         )
         sourceCompatibility.forEach { sc ->
             lint().files(
