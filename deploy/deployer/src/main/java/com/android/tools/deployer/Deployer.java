@@ -185,7 +185,8 @@ public class Deployer {
                             Tasks.OPTIMISTIC_INSTALL, apkInstaller::install, packageName, apks);
 
             TaskResult result = runner.run();
-            if (result.isSuccess()) {
+            installSuccess = result.isSuccess();
+            if (installSuccess) {
                 runner.create(
                         Tasks.DEPLOY_CACHE_STORE,
                         deployCache::store,
