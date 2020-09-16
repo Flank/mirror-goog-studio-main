@@ -37,7 +37,7 @@ import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 import java.io.Serializable
 
-class AnalyticsEnabledAndroidTestPropertiesTest {
+class AnalyticsEnabledAndroidTestTest {
     @Mock
     lateinit var delegate: AndroidTest
 

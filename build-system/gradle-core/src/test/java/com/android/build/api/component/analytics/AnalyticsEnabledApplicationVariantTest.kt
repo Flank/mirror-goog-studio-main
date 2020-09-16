@@ -16,141 +16,138 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.JniLibsPackagingOptions
-import com.android.build.api.variant.PackagingOptions
+import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.ApplicationVariant
+import com.android.build.api.variant.DependenciesInfo
+import com.android.build.api.variant.ApkPackagingOptions
+import com.android.build.api.variant.JniLibsApkPackagingOptions
 import com.android.build.api.variant.ResourcesPackagingOptions
-import com.android.build.api.variant.Variant
-import com.android.build.gradle.internal.fixtures.FakeGradleProvider
+import com.android.build.api.variant.SigningConfig
+import com.android.build.api.variant.VariantOutput
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.provider.MapProperty
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
-import java.io.Serializable
 
-class AnalyticsEnabledVariantPropertiesTest {
-
+class AnalyticsEnabledApplicationVariantTest {
     @Mock
-    lateinit var delegate: Variant
+    lateinit var delegate: ApplicationVariant
 
     private val stats = GradleBuildVariant.newBuilder()
-    private lateinit var proxy: AnalyticsEnabledVariant
+    private lateinit var proxy: AnalyticsEnabledApplicationVariant
 
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
-        proxy = object: AnalyticsEnabledVariant(delegate, stats, FakeObjectFactory.factory) {}
+        proxy = AnalyticsEnabledApplicationVariant(delegate, stats, FakeObjectFactory.factory)
     }
 
     @Test
     fun getApplicationId() {
-        Mockito.`when`(delegate.applicationId).thenReturn(FakeGradleProvider("myApp"))
+        Mockito.`when`(delegate.applicationId).thenReturn(FakeGradleProperty("myApp"))
         Truth.assertThat(proxy.applicationId.get()).isEqualTo("myApp")
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.READ_ONLY_APPLICATION_ID_VALUE)
+        ).isEqualTo(VariantPropertiesMethodType.APPLICATION_ID_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
             .applicationId
     }
 
     @Test
-    fun getPackageName() {
-        Mockito.`when`(delegate.packageName).thenReturn(FakeGradleProvider("package.name"))
-        Truth.assertThat(proxy.packageName.get()).isEqualTo("package.name")
+    fun getOutputs() {
+        Mockito.`when`(delegate.outputs).thenReturn(listOf())
+        Truth.assertThat(proxy.outputs).isEqualTo(listOf<VariantOutput>())
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.PACKAGE_NAME_VALUE)
+        ).isEqualTo(VariantPropertiesMethodType.GET_OUTPUTS_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
-            .packageName
+            .outputs
     }
 
     @Test
-    fun getBuildConfigFields() {
-        @Suppress("UNCHECKED_CAST")
-        val map: MapProperty<String, BuildConfigField<out Serializable>> =
-            Mockito.mock(MapProperty::class.java)
-                    as MapProperty<String, BuildConfigField<out Serializable>>
-        Mockito.`when`(delegate.buildConfigFields).thenReturn(map)
-        Truth.assertThat(proxy.buildConfigFields).isEqualTo(map)
+    fun getDependenciesInfo() {
+        val dependenciesInfo = Mockito.mock(DependenciesInfo::class.java)
+        Mockito.`when`(delegate.dependenciesInfo).thenReturn(dependenciesInfo)
+        Truth.assertThat(proxy.dependenciesInfo).isEqualTo(dependenciesInfo)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.BUILD_CONFIG_FIELDS_VALUE)
+        ).isEqualTo(VariantPropertiesMethodType.DEPENDENCIES_INFO_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
-            .buildConfigFields
+            .dependenciesInfo
     }
 
     @Test
-    fun addBuildConfigField() {
-        proxy.addBuildConfigField("key", "value", "comment")
+    fun getAaptOptions() {
+        val aaptOptions = Mockito.mock(AaptOptions::class.java)
+        Mockito.`when`(delegate.aaptOptions).thenReturn(aaptOptions)
+        Truth.assertThat(proxy.aaptOptions).isEqualTo(aaptOptions)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.ADD_BUILD_CONFIG_FIELD_VALUE)
+        ).isEqualTo(VariantPropertiesMethodType.AAPT_OPTIONS_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
-            .addBuildConfigField("key", "value", "comment")
+            .aaptOptions
     }
 
     @Test
-    fun addResValue() {
-        proxy.addResValue("name","key", "value", "comment")
+    fun aaptOptionsAction() {
+        val function = { param : AaptOptions -> println(param) }
+        proxy.aaptOptions(function)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.ADD_RES_VALUE_VALUE)
+        ).isEqualTo(VariantPropertiesMethodType.AAPT_OPTIONS_ACTION_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
-            .addResValue("name", "key", "value", "comment")
+            .aaptOptions(function)
     }
 
     @Test
-    fun addResValueProvider() {
-        val provider = FakeGradleProvider("value")
-        proxy.addResValue("name","key", provider, "comment")
+    fun getSigningConfig() {
+        val signingConfig = Mockito.mock(SigningConfig::class.java)
+        Mockito.`when`(delegate.signingConfig).thenReturn(signingConfig)
+        Truth.assertThat(proxy.signingConfig).isEqualTo(signingConfig)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.ADD_RES_VALUE_VALUE)
+        ).isEqualTo(VariantPropertiesMethodType.SIGNING_CONFIG_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
-            .addResValue("name", "key", provider, "comment")
+            .signingConfig
     }
 
     @Test
-    fun getManifestPlaceholders() {
-        @Suppress("UNCHECKED_CAST")
-        val map: MapProperty<String, String> =
-            Mockito.mock(MapProperty::class.java)
-                    as MapProperty<String, String>
-        Mockito.`when`(delegate.manifestPlaceholders).thenReturn(map)
-        Truth.assertThat(proxy.manifestPlaceholders).isEqualTo(map)
+    fun signingConfigAction() {
+        val function = { param : SigningConfig -> println(param) }
+        proxy.signingConfig(function)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.MANIFEST_PLACEHOLDERS_VALUE)
+        ).isEqualTo(VariantPropertiesMethodType.SIGNING_CONFIG_ACTION_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
-            .manifestPlaceholders
+            .signingConfig(function)
     }
 
     @Test
     fun getPackagingOptions() {
-        val packagingOptions = Mockito.mock(PackagingOptions::class.java)
-        val jniLibsPackagingOptions = Mockito.mock(JniLibsPackagingOptions::class.java)
+        val packagingOptions = Mockito.mock(ApkPackagingOptions::class.java)
+        val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackagingOptions::class.java)
         val resourcesPackagingOptions = Mockito.mock(ResourcesPackagingOptions::class.java)
-        Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsPackagingOptions)
+        Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsApkPackagingOptions)
         Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
         Mockito.`when`(delegate.packagingOptions).thenReturn(packagingOptions)
         // simulate a user configuring packaging options for jniLibs and resources
@@ -166,6 +163,33 @@ class AnalyticsEnabledVariantPropertiesTest {
                 VariantPropertiesMethodType.JNI_LIBS_PACKAGING_OPTIONS_VALUE,
                 VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE,
                 VariantPropertiesMethodType.RESOURCES_PACKAGING_OPTIONS_VALUE
+            )
+        )
+        Mockito.verify(delegate, Mockito.times(1)).packagingOptions
+    }
+
+    @Test
+    fun packagingOptionsActions() {
+        val packagingOptions = Mockito.mock(ApkPackagingOptions::class.java)
+        val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackagingOptions::class.java)
+        val resourcesPackagingOptions = Mockito.mock(ResourcesPackagingOptions::class.java)
+        Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsApkPackagingOptions)
+        Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
+        Mockito.`when`(delegate.packagingOptions).thenReturn(packagingOptions)
+        val action: ApkPackagingOptions.() -> Unit = {
+            this.jniLibs {}
+            this.resources {}
+        }
+        proxy.packagingOptions(action)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(3)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.map { it.type }
+        ).containsExactlyElementsIn(
+            listOf(
+                VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE,
+                VariantPropertiesMethodType.JNI_LIBS_PACKAGING_OPTIONS_ACTION_VALUE,
+                VariantPropertiesMethodType.RESOURCES_PACKAGING_OPTIONS_ACTION_VALUE
             )
         )
         Mockito.verify(delegate, Mockito.times(1)).packagingOptions

@@ -31,7 +31,7 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 
-class AnalyticsEnabledLibraryVariantPropertiesTest {
+class AnalyticsEnabledLibraryVariantTest {
     @Mock
     lateinit var delegate: LibraryVariant
 

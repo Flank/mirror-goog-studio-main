@@ -31,7 +31,7 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 
-class AnalyticsEnabledDynamicFeatureVariantPropertiesTest {
+class AnalyticsEnabledDynamicFeatureVariantTest {
     @Mock
     lateinit var delegate: DynamicFeatureVariant
 

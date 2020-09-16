@@ -18,6 +18,7 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.variant.ApplicationVariantBuilder
+import com.android.tools.build.gradle.internal.profile.VariantMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
@@ -36,6 +37,8 @@ open class AnalyticsEnabledApplicationVariantBuilder @Inject constructor(
         get() = delegate.dependenciesInfo
 
     override fun dependenciesInfo(action: DependenciesInfo.() -> Unit) {
+        stats.variantApiAccessBuilder.addVariantAccessBuilder().type =
+                VariantMethodType.DEPENDENCIES_ACTION_VALUE
         delegate.dependenciesInfo(action)
     }
 }

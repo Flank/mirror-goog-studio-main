@@ -32,7 +32,7 @@ import org.mockito.Mockito
 import org.mockito.Mockito.times
 import org.mockito.MockitoAnnotations
 
-class AnalyticsEnabledComponentBuilderPropertiesTest {
+class AnalyticsEnabledComponentTest {
 
     @Mock
     lateinit var delegate: Component

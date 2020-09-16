@@ -33,7 +33,7 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 
-class AnalyticsEnabledTestVariantPropertiesTest {
+class AnalyticsEnabledTestVariantTest {
     @Mock
     lateinit var delegate: TestVariant
 
