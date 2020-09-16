@@ -23,6 +23,8 @@ import com.android.SdkConstants.DOT_CLASS
 import com.android.SdkConstants.DOT_DEX
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_SRCJAR
+import com.android.SdkConstants.FN_BUILD_GRADLE
+import com.android.SdkConstants.FN_BUILD_GRADLE_KTS
 import com.android.repository.Revision
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.DefaultPosition
@@ -84,7 +86,30 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
     private val home: File = File(System.getProperty("user.home"))
 
     private fun getRoot(incident: Incident): File? {
-        return root ?: client.getRootDir() ?: incident.project?.dir.also { root = it }
+        return root ?: client.getRootDir() ?: run {
+            val project = incident.project
+            if (project != null) {
+                // Workaround: we need the root project; and the client couldn't compute it.
+                // We don't just want the project directory, we want the root, which often
+                // is not the same; as a temporary workaround before this shows up in the
+                // model (see LintCliClient#getRootDir) we find the highest directory that
+                // supports build.grade/kts.
+                var dir = project.dir
+                while (true) {
+                    val parent = dir.parentFile ?: break
+                    if (File(parent, FN_BUILD_GRADLE).exists() ||
+                        File(parent, FN_BUILD_GRADLE_KTS).exists()
+                    ) {
+                        dir = parent
+                    } else {
+                        break
+                    }
+                }
+                dir
+            } else {
+                null
+            }
+        }.also { root = it }
     }
 
     @Throws(IOException::class)
@@ -304,23 +329,39 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
 
             writeLocations(incident, indent)
             writeQuickFixes(incident, indent)
+            writeFingerprint(incident, indent)
 
-            val fingerprint = getFingerprint(incident)
-            // We're using partialFingerprints and primaryLocationLineHash here because
-            // (1) partialFingerprints is required by GitHub's scanning support and
-            // (2) is only consults the primaryLocationLineHash.
-            // We don't want to only use the line as a unique identifier; the issue
-            // id helps to disambiguate results that may overlap on the same line,
-            // and similarly lint's error messages generally encode unique attributes
-            // of the error that do not normally change over time, so all 3 are considered
-            // (along with the line contents) in the fingerprint.
-            writer.indent(indent++).write("\"partialFingerprints\": {\n")
-            writer.indent(indent).write("\"primaryLocationLineHash\": \"$fingerprint\"\n")
-            writer.indent(--indent).write("}\n")
             writer.indent(--indent).write("}${if (index < incidents.size - 1) "," else ""}\n")
         }
 
         writer.indent(indent).write("]\n")
+    }
+
+    private fun writeFingerprint(incident: Incident, indent: Int) {
+        writer.indent(indent).write("\"partialFingerprints\": {\n")
+
+        val hashFunction = Hashing.farmHashFingerprint64()
+
+        // We could include a hash for the message and id here, but the SARIF
+        // spec discourages including fingerprints for things that can easily
+        // be derived from the SARIF file
+
+        // Hash the source context -- not just the highlighted range for the
+        // error, but a few lines above and below
+        incidentSnippets[incident]?.let { context ->
+            val fingerprint = hashFunction.hashString(context, UTF_8).toString()
+            writer.indent(indent + 1).write("\"sourceContext/v1\": \"$fingerprint\"\n")
+        }
+
+        // GitHub code scanning (currently) documents that the only fingerprint they
+        // support is primaryLocationLineHash. Initially we computed a fingerprint for
+        // this, but it turns out code scanning *also* computes this hash on its own
+        // and complains if they don't match; see locationUpdateCallback in
+        // https://github.com/Faten-Org/codeql-action/blob/master/src/fingerprints.ts
+        // Attempting to match their exact keys doesn't seem like a good idea, so
+        // we'll leave that partialFingerprint out for now.
+
+        writer.indent(indent).write("}\n")
     }
 
     private fun writeRelatedLocations(incident: Incident, location: Location, indent: Int) {
@@ -385,10 +426,6 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
                     null
                 }
 
-            if (segment != null && !incidentSnippets.containsKey(incident)) {
-                incidentSnippets[incident] = segment
-            }
-
             val context = computeContext(fileText, start, end)
 
             writer.indent(indent++).write("\"region\": {\n")
@@ -419,8 +456,16 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
                 writer.indent(indent).write("\"text\": \"${snippet.escapeJson()}\"\n")
                 writer.indent(--indent).write("}\n")
                 writer.indent(--indent).write("}\n")
+
+                if (!incidentSnippets.containsKey(incident)) {
+                    incidentSnippets[incident] = snippet
+                }
             } else {
                 writer.write("\n")
+
+                if (segment != null && !incidentSnippets.containsKey(incident)) {
+                    incidentSnippets[incident] = segment
+                }
             }
         } else {
             // No locations: usually used for binary files, but in some cases also
@@ -684,17 +729,6 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
 
         writer.indent(--indent).write("]\n")
         writer.indent(--indent).write("}${if (last) "\n" else ",\n"}")
-    }
-
-    private fun getFingerprint(incident: Incident): String {
-        val key = StringBuilder()
-        key.append(incident.issue.id)
-        key.append(incident.message)
-        incidentSnippets[incident]?.let {
-            key.append(it)
-        }
-
-        return Hashing.sha256().hashString(key, UTF_8).toString()
     }
 
     private fun Writer.writeDescription(

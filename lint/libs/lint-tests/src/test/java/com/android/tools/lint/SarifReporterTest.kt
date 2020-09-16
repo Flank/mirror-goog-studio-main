@@ -242,7 +242,7 @@ class SarifReporterTest {
                                         }
                                     ],
                                     "partialFingerprints": {
-                                        "primaryLocationLineHash": "a8ba47969b399481217ab8b73a7359ff1c395adc75e986b50cfb9dff65d74c0b"
+                                        "sourceContext/v1": "6567b58f48151459"
                                     }
                                 },
                                 {
@@ -314,7 +314,7 @@ class SarifReporterTest {
                                         }
                                     ],
                                     "partialFingerprints": {
-                                        "primaryLocationLineHash": "86c7a4c5e1402d51ad4b97ff6c0fd95e4d30c86c5aeb9448af132937493bc451"
+                                        "sourceContext/v1": "7b9672069a5042f2"
                                     }
                                 },
                                 {
@@ -353,7 +353,7 @@ class SarifReporterTest {
                                         }
                                     ],
                                     "partialFingerprints": {
-                                        "primaryLocationLineHash": "b795bbaa9217108b1ac47c17d7124e44f3fb4b00b3d8efb1d6e71314cd378dd0"
+                                        "sourceContext/v1": "7252b279c747fe6d"
                                     }
                                 }
                             ]
@@ -531,7 +531,7 @@ class SarifReporterTest {
                                     }
                                 ],
                                 "partialFingerprints": {
-                                    "primaryLocationLineHash": "a84b911f18978fc1ed010591500e09d7cb99be27a359f8364dd7fe321e288ab6"
+                                    "sourceContext/v1": "80f628e8def57407"
                                 }
                             },
                             {
@@ -622,7 +622,7 @@ class SarifReporterTest {
                                     }
                                 ],
                                 "partialFingerprints": {
-                                    "primaryLocationLineHash": "232cfdef809f5b403b408976a433e2e7a1e3e9c87be67de0cb4e419aabaadadd"
+                                    "sourceContext/v1": "e66def4d268b2112"
                                 }
                             }
                         ]
@@ -774,7 +774,7 @@ class SarifReporterTest {
                                     }
                                 ],
                                 "partialFingerprints": {
-                                    "primaryLocationLineHash": "b792f0e68e0b60958566dd3132d2a0fc9d2edece9eae833026fddd77974bbf23"
+                                    "sourceContext/v1": "8d3c283830163750"
                                 }
                             }
                         ]
