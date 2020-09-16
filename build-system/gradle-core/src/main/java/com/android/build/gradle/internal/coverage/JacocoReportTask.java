@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.coverage;
 
 import com.android.Version;
 import com.android.annotations.NonNull;
-import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
@@ -179,11 +179,11 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<JacocoReportTask, TestComponentPropertiesImpl> {
+            extends VariantTaskCreationAction<JacocoReportTask, TestComponentImpl> {
         @NonNull private final Configuration jacocoAntConfiguration;
 
         public CreationAction(
-                @NonNull TestComponentPropertiesImpl testComponentProperties,
+                @NonNull TestComponentImpl testComponentProperties,
                 @NonNull Configuration jacocoAntConfiguration) {
             super(testComponentProperties);
             this.jacocoAntConfiguration = jacocoAntConfiguration;

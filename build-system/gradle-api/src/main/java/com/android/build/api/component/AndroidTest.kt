@@ -30,7 +30,7 @@ import java.io.Serializable
  * Properties for the android test Variant of a module.
  */
 @Incubating
-interface AndroidTestProperties : TestComponentProperties {
+interface AndroidTest : TestComponent {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.

@@ -24,7 +24,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.ComponentBuilder;
 import com.android.build.api.component.impl.TestComponentBuilderImpl;
-import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.extension.AndroidComponentsExtension;
 import com.android.build.api.extension.impl.OperationsRegistrar;
@@ -217,8 +217,7 @@ public abstract class BasePlugin<
     protected abstract TaskManager<VariantBuilderT, VariantT> createTaskManager(
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull
-                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl>>
-                            testComponents,
+                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension);

@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentBuilderImpl;
-import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.dsl.ApplicationExtension;
 import com.android.build.api.extension.ApplicationAndroidComponentsExtension;
 import com.android.build.api.extension.impl.ApplicationAndroidComponentsExtensionImpl;
@@ -148,8 +148,7 @@ public class AppPlugin
                     List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>
                             variants,
             @NonNull
-                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl>>
-                            testComponents,
+                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension) {

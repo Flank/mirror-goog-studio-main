@@ -19,7 +19,6 @@ package com.android.build.api.component.analytics
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.PackagingOptions
 import com.android.build.api.variant.Variant
-import com.android.tools.build.gradle.internal.profile.VariantMethodType
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
@@ -31,7 +30,7 @@ abstract class AnalyticsEnabledVariant (
     override val delegate: Variant,
     stats: GradleBuildVariant.Builder,
     objectFactory: ObjectFactory
-) : AnalyticsEnabledComponentProperties(delegate, stats, objectFactory), Variant {
+) : AnalyticsEnabledComponent(delegate, stats, objectFactory), Variant {
     override val applicationId: Provider<String>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =

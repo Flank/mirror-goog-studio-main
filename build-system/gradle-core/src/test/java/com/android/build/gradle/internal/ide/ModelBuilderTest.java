@@ -24,11 +24,11 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.ComponentIdentity;
-import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
+import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.ComponentIdentityImpl;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
-import com.android.build.api.component.impl.TestComponentPropertiesImpl;
-import com.android.build.api.component.impl.UnitTestPropertiesImpl;
+import com.android.build.api.component.impl.ComponentImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.variant.DependenciesInfo;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.api.variant.impl.VariantImpl;
@@ -96,7 +96,7 @@ public class ModelBuilderTest {
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private List<VariantImpl> variantList = Lists.newArrayList();
-    private List<TestComponentPropertiesImpl> testComponentList = Lists.newArrayList();
+    private List<TestComponentImpl> testComponentList = Lists.newArrayList();
 
     ModelBuilder modelBuilder;
     File apkLocation;
@@ -161,7 +161,7 @@ public class ModelBuilderTest {
         syncIssueReporter.reportWarning(IssueReporter.Type.GENERIC, "Should Fail");
     }
 
-    private <ComponentT extends ComponentPropertiesImpl> ComponentT createComponentProperties(
+    private <ComponentT extends ComponentImpl> ComponentT createComponentProperties(
             @NonNull String variantName,
             @NonNull String dirName,
             @NonNull VariantDslInfo variantDslInfo,
@@ -190,8 +190,8 @@ public class ModelBuilderTest {
         BaseVariantData variantData = Mockito.mock(BaseVariantData.class);
         when(variantData.getTaskContainer()).thenReturn(new MutableTaskContainer());
 
-        if (componentClass.equals(UnitTestPropertiesImpl.class)
-                || componentClass.equals(AndroidTestPropertiesImpl.class)) {
+        if (componentClass.equals(UnitTestImpl.class)
+                || componentClass.equals(AndroidTestImpl.class)) {
             assertThat(testedVariant).named("tested variant").isNotNull();
             ComponentT unitTestComponent =
                     variantPropertiesApiServices.newInstance(

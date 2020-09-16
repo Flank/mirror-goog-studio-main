@@ -17,8 +17,8 @@
 package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.AndroidTestProperties
-import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTestProperties
+import com.android.build.api.component.AndroidTest
+import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTest
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
@@ -49,7 +49,7 @@ import org.gradle.api.provider.Provider
 import java.io.Serializable
 import javax.inject.Inject
 
-open class AndroidTestPropertiesImpl @Inject constructor(
+open class AndroidTestImpl @Inject constructor(
     override val variant: AndroidTestBuilderImpl,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
@@ -64,7 +64,7 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     variantPropertiesApiServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
-) : TestComponentPropertiesImpl(
+) : TestComponentImpl(
     variant,
     buildFeatureValues,
     variantDslInfo,
@@ -79,7 +79,7 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     variantPropertiesApiServices,
     taskCreationServices,
     globalScope
-), AndroidTestProperties, AndroidTestCreationConfig {
+), AndroidTest, AndroidTestCreationConfig {
 
     private val delegate by lazy { AndroidTestCreationConfigImpl(this, globalScope, variantDslInfo) }
 
@@ -267,9 +267,9 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     override fun createUserVisibleVariantPropertiesObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledAndroidTestProperties =
+    ): AnalyticsEnabledAndroidTest =
         projectServices.objectFactory.newInstance(
-            AnalyticsEnabledAndroidTestProperties::class.java,
+            AnalyticsEnabledAndroidTest::class.java,
             this
 ,
             stats

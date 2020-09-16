@@ -17,7 +17,7 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledVariant
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.PackagingOptions
@@ -56,7 +56,7 @@ abstract class VariantImpl(
     variantPropertiesApiServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
-) : ComponentPropertiesImpl(
+) : ComponentImpl(
     variant,
     buildFeatureValues,
     variantDslInfo,
@@ -129,7 +129,7 @@ abstract class VariantImpl(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
-    val testComponents = mutableMapOf<VariantType, ComponentPropertiesImpl>()
+    val testComponents = mutableMapOf<VariantType, ComponentImpl>()
 
     override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
         internalServices.mapPropertyOf(

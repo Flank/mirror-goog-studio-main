@@ -16,7 +16,7 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.component.AndroidTestProperties
+import com.android.build.api.component.AndroidTest
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.ApkPackagingOptions
 import com.android.build.api.variant.BuildConfigField
@@ -39,15 +39,15 @@ import java.io.Serializable
 
 class AnalyticsEnabledAndroidTestPropertiesTest {
     @Mock
-    lateinit var delegate: AndroidTestProperties
+    lateinit var delegate: AndroidTest
 
     private val stats = GradleBuildVariant.newBuilder()
-    private lateinit var proxy: AnalyticsEnabledAndroidTestProperties
+    private lateinit var proxy: AnalyticsEnabledAndroidTest
 
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
-        proxy = AnalyticsEnabledAndroidTestProperties(delegate, stats, FakeObjectFactory.factory)
+        proxy = AnalyticsEnabledAndroidTest(delegate, stats, FakeObjectFactory.factory)
     }
 
     @Test

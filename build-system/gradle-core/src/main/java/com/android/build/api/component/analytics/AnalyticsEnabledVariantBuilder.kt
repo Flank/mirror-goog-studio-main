@@ -17,9 +17,9 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.AndroidTestBuilder
-import com.android.build.api.component.AndroidTestProperties
+import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.UnitTestBuilder
-import com.android.build.api.component.UnitTestProperties
+import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.AndroidTestBuilderImpl
 import com.android.build.api.component.impl.UnitTestBuilderImpl
 import com.android.build.api.variant.AndroidVersion
@@ -36,10 +36,10 @@ abstract class AnalyticsEnabledVariantBuilder(
     VariantBuilder {
 
     private val unitTestActions = DelayedActionExecutor<UnitTestBuilder>()
-    private val unitTestPropertiesOperations = DelayedActionExecutor<UnitTestProperties>()
+    private val unitTestPropertiesOperations = DelayedActionExecutor<UnitTest>()
 
     private val androidTestActions = DelayedActionExecutor<AndroidTestBuilder>()
-    private val androidTestPropertiesOperations = DelayedActionExecutor<AndroidTestProperties>()
+    private val androidTestPropertiesOperations = DelayedActionExecutor<AndroidTest>()
 
     override var minSdkVersion: AndroidVersion
         get() = delegate.minSdkVersion
@@ -65,11 +65,11 @@ abstract class AnalyticsEnabledVariantBuilder(
         unitTestActions.registerAction(action)
     }
 
-    override fun unitTestProperties(action: UnitTestProperties.() -> Unit) {
+    override fun unitTestProperties(action: UnitTest.() -> Unit) {
         unitTestPropertiesOperations.registerAction(Action { action(it) })
     }
 
-    fun unitTestProperties(action: Action<UnitTestProperties>) {
+    fun unitTestProperties(action: Action<UnitTest>) {
         unitTestPropertiesOperations.registerAction(action)
     }
 
@@ -81,11 +81,11 @@ abstract class AnalyticsEnabledVariantBuilder(
         androidTestActions.registerAction(action)
     }
 
-    override fun androidTestProperties(action: AndroidTestProperties.() -> Unit) {
+    override fun androidTestProperties(action: AndroidTest.() -> Unit) {
         androidTestPropertiesOperations.registerAction(Action { action(it) })
     }
 
-    fun androidTestProperties(action: Action<AndroidTestProperties>) {
+    fun androidTestProperties(action: Action<AndroidTest>) {
         androidTestPropertiesOperations.registerAction(action)
     }
 
@@ -95,7 +95,7 @@ abstract class AnalyticsEnabledVariantBuilder(
     }
 
     // FIXME should be internal
-    fun executeUnitTestPropertiesActions(target: UnitTestProperties) {
+    fun executeUnitTestPropertiesActions(target: UnitTest) {
         unitTestPropertiesOperations.executeActions(target)
     }
 
@@ -105,7 +105,7 @@ abstract class AnalyticsEnabledVariantBuilder(
     }
 
     // FIXME should be internal
-    fun executeAndroidTestPropertiesActions(target: AndroidTestProperties) {
+    fun executeAndroidTestPropertiesActions(target: AndroidTest) {
         androidTestPropertiesOperations.executeActions(target)
     }
 }

@@ -17,8 +17,8 @@
 package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.UnitTestProperties
-import com.android.build.api.component.analytics.AnalyticsEnabledUnitTestProperties
+import com.android.build.api.component.UnitTest
+import com.android.build.api.component.analytics.AnalyticsEnabledUnitTest
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
@@ -41,7 +41,7 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
-open class UnitTestPropertiesImpl @Inject constructor(
+open class UnitTestImpl @Inject constructor(
     componentIdentity: UnitTestBuilderImpl,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
@@ -56,7 +56,7 @@ open class UnitTestPropertiesImpl @Inject constructor(
     internalServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
-) : TestComponentPropertiesImpl(
+) : TestComponentImpl(
     componentIdentity,
     buildFeatureValues,
     variantDslInfo,
@@ -71,7 +71,7 @@ open class UnitTestPropertiesImpl @Inject constructor(
     internalServices,
     taskCreationServices,
     globalScope
-), UnitTestProperties, UnitTestCreationConfig {
+), UnitTest, UnitTestCreationConfig {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -110,9 +110,9 @@ open class UnitTestPropertiesImpl @Inject constructor(
     override fun createUserVisibleVariantPropertiesObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledUnitTestProperties =
+    ): AnalyticsEnabledUnitTest =
         projectServices.objectFactory.newInstance(
-            AnalyticsEnabledUnitTestProperties::class.java,
+            AnalyticsEnabledUnitTest::class.java,
             this,
             stats
         )

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.ide.v2
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
@@ -62,7 +62,7 @@ class NativeModelBuilder(
     private val enableParallelNativeJsonGen
         get() =
             projectOptions.get(BooleanOption.ENABLE_PARALLEL_NATIVE_JSON_GEN)
-    private val scopes: List<ComponentPropertiesImpl> by lazy {
+    private val scopes: List<ComponentImpl> by lazy {
         (variantModel.variants + variantModel.testComponents)
             .filter { it.taskContainer.cxxConfigurationModel != null }
     }

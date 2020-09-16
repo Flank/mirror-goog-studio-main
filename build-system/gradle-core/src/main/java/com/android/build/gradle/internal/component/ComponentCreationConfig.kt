@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.component
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.component.impl.TestComponentPropertiesImpl
+import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.variant.AndroidVersion
@@ -117,7 +117,7 @@ interface ComponentCreationConfig : ComponentIdentity {
 
      * This declares is again, even though the public interfaces only have it via
      * [TestComponentProperties]. This is to facilitate places where one cannot use
-     * [TestComponentPropertiesImpl].
+     * [TestComponentImpl].
      *
      * see [onTestedConfig] for a utility function helping deal with nullability
      */

@@ -18,7 +18,7 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.internal.tasks.VariantAwareTask;
 import com.android.utils.StringHelper;
@@ -138,11 +138,11 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
 
     public static class VitalCreationAction extends BaseCreationAction<LintPerVariantTask> {
 
-        private final ComponentPropertiesImpl componentProperties;
+        private final ComponentImpl componentProperties;
         private final List<? extends VariantImpl> allComponentsWithLint;
 
         public VitalCreationAction(
-                @NonNull ComponentPropertiesImpl componentProperties,
+                @NonNull ComponentImpl componentProperties,
                 @NonNull List<? extends VariantImpl> allComponentsWithLint) {
             super(componentProperties.getGlobalScope());
             this.componentProperties = componentProperties;
@@ -171,7 +171,7 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
             task.variantInputs = new VariantInputs(componentProperties);
             task.allInputs.from(task.variantInputs.getAllInputs());
 
-            for (ComponentPropertiesImpl component : allComponentsWithLint) {
+            for (ComponentImpl component : allComponentsWithLint) {
                 addModelArtifactsToInputs(task.allInputs, component);
             }
 

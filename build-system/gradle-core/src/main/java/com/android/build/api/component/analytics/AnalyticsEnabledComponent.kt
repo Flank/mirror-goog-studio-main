@@ -17,7 +17,7 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.artifact.Artifacts
-import com.android.build.api.component.ComponentProperties
+import com.android.build.api.component.Component
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
@@ -26,11 +26,11 @@ import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodTy
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
 
-abstract class AnalyticsEnabledComponentProperties(
-    open val delegate: ComponentProperties,
+abstract class AnalyticsEnabledComponent(
+    open val delegate: Component,
     val stats: GradleBuildVariant.Builder,
     val objectFactory: ObjectFactory
-) : ComponentProperties {
+) : Component {
     override val artifacts: Artifacts
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =

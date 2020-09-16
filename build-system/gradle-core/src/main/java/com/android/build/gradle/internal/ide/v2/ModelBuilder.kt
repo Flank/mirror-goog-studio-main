@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.ide.v2
 
 import com.android.SdkConstants
 import com.android.Version
-import com.android.build.api.component.impl.AndroidTestPropertiesImpl
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.component.impl.AndroidTestImpl
+import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.dsl.AndroidSourceSet
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.BuildFeatures
@@ -383,7 +383,7 @@ class ModelBuilder<
     }
 
     private fun createAndroidArtifact(
-        component: ComponentPropertiesImpl,
+        component: ComponentImpl,
         features: BuildFeatureValues
     ): AndroidArtifactImpl {
         val variantData = component.variantData
@@ -400,7 +400,7 @@ class ModelBuilder<
         classesFolders.addAll(component.getCompiledRClasses(COMPILE_CLASSPATH).files)
 
         val testInfo: TestInfo? = when(component) {
-            is TestVariantImpl, is AndroidTestPropertiesImpl -> {
+            is TestVariantImpl, is AndroidTestImpl -> {
                 val runtimeApks: Collection<File> = globalScope
                     .project
                     .configurations
@@ -455,7 +455,7 @@ class ModelBuilder<
     }
 
     private fun createJavaArtifact(
-        component: ComponentPropertiesImpl,
+        component: ComponentImpl,
         features: BuildFeatureValues
     ): JavaArtifact {
         val variantData = component.variantData
@@ -494,7 +494,7 @@ class ModelBuilder<
     }
 
     private fun createDependencies(
-        component: ComponentPropertiesImpl,
+        component: ComponentImpl,
         buildMapping: BuildMapping,
         globalLibraryBuildService: GlobalLibraryBuildService,
         mavenCoordinatesBuildService: Provider<MavenCoordinatesCacheBuildService>
@@ -546,7 +546,7 @@ class ModelBuilder<
     }
 
     private fun getBundleInfo(
-        component: ComponentPropertiesImpl
+        component: ComponentImpl
     ): BundleInfo? {
         if (!component.variantType.isBaseModule) {
             return null
@@ -566,7 +566,7 @@ class ModelBuilder<
 
     // FIXME this is coming from the v1 Model Builder and this needs to be rethought. b/160970116
     private fun inspectManifestForInstantTag(
-        component: ComponentPropertiesImpl,
+        component: ComponentImpl,
         instantAppResultMap: MutableMap<File, Boolean>
     ): Boolean {
         if (!component.variantType.isBaseModule && !component.variantType.isDynamicFeature) {
@@ -651,7 +651,7 @@ class ModelBuilder<
     }
 
     private fun getTestTargetVariant(
-        component: ComponentPropertiesImpl
+        component: ComponentImpl
     ): TestedTargetVariant? {
         if (extension is TestExtension<*,*,*,*,*>) {
             val targetPath = extension.targetProjectPath ?: return null

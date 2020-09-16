@@ -28,7 +28,7 @@ import static com.android.builder.model.TestOptions.Execution.ANDROIDX_TEST_ORCH
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
@@ -538,7 +538,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         .on(InternalArtifactType.DEVICE_PROVIDER_CODE_COVERAGE.INSTANCE);
             }
 
-            if (creationConfig instanceof TestComponentPropertiesImpl) {
+            if (creationConfig instanceof TestComponentImpl) {
                 if (type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER) {
                     creationConfig.getTaskContainer().setConnectedTestTask(taskProvider);
                     // possible redundant with setConnectedTestTask?

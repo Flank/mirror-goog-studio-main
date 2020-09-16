@@ -16,8 +16,7 @@
 
 package com.android.build.gradle.internal.core
 
-import com.android.build.api.component.ComponentProperties
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.gradle.internal.api.BaseVariantImpl
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.services.DslServices
@@ -59,7 +58,7 @@ class MergedFlavor(
                         RuntimeException(
                             """
                                 Access to deprecated legacy com.android.builder.model.ProductFlavor.getApplicationId() requires compatibility mode for Property values in new com.android.build.api.variant.VariantOutput.versionCode
-                                $ComponentPropertiesImpl.ENABLE_LEGACY_API
+                                $ComponentImpl.ENABLE_LEGACY_API
                                 """.trimIndent()
                         )
                     )

@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.gradle.api.ApkVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
@@ -36,7 +36,7 @@ import org.gradle.api.tasks.TaskProvider;
 public abstract class ApkVariantImpl extends InstallableVariantImpl implements ApkVariant {
 
     protected ApkVariantImpl(
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull ComponentImpl componentProperties,
             @NonNull BaseServices services,
             @NonNull ReadOnlyObjectProvider immutableObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {

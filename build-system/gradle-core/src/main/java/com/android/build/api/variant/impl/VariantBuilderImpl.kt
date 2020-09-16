@@ -17,10 +17,10 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.AndroidTestBuilder
-import com.android.build.api.component.AndroidTestProperties
+import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.UnitTestBuilder
-import com.android.build.api.component.UnitTestProperties
+import com.android.build.api.component.UnitTest
 import com.android.build.api.component.analytics.AnalyticsEnabledVariantBuilder
 import com.android.build.api.component.impl.ComponentBuilderImpl
 import com.android.build.api.variant.AndroidVersion
@@ -57,11 +57,11 @@ abstract class VariantBuilderImpl(
         throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
-    override fun unitTestProperties(action: UnitTestProperties.() -> Unit) {
+    override fun unitTestProperties(action: UnitTest.() -> Unit) {
         throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
-    fun unitTestProperties(action: Action<UnitTestProperties>) {
+    fun unitTestProperties(action: Action<UnitTest>) {
         throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
@@ -73,11 +73,11 @@ abstract class VariantBuilderImpl(
         throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
-    override fun androidTestProperties(action: AndroidTestProperties.() -> Unit) {
+    override fun androidTestProperties(action: AndroidTest.() -> Unit) {
         throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
-    fun androidTestProperties(action: Action<AndroidTestProperties>) {
+    fun androidTestProperties(action: Action<AndroidTest>) {
         throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 

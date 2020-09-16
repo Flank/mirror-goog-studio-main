@@ -16,11 +16,10 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.component.AndroidTestProperties
+import com.android.build.api.component.AndroidTest
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ApkPackagingOptions
-import com.android.build.api.variant.PackagingOptions
 import com.android.build.api.variant.SigningConfig
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -31,13 +30,13 @@ import org.gradle.api.provider.Provider
 import java.io.Serializable
 import javax.inject.Inject
 
-open class AnalyticsEnabledAndroidTestProperties @Inject constructor(
-    override val delegate: AndroidTestProperties,
+open class AnalyticsEnabledAndroidTest @Inject constructor(
+    override val delegate: AndroidTest,
     stats: GradleBuildVariant.Builder,
     objectFactory: ObjectFactory
-) : AnalyticsEnabledTestComponentProperties(
+) : AnalyticsEnabledTestComponent(
     delegate, stats, objectFactory
-), AndroidTestProperties {
+), AndroidTest {
     override val applicationId: Property<String>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =

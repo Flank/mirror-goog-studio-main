@@ -55,11 +55,11 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.Artifact.SingleArtifact;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
-import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.AndroidTestImpl;
+import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.component.impl.TestComponentBuilderImpl;
-import com.android.build.api.component.impl.TestComponentPropertiesImpl;
-import com.android.build.api.component.impl.UnitTestPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
@@ -320,15 +320,14 @@ public abstract class TaskManager<
     @NonNull private final List<ComponentInfo<VariantBuilderT, VariantT>> variants;
 
     @NonNull
-    private final List<ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl>>
-            testComponents;
+    private final List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents;
 
     private final boolean hasFlavors;
     @NonNull protected final GlobalScope globalScope;
     @NonNull private final Logger logger;
     @NonNull protected final TaskFactory taskFactory;
     @NonNull protected final ImmutableList<VariantT> variantPropertiesList;
-    @NonNull private final ImmutableList<TestComponentPropertiesImpl> testComponentPropertiesList;
+    @NonNull private final ImmutableList<TestComponentImpl> testComponentPropertiesList;
     @NonNull private final ImmutableList<ComponentCreationConfig> allPropertiesList;
 
     /**
@@ -343,8 +342,7 @@ public abstract class TaskManager<
     public TaskManager(
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull
-                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl>>
-                            testComponents,
+                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension) {
@@ -400,7 +398,7 @@ public abstract class TaskManager<
         for (ComponentInfo<VariantBuilderT, VariantT> variant : variants) {
             createTasksForVariant(variant, variants);
         }
-        for (ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl> testComponent :
+        for (ComponentInfo<TestComponentBuilderImpl, TestComponentImpl> testComponent :
                 testComponents) {
             createTasksForTest(testComponent);
         }
@@ -501,10 +499,8 @@ public abstract class TaskManager<
 
     /** Create tasks for the specified variant. */
     private void createTasksForTest(
-            @NonNull
-                    ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl>
-                            testComponent) {
-        final TestComponentPropertiesImpl componentProperties = testComponent.getProperties();
+            @NonNull ComponentInfo<TestComponentBuilderImpl, TestComponentImpl> testComponent) {
+        final TestComponentImpl componentProperties = testComponent.getProperties();
 
         createAssembleTask(componentProperties);
 
@@ -545,10 +541,10 @@ public abstract class TaskManager<
                                 multiDexInstrumentationDep);
             }
 
-            createAndroidTestVariantTasks((AndroidTestPropertiesImpl) componentProperties);
+            createAndroidTestVariantTasks((AndroidTestImpl) componentProperties);
         } else {
             // UNIT_TEST
-            createUnitTestVariantTasks((UnitTestPropertiesImpl) componentProperties);
+            createUnitTestVariantTasks((UnitTestImpl) componentProperties);
         }
     }
 
@@ -908,7 +904,7 @@ public abstract class TaskManager<
         creationConfig.onTestedConfig(
                 testedConfig -> {
                     FileCollection testedCodeDeps;
-                    if (testedConfig instanceof ComponentPropertiesImpl) {
+                    if (testedConfig instanceof ComponentImpl) {
                         testedCodeDeps =
                                 testedConfig.getDependenciesClassesJarsPostAsmInstrumentation(ALL);
                     } else {
@@ -928,7 +924,7 @@ public abstract class TaskManager<
                 });
     }
 
-    public void createMergeApkManifestsTask(@NonNull ComponentPropertiesImpl componentProperties) {
+    public void createMergeApkManifestsTask(@NonNull ComponentImpl componentProperties) {
         ApkVariantData apkVariantData = (ApkVariantData) componentProperties.getVariantData();
         Set<String> screenSizes = apkVariantData.getCompatibleScreens();
 
@@ -1706,8 +1702,7 @@ public abstract class TaskManager<
         taskContainer.getAssembleTask().configure(task -> task.setGroup(null));
     }
 
-    protected void registerRClassTransformStream(
-            @NonNull ComponentPropertiesImpl componentProperties) {
+    protected void registerRClassTransformStream(@NonNull ComponentImpl componentProperties) {
         if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
             return;
         }
@@ -1730,8 +1725,7 @@ public abstract class TaskManager<
     }
 
     /** Creates the tasks to build android tests. */
-    private void createAndroidTestVariantTasks(
-            @NonNull AndroidTestPropertiesImpl androidTestProperties) {
+    private void createAndroidTestVariantTasks(@NonNull AndroidTestImpl androidTestProperties) {
 
         createAnchorTasks(androidTestProperties);
 
@@ -1962,8 +1956,7 @@ public abstract class TaskManager<
         }
     }
 
-    protected void createConnectedTestForVariant(
-            @NonNull AndroidTestPropertiesImpl androidTestProperties) {
+    protected void createConnectedTestForVariant(@NonNull AndroidTestImpl androidTestProperties) {
         VariantImpl testedVariant = androidTestProperties.getTestedVariant();
 
         boolean isLibrary = testedVariant.getVariantType().isAar();
@@ -2751,7 +2744,7 @@ public abstract class TaskManager<
         }
     }
 
-    public void createAssembleTask(@NonNull ComponentPropertiesImpl componentProperties) {
+    public void createAssembleTask(@NonNull ComponentImpl componentProperties) {
         taskFactory.register(
                 componentProperties.computeTaskName("assemble"),
                 null /*preConfigAction*/,
@@ -2763,7 +2756,7 @@ public abstract class TaskManager<
                         componentProperties.getTaskContainer().setAssembleTask(taskProvider));
     }
 
-    public void createBundleTask(@NonNull ComponentPropertiesImpl componentProperties) {
+    public void createBundleTask(@NonNull ComponentImpl componentProperties) {
         taskFactory.register(
                 componentProperties.computeTaskName("bundle"),
                 null,
@@ -2993,7 +2986,7 @@ public abstract class TaskManager<
             taskFactory.register(new AnalyzeDependenciesTask.CreationAction(variant));
         }
 
-        for (TestComponentPropertiesImpl testComponent : testComponentPropertiesList) {
+        for (TestComponentImpl testComponent : testComponentPropertiesList) {
             taskFactory.register(new AnalyzeDependenciesTask.CreationAction(testComponent));
         }
     }

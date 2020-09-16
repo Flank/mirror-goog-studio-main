@@ -17,10 +17,10 @@
 package com.android.build.gradle.internal.lint
 
 import com.android.Version
-import com.android.build.api.component.impl.AndroidTestPropertiesImpl
-import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.api.component.impl.TestComponentPropertiesImpl
-import com.android.build.api.component.impl.UnitTestPropertiesImpl
+import com.android.build.api.component.impl.AndroidTestImpl
+import com.android.build.api.component.impl.ComponentImpl
+import com.android.build.api.component.impl.TestComponentImpl
+import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
@@ -371,7 +371,7 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
     class CreationAction(
         globalScope: GlobalScope,
         private val variantPropertiesList: List<VariantImpl>,
-        private val testPropertiesList: List<TestComponentPropertiesImpl>,
+        private val testPropertiesList: List<TestComponentImpl>,
         private val variantType: VariantType,
         private val buildFeatures: BuildFeatureValues
     ) : GlobalTaskCreationAction<LintModelModuleWriterTask>(globalScope) {
@@ -439,11 +439,11 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
             ).also { variantInput ->
                 variantInput.mainArtifact.setDisallowChanges(getAndroidArtifact(properties))
 
-                getTestComponent(properties, UnitTestPropertiesImpl::class.java)?.let {
+                getTestComponent(properties, UnitTestImpl::class.java)?.let {
                     variantInput.testArtifact.setDisallowChanges(getJavaArtifact(it))
                 }
 
-                getTestComponent(properties, AndroidTestPropertiesImpl::class.java)?.let {
+                getTestComponent(properties, AndroidTestImpl::class.java)?.let {
                     variantInput.androidTestArtifact.setDisallowChanges(getAndroidArtifact(it))
                 }
 
@@ -471,7 +471,7 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
         }
 
         private fun getAndroidArtifact(
-            properties: ComponentPropertiesImpl
+            properties: ComponentImpl
         ): AndroidArtifactInput =
             globalScope.dslServices.newInstance(AndroidArtifactInput::class.java).also {
                 it.applicationId.setDisallowChanges(properties.applicationId)
@@ -489,7 +489,7 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
             }
 
         private fun getJavaArtifact(
-            properties: TestComponentPropertiesImpl
+            properties: TestComponentImpl
         ): JavaArtifactInput =
             globalScope.dslServices.newInstance(JavaArtifactInput::class.java).also {
                 it.javacOutFolder.setDisallowChanges(
@@ -516,7 +516,7 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
             it.codeName.setDisallowChanges(codename)
         }
 
-        private fun <T : TestComponentPropertiesImpl> getTestComponent(
+        private fun <T : TestComponentImpl> getTestComponent(
             variantProperties: VariantImpl,
             targetClass: Class<T>
         ): T? = testPropertiesList

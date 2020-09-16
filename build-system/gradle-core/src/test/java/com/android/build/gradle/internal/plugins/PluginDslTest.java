@@ -21,9 +21,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.Version;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.component.impl.TestComponentBuilderImpl;
-import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.gradle.api.TestVariant;
@@ -282,7 +282,7 @@ public class PluginDslTest {
         checker.checkTestedVariant("f2FbDebug", "f2FbDebugAndroidTest", variants, testVariants);
         checker.checkTestedVariant("f2FcDebug", "f2FcDebugAndroidTest", variants, testVariants);
 
-        Map<String, ComponentPropertiesImpl> componentMap = getComponentMap();
+        Map<String, ComponentImpl> componentMap = getComponentMap();
 
         for (String dim1 : ImmutableList.of("f1", "f2")) {
             for (String dim2 : ImmutableList.of("fa", "fb", "fc")) {
@@ -531,9 +531,8 @@ public class PluginDslTest {
         android.setCompileSdkVersion(
                 "Google Inc.:Google APIs:" + TestConstants.COMPILE_SDK_VERSION_WITH_GOOGLE_APIS);
         plugin.createAndroidTasks();
-        Map<String, ComponentPropertiesImpl> componentMap = getComponentMap();
-        Map.Entry<String, ComponentPropertiesImpl> vsentry =
-                componentMap.entrySet().iterator().next();
+        Map<String, ComponentImpl> componentMap = getComponentMap();
+        Map.Entry<String, ComponentImpl> vsentry = componentMap.entrySet().iterator().next();
         File mockableJarFile =
                 vsentry.getValue().getGlobalScope().getMockableJarArtifact().getSingleFile();
         assertThat(mockableJarFile).isNotNull();
@@ -603,7 +602,7 @@ public class PluginDslTest {
                         + "}\n");
         plugin.createAndroidTasks();
 
-        Map<String, ComponentPropertiesImpl> componentMap = getComponentMap();
+        Map<String, ComponentImpl> componentMap = getComponentMap();
 
         Map<String, Map<String, String>> expected =
                 ImmutableMap.of(
@@ -704,7 +703,7 @@ public class PluginDslTest {
     }
 
     public void checkProguardFiles(Map<String, List<String>> expected) {
-        Map<String, ComponentPropertiesImpl> componentMap = getComponentMap();
+        Map<String, ComponentImpl> componentMap = getComponentMap();
         for (Map.Entry<String, List<String>> entry : expected.entrySet()) {
             String variantName = entry.getKey();
             Set<File> proguardFiles =
@@ -723,14 +722,14 @@ public class PluginDslTest {
         }
     }
 
-    public Map<String, ComponentPropertiesImpl> getComponentMap() {
-        Map<String, ComponentPropertiesImpl> result = new HashMap<>();
+    public Map<String, ComponentImpl> getComponentMap() {
+        Map<String, ComponentImpl> result = new HashMap<>();
         for (ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl> variant :
                 plugin.getVariantManager().getMainComponents()) {
             result.put(variant.getProperties().getName(), variant.getProperties());
         }
 
-        for (ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl> testComponent :
+        for (ComponentInfo<TestComponentBuilderImpl, TestComponentImpl> testComponent :
                 plugin.getVariantManager().getTestComponents()) {
             result.put(testComponent.getProperties().getName(), testComponent.getProperties());
         }

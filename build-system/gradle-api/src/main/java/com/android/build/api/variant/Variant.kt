@@ -15,7 +15,7 @@
  */
 package com.android.build.api.variant
 
-import com.android.build.api.component.ComponentProperties
+import com.android.build.api.component.Component
 import org.gradle.api.Incubating
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
@@ -25,7 +25,7 @@ import java.io.Serializable
  * Parent interface for all types of variants.
  */
 @Incubating
-interface Variant : ComponentProperties {
+interface Variant : Component {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.

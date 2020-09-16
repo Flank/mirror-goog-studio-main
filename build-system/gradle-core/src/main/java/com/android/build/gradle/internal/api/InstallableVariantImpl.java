@@ -19,11 +19,10 @@ package com.android.build.gradle.internal.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.Artifact;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.InstallableVariant;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import org.gradle.api.DefaultTask;
@@ -41,7 +40,7 @@ import org.gradle.api.tasks.TaskProvider;
 public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl implements InstallableVariant {
 
     protected InstallableVariantImpl(
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull ComponentImpl componentProperties,
             @NonNull BaseServices services,
             @NonNull ReadOnlyObjectProvider immutableObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {

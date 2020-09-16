@@ -23,9 +23,9 @@ import com.android.annotations.NonNull;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.AndroidTestBuilderImpl;
-import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
+import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.UnitTestBuilderImpl;
-import com.android.build.api.component.impl.UnitTestPropertiesImpl;
+import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.api.dsl.TestBuildFeatures;
 import com.android.build.api.variant.impl.TestVariantBuilderImpl;
@@ -169,7 +169,7 @@ public class TestVariantFactory
 
     @NonNull
     @Override
-    public UnitTestPropertiesImpl createUnitTestProperties(
+    public UnitTestImpl createUnitTestProperties(
             @NonNull UnitTestBuilderImpl componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
@@ -188,7 +188,7 @@ public class TestVariantFactory
 
     @NonNull
     @Override
-    public AndroidTestPropertiesImpl createAndroidTestProperties(
+    public AndroidTestImpl createAndroidTestProperties(
             @NonNull AndroidTestBuilderImpl componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,

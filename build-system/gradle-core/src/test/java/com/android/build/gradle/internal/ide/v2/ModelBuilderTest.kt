@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.ide.v2
 
-import com.android.build.api.component.impl.TestComponentPropertiesImpl
+import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.variant.ApplicationVariantBuilder
@@ -171,7 +171,7 @@ class ModelBuilderTest {
     }
 
     private val variantList: MutableList<VariantImpl> = mutableListOf()
-    private val testComponentList: MutableList<TestComponentPropertiesImpl> = mutableListOf()
+    private val testComponentList: MutableList<TestComponentImpl> = mutableListOf()
 
     private fun createApplicationModelBuilder(
     ): ModelBuilder<

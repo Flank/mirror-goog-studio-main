@@ -17,7 +17,7 @@
 package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.TestComponentProperties
+import com.android.build.api.component.TestComponent
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -34,7 +34,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import javax.inject.Inject
 
-abstract class TestComponentPropertiesImpl @Inject constructor(
+abstract class TestComponentImpl @Inject constructor(
     componentIdentity: TestComponentBuilderImpl,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
@@ -49,7 +49,7 @@ abstract class TestComponentPropertiesImpl @Inject constructor(
     variantPropertiesApiServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
-) : ComponentPropertiesImpl(
+) : ComponentImpl(
     componentIdentity,
     buildFeatureValues,
     variantDslInfo,
@@ -63,7 +63,7 @@ abstract class TestComponentPropertiesImpl @Inject constructor(
     variantPropertiesApiServices,
     taskCreationServices,
     globalScope
-), TestComponentProperties, TestComponentCreationConfig {
+), TestComponent, TestComponentCreationConfig {
 
     // map the internal getter to the impl of the external variant object
     override val testedConfig: VariantCreationConfig

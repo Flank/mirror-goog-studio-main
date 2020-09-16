@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.plugins;
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentBuilderImpl;
-import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.extension.LibraryAndroidComponentsExtension;
 import com.android.build.api.extension.impl.LibraryAndroidComponentsExtensionImpl;
 import com.android.build.api.extension.impl.OperationsRegistrar;
@@ -145,8 +145,7 @@ public class LibraryPlugin
     protected LibraryTaskManager createTaskManager(
             @NonNull List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>> variants,
             @NonNull
-                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentPropertiesImpl>>
-                            testComponents,
+                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension) {

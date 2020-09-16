@@ -22,7 +22,7 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.Identifier
 import static org.gradle.internal.logging.text.StyledTextOutput.Style.Info;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.gradle.internal.ide.dependencies.ArtifactUtils;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact;
@@ -60,7 +60,7 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
         super.completeProject(project);
     }
 
-    public void startComponent(@NonNull ComponentPropertiesImpl componentProperties) {
+    public void startComponent(@NonNull ComponentImpl componentProperties) {
         if (hasConfigs) {
             getTextOutput().println();
         }
@@ -72,7 +72,7 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
                 true);
     }
 
-    public void render(@NonNull ComponentPropertiesImpl componentProperties) {
+    public void render(@NonNull ComponentImpl componentProperties) {
         ImmutableMap<String, String> buildMapping =
                 BuildMappingUtils.computeBuildMapping(
                         componentProperties.getGlobalScope().getProject().getGradle());

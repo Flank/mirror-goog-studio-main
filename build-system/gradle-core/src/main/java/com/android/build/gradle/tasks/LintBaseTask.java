@@ -28,7 +28,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.VariantOutputConfiguration;
 import com.android.build.api.variant.impl.BuiltArtifactsImpl;
@@ -261,7 +261,7 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
      */
     protected static void addModelArtifactsToInputs(
             @NonNull ConfigurableFileCollection inputs,
-            @NonNull ComponentPropertiesImpl componentProperties) {
+            @NonNull ComponentImpl componentProperties) {
 
         inputs.from(
                 (Callable<Collection<ArtifactCollection>>)
@@ -278,8 +278,7 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
             VariantImpl variantProperties = (VariantImpl) componentProperties;
 
             for (VariantType variantType : VariantType.Companion.getTestComponents()) {
-                ComponentPropertiesImpl testVariant =
-                        variantProperties.getTestComponents().get(variantType);
+                ComponentImpl testVariant = variantProperties.getTestComponents().get(variantType);
                 if (testVariant != null) {
                     addModelArtifactsToInputs(inputs, testVariant);
                 }
@@ -295,7 +294,7 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
 
         private final ConfigurableFileCollection allInputs;
 
-        public VariantInputs(@NonNull ComponentPropertiesImpl componentProperties) {
+        public VariantInputs(@NonNull ComponentImpl componentProperties) {
             GlobalScope globalScope = componentProperties.getGlobalScope();
 
             name = componentProperties.getName();

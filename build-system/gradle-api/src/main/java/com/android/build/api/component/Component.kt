@@ -24,7 +24,7 @@ import com.android.build.api.instrumentation.InstrumentationScope
 import org.gradle.api.Incubating
 
 @Incubating
-interface ComponentProperties: ComponentIdentity,
+interface Component: ComponentIdentity,
     ActionableComponentObject {
 
     /**

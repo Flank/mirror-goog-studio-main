@@ -17,7 +17,7 @@
 package com.android.build.gradle
 
 import com.android.build.api.variant.VariantFilter
-import com.android.build.api.component.impl.TestComponentPropertiesImpl
+import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -529,7 +529,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             given,
             { testBuildType },
             { components },
-            { listOf<TestComponentPropertiesImpl>() },
+            { listOf<TestComponentImpl>() },
             dslServices.issueReporter
         ).defaultVariant
     }

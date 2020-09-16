@@ -16,7 +16,7 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.component.ComponentProperties
+import com.android.build.api.component.Component
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
@@ -35,15 +35,15 @@ import org.mockito.MockitoAnnotations
 class AnalyticsEnabledComponentBuilderPropertiesTest {
 
     @Mock
-    lateinit var delegate: ComponentProperties
+    lateinit var delegate: Component
 
     private val stats = GradleBuildVariant.newBuilder()
-    private lateinit var proxy: AnalyticsEnabledComponentProperties
+    private lateinit var proxy: AnalyticsEnabledComponent
 
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
-        proxy = object: AnalyticsEnabledComponentProperties(delegate, stats, FakeObjectFactory.factory) {}
+        proxy = object: AnalyticsEnabledComponent(delegate, stats, FakeObjectFactory.factory) {}
     }
 
     abstract class MockedVisitor : AsmClassVisitorFactory<InstrumentationParameters>

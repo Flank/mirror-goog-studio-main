@@ -17,10 +17,10 @@
 package com.android.build.api.variant
 
 import com.android.build.api.component.AndroidTestBuilder
-import com.android.build.api.component.AndroidTestProperties
+import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.ComponentBuilder
 import com.android.build.api.component.UnitTestBuilder
-import com.android.build.api.component.UnitTestProperties
+import com.android.build.api.component.UnitTest
 import com.android.build.api.component.ActionableComponentObject
 import org.gradle.api.Incubating
 
@@ -32,10 +32,10 @@ import org.gradle.api.Incubating
 interface VariantBuilder: ComponentBuilder, ActionableComponentObject {
 
     fun unitTest(action: UnitTestBuilder.() -> Unit)
-    fun unitTestProperties(action: UnitTestProperties.() -> Unit)
+    fun unitTestProperties(action: UnitTest.() -> Unit)
 
     fun androidTest(action: AndroidTestBuilder.() -> Unit)
-    fun androidTestProperties(action: AndroidTestProperties.() -> Unit)
+    fun androidTestProperties(action: AndroidTest.() -> Unit)
 
     /**
      * Gets the minimum supported SDK Version for this variant.

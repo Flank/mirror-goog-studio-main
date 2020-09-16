@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.build.api.component
+package com.android.build.api.component.analytics
 
-import org.gradle.api.Incubating
+import com.android.build.api.component.UnitTest
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.model.ObjectFactory
+import javax.inject.Inject
 
-/**
- * Properties for the unit test variant of a module.
- */
-@Incubating
-interface UnitTestProperties : TestComponentProperties {
-}
+open class AnalyticsEnabledUnitTest @Inject constructor(
+    override val delegate: UnitTest,
+    stats: GradleBuildVariant.Builder,
+    objectFactory: ObjectFactory
+) : AnalyticsEnabledTestComponent(delegate, stats, objectFactory), UnitTest

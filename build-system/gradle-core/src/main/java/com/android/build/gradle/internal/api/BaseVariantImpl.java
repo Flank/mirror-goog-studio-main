@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.ArtifactType;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.JavaCompileOptions;
@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.core.InternalBaseVariant;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
@@ -79,7 +78,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     public static final String USE_PROPERTIES_DEPRECATION_URL =
             "https://d.android.com/r/tools/use-properties";
 
-    @NonNull protected final ComponentPropertiesImpl componentProperties;
+    @NonNull protected final ComponentImpl componentProperties;
     @NonNull protected final BaseServices services;
 
     @NonNull protected final ReadOnlyObjectProvider readOnlyObjectProvider;
@@ -87,7 +86,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @NonNull protected final NamedDomainObjectContainer<BaseVariantOutput> outputs;
 
     BaseVariantImpl(
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull ComponentImpl componentProperties,
             @NonNull BaseServices services,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {

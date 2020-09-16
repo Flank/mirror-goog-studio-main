@@ -19,8 +19,8 @@ package com.android.build.api.component.impl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.component.ComponentProperties
-import com.android.build.api.component.analytics.AnalyticsEnabledComponentProperties
+import com.android.build.api.component.Component
+import com.android.build.api.component.analytics.AnalyticsEnabledComponent
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
@@ -83,7 +83,7 @@ import org.gradle.api.provider.Provider
 import java.io.File
 import java.util.concurrent.Callable
 
-abstract class ComponentPropertiesImpl(
+abstract class ComponentImpl(
     open val variant: ComponentBuilderImpl,
     override val buildFeatures: BuildFeatureValues,
     override val variantDslInfo: VariantDslInfo,
@@ -98,7 +98,7 @@ abstract class ComponentPropertiesImpl(
     override val services: TaskCreationServices,
     @Deprecated("Do not use if you can avoid it. Check if services has what you need")
     override val globalScope: GlobalScope
-): ComponentProperties, ComponentCreationConfig, ComponentIdentity by variant {
+): Component, ComponentCreationConfig, ComponentIdentity by variant {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -195,7 +195,7 @@ abstract class ComponentPropertiesImpl(
 
      * This declares is again, even though the public interfaces only have it via
      * [TestComponentProperties]. This is to facilitate places where one cannot use
-     * [TestComponentPropertiesImpl].
+     * [TestComponentImpl].
      *
      * see [onTestedConfig] for a utility function helping deal with nullability
      */
@@ -682,7 +682,7 @@ abstract class ComponentPropertiesImpl(
     abstract fun createUserVisibleVariantPropertiesObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledComponentProperties
+    ): AnalyticsEnabledComponent
 
     override fun getDependenciesClassesJarsPostAsmInstrumentation(scope: ArtifactScope): FileCollection {
         return if (registeredDependenciesClassesVisitors.isNotEmpty()) {

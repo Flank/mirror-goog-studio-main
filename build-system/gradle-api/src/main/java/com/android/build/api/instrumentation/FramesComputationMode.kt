@@ -16,13 +16,13 @@
 
 package com.android.build.api.instrumentation
 
-import com.android.build.api.component.ComponentProperties
+import com.android.build.api.component.Component
 import org.gradle.api.Incubating
 import org.objectweb.asm.ClassWriter
 
 /**
  * Indicates the frame computation mode that will be applied to the bytecode of the classes
- * instrumented by ASM visitors registered through [ComponentProperties.transformClassesWith].
+ * instrumented by ASM visitors registered through [Component.transformClassesWith].
  *
  * The default mode is to [copy frames][FramesComputationMode.COPY_FRAMES].
  */

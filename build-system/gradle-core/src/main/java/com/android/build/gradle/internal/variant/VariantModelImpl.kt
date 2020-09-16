@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.variant
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.api.component.impl.TestComponentPropertiesImpl
+import com.android.build.api.component.impl.ComponentImpl
+import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
@@ -34,13 +34,13 @@ class VariantModelImpl(
     override val inputs: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>,
     private val testBuilderTypeProvider: () -> String?,
     private val variantProvider: () -> List<VariantImpl>,
-    private val testComponentProvider: () -> List<TestComponentPropertiesImpl>,
+    private val testComponentProvider: () -> List<TestComponentImpl>,
     private val issueHandler: IssueReporter) : VariantModel {
 
     override val variants: List<VariantImpl>
         get() = variantProvider()
 
-    override val testComponents: List<TestComponentPropertiesImpl>
+    override val testComponents: List<TestComponentImpl>
         get() = testComponentProvider()
 
     override val defaultVariant: String?
@@ -80,7 +80,7 @@ class VariantModelImpl(
         val chosenBuildType: String? = getBuildAuthorSpecifiedDefaultBuildType()
         val chosenFlavors: Map<String, String> = getBuildAuthorSpecifiedDefaultFlavors()
         val fallbackDefaultBuildType: String = testBuilderTypeProvider() ?: "debug"
-        val preferredDefaultVariantScopeComparator: Comparator<ComponentPropertiesImpl> =
+        val preferredDefaultVariantScopeComparator: Comparator<ComponentImpl> =
             BuildAuthorSpecifiedDefaultBuildTypeComparator(chosenBuildType)
                 .thenComparing(BuildAuthorSpecifiedDefaultsFlavorComparator(chosenFlavors))
                 .thenComparing(DefaultBuildTypeComparator(fallbackDefaultBuildType))
@@ -202,8 +202,8 @@ Please only set `isDefault = true` for one product flavor in each flavor dimensi
  */
 private class BuildAuthorSpecifiedDefaultBuildTypeComparator constructor(
     private val chosen: String?
-) : Comparator<ComponentPropertiesImpl> {
-    override fun compare(v1: ComponentPropertiesImpl, v2: ComponentPropertiesImpl): Int {
+) : Comparator<ComponentImpl> {
+    override fun compare(v1: ComponentImpl, v2: ComponentImpl): Int {
         if (chosen == null) {
             return 0
         }
@@ -227,8 +227,8 @@ private class BuildAuthorSpecifiedDefaultBuildTypeComparator constructor(
  */
 private class BuildAuthorSpecifiedDefaultsFlavorComparator constructor(
     private val defaultFlavors: Map<String, String>
-) : Comparator<ComponentPropertiesImpl> {
-    override fun compare(v1: ComponentPropertiesImpl, v2: ComponentPropertiesImpl): Int {
+) : Comparator<ComponentImpl> {
+    override fun compare(v1: ComponentImpl, v2: ComponentImpl): Int {
         var f1Score = 0
         var f2Score = 0
         for (flavor in v1.variantDslInfo.productFlavorList) {
@@ -257,8 +257,8 @@ private class BuildAuthorSpecifiedDefaultsFlavorComparator constructor(
  */
 private class DefaultBuildTypeComparator constructor(
     private val preferredBuildType: String
-) : Comparator<ComponentPropertiesImpl> {
-    override fun compare(v1: ComponentPropertiesImpl, v2: ComponentPropertiesImpl): Int {
+) : Comparator<ComponentImpl> {
+    override fun compare(v1: ComponentImpl, v2: ComponentImpl): Int {
         val b1 = v1.buildType
         val b2 = v2.buildType
         return if (b1 == b2) {
@@ -279,8 +279,8 @@ private class DefaultBuildTypeComparator constructor(
  *
  * The best match is the *minimum* element.
  */
-private class DefaultFlavorComparator : Comparator<ComponentPropertiesImpl> {
-    override fun compare(v1: ComponentPropertiesImpl, v2: ComponentPropertiesImpl): Int {
+private class DefaultFlavorComparator : Comparator<ComponentImpl> {
+    override fun compare(v1: ComponentImpl, v2: ComponentImpl): Int {
         // Compare flavors left-to right.
         for (i in v1.variantDslInfo.productFlavorList.indices) {
             val f1 = v1.variantDslInfo.productFlavorList[i].name

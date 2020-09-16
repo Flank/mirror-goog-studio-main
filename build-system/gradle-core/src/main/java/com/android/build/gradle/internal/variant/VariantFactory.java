@@ -21,10 +21,10 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.AndroidTestBuilderImpl;
-import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.AndroidTestImpl;
+import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.component.impl.UnitTestBuilderImpl;
-import com.android.build.api.component.impl.UnitTestPropertiesImpl;
+import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
 import com.android.build.api.variant.impl.VariantImpl;
@@ -96,7 +96,7 @@ public interface VariantFactory<
             @NonNull TaskCreationServices taskCreationServices);
 
     @NonNull
-    UnitTestPropertiesImpl createUnitTestProperties(
+    UnitTestImpl createUnitTestProperties(
             @NonNull UnitTestBuilderImpl componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
@@ -112,7 +112,7 @@ public interface VariantFactory<
             @NonNull TaskCreationServices taskCreationServices);
 
     @NonNull
-    AndroidTestPropertiesImpl createAndroidTestProperties(
+    AndroidTestImpl createAndroidTestProperties(
             @NonNull AndroidTestBuilderImpl componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
@@ -156,7 +156,7 @@ public interface VariantFactory<
     @Nullable
     BaseVariantImpl createVariantApi(
             @NonNull GlobalScope globalScope,
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull ComponentImpl componentProperties,
             @NonNull BaseVariantData variantData,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider);
 
