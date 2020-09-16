@@ -33,6 +33,7 @@ import com.android.tools.agent.app.inspection.version.VersionChecker;
 import com.android.tools.agent.app.inspection.version.VersionCheckerResult;
 import com.android.tools.agent.app.inspection.version.VersionTargetInfo;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -110,10 +111,8 @@ public class AppInspectionService {
      * @param inspectorId the unique id of the inspector being launched
      * @param dexPath the path to the .dex file of the inspector
      * @param projectName the name of the studio project that is trying to launch the inspector
-     * @param versionFileName the full name of the version file located in the APK's META-INF. Null
-     *     if inspector is not targeting any particular library (ex: DB inspector).
-     * @param minVersion the minimum version of the library this inspector is compatible with. Null
-     *     if inspector is not targeting any particular library (ex: DB inspector).
+     * @param target specifies the information required to locate and read the version file of the
+     *     library
      * @param force if true, create the inspector even if one is already running
      * @param commandId unique id of this command in the context of app inspection service
      */
@@ -202,6 +201,23 @@ public class AppInspectionService {
         for (InspectorBridge bridge : mInspectorBridges.values()) {
             bridge.cancelCommand(cancelledCommandId);
         }
+    }
+
+    /**
+     * This command allows the IDE to query for the versions of the libraries it wants to inspect
+     * that are present in this app.
+     *
+     * @param commandId the unique commandId associated with this command
+     * @param targets the libraries Studio wants version information for
+     */
+    public void getLibraryVersionsCommand(int commandId, VersionTargetInfo[] targets) {
+        List<VersionCheckerResult> results = new ArrayList<>();
+        for (VersionTargetInfo target : targets) {
+            VersionCheckerResult result = versionChecker.checkVersion(target);
+            results.add(result);
+        }
+        NativeTransport.sendGetLibraryVersionsResponse(
+                commandId, results.toArray(), results.size());
     }
 
     private void doDispose(String inspectorId) {

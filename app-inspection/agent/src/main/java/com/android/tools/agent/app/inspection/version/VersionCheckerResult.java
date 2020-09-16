@@ -47,9 +47,14 @@ public class VersionCheckerResult {
     /** The version file that we checked. */
     public String versionFileName;
 
-    public VersionCheckerResult(Status status, String message, String versionFileName) {
+    /** The version of the library. Null if it couldn't be read. */
+    public String version;
+
+    public VersionCheckerResult(
+            Status status, String message, String versionFileName, String version) {
         this.status = status;
         this.message = message;
         this.versionFileName = versionFileName;
+        this.version = version;
     }
 }

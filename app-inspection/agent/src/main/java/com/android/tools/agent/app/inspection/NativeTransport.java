@@ -37,6 +37,9 @@ class NativeTransport {
 
     public static native void sendRawResponseError(int commandId, String errorMessage);
 
+    public static native void sendGetLibraryVersionsResponse(
+            int commandId, Object[] results, int length);
+
     public static native void sendCrashEvent(String inspectorId, String errorMessage);
 
     public static native void sendRawEvent(String inspectorId, byte[] eventData, int length);

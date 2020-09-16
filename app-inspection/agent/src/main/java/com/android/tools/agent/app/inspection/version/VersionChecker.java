@@ -41,12 +41,14 @@ public class VersionChecker {
                 return new VersionCheckerResult(
                         VersionCheckerResult.Status.NOT_FOUND,
                         "Failed to find version file " + versionFile,
-                        versionFile);
+                        versionFile,
+                        null);
             case READ_ERROR:
                 return new VersionCheckerResult(
                         VersionCheckerResult.Status.INCOMPATIBLE,
                         "Failed to read version file " + versionFile,
-                        versionFile);
+                        versionFile,
+                        null);
         }
         Version version = Version.parseOrNull(readResult.versionString);
         if (version == null) {
@@ -56,18 +58,23 @@ public class VersionChecker {
                             + readResult.versionString
                             + " which is in "
                             + versionFile,
-                    versionFile);
+                    versionFile,
+                    readResult.versionString);
         }
         Version minVersion = Version.parseOrNull(minVersionString);
         if (minVersion == null) {
             return new VersionCheckerResult(
                     VersionCheckerResult.Status.ERROR,
                     "Failed to parse provided min version " + minVersionString,
-                    versionFile);
+                    versionFile,
+                    readResult.versionString);
         }
         if (version.compareTo(minVersion) >= 0) {
             return new VersionCheckerResult(
-                    VersionCheckerResult.Status.COMPATIBLE, null, versionFile);
+                    VersionCheckerResult.Status.COMPATIBLE,
+                    null,
+                    versionFile,
+                    readResult.versionString);
         } else {
             return new VersionCheckerResult(
                     VersionCheckerResult.Status.INCOMPATIBLE,
@@ -75,7 +82,8 @@ public class VersionChecker {
                             + readResult.versionString
                             + " does not satisfy the inspector's min version requirement "
                             + minVersionString,
-                    versionFile);
+                    versionFile,
+                    readResult.versionString);
         }
     }
 
