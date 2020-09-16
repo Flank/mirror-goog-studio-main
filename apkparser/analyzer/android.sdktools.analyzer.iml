@@ -8,6 +8,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/test/resources" type="java-test-resource" />
     </content>
     <orderEntry type="inheritedJdk" />
+    <orderEntry type="library" name="studio-sdk" level="project" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="android.sdktools.android-annotations" />
     <orderEntry type="module" module-name="android.sdktools.common" />
@@ -46,8 +47,8 @@
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
     <orderEntry type="library" scope="TEST" name="jimfs" level="project" />
     <orderEntry type="module" module-name="android.sdktools.binary-resources" />
-    <orderEntry type="module" module-name="android.sdktools.lint-api" exported=""/>
-    <orderEntry type="module" module-name="android.sdktools.lint-checks" exported=""/>
+    <orderEntry type="module" module-name="android.sdktools.lint-api" exported="" />
+    <orderEntry type="module" module-name="android.sdktools.lint-checks" exported="" />
     <orderEntry type="module" module-name="android.sdktools.sdk-common" />
   </component>
 </module>

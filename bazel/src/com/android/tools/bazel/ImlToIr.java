@@ -397,6 +397,7 @@ public class ImlToIr {
                 || moduleName.startsWith("intellij.java")) return true;
         if (libraryName.equals("studio-platform")
                 || libraryName.startsWith("studio-plugin-")
+                || libraryName.equals("studio-sdk")
                 || libraryName.equals("intellij-updater")) {
             return true;
         }
