@@ -311,7 +311,7 @@ public abstract class TaskManager<
     // Temporary static variables for Kotlin+Compose configuration
     public static final String KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME =
             "kotlinCompilerClasspath";
-    public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "1.0.0-alpha01";
+    public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "1.0.0-alpha04";
     public static final String COMPOSE_KOTLIN_COMPILER_VERSION = "1.4.10";
     public static final String CREATE_MOCKABLE_JAR_TASK_NAME = "createMockableJar";
 
@@ -714,7 +714,7 @@ public abstract class TaskManager<
         project.getDependencies()
                 .add(
                         kotlinExtension.getName(),
-                        "androidx.compose:compose-compiler:"
+                        "androidx.compose.compiler:compiler:"
                                 + (kotlinCompilerExtensionVersionInDsl != null
                                         ? kotlinCompilerExtensionVersionInDsl
                                         : COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION));
