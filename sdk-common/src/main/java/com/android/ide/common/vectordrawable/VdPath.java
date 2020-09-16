@@ -22,6 +22,7 @@ import static com.android.utils.XmlUtils.formatFloatValue;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.ide.common.vectordrawable.PathParser.ParseMode;
+import com.android.utils.PositionXmlParser;
 import com.google.common.collect.ImmutableMap;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -662,6 +663,11 @@ class VdPath extends VdElement {
                         org.w3c.dom.Node currentItem = stopAttr.item(j);
                         if (currentItem.getNodeName().equals("android:color")) {
                             color = currentItem.getNodeValue();
+                            if (color != null &&
+                                    (color.charAt(0) == '@' || color.charAt(0) == '?')) {
+                                throw new IllegalVectorDrawableResourceRefException(
+                                        color, PositionXmlParser.getPosition(currentItem), null);
+                            }
                         } else if (currentItem.getNodeName().equals("android:offset")) {
                             offset = currentItem.getNodeValue();
                         }

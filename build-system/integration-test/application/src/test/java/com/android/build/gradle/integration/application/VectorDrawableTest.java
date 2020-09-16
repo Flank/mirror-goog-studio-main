@@ -36,6 +36,7 @@ import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -583,6 +584,53 @@ public class VectorDrawableTest {
         assertThat(result.getFailureMessage())
                 .contains("vector drawable support was added in Android 5.0 (API level 21)");
         assertThat(result.getFailureMessage()).contains("vector-asset-studio.html");
+    }
+
+    @Test
+    public void testVectorDrawablesWithInvalidFillTypeValueThrowsException()
+            throws IOException, InterruptedException {
+        File vector = new File(project.getProjectDir(), "src/main/res/drawable/icon.xml");
+        Files.asCharSink(
+                vector,
+                StandardCharsets.UTF_8)
+                .write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:aapt=\"http://schemas.android.com/aapt\"\n"
+                        + "    android:width=\"100dp\"\n"
+                        + "    android:height=\"100dp\"\n"
+                        + "    android:viewportWidth=\"100\"\n"
+                        + "    android:viewportHeight=\"100\">\n"
+                        + "    <path android:pathData=\"M0,870l0,-870l987,0l0,870z\">\n"
+                        + "        <aapt:attr name=\"android:fillColor\">\n"
+                        + "            <gradient\n"
+                        + "                android:endX=\"50\"\n"
+                        + "                android:endY=\"0\"\n"
+                        + "                android:startX=\"50\"\n"
+                        + "                android:startY=\"100\"\n"
+                        + "                android:type=\"linear\">\n"
+                        + "                <item\n"
+                        + "                    android:color=\"#003420\"\n"
+                        + "                    android:offset=\"0\" />\n"
+                        + "                <item\n"
+                        + "                    android:color=\"@android:color/transparent\"\n"
+                        + "                    android:offset=\"0.2\" />\n"
+                        + "            </gradient>\n"
+                        + "        </aapt:attr>\n"
+                        + "    </path>\n"
+                        + "</vector>");
+        AssumeBuildToolsUtil.assumeBuildToolsAtLeast(19);
+        GradleBuildResult result = project.executor().expectFailure().run("assembleDebug");
+        assertThat(result.getFailureMessage()).contains(
+                "Unable to generate a PNG file from vector drawable from "
+                        + "resource reference '@android:color/transparent' ("
+                        + vector.getAbsolutePath()
+                        + " line 20). "
+                        + "Please consider using vectorDrawables.useSupportLibrary or "
+                        + "replace the resource reference with a hexadecimal value. "
+                        + "More information: "
+                        + "https://developer.android.com"
+                        + "/guide/topics/graphics/vector-drawable-resources"
+        );
     }
 
     private static void assertPngGenerationDisabled(Apk apk) throws Exception {

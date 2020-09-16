@@ -27,6 +27,8 @@ import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.ide.common.resources.configuration.VersionQualifier;
+import com.android.ide.common.resources.usage.ResourceUsageModel;
+import com.android.ide.common.vectordrawable.IllegalVectorDrawableResourceRefException;
 import com.android.ide.common.vectordrawable.VdPreview;
 import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
@@ -269,7 +271,25 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
 
             VdPreview.TargetSize imageSize = VdPreview.TargetSize.createFromScale(scaleFactor);
             String xmlContent = Files.asCharSource(original, StandardCharsets.UTF_8).read();
-            BufferedImage image = VdPreview.getPreviewFromVectorXml(imageSize, xmlContent, null);
+            BufferedImage image;
+            try {
+                image = VdPreview.getPreviewFromVectorXml(imageSize, xmlContent, null);
+            } catch (IllegalVectorDrawableResourceRefException e) {
+                String message = String.format(
+                        "Unable to generate a PNG file from vector drawable "
+                                + "from resource reference '%s' (%s line %s). "
+                                + "Please consider using vectorDrawables.useSupportLibrary "
+                                + "or replace the resource reference with a hexadecimal value. "
+                                + "More information: "
+                                + "https://developer.android.com"
+                                + "/guide/topics/graphics/vector-drawable-resources",
+                        e.getValue(),
+                        original.getAbsolutePath(),
+                        e.getSourcePosition().getStartLine() + 1
+                );
+                throw new IllegalVectorDrawableResourceRefException(
+                        e.getValue(), e.getSourcePosition(), message);
+            }
             checkState(image != null, "Generating the image failed.");
             ImageIO.write(image, "png", toBeGenerated);
         }
