@@ -29,6 +29,7 @@ public class DeployRunnerParameters {
 
     private Command command = Command.UNKNOWN;
     private boolean forceFullInstall = false;
+    private boolean optimisticInstall = false;
     private String installersPath = null;
     private List<String> parameters = new ArrayList<>();
 
@@ -39,6 +40,8 @@ public class DeployRunnerParameters {
             forceFullInstall = true;
         } else if (arg.startsWith("--installers-path=")) {
             installersPath = arg.substring(18);
+        } else if (arg.startsWith("--optimistic-install")) {
+            optimisticInstall = true;
         } else {
             throw new RuntimeException("Unknown flag: '" + arg + "'");
         }
@@ -93,5 +96,9 @@ public class DeployRunnerParameters {
 
     public String getInstallersPath() {
         return installersPath;
+    }
+
+    public boolean isOptimisticInstall() {
+        return optimisticInstall;
     }
 }
