@@ -17,12 +17,21 @@
 package com.android.tools.agent.app.inspection;
 
 import static com.android.tools.agent.app.inspection.InspectorContext.CrashListener;
-import static com.android.tools.agent.app.inspection.NativeTransport.*;
+import static com.android.tools.agent.app.inspection.NativeTransport.sendCrashEvent;
+import static com.android.tools.agent.app.inspection.NativeTransport.sendCreateInspectorResponseError;
+import static com.android.tools.agent.app.inspection.NativeTransport.sendCreateInspectorResponseLibraryMissing;
+import static com.android.tools.agent.app.inspection.NativeTransport.sendCreateInspectorResponseSuccess;
+import static com.android.tools.agent.app.inspection.NativeTransport.sendCreateInspectorResponseVersionIncompatible;
+import static com.android.tools.agent.app.inspection.NativeTransport.sendDisposeInspectorResponseError;
+import static com.android.tools.agent.app.inspection.NativeTransport.sendDisposeInspectorResponseSuccess;
+import static com.android.tools.agent.app.inspection.NativeTransport.sendRawResponseError;
 
 import androidx.inspection.ArtTooling;
 import androidx.inspection.ArtTooling.EntryHook;
 import androidx.inspection.ArtTooling.ExitHook;
 import com.android.tools.agent.app.inspection.version.VersionChecker;
+import com.android.tools.agent.app.inspection.version.VersionCheckerResult;
+import com.android.tools.agent.app.inspection.version.VersionTargetInfo;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
@@ -80,6 +89,8 @@ public class AppInspectionService {
                 }
             };
 
+    private final VersionChecker versionChecker = new VersionChecker();
+
     /**
      * Construct an instance referencing some native (JVMTI) resources.
      *
@@ -109,8 +120,7 @@ public class AppInspectionService {
     public void createInspector(
             String inspectorId,
             String dexPath,
-            String versionFileName,
-            String minVersion,
+            VersionTargetInfo target,
             String projectName,
             boolean force,
             int commandId) {
@@ -134,11 +144,7 @@ public class AppInspectionService {
             doDispose(inspectorId);
         }
 
-        VersionTargetInfo versionTarget = null;
-        if (minVersion != null && versionFileName != null) {
-            versionTarget = new VersionTargetInfo(versionFileName, minVersion);
-        }
-        if (!doCheckVersion(commandId, versionTarget)) {
+        if (!doCheckVersion(commandId, target)) {
             return;
         }
 
@@ -228,16 +234,14 @@ public class AppInspectionService {
         if (versionTarget == null) {
             return true;
         }
-        VersionChecker.Result versionResult =
-                VersionChecker.checkVersion(
-                        versionTarget.versionFileName, versionTarget.minVersion);
-        if (versionResult.status == VersionChecker.Result.Status.INCOMPATIBLE) {
+        VersionCheckerResult versionResult = versionChecker.checkVersion(versionTarget);
+        if (versionResult.status == VersionCheckerResult.Status.INCOMPATIBLE) {
             sendCreateInspectorResponseVersionIncompatible(commandId, versionResult.message);
             return false;
-        } else if (versionResult.status == VersionChecker.Result.Status.NOT_FOUND) {
+        } else if (versionResult.status == VersionCheckerResult.Status.NOT_FOUND) {
             sendCreateInspectorResponseLibraryMissing(commandId, versionResult.message);
             return false;
-        } else if (versionResult.status == VersionChecker.Result.Status.ERROR) {
+        } else if (versionResult.status == VersionCheckerResult.Status.ERROR) {
             sendCreateInspectorResponseError(commandId, versionResult.message);
             return false;
         }
@@ -423,13 +427,4 @@ public class AppInspectionService {
     private static native void nativeRegisterExitHook(
             long servicePtr, Class<?> originClass, String originMethod);
 
-    private static class VersionTargetInfo {
-        String versionFileName;
-        String minVersion;
-
-        public VersionTargetInfo(String versionFileName, String minVersion) {
-            this.versionFileName = versionFileName;
-            this.minVersion = minVersion;
-        }
-    }
 }
