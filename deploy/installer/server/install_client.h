@@ -29,8 +29,8 @@ namespace deploy {
 // Client object for communicating with an install server.
 class InstallClient {
  public:
-  InstallClient(int input_fd, int output_fd)
-      : input_(input_fd), output_(output_fd) {}
+  InstallClient(int server_pid, int input_fd, int output_fd)
+      : server_pid_(server_pid), input_(input_fd), output_(output_fd) {}
 
   // Writes a serialized protobuf message to the connected client.
   bool Write(const proto::InstallServerRequest& request) {
@@ -52,6 +52,7 @@ class InstallClient {
   bool KillServerAndWait(proto::InstallServerResponse* response);
 
  private:
+  int server_pid_;
   ProtoPipe input_;
   ProtoPipe output_;
   const int kDefaultTimeoutMs = 5000;

@@ -57,7 +57,8 @@ std::unique_ptr<InstallClient> TryStartServer(const Executor& executor,
 
   // Wait for server startup acknowledgement. Note that when creating the
   // client, the server's output is the clients's input and vice-versa.
-  std::unique_ptr<InstallClient> client(new InstallClient(stdout_fd, stdin_fd));
+  std::unique_ptr<InstallClient> client(
+      new InstallClient(pid, stdout_fd, stdin_fd));
   if (client->WaitForStart()) {
     close(stderr_fd);
     return client;
