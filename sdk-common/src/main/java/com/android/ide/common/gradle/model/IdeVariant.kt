@@ -21,6 +21,9 @@ interface IdeVariant {
   val mainArtifact: IdeAndroidArtifact
   val androidTestArtifact: IdeAndroidArtifact?
   val unitTestArtifact: IdeJavaArtifact?
+  val extraAndroidArtifacts: List<IdeAndroidArtifact>
+  val extraJavaArtifacts: List<IdeJavaArtifact>
+  val testArtifacts: List<IdeBaseArtifact>
   val buildType: String
   val productFlavors: List<String>
 

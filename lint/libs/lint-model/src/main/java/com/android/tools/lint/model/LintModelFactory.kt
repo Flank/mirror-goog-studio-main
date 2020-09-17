@@ -360,12 +360,16 @@ class LintModelFactory : LintModelModuleLoader {
     }
 
     private fun getAndroidTestArtifact(variant: IdeVariant): LintModelAndroidArtifact? {
-        val artifact = variant.androidTestArtifact ?: return null
+        val artifact = variant.extraAndroidArtifacts.firstOrNull {
+            it.name == AndroidProject.ARTIFACT_ANDROID_TEST
+        } ?: return null
         return getArtifact(artifact)
     }
 
     private fun getTestArtifact(variant: IdeVariant): LintModelJavaArtifact? {
-        val artifact = variant.unitTestArtifact ?: return null
+        val artifact = variant.extraJavaArtifacts.firstOrNull {
+            it.name == AndroidProject.ARTIFACT_UNIT_TEST
+        } ?: return null
         return getArtifact(artifact)
     }
 

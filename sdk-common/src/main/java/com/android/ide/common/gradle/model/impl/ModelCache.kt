@@ -764,9 +764,8 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
       name = variant.name,
       displayName = variant.displayName,
       mainArtifact = copyModel(variant.mainArtifact) { androidArtifactFrom(it, modelVersion) },
-      androidTestArtifact =
-      copy(variant::getExtraAndroidArtifacts) { androidArtifactFrom(it, modelVersion) }.firstOrNull { it.isTestArtifact },
-      unitTestArtifact = copy(variant::getExtraJavaArtifacts) { javaArtifactFrom(it) }.firstOrNull { it.isTestArtifact },
+      extraAndroidArtifacts = copy(variant::getExtraAndroidArtifacts) { androidArtifactFrom(it, modelVersion) },
+      extraJavaArtifacts = copy(variant::getExtraJavaArtifacts) { javaArtifactFrom(it) },
       buildType = variant.buildType,
       productFlavors = ImmutableList.copyOf(variant.productFlavors),
       mergedFlavor = copyModel(variant.mergedFlavor, ::productFlavorFrom),

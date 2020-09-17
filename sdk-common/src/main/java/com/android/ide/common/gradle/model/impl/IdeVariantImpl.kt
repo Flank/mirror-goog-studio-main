@@ -16,21 +16,31 @@
 package com.android.ide.common.gradle.model.impl
 
 import com.android.ide.common.gradle.model.IdeAndroidArtifact
+import com.android.ide.common.gradle.model.IdeBaseArtifact
 import com.android.ide.common.gradle.model.IdeJavaArtifact
 import com.android.ide.common.gradle.model.IdeProductFlavor
 import com.android.ide.common.gradle.model.IdeTestedTargetVariant
 import com.android.ide.common.gradle.model.IdeVariant
+import com.google.common.collect.ImmutableList
 import java.io.Serializable
 
 data class IdeVariantImpl(
   override val name: String,
   override val displayName: String,
   override val mainArtifact: IdeAndroidArtifact,
-  override val unitTestArtifact: IdeJavaArtifact?,
-  override val androidTestArtifact: IdeAndroidArtifact?,
+  override val extraAndroidArtifacts: List<IdeAndroidArtifact>,
+  override val extraJavaArtifacts: List<IdeJavaArtifact>,
   override val buildType: String,
   override val productFlavors: List<String>,
   override val mergedFlavor: IdeProductFlavor,
   override val testedTargetVariants: List<IdeTestedTargetVariant>,
   override val instantAppCompatible: Boolean
-) : IdeVariant, Serializable
+) : IdeVariant, Serializable {
+  override val testArtifacts: List<IdeBaseArtifact>
+    get() = ImmutableList.copyOf(
+      (extraAndroidArtifacts.asSequence() + extraJavaArtifacts.asSequence()).filter { it.isTestArtifact }.asIterable())
+
+  override val androidTestArtifact: IdeAndroidArtifact? get() = extraAndroidArtifacts.firstOrNull { it.isTestArtifact }
+
+  override val unitTestArtifact: IdeJavaArtifact? get() = extraJavaArtifacts.firstOrNull { it.isTestArtifact }
+}
