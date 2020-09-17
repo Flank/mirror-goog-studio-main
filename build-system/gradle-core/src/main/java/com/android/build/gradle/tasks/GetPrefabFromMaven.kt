@@ -29,7 +29,7 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes
  * 1. Update this version string.
  * 2. Run bazel run //tools/base/bazel:add_dependency com.google.prefab:cli:jar:all:$VERSION
  * 3. Add the following block to
- *    //prebuilts/tools/common/repository/m2/com/google/prefab/cli/$VERSION/BUILD:
+ *    //prebuilts/tools/common/m2/repository/com/google/prefab/cli/$VERSION/BUILD:
  *
  *    maven_java_import(
  *        name = "jar",
@@ -44,9 +44,9 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes
  *    See http://b/146079078 for more information.
  *
  * 4. Update the "prebuilts" maven_repo target in
- *    //tools/base/build-system/integration-test/native/BUILD.bazel with the new version number.
+ *    //tools/base/build-system/integration-test/BUILD.bazel with the new version number.
  */
-private const val DEFAULT_PREFAB_VERSION = "1.0.0"
+private const val DEFAULT_PREFAB_VERSION = "1.1.1"
 private const val PREFAB_CONFIG_NAME = "_internal_prefab_binary"
 
 private fun getPrefabArtifact(configuration: Configuration): FileCollection =
