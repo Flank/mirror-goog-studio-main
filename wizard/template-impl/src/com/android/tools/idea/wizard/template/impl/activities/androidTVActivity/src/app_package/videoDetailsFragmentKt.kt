@@ -35,6 +35,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.graphics.drawable.Drawable
 import ${getMaterialComponentName("android.support.v17.leanback.app.DetailsFragment", useAndroidX)}
 import ${getMaterialComponentName("android.support.v17.leanback.app.DetailsFragmentBackgroundController", useAndroidX)}
 import ${getMaterialComponentName("android.support.v17.leanback.widget.Action", useAndroidX)}
@@ -58,9 +59,8 @@ import android.util.Log
 import android.widget.Toast
 
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.drawable.GlideDrawable
-import com.bumptech.glide.request.animation.GlideAnimation
 import com.bumptech.glide.request.target.SimpleTarget
+import com.bumptech.glide.request.transition.Transition
 
 import java.util.Collections
 
@@ -101,13 +101,13 @@ class ${detailsFragment} : DetailsFragment() {
     private fun initializeBackground(movie: Movie?) {
         mDetailsBackground.enableParallax()
         Glide.with($contextArgBlock)
-                .load(movie?.backgroundImageUrl)
                 .asBitmap()
                 .centerCrop()
                 .error(R.drawable.default_background)
+                .load(movie?.backgroundImageUrl)
                 .into<SimpleTarget<Bitmap>>(object : SimpleTarget<Bitmap>() {
                     override fun onResourceReady(bitmap: Bitmap,
-                                                 glideAnimation: GlideAnimation<in Bitmap>) {
+                                                 transition: Transition<in Bitmap>?) {
                         mDetailsBackground.coverBitmap = bitmap
                         mAdapter.notifyArrayItemRangeChanged(0, mAdapter.size())
                     }
@@ -124,11 +124,11 @@ class ${detailsFragment} : DetailsFragment() {
             .load(mSelectedMovie?.cardImageUrl)
             .centerCrop()
             .error(R.drawable.default_background)
-            .into<SimpleTarget<GlideDrawable>>(object : SimpleTarget<GlideDrawable>(width, height) {
-                        override fun onResourceReady(resource: GlideDrawable,
-                                                     glideAnimation: GlideAnimation<in GlideDrawable>) {
-                            Log.d(TAG, "details overview card image url ready: " + resource)
-                            row.imageDrawable = resource
+            .into<SimpleTarget<Drawable>>(object : SimpleTarget<Drawable>(width, height) {
+                        override fun onResourceReady(drawable: Drawable,
+                                                     transition: Transition<in Drawable>?) {
+                            Log.d(TAG, "details overview card image url ready: " + drawable)
+                            row.imageDrawable = drawable
                             mAdapter.notifyArrayItemRangeChanged(0, mAdapter.size())
                         }
                     })
