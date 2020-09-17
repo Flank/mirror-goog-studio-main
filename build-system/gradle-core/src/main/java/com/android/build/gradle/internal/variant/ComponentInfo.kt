@@ -22,10 +22,10 @@ import com.android.build.api.component.impl.ComponentImpl
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 
 class ComponentInfo<
-        ComponentT : ComponentBuilderImpl,
-        ComponentPropertiesT : ComponentImpl>(
+        ComponentBuilderT : ComponentBuilderImpl,
+        ComponentT : ComponentImpl>(
+    val variantBuilder: ComponentBuilderT,
     val variant: ComponentT,
-    val properties: ComponentPropertiesT,
     val stats: GradleBuildVariant.Builder,
     val userVisibleVariant: AnalyticsEnabledVariantBuilder?
 )

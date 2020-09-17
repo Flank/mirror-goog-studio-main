@@ -37,11 +37,11 @@ public abstract class AndroidArtifactVariantImpl extends BaseVariantImpl
         implements AndroidArtifactVariant {
 
     protected AndroidArtifactVariantImpl(
-            @NonNull ComponentImpl componentProperties,
+            @NonNull ComponentImpl component,
             @NonNull BaseServices services,
             @NonNull ReadOnlyObjectProvider immutableObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(componentProperties, services, immutableObjectProvider, outputs);
+        super(component, services, immutableObjectProvider, outputs);
     }
 
     @NonNull
@@ -51,12 +51,12 @@ public abstract class AndroidArtifactVariantImpl extends BaseVariantImpl
     @Override
     public SigningConfig getSigningConfig() {
         return readOnlyObjectProvider.getSigningConfig(
-                componentProperties.getVariantDslInfo().getSigningConfig());
+                component.getVariantDslInfo().getSigningConfig());
     }
 
     @Override
     public boolean isSigningReady() {
-        return componentProperties.getVariantDslInfo().isSigningReady();
+        return component.getVariantDslInfo().isSigningReady();
     }
 
     @Nullable
@@ -73,7 +73,7 @@ public abstract class AndroidArtifactVariantImpl extends BaseVariantImpl
             return null;
         }
 
-        return componentProperties.getOutputs().getMainSplit().getVersionName().getOrNull();
+        return component.getOutputs().getMainSplit().getVersionName().getOrNull();
     }
 
     @Override
@@ -89,7 +89,7 @@ public abstract class AndroidArtifactVariantImpl extends BaseVariantImpl
             return -1;
         }
 
-        return componentProperties.getOutputs().getMainSplit().getVersionCode().getOrElse(-1);
+        return component.getOutputs().getMainSplit().getVersionCode().getOrElse(-1);
     }
 
     @NonNull

@@ -126,12 +126,12 @@ open class BasicModuleModelMock {
         throwUnmocked
     )
 
-    val component: VariantBuilderImpl = mock(
+    val variantBuilder: VariantBuilderImpl = mock(
             VariantBuilderImpl::class.java,
         throwUnmocked
     ) as VariantBuilderImpl
 
-    val componentProperties: VariantImpl = mock(
+    val variantImpl: VariantImpl = mock(
         VariantImpl::class.java,
         throwUnmocked
     )
@@ -209,8 +209,7 @@ open class BasicModuleModelMock {
 
     val configurationModel by lazy {
         tryCreateCxxConfigurationModel(
-            component,
-            componentProperties
+                variantImpl
         )!!
     }
 
@@ -237,7 +236,7 @@ open class BasicModuleModelMock {
             Splits::class.java,
             throwUnmocked
         )
-        val variantImpl = mock(
+        val variantBuilderImpl = mock(
             VariantBuilderImpl::class.java,
             throwUnmocked
         )
@@ -268,9 +267,9 @@ open class BasicModuleModelMock {
             throwUnmocked
         )
 
-        doReturn(global).`when`(componentProperties).globalScope
-        doReturn(variantScope).`when`(componentProperties).variantScope
-        doReturn(baseVariantData).`when`(componentProperties).variantData
+        doReturn(global).`when`(this.variantImpl).globalScope
+        doReturn(variantScope).`when`(this.variantImpl).variantScope
+        doReturn(baseVariantData).`when`(this.variantImpl).variantData
 
         val variantDependencies = Mockito.mock(VariantDependencies::class.java)
         doReturn(prefabArtifactCollection).`when`(variantDependencies).getArtifactCollection(
@@ -278,7 +277,8 @@ open class BasicModuleModelMock {
             AndroidArtifacts.ArtifactScope.ALL,
             AndroidArtifacts.ArtifactType.PREFAB_PACKAGE
         )
-        doReturn(variantDependencies).`when`(componentProperties).variantDependencies
+        doReturn(variantDependencies).`when`(this.variantImpl).variantDependencies
+        doReturn(variantBuilder).`when`(this.variantImpl).variantBuilder
         doReturn(prefabFileCollection).`when`(prefabArtifactCollection).artifactFiles
         doReturn(emptyList<File>().iterator()).`when`(prefabFileCollection).iterator()
 
@@ -289,7 +289,7 @@ open class BasicModuleModelMock {
         doReturn(abiSplitOptions).`when`(splits).abi
         doReturn(setOf<String>()).`when`(splits).abiFilters
         doReturn(false).`when`(abiSplitOptions).isUniversalApk
-        doReturn(minSdkVersion).`when`(component).minSdkVersion
+        doReturn(minSdkVersion).`when`(variantBuilder).minSdkVersion
         doReturn(":$appName").`when`(project).path
         return appFolder
     }
@@ -341,8 +341,8 @@ open class BasicModuleModelMock {
             doReturn(listOf<String>()).`when`(externalNativeCmakeOptions).cppFlags
             doReturn(setOf<String>()).`when`(externalNativeCmakeOptions).targets
             doReturn(setOf<String>()).`when`(mergedNdkConfig).abiFilters
-            doReturn("debug").`when`(componentProperties).name
-            doReturn(buildFeatures).`when`(componentProperties).buildFeatures
+            doReturn("debug").`when`(variantImpl).name
+            doReturn(buildFeatures).`when`(variantImpl).buildFeatures
 
             projectRootDir.mkdirs()
             sdkDir.mkdirs()
@@ -376,7 +376,7 @@ open class BasicModuleModelMock {
             doReturn(ndkHandler).`when`(sdkComponents).ndkHandler
             doReturn(ndkInstallStatus).`when`(ndkHandler).ndkPlatform
             doReturn(ndkInstallStatus).`when`(ndkHandler).getNdkPlatform(true)
-            doReturn(variantDslInfo).`when`(componentProperties).variantDslInfo
+            doReturn(variantDslInfo).`when`(variantImpl).variantDslInfo
             doReturn(true).`when`(variantDslInfo).isDebuggable
 
             val ndkInfo = NdkR19Info(ndkFolder)

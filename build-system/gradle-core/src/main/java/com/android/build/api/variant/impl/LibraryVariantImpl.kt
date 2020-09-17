@@ -45,7 +45,7 @@ import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class  LibraryVariantImpl @Inject constructor(
-        override val variant: LibraryVariantBuilderImpl,
+        override val variantBuilder: LibraryVariantBuilderImpl,
         buildFeatureValues: BuildFeatureValues,
         variantDslInfo: VariantDslInfo,
         variantDependencies: VariantDependencies,
@@ -59,7 +59,7 @@ open class  LibraryVariantImpl @Inject constructor(
         taskCreationServices: TaskCreationServices,
         globalScope: GlobalScope
 ) : VariantImpl(
-    variant,
+    variantBuilder,
     buildFeatureValues,
     variantDslInfo,
     variantDependencies,
@@ -115,7 +115,7 @@ open class  LibraryVariantImpl @Inject constructor(
     override val dexingType: DexingType
         get() = delegate.dexingType
 
-    override fun createUserVisibleVariantPropertiesObject(
+    override fun createUserVisibleVariantObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
     ): AnalyticsEnabledVariant =

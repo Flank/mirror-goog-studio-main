@@ -488,11 +488,11 @@ public abstract class BasePlugin<
                         extension::getTestBuildType,
                         () ->
                                 variantManager.getMainComponents().stream()
-                                        .map(ComponentInfo::getProperties)
+                                        .map(ComponentInfo::getVariant)
                                         .collect(Collectors.toList()),
                         () ->
                                 variantManager.getTestComponents().stream()
-                                        .map(ComponentInfo::getProperties)
+                                        .map(ComponentInfo::getVariant)
                                         .collect(Collectors.toList()),
                         dslServices.getIssueReporter());
 
@@ -678,7 +678,7 @@ public abstract class BasePlugin<
                 new ApiObjectFactory(extension, variantFactory, globalScope);
 
         for (ComponentInfo<VariantBuilderT, VariantT> variant : variants) {
-            apiObjectFactory.create(variant.getProperties());
+            apiObjectFactory.create(variant.getVariant());
         }
 
         // lock the Properties of the variant API after the old API because
@@ -694,13 +694,13 @@ public abstract class BasePlugin<
         // now publish all variant artifacts for non test variants since
         // tests don't publish anything.
         for (ComponentInfo<VariantBuilderT, VariantT> component : variants) {
-            component.getProperties().publishBuildArtifacts();
+            component.getVariant().publishBuildArtifacts();
         }
 
         checkSplitConfiguration();
         variantManager.setHasCreatedTasks(true);
         for (ComponentInfo<VariantBuilderT, VariantT> variant : variants) {
-            variant.getProperties().getArtifacts().ensureAllOperationsAreSatisfied();
+            variant.getVariant().getArtifacts().ensureAllOperationsAreSatisfied();
         }
         // notify our properties that configuration is over for us.
         GradleProperty.Companion.endOfEvaluation();

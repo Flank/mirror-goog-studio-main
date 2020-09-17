@@ -40,11 +40,11 @@ import org.gradle.api.tasks.TaskProvider;
 public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl implements InstallableVariant {
 
     protected InstallableVariantImpl(
-            @NonNull ComponentImpl componentProperties,
+            @NonNull ComponentImpl component,
             @NonNull BaseServices services,
             @NonNull ReadOnlyObjectProvider immutableObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(componentProperties, services, immutableObjectProvider, outputs);
+        super(component, services, immutableObjectProvider, outputs);
     }
 
     @NonNull
@@ -60,8 +60,8 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
 
-        if (componentProperties.getTaskContainer().getInstallTask() != null) {
-            return componentProperties.getTaskContainer().getInstallTask().getOrNull();
+        if (component.getTaskContainer().getInstallTask() != null) {
+            return component.getTaskContainer().getInstallTask().getOrNull();
         }
 
         return null;
@@ -72,8 +72,7 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
     public TaskProvider<Task> getInstallProvider() {
         // Double cast needed to satisfy the compiler
         //noinspection unchecked
-        return (TaskProvider<Task>)
-                (TaskProvider<?>) componentProperties.getTaskContainer().getInstallTask();
+        return (TaskProvider<Task>) (TaskProvider<?>) component.getTaskContainer().getInstallTask();
     }
 
     @Override
@@ -85,8 +84,8 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
 
-        if (componentProperties.getTaskContainer().getUninstallTask() != null) {
-            return componentProperties.getTaskContainer().getUninstallTask().getOrNull();
+        if (component.getTaskContainer().getUninstallTask() != null) {
+            return component.getTaskContainer().getUninstallTask().getOrNull();
         }
 
         return null;
@@ -98,7 +97,7 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
         // Double cast needed to satisfy the compiler
         //noinspection unchecked
         return (TaskProvider<Task>)
-                (TaskProvider<?>) componentProperties.getTaskContainer().getUninstallTask();
+                (TaskProvider<?>) component.getTaskContainer().getUninstallTask();
     }
 
     /**
@@ -113,17 +112,15 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
     @Incubating
     public Provider<FileCollection> getFinalArtifact(
             @NonNull Artifact.SingleArtifact<? extends FileSystemLocation> artifactType) {
-        return componentProperties
+        return component
                 .getGlobalScope()
                 .getProject()
                 .getProviders()
                 .provider(
                         () ->
-                                componentProperties
+                                component
                                         .getServices()
                                         .fileCollection(
-                                                componentProperties
-                                                        .getArtifacts()
-                                                        .get(artifactType)));
+                                                component.getArtifacts().get(artifactType)));
     }
 }

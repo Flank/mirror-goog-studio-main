@@ -49,7 +49,7 @@ internal class DynamicFeatureVariantFactory(
     globalScope
 ) {
 
-    override fun createVariantObject(
+    override fun createVariantBuilder(
         componentIdentity: ComponentIdentity,
         variantDslInfo: VariantDslInfo,
         variantApiServices: VariantApiServices
@@ -64,8 +64,8 @@ internal class DynamicFeatureVariantFactory(
             )
     }
 
-    override fun createVariantPropertiesObject(
-            variant: DynamicFeatureVariantBuilderImpl,
+    override fun createVariant(
+            variantBuilder: DynamicFeatureVariantBuilderImpl,
             componentIdentity: ComponentIdentity,
             buildFeatures: BuildFeatureValues,
             variantDslInfo: VariantDslInfo,
@@ -83,7 +83,7 @@ internal class DynamicFeatureVariantFactory(
             .objectFactory
             .newInstance(
                 DynamicFeatureVariantImpl::class.java,
-                variant,
+                variantBuilder,
                 buildFeatures,
                 variantDslInfo,
                 variantDependencies,

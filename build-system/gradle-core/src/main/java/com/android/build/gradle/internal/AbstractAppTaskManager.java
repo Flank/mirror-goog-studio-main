@@ -87,7 +87,7 @@ public abstract class AbstractAppTaskManager<
     protected void createCommonTasks(
             @NonNull ComponentInfo<VariantBuilderT, VariantT> variant,
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> allComponentsWithLint) {
-        VariantT appVariantProperties = variant.getProperties();
+        VariantT appVariantProperties = variant.getVariant();
         ApkCreationConfig apkCreationConfig = (ApkCreationConfig) appVariantProperties;
 
         createAnchorTasks(appVariantProperties);
@@ -138,8 +138,8 @@ public abstract class AbstractAppTaskManager<
         createAidlTask(appVariantProperties);
 
         // Add external native build tasks
-        createExternalNativeBuildJsonGenerators(variant.getVariant(), appVariantProperties);
-        createExternalNativeBuildTasks(variant.getVariant(), appVariantProperties);
+        createExternalNativeBuildJsonGenerators(variant.getVariantBuilder(), appVariantProperties);
+        createExternalNativeBuildTasks(variant.getVariantBuilder(), appVariantProperties);
 
         maybeExtractProfilerDependencies(apkCreationConfig);
 
@@ -175,12 +175,12 @@ public abstract class AbstractAppTaskManager<
         taskFactory.register(new ApkZipPackagingTask.CreationAction(appVariantProperties));
     }
 
-    private void createCompileTask(@NonNull VariantImpl variantProperties) {
-        ApkCreationConfig apkCreationConfig = (ApkCreationConfig) variantProperties;
+    private void createCompileTask(@NonNull VariantImpl variant) {
+        ApkCreationConfig apkCreationConfig = (ApkCreationConfig) variant;
 
-        TaskProvider<? extends JavaCompile> javacTask = createJavacTask(variantProperties);
-        addJavacClassesStream(variantProperties);
-        setJavaCompilerTask(javacTask, variantProperties);
+        TaskProvider<? extends JavaCompile> javacTask = createJavacTask(variant);
+        addJavacClassesStream(variant);
+        setJavaCompilerTask(javacTask, variant);
         createPostCompilationTasks(apkCreationConfig);
     }
 
@@ -286,34 +286,31 @@ public abstract class AbstractAppTaskManager<
                 resources.fromFile(applicationIdWriterTask);
     }
 
-    private void createMergeResourcesTasks(@NonNull VariantImpl variantProperties) {
+    private void createMergeResourcesTasks(@NonNull VariantImpl variant) {
         // The "big merge" of all resources, will merge and compile resources that will later
         // be used for linking.
         createMergeResourcesTask(
-                variantProperties,
-                true,
-                Sets.immutableEnumSet(MergeResources.Flag.PROCESS_VECTOR_DRAWABLES));
+                variant, true, Sets.immutableEnumSet(MergeResources.Flag.PROCESS_VECTOR_DRAWABLES));
 
-        ProjectOptions projectOptions = variantProperties.getServices().getProjectOptions();
+        ProjectOptions projectOptions = variant.getServices().getProjectOptions();
         // TODO: get rid of separate flag for app modules.
         boolean nonTransitiveR =
                 projectOptions.get(BooleanOption.NON_TRANSITIVE_R_CLASS)
                         && projectOptions.get(BooleanOption.NON_TRANSITIVE_APP_R_CLASS);
         boolean namespaced =
-                variantProperties.getGlobalScope().getExtension().getAaptOptions().getNamespaced();
+                variant.getGlobalScope().getExtension().getAaptOptions().getNamespaced();
 
         // TODO(b/138780301): Also use compile time R class in android tests.
         if ((projectOptions.get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS) || nonTransitiveR)
-                && !variantProperties.getVariantType().isForTesting()
+                && !variant.getVariantType().isForTesting()
                 && !namespaced) {
             // The "small merge" of only the app's local resources (can be multiple source-sets, but
             // most of the time it's just one). This is used by the Process for generating the local
             // R-def.txt file containing a list of resources defined in this module.
             basicCreateMergeResourcesTask(
-                    variantProperties,
+                    variant,
                     MergeType.PACKAGE,
-                    variantProperties
-                            .getPaths()
+                    variant.getPaths()
                             .getIntermediateDir(InternalArtifactType.PACKAGED_RES.INSTANCE),
                     false,
                     false,

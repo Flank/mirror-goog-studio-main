@@ -21,7 +21,7 @@ import com.android.build.api.variant.Variant
 
 interface ActionableVariantObjectOperationsExecutor<VariantBuilderT: VariantBuilder, VariantT: Variant> {
 
-    fun executeVariantOperations(variant: VariantBuilderT)
+    fun executeVariantBuilderOperations(variant: VariantBuilderT)
 
-    fun executeVariantPropertiesOperations(variant: VariantT)
+    fun executeVariantOperations(variant: VariantT)
 }

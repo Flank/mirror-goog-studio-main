@@ -726,12 +726,12 @@ public class PluginDslTest {
         Map<String, ComponentImpl> result = new HashMap<>();
         for (ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl> variant :
                 plugin.getVariantManager().getMainComponents()) {
-            result.put(variant.getProperties().getName(), variant.getProperties());
+            result.put(variant.getVariant().getName(), variant.getVariant());
         }
 
         for (ComponentInfo<TestComponentBuilderImpl, TestComponentImpl> testComponent :
                 plugin.getVariantManager().getTestComponents()) {
-            result.put(testComponent.getProperties().getName(), testComponent.getProperties());
+            result.put(testComponent.getVariant().getName(), testComponent.getVariant());
         }
 
         return result;

@@ -48,7 +48,7 @@ import org.gradle.api.provider.Property
 import javax.inject.Inject
 
 open class ApplicationVariantImpl @Inject constructor(
-        override val variant: ApplicationVariantBuilderImpl,
+        override val variantBuilder: ApplicationVariantBuilderImpl,
         buildFeatureValues: BuildFeatureValues,
         variantDslInfo: VariantDslInfo,
         variantDependencies: VariantDependencies,
@@ -63,7 +63,7 @@ open class ApplicationVariantImpl @Inject constructor(
         taskCreationServices: TaskCreationServices,
         globalScope: GlobalScope
 ) : VariantImpl(
-    variant,
+    variantBuilder,
     buildFeatureValues,
     variantDslInfo,
     variantDependencies,
@@ -184,7 +184,7 @@ open class ApplicationVariantImpl @Inject constructor(
 
     override val renderscriptTargetApi: Int
         get() {
-            return variant.renderscriptTargetApi
+            return variantBuilder.renderscriptTargetApi
         }
 
     override val dexingType: DexingType
@@ -195,7 +195,7 @@ open class ApplicationVariantImpl @Inject constructor(
                     && globalScope.hasDynamicFeatures()
                     && dexingType.needsMainDexList)
 
-    override fun createUserVisibleVariantPropertiesObject(
+    override fun createUserVisibleVariantObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
     ): AnalyticsEnabledApplicationVariant =

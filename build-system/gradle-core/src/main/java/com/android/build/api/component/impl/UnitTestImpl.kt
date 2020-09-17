@@ -105,9 +105,9 @@ open class UnitTestImpl @Inject constructor(
         sourceSets: ImmutableList.Builder<ConfigurableFileTree>) {}
 
     override val minSdkVersion: AndroidVersion
-        get() = testedVariant.variant.minSdkVersion
+        get() = testedVariant.variantBuilder.minSdkVersion
 
-    override fun createUserVisibleVariantPropertiesObject(
+    override fun createUserVisibleVariantObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
     ): AnalyticsEnabledUnitTest =

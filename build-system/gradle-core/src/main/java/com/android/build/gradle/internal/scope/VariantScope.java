@@ -81,7 +81,7 @@ public interface VariantScope {
     /** Returns whether we need to create original java resource streams */
     boolean getNeedsJavaResStreams();
 
-    boolean isTestOnly(VariantImpl variantProperties);
+    boolean isTestOnly(VariantImpl variant);
 
     boolean isCoreLibraryDesugaringEnabled(ConsumableCreationConfig creationConfig);
 

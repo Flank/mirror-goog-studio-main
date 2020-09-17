@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * executing these actions.
  *
  * @param VariantObjectT is either a [com.android.build.api.variant.VariantBuilder] or
- * [com.android.build.api.variant.VariantProperties]
+ * [com.android.build.api.variant.Variant]
  */
 class VariantOperations<VariantObjectT> where VariantObjectT: ActionableComponentObject, VariantObjectT: ComponentIdentity {
     private val actions = mutableListOf<Action<VariantObjectT>>()

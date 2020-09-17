@@ -50,21 +50,21 @@ import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class DynamicFeatureVariantImpl @Inject constructor(
-    override val variant: DynamicFeatureVariantBuilderImpl,
-    buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo,
-    variantDependencies: VariantDependencies,
-    variantSources: VariantSources,
-    paths: VariantPathHelper,
-    artifacts: ArtifactsImpl,
-    variantScope: VariantScope,
-    variantData: BaseVariantData,
-    transformManager: TransformManager,
-    internalServices: VariantPropertiesApiServices,
-    taskCreationServices: TaskCreationServices,
-    globalScope: GlobalScope
+        override val variantBuilder: DynamicFeatureVariantBuilderImpl,
+        buildFeatureValues: BuildFeatureValues,
+        variantDslInfo: VariantDslInfo,
+        variantDependencies: VariantDependencies,
+        variantSources: VariantSources,
+        paths: VariantPathHelper,
+        artifacts: ArtifactsImpl,
+        variantScope: VariantScope,
+        variantData: BaseVariantData,
+        transformManager: TransformManager,
+        internalServices: VariantPropertiesApiServices,
+        taskCreationServices: TaskCreationServices,
+        globalScope: GlobalScope
 ) : VariantImpl(
-    variant,
+    variantBuilder,
     buildFeatureValues,
     variantDslInfo,
     variantDependencies,
@@ -241,7 +241,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     override val needsMainDexListForBundle: Boolean
         get() = false
 
-    override fun createUserVisibleVariantPropertiesObject(
+    override fun createUserVisibleVariantObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
     ): AnalyticsEnabledDynamicFeatureVariant =

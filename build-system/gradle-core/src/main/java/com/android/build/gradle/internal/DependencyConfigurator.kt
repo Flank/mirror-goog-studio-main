@@ -557,7 +557,7 @@ class DependencyConfigurator(
         testComponents: List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>>
     ): DependencyConfigurator {
         val allComponents: List<ComponentCreationConfig> =
-            (variants + testComponents).map { it.properties as ComponentCreationConfig }
+            (variants + testComponents).map { it.variant as ComponentCreationConfig }
 
         val dependencies = project.dependencies
 

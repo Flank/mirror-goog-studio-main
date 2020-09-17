@@ -43,7 +43,7 @@ import org.objectweb.asm.Type
 import java.io.Serializable
 
 abstract class VariantImpl(
-    override val variant: VariantBuilderImpl,
+    override val variantBuilder: VariantBuilderImpl,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
@@ -57,7 +57,7 @@ abstract class VariantImpl(
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : ComponentImpl(
-    variant,
+    variantBuilder,
     buildFeatureValues,
     variantDslInfo,
     variantDependencies,
@@ -140,14 +140,14 @@ abstract class VariantImpl(
     }
 
     override val renderscriptTargetApi: Int
-        get() =  variant.renderscriptTargetApi
+        get() =  variantBuilder.renderscriptTargetApi
 
     override val minSdkVersion: AndroidVersion
-        get() = variant.minSdkVersion
+        get() = variantBuilder.minSdkVersion
 
 
     override val maxSdkVersion: Int?
-        get() = variant.maxSdkVersion
+        get() = variantBuilder.maxSdkVersion
 
     private var _isMultiDexEnabled: Boolean? = variantDslInfo.isMultiDexEnabled
     override val isMultiDexEnabled: Boolean
@@ -166,7 +166,7 @@ abstract class VariantImpl(
     override val isCoreLibraryDesugaringEnabled: Boolean
         get() = variantScope.isCoreLibraryDesugaringEnabled(this)
 
-    abstract override fun createUserVisibleVariantPropertiesObject(
+    abstract override fun createUserVisibleVariantObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
     ): AnalyticsEnabledVariant

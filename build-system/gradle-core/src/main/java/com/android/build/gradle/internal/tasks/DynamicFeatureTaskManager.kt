@@ -44,25 +44,25 @@ internal class DynamicFeatureTaskManager(
 ) {
 
     override fun doCreateTasksForVariant(
-            variant: ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>,
+            variantInfo: ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>,
             allVariants: MutableList<ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>>
     ) {
-        createCommonTasks(variant, allVariants)
+        createCommonTasks(variantInfo, allVariants)
 
-        val variantProperties = variant.properties
+        val variant = variantInfo.variant
 
-        createDynamicBundleTask(variantProperties)
+        createDynamicBundleTask(variant)
 
         // Non-base feature specific task.
         // Task will produce artifacts consumed by the base feature
-        taskFactory.register(FeatureSplitDeclarationWriterTask.CreationAction(variantProperties))
-        if (variantProperties.buildFeatures.dataBinding) {
+        taskFactory.register(FeatureSplitDeclarationWriterTask.CreationAction(variant))
+        if (variant.buildFeatures.dataBinding) {
             // Create a task that will package necessary information about the feature into a
             // file which is passed into the Data Binding annotation processor.
-            taskFactory.register(DataBindingExportFeatureInfoTask.CreationAction(variantProperties))
+            taskFactory.register(DataBindingExportFeatureInfoTask.CreationAction(variant))
         }
-        taskFactory.register(ExportConsumerProguardFilesTask.CreationAction(variantProperties))
-        taskFactory.register(FeatureNameWriterTask.CreationAction(variantProperties))
+        taskFactory.register(ExportConsumerProguardFilesTask.CreationAction(variant))
+        taskFactory.register(FeatureNameWriterTask.CreationAction(variant))
 
     }
 

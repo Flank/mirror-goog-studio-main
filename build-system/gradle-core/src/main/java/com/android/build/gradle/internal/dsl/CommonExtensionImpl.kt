@@ -238,11 +238,11 @@ abstract class CommonExtensionImpl<
         variantPropertiesOperations.addAction(Action { action.invoke(it) })
     }
 
-    override fun executeVariantOperations(variant: VariantBuilderT) {
+    override fun executeVariantBuilderOperations(variant: VariantBuilderT) {
         variantOperations.executeActions(variant)
     }
 
-    override fun executeVariantPropertiesOperations(variant: VariantT) {
+    override fun executeVariantOperations(variant: VariantT) {
         variantPropertiesOperations.executeActions(variant)
     }
 

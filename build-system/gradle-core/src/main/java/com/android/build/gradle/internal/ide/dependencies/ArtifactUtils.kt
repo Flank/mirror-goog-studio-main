@@ -56,15 +56,15 @@ class ArtifactCollectionsInputs constructor(
     enum class RuntimeType { FULL, PARTIAL }
 
     constructor(
-        componentProperties: ComponentImpl,
+        componentImpl: ComponentImpl,
         runtimeType: RuntimeType,
         buildMapping: ImmutableMap<String, String>
     ) : this(
-        componentProperties.variantDependencies,
-        componentProperties.globalScope.project.path,
-        componentProperties.name,
+        componentImpl.variantDependencies,
+        componentImpl.globalScope.project.path,
+        componentImpl.name,
         runtimeType,
-        getBuildService(componentProperties.services.buildServiceRegistry),
+        getBuildService(componentImpl.services.buildServiceRegistry),
         buildMapping
     )
 
@@ -150,10 +150,10 @@ class ArtifactCollections(
     val consumedConfigType: AndroidArtifacts.ConsumedConfigType
 ) {
     constructor(
-        componentProperties: ComponentImpl,
+        componentImpl: ComponentImpl,
         consumedConfigType: AndroidArtifacts.ConsumedConfigType
     ) : this(
-        componentProperties.variantDependencies, consumedConfigType
+        componentImpl.variantDependencies, consumedConfigType
     )
 
     /**
@@ -248,28 +248,28 @@ class ArtifactCollections(
  * Returns a set of ResolvedArtifact where the [ResolvedArtifact.dependencyType] and
  * [ResolvedArtifact.isWrappedModule] fields have been setup properly.
  *
- * @param componentProperties the variant to get the artifacts from
+ * @param componentImpl the variant to get the artifacts from
  * @param consumedConfigType the type of the dependency to resolve (compile vs runtime)
  * @param dependencyFailureHandler handler for dependency resolution errors
  * @param buildMapping a build mapping from build name to root dir.
  */
 fun getAllArtifacts(
-    componentProperties: ComponentImpl,
+    componentImpl: ComponentImpl,
     consumedConfigType: AndroidArtifacts.ConsumedConfigType,
     dependencyFailureHandler: DependencyFailureHandler?,
     buildMapping: ImmutableMap<String, String>
 ): Set<ResolvedArtifact> {
-    val collections = ArtifactCollections(componentProperties, consumedConfigType)
+    val collections = ArtifactCollections(componentImpl, consumedConfigType)
     val mavenCoordinatesCache =
         getBuildService<MavenCoordinatesCacheBuildService>(
-            componentProperties.services.buildServiceRegistry
+            componentImpl.services.buildServiceRegistry
         ).get()
     return getAllArtifacts(
         collections,
         dependencyFailureHandler,
         buildMapping,
-        componentProperties.globalScope.project.path,
-        componentProperties.name,
+        componentImpl.globalScope.project.path,
+        componentImpl.name,
         mavenCoordinatesCache
     )
 }

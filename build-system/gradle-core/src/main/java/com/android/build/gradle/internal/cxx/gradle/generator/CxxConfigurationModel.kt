@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.gradle.generator
 
-import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.toSharedAndroidVersion
 import com.android.build.gradle.LibraryExtension
@@ -223,11 +222,10 @@ fun CxxConfigurationModel.abiJsonFile(abi : Abi): File {
  * was deserialized from the task graph.
  */
 fun tryCreateCxxConfigurationModel(
-    variant: VariantBuilderImpl,
-    componentProperties: VariantImpl,
-    allDefaultAbis: Boolean = true
+        variant: VariantImpl,
+        allDefaultAbis: Boolean = true
 ) : CxxConfigurationModel? {
-    val global = componentProperties.globalScope
+    val global = variant.globalScope
 
     val (buildSystem, makeFile, buildStagingFolder) =
         getProjectPath(global.extension.externalNativeBuild)
@@ -269,7 +267,7 @@ fun tryCreateCxxConfigurationModel(
         } else {
             null
         }
-    val prefabTargets = when (val extension = componentProperties.globalScope.extension) {
+    val prefabTargets = when (val extension = variant.globalScope.extension) {
             is LibraryExtension -> extension.prefab.map { it.name }.toSet()
             else -> emptySet()
         }
@@ -277,8 +275,8 @@ fun tryCreateCxxConfigurationModel(
     /**
      * Prefab settings.
      */
-    val prefabPackageDirectoryList = if (componentProperties.buildFeatures.prefab) {
-            componentProperties.variantDependencies.getArtifactCollection(
+    val prefabPackageDirectoryList = if (variant.buildFeatures.prefab) {
+            variant.variantDependencies.getArtifactCollection(
                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.PREFAB_PACKAGE
@@ -287,8 +285,8 @@ fun tryCreateCxxConfigurationModel(
             null
         }
 
-    val prefabClassPath = if (componentProperties.buildFeatures.prefab) {
-            getPrefabFromMaven(componentProperties.globalScope)
+    val prefabClassPath = if (variant.buildFeatures.prefab) {
+            getPrefabFromMaven(variant.globalScope)
         } else {
             null
         }
@@ -302,8 +300,8 @@ fun tryCreateCxxConfigurationModel(
         buildDir = global.project.buildDir,
         rootDir = global.project.rootDir,
         buildFile = global.project.buildFile,
-        isDebuggable = componentProperties.variantDslInfo.isDebuggable,
-        minSdkVersion = variant.minSdkVersion.toSharedAndroidVersion(),
+        isDebuggable = variant.variantDslInfo.isDebuggable,
+        minSdkVersion = variant.variantBuilder.minSdkVersion.toSharedAndroidVersion(),
         cmakeVersion = global.extension.externalNativeBuild.cmake.version,
         splitsAbiFilterSet = global.extension.splits.abiFilters,
         intermediatesFolder = global.intermediatesDir,
@@ -313,13 +311,13 @@ fun tryCreateCxxConfigurationModel(
         ideBuildTargetAbi = option(IDE_BUILD_TARGET_ABI),
         isCmakeBuildCohabitationEnabled = option(ENABLE_CMAKE_BUILD_COHABITATION),
         chromeTraceJsonFolder = chromeTraceJsonFolder,
-        isPrefabEnabled = componentProperties.buildFeatures.prefab,
+        isPrefabEnabled = variant.buildFeatures.prefab,
         prefabClassPath = prefabClassPath,
         prefabPackageDirectoryList = prefabPackageDirectoryList,
         implicitBuildTargetSet = prefabTargets,
-        variantName = componentProperties.name,
+        variantName = variant.name,
         nativeVariantConfig = createNativeBuildSystemVariantConfig(
-            buildSystem, componentProperties.variantDslInfo
+            buildSystem, variant.variantDslInfo
         ),
         isV2NativeModelEnabled = option(ENABLE_V2_NATIVE_MODEL),
         isPreferCmakeFileApiEnabled = option(PREFER_CMAKE_FILE_API)

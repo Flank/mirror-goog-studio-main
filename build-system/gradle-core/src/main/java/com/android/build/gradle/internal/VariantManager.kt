@@ -17,7 +17,6 @@ package com.android.build.gradle.internal
 
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.computeSourceSetName
-import com.android.builder.dexing.isLegacyMultiDexMode
 import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.api.extension.impl.OperationsRegistrar
@@ -54,6 +53,7 @@ import com.android.build.gradle.internal.variant.*
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.SigningOptions
 import com.android.builder.core.VariantType
+import com.android.builder.dexing.isLegacyMultiDexMode
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.wireless.android.sdk.stats.ApiVersion
@@ -215,7 +215,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
 
         // create the Variant object so that we can run the action which may interrupt the creation
         // (in case of enabled = false)
-        val variantBuilder = variantFactory.createVariantObject(
+        val variantBuilder = variantFactory.createVariantBuilder(
                 componentIdentity, variantDslInfo, variantApiServices)
 
         // now that we have the variant, create the analytics object,
@@ -223,7 +223,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 project.gradle.sharedServices,
                 AnalyticsConfiguratorService::class.java)
                 .get()
-        val profileBuilder = configuratorService.getVariantBuilder(
+        val profileEnabledVariantBuilder = configuratorService.getVariantBuilder(
                 project.path, variantBuilder.name)
 
         // HACK, we need access to the new type rather than the old. This will go away in the
@@ -231,12 +231,12 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         @Suppress("UNCHECKED_CAST")
         val commonExtension =
                 extension as ActionableVariantObjectOperationsExecutor<VariantBuilder, Variant>
-        val userVisibleVariantBuilderObject =
-                variantBuilder.createUserVisibleVariantObject(projectServices, profileBuilder)
-        commonExtension.executeVariantOperations(userVisibleVariantBuilderObject)
+        val userVisibleVariantBuilder =
+                variantBuilder.createUserVisibleVariantObject(projectServices, profileEnabledVariantBuilder)
+        commonExtension.executeVariantBuilderOperations(userVisibleVariantBuilder)
 
         // execute the new API
-        variantBuilderOperationsRegistrar.executeOperations(userVisibleVariantBuilderObject)
+        variantBuilderOperationsRegistrar.executeOperations(userVisibleVariantBuilder)
         if (!variantBuilder.enabled) {
             return null
         }
@@ -315,8 +315,8 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 globalScope,
                 taskContainer)
 
-        // then the new VariantProperties which will contain the 2 old objects.
-        val variantApiObject = variantFactory.createVariantPropertiesObject(
+        // then the new Variant which will contain the 2 old objects.
+        val variantApiObject = variantFactory.createVariant(
                 variantBuilder,
                 componentIdentity,
                 buildFeatureValues,
@@ -332,12 +332,12 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 taskCreationServices)
 
         // Run the VariantProperties actions
-        val userVisibleVariantPropertiesObject = (variantApiObject as VariantImpl)
-                .createUserVisibleVariantPropertiesObject(projectServices, profileBuilder)
-        commonExtension.executeVariantPropertiesOperations(userVisibleVariantPropertiesObject)
-        variantOperationsRegistrar.executeOperations(userVisibleVariantPropertiesObject)
+        val userVisibleVariant = (variantApiObject as VariantImpl)
+                .createUserVisibleVariantObject(projectServices, profileEnabledVariantBuilder)
+        commonExtension.executeVariantOperations(userVisibleVariant)
+        variantOperationsRegistrar.executeOperations(userVisibleVariant)
         return ComponentInfo(
-                variantBuilder, variantApiObject, profileBuilder, userVisibleVariantBuilderObject)
+                variantBuilder, variantApiObject, profileEnabledVariantBuilder, userVisibleVariantBuilder)
     }
 
     private fun createCompoundSourceSets(
@@ -392,8 +392,8 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 dslServices,
                 variantPropertiesApiServices)
         variantDslInfoBuilder.testedVariant =
-                testedComponentInfo.properties.variantDslInfo as VariantDslInfoImpl
-        val productFlavorList = testedComponentInfo.properties.variantDslInfo.productFlavorList
+                testedComponentInfo.variant.variantDslInfo as VariantDslInfoImpl
+        val productFlavorList = testedComponentInfo.variant.variantDslInfo.productFlavorList
 
         // We must first add the flavors to the variant builder, in order to get the proper
         // variant-specific and multi-flavor name as we add/create the variant providers later.
@@ -410,7 +410,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         val apiAccessStats = testedComponentInfo.stats
         // this is ANDROID_TEST
         val component = if (variantType.isApk) {
-            val androidTestVariant = variantFactory.createAndroidTestObject(
+            val androidTestVariant = variantFactory.createAndroidTestBuilder(
                     variantDslInfo.componentIdentity,
                     variantDslInfo,
                     variantApiServices)
@@ -420,7 +420,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             androidTestVariant
         } else {
             // this is UNIT_TEST
-            val unitTestVariant = variantFactory.createUnitTestObject(
+            val unitTestVariant = variantFactory.createUnitTestBuilder(
                     variantDslInfo.componentIdentity,
                     variantDslInfo,
                     variantApiServices)
@@ -486,7 +486,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 variantDslInfo)
                 .addSourceSets(testVariantSourceSets)
                 .setFlavorSelection(getFlavorSelection(variantDslInfo))
-                .setTestedVariant(testedComponentInfo.properties)
+                .setTestedVariant(testedComponentInfo.variant)
         val variantDependencies = builder.build()
         val pathHelper = VariantPathHelper(project, variantDslInfo, dslServices)
         val componentIdentity = variantDslInfo.componentIdentity
@@ -500,7 +500,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 pathHelper,
                 artifacts,
                 globalScope,
-                testedComponentInfo.properties)
+                testedComponentInfo.variant)
 
         // create the internal storage for this variant.
         val testVariantData = TestVariantData(
@@ -510,7 +510,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 variantSources,
                 pathHelper,
                 artifacts,
-                (testedComponentInfo.properties.variantData as TestedVariantData),
+                (testedComponentInfo.variant.variantData as TestedVariantData),
                 variantPropertiesApiServices,
                 globalScope,
                 taskContainer)
@@ -520,7 +520,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
 
         // this is ANDROID_TEST
         componentProperties = if (variantType.isApk) {
-            val androidTestProperties = variantFactory.createAndroidTestProperties(
+            val androidTestProperties = variantFactory.createAndroidTest(
                     (component as AndroidTestBuilderImpl),
                     buildFeatureValues,
                     variantDslInfo,
@@ -530,23 +530,23 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                     artifacts,
                     variantScope,
                     testVariantData,
-                    testedComponentInfo.properties,
+                    testedComponentInfo.variant,
                     transformManager,
                     variantPropertiesApiServices,
                     taskCreationServices)
 
             // also execute the delayed actions registered on the Component via
             // androidTest { onProperties {} }
-            val userVisibleVariantPropertiesObject =
-                    androidTestProperties.createUserVisibleVariantPropertiesObject(
+            val userVisibleVariant =
+                    androidTestProperties.createUserVisibleVariantObject(
                             projectServices, apiAccessStats)
-            // or on the tested variant via unitTestProperties {}
+            // or on the tested variant via unitTest {}
             testedComponentInfo.userVisibleVariant
-                    ?.executeAndroidTestPropertiesActions(userVisibleVariantPropertiesObject)
+                    ?.executeAndroidTestPropertiesActions(userVisibleVariant)
             androidTestProperties
         } else {
             // this is UNIT_TEST
-            val unitTestProperties = variantFactory.createUnitTestProperties(
+            val unitTestProperties = variantFactory.createUnitTest(
                     (component as UnitTestBuilderImpl),
                     buildFeatureValues,
                     variantDslInfo,
@@ -556,25 +556,25 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                     artifacts,
                     variantScope,
                     testVariantData,
-                    testedComponentInfo.properties,
+                    testedComponentInfo.variant,
                     transformManager,
                     variantPropertiesApiServices,
                     taskCreationServices)
 
             // execute the delayed actions registered on the Component via
             // unitTest { onProperties {} }
-            val userVisibleVariantPropertiesObject =
-                    unitTestProperties.createUserVisibleVariantPropertiesObject(
+            val userVisibleVariant =
+                    unitTestProperties.createUserVisibleVariantObject(
                             projectServices, apiAccessStats)
             // or on the tested variant via unitTestProperties {}
             testedComponentInfo.userVisibleVariant
-                    ?.executeUnitTestPropertiesActions(userVisibleVariantPropertiesObject)
+                    ?.executeUnitTestPropertiesActions(userVisibleVariant)
             unitTestProperties
         }
 
         // register
         testedComponentInfo
-                .properties
+                .variant
                 .testComponents[variantDslInfo.variantType] = componentProperties
         return ComponentInfo(
                 component, componentProperties, testedComponentInfo.stats, null)
@@ -625,7 +625,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                     variantType,
                     buildFeatureValues)?.let { variantInfo ->
                 addVariant(variantInfo)
-                val variant = variantInfo.properties
+                val variant = variantInfo.variant
                 val variantDslInfo = variant.variantDslInfo
                 val variantScope = variant.variantScope
                 val minSdkVersion = variantInfo.variant.minSdkVersion.apiLevel

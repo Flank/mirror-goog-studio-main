@@ -41,7 +41,7 @@ class EmptyGlobalMock {
         throwUnmocked
     )
 
-    val componentProperties: ComponentImpl = Mockito.mock(
+    val componentImpl: ComponentImpl = Mockito.mock(
         ComponentImpl::class.java,
         throwUnmocked
     )

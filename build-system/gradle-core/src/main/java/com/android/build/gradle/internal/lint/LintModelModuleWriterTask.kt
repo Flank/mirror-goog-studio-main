@@ -430,60 +430,60 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
         }
 
         private fun createVariantInput(
-            properties: VariantImpl
+            variant: VariantImpl
         ): VariantInput {
             return globalScope.dslServices.newInstance(
                 VariantInput::class.java,
-                properties.name,
-                if (properties is ApkCreationConfig) properties.minifiedEnabled else false
+                variant.name,
+                if (variant is ApkCreationConfig) variant.minifiedEnabled else false
             ).also { variantInput ->
-                variantInput.mainArtifact.setDisallowChanges(getAndroidArtifact(properties))
+                variantInput.mainArtifact.setDisallowChanges(getAndroidArtifact(variant))
 
-                getTestComponent(properties, UnitTestImpl::class.java)?.let {
+                getTestComponent(variant, UnitTestImpl::class.java)?.let {
                     variantInput.testArtifact.setDisallowChanges(getJavaArtifact(it))
                 }
 
-                getTestComponent(properties, AndroidTestImpl::class.java)?.let {
+                getTestComponent(variant, AndroidTestImpl::class.java)?.let {
                     variantInput.androidTestArtifact.setDisallowChanges(getAndroidArtifact(it))
                 }
 
-                variantInput.packageName.setDisallowChanges(properties.packageName)
+                variantInput.packageName.setDisallowChanges(variant.packageName)
 
-                variantInput.minSdkVersion.setDisallowChanges(properties.variant.minSdkVersion.convert())
-                variantInput.targetSdkVersion.setDisallowChanges(properties.variantDslInfo.targetSdkVersion.convert())
+                variantInput.minSdkVersion.setDisallowChanges(variant.variantBuilder.minSdkVersion.convert())
+                variantInput.targetSdkVersion.setDisallowChanges(variant.variantDslInfo.targetSdkVersion.convert())
 
                 // FIXME resvalue
-                if (properties is ApkCreationConfig) {
-                    variantInput.manifestPlaceholders.setDisallowChanges(properties.manifestPlaceholders)
+                if (variant is ApkCreationConfig) {
+                    variantInput.manifestPlaceholders.setDisallowChanges(variant.manifestPlaceholders)
                 }
 
-                variantInput.resourceConfigurations.setDisallowChanges(properties.resourceConfigurations)
+                variantInput.resourceConfigurations.setDisallowChanges(variant.resourceConfigurations)
                 // FIXME proguardFiles
                 // FIXME consumerProguardFiles
 
                 // FIXME sourceProviders
                 // FIXME testSourceProviders
 
-                if (properties is ApkCreationConfig) {
-                    variantInput.debuggable.setDisallowChanges(properties.debuggable)
+                if (variant is ApkCreationConfig) {
+                    variantInput.debuggable.setDisallowChanges(variant.debuggable)
                 }
             }
         }
 
         private fun getAndroidArtifact(
-            properties: ComponentImpl
+            componentImpl: ComponentImpl
         ): AndroidArtifactInput =
             globalScope.dslServices.newInstance(AndroidArtifactInput::class.java).also {
-                it.applicationId.setDisallowChanges(properties.applicationId)
+                it.applicationId.setDisallowChanges(componentImpl.applicationId)
                 it.generatedSourceFolders.setDisallowChanges(listOf()) // FIXME
                 it.generatedResourceFolders.setDisallowChanges(listOf()) //FIXME
-                it.javacOutFolder.setDisallowChanges(properties.artifacts.get(JAVAC).map { it.asFile })
+                it.javacOutFolder.setDisallowChanges(componentImpl.artifacts.get(JAVAC).map { it.asFile })
 
                 it.additionalClasses.from(
-                    properties.variantData.allPreJavacGeneratedBytecode
+                    componentImpl.variantData.allPreJavacGeneratedBytecode
                 )
-                it.additionalClasses.from(properties.variantData.allPostJavacGeneratedBytecode)
-                it.additionalClasses.from(properties
+                it.additionalClasses.from(componentImpl.variantData.allPostJavacGeneratedBytecode)
+                it.additionalClasses.from(componentImpl
                     .getCompiledRClasses(AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH))
                 it.additionalClasses.disallowChanges()
             }
@@ -517,11 +517,11 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
         }
 
         private fun <T : TestComponentImpl> getTestComponent(
-            variantProperties: VariantImpl,
+            variant: VariantImpl,
             targetClass: Class<T>
         ): T? = testPropertiesList
             .asSequence()
-            .filter { it.testedConfig === variantProperties }
+            .filter { it.testedConfig === variant }
             .filterIsInstance(targetClass)
             .firstOrNull()
     }
