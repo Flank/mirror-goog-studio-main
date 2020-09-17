@@ -96,7 +96,7 @@ class ExternalAnnotationsDetector : Detector(), SourceCodeScanner {
                 ISSUE,
                 expression,
                 context.getLocation(expression),
-                "${member.name} used instead of `JavaContext.getAllAnnotations`."
+                "${member.name} used instead of `JavaEvaluator.getAllAnnotations`."
             )
         }
     }

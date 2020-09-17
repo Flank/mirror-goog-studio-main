@@ -3,7 +3,7 @@
 
     <issue
         id="ExternalAnnotations"
-        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        message="getAnnotations used instead of `JavaEvaluator.getAllAnnotations`.">
         <location
             file="libs/lint-gradle/src/main/java/com/android/tools/lint/annotations/Extractor.java"
             line="571"/>
@@ -11,7 +11,7 @@
 
     <issue
         id="ExternalAnnotations"
-        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        message="getAnnotations used instead of `JavaEvaluator.getAllAnnotations`.">
         <location
             file="libs/lint-gradle/src/main/java/com/android/tools/lint/annotations/Extractor.java"
             line="584"/>
@@ -19,7 +19,7 @@
 
     <issue
         id="ExternalAnnotations"
-        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        message="getAnnotations used instead of `JavaEvaluator.getAllAnnotations`.">
         <location
             file="libs/lint-gradle/src/main/java/com/android/tools/lint/annotations/Extractor.java"
             line="680"/>
@@ -27,7 +27,7 @@
 
     <issue
         id="ExternalAnnotations"
-        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        message="getAnnotations used instead of `JavaEvaluator.getAllAnnotations`.">
         <location
             file="libs/lint-gradle/src/main/java/com/android/tools/lint/annotations/Extractor.java"
             line="750"/>
@@ -35,7 +35,7 @@
 
     <issue
         id="ExternalAnnotations"
-        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        message="getAnnotations used instead of `JavaEvaluator.getAllAnnotations`.">
         <location
             file="libs/lint-gradle/src/main/java/com/android/tools/lint/annotations/Extractor.java"
             line="2842"/>
