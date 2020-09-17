@@ -86,7 +86,8 @@ private fun setIrUsedInAnalytics(creationConfig: ComponentCreationConfig, projec
 fun addComposeArgsToKotlinCompile(
         task: Task,
         creationConfig: ComponentCreationConfig,
-        compilerExtension: FileCollection) {
+        compilerExtension: FileCollection,
+        useLiveLiterals: Boolean) {
     task as KotlinCompile
     // Add as input
     task.inputs.files(compilerExtension)
@@ -102,21 +103,23 @@ fun addComposeArgsToKotlinCompile(
     task.doFirst {
         it as KotlinCompile
         it.kotlinOptions.useIR = true
-        it.kotlinOptions.freeCompilerArgs +=
-                listOf(
-                        "-Xplugin=${compilerExtension.files.first().absolutePath}",
-                        "-XXLanguage:+NonParenthesizedAnnotationsOnFunctionalTypes",
-                        "-P", "plugin:androidx.compose.plugins.idea:enabled=true",
-                        "-Xallow-jvm-ir-dependencies"
-                ) + if (debuggable) {
-                    listOf(
-                            "-P",
-                            "plugin:androidx.compose.compiler.plugins.kotlin:liveLiterals=true",
-                            "-P",
-                            "plugin:androidx.compose.compiler.plugins.kotlin:sourceInformation=true"
-                    )
-                } else {
-                    listOf()
-                }
+        val extraFreeCompilerArgs = mutableListOf(
+                "-Xplugin=${compilerExtension.files.first().absolutePath}",
+                "-XXLanguage:+NonParenthesizedAnnotationsOnFunctionalTypes",
+                "-P", "plugin:androidx.compose.plugins.idea:enabled=true",
+                "-Xallow-jvm-ir-dependencies"
+        )
+        if (debuggable) {
+            extraFreeCompilerArgs += listOf(
+                    "-P",
+                    "plugin:androidx.compose.compiler.plugins.kotlin:sourceInformation=true")
+
+            if (useLiveLiterals) {
+                extraFreeCompilerArgs += listOf(
+                        "-P",
+                        "plugin:androidx.compose.compiler.plugins.kotlin:liveLiterals=true")
+            }
+        }
+        it.kotlinOptions.freeCompilerArgs += extraFreeCompilerArgs
     }
 }
