@@ -41,6 +41,9 @@ import org.jetbrains.uast.UClass;
 /** Looks for Parcelable classes that are missing a CREATOR field */
 public class ParcelDetector extends Detector implements SourceCodeScanner {
 
+    private static final String OLD_PARCELIZE = "kotlinx.android.parcel.Parcelize";
+    private static final String NEW_PARCELIZE = "kotlinx.parcelize.Parcelize";
+
     /** The main issue discovered by this detector */
     public static final Issue ISSUE =
             Issue.create(
@@ -94,7 +97,8 @@ public class ParcelDetector extends Detector implements SourceCodeScanner {
         if (isKotlin) {
             PsiModifierList modifierList = declaration.getModifierList();
             if (modifierList != null
-                    && modifierList.findAnnotation("kotlinx.android.parcel.Parcelize") != null) {
+                    && (modifierList.findAnnotation(OLD_PARCELIZE) != null
+                            || modifierList.findAnnotation(NEW_PARCELIZE) != null)) {
                 // Already using @Parcelize: nothing to suggest (and don't warn about missing
                 // CREATOR field below)
                 return;
