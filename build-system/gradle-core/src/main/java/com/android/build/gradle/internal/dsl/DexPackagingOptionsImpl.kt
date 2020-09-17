@@ -18,6 +18,6 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.DexPackagingOptions
 
-class DexPackagingOptionsImpl : DexPackagingOptions {
+open class DexPackagingOptionsImpl : DexPackagingOptions {
     override var useLegacyPackaging: Boolean? = null
 }

@@ -18,9 +18,34 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.JniLibsPackagingOptions
 
-class JniLibsPackagingOptionsImpl : JniLibsPackagingOptions {
+open class JniLibsPackagingOptionsImpl : JniLibsPackagingOptions {
+
     override var useLegacyPackaging: Boolean? = null
+
     override val excludes: MutableSet<String> = mutableSetOf()
+
+    // support excludes += 'foo' syntax in groovy
+    fun setExcludes(patterns: Set<String>) {
+        val newExcludes = patterns.toList()
+        excludes.clear()
+        excludes.addAll(newExcludes)
+    }
+
     override val pickFirsts: MutableSet<String> = mutableSetOf()
+
+    // support pickFirsts += 'foo' syntax in groovy
+    fun setPickFirsts(patterns: Set<String>) {
+        val newPickFirsts = patterns.toList()
+        pickFirsts.clear()
+        pickFirsts.addAll(newPickFirsts)
+    }
+
     override val keepDebugSymbols: MutableSet<String> = mutableSetOf()
+
+    // support keepDebugSymbols += 'foo' syntax in groovy
+    fun setKeepDebugSymbols(patterns: Set<String>) {
+        val newKeepDebugSymbols = patterns.toList()
+        keepDebugSymbols.clear()
+        keepDebugSymbols.addAll(newKeepDebugSymbols)
+    }
 }

@@ -20,8 +20,32 @@ import com.android.build.api.dsl.ResourcesPackagingOptions
 import com.android.build.gradle.internal.packaging.defaultExcludes
 import com.android.build.gradle.internal.packaging.defaultMerges
 
-class ResourcesPackagingOptionsImpl : ResourcesPackagingOptions {
+open class ResourcesPackagingOptionsImpl : ResourcesPackagingOptions {
+
     override val excludes: MutableSet<String> = defaultExcludes.toMutableSet()
+
+    // support excludes += 'foo' syntax in groovy
+    fun setExcludes(patterns: Set<String>) {
+        val newExcludes = patterns.toList()
+        excludes.clear()
+        excludes.addAll(newExcludes)
+    }
+
     override val pickFirsts: MutableSet<String> = mutableSetOf()
+
+    // support pickFirsts += 'foo' syntax in groovy
+    fun setPickFirsts(patterns: Set<String>) {
+        val newPickFirsts = patterns.toList()
+        pickFirsts.clear()
+        pickFirsts.addAll(newPickFirsts)
+    }
+
     override val merges: MutableSet<String> = defaultMerges.toMutableSet()
+
+    // support merges += 'foo' syntax in groovy
+    fun setMerges(patterns: Set<String>) {
+        val newMerges = patterns.toList()
+        merges.clear()
+        merges.addAll(newMerges)
+    }
 }

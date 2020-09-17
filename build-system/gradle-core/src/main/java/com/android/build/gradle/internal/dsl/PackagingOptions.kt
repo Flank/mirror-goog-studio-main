@@ -21,6 +21,9 @@ import com.android.build.api.dsl.JniLibsPackagingOptions
 import com.android.build.api.dsl.ResourcesPackagingOptions
 import com.android.build.gradle.internal.packaging.defaultExcludes
 import com.android.build.gradle.internal.packaging.defaultMerges
+import com.android.build.gradle.internal.services.DslServices
+import org.gradle.api.Action
+import javax.inject.Inject
 
 /**
  * DSL object for configuring APK packaging options.
@@ -139,7 +142,8 @@ import com.android.build.gradle.internal.packaging.defaultMerges
  * }
  * </pre>
  */
-open class PackagingOptions : com.android.builder.model.PackagingOptions,
+open class PackagingOptions @Inject constructor(dslServices: DslServices) :
+    com.android.builder.model.PackagingOptions,
     com.android.build.api.dsl.PackagingOptions {
 
     override val excludes: MutableSet<String> = defaultExcludes.toMutableSet()
@@ -190,21 +194,36 @@ open class PackagingOptions : com.android.builder.model.PackagingOptions,
         doNotStrip.add(pattern);
     }
 
-    override val dex: DexPackagingOptions = DexPackagingOptionsImpl()
+    override val dex: DexPackagingOptions =
+        dslServices.newInstance(DexPackagingOptionsImpl::class.java)
 
     override fun dex(action: DexPackagingOptions.() -> Unit) {
         action.invoke(dex)
     }
 
-    override val jniLibs: JniLibsPackagingOptions = JniLibsPackagingOptionsImpl()
+    fun dex(action: Action<DexPackagingOptions>) {
+        action.execute(dex)
+    }
+
+    override val jniLibs: JniLibsPackagingOptions =
+        dslServices.newInstance(JniLibsPackagingOptionsImpl::class.java)
 
     override fun jniLibs(action: JniLibsPackagingOptions.() -> Unit) {
         action.invoke(jniLibs)
     }
 
-    override val resources: ResourcesPackagingOptions = ResourcesPackagingOptionsImpl()
+    fun jniLibs(action: Action<JniLibsPackagingOptions>) {
+        action.execute(jniLibs)
+    }
+
+    override val resources: ResourcesPackagingOptions =
+        dslServices.newInstance(ResourcesPackagingOptionsImpl::class.java)
 
     override fun resources(action: ResourcesPackagingOptions.() -> Unit) {
         action.invoke(resources)
+    }
+
+    fun resources(action: Action<ResourcesPackagingOptions>) {
+        action.execute(resources)
     }
 }
