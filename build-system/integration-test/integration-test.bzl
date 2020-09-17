@@ -93,9 +93,9 @@ def single_gradle_integration_test_per_source(
         package_name,
         srcs,
         runtime_deps = [],
+        flaky_targets = [],
         tags = [],
         **kwargs):
-
     split_targets = []
 
     # List of target names approved to use an eternal timeout.
@@ -107,6 +107,7 @@ def single_gradle_integration_test_per_source(
 
     # need case-insensitive target names because of case-insensitive FS e.g. on Windows
     lowercase_split_targets = []
+    num_flaky_applied = 0
     for src in srcs:
         start_index = src.rfind("/")
         end_index = src.rfind(".")
@@ -116,11 +117,15 @@ def single_gradle_integration_test_per_source(
             target_name = src.split("/")[-2] + "." + target_name
         split_targets.append(target_name)
         lowercase_split_targets.append(target_name.lower())
+        is_flaky = target_name in flaky_targets
+        if is_flaky:
+            num_flaky_applied += 1
 
         gradle_integration_test(
             name = target_name,
             srcs = [src],
             deps = deps,
+            flaky = is_flaky,
             data = data,
             shard_count = None,
             maven_repos = maven_repos,
@@ -129,6 +134,9 @@ def single_gradle_integration_test_per_source(
             timeout = "eternal" if target_name in eternal_target_names else "long",
             **kwargs
         )
+    if num_flaky_applied != len(flaky_targets):
+        fail("mismatch between flaky_targets given and targets found.")
+
     native.test_suite(
         name = name,
         tests = split_targets,

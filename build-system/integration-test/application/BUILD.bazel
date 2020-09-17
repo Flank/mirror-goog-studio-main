@@ -251,6 +251,9 @@ single_gradle_integration_test_per_source(
         exclude = SOURCES_TO_COMPILE_TOGETHER + CONNECTED_TESTS + CHECK_ALL_SOURCES,
     ),
     data = TEST_DATA,
+    flaky_targets = [
+        "GradlePluginMemoryLeakTest",  # b/153972155
+    ],
     maven_repos = [
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test:androidx_latest",

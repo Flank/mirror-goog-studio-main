@@ -4,7 +4,9 @@ When bazel is invoked with this aspect attached, it validates that only
 the allowlisted targets below can set "flaky" to true.
 """
 
-APPROVED_FLAKY_TESTS = []
+APPROVED_FLAKY_TESTS = [
+    "//tools/base/build-system/integration-test/application:GradlePluginMemoryLeakTest",  # b/153972155
+]
 
 FAILURE_MESSAGE = """Test target {} has flaky set to true.
 Only approved targets can set flaky attribute to true (b/159928949).
