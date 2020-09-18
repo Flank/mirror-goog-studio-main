@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.testing.BaseTestRunner
 import com.android.build.gradle.internal.testing.CustomTestRunListener
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.build.gradle.internal.testing.utp.UtpDependency.LAUNCHER
+import com.android.build.gradle.internal.testing.utp.RetentionConfig
 import com.android.builder.testing.api.DeviceConnector
 import com.android.ddmlib.testrunner.TestIdentifier
 import com.android.ide.common.process.JavaProcessExecutor
@@ -54,7 +55,7 @@ class UtpTestRunner @JvmOverloads constructor(
         executor: ExecutorServiceAdapter,
         private val utpDependencies: UtpDependencies,
         private val sdkComponents: SdkComponentsBuildService,
-        private val usesIcebox: Boolean,
+        private val retentionConfig: RetentionConfig,
         private val configFactory: UtpConfigFactory = UtpConfigFactory())
     : BaseTestRunner(splitSelectExec, processExecutor, executor) {
 
@@ -88,7 +89,7 @@ class UtpTestRunner @JvmOverloads constructor(
                             utpTmpDir,
                             utpTestLogDir,
                             utpTestRunLogDir,
-                            usesIcebox).writeTo(writer)
+                            retentionConfig).writeTo(writer)
                 }
             }
             val serverConfigProtoFile = File.createTempFile("serverConfig", ".pb").also { file ->

@@ -118,9 +118,9 @@ public class DeviceManagerTest {
                 .containsExactly(
                         "Android TV (1080p)",
                         "Android TV (720p)",
-                        "Android Wear Round",
-                        "Android Wear Round Chin",
-                        "Android Wear Square",
+                        "Wear OS Round",
+                        "Wear OS Round Chin",
+                        "Wear OS Square",
                         "Automotive (1024p landscape)",
                         "Galaxy Nexus",
                         "Nexus 10",
@@ -172,9 +172,9 @@ public class DeviceManagerTest {
                         "13.5\" Freeform",
                         "Android TV (1080p)",
                         "Android TV (720p)",
-                        "Android Wear Round",
-                        "Android Wear Round Chin",
-                        "Android Wear Square",
+                        "Wear OS Round",
+                        "Wear OS Round Chin",
+                        "Wear OS Square",
                         "Automotive (1024p landscape)",
                         "Galaxy Nexus",
                         "Nexus 10",
@@ -274,9 +274,9 @@ public class DeviceManagerTest {
                 .containsExactly(
                         "Android TV (1080p)",
                         "Android TV (720p)",
-                        "Android Wear Round",
-                        "Android Wear Round Chin",
-                        "Android Wear Square",
+                        "Wear OS Round",
+                        "Wear OS Round Chin",
+                        "Wear OS Square",
                         "Automotive (1024p landscape)",
                         "Galaxy Nexus",
                         "Nexus 10",
@@ -326,9 +326,9 @@ public class DeviceManagerTest {
                         "13.5\" Freeform",
                         "Android TV (1080p)",
                         "Android TV (720p)",
-                        "Android Wear Round",
-                        "Android Wear Round Chin",
-                        "Android Wear Square",
+                        "Wear OS Round",
+                        "Wear OS Round Chin",
+                        "Wear OS Square",
                         "Automotive (1024p landscape)",
                         "Galaxy Nexus",
                         "My Custom Tablet",
@@ -418,9 +418,9 @@ public class DeviceManagerTest {
                 .containsExactly(
                         "Android TV (1080p)",
                         "Android TV (720p)",
-                        "Android Wear Round",
-                        "Android Wear Round Chin",
-                        "Android Wear Square",
+                        "Wear OS Round",
+                        "Wear OS Round Chin",
+                        "Wear OS Square",
                         "Automotive (1024p landscape)",
                         "Galaxy Nexus",
                         "Nexus 10",
@@ -470,9 +470,9 @@ public class DeviceManagerTest {
                         "13.5\" Freeform",
                         "Android TV (1080p)",
                         "Android TV (720p)",
-                        "Android Wear Round",
-                        "Android Wear Round Chin",
-                        "Android Wear Square",
+                        "Wear OS Round",
+                        "Wear OS Round Chin",
+                        "Wear OS Square",
                         "Automotive (1024p landscape)",
                         "Galaxy Nexus",
                         "Mock Tag 1 Device Name",
@@ -585,7 +585,7 @@ public class DeviceManagerTest {
         DeviceManager localDeviceManager = createDeviceManager();
         int count = localDeviceManager.getDevices(EnumSet.allOf(DeviceFilter.class)).size();
         Device localDevice = localDeviceManager.getDevice("wear_round", "Google");
-        assertThat(localDevice.getDisplayName()).isEqualTo("Android Wear Round");
+        assertThat(localDevice.getDisplayName()).isEqualTo("Wear OS Round");
 
         // Create two system image directories with different definitions of the
         // device that we just checked. The version in android-25 should override
@@ -648,7 +648,7 @@ public class DeviceManagerTest {
 
         Device squareDevice = dm.getDevice("wear_square", "Google");
         String squareName = squareDevice.getDisplayName();
-        assertThat(squareName).isEqualTo("Android Wear Square");
+        assertThat(squareName).isEqualTo("Wear OS Square");
         assertThat(squareDevice.isScreenRound()).isFalse();
 
         Device.Builder devBuilder = new Device.Builder(squareDevice);

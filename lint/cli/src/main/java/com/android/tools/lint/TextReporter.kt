@@ -228,12 +228,12 @@ class TextReporter(
             }
             writer.write('\n'.toInt())
             writer.flush()
-            if (close) {
-                writer.close()
-                if (!client.flags.isQuiet && this.output != null) {
-                    val path = convertPath(this.output.absolutePath)
-                    println("Wrote text report to $path")
-                }
+        }
+        if (close) {
+            writer.close()
+            if (!client.flags.isQuiet && this.output != null) {
+                val path = convertPath(this.output.absolutePath)
+                println("Wrote text report to $path")
             }
         }
     }

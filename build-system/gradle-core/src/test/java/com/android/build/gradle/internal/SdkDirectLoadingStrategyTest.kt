@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal
 
 import com.android.SdkConstants
+import com.android.aapt.Resources
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.internal.compiler.RenderScriptProcessor
@@ -33,6 +34,14 @@ import java.io.File
 import java.util.Properties
 
 class SdkDirectLoadingStrategyTest {
+    private data class SystemImageInfo(
+        val api: Int,
+        val vendor: String,
+        val abi: String,
+        val directory: String
+    ) {
+        val repository = "system-images;android-$api;$vendor;$abi"
+    }
 
     private val PLATFORM_TOOLS_XML = """
         <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -184,6 +193,71 @@ class SdkDirectLoadingStrategyTest {
         ]
     """.trimIndent()
 
+    // TODO
+    private fun getSystemImageXml(
+        systemImageInfo: SystemImageInfo) =
+    """
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <ns2:repository
+            xmlns:ns2="http://schemas.android.com/repository/android/common/01"
+            xmlns:ns3="http://schemas.android.com/repository/android/generic/01"
+            xmlns:ns4="http://schemas.android.com/sdk/android/repo/addon2/01"
+            xmlns:ns5="http://schemas.android.com/sdk/android/repo/repository2/01"
+            xmlns:ns6="http://schemas.android.com/sdk/android/repo/sys-img2/01">
+
+            <license id="android-sdk-license" type="text">Very valid license</license>
+            <localPackage
+                path="${systemImageInfo.repository}"
+                obsolete="false">
+
+                <type-details
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:type="ns6:sysImgDetailsType">
+                    <api-level>${systemImageInfo.api}</api-level>
+                    <tag>
+                        <id>${systemImageInfo.vendor}</id>
+                        <display>A Valid Display Name</display>
+                    </tag>
+                    <vendor>
+                        <id>validVendorShortId</id>
+                        <display>A Valid Display Name</display>
+                    </vendor>
+                    <abi>${systemImageInfo.abi}</abi>
+                </type-details>
+                <revision>
+                    <major>8</major>
+                </revision>
+                <display-name>A Valid Display Name</display-name>
+                <uses-license ref="android-sdk-license"/>
+            </localPackage>
+        </ns2:repository>
+    """.trimIndent()
+
+    private val EMULATOR_XML = """
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <ns2:repository
+            xmlns:ns2="http://schemas.android.com/repository/android/common/01"
+            xmlns:ns3="http://schemas.android.com/repository/android/generic/01"
+            xmlns:ns4="http://schemas.android.com/sdk/android/repo/addon2/01"
+            xmlns:ns5="http://schemas.android.com/sdk/android/repo/repository2/01"
+            xmlns:ns6="http://schemas.android.com/sdk/android/repo/sys-img2/01">
+
+        <license id="android-sdk-license" type="text">Very valid license</license>
+            <localPackage path="emulator" obsolete="false">
+                <type-details
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:type="ns3:genericDetailsType"/>
+                <revision>
+                    <major>30</major>
+                    <minor>0</minor>
+                    <micro>26</micro>
+                </revision>
+                <display-name>Android Emulator</display-name>
+                <uses-license ref="android-sdk-license"/>
+            </localPackage>
+        </ns2:repository>
+    """.trimIndent()
+
     @get:Rule
     val testFolder = TemporaryFolder()
 
@@ -311,6 +385,97 @@ class SdkDirectLoadingStrategyTest {
         assertAllComponentsAreNull(directLoader)
     }
 
+    @Test
+    fun load_missingSystemImage() {
+        configureSdkDirectory(configureSystemImages = false)
+        val directLoader = getDirectLoader()
+
+        assertThat(
+            directLoader.getSystemImageLibFolder(
+                "system-images;android-29;google-apis-playstore;x86"))
+            .isNull()
+        // A missing system image should not interfere with whether or not the loader is successful.
+        assertThat(directLoader.loadedSuccessfully()).isTrue()
+        assertAllComponentsArePresent(directLoader)
+    }
+
+    @Test
+    fun load_systemImage() {
+        configureSdkDirectory(
+            systemImageInfos = listOf(
+                SystemImageInfo(
+                    29,
+                    "google-apis-playstore",
+                    "x86",
+                    "system-images/android-29/google-apis-playstore/x86"),
+                SystemImageInfo(
+                    29,
+                    "default",
+                    "x86",
+                    "system-images/android-29/default/x86")))
+
+        val directLoader = getDirectLoader()
+
+        assertThat(
+            directLoader.getSystemImageLibFolder(
+                "system-images;android-29;google-apis-playstore;x86"))
+            .isNotNull()
+        assertThat(
+            directLoader.getSystemImageLibFolder(
+                "system-images;android-29;default;x86"))
+            .isNotNull()
+        assertThat(
+            directLoader.getSystemImageLibFolder(
+                "system-images;android-28;default;x86"))
+            .isNull()
+    }
+
+    @Test
+    fun load_cacheHitSystemImage() {
+        configureSdkDirectory(
+            systemImageInfos = listOf(
+                SystemImageInfo(
+                    29,
+                    "google-apis-playstore",
+                    "x86",
+                    "system-images/android-29/google-apis-playstore/x86")))
+
+        val directLoader = getDirectLoader()
+
+        assertThat(
+            directLoader.getSystemImageLibFolder(
+                "system-images;android-29;google-apis-playstore;x86"))
+            .isNotNull()
+
+        testFolder.root.resolve("system-images").deleteRecursively()
+
+        assertThat(
+            directLoader.getSystemImageLibFolder(
+                "system-images;android-29;google-apis-playstore;x86"))
+            .isNotNull()
+    }
+
+    @Test
+    fun load_missingEmulator() {
+        configureSdkDirectory(configureEmulator = false)
+
+        val directLoader = getDirectLoader()
+
+        assertThat(directLoader.getEmulatorLibFolder()).isNull()
+        // A missing emulator should not interfere with whether or not the loader is successful.
+        assertThat(directLoader.loadedSuccessfully()).isTrue()
+        assertAllComponentsArePresent(directLoader)
+    }
+
+    @Test
+    fun load_emulator() {
+        configureSdkDirectory()
+
+        val directLoader = getDirectLoader()
+
+        assertThat(directLoader.getEmulatorLibFolder()).isNotNull()
+    }
+
     private fun getDirectLoader(
         platformHash: String = "android-28",
         buildTools: String = SdkConstants.CURRENT_BUILD_TOOLS_VERSION): SdkDirectLoadingStrategy {
@@ -332,7 +497,10 @@ class SdkDirectLoadingStrategyTest {
         buildToolsDirectory: String = SdkConstants.CURRENT_BUILD_TOOLS_VERSION,
         configurePlatformTools: Boolean = true,
         configureSupportTools: Boolean = true,
-        configureTestAddOn: Boolean = true) {
+        configureTestAddOn: Boolean = true,
+        configureSystemImages: Boolean = true,
+        systemImageInfos: List<SystemImageInfo> = listOf(),
+        configureEmulator: Boolean = true) {
 
         val sdkDir = SdkLocator.sdkTestDirectory!!
 
@@ -397,6 +565,27 @@ class SdkDirectLoadingStrategyTest {
             testAddOnPackageXml.createNewFile()
             testAddOnPackageXml.writeText(ADD_ON_XML)
         }
+
+        if (configureSystemImages) {
+            for (info in systemImageInfos) {
+                val systemImageRoot =
+                    sdkDir.resolve(info.directory)
+                systemImageRoot.mkdirs()
+
+                val systemImagePackageXml = systemImageRoot.resolve("package.xml")
+                systemImagePackageXml.createNewFile()
+                systemImagePackageXml.writeText(getSystemImageXml(info))
+            }
+        }
+
+        if (configureEmulator) {
+            val emulatorRoot = sdkDir.resolve("emulator")
+            emulatorRoot.mkdirs()
+
+            val emulatorPackageXml = emulatorRoot.resolve("package.xml")
+            emulatorPackageXml.createNewFile()
+            emulatorPackageXml.writeText(EMULATOR_XML)
+        }
     }
 
     private fun assertAllComponentsAreNull(sdkDirectLoadingStrategy: SdkDirectLoadingStrategy) {
@@ -441,7 +630,7 @@ class SdkDirectLoadingStrategyTest {
         assertThat(sdkDirectLoadingStrategy.getTargetBootClasspath()).containsExactly(
             sdkRoot.resolve("platforms/$platformHash/${SdkConstants.FN_FRAMEWORK_LIBRARY}"))
 
-        val buildToolDirectory = sdkRoot.resolve("build-tools/29.0.2")
+        val buildToolDirectory = sdkRoot.resolve("build-tools/30.0.0")
         assertThat(sdkDirectLoadingStrategy.getBuildToolsRevision()).isEqualTo(
             ToolsRevisionUtils.MIN_BUILD_TOOLS_REV)
         assertThat(sdkDirectLoadingStrategy.getAidlExecutable()).isEqualTo(

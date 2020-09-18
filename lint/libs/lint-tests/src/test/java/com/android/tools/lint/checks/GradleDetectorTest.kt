@@ -41,6 +41,7 @@ import com.android.tools.lint.checks.GradleDetector.Companion.EXPIRING_TARGET_SD
 import com.android.tools.lint.checks.GradleDetector.Companion.GRADLE_GETTER
 import com.android.tools.lint.checks.GradleDetector.Companion.GRADLE_PLUGIN_COMPATIBILITY
 import com.android.tools.lint.checks.GradleDetector.Companion.HIGH_APP_VERSION_CODE
+import com.android.tools.lint.checks.GradleDetector.Companion.JAVA_PLUGIN_LANGUAGE_LEVEL
 import com.android.tools.lint.checks.GradleDetector.Companion.KTX_EXTENSION_AVAILABLE
 import com.android.tools.lint.checks.GradleDetector.Companion.LIFECYCLE_ANNOTATION_PROCESSOR_WITH_JAVA8
 import com.android.tools.lint.checks.GradleDetector.Companion.MIN_SDK_TOO_LOW
@@ -369,7 +370,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                             "build.gradle:9: Warning: A newer version of $library than $version is available: $expectedVersion [GradleDependency]\n" +
                             "    $dependencyString\n" +
                             "    ${" ".repeat(configuration.length + 1)}" +
-                                "${"~".repeat(library.length + versionString.length + 3)}\n" +
+                            "${"~".repeat(library.length + versionString.length + 3)}\n" +
                             "0 errors, 1 warnings"
 
                         lint().files(source).issues(DEPENDENCY).run().expect(expected)
@@ -1291,6 +1292,47 @@ class GradleDetectorTest : AbstractCheckTest() {
         ).issues(AGP_DEPENDENCY, GRADLE_PLUGIN_COMPATIBILITY).run().expect(expected)
     }
 
+    fun testPreviewVersionsKts() {
+        val expected = "" +
+            "build.gradle.kts:7: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is " +
+            GRADLE_PLUGIN_RECOMMENDED_VERSION +
+            " [GradlePluginVersion]\n" +
+            "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "build.gradle.kts:8: Warning: A newer version of com.android.tools.build:gradle than 1.0.0 is available: " +
+            GRADLE_PLUGIN_RECOMMENDED_VERSION +
+            " [AndroidGradlePluginVersion]\n" +
+            "        classpath(\"com.android.tools.build:gradle:1.0.0\")\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "build.gradle.kts:9: Warning: A newer version of com.android.tools.build:gradle than 2.0.0-alpha4 is available: 3.5.0-alpha10 [AndroidGradlePluginVersion]\n" +
+            "        classpath(\"com.android.tools.build:gradle:2.0.0-alpha4\")\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 2 warnings\n"
+
+        lint().files(
+            kts(
+                "" +
+                    "buildscript {\n" +
+                    "    repositories {\n" +
+                    "        google()\n" +
+                    "        jcenter()\n" +
+                    "    }\n" +
+                    "    dependencies {\n" +
+                    "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
+                    "        classpath(\"com.android.tools.build:gradle:1.0.0\")\n" +
+                    "        classpath(\"com.android.tools.build:gradle:2.0.0-alpha4\")\n" +
+                    "    }\n" +
+                    "}\n" +
+                    "\n" +
+                    "allprojects {\n" +
+                    "    repositories {\n" +
+                    "        jcenter()\n" +
+                    "    }\n" +
+                    "}\n"
+            )
+        ).issues(AGP_DEPENDENCY, GRADLE_PLUGIN_COMPATIBILITY).run().expect(expected)
+    }
+
     fun testPreviewVersionsNoGoogleMaven() {
         // regression test for b/144442233: if we don't have google() in buildscript repositories,
         // we probably shouldn't unconditionally update AGP version dependencies.
@@ -1313,6 +1355,43 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "        classpath 'com.android.tools.build:gradle:1.0.0-rc8'\n" +
                     "        classpath 'com.android.tools.build:gradle:1.0.0'\n" +
                     "        classpath 'com.android.tools.build:gradle:2.0.0-alpha4'\n" +
+                    "    }\n" +
+                    "}\n" +
+                    "\n" +
+                    "allprojects {\n" +
+                    "    repositories {\n" +
+                    "        jcenter()\n" +
+                    "    }\n" +
+                    "}\n"
+            )
+        ).issues(DEPENDENCY, GRADLE_PLUGIN_COMPATIBILITY).run()
+            .expect(expected)
+            .expectFixDiffs("")
+    }
+
+    fun testPreviewVersionsNoGoogleMavenKts() {
+        // regression test for b/144442233, Kts version: check that we can detect and react to
+        // 0-argument calls, even if it's unrealistic that any .build.kts file suffers from this
+        // precise problem.
+        val expected = "" +
+            "build.gradle.kts:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is " +
+            GRADLE_PLUGIN_RECOMMENDED_VERSION +
+            " [GradlePluginVersion]\n" +
+            "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
+            "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings\n"
+
+        lint().files(
+            kts(
+                "" +
+                    "buildscript {\n" +
+                    "    repositories {\n" +
+                    "        jcenter()\n" +
+                    "    }\n" +
+                    "    dependencies {\n" +
+                    "        classpath(\"com.android.tools.build:gradle:1.0.0-rc8\")\n" +
+                    "        classpath(\"com.android.tools.build:gradle:1.0.0\")\n" +
+                    "        classpath(\"com.android.tools.build:gradle:2.0.0-alpha4\")\n" +
                     "    }\n" +
                     "}\n" +
                     "\n" +
@@ -3327,6 +3406,289 @@ class GradleDetectorTest : AbstractCheckTest() {
             .issues(KTX_EXTENSION_AVAILABLE)
             .run()
             .expectClean()
+    }
+
+    fun testJavaLanguageLevelClean() {
+        val sourceCompatibility = listOf(
+            "java.sourceCompatibility JavaVersion.VERSION_1_8",
+            "java.sourceCompatibility = JavaVersion.VERSION_1_8",
+            "java { sourceCompatibility JavaVersion.VERSION_1_8 }",
+            "java { sourceCompatibility = JavaVersion.VERSION_1_8 }",
+            // special-case syntax (assignment only)
+            "sourceCompatibility = JavaVersion.VERSION_1_8"
+        )
+        val targetCompatibility = listOf(
+            "java.targetCompatibility JavaVersion.VERSION_1_8",
+            "java.targetCompatibility = JavaVersion.VERSION_1_8",
+            "java { targetCompatibility JavaVersion.VERSION_1_8 }",
+            "java { targetCompatibility = JavaVersion.VERSION_1_8 }",
+            "targetCompatibility = JavaVersion.VERSION_1_8"
+        )
+        sourceCompatibility.forEach { sc ->
+            targetCompatibility.forEach { tc ->
+                lint().files(
+                    gradle(
+                        """
+                           plugins {
+                               id 'java'
+                           }
+                        """.trimIndent() + "\n${sc}\n$tc"
+                    ).indented()
+                )
+                    .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
+                    .run()
+                    .expectClean()
+            }
+        }
+    }
+
+    fun testJavaLanguageLevelNoSourceCompatibility() {
+        val targetCompatibility = listOf(
+            "java.targetCompatibility JavaVersion.VERSION_1_8",
+            "java.targetCompatibility = JavaVersion.VERSION_1_8",
+            "java { targetCompatibility JavaVersion.VERSION_1_8 }",
+            "java { targetCompatibility = JavaVersion.VERSION_1_8 }",
+            "targetCompatibility = JavaVersion.VERSION_1_8"
+        )
+        targetCompatibility.forEach { tc ->
+            lint().files(
+                gradle(
+                    """
+                        plugins {
+                           id 'java'
+                        }
+                    """.trimIndent() + "\n$tc"
+                ).indented()
+            )
+                .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
+                .run()
+                .expect(
+                    """
+                        build.gradle:2: Warning: no Java sourceCompatibility directive [JavaPluginLanguageLevel]
+                           id 'java'
+                           ~~~~~~~~~
+                        0 errors, 1 warnings
+                    """
+                )
+                .expectFixDiffs(
+                    """
+                        Fix for build.gradle line 2: Insert sourceCompatibility directive for JDK8:
+                        @@ -5 +5
+                        + java.sourceCompatibility = JavaVersion.VERSION_1_8
+                    """.trimIndent()
+                )
+        }
+    }
+
+    fun testJavaLanguageLevelNoTargetCompatibility() {
+        val sourceCompatibility = listOf(
+            "java.sourceCompatibility JavaVersion.VERSION_1_8",
+            "java.sourceCompatibility = JavaVersion.VERSION_1_8",
+            "java { sourceCompatibility JavaVersion.VERSION_1_8 }",
+            "java { sourceCompatibility = JavaVersion.VERSION_1_8 }",
+            "sourceCompatibility = JavaVersion.VERSION_1_8"
+        )
+        sourceCompatibility.forEach { sc ->
+            lint().files(
+                gradle(
+                    """
+                        plugins {
+                           id 'java'
+                        }
+                    """.trimIndent() + "\n$sc"
+                ).indented()
+            )
+                .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
+                .run()
+                .expect(
+                    """
+                        build.gradle:2: Warning: no Java targetCompatibility directive [JavaPluginLanguageLevel]
+                           id 'java'
+                           ~~~~~~~~~
+                        0 errors, 1 warnings
+                    """
+                )
+                .expectFixDiffs(
+                    """
+                        Fix for build.gradle line 2: Insert targetCompatibility directive for JDK8:
+                        @@ -5 +5
+                        + java.targetCompatibility = JavaVersion.VERSION_1_8
+                    """.trimIndent()
+                )
+        }
+    }
+
+    fun testJavaLanguageLevelNoDirectives() {
+        val plugins = listOf(
+            "java", "java-library", "application",
+            "org.gradle.java", "org.gradle.java-library", "org.gradle.application"
+        )
+        plugins.forEach { plugin ->
+            lint().files(
+                gradle(
+                    """
+                    plugins {
+                       id '$plugin'
+                    }
+                    """.trimIndent()
+                ).indented()
+            )
+                .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
+                .run()
+                .expect(
+                    """
+                    build.gradle:2: Warning: no Java language level directives [JavaPluginLanguageLevel]
+                       id '$plugin'
+                       ${"~".repeat(plugin.length + 5)}
+                    0 errors, 1 warnings
+                """
+                )
+                .expectFixDiffs(
+                    """
+                    Fix for build.gradle line 2: Insert JDK8 language level directives:
+                    @@ -4 +4
+                    + java {
+                    +     sourceCompatibility = JavaVersion.VERSION_1_8
+                    +     targetCompatibility = JavaVersion.VERSION_1_8
+                    + }
+                    """.trimIndent()
+                )
+        }
+    }
+
+    fun testJavaLanguageLevelCleanKts() {
+        val sourceCompatibility = listOf(
+            "java.sourceCompatibility = JavaVersion.VERSION_1_8",
+            "java { sourceCompatibility = JavaVersion.VERSION_1_8 }"
+        )
+        val targetCompatibility = listOf(
+            "java.targetCompatibility = JavaVersion.VERSION_1_8",
+            "java { targetCompatibility = JavaVersion.VERSION_1_8 }"
+        )
+        sourceCompatibility.forEach { sc ->
+            targetCompatibility.forEach { tc ->
+                lint().files(
+                    kts(
+                        """
+                           plugins {
+                               id("java")
+                           }
+                        """.trimIndent() + "\n${sc}\n$tc"
+                    ).indented()
+                )
+                    .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
+                    .run()
+                    .expectClean()
+            }
+        }
+    }
+
+    fun testJavaLanguageLevelNoSourceCompatibilityKts() {
+        val targetCompatibility = listOf(
+            "java.targetCompatibility = JavaVersion.VERSION_1_8",
+            "java { targetCompatibility = JavaVersion.VERSION_1_8 }"
+        )
+        targetCompatibility.forEach { tc ->
+            lint().files(
+                kts(
+                    """
+                        plugins {
+                           id("java")
+                        }
+                    """.trimIndent() + "\n$tc"
+                ).indented()
+            )
+                .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
+                .run()
+                .expect(
+                    """
+                        build.gradle.kts:2: Warning: no Java sourceCompatibility directive [JavaPluginLanguageLevel]
+                           id("java")
+                           ~~~~~~~~~~
+                        0 errors, 1 warnings
+                    """
+                )
+                .expectFixDiffs(
+                    """
+                        Fix for build.gradle.kts line 2: Insert sourceCompatibility directive for JDK8:
+                        @@ -5 +5
+                        + java.sourceCompatibility = JavaVersion.VERSION_1_8
+                    """.trimIndent()
+                )
+        }
+    }
+
+    fun testJavaLanguageLevelNoTargetCompatibilityKts() {
+        val sourceCompatibility = listOf(
+            "java.sourceCompatibility = JavaVersion.VERSION_1_8",
+            "java { sourceCompatibility = JavaVersion.VERSION_1_8 }"
+        )
+        sourceCompatibility.forEach { sc ->
+            lint().files(
+                kts(
+                    """
+                        plugins {
+                           id("java")
+                        }
+                    """.trimIndent() + "\n$sc"
+                ).indented()
+            )
+                .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
+                .run()
+                .expect(
+                    """
+                        build.gradle.kts:2: Warning: no Java targetCompatibility directive [JavaPluginLanguageLevel]
+                           id("java")
+                           ~~~~~~~~~~
+                        0 errors, 1 warnings
+                    """
+                )
+                .expectFixDiffs(
+                    """
+                        Fix for build.gradle.kts line 2: Insert targetCompatibility directive for JDK8:
+                        @@ -5 +5
+                        + java.targetCompatibility = JavaVersion.VERSION_1_8
+                    """.trimIndent()
+                )
+        }
+    }
+
+    fun testJavaLanguageLevelNoDirectivesKts() {
+        val plugins = listOf(
+            "java", "java-library", "application",
+            "org.gradle.java", "org.gradle.java-library", "org.gradle.application"
+        )
+        plugins.forEach { plugin ->
+            lint().files(
+                kts(
+                    """
+                    plugins {
+                       id("$plugin")
+                    }
+                    """.trimIndent()
+                ).indented()
+            )
+                .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
+                .run()
+                .expect(
+                    """
+                    build.gradle.kts:2: Warning: no Java language level directives [JavaPluginLanguageLevel]
+                       id("$plugin")
+                       ${"~".repeat(plugin.length + 6)}
+                    0 errors, 1 warnings
+                """
+                )
+                .expectFixDiffs(
+                    """
+                    Fix for build.gradle.kts line 2: Insert JDK8 language level directives:
+                    @@ -4 +4
+                    + java {
+                    +     sourceCompatibility = JavaVersion.VERSION_1_8
+                    +     targetCompatibility = JavaVersion.VERSION_1_8
+                    + }
+                    """.trimIndent()
+                )
+        }
     }
 
     // -------------------------------------------------------------------------------------------

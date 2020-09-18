@@ -23,8 +23,8 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
-import com.android.build.api.component.TestComponentProperties;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.component.TestComponent;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
@@ -108,9 +108,8 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             GlobalScope globalScope = creationConfig.getGlobalScope();
             BaseExtension extension = globalScope.getExtension();
 
-            VariantPropertiesImpl testedVariant =
-                    (VariantPropertiesImpl)
-                            ((TestComponentProperties) creationConfig).getTestedVariant();
+            VariantImpl testedVariant =
+                    (VariantImpl) ((TestComponent) creationConfig).getTestedVariant();
 
             boolean includeAndroidResources =
                     extension.getTestOptions().getUnitTests().isIncludeAndroidResources();

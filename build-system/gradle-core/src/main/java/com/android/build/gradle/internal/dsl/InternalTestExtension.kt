@@ -19,10 +19,8 @@ package com.android.build.gradle.internal.dsl
 import com.android.build.api.dsl.TestBuildFeatures
 import com.android.build.api.dsl.TestExtension
 import com.android.build.api.variant.TestVariant
-import com.android.build.api.variant.TestVariantProperties
+import com.android.build.api.variant.TestVariantBuilder
 import com.android.build.gradle.api.AndroidSourceSet
-import com.android.build.gradle.internal.CompileOptions
-import com.android.build.gradle.internal.coverage.JacocoOptions
 
 /** See [InternalCommonExtension] */
 interface InternalTestExtension :
@@ -37,5 +35,5 @@ interface InternalTestExtension :
                 BuildType,
                 DefaultConfig,
                 ProductFlavor,
-                TestVariant<TestVariantProperties>,
-                TestVariantProperties>
+                TestVariantBuilder,
+                TestVariant>

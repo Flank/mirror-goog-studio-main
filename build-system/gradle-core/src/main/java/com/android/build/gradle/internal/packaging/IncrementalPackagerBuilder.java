@@ -19,13 +19,10 @@ package com.android.build.gradle.internal.packaging;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.signing.SigningConfigData;
-import com.android.builder.core.DefaultManifestParser;
-import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.files.SerializableChange;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.internal.packaging.IncrementalPackager;
-import com.android.builder.packaging.PackagingUtils;
 import com.android.ide.common.resources.FileStatus;
 import com.android.ide.common.signing.CertificateInfo;
 import com.android.ide.common.signing.KeystoreHelper;
@@ -33,7 +30,6 @@ import com.android.ide.common.signing.KeytoolException;
 import com.android.tools.build.apkzlib.sign.SigningOptions;
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -80,16 +76,11 @@ public class IncrementalPackagerBuilder {
             ApkCreatorFactory.CreationData.builder();
 
     /**
-     * How should native libraries be packaged. If not defined, it can be inferred if {@link
-     * #manifestFile} is defined.
+     * How should native libraries be packaged. Only applicable if using apkzlib.
      */
     @Nullable private NativeLibrariesPackagingMode nativeLibrariesPackagingMode;
 
-    /**
-     * The no-compress predicate: returns {@code true} for paths that should not be compressed. If
-     * not defined, but {@link #aaptOptionsNoCompress} and {@link #manifestFile} are both defined,
-     * it can be inferred.
-     */
+    /** The no-compress predicate: returns {@code true} for paths that should not be compressed. */
     @Nullable private Predicate<String> noCompressPredicate;
 
     /**
@@ -129,15 +120,6 @@ public class IncrementalPackagerBuilder {
     @NonNull
     private Set<String> abiFilters;
 
-    /** Manifest. */
-    @Nullable private File manifestFile;
-
-    /** Whether the manifest file is required to exist. */
-    private boolean isManifestFileRequired;
-
-    /** aapt options no compress config. */
-    @Nullable private Collection<String> aaptOptionsNoCompress;
-
     @NonNull private BuildType buildType;
 
     @NonNull private ApkCreatorType apkCreatorType = ApkCreatorType.APK_Z_FILE_CREATOR;
@@ -147,6 +129,7 @@ public class IncrementalPackagerBuilder {
     @NonNull private List<SerializableChange> changedAssets = new ArrayList<>();
     @NonNull private Map<RelativeFile, FileStatus> changedAndroidResources = new HashMap<>();
     @NonNull private Map<RelativeFile, FileStatus> changedNativeLibs = new HashMap<>();
+    @NonNull private List<SerializableChange> changedAppMetadata = new ArrayList<>();
 
     /** Creates a new builder. */
     public IncrementalPackagerBuilder(@NonNull BuildType buildType) {
@@ -269,7 +252,9 @@ public class IncrementalPackagerBuilder {
     }
 
     /**
-     * Sets the packaging mode for native libraries.
+     * Sets the packaging mode for native libraries. Only applicable if using apkzlib.
+     *
+     * TODO (b/134585392) Remove this after removing apkzlib dependency
      *
      * @param packagingMode the packging mode
      * @return {@code this} for use with fluent-style notation
@@ -278,21 +263,6 @@ public class IncrementalPackagerBuilder {
     public IncrementalPackagerBuilder withNativeLibraryPackagingMode(
             @NonNull NativeLibrariesPackagingMode packagingMode) {
         nativeLibrariesPackagingMode = packagingMode;
-        return this;
-    }
-
-    /**
-     * Sets the manifest. While the manifest itself is not used for packaging, information on the
-     * native libraries packaging mode can be inferred from the manifest.
-     *
-     * @param manifest the manifest
-     * @param isManifestFileRequired whether the manifest file is required to exist
-     * @return {@code this} for use with fluent-style notation
-     */
-    public IncrementalPackagerBuilder withManifest(
-            @NonNull File manifest, boolean isManifestFileRequired) {
-        this.manifestFile = manifest;
-        this.isManifestFileRequired = isManifestFileRequired;
         return this;
     }
 
@@ -307,19 +277,6 @@ public class IncrementalPackagerBuilder {
     public IncrementalPackagerBuilder withNoCompressPredicate(
             @NonNull Predicate<String> noCompressPredicate) {
         this.noCompressPredicate = noCompressPredicate;
-        return this;
-    }
-
-    /**
-     * Sets the {@code aapt} options no compress predicate.
-     *
-     * <p>The no-compress predicate can be computed if this and the manifest (see {@link
-     * #withManifest(File, boolean)}) are both defined.
-     */
-    @NonNull
-    public IncrementalPackagerBuilder withAaptOptionsNoCompress(
-            @Nullable Collection<String> aaptOptionsNoCompress) {
-        this.aaptOptionsNoCompress = aaptOptionsNoCompress;
         return this;
     }
 
@@ -466,6 +423,18 @@ public class IncrementalPackagerBuilder {
     }
 
     /**
+     * Sets the changed app metadata
+     *
+     * @param changedAppMetadata the changed app metadata
+     * @return {@code this} for use with fluent-style notation
+     */
+    public IncrementalPackagerBuilder withChangedAppMetadata(
+            @NonNull Collection<SerializableChange> changedAppMetadata) {
+        this.changedAppMetadata = ImmutableList.copyOf(changedAppMetadata);
+        return this;
+    }
+
+    /**
      * Creates the packager, verifying that all the minimum data has been provided. The required
      * information are:
      *
@@ -481,23 +450,8 @@ public class IncrementalPackagerBuilder {
     public IncrementalPackager build() {
         Preconditions.checkState(intermediateDir != null, "intermediateDir == null");
 
-        ManifestAttributeSupplier manifest =
-                this.manifestFile != null
-                        ? new DefaultManifestParser(
-                                this.manifestFile, () -> true, isManifestFileRequired, null)
-                        : null;
-
+        Preconditions.checkNotNull(nativeLibrariesPackagingMode);
         Preconditions.checkNotNull(noCompressPredicate);
-
-        if (nativeLibrariesPackagingMode == null) {
-            if (manifest != null) {
-                nativeLibrariesPackagingMode =
-                        PackagingUtils.getNativeLibrariesLibrariesPackagingMode(manifest);
-            } else {
-                nativeLibrariesPackagingMode = NativeLibrariesPackagingMode.COMPRESSED;
-            }
-        }
-
         creationDataBuilder
                 .setNativeLibrariesPackagingMode(nativeLibrariesPackagingMode)
                 .setNoCompressPredicate(noCompressPredicate::test);
@@ -518,7 +472,8 @@ public class IncrementalPackagerBuilder {
                     changedJavaResources,
                     changedAssets,
                     changedAndroidResources,
-                    changedNativeLibs);
+                    changedNativeLibs,
+                    changedAppMetadata);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

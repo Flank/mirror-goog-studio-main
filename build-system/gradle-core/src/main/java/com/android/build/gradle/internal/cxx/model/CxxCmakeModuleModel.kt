@@ -21,6 +21,12 @@ import java.io.File
 
 interface CxxCmakeModuleModel {
     /**
+     * Whether there is a valid cmake.exe.
+     *   ex, /path/to/cmake/cmake.exe
+     */
+    val isValidCmakeAvailable: Boolean
+
+    /**
      * Path to cmake.exe
      *   ex, /path/to/cmake/cmake.exe
      */

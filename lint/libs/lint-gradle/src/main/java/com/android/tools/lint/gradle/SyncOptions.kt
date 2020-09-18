@@ -24,6 +24,7 @@ import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.detector.api.Category.Companion.getCategory
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.isSarifFile
 import com.android.tools.lint.model.LintModelLintOptions
 import org.gradle.api.GradleException
 import org.gradle.api.Project
@@ -156,7 +157,10 @@ fun syncTo(
                     closeWriter = true
                 }
             }
-            val reporter = Reporter.createTextReporter(client, flags, file, writer, closeWriter)
+            val reporter = if (isSarifFile(output))
+                Reporter.createSarifReporter(client, output)
+            else
+                Reporter.createTextReporter(client, flags, file, writer, closeWriter)
             flags.reporters.add(reporter)
         }
         if (options.htmlReport) {
@@ -170,7 +174,11 @@ fun syncTo(
             }
             output = validateOutputFile(output!!)
             try {
-                flags.reporters.add(Reporter.createHtmlReporter(client, output, flags))
+                val reporter = if (isSarifFile(output))
+                    Reporter.createSarifReporter(client, output)
+                else
+                    Reporter.createHtmlReporter(client, output, flags)
+                flags.reporters.add(reporter)
             } catch (e: IOException) {
                 throw GradleException("HTML invalid argument.", e)
             }
@@ -190,15 +198,16 @@ fun syncTo(
             }
             output = validateOutputFile(output!!)
             try {
-                flags.reporters
-                    .add(
-                        Reporter.createXmlReporter(
-                            client,
-                            output,
-                            intendedForBaseline = false,
-                            includeFixes = flags.isIncludeXmlFixes
-                        )
+                val reporter = if (isSarifFile(output))
+                    Reporter.createSarifReporter(client, output)
+                else
+                    Reporter.createXmlReporter(
+                        client,
+                        output,
+                        intendedForBaseline = false,
+                        includeFixes = flags.isIncludeXmlFixes
                     )
+                flags.reporters.add(reporter)
             } catch (e: IOException) {
                 throw GradleException("XML invalid argument.", e)
             }

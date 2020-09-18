@@ -20,6 +20,17 @@ then
   IS_POST_SUBMIT=true
 fi
 
+declare -a detect_flake_args
+for arg in "$@"
+do
+  if [[ "${arg}" == "--detect_flakes" ]];
+  then
+    detect_flake_args+=(--runs_per_test=20)
+    detect_flake_args+=(--runs_per_test_detects_flakes)
+    detect_flake_args+=(--nocache_test_results)
+  fi
+done
+
 readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
 
@@ -46,6 +57,7 @@ readonly invocation_id="$(uuidgen)"
   --tool_tag=${script_name} \
   --profile="${DIST_DIR:-/tmp}/profile-${BUILD_NUMBER}.json.gz" \
   --runs_per_test=//tools/base/bazel:iml_to_build_consistency_test@2 \
+  ${detect_flake_args[@]} \
   -- \
   //tools/idea/updater:updater_deploy.jar \
   //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar \

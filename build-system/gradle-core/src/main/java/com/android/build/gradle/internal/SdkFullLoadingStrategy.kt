@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal
 
+import com.android.SdkConstants
 import com.android.builder.internal.compiler.RenderScriptProcessor
 import com.android.builder.sdk.SdkInfo
 import com.android.builder.sdk.TargetInfo
@@ -91,6 +92,12 @@ class SdkFullLoadingStrategy(
     fun getSupportBlasLibFolder() = getBuildToolsInfo()?.let {
         RenderScriptProcessor.getSupportBlasLibFolder(it.location)
     }
+
+    fun getSystemImageLibFolder(imageHash: String) =
+        sdkHandler.installSystemImageWarnOnFailure(imageHash)
+
+    fun getEmulatorLibFolder() =
+        sdkHandler.localEmulator
 
     @Synchronized
     fun reset() {

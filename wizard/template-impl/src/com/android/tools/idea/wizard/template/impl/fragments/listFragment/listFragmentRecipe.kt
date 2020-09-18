@@ -20,6 +20,7 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
 import com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.placeholder.placeholderContentJava
 import com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.placeholder.placeholderContentKt
 import com.android.tools.idea.wizard.template.impl.fragments.listFragment.res.layout.fragmentListXml
@@ -45,6 +46,7 @@ fun RecipeExecutor.listFragmentRecipe(
   val ktOrJavaExt = projectData.language.extension
   val applicationPackage = projectData.applicationPackage
   addAllKotlinDependencies(moduleData)
+  addViewBindingSupport(moduleData.viewBindingSupport, true)
 
   addDependency("com.android.support:support-v4:${appCompatVersion}.+")
   addDependency("com.android.support:recyclerview-v7:${appCompatVersion}.+")
@@ -61,9 +63,23 @@ fun RecipeExecutor.listFragmentRecipe(
   }
   save(listFragment, srcOut.resolve("${fragmentClass}.${ktOrJavaExt}"))
 
+  val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()
   val recyclerViewAdapter = when (projectData.language) {
-    Language.Java -> recyclerViewAdapterJava(adapterClassName, fragmentLayout, packageName, useAndroidX)
-    Language.Kotlin -> recyclerViewAdapterKt(adapterClassName, applicationPackage, fragmentLayout, packageName, useAndroidX)
+    Language.Java -> recyclerViewAdapterJava(
+      adapterClassName = adapterClassName,
+      fragmentLayout = fragmentLayout,
+      packageName = packageName,
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported
+    )
+    Language.Kotlin -> recyclerViewAdapterKt(
+      adapterClassName = adapterClassName,
+      applicationPackage = applicationPackage,
+      fragmentLayout = fragmentLayout,
+      kotlinEscapedPackageName = packageName,
+      useAndroidX = useAndroidX,
+      isViewBindingSupported = isViewBindingSupported
+    )
   }
   save(recyclerViewAdapter, srcOut.resolve("${adapterClassName}.${ktOrJavaExt}"))
 

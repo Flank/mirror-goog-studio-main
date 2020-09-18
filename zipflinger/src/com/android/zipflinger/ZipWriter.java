@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.file.StandardOpenOption;
 
 public class ZipWriter implements Closeable {
@@ -75,6 +76,16 @@ public class ZipWriter implements Closeable {
         while (copied != count) {
             copied += src.transferTo(position + copied, count - copied, channel);
         }
+    }
+
+    public void transferFrom(@NonNull ReadableByteChannel src, long count) throws IOException {
+        ensureOpen();
+        long position = channel.position();
+        long copied = 0;
+        while (copied != count) {
+            copied += channel.transferFrom(src, position + copied, count - copied);
+        }
+        channel.position(position + copied);
     }
 
     private void ensureOpen() throws IOException {

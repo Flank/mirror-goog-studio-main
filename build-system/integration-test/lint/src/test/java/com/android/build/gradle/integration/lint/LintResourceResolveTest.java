@@ -18,27 +18,38 @@ package com.android.build.gradle.integration.lint;
 
 import static com.android.testutils.truth.FileSubject.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * Test making sure that the SupportAnnotationUsage does not report errors referencing R.type.name
  * resource fields. (Regression test for bug 133326990.)
  */
+@RunWith(FilterableParameterized.class)
 public class LintResourceResolveTest {
+    @Parameterized.Parameters(name = "{0}")
+    public static LintInvocationType[] getParams() {
+        return LintInvocationType.values();
+    }
+
     @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestProject("lintResourceResolve")
-                    // http://b/146208910
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                    .create();
+    public final GradleTestProject project;
+
+    public LintResourceResolveTest(LintInvocationType lintInvocationType) {
+        this.project = lintInvocationType.testProjectBuilder()
+                .fromTestProject("lintResourceResolve")
+                .create();
+    }
 
     @Test
     public void checkClean() throws Exception {
+        // Run twice to catch issues with configuration caching
+        project.execute("clean", ":app:lintDebug");
         project.execute("clean", ":app:lintDebug");
         File file = new File(project.getSubproject("app").getProjectDir(), "lint-report.txt");
         assertThat(file).exists();

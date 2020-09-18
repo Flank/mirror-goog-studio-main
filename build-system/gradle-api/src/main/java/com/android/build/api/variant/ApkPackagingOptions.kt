@@ -24,6 +24,14 @@ import org.gradle.api.Incubating
 @Incubating
 interface ApkPackagingOptions : PackagingOptions {
 
+    /** PackagingOptions for dex files. Initialized from the corresponding DSL. */
+    val dex: DexPackagingOptions
+
+    /** PackagingOptions for dex files. Initialized from the corresponding DSL. */
+    fun dex(action: DexPackagingOptions.() -> Unit)
+
+    override val jniLibs: JniLibsApkPackagingOptions
+
     /** PackagingOptions for native libraries. Initialized from the corresponding DSL. */
     fun jniLibs(action: JniLibsApkPackagingOptions.() -> Unit)
 }

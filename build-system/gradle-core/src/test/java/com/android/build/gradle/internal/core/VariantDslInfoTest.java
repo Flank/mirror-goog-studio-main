@@ -292,8 +292,8 @@ public class VariantDslInfoTest {
     private VariantDslInfo createVariant(SigningConfig signingOverride) {
 
         List<Pair<String, String>> flavors = ImmutableList.of(new Pair<>("dimension1", "flavor"));
-        VariantBuilder builder =
-                VariantBuilder.getBuilder(
+        VariantDslInfoBuilder builder =
+                VariantDslInfoBuilder.getBuilder(
                         new DimensionCombinationImpl("debug", flavors),
                         VariantTypeImpl.BASE_APK,
                         defaultConfig,

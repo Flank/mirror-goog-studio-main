@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.api.variant.impl.AndroidVersionImpl
+import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
-import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
+import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
 import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateCxxConfigurationModel
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -125,13 +126,13 @@ open class BasicModuleModelMock {
         throwUnmocked
     )
 
-    val component: VariantImpl<VariantPropertiesImpl> = mock(
-        VariantImpl::class.java,
+    val component: VariantBuilderImpl = mock(
+            VariantBuilderImpl::class.java,
         throwUnmocked
-    ) as VariantImpl<VariantPropertiesImpl>
+    ) as VariantBuilderImpl
 
-    val componentProperties: VariantPropertiesImpl = mock(
-        VariantPropertiesImpl::class.java,
+    val componentProperties: VariantImpl = mock(
+        VariantImpl::class.java,
         throwUnmocked
     )
 
@@ -183,6 +184,7 @@ open class BasicModuleModelMock {
     val allPlatformsProjectRootDir = join(projects, "MyProject")
     val projectRootDir = join(allPlatformsProjectRootDir,  "Source", "Android")
     val sdkDir = join(home, "Library", "Android", "sdk")
+    val cmakeDir = join(sdkDir, "cmake", DEFAULT_CMAKE_VERSION, "bin")
     val ndkHandler = mock(
         NdkHandler::class.java,
         throwUnmocked
@@ -236,7 +238,7 @@ open class BasicModuleModelMock {
             throwUnmocked
         )
         val variantImpl = mock(
-            VariantImpl::class.java,
+            VariantBuilderImpl::class.java,
             throwUnmocked
         )
         val prefabArtifactCollection = mock(ArtifactCollection::class.java, throwUnmocked)
@@ -296,6 +298,7 @@ open class BasicModuleModelMock {
             val ndkFolder = join(sdkDir, "ndk", ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)
             val meta = join(ndkFolder, "meta")
             meta.mkdirs()
+            cmakeDir.mkdirs()
             File(meta, "platforms.json").writeText(platformsJson)
             File(meta, "abis.json").writeText(abisJson)
             val osName = System.getProperty("os.name").toLowerCase(Locale.ENGLISH)

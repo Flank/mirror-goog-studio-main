@@ -90,6 +90,25 @@ class DetectRootViewChangeTest {
         assertThat(changeDetector.handler.waitingMessages()).isEqualTo(0)
     }
 
+    @Test
+    fun testRemoveLast() {
+        val v1 = createView()
+        val views = mutableListOf(v1)
+        `when`(myService!!.rootViews).thenReturn(views).thenReturn(emptyList())
+
+        val changeDetector = DetectRootViewChange(myService!!)
+        var startCount = 0
+        var stopCount = 0
+        `when`(myService!!.startLayoutInspector(any())).thenAnswer { startCount++ }
+        `when`(myService!!.stopCapturing(any())).thenAnswer { stopCount++ }
+
+        changeDetector.handler.advance(step)
+        assertThat(startCount).isEqualTo(0)
+        assertThat(stopCount).isEqualTo(1)
+
+        assertThat(changeDetector.roots).isEmpty()
+    }
+
     private fun createView(): View {
         val view: View = mock()
         `when`(view.post(any())).thenAnswer { invocation ->

@@ -39,7 +39,7 @@ class WorkerEnabledTransformationTest: VariantApiBaseTest(TestType.Script, Scrip
             import java.io.Serializable
             import java.nio.file.Files
             import javax.inject.Inject
-            
+
             import org.gradle.api.file.Directory
             import org.gradle.api.file.DirectoryProperty
             import org.gradle.api.file.RegularFileProperty
@@ -48,8 +48,8 @@ class WorkerEnabledTransformationTest: VariantApiBaseTest(TestType.Script, Scrip
             import org.gradle.api.tasks.Internal
             import org.gradle.api.tasks.TaskAction
             import org.gradle.workers.WorkerExecutor
-            
-            import com.android.build.api.artifact.ArtifactType 
+
+            import com.android.build.api.artifact.ArtifactType
             import com.android.build.api.artifact.ArtifactTransformationRequest
             import com.android.build.api.variant.BuiltArtifact
 
@@ -57,12 +57,15 @@ class WorkerEnabledTransformationTest: VariantApiBaseTest(TestType.Script, Scrip
 
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
+            }
 
-                onVariantProperties {
-                    TaskProvider copyApksProvider = tasks.register('copy' + it.getName() + 'Apks', CopyApksTask)
+            androidComponents {
+
+                onVariants(selector().all(), { variant ->
+                    TaskProvider copyApksProvider = tasks.register('copy' + variant.getName() + 'Apks', CopyApksTask)
 
                     ArtifactTransformationRequest request =
-                        it.artifacts.use(copyApksProvider)
+                        variant.artifacts.use(copyApksProvider)
                             .wiredWithDirectories(
                                 { it.getApkFolder() },
                                 { it.getOutFolder()})
@@ -72,7 +75,7 @@ class WorkerEnabledTransformationTest: VariantApiBaseTest(TestType.Script, Scrip
                         it.transformationRequest.set(request)
                         it.getOutFolder().set(new File("${outFolderForApk.absolutePath}"))
                     }
-                }
+                })
             }
             """.trimIndent()
                 testingElements.addManifest(this)

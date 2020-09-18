@@ -17,14 +17,22 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.TestComponent
-import com.android.build.api.component.TestComponentProperties
+import com.android.build.api.variant.Variant
+import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.model.ObjectFactory
 
-/**
- * Shim object for [TestComponent] that records all mutating accesses to the analytics.
- */
-abstract class AnalyticsEnabledTestComponent<PropertiesT: TestComponentProperties>(
-    delegate: TestComponent<PropertiesT>,
-    stats: GradleBuildVariant.Builder
-) : AnalyticsEnabledComponent<PropertiesT>(delegate, stats),
-    TestComponent<PropertiesT>
+open abstract class AnalyticsEnabledTestComponent(
+    override val delegate: TestComponent,
+    stats: GradleBuildVariant.Builder,
+    objectFactory: ObjectFactory
+) : AnalyticsEnabledComponent(
+    delegate, stats, objectFactory
+), TestComponent {
+    override val testedVariant: Variant
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.TESTED_VARIANT_VALUE
+            return delegate.testedVariant
+        }
+}

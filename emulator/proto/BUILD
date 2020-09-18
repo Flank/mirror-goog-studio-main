@@ -7,6 +7,7 @@ android_java_proto_library(
         "rtc_service.proto",
         "snapshot.proto",
         "snapshot_service.proto",
+        "ui_controller_service.proto",
     ],
     grpc_support = 1,
     java_deps = ["//tools/base/third_party:io.grpc_grpc-all"],

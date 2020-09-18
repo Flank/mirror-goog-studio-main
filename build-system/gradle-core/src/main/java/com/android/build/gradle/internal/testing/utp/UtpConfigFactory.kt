@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.testing.utp
 
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.testing.StaticTestData
+import com.android.build.gradle.internal.testing.utp.RetentionConfig
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_CONTROLLER_ADB
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_LOCAL
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DRIVER_INSTRUMENTATION
@@ -27,6 +28,7 @@ import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.BuildToolInfo
 import com.google.protobuf.Any
+import com.google.testing.platform.plugin.android.icebox.host.proto.IceboxPluginProto
 import com.google.testing.platform.plugin.android.icebox.host.proto.IceboxPluginProto.IceboxPlugin
 import com.google.testing.platform.proto.api.config.AdbDeviceControllerProto
 import com.google.testing.platform.proto.api.config.AndroidInstrumentationDriverProto
@@ -74,7 +76,7 @@ class UtpConfigFactory {
         tmpDir: File,
         testLogDir: File,
         testRunLogDir: File,
-        usesIcebox: Boolean
+        retentionConfig: RetentionConfig
     ): RunnerConfigProto.RunnerConfig {
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
             addDevice(createLocalDevice(device, testData, utpDependencies))
@@ -82,7 +84,7 @@ class UtpConfigFactory {
                 createTestFixture(
                     device, apks, testData, utpDependencies, sdkComponents,
                     outputDir, tmpDir, testLogDir, testRunLogDir,
-                    usesIcebox
+                    retentionConfig
                 )
             )
             singleDeviceExecutor = createSingleDeviceExecutor(device)
@@ -160,7 +162,7 @@ class UtpConfigFactory {
         tmpDir: File,
         testLogDir: File,
         testRunLogDir: File,
-        usesRetention: Boolean
+        retentionConfig: RetentionConfig
     ): FixtureProto.TestFixture {
         return FixtureProto.TestFixture.newBuilder().apply {
             testFixtureIdBuilder.apply {
@@ -184,7 +186,7 @@ class UtpConfigFactory {
                 sdkComponents
             )
 
-            if (usesRetention) {
+            if (retentionConfig.enabled) {
                 var retentionTestData = testData.copy(
                     instrumentationRunnerArguments = testData.instrumentationRunnerArguments
                         .toMutableMap()
@@ -200,6 +202,17 @@ class UtpConfigFactory {
                         // TODO(155308548): query device for the following fields
                         emulatorGrpcAddress = DEFAULT_EMULATOR_GRPC_ADDRESS
                         emulatorGrpcPort = findGrpcPort(device.serialNumber)
+                        snapshotCompression = if (retentionConfig.compressSnapshots) {
+                            IceboxPluginProto.Compression.TARGZ
+                        } else {
+                            IceboxPluginProto.Compression.NONE
+                        }
+                        skipSnapshot = false
+                        maxSnapshotNumber = if (retentionConfig.retainAll) {
+                            0
+                        } else {
+                            retentionConfig.maxSnapshots
+                        }
                     }.build())
                     addAllJar(
                         utpDependencies.testPluginHostRetention.files.map {

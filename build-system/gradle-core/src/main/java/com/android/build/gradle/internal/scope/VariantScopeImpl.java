@@ -34,7 +34,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.ComponentIdentity;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.ProguardFileType;
@@ -104,7 +104,7 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull private final VariantDependencies variantDependencies;
 
     @NonNull private final PublishingSpecs.VariantSpec variantPublishingSpec;
-    @Nullable private final VariantPropertiesImpl testedVariantProperties;
+    @Nullable private final VariantImpl testedVariantProperties;
 
     // Global Data
     @NonNull private final GlobalScope globalScope;
@@ -124,7 +124,7 @@ public class VariantScopeImpl implements VariantScope {
             @NonNull VariantPathHelper pathHelper,
             @NonNull ArtifactsImpl artifacts,
             @NonNull GlobalScope globalScope,
-            @Nullable VariantPropertiesImpl testedVariantProperties) {
+            @Nullable VariantImpl testedVariantProperties) {
         this.componentIdentity = componentIdentity;
         this.variantDslInfo = variantDslInfo;
         this.variantDependencies = variantDependencies;
@@ -313,10 +313,10 @@ public class VariantScopeImpl implements VariantScope {
      *
      * <p>This value can be overridden by the OptionalBooleanOption.IDE_TEST_ONLY property.
      *
-     * @param variantProperties {@link VariantPropertiesImpl} for this variant scope.
+     * @param variantProperties {@link VariantImpl} for this variant scope.
      */
     @Override
-    public boolean isTestOnly(VariantPropertiesImpl variantProperties) {
+    public boolean isTestOnly(VariantImpl variantProperties) {
         ProjectOptions projectOptions = globalScope.getProjectOptions();
         Boolean isTestOnlyOverride = projectOptions.get(OptionalBooleanOption.IDE_TEST_ONLY);
 

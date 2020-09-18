@@ -809,9 +809,9 @@ public class TestLintTask {
                         output2);
             }
 
-            return new TestLintResult(this, output, lintClient.firstThrowable, incidents);
+            return new TestLintResult(this, rootDir, output, lintClient.firstThrowable, incidents);
         } catch (Throwable e) {
-            return new TestLintResult(this, null, e, Collections.emptyList());
+            return new TestLintResult(this, rootDir, null, e, Collections.emptyList());
         } finally {
             if (rootDirectory == null) { // Only delete if we created it above
                 TestUtils.deleteFile(rootDir);

@@ -20,8 +20,8 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures
+import com.android.build.api.variant.impl.DynamicFeatureVariantBuilderImpl
 import com.android.build.api.variant.impl.DynamicFeatureVariantImpl
-import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -44,7 +44,7 @@ import com.android.builder.core.VariantTypeImpl
 internal class DynamicFeatureVariantFactory(
     projectServices: ProjectServices,
     globalScope: GlobalScope
-) : AbstractAppVariantFactory<DynamicFeatureVariantImpl, DynamicFeatureVariantPropertiesImpl>(
+) : AbstractAppVariantFactory<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>(
     projectServices,
     globalScope
 ) {
@@ -53,11 +53,11 @@ internal class DynamicFeatureVariantFactory(
         componentIdentity: ComponentIdentity,
         variantDslInfo: VariantDslInfo,
         variantApiServices: VariantApiServices
-    ): DynamicFeatureVariantImpl {
+    ): DynamicFeatureVariantBuilderImpl {
         return projectServices
             .objectFactory
             .newInstance(
-                DynamicFeatureVariantImpl::class.java,
+                DynamicFeatureVariantBuilderImpl::class.java,
                 variantDslInfo,
                 componentIdentity,
                 variantApiServices
@@ -65,24 +65,24 @@ internal class DynamicFeatureVariantFactory(
     }
 
     override fun createVariantPropertiesObject(
-        variant: DynamicFeatureVariantImpl,
-        componentIdentity: ComponentIdentity,
-        buildFeatures: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo,
-        variantDependencies: VariantDependencies,
-        variantSources: VariantSources,
-        paths: VariantPathHelper,
-        artifacts: ArtifactsImpl,
-        variantScope: VariantScope,
-        variantData: BaseVariantData,
-        transformManager: TransformManager,
-        variantPropertiesApiServices: VariantPropertiesApiServices,
-        taskCreationServices: TaskCreationServices
-    ): DynamicFeatureVariantPropertiesImpl {
+            variant: DynamicFeatureVariantBuilderImpl,
+            componentIdentity: ComponentIdentity,
+            buildFeatures: BuildFeatureValues,
+            variantDslInfo: VariantDslInfo,
+            variantDependencies: VariantDependencies,
+            variantSources: VariantSources,
+            paths: VariantPathHelper,
+            artifacts: ArtifactsImpl,
+            variantScope: VariantScope,
+            variantData: BaseVariantData,
+            transformManager: TransformManager,
+            variantPropertiesApiServices: VariantPropertiesApiServices,
+            taskCreationServices: TaskCreationServices
+    ): DynamicFeatureVariantImpl {
         val variantProperties = projectServices
             .objectFactory
             .newInstance(
-                DynamicFeatureVariantPropertiesImpl::class.java,
+                DynamicFeatureVariantImpl::class.java,
                 variant,
                 buildFeatures,
                 variantDslInfo,
@@ -136,7 +136,6 @@ internal class DynamicFeatureVariantFactory(
         )
     }
 
-    override fun getVariantType(): VariantType {
-        return VariantTypeImpl.OPTIONAL_APK
-    }
+    override val variantType
+        get() = VariantTypeImpl.OPTIONAL_APK
 }

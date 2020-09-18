@@ -17,15 +17,46 @@
 package com.android.tools.idea.wizard.template.impl.fragments.listFragment.src.app_package
 
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 import com.android.tools.idea.wizard.template.renderIf
 
 fun recyclerViewAdapterKt(
   adapterClassName: String,
   applicationPackage: String?,
-  fragment_layout: String,
+  fragmentLayout: String,
   kotlinEscapedPackageName: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+
+  val onCreateViewHolderBlock = if (isViewBindingSupported) """
+    return ViewHolder(${layoutToViewBindingClass(fragmentLayout)}.inflate(LayoutInflater.from(parent.context), parent, false))
+  """ else """
+    val view = LayoutInflater.from(parent.context).inflate(R.layout.${fragmentLayout}, parent, false)
+    return ViewHolder(view)
+  """
+
+  val viewHolderBlock = if (isViewBindingSupported) """
+    inner class ViewHolder(binding: ${layoutToViewBindingClass(fragmentLayout)}) : RecyclerView.ViewHolder(binding.root) {
+        val idView: TextView = binding.itemNumber
+        val contentView: TextView = binding.content
+
+        override fun toString(): String {
+            return super.toString() + " '" + contentView.text + "'"
+        }
+    }
+  """ else """
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val idView: TextView = view.findViewById(R.id.item_number)
+        val contentView: TextView = view.findViewById(R.id.content)
+
+        override fun toString(): String {
+            return super.toString() + " '" + contentView.text + "'"
+        }
+    }
+  """
+  return """
 package ${kotlinEscapedPackageName}
 
 import ${getMaterialComponentName("android.support.v7.widget.RecyclerView", useAndroidX)}
@@ -36,6 +67,7 @@ import android.widget.TextView
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
 
 import ${kotlinEscapedPackageName}.placeholder.PlaceholderContent.PlaceholderItem
+${importViewBindingClass(isViewBindingSupported, kotlinEscapedPackageName, fragmentLayout)}
 
 /**
  * [RecyclerView.Adapter] that can display a [PlaceholderItem].
@@ -46,9 +78,7 @@ class ${adapterClassName}(
     : RecyclerView.Adapter<${adapterClassName}.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.${fragment_layout}, parent, false)
-        return ViewHolder(view)
+        $onCreateViewHolderBlock
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -59,13 +89,7 @@ class ${adapterClassName}(
 
     override fun getItemCount(): Int = values.size
 
-    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val idView: TextView = view.findViewById(R.id.item_number)
-        val contentView: TextView = view.findViewById(R.id.content)
-
-        override fun toString(): String {
-            return super.toString() + " '" + contentView.text + "'"
-        }
-    }
+    $viewHolderBlock
 }
 """
+}

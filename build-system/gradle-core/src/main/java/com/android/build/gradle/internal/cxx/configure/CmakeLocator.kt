@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.cxx.configure
 import com.android.SdkConstants
 import com.android.SdkConstants.FD_CMAKE
 import com.android.build.gradle.external.cmake.CmakeUtils
+import com.android.build.gradle.external.cmake.CmakeUtils.keepWhileNumbersAndDots
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.errorln
@@ -355,7 +356,11 @@ fun findCmakePathLogic(
     if (cmakePaths.isEmpty()) {
         for (sdkFolder in sdkFolders()) {
             if (cmakePaths.contains(sdkFolder.path)) continue
-            val version = versionGetter(sdkFolder) ?: continue
+            val version = try {
+                Revision.parseRevision(keepWhileNumbersAndDots(sdkFolder.parentFile.name))
+            } catch (e: Throwable) {
+                null
+            } ?: versionGetter(sdkFolder) ?: continue
             if (!dsl.isSatisfiedBy(version)) continue
             cmakePaths.add(sdkFolder.path)
         }

@@ -16,18 +16,12 @@
 
 package com.android.builder.packaging
 
-import com.android.builder.core.ManifestAttributeSupplier
-import com.android.sdklib.AndroidVersion.VersionCodes.O
-import com.android.sdklib.AndroidVersion.VersionCodes.P
+import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.google.common.truth.BooleanSubject
 import com.google.common.truth.Truth.assertThat
-import org.junit.Before
 import org.junit.Test
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.MockitoAnnotations
 import java.nio.file.FileSystem
 import java.util.function.Predicate
 import javax.annotation.CheckReturnValue
@@ -35,14 +29,6 @@ import javax.annotation.CheckReturnValue
 class PackagingUtilsTest {
 
     private val fs: FileSystem by lazy { Jimfs.newFileSystem(Configuration.unix()) }
-
-    @Mock
-    lateinit var manifest: ManifestAttributeSupplier
-
-    @Before
-    fun setup() {
-        MockitoAnnotations.initMocks(this)
-    }
 
     @Test
     fun testGetNoCompressPredicateForExtensions_empty() {
@@ -159,9 +145,13 @@ class PackagingUtilsTest {
 
     @Test
     fun testGetNoCompressPredicate_doNotCompressNativeLibsOrDex() {
-        Mockito.`when`(manifest.extractNativeLibs).thenReturn(false)
-        Mockito.`when`(manifest.useEmbeddedDex).thenReturn(true)
-        PackagingUtils.getNoCompressPredicate(listOf("oo"), manifest, 1).run {
+        val nativeLibsPackagingMode = NativeLibrariesPackagingMode.UNCOMPRESSED_AND_ALIGNED
+        val dexPackagingMode = DexPackagingMode.UNCOMPRESSED
+        PackagingUtils.getNoCompressPredicate(
+            listOf("oo"),
+            nativeLibsPackagingMode,
+            dexPackagingMode
+        ).run {
             // check aaptOptionsNoCompress
             assertThatTest("foo").isTrue()
             // check .tflite (Issue 152875817)
@@ -175,9 +165,13 @@ class PackagingUtilsTest {
 
     @Test
     fun testGetNoCompressPredicate_compressNativeLibsAndDex() {
-        Mockito.`when`(manifest.extractNativeLibs).thenReturn(true)
-        Mockito.`when`(manifest.useEmbeddedDex).thenReturn(false)
-        PackagingUtils.getNoCompressPredicate(listOf("oo"), manifest, 1).run {
+        val nativeLibsPackagingMode = NativeLibrariesPackagingMode.COMPRESSED
+        val dexPackagingMode = DexPackagingMode.COMPRESSED
+        PackagingUtils.getNoCompressPredicate(
+            listOf("oo"),
+            nativeLibsPackagingMode,
+            dexPackagingMode
+        ).run {
             // check aaptOptionsNoCompress
             assertThatTest("foo").isTrue()
             // check .tflite (Issue 152875817)
@@ -186,24 +180,6 @@ class PackagingUtilsTest {
             assertThatTest("picture.jpg").isTrue()
             assertThatTest("native.so").isFalse()
             assertThatTest("classes.dex").isFalse()
-        }
-    }
-
-    @Test
-    fun testGetNoCompressPredicate_compressDexWhenMinSdkO() {
-        Mockito.`when`(manifest.extractNativeLibs).thenReturn(null)
-        Mockito.`when`(manifest.useEmbeddedDex).thenReturn(null)
-        PackagingUtils.getNoCompressPredicate(listOf(), manifest, O).run {
-            assertThatTest("classes.dex").isFalse()
-        }
-    }
-
-    @Test
-    fun testGetNoCompressPredicate_doNotCompressDexWhenMinSdkP() {
-        Mockito.`when`(manifest.extractNativeLibs).thenReturn(null)
-        Mockito.`when`(manifest.useEmbeddedDex).thenReturn(null)
-        PackagingUtils.getNoCompressPredicate(listOf(), manifest, P).run {
-            assertThatTest("classes.dex").isTrue()
         }
     }
 

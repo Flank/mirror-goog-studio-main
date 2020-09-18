@@ -73,7 +73,8 @@ class NoOpIncrementalBuildTaskStatesTest {
                 ":app:processDebugManifestForPackage",
                 ":app:processDebugResources",
                 ":app:testDebugUnitTest",
-                ":app:validateSigningDebug"
+                ":app:validateSigningDebug",
+                ":app:writeDebugAppMetadata"
             ),
             SKIPPED to setOf(
                 ":app:compileDebugAidl",

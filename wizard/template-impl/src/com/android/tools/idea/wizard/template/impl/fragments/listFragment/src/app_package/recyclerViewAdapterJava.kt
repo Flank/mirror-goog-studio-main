@@ -17,13 +17,38 @@
 package com.android.tools.idea.wizard.template.impl.fragments.listFragment.src.app_package
 
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
 
 fun recyclerViewAdapterJava(
   adapterClassName: String,
   fragmentLayout: String,
   packageName: String,
-  useAndroidX: Boolean
-) = """
+  useAndroidX: Boolean,
+  isViewBindingSupported: Boolean
+): String {
+
+  val onCreateViewHolderBlock = if (isViewBindingSupported) """
+    return new ViewHolder(${layoutToViewBindingClass(fragmentLayout)}.inflate(LayoutInflater.from(parent.getContext()), parent, false));
+  """ else """
+    return new ViewHolder(LayoutInflater.from(parent.getContext()), parent);
+  """
+
+  val viewHolderBlock = if (isViewBindingSupported) """
+    public ViewHolder(${layoutToViewBindingClass(fragmentLayout)} binding) {
+      super(binding.getRoot());
+      mIdView = binding.itemNumber;
+      mContentView = binding.content;
+    }
+  """ else """
+    public ViewHolder(View view) {
+      super(view);
+      mIdView = (TextView) view.findViewById(R.id.item_number);
+      mContentView = (TextView) view.findViewById(R.id.content);
+    }
+  """
+
+  return """
 package ${packageName};
 
 import ${getMaterialComponentName("android.support.v7.widget.RecyclerView", useAndroidX)};
@@ -33,6 +58,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import ${packageName}.placeholder.PlaceholderContent.PlaceholderItem;
+${importViewBindingClass(isViewBindingSupported, packageName, fragmentLayout)};
 
 import java.util.List;
 
@@ -50,9 +76,7 @@ public class ${adapterClassName} extends RecyclerView.Adapter<${adapterClassName
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.${fragmentLayout}, parent, false);
-        return new ViewHolder(view);
+        $onCreateViewHolderBlock
     }
 
     @Override
@@ -68,17 +92,11 @@ public class ${adapterClassName} extends RecyclerView.Adapter<${adapterClassName
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        public final View mView;
         public final TextView mIdView;
         public final TextView mContentView;
         public PlaceholderItem mItem;
 
-        public ViewHolder(View view) {
-            super(view);
-            mView = view;
-            mIdView = (TextView) view.findViewById(R.id.item_number);
-            mContentView = (TextView) view.findViewById(R.id.content);
-        }
+        $viewHolderBlock
 
         @Override
         public String toString() {
@@ -87,3 +105,4 @@ public class ${adapterClassName} extends RecyclerView.Adapter<${adapterClassName
     }
 }
 """
+}

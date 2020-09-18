@@ -16,9 +16,26 @@
 package com.android.build.api.variant
 
 import org.gradle.api.Incubating
+import org.gradle.api.provider.Provider
 
-/**
- * [Variant] type for library projects
- */
+/** [Variant] for Library projects */
 @Incubating
-interface LibraryVariant<PropertiesT: LibraryVariantProperties> : Variant<PropertiesT>
+interface LibraryVariant : Variant {
+
+    /**
+     * Variant's application ID as present in the final manifest file of the APK.
+     *
+     * This is a read-ony value based on the package entry in the manifest
+     */
+    override val applicationId: Provider<String>
+
+    /**
+     * Variant's packagingOptions, initialized by the corresponding global DSL element.
+     */
+    override val packagingOptions: LibraryPackagingOptions
+
+    /**
+     * Variant's packagingOptions, initialized by the corresponding global DSL element.
+     */
+    fun packagingOptions(action: LibraryPackagingOptions.() -> Unit)
+}

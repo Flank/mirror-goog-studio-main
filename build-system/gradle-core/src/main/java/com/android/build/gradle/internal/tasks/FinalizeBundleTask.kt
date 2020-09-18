@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.apksig.ApkSigner
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -220,7 +220,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
 
             // Don't sign debuggable bundles.
             if (!creationConfig.debuggable) {
-                task.signingConfig = SigningConfigProvider.create(creationConfig as ComponentPropertiesImpl)
+                task.signingConfig = SigningConfigProvider.create(creationConfig as ComponentImpl)
             }
 
             task.applicationId.setDisallowChanges(creationConfig.applicationId)

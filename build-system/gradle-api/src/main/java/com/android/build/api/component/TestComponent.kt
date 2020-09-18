@@ -16,8 +16,11 @@
 
 package com.android.build.api.component
 
+import com.android.build.api.variant.Variant
 import org.gradle.api.Incubating
 
 @Incubating
-interface TestComponent<PropertiesT: TestComponentProperties> : Component<PropertiesT> {
+interface TestComponent : Component {
+
+    val testedVariant: Variant
 }

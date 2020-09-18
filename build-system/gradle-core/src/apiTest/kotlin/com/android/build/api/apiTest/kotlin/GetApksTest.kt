@@ -53,10 +53,13 @@ class GetApksTest: VariantApiBaseTest(TestType.Script) {
             ${testingElements.getDisplayApksTask()}
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
-                onVariantProperties {
-                    project.tasks.register<DisplayApksTask>("${ '$' }{name}DisplayApks") {
-                        apkFolder.set(artifacts.get(ArtifactType.APK))
-                        builtArtifactsLoader.set(artifacts.getBuiltArtifactsLoader())
+            }
+
+            androidComponents {
+                onVariants { variant ->
+                    project.tasks.register<DisplayApksTask>("${ '$' }{variant.name}DisplayApks") {
+                        apkFolder.set(variant.artifacts.get(ArtifactType.APK))
+                        builtArtifactsLoader.set(variant.artifacts.getBuiltArtifactsLoader())
                     }
                 }
             }
@@ -98,6 +101,48 @@ expected result : "Got an APK...." message.
                     )
                 }
             }
+        }
+    }
+
+    @Test
+    fun newApiTest() {
+        given {
+            tasksToInvoke.addAll(listOf("clean", ":app:assembleDebug"))
+            addModule(":app") {
+                @Suppress("RemoveExplicitTypeArguments")
+                buildFile =
+                        // language=kotlin
+                        """
+            plugins {
+                    id("com.android.application")
+                    kotlin("android")
+                    kotlin("android.extensions")
+            }
+            import org.gradle.api.DefaultTask
+            import org.gradle.api.file.DirectoryProperty
+            import org.gradle.api.tasks.InputFiles
+            import org.gradle.api.tasks.TaskAction
+            import com.android.build.api.variant.BuiltArtifactsLoader
+            import com.android.build.api.artifact.ArtifactType
+            import org.gradle.api.provider.Property
+            import org.gradle.api.tasks.Internal
+            ${testingElements.getDisplayApksTask()}
+            android {
+                ${testingElements.addCommonAndroidBuildLogic()}
+            }
+            androidComponents {
+                beforeVariants {
+                    println("I am called ${'$'}name")
+                }
+            }
+        """.trimIndent()
+                testingElements.addManifest( this)
+            }
+        }
+        check {
+            assertNotNull(this)
+            Truth.assertThat(output).contains("I am called ")
+            Truth.assertThat(output).contains("BUILD SUCCESSFUL")
         }
     }
 }

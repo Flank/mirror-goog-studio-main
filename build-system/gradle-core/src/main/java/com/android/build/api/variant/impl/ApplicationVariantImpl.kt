@@ -15,66 +15,207 @@
  */
 package com.android.build.api.variant.impl
 
-import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariant
-import com.android.build.api.component.analytics.AnalyticsEnabledVariant
-import com.android.build.api.dsl.DependenciesInfo
+import com.android.build.api.component.impl.ApkCreationConfigImpl
+import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.ApkPackagingOptions
 import com.android.build.api.variant.ApplicationVariant
-import com.android.build.api.variant.ApplicationVariantProperties
+import com.android.build.api.variant.DependenciesInfo
+import com.android.build.api.variant.SigningConfig
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.dsl.NdkOptions
+import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
+import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
-import com.android.build.gradle.internal.services.VariantApiServices
+import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.android.build.gradle.options.IntegerOption
+import com.android.builder.dexing.DexingType
+import com.android.builder.model.CodeShrinker
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.Action
+import com.android.build.gradle.options.StringOption
+import org.gradle.api.provider.Property
 import javax.inject.Inject
 
 open class ApplicationVariantImpl @Inject constructor(
-    variantDslInfo: VariantDslInfo,
-    dslDependencyInfo: DependenciesInfo,
-    variantConfiguration: ComponentIdentity,
-    variantApiServices: VariantApiServices
-) : VariantImpl<ApplicationVariantProperties>(
+        override val variant: ApplicationVariantBuilderImpl,
+        buildFeatureValues: BuildFeatureValues,
+        variantDslInfo: VariantDslInfo,
+        variantDependencies: VariantDependencies,
+        variantSources: VariantSources,
+        paths: VariantPathHelper,
+        artifacts: ArtifactsImpl,
+        variantScope: VariantScope,
+        variantData: BaseVariantData,
+        variantDependencyInfo: DependenciesInfo,
+        transformManager: TransformManager,
+        internalServices: VariantPropertiesApiServices,
+        taskCreationServices: TaskCreationServices,
+        globalScope: GlobalScope
+) : VariantImpl(
+    variant,
+    buildFeatureValues,
     variantDslInfo,
-    variantConfiguration,
-    variantApiServices
-), ApplicationVariant<ApplicationVariantProperties> {
+    variantDependencies,
+    variantSources,
+    paths,
+    artifacts,
+    variantScope,
+    variantData,
+    transformManager,
+    internalServices,
+    taskCreationServices,
+    globalScope
+), ApplicationVariant, ApplicationCreationConfig {
 
+    val delegate by lazy { ApkCreationConfigImpl(this, globalScope, variantDslInfo) }
+
+    // ---------------------------------------------------------------------------------------------
+    // PUBLIC API
+    // ---------------------------------------------------------------------------------------------
+
+    override val applicationId: Property<String> = variantDslInfo.applicationId
+
+    override val embedsMicroApp: Boolean
+        get() = variantDslInfo.isEmbedMicroApp
+
+    override val dependenciesInfo: DependenciesInfo = variantDependencyInfo
+
+    override val aaptOptions: AaptOptions by lazy {
+        initializeAaptOptionsFromDsl(
+            globalScope.extension.aaptOptions,
+            internalServices
+        )
+    }
+
+    override fun aaptOptions(action: AaptOptions.() -> Unit) {
+        action.invoke(aaptOptions)
+    }
+
+    override val signingConfig: SigningConfig by lazy {
+        SigningConfigImpl(
+            variantDslInfo.signingConfig,
+            internalServices,
+            minSdkVersion.apiLevel,
+            globalScope.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
+        )
+    }
+
+    override fun signingConfig(action: SigningConfig.() -> Unit) {
+        action.invoke(signingConfig)
+    }
+
+    override val packagingOptions: ApkPackagingOptions by lazy {
+        ApkPackagingOptionsImpl(
+            globalScope.extension.packagingOptions,
+            internalServices,
+            minSdkVersion.apiLevel
+        )
+    }
+
+    override fun packagingOptions(action: ApkPackagingOptions.() -> Unit) {
+        action.invoke(packagingOptions)
+    }
+
+    override val minifiedEnabled: Boolean
+        get() = variantDslInfo.isMinifyEnabled
+
+    // ---------------------------------------------------------------------------------------------
+    // INTERNAL API
+    // ---------------------------------------------------------------------------------------------
+
+    override val testOnlyApk: Boolean
+        get() = variantScope.isTestOnly(this)
+
+    override val needAssetPackTasks: Property<Boolean> =
+        internalServices.propertyOf(Boolean::class.java, false)
+
+    override val shouldPackageDesugarLibDex: Boolean
+        get() = delegate.isCoreLibraryDesugaringEnabled
     override val debuggable: Boolean
-        get() = variantDslInfo.isDebuggable
+        get() = delegate.isDebuggable
 
-    // only instantiate this if this is needed. This allows non-built variant to not do too much work.
-    override val dependenciesInfo: DependenciesInfo by lazy {
-        if (variantApiServices.isPostVariantApi) {
-            // this is queried after the Variant API, so we can just return the DSL object.
-            dslDependencyInfo
-        } else {
-            variantApiServices.newInstance(
-                MutableDependenciesInfoImpl::class.java,
-                dslDependencyInfo,
-                variantApiServices
-            )
+    override val shouldPackageProfilerDependencies: Boolean
+        get() = advancedProfilingTransforms.isNotEmpty()
+
+    override val advancedProfilingTransforms: List<String>
+        get() {
+            return services.projectOptions[StringOption.IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS]?.split(
+                ","
+            ) ?: emptyList()
         }
-    }
 
-    override fun dependenciesInfo(action: DependenciesInfo.() -> Unit) {
-        action.invoke(dependenciesInfo)
-    }
+    override val nativeDebugSymbolLevel: DebugSymbolLevel
+        get() {
+            val debugSymbolLevelOrNull =
+                NdkOptions.DEBUG_SYMBOL_LEVEL_CONVERTER.convert(
+                    variantDslInfo.ndkConfig.debugSymbolLevel
+                )
+            return debugSymbolLevelOrNull ?: if (debuggable) DebugSymbolLevel.NONE else DebugSymbolLevel.SYMBOL_TABLE
+        }
 
-    fun dependenciesInfo(action: Action<DependenciesInfo>) {
-        action.execute(dependenciesInfo)
-    }
+    // ---------------------------------------------------------------------------------------------
+    // Private stuff
+    // ---------------------------------------------------------------------------------------------
 
-    override fun executePropertiesActions(target: ApplicationVariantProperties) {
-        propertiesActions.executeActions(target)
-    }
+    override fun createVersionNameProperty(): Property<String?> =
+        internalServices.newNullablePropertyBackingDeprecatedApi(
+            String::class.java,
+            variantDslInfo.versionName,
+            "$name::versionName"
+        )
 
-    override fun createUserVisibleVariantObject(
+    override fun createVersionCodeProperty() : Property<Int?> =
+        internalServices.newNullablePropertyBackingDeprecatedApi(
+            Int::class.java,
+            variantDslInfo.versionCode,
+            "$name::versionCode"
+        )
+
+    override val renderscriptTargetApi: Int
+        get() {
+            return variant.renderscriptTargetApi
+        }
+
+    override val dexingType: DexingType
+        get() = delegate.dexingType
+
+    override val needsMainDexListForBundle: Boolean
+        get() = (variantType.isBaseModule
+                    && globalScope.hasDynamicFeatures()
+                    && dexingType.needsMainDexList)
+
+    override fun createUserVisibleVariantPropertiesObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledVariant<in ApplicationVariantProperties> =
+    ): AnalyticsEnabledApplicationVariant =
         projectServices.objectFactory.newInstance(
             AnalyticsEnabledApplicationVariant::class.java,
             this,
             stats
         )
+    override val minSdkVersionWithTargetDeviceApi: AndroidVersion
+        get() = delegate.minSdkVersionWithTargetDeviceApi
+
+    override val codeShrinker: CodeShrinker?
+        get() = delegate.getCodeShrinker()
+
+    override fun getNeedsMergedJavaResStream(): Boolean = delegate.getNeedsMergedJavaResStream()
+
+    override fun getJava8LangSupportType(): VariantScope.Java8LangSupport = delegate.getJava8LangSupportType()
+
+    override val needsShrinkDesugarLibrary: Boolean
+        get() = delegate.needsShrinkDesugarLibrary
+
+
 }

@@ -19,6 +19,8 @@ import com.android.SdkConstants
 import com.android.SdkConstants.DOT_JAVA
 import com.android.SdkConstants.DOT_KT
 import com.android.SdkConstants.DOT_KTS
+import com.android.SdkConstants.FN_BUILD_GRADLE
+import com.android.SdkConstants.FN_BUILD_GRADLE_KTS
 import com.android.SdkConstants.VALUE_TRUE
 import com.android.Version
 import com.android.ide.common.repository.GradleVersion
@@ -53,6 +55,7 @@ import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.describeCounts
+import com.android.tools.lint.detector.api.getCommonParent
 import com.android.tools.lint.detector.api.getEncodedString
 import com.android.tools.lint.detector.api.guessGradleLocation
 import com.android.tools.lint.detector.api.isJdkFolder
@@ -720,9 +723,14 @@ open class LintCliClient : LintClient {
 
     fun getDisplayPath(project: Project?, file: File, fullPath: Boolean): String {
         project ?: return file.path
+        val referenceDir = project.referenceDir
+        return getDisplayPath(referenceDir, file, fullPath)
+    }
+
+    fun getDisplayPath(referenceDir: File, file: File, fullPath: Boolean): String {
         var path = file.path
-        if (!fullPath && path.startsWith(project.referenceDir.path)) {
-            var chop = project.referenceDir.path.length
+        if (!fullPath && path.startsWith(referenceDir.path)) {
+            var chop = referenceDir.path.length
             if (path.length > chop && path[chop] == File.separatorChar) {
                 chop++
             }
@@ -733,7 +741,7 @@ open class LintCliClient : LintClient {
         } else if (fullPath) {
             path = getCleanPath(file.absoluteFile)
         } else if (file.isAbsolute && file.exists()) {
-            path = getRelativePath(project.referenceDir, file) ?: file.path
+            path = getRelativePath(referenceDir, file) ?: file.path
         }
         return path
     }
@@ -1109,6 +1117,40 @@ open class LintCliClient : LintClient {
             log(Severity.ERROR, e, "Couldn't parse merged manifest")
         }
         return super.getMergedManifest(project)
+    }
+
+    fun getRootDir(): File? {
+        if (::driver.isInitialized) {
+            driver.request.srcRoot?.let {
+                return it
+            }
+        }
+
+        var root: File? = null
+        for (project in knownProjects) {
+            if (!project.reportIssues) {
+                continue
+            }
+            root = if (root == null) {
+                project.dir
+            } else {
+                getCommonParent(root, project.dir)
+            }
+        }
+
+        // Workaround: we need the root project; it's not yet part of the model,
+        // and adding it now would clash with simultaneous edits to decouple Gradle
+        // and lint
+        val parent = root?.parentFile
+        if (parent != null) {
+            if (File(parent, FN_BUILD_GRADLE).exists() ||
+                File(parent, FN_BUILD_GRADLE_KTS).exists()
+            ) {
+                return parent
+            }
+        }
+
+        return root
     }
 
     protected open inner class LintCliUastParser(project: Project?) :

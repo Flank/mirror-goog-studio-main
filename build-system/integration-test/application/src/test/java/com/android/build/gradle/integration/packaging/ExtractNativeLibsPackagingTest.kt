@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ApkSubject
+import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -32,31 +33,53 @@ import java.util.zip.ZipFile
  * sourceManifestvalue and expectedMergedManifestValue refer to the value of
  * android:extractNativeLibs in the source and merged manifests, respectively. If null, no such
  * attribute is written or expected in the manifests.
+ *
+ * useLegacyPackaging refers to the value of PackagingOptions.jniLibs.useLegacyPackaging specified
+ * via the DSL. If null, no such value is specified.
  */
 @RunWith(FilterableParameterized::class)
 class ExtractNativeLibsPackagingTest(
-    sourceManifestValue: Boolean?,
-    minSdk: Int,
+    private val sourceManifestValue: Boolean?,
+    private val minSdk: Int,
+    private val useLegacyPackaging: Boolean?,
     private val expectedMergedManifestValue: Boolean?,
     private val expectedCompression: Int
 ) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "extractNativeLibs_{0}_minSdk_{1}")
+        @Parameterized.Parameters(name = "extractNativeLibs_{0}_minSdk_{1}_useLegacyPackaging_{2}")
         fun parameters() = listOf(
-            arrayOf(true, 22, true, ZipEntry.DEFLATED),
-            arrayOf(true, 23, true, ZipEntry.DEFLATED),
-            arrayOf(false, 22, false, ZipEntry.STORED),
-            arrayOf(false, 23, false, ZipEntry.STORED),
-            arrayOf(null, 22, null, ZipEntry.DEFLATED),
-            arrayOf(null, 23, false, ZipEntry.STORED)
+            arrayOf(true, 22, true, true, ZipEntry.DEFLATED),
+            arrayOf(true, 22, false, true, ZipEntry.DEFLATED),
+            arrayOf(true, 22, null, true, ZipEntry.DEFLATED),
+            arrayOf(true, 23, true, true, ZipEntry.DEFLATED),
+            arrayOf(true, 23, false, true, ZipEntry.DEFLATED),
+            arrayOf(true, 23, null, true, ZipEntry.DEFLATED),
+            arrayOf(false, 22, true, false, ZipEntry.STORED),
+            arrayOf(false, 22, false, false, ZipEntry.STORED),
+            arrayOf(false, 22, null, false, ZipEntry.STORED),
+            arrayOf(false, 23, true, false, ZipEntry.STORED),
+            arrayOf(false, 23, false, false, ZipEntry.STORED),
+            arrayOf(false, 23, null, false, ZipEntry.STORED),
+            arrayOf(null, 22, true, null, ZipEntry.DEFLATED),
+            arrayOf(null, 22, false, false, ZipEntry.STORED),
+            arrayOf(null, 22, null, null, ZipEntry.DEFLATED),
+            arrayOf(null, 23, true, null, ZipEntry.DEFLATED),
+            arrayOf(null, 23, false, false, ZipEntry.STORED),
+            arrayOf(null, 23, null, false, ZipEntry.STORED)
         )
     }
 
     private val extractNativeLibsAttribute = when (sourceManifestValue) {
         true -> "android:extractNativeLibs=\"true\""
         false -> "android:extractNativeLibs=\"false\""
+        null -> ""
+    }
+
+    private val useLegacyPackagingString = when (useLegacyPackaging) {
+        true -> "android.packagingOptions.jniLibs.useLegacyPackaging = true"
+        false -> "android.packagingOptions.jniLibs.useLegacyPackaging = false"
         null -> ""
     }
 
@@ -74,6 +97,7 @@ class ExtractNativeLibsPackagingTest(
                                 minSdk = $minSdk
                             }
                         }
+                        $useLegacyPackagingString
                         """.trimIndent()
                 )
                 .withFile(
@@ -92,7 +116,22 @@ class ExtractNativeLibsPackagingTest(
 
     @Test
     fun testNativeLibPackagedCorrectly() {
-        project.executor().run("assembleDebug")
+        project.executor().run("assembleDebug").stdout.use {
+            val resolvedUseLegacyPackaging: Boolean = useLegacyPackaging ?: (minSdk < 23)
+            when {
+                resolvedUseLegacyPackaging && expectedCompression == ZipEntry.STORED -> {
+                    assertThat(it).contains(
+                        "PackagingOptions.jniLibs.useLegacyPackaging should be set to false"
+                    )
+                }
+                !resolvedUseLegacyPackaging && expectedCompression == ZipEntry.DEFLATED -> {
+                    assertThat(it).contains(
+                        "PackagingOptions.jniLibs.useLegacyPackaging should be set to true"
+                    )
+                }
+                else -> assertThat(it).doesNotContain("PackagingOptions.jniLibs.useLegacyPackaging")
+            }
+        }
         val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
 
         // check merged manifest

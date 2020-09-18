@@ -24,7 +24,7 @@ fi
 # Generate baseline coverage file lists
 "${script_dir}/bazel" \
   build \
-  --config=remote \
+  --config=dynamic \
   --build_tag_filters="coverage-sources" \
   -- \
   //tools/... \
@@ -35,8 +35,10 @@ fi
   --max_idle_secs=60 \
   test \
   --keep_going \
-  --config=remote \
+  --config=dynamic \
   --invocation_id=${invocation_id} \
+  --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \
+  --profile="${dist_dir:-/tmp}/profile-${build_number}.json.gz" \
   ${auth_options} \
   --test_tag_filters=-no_linux,-no_test_linux,-perfgate \
   --define agent_coverage=true \
@@ -55,7 +57,7 @@ fi
 # Build the lcov file
 "${script_dir}/bazel" \
   build \
-  --config=remote \
+  --config=dynamic \
   --remote_download_outputs=toplevel \
   --invocation_id=${report_invocation_id} \
   ${auth_options} \

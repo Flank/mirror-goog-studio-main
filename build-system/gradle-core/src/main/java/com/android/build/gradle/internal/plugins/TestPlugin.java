@@ -18,11 +18,13 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
-import com.android.build.api.component.TestComponentProperties;
+import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.extension.TestAndroidComponentsExtension;
+import com.android.build.api.extension.impl.OperationsRegistrar;
+import com.android.build.api.extension.impl.TestAndroidComponentsExtensionImpl;
+import com.android.build.api.variant.impl.TestVariantBuilderImpl;
 import com.android.build.api.variant.impl.TestVariantImpl;
-import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -40,7 +42,6 @@ import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.v2.ide.ProjectType;
-import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.util.List;
 import javax.inject.Inject;
@@ -51,7 +52,9 @@ import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'test' projects. */
-public class TestPlugin extends BasePlugin<TestVariantImpl, TestVariantPropertiesImpl> {
+public class TestPlugin
+        extends BasePlugin<
+                TestAndroidComponentsExtension, TestVariantBuilderImpl, TestVariantImpl> {
     @Inject
     public TestPlugin(
             ToolingModelBuilderRegistry registry,
@@ -108,6 +111,22 @@ public class TestPlugin extends BasePlugin<TestVariantImpl, TestVariantPropertie
 
     @NonNull
     @Override
+    protected TestAndroidComponentsExtension createComponentExtension(
+            @NonNull DslServices dslServices,
+            @NonNull OperationsRegistrar<TestVariantBuilderImpl> variantBuilderOperationsRegistrar,
+            @NonNull OperationsRegistrar<TestVariantImpl> variantOperationsRegistrar) {
+        return project.getExtensions()
+                .create(
+                        TestAndroidComponentsExtension.class,
+                        "androidComponents",
+                        TestAndroidComponentsExtensionImpl.class,
+                        dslServices,
+                        variantBuilderOperationsRegistrar,
+                        variantOperationsRegistrar);
+    }
+
+    @NonNull
+    @Override
     protected GradleBuildProject.PluginType getAnalyticsPluginType() {
         return GradleBuildProject.PluginType.TEST;
     }
@@ -115,13 +134,9 @@ public class TestPlugin extends BasePlugin<TestVariantImpl, TestVariantPropertie
     @NonNull
     @Override
     protected TestApplicationTaskManager createTaskManager(
-            @NonNull List<ComponentInfo<TestVariantImpl, TestVariantPropertiesImpl>> variants,
+            @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> variants,
             @NonNull
-                    List<
-                                    ComponentInfo<
-                                            TestComponentImpl<? extends TestComponentProperties>,
-                                            TestComponentPropertiesImpl>>
-                            testComponents,
+                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension) {

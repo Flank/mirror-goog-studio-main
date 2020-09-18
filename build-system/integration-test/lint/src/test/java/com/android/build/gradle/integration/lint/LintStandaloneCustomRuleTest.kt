@@ -16,12 +16,13 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.testutils.truth.FileSubject.assertThat
-import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
 /**
  * Test for the standalone lint plugin.
@@ -30,17 +31,26 @@ import org.junit.Test
  * To run just this test:
  * ./gradlew :base:build-system:integration-test:application:test -D:base:build-system:integration-test:application:test.single=LintStandaloneCustomRuleTest
  */
-class LintStandaloneCustomRuleTest {
+@RunWith(FilterableParameterized::class)
+class LintStandaloneCustomRuleTest(lintInvocationType: LintInvocationType) {
+
+    companion object {
+        @get:JvmStatic
+        @get:Parameterized.Parameters(name = "{0}")
+        val params get() = LintInvocationType.values()
+    }
+
     @Rule
     @JvmField
-    var project = GradleTestProject.builder().fromTestProject("lintStandaloneCustomRules")
-        // http://b/146208910
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+    var project = lintInvocationType.testProjectBuilder()
+        .fromTestProject("lintStandaloneCustomRules")
         .create()
 
     @Test
     @Throws(Exception::class)
     fun checkStandaloneLint() {
+        // Run twice to catch issues with configuration caching
+        project.execute("clean", "lint")
         project.execute("clean", "lint")
 
         val file = project.getSubproject("library").file("lint-results.txt")

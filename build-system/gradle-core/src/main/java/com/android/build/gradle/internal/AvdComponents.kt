@@ -80,7 +80,7 @@ abstract class AvdComponentsBuildService @Inject constructor(
         // TODO(b/16526279): Make sure this is wired up correctly once build service is set up.
         File(parameters.avdLocation.get())
     }
-    
+
     private fun createOrRetrieveAvd(
         imageHash: String,
         deviceName: String,
@@ -133,18 +133,18 @@ abstract class AvdComponentsBuildService @Inject constructor(
 
     private fun defaultHardwareConfig(): MutableMap<String, String> {
         // Get the defaults of all the user-modifiable properties.
-        val emulatorPackage = sdkHandler.getLocalPackage(
-            SdkConstants.FD_EMULATOR,
-            LoggerProgressIndicatorWrapper(StdLogger(StdLogger.Level.VERBOSE))
-        )
+        val emulatorProvider = parameters.sdkService.get().emulatorDirectoryProvider
 
-        if (emulatorPackage == null) {
-            // TODO(b/16526279) Should download emulator package
-            error ("AVD Emulator package is not downloaded. Failed to retrieve hardware defaults" +
-                    "for virtual device.")
+        val emulatorLib = if (emulatorProvider.isPresent) {
+            emulatorProvider.get().asFile
+        } else {
+            error(
+                "AVD Emulator package is not downloaded. Failed to retrieve hardware defaults" +
+                        "for virtual device."
+            )
         }
 
-        val libDirectory = File(emulatorPackage.location, SdkConstants.FD_LIB)
+        val libDirectory = File(emulatorLib, SdkConstants.FD_LIB)
         val hardwareDefs = File(libDirectory, SdkConstants.FN_HARDWARE_INI)
         val hwMap =
                 HardwareProperties.parseHardwareDefinitions(

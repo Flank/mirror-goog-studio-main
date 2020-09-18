@@ -16,27 +16,56 @@
 
 package com.android.build.api.variant
 
-import com.android.build.api.dsl.DependenciesInfo
 import org.gradle.api.Incubating
+import org.gradle.api.provider.Property
 
 /**
- * Application specific variant object that contains properties that will determine the variant's
- * build flow.
- *
- * For example, an application variant may have minification on or off, or have a different
- * minSdkVersion from the other variants.
- *
- * All these properties must be resolved during configuration time as [org.gradle.api.Task]
- * representing the variant build flows must be created.
+ * Properties for the main Variant of an application.
  */
 @Incubating
-interface ApplicationVariant<PropertiesT: ApplicationVariantProperties> : Variant<PropertiesT> {
+interface ApplicationVariant : Variant {
 
-    val debuggable: Boolean
+    /**
+     * Variant's application ID as present in the final manifest file of the APK.
+     */
+    override val applicationId: Property<String>
+
+    /**
+     * Returns the final list of variant outputs.
+     * @return read only list of [VariantOutput] for this variant.
+     */
+    val outputs: List<VariantOutput>
 
     /** Specify whether to include SDK dependency information in APKs and Bundles. */
     val dependenciesInfo: DependenciesInfo
 
-    /** Specify whether to include SDK dependency information in APKs and Bundles. */
-    fun dependenciesInfo(action: DependenciesInfo.() -> Unit)
+    /**
+     * Variant's aaptOptions, initialized by the corresponding global DSL element.
+     */
+    val aaptOptions: AaptOptions
+
+    /**
+     * Variant's aaptOptions, initialized by the corresponding global DSL element.
+     */
+    fun aaptOptions(action: AaptOptions.() -> Unit)
+
+    /**
+     * Variant's signingConfig, initialized by the corresponding DSL element.
+     */
+    val signingConfig: SigningConfig
+
+    /**
+     * Variant's signingConfig, initialized by the corresponding DSL element.
+     */
+    fun signingConfig(action: SigningConfig.() -> Unit)
+
+    /**
+     * Variant's packagingOptions, initialized by the corresponding global DSL element.
+     */
+    override val packagingOptions: ApkPackagingOptions
+
+    /**
+     * Variant's packagingOptions, initialized by the corresponding global DSL element.
+     */
+    fun packagingOptions(action: ApkPackagingOptions.() -> Unit)
 }

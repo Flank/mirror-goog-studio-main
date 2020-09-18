@@ -11,11 +11,11 @@
 		},
 		{
 			"isExternal" : true,
-			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/ndk/21.2.6472646/build/cmake/android.toolchain.cmake"
+			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/ndk/21.3.6528147/build/cmake/android.toolchain.cmake"
 		},
 		{
 			"isExternal" : true,
-			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/ndk/21.2.6472646/build/cmake/platforms.cmake"
+			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/ndk/21.3.6528147/build/cmake/platforms.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -33,7 +33,7 @@
 		},
 		{
 			"isExternal" : true,
-			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/ndk/21.2.6472646/build/cmake/android.toolchain.cmake"
+			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/ndk/21.3.6528147/build/cmake/android.toolchain.cmake"
 		},
 		{
 			"isCMake" : true,

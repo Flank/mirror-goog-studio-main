@@ -28,9 +28,8 @@ import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.dsl.ApplicationExtension;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.BuildTypeData;
@@ -373,7 +372,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
 
         String defaultVariant = variantModel.getDefaultVariant();
-        for (VariantPropertiesImpl variantProperties : variantModel.getVariants()) {
+        for (com.android.build.api.variant.impl.VariantImpl variantProperties :
+                variantModel.getVariants()) {
             variantNames.add(variantProperties.getName());
             if (shouldBuildVariant) {
                 variants.add(createVariant(variantProperties));
@@ -426,8 +426,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 variantBuildOutputs);
     }
 
-    private VariantBuildInformation createBuildInformation(
-            ComponentPropertiesImpl componentProperties) {
+    private VariantBuildInformation createBuildInformation(ComponentImpl componentProperties) {
         return new VariantBuildInformationImp(
                 componentProperties.getName(),
                 componentProperties.getTaskContainer().assembleTask.getName(),
@@ -493,8 +492,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         return regularFile != null ? regularFile.getAsFile().getAbsolutePath() : null;
     }
 
-    protected boolean inspectManifestForInstantTag(
-            @NonNull ComponentPropertiesImpl componentProperties) {
+    protected boolean inspectManifestForInstantTag(@NonNull ComponentImpl componentProperties) {
         if (projectType != PROJECT_TYPE_APP && projectType != PROJECT_TYPE_DYNAMIC_FEATURE) {
             return false;
         }
@@ -564,7 +562,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         if (variantName == null) {
             throw new IllegalArgumentException("Variant name cannot be null.");
         }
-        for (VariantPropertiesImpl variantProperties : variantModel.getVariants()) {
+        for (com.android.build.api.variant.impl.VariantImpl variantProperties :
+                variantModel.getVariants()) {
             if (variantProperties.getName().equals(variantName)) {
                 VariantImpl variant = createVariant(variantProperties);
                 if (shouldScheduleSourceGeneration) {
@@ -610,7 +609,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     @NonNull
-    private VariantImpl createVariant(@NonNull ComponentPropertiesImpl componentProperties) {
+    private VariantImpl createVariant(@NonNull ComponentImpl componentProperties) {
         AndroidArtifact mainArtifact = createAndroidArtifact(ARTIFACT_MAIN, componentProperties);
 
         // Need access to the merged flavors for the model, so we cast.
@@ -656,12 +655,12 @@ public class ModelBuilder<Extension extends BaseExtension>
                                                 libraryDependencyCache))
                         .collect(Collectors.toList());
 
-        if (componentProperties instanceof VariantPropertiesImpl) {
-            VariantPropertiesImpl variantProperties = (VariantPropertiesImpl) componentProperties;
+        if (componentProperties instanceof com.android.build.api.variant.impl.VariantImpl) {
+            com.android.build.api.variant.impl.VariantImpl variantProperties =
+                    (com.android.build.api.variant.impl.VariantImpl) componentProperties;
 
             for (VariantType variantType : VariantType.Companion.getTestComponents()) {
-                ComponentPropertiesImpl testVariant =
-                        variantProperties.getTestComponents().get(variantType);
+                ComponentImpl testVariant = variantProperties.getTestComponents().get(variantType);
                 if (testVariant != null) {
                     switch ((VariantTypeImpl) variantType) {
                         case ANDROID_TEST:
@@ -704,7 +703,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                         : ImmutableList.of());
     }
 
-    private void checkProguardFiles(@NonNull ComponentPropertiesImpl componentProperties) {
+    private void checkProguardFiles(@NonNull ComponentImpl componentProperties) {
         final Project project = globalScope.getProject();
 
         // We check for default files unless it's a base module, which can include default files.
@@ -725,7 +724,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     @NonNull
     private Collection<TestedTargetVariant> getTestTargetVariants(
-            @NonNull ComponentPropertiesImpl componentProperties) {
+            @NonNull ComponentImpl componentProperties) {
         if (extension instanceof TestAndroidConfig) {
             TestAndroidConfig testConfig = (TestAndroidConfig) extension;
 
@@ -764,8 +763,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     private JavaArtifactImpl createUnitTestsJavaArtifact(
-            @NonNull VariantType variantType,
-            @NonNull ComponentPropertiesImpl componentProperties) {
+            @NonNull VariantType variantType, @NonNull ComponentImpl componentProperties) {
         ArtifactsImpl artifacts = componentProperties.getArtifacts();
 
         SourceProviders sourceProviders = determineSourceProviders(componentProperties);
@@ -818,7 +816,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     /** Gather the dependency graph for the specified <code>variantScope</code>. */
     @NonNull
     private Pair<Dependencies, DependencyGraphs> getDependencies(
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull ComponentImpl componentProperties,
             @NonNull ImmutableMap<String, String> buildMapping,
             int modelLevel,
             boolean modelWithFullDependency) {
@@ -871,7 +869,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     private AndroidArtifact createAndroidArtifact(
-            @NonNull String name, @NonNull ComponentPropertiesImpl componentProperties) {
+            @NonNull String name, @NonNull ComponentImpl componentProperties) {
         VariantScope variantScope = componentProperties.getVariantScope();
         VariantDslInfo variantDslInfo = componentProperties.getVariantDslInfo();
 
@@ -991,7 +989,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     private static SourceProviders determineSourceProviders(
-            @NonNull ComponentPropertiesImpl componentProperties) {
+            @NonNull ComponentImpl componentProperties) {
         SourceProvider variantSourceProvider =
                 componentProperties.getVariantSources().getVariantSourceProvider();
         SourceProvider multiFlavorSourceProvider =
@@ -1007,8 +1005,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     @NonNull
-    private static List<String> getProductFlavorNames(
-            @NonNull ComponentPropertiesImpl componentProperties) {
+    private static List<String> getProductFlavorNames(@NonNull ComponentImpl componentProperties) {
         return componentProperties
                 .getProductFlavors()
                 .stream()
@@ -1018,7 +1015,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     @NonNull
     public static List<File> getGeneratedSourceFoldersForUnitTests(
-            @Nullable ComponentPropertiesImpl componentProperties) {
+            @Nullable ComponentImpl componentProperties) {
         if (componentProperties == null) {
             return Collections.emptyList();
         }
@@ -1037,7 +1034,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     @NonNull
     public static List<File> getGeneratedSourceFolders(
-            @Nullable ComponentPropertiesImpl componentProperties) {
+            @Nullable ComponentImpl componentProperties) {
         if (componentProperties == null) {
             return Collections.emptyList();
         }
@@ -1087,7 +1084,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     @NonNull
     public static List<File> getGeneratedResourceFolders(
-            @Nullable ComponentPropertiesImpl componentProperties) {
+            @Nullable ComponentImpl componentProperties) {
         if (componentProperties == null) {
             return Collections.emptyList();
         }

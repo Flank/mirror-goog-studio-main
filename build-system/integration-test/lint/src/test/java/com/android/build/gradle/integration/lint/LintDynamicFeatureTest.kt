@@ -16,23 +16,32 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
-class LintDynamicFeatureTest {
+@RunWith(FilterableParameterized::class)
+class LintDynamicFeatureTest(lintInvocationType: LintInvocationType) {
+
+    companion object {
+        @get:JvmStatic
+        @get:Parameterized.Parameters(name = "{0}")
+        val params get() = LintInvocationType.values()
+    }
 
     @get:Rule
-    val project: GradleTestProject = GradleTestProject.builder()
-        .fromTestProject("dynamicApp")
-        // http://b/146208910
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-        .create()
+    val project: GradleTestProject =
+        lintInvocationType.testProjectBuilder()
+            .fromTestProject("dynamicApp").create()
 
     @Test
     fun runLint() {
+        // Run twice to catch issues with configuration caching
+        project.execute("clean", ":feature1:lint")
         project.execute("clean", ":feature1:lint")
         assertThat(project.buildResult.failedTasks).isEmpty()
 

@@ -22,7 +22,7 @@ import com.android.build.api.component.impl.ComponentIdentityImpl
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.AndroidVersionImpl
-import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
+import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
@@ -72,7 +72,7 @@ class CompatibleScreensManifestTest {
     @Mock private lateinit var artifacts: ArtifactsImpl
     @Mock private lateinit var taskContainer: MutableTaskContainer
     @Mock private lateinit var variantData: BaseVariantData
-    @Mock private lateinit var variantProperties: ApplicationVariantPropertiesImpl
+    @Mock private lateinit var variantProperties: ApplicationVariantImpl
 
     private lateinit var task: CompatibleScreensManifest
 

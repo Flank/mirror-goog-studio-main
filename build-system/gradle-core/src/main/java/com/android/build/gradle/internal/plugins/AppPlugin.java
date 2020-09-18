@@ -17,12 +17,14 @@
 package com.android.build.gradle.internal.plugins;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.component.TestComponentProperties;
+import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.dsl.ApplicationExtension;
+import com.android.build.api.extension.ApplicationAndroidComponentsExtension;
+import com.android.build.api.extension.impl.ApplicationAndroidComponentsExtensionImpl;
+import com.android.build.api.extension.impl.OperationsRegistrar;
+import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
-import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.AppModelBuilder;
@@ -42,7 +44,6 @@ import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.v2.ide.ProjectType;
-import com.android.builder.profile.Recorder;
 import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -53,7 +54,10 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects, applied on the base application module */
 public class AppPlugin
-        extends AbstractAppPlugin<ApplicationVariantImpl, ApplicationVariantPropertiesImpl> {
+        extends AbstractAppPlugin<
+                ApplicationAndroidComponentsExtension,
+                ApplicationVariantBuilderImpl,
+                ApplicationVariantImpl> {
     @Inject
     public AppPlugin(
             ToolingModelBuilderRegistry registry,
@@ -121,16 +125,30 @@ public class AppPlugin
 
     @NonNull
     @Override
+    protected ApplicationAndroidComponentsExtension createComponentExtension(
+            @NonNull DslServices dslServices,
+            @NonNull
+                    OperationsRegistrar<ApplicationVariantBuilderImpl>
+                            variantBuilderOperationsRegistrar,
+            @NonNull OperationsRegistrar<ApplicationVariantImpl> variantOperationsRegistrar) {
+        return project.getExtensions()
+                .create(
+                        ApplicationAndroidComponentsExtension.class,
+                        "androidComponents",
+                        ApplicationAndroidComponentsExtensionImpl.class,
+                        dslServices,
+                        variantBuilderOperationsRegistrar,
+                        variantOperationsRegistrar);
+    }
+
+    @NonNull
+    @Override
     protected ApplicationTaskManager createTaskManager(
             @NonNull
-                    List<ComponentInfo<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>>
+                    List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>
                             variants,
             @NonNull
-                    List<
-                                    ComponentInfo<
-                                            TestComponentImpl<? extends TestComponentProperties>,
-                                            TestComponentPropertiesImpl>>
-                            testComponents,
+                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension) {

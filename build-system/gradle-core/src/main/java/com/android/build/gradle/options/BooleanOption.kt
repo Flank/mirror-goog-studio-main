@@ -163,6 +163,7 @@ enum class BooleanOption(
 
     USE_NEW_DSL_INTERFACES("android.experimental.newDslInterfaces", false, FeatureStage.Experimental),
 
+    USE_NEW_LINT_MODEL("android.experimental.useNewLintModel", false, FeatureStage.Experimental),
     /* ------------------------
      * SOFTLY-ENFORCED FEATURES
      */

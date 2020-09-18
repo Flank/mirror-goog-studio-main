@@ -37,10 +37,12 @@ message ComponentTreeEvent {
   }
   PayloadType payload_type = 2;
   View root = 3;
-  repeated StringEntry string = 4;
-  ResourceConfiguration resources = 5;
-  repeated int64 all_window_ids = 6;
-  int32 generation = 7;
+  sint32 root_surface_offset_x = 4;
+  sint32 root_surface_offset_y = 5;
+  repeated StringEntry string = 6;
+  ResourceConfiguration resources = 7;
+  repeated int64 all_window_ids = 8;
+  int32 generation = 9;
 }
 
 message PropertyEvent {

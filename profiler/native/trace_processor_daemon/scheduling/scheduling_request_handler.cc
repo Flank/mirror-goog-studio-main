@@ -55,9 +55,10 @@ void SchedulingRequestHandler::PopulateEvents(SchedulingEventsParameters params,
       break;
     case SchedulingEventsParameters::kThreadId:
       query_string =
-          "SELECT tid, pid, cpu, ts, dur, end_state, priority "
+          "SELECT tid, COALESCE(pid, 0) as pid, cpu, ts, dur, end_state, "
+          "priority "
           "FROM sched INNER JOIN thread using(utid) "
-          "           INNER JOIN process using(upid) "
+          "           LEFT JOIN process using(upid) "
           "WHERE tid = " +
           std::to_string(params.thread_id()) +
           " "
@@ -65,9 +66,10 @@ void SchedulingRequestHandler::PopulateEvents(SchedulingEventsParameters params,
       break;
     case SchedulingEventsParameters::CRITERIA_NOT_SET:
       query_string =
-          "SELECT tid, pid, cpu, ts, dur, end_state, priority "
+          "SELECT tid, COALESCE(pid, 0) as pid, cpu, ts, dur, end_state, "
+          "priority "
           "FROM sched INNER JOIN thread using(utid) "
-          "           INNER JOIN process using(upid) "
+          "           LEFT JOIN process using(upid) "
           "ORDER BY tid ASC, ts ASC";
       break;
     default:

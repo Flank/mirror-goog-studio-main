@@ -108,7 +108,24 @@ void OverlayInstallCommand::SetUpAgent(
   RunasExecutor run_as(request_.package_name(), workspace_.GetExecutor());
   std::string error;
 
-  if (missing_files.find(startup_path) != missing_files.end() &&
+  bool missing_startup =
+      missing_files.find(startup_path) != missing_files.end();
+  bool missing_agent = missing_files.find(agent_path) != missing_files.end();
+
+  // Clean up other agents from the startup_agent directory. Because agents are
+  // versioned (agent-<version#>) we cannot simply copy our agent on top of the
+  // previous file. If the startup_agent directory exists but our agent cannot
+  // be found in it, we assume another agent is present and delete it.
+  if (!missing_startup && missing_agent) {
+    if (!run_as.Run("rm", {"-f", "-r", startup_path}, nullptr, &error)) {
+      ErrEvent("Could not remove old agents: " + error);
+      overlay_response->set_status(proto::OverlayInstallResponse::SETUP_FAILED);
+      return;
+    }
+    missing_startup = true;
+  }
+
+  if (missing_startup &&
       !run_as.Run("mkdir", {startup_path}, nullptr, &error)) {
     ErrEvent("Could not create startup agent directory: " + error);
     overlay_response->set_status(proto::OverlayInstallResponse::SETUP_FAILED);
@@ -123,7 +140,7 @@ void OverlayInstallCommand::SetUpAgent(
   }
 
   std::string tmp_agent = workspace_.GetTmpFolder() + agent;
-  if (missing_files.find(agent_path) != missing_files.end() &&
+  if (missing_agent &&
       !run_as.Run("cp", {"-F", tmp_agent, agent_path}, nullptr, &error)) {
     ErrEvent("Could not copy binaries: " + error);
     overlay_response->set_status(proto::OverlayInstallResponse::SETUP_FAILED);

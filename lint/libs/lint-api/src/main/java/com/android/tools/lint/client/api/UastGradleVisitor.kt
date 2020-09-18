@@ -25,7 +25,9 @@ import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
+import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULambdaExpression
+import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
@@ -45,14 +47,6 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
                     handleBinaryExpression(node, detectors, context)
                     return super.visitBinaryExpression(node)
                 }
-
-                override fun visitReturnExpression(node: UReturnExpression): Boolean {
-                    val returnExpression = node.returnExpression
-                    if (returnExpression is UCallExpression) {
-                        visitCallExpression(returnExpression)
-                    }
-                    return super.visitReturnExpression(node)
-                }
             })
     }
 
@@ -62,30 +56,23 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
         context: GradleContext
     ) {
         if (node.isAssignment()) {
-            val parentCall = getSurroundingNamedBlock(node)
-            if (parentCall != null) {
-                val parentParentCall = getSurroundingNamedBlock(parentCall)
-                val parentName =
-                    getMethodName(parentCall)
-                val parentParentName = if (parentParentCall != null)
-                    getMethodName(parentParentCall)
-                else null
-                if (parentName != null) {
-                    val target = node.leftOperand.asSourceString()
-                    val value = node.rightOperand.asSourceString()
-                    for (scanner in detectors) {
-                        scanner.checkDslPropertyAssignment(
-                            context,
-                            target,
-                            value,
-                            parentName,
-                            parentParentName,
-                            node.leftOperand,
-                            node.rightOperand,
-                            node
-                        )
-                    }
-                }
+            val hierarchy = getPropertyHierarchy(node.leftOperand)
+            val target = hierarchy.firstOrNull() ?: return
+            val hierarchyWithParents = hierarchy + getParent(node) + getParentN(node, 2)
+            val parentName = hierarchyWithParents[1]
+            val parentParentName = hierarchyWithParents[2]
+            val value = node.rightOperand.asSourceString()
+            for (scanner in detectors) {
+                scanner.checkDslPropertyAssignment(
+                    context,
+                    target,
+                    value,
+                    parentName,
+                    parentParentName,
+                    node.leftOperand,
+                    node.rightOperand,
+                    node
+                )
             }
         } else {
             val left = node.leftOperand
@@ -119,41 +106,27 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
                         // Some sort of DSL property?
                         // Parent should be block, its parent lambda, its parent a call -
                         // the name is the parent
-                        val parentCall = getSurroundingNamedBlock(node)
-                        if (parentCall != null) {
-                            val parentParentCall =
-                                getSurroundingNamedBlock(parentCall)
-                            val parentName =
-                                getMethodName(
-                                    parentCall
-                                )
-                            val parentParentName = if (parentParentCall != null)
-                                getMethodName(
-                                    parentParentCall
-                                )
-                            else null
-                            if (parentName != null) {
-                                val value = arg.asSourceString()
-                                for (scanner in detectors) {
-                                    // How do I represent this: we're passing
-                                    // in *two* values:
-                                    //  the plugin id
-                                    // and then the version to use
-                                    // For now just passing the first one, e.g.
-                                    // in the above, plugins.id = "com.android.application"
+                        val parentName = getParent(node)
+                        val parentParentName = getParentN(node, 2)
+                        val value = arg.asSourceString()
+                        for (scanner in detectors) {
+                            // How do I represent this: we're passing
+                            // in *two* values:
+                            //  the plugin id
+                            // and then the version to use
+                            // For now just passing the first one, e.g.
+                            // in the above, plugins.id = "com.android.application"
 
-                                    scanner.checkDslPropertyAssignment(
-                                        context,
-                                        target,
-                                        value,
-                                        parentName,
-                                        parentParentName,
-                                        left,
-                                        arg,
-                                        node
-                                    )
-                                }
-                            }
+                            scanner.checkDslPropertyAssignment(
+                                context,
+                                target,
+                                value,
+                                parentName,
+                                parentParentName,
+                                left,
+                                arg,
+                                node
+                            )
                         }
                     }
                 }
@@ -168,39 +141,57 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
     ) {
         val valueArguments = node.valueArguments
         val propertyName = getMethodName(node)
-        if (propertyName != null && valueArguments.size == 1) {
-            val arg = valueArguments[0]
-            if (arg !is ULambdaExpression) {
+        if (propertyName == null) {
+            return
+        } else {
+            val parentName = getParent(node)
+            val parentParentName = getParentN(node, 2)
+            val unnamedArguments = valueArguments.map { it.asSourceString() }
+            for (scanner in detectors) {
+                scanner.checkMethodCall(
+                    context,
+                    propertyName,
+                    parentName,
+                    parentParentName,
+                    mapOf(),
+                    unnamedArguments,
+                    node
+                )
+            }
+            if (valueArguments.size == 1 && valueArguments[0] !is ULambdaExpression) {
                 // Some sort of DSL property?
                 // Parent should be block, its parent lambda, its parent a call -
                 // the name is the parent
-                val parentCall = getSurroundingNamedBlock(node)
-                if (parentCall != null) {
-                    val parentParentCall = getSurroundingNamedBlock(parentCall)
-                    val parentName =
-                        getMethodName(parentCall)
-                    val parentParentName = if (parentParentCall != null)
-                        getMethodName(
-                            parentParentCall
-                        )
-                    else null
-                    if (parentName != null) {
-                        val value = arg.asSourceString()
-                        for (scanner in detectors) {
-                            scanner.checkDslPropertyAssignment(
-                                context,
-                                propertyName,
-                                value,
-                                parentName,
-                                parentParentName,
-                                node.methodIdentifier ?: node,
-                                arg,
-                                node
-                            )
-                        }
-                    }
+                val value = unnamedArguments[0]
+                for (scanner in detectors) {
+                    scanner.checkDslPropertyAssignment(
+                        context,
+                        propertyName,
+                        value,
+                        parentName,
+                        parentParentName,
+                        node.methodIdentifier ?: node,
+                        valueArguments[0],
+                        node
+                    )
                 }
             }
+        }
+    }
+
+    private fun getPropertyHierarchy(expression: UExpression): List<String> {
+        return when (expression) {
+            is UQualifiedReferenceExpression -> {
+                val result = mutableListOf(expression.selector.asSourceString())
+                var receiver = expression.receiver
+                while (receiver is UQualifiedReferenceExpression) {
+                    result.add(receiver.selector.asSourceString())
+                    receiver = receiver.receiver
+                }
+                result.add(receiver.asSourceString())
+                result
+            }
+            else -> listOf(expression.asSourceString())
         }
     }
 
@@ -222,6 +213,17 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
 
         return null
     }
+
+    private fun getParentN(node: UElement, n: Int): String? {
+        val parentCall = getSurroundingNamedBlock(node)
+        return when {
+            parentCall == null -> null
+            n == 1 -> getMethodName(parentCall)
+            else -> getParentN(parentCall, n - 1)
+        }
+    }
+
+    private fun getParent(node: UElement) = getParentN(node, 1)
 
     override fun createLocation(context: GradleContext, cookie: Any): Location {
         return javaContext.getLocation(cookie as UElement)

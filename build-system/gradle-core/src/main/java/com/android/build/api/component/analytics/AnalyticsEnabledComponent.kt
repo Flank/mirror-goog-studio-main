@@ -16,38 +16,71 @@
 
 package com.android.build.api.component.analytics
 
+import com.android.build.api.artifact.Artifacts
 import com.android.build.api.component.Component
-import com.android.build.api.component.ComponentProperties
-import com.android.tools.build.gradle.internal.profile.VariantMethodType
+import com.android.build.api.instrumentation.AsmClassVisitorFactory
+import com.android.build.api.instrumentation.FramesComputationMode
+import com.android.build.api.instrumentation.InstrumentationParameters
+import com.android.build.api.instrumentation.InstrumentationScope
+import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.model.ObjectFactory
 
-/**
- * Superclass for all analytics enabled implementations.
- */
-abstract class AnalyticsEnabledComponent<PropertiesT : ComponentProperties>(
-    open val delegate: Component<PropertiesT>,
-    protected val stats: GradleBuildVariant.Builder
-) : Component<PropertiesT> {
-
-    override var enabled: Boolean
-        get() = delegate.enabled
-        set(value) {
-            stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.ENABLED_VALUE
-            delegate.enabled = value
+abstract class AnalyticsEnabledComponent(
+    open val delegate: Component,
+    val stats: GradleBuildVariant.Builder,
+    val objectFactory: ObjectFactory
+) : Component {
+    override val artifacts: Artifacts
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.ARTIFACTS_VALUE
+            return objectFactory.newInstance(
+                AnalyticsEnabledArtifacts::class.java,
+                delegate.artifacts,
+                stats,
+                objectFactory)
         }
 
-    override fun onProperties(action: PropertiesT.() -> Unit) {
-        delegate.onProperties(action)
+    override fun <ParamT : InstrumentationParameters> transformClassesWith(
+        classVisitorFactoryImplClass: Class<out AsmClassVisitorFactory<ParamT>>,
+        scope: InstrumentationScope,
+        instrumentationParamsConfig: (ParamT) -> Unit
+    ) {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.ASM_TRANSFORM_CLASSES_VALUE
+        delegate.transformClassesWith(
+            classVisitorFactoryImplClass,
+            scope,
+            instrumentationParamsConfig)
     }
 
-    override fun getName(): String =
-        delegate.name
-
+    override fun setAsmFramesComputationMode(mode: FramesComputationMode) {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.ASM_FRAMES_COMPUTATION_NODE_VALUE
+        delegate.setAsmFramesComputationMode(mode)
+    }
 
     override val buildType: String?
-        get() = delegate.buildType
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.BUILD_TYPE_VALUE
+            return delegate.buildType
+        }
+
     override val productFlavors: List<Pair<String, String>>
-        get() = delegate.productFlavors
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.PRODUCT_FLAVORS_VALUE
+            return delegate.productFlavors
+        }
+
     override val flavorName: String
-        get() = delegate.flavorName
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.FLAVOR_NAME_VALUE
+            return delegate.flavorName
+        }
+
+    override fun getName(): String = delegate.name
 }

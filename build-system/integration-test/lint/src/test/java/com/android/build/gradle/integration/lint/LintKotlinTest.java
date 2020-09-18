@@ -19,31 +19,46 @@ package com.android.build.gradle.integration.lint;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import java.io.File;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Integration test for lint analyzing Kotlin code from Gradle. */
+@RunWith(FilterableParameterized.class)
 public class LintKotlinTest {
 
-    @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("lintKotlin").create();
+    @Parameterized.Parameters(name = "{0}")
+    public static LintInvocationType[] getParams() {
+        return LintInvocationType.values();
+    }
 
-    @Before
-    public void setUp() {
-        Throwable exception = project.executeExpectingFailure("clean", ":app:lintDebug");
+    @Rule
+    public final GradleTestProject project;
+
+    public LintKotlinTest(LintInvocationType lintInvocationType) {
+        this.project = lintInvocationType.testProjectBuilder()
+                .fromTestProject("lintKotlin")
+                .create();
+    }
+
+    @Test
+    public void checkFindErrors() throws Exception {
+        project.executor().expectFailure().run(":app:lintDebug");
+        GradleBuildResult result = project.executor().expectFailure().run(":app:lintDebug");
+
+
+        Throwable exception = result.getException();
         while (exception.getCause() != null && exception.getCause() != exception) {
             exception = exception.getCause();
         }
         assertThat(exception.getMessage())
                 .contains("Lint found errors in the project; aborting build");
-    }
 
-    @Test
-    public void checkFindErrors() {
         File lintReport = project.file("app/lint-report.xml");
         assertThat(lintReport)
                 .contains(

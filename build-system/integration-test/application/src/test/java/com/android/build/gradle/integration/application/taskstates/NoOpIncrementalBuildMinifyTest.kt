@@ -119,6 +119,7 @@ class NoOpIncrementalBuildMinifyTest {
                 ":processReleaseResources",
                 ":sdkReleaseDependencyData",
                 ":validateSigningDebugAndroidTest",
+                ":writeReleaseAppMetadata",
                 ":writeReleaseApplicationId"
             ),
             SKIPPED to setOf(
@@ -131,6 +132,7 @@ class NoOpIncrementalBuildMinifyTest {
                 ":compileReleaseRenderscript",
                 ":compileReleaseShaders",
                 ":compileReleaseUnitTestJavaWithJavac",
+                ":extractReleaseNativeSymbolTables",
                 ":mergeReleaseNativeDebugMetadata",
                 ":mergeReleaseNativeLibs",
                 ":preDebugAndroidTestBuild",

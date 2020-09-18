@@ -164,10 +164,13 @@ open class ConfigurationHierarchy(
             var current: Configuration? = child
             var current2: Configuration? = child
             while (current != null) {
-                current = parentOf[current2] ?: return
+                current = parentOf[current] ?: return
                 current2 = parentOf[parentOf[current2] ?: return] ?: return
                 if (current === current2) {
-                    error("Cyclical configuration chain")
+                    // hotfix for b/168261940
+                    // client.log(Severity.ERROR, null, "Cyclical configuration chain")
+                    parentOf.remove(child)
+                    break
                 }
             }
         }

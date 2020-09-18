@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.dsl.CmakeOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
@@ -41,8 +41,8 @@ class EmptyGlobalMock {
         throwUnmocked
     )
 
-    val componentProperties: ComponentPropertiesImpl = Mockito.mock(
-        ComponentPropertiesImpl::class.java,
+    val componentProperties: ComponentImpl = Mockito.mock(
+        ComponentImpl::class.java,
         throwUnmocked
     )
 

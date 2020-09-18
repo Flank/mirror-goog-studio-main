@@ -16,13 +16,14 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.testutils.truth.FileSubject.assertThat
-import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
 /**
  * Test for the standalone lint plugin.
@@ -31,16 +32,23 @@ import org.junit.Test
  * To run just this test:
  * ./gradlew :base:build-system:integration-test:application:test -D:base:build-system:integration-test:application:test.single=LintStandaloneVitalTest
  */
-class LintStandaloneVitalTest {
+@RunWith(FilterableParameterized::class)
+class LintStandaloneVitalTest(lintInvocationType: LintInvocationType) {
+
+    companion object {
+        @get:JvmStatic
+        @get:Parameterized.Parameters(name = "{0}")
+        val params get() = LintInvocationType.values()
+    }
+
     @Rule
     @JvmField
-    var project = GradleTestProject.builder().fromTestProject("lintStandaloneVital")
-        // http://b/146208910
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+    var project = lintInvocationType
+        .testProjectBuilder()
+        .fromTestProject("lintStandaloneVital")
         .create()
 
     @Test
-    @Throws(Exception::class)
     fun checkStandaloneLintVital() {
         project.executeExpectingFailure("clean", "lintVital")
 

@@ -99,7 +99,7 @@
 			],
 			"sysroot" :
 			{
-				"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+				"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
 			}
 		}
 	],
@@ -142,7 +142,7 @@
 		"language" : "CXX",
 		"sysroot" :
 		{
-			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+			"path" : "/private/var/tmp/_bazel_jomof/cd7382de6c57d974eabcf5c1270266ca/execroot/__main__/_tmp/e73845a038e53cc353cb07b1ca717d95/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
 		}
 	},
 	"name" : "app",

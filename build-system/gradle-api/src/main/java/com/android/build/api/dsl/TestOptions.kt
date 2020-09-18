@@ -83,4 +83,26 @@ interface TestOptions {
      * @since 3.0.0
      */
     var execution: String
+
+    /**
+     * Configures Android Test Retention.
+     *
+     * Android Test Retention automatically takes emulator snapshots on test failures. It can only
+     * work with Unified Test Platform (UTP), thus would require
+     * "execution 'ANDROID_TEST_ORCHESTRATOR'".
+     *
+     * ```
+     * android {
+     *   testOptions {
+     *     execution 'ANDROID_TEST_ORCHESTRATOR'
+     *     failureRetention {
+     *       enable true
+     *       maxSnapshots 5
+     *       compressSnapshots false
+     *     }
+     *   }
+     * }
+     * ```
+     */
+    var failureRetention: FailureRetention
 }

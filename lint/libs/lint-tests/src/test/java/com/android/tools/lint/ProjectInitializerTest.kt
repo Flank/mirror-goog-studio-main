@@ -168,6 +168,24 @@ class ProjectInitializerTest {
 
         val root = temp.newFolder()
 
+        val configFile = File(root, "lint.xml")
+        @Language("XML")
+        val config =
+            """
+            <lint
+                checkTestSources='false'
+                ignoreTestSources='false'
+                checkGeneratedSources='true'
+                explainIssues='false'
+            >
+                <issue id="CheckResult" severity="error"/>
+                <!-- Reduce severity of UniquePermission from error to warning -->
+                <issue id="UniquePermission" severity="warning"/>
+            </lint>
+            """
+        configFile.parentFile?.mkdirs()
+        configFile.writeText(config.trimIndent())
+
         val projects = lint().projects(main, library).createProjects(root)
         val appProjectDir = projects[0]
         val appProjectPath = appProjectDir.path
@@ -319,11 +337,14 @@ class ProjectInitializerTest {
                 <string name="string1">String 2</string>
                         ~~~~~~~~~~~~~~
                 res/values/strings.xml:2: Previously defined here
-            ../Library/AndroidManifest.xml:8: Error: Permission name SEND_SMS is not unique (appears in both foo.permission.SEND_SMS and bar.permission.SEND_SMS) [UniquePermission]
+            generated/Generated.java:3: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
+              String path = "/sdcard/file";
+                            ~~~~~~~~~~~~~~
+            ../Library/AndroidManifest.xml:8: Warning: Permission name SEND_SMS is not unique (appears in both foo.permission.SEND_SMS and bar.permission.SEND_SMS) [UniquePermission]
                 <permission android:name="bar.permission.SEND_SMS"
                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 AndroidManifest.xml:8: Previous permission here
-            3 errors, 0 warnings (1 error filtered by baseline baseline.xml)
+            2 errors, 2 warnings (1 error filtered by baseline baseline.xml)
             """,
             "w: Classpath entry points to a non-existent location: ROOT/test.jar",
 
@@ -335,6 +356,8 @@ class ProjectInitializerTest {
                 "--quiet",
                 "--check",
                 "UniquePermission,DuplicateDefinition,SdCardPath",
+                "--config",
+                configFile.path,
                 "--text",
                 "stdout",
                 "--project",

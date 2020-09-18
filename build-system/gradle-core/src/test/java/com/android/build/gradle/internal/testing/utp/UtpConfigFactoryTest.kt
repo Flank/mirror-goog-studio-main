@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.testing.StaticTestData
+import com.android.build.gradle.internal.testing.utp.RetentionConfig
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.BuildToolInfo
 import com.google.common.truth.Truth.assertThat
@@ -73,6 +74,8 @@ class UtpConfigFactoryTest {
     lateinit var mockBuildToolInfo: BuildToolInfo
     @Mock
     lateinit var mockBuildToolInfoProvider: Provider<BuildToolInfo>
+    @Mock
+    lateinit var mockRetentionConfig: RetentionConfig
     val testData = StaticTestData(
         testedApplicationId = "com.example.application",
         applicationId = "com.example.application.test",
@@ -146,7 +149,7 @@ class UtpConfigFactoryTest {
             mockTmpDir,
             mockTestLogDir,
             mockRunLogDir,
-            false)
+            mockRetentionConfig)
 
         assertThat(runnerConfigProto.toString()).isEqualTo("""
             device {
@@ -281,6 +284,9 @@ class UtpConfigFactoryTest {
 
     @Test
     fun createRunnerConfigProtoWithIcebox() {
+        `when`(mockRetentionConfig.enabled).thenReturn(true)
+        `when`(mockRetentionConfig.retainAll).thenReturn(true)
+
         val factory = UtpConfigFactory()
         val runnerConfigProto = factory.createRunnerConfigProto(
             mockDevice,
@@ -292,7 +298,7 @@ class UtpConfigFactoryTest {
             mockTmpDir,
             mockTestLogDir,
             mockRunLogDir,
-            true)
+            mockRetentionConfig)
 
         assertThat(runnerConfigProto.toString()).isEqualTo("""
             device {

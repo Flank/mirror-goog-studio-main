@@ -675,6 +675,27 @@ class LintUtilsTest : TestCase() {
         assertThat(isJavaKeyword("false")).isTrue()
     }
 
+    fun testIsParent() {
+        fun file(path: String): File {
+            return File(path.replace("/", File.separator))
+        }
+
+        assertTrue(isParent(file("foo"), file("foo"), strict = false))
+        assertFalse(isParent(file("foo"), file("foo"), strict = true))
+        assertTrue(isParent(file("/tmp/foo/"), file("/tmp/foo"), strict = false))
+        assertTrue(isParent(file("/tmp/foo"), file("/tmp/foo/"), strict = false))
+        assertFalse(isParent(file("/tmp/foo"), file("/tmp/foo/"), strict = true))
+        assertTrue(isParent(file("/tmp/foo"), file("/tmp/foo/bar")))
+        assertFalse(isParent(file("/tmp/foo"), file("/tmp/fooo")))
+    }
+
+    fun testGetFileUri() {
+        val pwd = System.getProperty("user.dir")
+        val uri = getFileUri(File("$pwd${File.separator}foo"))
+        assertTrue(uri.startsWith("file://"))
+        assertTrue(uri.endsWith("/foo"))
+    }
+
     private class JavaTestContext(
         driver: LintDriver,
         project: Project,

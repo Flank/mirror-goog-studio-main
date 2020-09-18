@@ -16,101 +16,85 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.component.AndroidTest
-import com.android.build.api.component.AndroidTestProperties
-import com.android.build.api.component.UnitTest
-import com.android.build.api.component.UnitTestProperties
-import com.android.build.api.component.impl.AndroidTestImpl
-import com.android.build.api.component.impl.UnitTestImpl
-import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.PackagingOptions
 import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
-import com.android.build.api.variant.impl.DelayedActionExecutor
-import com.android.tools.build.gradle.internal.profile.VariantMethodType
+import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.Action
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Provider
+import java.io.Serializable
 
-abstract class AnalyticsEnabledVariant<PropertiesT: VariantProperties>(
-    override val delegate: Variant<PropertiesT>,
-    stats: GradleBuildVariant.Builder
-) : AnalyticsEnabledComponent<PropertiesT>(delegate, stats),
-    Variant<PropertiesT> {
-
-    private val unitTestActions = DelayedActionExecutor<UnitTest<UnitTestProperties>>()
-    private val unitTestPropertiesOperations = DelayedActionExecutor<UnitTestProperties>()
-
-    private val androidTestActions = DelayedActionExecutor<AndroidTest<AndroidTestProperties>>()
-    private val androidTestPropertiesOperations = DelayedActionExecutor<AndroidTestProperties>()
-
-    override var minSdkVersion: AndroidVersion
-        get() = delegate.minSdkVersion
-        set(value) {
-            stats.variantApiAccessBuilder.addVariantAccessBuilder().type =
-                VariantMethodType.MIN_SDK_VERSION_VALUE_VALUE
-            delegate.minSdkVersion = value
+abstract class AnalyticsEnabledVariant (
+    override val delegate: Variant,
+    stats: GradleBuildVariant.Builder,
+    objectFactory: ObjectFactory
+) : AnalyticsEnabledComponent(delegate, stats, objectFactory), Variant {
+    override val applicationId: Provider<String>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.
+                READ_ONLY_APPLICATION_ID_VALUE
+            return delegate.applicationId
         }
 
-    override var renderscriptTargetApi: Int
-        get() = delegate.renderscriptTargetApi
-        set(value) {
-            stats.variantApiAccessBuilder.addVariantAccessBuilder()
-                .type = VariantMethodType.RENDERSCRIPT_TARGET_API_VALUE
-            delegate.renderscriptTargetApi = value
+    override val packageName: Provider<String>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.PACKAGE_NAME_VALUE
+            return delegate.packageName
         }
 
-    override fun unitTest(action: UnitTest<UnitTestProperties>.() -> Unit) {
-        unitTestActions.registerAction(Action { action(it) })
+    override val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.BUILD_CONFIG_FIELDS_VALUE
+            return delegate.buildConfigFields
+        }
+
+    override fun addBuildConfigField(key: String, value: Serializable, comment: String?) {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.ADD_BUILD_CONFIG_FIELD_VALUE
+        delegate.addBuildConfigField(key, value, comment)
     }
 
-    fun unitTest(action: Action<UnitTest<UnitTestProperties>>) {
-        unitTestActions.registerAction(action)
+    override fun addResValue(name: String, type: String, value: String, comment: String?) {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.ADD_RES_VALUE_VALUE
+        delegate.addResValue(name, type, value, comment)
     }
 
-    override fun unitTestProperties(action: UnitTestProperties.() -> Unit) {
-        unitTestPropertiesOperations.registerAction(Action { action(it) })
+    override fun addResValue(
+        name: String,
+        type: String,
+        value: Provider<String>,
+        comment: String?
+    ) {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.ADD_RES_VALUE_VALUE
+        delegate.addResValue(name, type, value, comment)
     }
 
-    fun unitTestProperties(action: Action<UnitTestProperties>) {
-        unitTestPropertiesOperations.registerAction(action)
+    override val manifestPlaceholders: MapProperty<String, String>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.MANIFEST_PLACEHOLDERS_VALUE
+            return delegate.manifestPlaceholders
+        }
+
+    private val userVisiblePackagingOptions: PackagingOptions by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledPackagingOptions::class.java,
+            delegate.packagingOptions,
+            stats
+        )
     }
 
-    override fun androidTest(action: AndroidTest<AndroidTestProperties>.() -> Unit) {
-        androidTestActions.registerAction(Action { action(it) })
-    }
-
-    fun androidTest(action: Action<AndroidTest<AndroidTestProperties>>) {
-        androidTestActions.registerAction(action)
-    }
-
-    override fun androidTestProperties(action: AndroidTestProperties.() -> Unit) {
-        androidTestPropertiesOperations.registerAction(Action { action(it) })
-    }
-
-    fun androidTestProperties(action: Action<AndroidTestProperties>) {
-        androidTestPropertiesOperations.registerAction(action)
-    }
-
-    // FIXME should be internal
-    fun executeUnitTestActions(target: UnitTestImpl) {
-        @Suppress("UNCHECKED_CAST")
-        unitTestActions.executeActions(
-            AnalyticsEnabledUnitTest(target, stats) as UnitTest<UnitTestProperties>)
-    }
-
-    // FIXME should be internal
-    fun executeUnitTestPropertiesActions(target: UnitTestProperties) {
-        unitTestPropertiesOperations.executeActions(target)
-    }
-
-    // FIXME should be internal
-    fun executeAndroidTestActions(target: AndroidTestImpl) {
-        @Suppress("UNCHECKED_CAST")
-        androidTestActions.executeActions(
-            AnalyticsEnabledAndroidTest(target, stats) as AndroidTest<AndroidTestProperties>)
-    }
-
-    // FIXME should be internal
-    fun executeAndroidTestPropertiesActions(target: AndroidTestProperties) {
-        androidTestPropertiesOperations.executeActions(target)
-    }
+    override val packagingOptions: PackagingOptions
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
+            return userVisiblePackagingOptions
+        }
 }

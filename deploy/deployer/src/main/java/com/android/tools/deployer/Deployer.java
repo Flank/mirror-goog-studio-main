@@ -184,7 +184,8 @@ public class Deployer {
                     runner.create(
                             Tasks.OPTIMISTIC_INSTALL, apkInstaller::install, packageName, apks);
 
-            installSuccess = runner.run().isSuccess();
+            TaskResult result = runner.run();
+            installSuccess = result.isSuccess();
             if (installSuccess) {
                 runner.create(
                         Tasks.DEPLOY_CACHE_STORE,
@@ -194,6 +195,7 @@ public class Deployer {
                         apks,
                         overlayId);
             }
+            result.getMetrics().forEach(metrics::add);
         }
 
         // This needs to happen no matter which path we're on, so create the task now.

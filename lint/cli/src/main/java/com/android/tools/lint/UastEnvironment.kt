@@ -19,6 +19,7 @@ package com.android.tools.lint
 import com.android.SdkConstants.DOT_KT
 import com.android.SdkConstants.DOT_KTS
 import com.android.SdkConstants.DOT_SRCJAR
+import com.android.SdkConstants.EXT_JAR
 import com.android.tools.lint.UastEnvironment.Companion.disposeApplicationEnvironment
 import com.intellij.codeInsight.CustomExceptionHandler
 import com.intellij.codeInsight.ExternalAnnotationsManager
@@ -111,10 +112,19 @@ class UastEnvironment private constructor(
         }
 
         fun addSourceRoots(sourceRoots: List<File>) {
-            kotlinCompilerConfig.addJavaSourceRoots(sourceRoots)
             // Note: the Kotlin compiler would normally add KotlinSourceRoots to the configuration
             // too, to be used by KotlinCoreEnvironment when computing the set of KtFiles to
             // analyze. However, Lint already computes the list of KtFiles on its own in LintDriver.
+            kotlinCompilerConfig.addJavaSourceRoots(sourceRoots)
+            if (Configuration::class.java.desiredAssertionStatus()) {
+                for (root in sourceRoots) {
+                    // The equivalent assertion in JavaCoreProjectEnvironment.addSourcesToClasspath
+                    // happens too late to be useful.
+                    assert(root.extension != EXT_JAR) {
+                        "Jar files should be added as classpath roots, not as source roots: $root"
+                    }
+                }
+            }
         }
 
         fun addClasspathRoots(classpathRoots: List<File>) {

@@ -9,7 +9,7 @@
     - compileTarget     = "29"
     - buildFolder       = {PROJECT}/build{!}
     - resourcePrefix    = (null)
-    - buildToolsVersion = "29.0.2"
+    - buildToolsVersion = "30.0.0"
     - dynamicFeatures   = []
     > bootClasspath:
        * {ANDROID_SDK}/platforms/android-29/android.jar{F}

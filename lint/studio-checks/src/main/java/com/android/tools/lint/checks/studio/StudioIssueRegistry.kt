@@ -61,7 +61,6 @@ class StudioIssueRegistry : IssueRegistry() {
         ImplicitExecutorDetector.ISSUE,
         IntellijThreadDetector.ISSUE,
         RegexpPathDetector.ISSUE,
-        SwingUtilitiesDetector.ISSUE,
         SwingWorkerDetector.ISSUE,
         GradleApiUsageDetector.ISSUE,
         HdpiDetector.ISSUE,

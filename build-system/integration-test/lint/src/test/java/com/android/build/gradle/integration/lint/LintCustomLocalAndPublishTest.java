@@ -19,30 +19,42 @@ package com.android.build.gradle.integration.lint;
 import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.testutils.truth.FileSubject.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.utils.FileUtils;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * Test for publishing a custom jar in a library model, used by a consuming app, as well as having a
  * local lint jar.
  */
+@RunWith(FilterableParameterized.class)
 public class LintCustomLocalAndPublishTest {
+
+    @Parameterized.Parameters(name = "{0}")
+    public static LintInvocationType[] getParams() {
+        return LintInvocationType.values();
+    }
+
     @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestProject("lintCustomLocalAndPublishRules")
-                    // http://b/146208910
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                    .create();
+    public final GradleTestProject project;
+
+    public LintCustomLocalAndPublishTest(LintInvocationType lintInvocationType) {
+        this.project = lintInvocationType.testProjectBuilder()
+                .fromTestProject("lintCustomLocalAndPublishRules")
+                .create();
+    }
 
     @Test
     public void checkCustomLint() throws Exception {
         project.executor().withFailOnWarning(false).run("clean");
         project.executor().withFailOnWarning(false).run(":library-remote:uploadArchives");
+        // Run twice to catch issues with configuration caching
+        project.executor().withFailOnWarning(false).expectFailure().run(":library:lintDebug");
         project.executor().withFailOnWarning(false).expectFailure().run(":library:lintDebug");
         project.executor().withFailOnWarning(false).expectFailure().run(":app:lintDebug");
         String appexpected =

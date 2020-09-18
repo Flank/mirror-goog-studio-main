@@ -16,18 +16,16 @@
 
 package com.android.build.gradle.internal.variant
 
-import com.android.build.api.component.ComponentProperties
-import com.android.build.api.component.analytics.AnalyticsEnabledVariant
+import com.android.build.api.component.analytics.AnalyticsEnabledVariantBuilder
+import com.android.build.api.component.impl.ComponentBuilderImpl
 import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.api.variant.VariantProperties
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 
 class ComponentInfo<
-        ComponentT : ComponentImpl<out ComponentProperties>,
-        ComponentPropertiesT : ComponentPropertiesImpl>(
+        ComponentT : ComponentBuilderImpl,
+        ComponentPropertiesT : ComponentImpl>(
     val variant: ComponentT,
     val properties: ComponentPropertiesT,
     val stats: GradleBuildVariant.Builder,
-    val userVisibleVariant: AnalyticsEnabledVariant<in VariantProperties>?
+    val userVisibleVariant: AnalyticsEnabledVariantBuilder?
 )

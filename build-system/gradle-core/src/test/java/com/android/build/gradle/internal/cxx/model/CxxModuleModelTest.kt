@@ -231,8 +231,9 @@ class CxxModuleModelTest {
                             method.toGenericString()
                     )
                     .isTrue()
-                assertThat(method.name.endsWith("Enabled"))
-                    .named("vals with Boolean type must end with 'Enabled': " +
+                assertThat(method.name.endsWith("Enabled")
+                        || method.name.endsWith("Available"))
+                    .named("vals with Boolean type must end with 'Enabled' or 'Available': " +
                             method.toGenericString()
                     )
                     .isTrue()

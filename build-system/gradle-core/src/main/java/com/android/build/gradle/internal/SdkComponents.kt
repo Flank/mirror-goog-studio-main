@@ -32,6 +32,7 @@ import com.android.repository.Revision
 import com.android.sdklib.AndroidVersion
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.OptionalLibrary
+import org.gradle.api.InvalidUserDataException
 import org.gradle.api.NonExtensible
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
@@ -206,7 +207,12 @@ abstract class SdkComponentsBuildService @Inject constructor(
 
     fun sdkImageDirectoryProvider(imageHash: String): Provider<Directory> =
         objectFactory.directoryProperty().fileProvider(providerFactory.provider {
-            sdkHandler.installSystemImage(imageHash)
+            sdkLoadStrategy.getSystemImageLibFolder(imageHash)
+        })
+
+    val emulatorDirectoryProvider: Provider<Directory> =
+        objectFactory.directoryProperty().fileProvider(providerFactory.provider {
+            sdkLoadStrategy.getEmulatorLibFolder()
         })
 
     val ndkDirectoryProvider: Provider<Directory> =
@@ -215,7 +221,15 @@ abstract class SdkComponentsBuildService @Inject constructor(
         })
 
     val ndkRevisionProvider: Provider<Revision> =
-        providerFactory.provider { ndkHandler.ndkPlatform.getOrThrow().revision }
+        providerFactory.provider {
+            try {
+                ndkHandler.ndkPlatform.getOrThrow().revision
+            }
+            catch (e: InvalidUserDataException) {
+                parameters.issueReporter.get().reportWarning(IssueReporter.Type.GENERIC, e.message!!)
+                return@provider null
+            }
+         }
 
     val stripExecutableFinderProvider: Provider<SymbolStripExecutableFinder> =
         providerFactory.provider {

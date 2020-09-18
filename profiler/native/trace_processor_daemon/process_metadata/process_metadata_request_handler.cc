@@ -32,7 +32,7 @@ void ProcessMetadataRequestHandler::PopulateMetadata(
   if (params.process_id() > 0) {
     query_string =
         "SELECT upid, pid, process.name, utid, tid, thread.name "
-        "FROM process INNER JOIN thread using(upid) "
+        "FROM thread INNER JOIN process using(upid) "
         "WHERE pid = " +
         std::to_string(params.process_id()) +
         " "
@@ -40,42 +40,66 @@ void ProcessMetadataRequestHandler::PopulateMetadata(
   } else {
     query_string =
         "SELECT upid, pid, process.name, utid, tid, thread.name "
-        "FROM process INNER JOIN thread using(upid) "
+        "FROM thread LEFT JOIN process using(upid) "
         "ORDER BY upid ASC, utid ASC";
   }
 
   std::unordered_map<long, proto::ProcessMetadataResult::ProcessMetadata*>
       process_map;
+  std::unordered_map<long, proto::ProcessMetadataResult::ThreadMetadata*>
+      dangling_thread_map;
 
   auto it = tp_->ExecuteQuery(query_string);
   while (it.Next()) {
-    auto upid = it.Get(0).long_value;
 
-    if (process_map.find(upid) == process_map.end()) {
-      auto process_proto = result->add_process();
+    // Check if upid is null or not.
+    if (it.Get(0).is_null()) {
+      // If null, it means we have a dangling thread. A thread which we have
+      // some info for, but it is not associated to any process.
+      auto tid = it.Get(4).long_value;
 
-      process_proto->set_internal_id(upid);
+      if (dangling_thread_map.find(tid) == dangling_thread_map.end()) {
+        auto thread_proto = result->add_dangling_thread();
 
-      auto pid = it.Get(1).long_value;
-      process_proto->set_id(pid);
+        thread_proto->set_id(tid);
 
-      auto name_sql_value = it.Get(2);
+        auto utid = it.Get(3).long_value;
+        thread_proto->set_internal_id(utid);
+
+        auto name_sql_value = it.Get(5);
+        auto name = name_sql_value.is_null() ? "" : name_sql_value.string_value;
+        thread_proto->set_name(name);
+      }
+    } else {
+      // We have full process + thread info.
+      auto upid = it.Get(0).long_value;
+
+      if (process_map.find(upid) == process_map.end()) {
+        auto process_proto = result->add_process();
+
+        process_proto->set_internal_id(upid);
+
+        auto pid = it.Get(1).long_value;
+        process_proto->set_id(pid);
+
+        auto name_sql_value = it.Get(2);
+        auto name = name_sql_value.is_null() ? "" : name_sql_value.string_value;
+        process_proto->set_name(name);
+
+        process_map[upid] = process_proto;
+      }
+
+      auto thread_proto = process_map[upid]->add_thread();
+
+      auto utid = it.Get(3).long_value;
+      thread_proto->set_internal_id(utid);
+
+      auto tid = it.Get(4).long_value;
+      thread_proto->set_id(tid);
+
+      auto name_sql_value = it.Get(5);
       auto name = name_sql_value.is_null() ? "" : name_sql_value.string_value;
-      process_proto->set_name(name);
-
-      process_map[upid] = process_proto;
+      thread_proto->set_name(name);
     }
-
-    auto thread_proto = process_map[upid]->add_thread();
-
-    auto utid = it.Get(3).long_value;
-    thread_proto->set_internal_id(utid);
-
-    auto tid = it.Get(4).long_value;
-    thread_proto->set_id(tid);
-
-    auto name_sql_value = it.Get(5);
-    auto name = name_sql_value.is_null() ? "" : name_sql_value.string_value;
-    thread_proto->set_name(name);
   }
 }

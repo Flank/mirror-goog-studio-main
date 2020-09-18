@@ -16,39 +16,46 @@
 
 package com.android.build.gradle.integration.lint;
 
+import static com.android.build.gradle.integration.common.truth.ScannerSubject.assertThat;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.File;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * Integration test for the lintFix target on the synthetic accessor warnings found in the Kotlin
  * project.
  */
+@RunWith(Parameterized.class)
 public class LintFixTest {
 
-    @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("lintKotlin").create();
+    @Parameterized.Parameters(name = "{0}")
+    public static LintInvocationType[] getParams() {
+        return LintInvocationType.values();
+    }
 
-    @Before
-    public void setUp() throws Exception {
-        @SuppressWarnings("ThrowableNotThrown")
-        Throwable exception = project.executeExpectingFailure("clean", ":app:lintFix");
-        while (exception.getCause() != null && exception.getCause() != exception) {
-            exception = exception.getCause();
-        }
-        assertThat(exception.getMessage())
-                .contains(
-                        "Aborting build since sources were modified to apply quickfixes after compilation");
+    @Rule
+    public final GradleTestProject project;
+
+    public LintFixTest(LintInvocationType lintInvocationType) {
+        this.project = lintInvocationType.testProjectBuilder()
+                .fromTestProject("lintKotlin")
+                .create();
     }
 
     @Test
-    public void checkFindNestedResult() {
+    public void checkFindNestedResult() throws Exception {
+        GradleBuildResult result = project.executor().expectFailure().run("clean", ":app:lintFix");
+        assertThat(result.getStderr())
+                .contains(
+                        "Aborting build since sources were modified to apply quickfixes after compilation");
+
         // Make sure quickfixes worked too
         File source = project.file("app/src/main/kotlin/test/pkg/AccessTest2.kt");
         // The original source has this:
@@ -63,5 +70,7 @@ public class LintFixTest {
         //    ...
         assertThat(source).contains("internal fun method1()");
         assertThat(source).contains("internal constructor()");
+        GradleBuildResult result2 = project.executor().expectFailure().run("clean", ":app:lintFix");
+        assertThat(result2.getStderr()).contains("Lint found errors in the project; aborting build");
     }
 }

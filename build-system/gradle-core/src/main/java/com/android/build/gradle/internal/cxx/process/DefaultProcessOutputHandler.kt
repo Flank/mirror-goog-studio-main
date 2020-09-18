@@ -48,7 +48,10 @@ class DefaultProcessOutputHandler(
             stderrReceivers.add(ChunkBytesToLineOutputStream(logPrefix, { lifecycleln(it) }))
         }
         if (logOutputToInfo) {
-            stdoutReceivers.add(ChunkBytesToLineOutputStream(logPrefix, { infoln(it) }))
+            stdoutReceivers.add(ChunkBytesToLineOutputStream(logPrefix, {
+                if (shouldElevateToLifeCycle(it)) lifecycleln(it)
+                else infoln(it)
+            }))
         }
         return DefaultProcessOutput(
             singleStderr,
@@ -65,4 +68,3 @@ class DefaultProcessOutputHandler(
         stdout = output.stdout
     }
 }
-

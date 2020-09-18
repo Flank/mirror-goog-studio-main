@@ -18,8 +18,8 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.api.variant.impl.AndroidVersionImpl
+import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
-import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
@@ -64,8 +64,8 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
     val ndkHandler = Mockito.mock(NdkHandler::class.java)
     val ndkPlatform = NdkInstallStatus.Valid(Mockito.mock(NdkPlatform::class.java))
-    val variantImpl: VariantImpl<VariantPropertiesImpl> = Mockito.mock(VariantImpl::class.java) as VariantImpl<VariantPropertiesImpl>
-    val componentPropertiesImpl = Mockito.mock(VariantPropertiesImpl::class.java)
+    val variantImpl: VariantBuilderImpl = Mockito.mock(VariantBuilderImpl::class.java) as VariantBuilderImpl
+    val componentPropertiesImpl = Mockito.mock(VariantImpl::class.java)
     val baseVariantData = Mockito.mock(BaseVariantData::class.java)
     val variantScope = Mockito.mock(VariantScope::class.java)
     val buildFeatures = Mockito.mock(BuildFeatureValues::class.java)

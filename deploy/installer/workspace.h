@@ -55,10 +55,6 @@ class Workspace {
 
   void SetExecutor(Executor* executor) { executor_ = executor; }
 
-  IO& GetIO() const noexcept { return *io_; }
-
-  void SetIO(IO* io) { io_ = io; }
-
   void Init() noexcept;
 
  private:
@@ -70,7 +66,6 @@ class Workspace {
   std::string tmp_;
 
   Executor* executor_;
-  IO* io_;
 
   deploy::MessagePipeWrapper output_pipe_;
 };

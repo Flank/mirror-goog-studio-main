@@ -37,7 +37,7 @@ sealed class TargetDataItem {
      *  "language" : "C",
      *  "sourceIndexes" : [0],
      *  "sysroot" : {
-     *    "path" : "/sdk/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+     *    "path" : "/sdk/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
      *  }
      */
     data class CompileGroups(val compileGroups : List<TargetCompileGroupData>) : TargetDataItem()
@@ -86,7 +86,7 @@ sealed class TargetDataItem {
      *  } ],
      *  "language" : "CXX",
      *  "sysroot" : {
-     *     "path" : "/ndk/21.2.6472646/toolchains/llvm/prebuilt/darwin-x86_64/sysroot
+     *     "path" : "/ndk/21.3.6528147/toolchains/llvm/prebuilt/darwin-x86_64/sysroot
      *   }
      */
     data class Link(

@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.dsl
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.variant.ApplicationVariant
-import com.android.build.api.variant.ApplicationVariantProperties
+import com.android.build.api.variant.ApplicationVariantBuilder
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.coverage.JacocoOptions
@@ -37,8 +37,8 @@ interface InternalApplicationExtension :
                 BuildType,
                 DefaultConfig,
                 ProductFlavor,
-                ApplicationVariant<ApplicationVariantProperties>,
-                ApplicationVariantProperties> {
+                ApplicationVariantBuilder,
+                ApplicationVariant> {
     override var dynamicFeatures: MutableSet<String>
     override var assetPacks: MutableSet<String>
 }

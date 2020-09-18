@@ -398,7 +398,7 @@ abstract class Detector {
         context: GradleContext,
         property: String,
         value: String,
-        parent: String,
+        parent: String?,
         parentParent: String?,
         valueCookie: Any,
         statementCookie: Any
@@ -409,7 +409,7 @@ abstract class Detector {
         context: GradleContext,
         property: String,
         value: String,
-        parent: String,
+        parent: String?,
         parentParent: String?,
         propertyCookie: Any,
         valueCookie: Any,

@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
+import com.android.build.gradle.internal.cxx.logging.lifecycleln
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.ninjaLogFile
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
@@ -288,8 +289,6 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
 
                 for (runtimeFile in library.runtimeFiles) {
                     val dest = join(variant.objFolder, abi.tag, runtimeFile.name)
-                    // Dependencies within the same project will also show up as runtimeFiles, and
-                    // will have the same source and destination. Can skip those.
                     hardLinkOrCopy(runtimeFile, dest)
                 }
             }
@@ -322,6 +321,8 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
      * Hard link [source] to [destination].
      */
     private fun hardLinkOrCopy(source:File, destination:File) {
+        // Dependencies within the same project will also show up as runtimeFiles, and
+        // will have the same source and destination. Can skip those.
         if (isSameFile(source, destination)) {
             // This happens if source and destination are lexically the same
             // --or-- if one is a hard link to the other.
@@ -331,6 +332,14 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
 
         if(destination.exists()) {
             destination.delete()
+        }
+
+        // CMake can report runtime files that it doesn't later produce.
+        // Don't try to copy these. Also, don't warn because hard-link/copy
+        // is not the correct location to diagnose why the *original*
+        // runtime file was not created.
+        if(!source.exists()) {
+            return
         }
 
         try {
@@ -444,10 +453,7 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
      * Given a list of build steps, execute each. If there is a failure, processing is stopped at
      * that point.
      */
-    @Throws(BuildCommandException::class, IOException::class)
     private fun executeProcessBatch(buildSteps: List<BuildStep>) {
-        val logger = logger
-
         for (buildStep in buildSteps) {
             val tokens = buildStep.buildCommandComponents
             val processBuilder = ProcessInfoBuilder()
@@ -466,13 +472,11 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
                     .stream()
                     .map { library -> library.artifactName + "_" + library.abi }
                     .toList()
-                logger.lifecycle(
-                    String.format("Build multiple targets ${targetNames.joinToString(" ")}"))
+                lifecycleln("Build multiple targets ${targetNames.joinToString(" ")}")
             } else {
                 checkElementIndex(0, buildStep.libraries.size)
                 logFileSuffix = buildStep.libraries[0].artifactName + "_" + abiName
-                logger.lifecycle(
-                    String.format("Build $logFileSuffix"))
+                lifecycleln("Build $logFileSuffix")
             }
 
             abis

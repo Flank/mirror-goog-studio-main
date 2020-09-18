@@ -1,5 +1,6 @@
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
+load("//tools/base/bazel/validations:timeout.bzl", "APPROVED_ETERNAL_TESTS")
 
 # A gradle integration test
 #
@@ -84,8 +85,25 @@ def single_gradle_integration_test(name, deps, data, maven_repos, srcs = "", run
     )
 
 # Given a glob, this will create integration gradle test target for each of the sources in the glob.
-def single_gradle_integration_test_per_source(name, deps, data, maven_repos, srcs, runtime_deps = [], tags = [], **kwargs):
+def single_gradle_integration_test_per_source(
+        name,
+        deps,
+        data,
+        maven_repos,
+        package_name,
+        srcs,
+        runtime_deps = [],
+        tags = [],
+        **kwargs):
+
     split_targets = []
+
+    # List of target names approved to use an eternal timeout.
+    eternal_target_names = []
+    eternal_target_prefix = "//" + package_name + ":"
+    for target in APPROVED_ETERNAL_TESTS:
+        if target.startswith(eternal_target_prefix):
+            eternal_target_names.append(target[len(eternal_target_prefix):])
 
     # need case-insensitive target names because of case-insensitive FS e.g. on Windows
     lowercase_split_targets = []
@@ -108,6 +126,7 @@ def single_gradle_integration_test_per_source(name, deps, data, maven_repos, src
             maven_repos = maven_repos,
             runtime_deps = runtime_deps,
             tags = tags,
+            timeout = "eternal" if target_name in eternal_target_names else "long",
             **kwargs
         )
     native.test_suite(

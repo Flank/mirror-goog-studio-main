@@ -72,7 +72,7 @@ public class SdkAutoDownloadTest {
     private static final String BUILD_TOOLS_VERSION = SdkConstants.CURRENT_BUILD_TOOLS_VERSION;
     private static final String PLATFORM_VERSION =
             TestUtils.getLatestAndroidPlatform().replace("android-", "");
-    private static final String NDK_VERSION = "20.0.5594570";
+    private static final String NDK_VERSION = "21.3.6528147";
     private static final String CMAKE_VERSION = "3.6.0";
 
     @Rule
@@ -577,7 +577,10 @@ public class SdkAutoDownloadTest {
         assertThat(Splitter.on(' ').split(data))
                 .containsExactly(
                         "platforms;android-" + PLATFORM_VERSION,
-                        "build-tools;" + BUILD_TOOLS_VERSION);
+                        "build-tools;" + BUILD_TOOLS_VERSION,
+                        "platform-tools",
+                        "tools",
+                        "patcher;v4");
     }
 
     @Ignore("b/144346671")

@@ -16,7 +16,7 @@
  */
 package com.android.build.api.component.impl
 
-import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantBuilder
 import com.android.testutils.AbstractReturnGivenReturnExpectTest
 import com.android.testutils.on
 import org.gradle.api.Action
@@ -207,7 +207,7 @@ class FilteredComponentActionTest: AbstractReturnGivenReturnExpectTest<Pair<Filt
 
         val operation = with(given.first) {
             FilteredComponentAction(
-                specificType = Variant::class.java,
+                specificType = VariantBuilder::class.java,
                 name = name,
                 namePattern = namePattern,
                 buildType = buildType,
@@ -218,7 +218,7 @@ class FilteredComponentActionTest: AbstractReturnGivenReturnExpectTest<Pair<Filt
         }
 
         val variant = with(given.second) {
-            Mockito.mock(Variant::class.java).also { variant ->
+            Mockito.mock(VariantBuilder::class.java).also { variant ->
                 name?.let { Mockito.`when`(variant.name).thenReturn(it) }
                 buildType?.let { Mockito.`when`(variant.buildType).thenReturn(it) }
                 Mockito.`when`(variant.productFlavors).thenReturn(productFlavors)

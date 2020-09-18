@@ -45,12 +45,9 @@ using namespace deploy;
 static const char* kNoValue = "";
 
 struct Parameters {
-  const char* binary_name = kNoValue;
-  const char* command_name = kNoValue;
   const char* cmd_path = kNoValue;
   const char* pm_path = kNoValue;
   const char* version = kNoValue;
-  int consumed = 0;
 };
 
 // In daemon mode, the installer servers requests continuously from stdin.
@@ -61,8 +58,6 @@ void ProcessRequest(std::unique_ptr<proto::InstallerRequest>, Workspace&);
 
 Parameters ParseArgs(int argc, char** argv) {
   Parameters parameters;
-  parameters.binary_name = argv[0];
-  parameters.consumed = 1;
 
   int index = 1;
   while (index < argc && argv[index][0] == '-') {
@@ -76,13 +71,7 @@ Parameters ParseArgs(int argc, char** argv) {
     } else if (!strncmp("-version", argv[index], 8)) {
       parameters.version = strtok(nullptr, "=");
     }
-    parameters.consumed++;
     index++;
-  }
-
-  if (index < argc) {
-    parameters.command_name = argv[index];
-    parameters.consumed++;
   }
 
   return parameters;

@@ -39,14 +39,11 @@ namespace deploy {
 
 namespace {
 
-enum class StartResult { SUCCESS, TRY_COPY, FAILURE };
-
 // Attempts to start the server and connect an InstallClient to it. If this
 // operation sets the value of result to SUCCESS, returns a unique_ptr to an
 // InstallClient; otherwise the pointer is nullptr.
 std::unique_ptr<InstallClient> TryStartServer(const Executor& executor,
-                                              const std::string& exec_path,
-                                              StartResult* result) {
+                                              const std::string& exec_path) {
   int stdin_fd;
   int stdout_fd;
   int stderr_fd;
@@ -55,16 +52,15 @@ std::unique_ptr<InstallClient> TryStartServer(const Executor& executor,
                             &pid)) {
     // ForkAndExec only returns false if the pipe creation fails.
     ErrEvent("Could not ForkAndExec when starting server");
-    *result = StartResult::FAILURE;
     return nullptr;
   }
 
   // Wait for server startup acknowledgement. Note that when creating the
   // client, the server's output is the clients's input and vice-versa.
-  std::unique_ptr<InstallClient> client(new InstallClient(stdout_fd, stdin_fd));
+  std::unique_ptr<InstallClient> client(
+      new InstallClient(pid, stdout_fd, stdin_fd));
   if (client->WaitForStart()) {
     close(stderr_fd);
-    *result = StartResult::SUCCESS;
     return client;
   }
 
@@ -85,7 +81,6 @@ std::unique_ptr<InstallClient> TryStartServer(const Executor& executor,
              "'");
   }
 
-  *result = StartResult::FAILURE;
   return nullptr;
 }
 }  // namespace
@@ -368,14 +363,13 @@ std::unique_ptr<InstallClient> StartInstallServer(
   const std::string exec_path = "/data/data/" + package_name + "/code_cache/";
   const RunasExecutor run_as(package_name, executor);
 
-  StartResult result;
-  auto client = TryStartServer(run_as, exec_path + exec_name, &result);
-  if (result == StartResult::SUCCESS) {
+  auto client = TryStartServer(run_as, exec_path + exec_name);
+  if (client != nullptr) {
     return client;
   }
 
   if (TryCopyServer(run_as, server_path, exec_path, exec_name)) {
-    return TryStartServer(run_as, exec_path + exec_name, &result);
+    return TryStartServer(run_as, exec_path + exec_name);
   }
 
   return nullptr;

@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Contains a list of registered [Action] on an instance of [VariantObjectT] plus services like
  * executing these actions.
  *
- * @param VariantObjectT is either a [com.android.build.api.variant.Variant] or
+ * @param VariantObjectT is either a [com.android.build.api.variant.VariantBuilder] or
  * [com.android.build.api.variant.VariantProperties]
  */
 class VariantOperations<VariantObjectT> where VariantObjectT: ActionableComponentObject, VariantObjectT: ComponentIdentity {
@@ -38,9 +38,9 @@ class VariantOperations<VariantObjectT> where VariantObjectT: ActionableComponen
         if (actionsExecuted.get()) {
             throw RuntimeException("""
                 It is too late to add actions as the callbacks already executed.
-                Did you try to call onVariants or onVariantProperties from the old variant API 
-                'applicationVariants' for instance ? you should always call onVariants or 
-                onVariantProperties directly from the android DSL block. 
+                Did you try to call onVariants or onVariantProperties from the old variant API
+                'applicationVariants' for instance ? you should always call onVariants or
+                onVariantProperties directly from the android DSL block.
                 """)
         }
         actions.add(action)

@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
+import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
+import com.android.builder.internal.packaging.IncrementalPackager.APP_METADATA_FILE_NAME
 import com.android.builder.packaging.PackagingUtils
 import com.android.bundle.Config
 import com.android.tools.build.bundletool.commands.BuildBundleCommand
@@ -95,6 +96,10 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val nativeDebugMetadataFiles: ConfigurableFileCollection
 
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    abstract val appMetadata: RegularFileProperty
+
     @get:Input
     abstract val aaptOptionsNoCompress: ListProperty<String>
 
@@ -138,6 +143,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             it.bundleFile.set(bundleFile)
             it.bundleDeps.set(bundleDeps)
             it.bundleNeedsFusedStandaloneConfig.set(bundleNeedsFusedStandaloneConfig)
+            it.appMetadata.set(appMetadata)
         }
     }
 
@@ -155,6 +161,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         abstract val bundleFile: RegularFileProperty
         abstract val bundleDeps: RegularFileProperty
         abstract val bundleNeedsFusedStandaloneConfig: Property<Boolean>
+        abstract val appMetadata: RegularFileProperty
     }
 
     abstract class BundleToolWorkAction : ProfileAwareWorkAction<Params>() {
@@ -293,6 +300,12 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 )
             }
 
+            command.addMetadataFile(
+                    "com.android.tools.build.gradle",
+                    APP_METADATA_FILE_NAME,
+                    parameters.appMetadata.asFile.get().toPath()
+            )
+
             command.build().execute()
         }
 
@@ -337,8 +350,8 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     /**
      * CreateAction for a Task that will pack the bundle artifact.
      */
-    class CreationAction(componentProperties: ApplicationVariantPropertiesImpl) :
-        VariantTaskCreationAction<PackageBundleTask, ApplicationVariantPropertiesImpl>(
+    class CreationAction(componentProperties: ApplicationVariantImpl) :
+        VariantTaskCreationAction<PackageBundleTask, ApplicationVariantImpl>(
             componentProperties
         ) {
         override val name: String
@@ -422,6 +435,11 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     creationConfig.minSdkVersion.getFeatureLevel() < MIN_SDK_FOR_SPLITS
                             && creationConfig.artifacts.get(InternalArtifactType.ASSET_PACK_BUNDLE).isPresent
                 }
+            )
+
+            creationConfig.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.APP_METADATA,
+                task.appMetadata
             )
         }
     }

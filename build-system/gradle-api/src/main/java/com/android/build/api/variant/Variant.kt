@@ -13,43 +13,77 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.build.api.variant
 
-import com.android.build.api.component.AndroidTest
-import com.android.build.api.component.AndroidTestProperties
 import com.android.build.api.component.Component
-import com.android.build.api.component.UnitTest
-import com.android.build.api.component.UnitTestProperties
-import com.android.build.api.component.ActionableComponentObject
 import org.gradle.api.Incubating
+import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Provider
+import java.io.Serializable
 
 /**
- * Variant object that contains properties that must be set during configuration time as it
- * changes the build flow for the variant.
- *
- * @param PropertiesT the [VariantProperties] type associated with this [Variant]
+ * Parent interface for all types of variants.
  */
 @Incubating
-interface Variant<PropertiesT : VariantProperties>: Component<PropertiesT>,
-    ActionableComponentObject {
-
-    fun unitTest(action: UnitTest<UnitTestProperties>.() -> Unit)
-    fun unitTestProperties(action: UnitTestProperties.() -> Unit)
-
-    fun androidTest(action: AndroidTest<AndroidTestProperties>.() -> Unit)
-    fun androidTestProperties(action: AndroidTestProperties.() -> Unit)
+interface Variant : Component {
 
     /**
-     * Gets the minimum supported SDK Version for this variant.
-     */
-    var minSdkVersion: AndroidVersion
-
-    /**
-     * Specifies the bytecode version to be generated. We recommend you set this value to the
-     * lowest API level able to provide all the functionality you are using
+     * Variant's application ID as present in the final manifest file of the APK.
      *
-     * @return the renderscript target api or -1 if not specified.
+     * Some type of variants allows this to be writeable but for some it's only read-only.
      */
-    var renderscriptTargetApi: Int
+    val applicationId: Provider<String>
+
+    /**
+     * The package name into which some classes are generated
+     */
+    val packageName: Provider<String>
+
+    /**
+     * Variant's [BuildConfigField] which will be generated in the BuildConfig class.
+     */
+    val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>>
+
+    /**
+     * Convenience method to add a new Build Config field which value is known at configuration
+     * time.
+     *
+     * @param key the build config field name
+     * @param value the build config field value which type must be [Serializable]
+     * @param comment optional comment for the field.
+     */
+    fun addBuildConfigField(key: String, value: Serializable, comment: String?)
+
+    /**
+     * Adds a ResValue element to the generated resources.
+     * @param name the resource name
+     * @param type the resource type like 'string'
+     * @param value the resource value
+     * @param comment optional comment to be added to the generated resource file for the field.
+     */
+    fun addResValue(name: String, type: String, value: String, comment: String?)
+
+    /**
+     * Adds a ResValue element to the generated resources.
+     * @param name the resource name
+     * @param type the resource type like 'string'
+     * @param value a [Provider] for the value
+     * @param comment optional comment to be added to the generated resource file for the field.
+     */
+    fun addResValue(name: String, type: String, value: Provider<String>, comment: String?)
+
+    /**
+     * [MapProperty] of the variant's manifest placeholders.
+     *
+     * Placeholders are organized with a key and a value. The value is a [String] that will be
+     * used as is in the merged manifest.
+     *
+     * @return the [MapProperty] with keys as [String]
+     */
+    val manifestPlaceholders: MapProperty<String, String>
+
+    /**
+     * Variant's packagingOptions, initialized by the corresponding global DSL element.
+     */
+    val packagingOptions: PackagingOptions
 }

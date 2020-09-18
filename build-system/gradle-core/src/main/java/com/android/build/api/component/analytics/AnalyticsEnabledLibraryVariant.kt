@@ -16,16 +16,46 @@
 
 package com.android.build.api.component.analytics
 
+import com.android.build.api.variant.LibraryPackagingOptions
 import com.android.build.api.variant.LibraryVariant
-import com.android.build.api.variant.LibraryVariantProperties
+import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
-/**
- * Shim object for [LibraryVariant] that records all mutating accesses to the analytics.
- */
-open class AnalyticsEnabledLibraryVariant<PropertiesT: LibraryVariantProperties> @Inject constructor(
-    delegate: LibraryVariant<PropertiesT>,
-    stats: GradleBuildVariant.Builder
-) : AnalyticsEnabledVariant<PropertiesT>(delegate, stats),
-    LibraryVariant<PropertiesT>
+open class AnalyticsEnabledLibraryVariant @Inject constructor(
+    override val delegate: LibraryVariant,
+    stats: GradleBuildVariant.Builder,
+    objectFactory: ObjectFactory
+) : AnalyticsEnabledVariant(
+    delegate, stats, objectFactory
+), LibraryVariant {
+    override val applicationId: Provider<String>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.READ_ONLY_APPLICATION_ID_VALUE
+            return delegate.applicationId
+        }
+
+    private val userVisiblePackagingOptions: LibraryPackagingOptions by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledLibraryPackagingOptions::class.java,
+            delegate.packagingOptions,
+            stats
+        )
+    }
+
+    override val packagingOptions: LibraryPackagingOptions
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
+            return userVisiblePackagingOptions
+        }
+
+    override fun packagingOptions(action: LibraryPackagingOptions.() -> Unit) {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
+        action.invoke(userVisiblePackagingOptions)
+    }
+}

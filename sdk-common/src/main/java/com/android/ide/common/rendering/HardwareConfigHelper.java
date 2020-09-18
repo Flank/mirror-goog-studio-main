@@ -215,6 +215,8 @@ public class HardwareConfigHelper {
             // Example: 320x200, tvpdi (Round Chin)
             if (name.startsWith("Android Wear ")) {
                 name = name.substring("Android Wear ".length());
+            } else if (name.startsWith("Wear OS ")) {
+                name = name.substring("Wear OS ".length());
             }
             return String.format(Locale.US, "%1$s (%2$s)", getResolutionString(device), name);
         } else {

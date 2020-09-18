@@ -16,16 +16,94 @@
 
 package com.android.build.api.component.analytics
 
+import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.ApkPackagingOptions
 import com.android.build.api.variant.TestVariant
-import com.android.build.api.variant.TestVariantProperties
+import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
-/**
- * Shim object for [AnalyticsEnabledVariant] that records all mutating accesses to the analytics.
- */
-open class AnalyticsEnabledTestVariant<PropertiesT: TestVariantProperties> @Inject constructor(
-    delegate: TestVariant<PropertiesT>,
-    stats: GradleBuildVariant.Builder
-) : AnalyticsEnabledVariant<PropertiesT>(delegate, stats),
-    TestVariant<PropertiesT>
+open class AnalyticsEnabledTestVariant @Inject constructor(
+    override val delegate: TestVariant,
+    stats: GradleBuildVariant.Builder,
+    objectFactory: ObjectFactory
+): AnalyticsEnabledVariant(delegate, stats, objectFactory), TestVariant {
+    override val applicationId: Property<String>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.APPLICATION_ID_VALUE
+            return delegate.applicationId
+        }
+
+    override val aaptOptions: AaptOptions
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.AAPT_OPTIONS_VALUE
+            return delegate.aaptOptions
+        }
+
+    override fun aaptOptions(action: AaptOptions.() -> Unit) {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.AAPT_OPTIONS_ACTION_VALUE
+        delegate.aaptOptions(action)
+    }
+
+    override val testedApplicationId: Provider<String>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.TESTED_APPLICATION_ID_VALUE
+            return delegate.testedApplicationId
+        }
+
+    override val instrumentationRunner: Property<String>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.INSTRUMENTATION_RUNNER_VALUE
+            return delegate.instrumentationRunner
+        }
+
+    override val handleProfiling: Property<Boolean>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.HANDLE_PROFILING_VALUE
+            return delegate.handleProfiling
+        }
+
+    override val functionalTest: Property<Boolean>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.FUNCTIONAL_TEST_VALUE
+            return delegate.functionalTest
+        }
+
+    override val testLabel: Property<String?>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.TEST_LABEL_VALUE
+            return delegate.testLabel
+        }
+
+    private val userVisiblePackagingOptions: ApkPackagingOptions by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledApkPackagingOptions::class.java,
+            delegate.packagingOptions,
+            stats
+        )
+    }
+
+    override val packagingOptions: ApkPackagingOptions
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
+            return userVisiblePackagingOptions
+        }
+
+    override fun packagingOptions(action: ApkPackagingOptions.() -> Unit) {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
+        action.invoke(userVisiblePackagingOptions)
+    }
+}

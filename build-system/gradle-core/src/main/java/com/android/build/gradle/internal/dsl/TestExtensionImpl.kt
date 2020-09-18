@@ -19,12 +19,8 @@ package com.android.build.gradle.internal.dsl
 import com.android.build.api.component.GenericFilteredComponentActionRegistrar
 import com.android.build.api.component.impl.GenericFilteredComponentActionRegistrarImpl
 import com.android.build.api.dsl.TestBuildFeatures
-import com.android.build.api.dsl.TestExtension
 import com.android.build.api.variant.TestVariant
-import com.android.build.api.variant.TestVariantProperties
-import com.android.build.gradle.api.AndroidSourceSet
-import com.android.build.gradle.internal.CompileOptions
-import com.android.build.gradle.internal.coverage.JacocoOptions
+import com.android.build.api.variant.TestVariantBuilder
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.services.DslServices
 
@@ -38,8 +34,8 @@ class TestExtensionImpl(
             BuildType,
             DefaultConfig,
             ProductFlavor,
-            TestVariant<TestVariantProperties>,
-            TestVariantProperties>(
+            TestVariantBuilder,
+            TestVariant>(
         dslServices,
         dslContainers
     ),
@@ -49,21 +45,21 @@ class TestExtensionImpl(
         dslServices.newInstance(TestBuildFeaturesImpl::class.java)
 
     @Suppress("UNCHECKED_CAST")
-    override val onVariants: GenericFilteredComponentActionRegistrar<TestVariant<TestVariantProperties>>
+    override val onVariants: GenericFilteredComponentActionRegistrar<TestVariantBuilder>
         get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
             dslServices,
             variantOperations,
-            TestVariant::class.java
-        ) as GenericFilteredComponentActionRegistrar<TestVariant<TestVariantProperties>>
+            TestVariantBuilder::class.java
+        ) as GenericFilteredComponentActionRegistrar<TestVariantBuilder>
     @Suppress("UNCHECKED_CAST")
-    override val onVariantProperties: GenericFilteredComponentActionRegistrar<TestVariantProperties>
+    override val onVariantProperties: GenericFilteredComponentActionRegistrar<TestVariant>
         get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
             dslServices,
             variantPropertiesOperations,
-            TestVariantProperties::class.java
-        ) as GenericFilteredComponentActionRegistrar<TestVariantProperties>
+            TestVariant::class.java
+        ) as GenericFilteredComponentActionRegistrar<TestVariant>
 
     override var targetProjectPath: String? = null
 }

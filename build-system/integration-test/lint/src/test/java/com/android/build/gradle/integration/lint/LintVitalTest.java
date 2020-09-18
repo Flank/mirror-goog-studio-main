@@ -18,11 +18,11 @@ package com.android.build.gradle.integration.lint;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
-import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import java.io.File;
@@ -30,19 +30,26 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Checks if fatal lint errors stop the release build. */
+@RunWith(FilterableParameterized.class)
 public class LintVitalTest {
 
-    public static final GradleProject helloWorldApp = HelloWorldApp.noBuildFile();
+    @Parameterized.Parameters(name = "{0}")
+    public static LintInvocationType[] getParams() {
+        return LintInvocationType.values();
+    }
 
     @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestApp(helloWorldApp)
-                    // http://b/146208910
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                    .create();
+    public final GradleTestProject project;
+
+    public LintVitalTest(LintInvocationType lintInvocationType) {
+        this.project = lintInvocationType.testProjectBuilder()
+                .fromTestApp(HelloWorldApp.noBuildFile())
+                .create();
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -54,9 +61,18 @@ public class LintVitalTest {
                         + "    compileSdkVersion "
                         + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                         + "\n"
+                        + "    defaultConfig.minSdk = "
+                        + TestVersions.SUPPORT_LIB_MIN_SDK
+                        + "\n"
+                        + "    dependenciesInfo.includeInApk = false"
+                        + "}\n"
+                        + "dependencies {\n"
+                        + "    androidTestImplementation \"com.android.support.test:runner:${project.testSupportLibVersion}\"\n"
+                        + "    androidTestImplementation \"com.android.support.test:rules:${project.testSupportLibVersion}\"\n"
+                        + "}\n"
                         // Make sure lint task is created on plugin apply, not afterEvaluate.
-                        + "task(\"myCheck\").dependsOn(lint)"
-                        + "}");
+                        + "task(\"myCheck\").dependsOn(lint)\n"
+                        + "\n");
 
         File manifest = project.file("src/main/AndroidManifest.xml");
         TestFileUtils.searchAndReplace(
@@ -70,8 +86,7 @@ public class LintVitalTest {
      */
     @Test
     public void runningLintSkipsLintVital() throws Exception {
-        GradleBuildResult result =
-                project.executor().expectFailure().run("lintVitalRelease", "lint");
+        GradleBuildResult result = project.executor().expectFailure().run("lintVitalRelease", "lint");
         TruthHelper.assertThat(result.getTask(":lintVitalRelease")).wasSkipped();
 
         // We make this assertion to ensure that :lint is actually run and runs as expected. Without
@@ -82,8 +97,7 @@ public class LintVitalTest {
 
     @Test
     public void fatalLintCheckFailsBuild() throws IOException, InterruptedException {
-        GradleBuildResult result =
-                project.executor().expectFailure().run("assembleRelease");
+        GradleBuildResult result = project.executor().expectFailure().run("assembleRelease");
         assertThat(result.getFailureMessage()).contains("fatal errors");
         TruthHelper.assertThat(result.getTask(":lintVitalRelease")).failed();
     }
@@ -92,6 +106,8 @@ public class LintVitalTest {
     public void lintVitalIsNotRunForLibraries() throws IOException, InterruptedException {
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(), "com.android.application", "com.android.library");
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(), "dependenciesInfo.includeInApk = false", "");
         GradleBuildResult result = project.executor().run("assembleRelease");
         assertThat(result.findTask(":lintVitalRelease")).isNull();
     }

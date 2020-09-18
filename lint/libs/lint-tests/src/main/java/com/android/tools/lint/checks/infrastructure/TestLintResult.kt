@@ -19,9 +19,8 @@ package com.android.tools.lint.checks.infrastructure
 import com.android.SdkConstants.DOT_XML
 import com.android.tools.lint.Incident
 import com.android.tools.lint.LintStats
-import com.android.tools.lint.UastEnvironment
 import com.android.tools.lint.Reporter
-import com.android.tools.lint.XmlReporter
+import com.android.tools.lint.UastEnvironment
 import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.client.api.LintBaseline
 import com.android.tools.lint.detector.api.Severity
@@ -61,6 +60,7 @@ import javax.swing.text.PlainDocument
 
 class TestLintResult internal constructor(
     private val task: TestLintTask,
+    private val rootDir: File,
     private val output: String?,
     private val throwable: Throwable?,
     private val incidents: List<Incident>
@@ -469,12 +469,18 @@ class TestLintResult internal constructor(
         @Language("HTML") expected: String,
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
+        val trimmed = expected.trimIndent().replace('$', '＄')
         return checkHtmlReport(
-            TestResultChecker { s ->
-                assertEquals(
-                    expected,
-                    s
-                )
+            TestResultChecker { actual ->
+                val s = actual.trimIndent().replace('$', '＄')
+                if (s != trimmed && s.replace('\\', '/') == trimmed) {
+                    // Allow Windows file separators to differ
+                } else {
+                    assertEquals(
+                        trimmed,
+                        s
+                    )
+                }
             },
             transformer = transformer
         )
@@ -490,7 +496,7 @@ class TestLintResult internal constructor(
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
         return checkReport(
-            html = false,
+            xml = true,
             includeFixes = false,
             fullPaths = false,
             intendedForBaseline = false,
@@ -536,12 +542,12 @@ class TestLintResult internal constructor(
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
         return checkReport(
-            false,
-            includeFixes,
-            fullPaths,
-            intendedForBaseline,
-            transformer,
-            *checkers
+            xml = true,
+            includeFixes = includeFixes,
+            fullPaths = fullPaths,
+            intendedForBaseline = intendedForBaseline,
+            transformer = transformer,
+            checkers = *checkers
         )
     }
 
@@ -557,14 +563,16 @@ class TestLintResult internal constructor(
         intendedForBaseline: Boolean = false,
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
+        val trimmed = expected.trimIndent().replace('$', '＄')
         return checkXmlReport(
             checkers = *arrayOf(
-                TestResultChecker { s ->
-                    if (s != expected && s.replace('\\', '/') == expected) {
+                TestResultChecker { actual ->
+                    val s = actual.trimIndent().replace('$', '＄')
+                    if (s != trimmed && s.replace('\\', '/') == trimmed) {
                         // Allow Windows file separators to differ
                     } else {
                         assertEquals(
-                            expected,
+                            trimmed,
                             s
                         )
                     }
@@ -577,21 +585,68 @@ class TestLintResult internal constructor(
         )
     }
 
+    /**
+     * Checks that the SARIF report is as expected
+     *
+     * @param expected the expected SARIF report
+     */
+    fun expectSarif(
+        @Language("JSON") expected: String,
+        transformer: TestResultTransformer = TestResultTransformer { it }
+    ): TestLintResult {
+        val trimmed = expected.trimIndent().replace('$', '＄')
+        return checkSarifReport(
+            checkers = *arrayOf(
+                TestResultChecker { actual ->
+                    val s = actual.trimIndent().replace('$', '＄')
+                    if (s != trimmed && s.replace('\\', '/') == trimmed) {
+                        // Allow Windows file separators to differ
+                    } else {
+                        assertEquals(
+                            trimmed,
+                            s
+                        )
+                    }
+                }
+            ),
+            transformer = transformer
+        )
+    }
+
+    /**
+     * Checks that the SARIF report is as expected
+     *
+     * @param checkers one or more checks to apply to the output
+     */
+    fun checkSarifReport(
+        vararg checkers: TestResultChecker,
+        transformer: TestResultTransformer = TestResultTransformer { it }
+    ): TestLintResult {
+        return checkReport(
+            sarif = true,
+            transformer = transformer,
+            checkers = *checkers
+        )
+    }
+
     private fun checkReport(
-        html: Boolean,
+        xml: Boolean = false,
+        html: Boolean = false,
+        sarif: Boolean = false,
         includeFixes: Boolean = false,
         fullPaths: Boolean = false,
         intendedForBaseline: Boolean = false,
         transformer: TestResultTransformer = TestResultTransformer { it },
         vararg checkers: TestResultChecker
     ): TestLintResult {
+        assertTrue(xml || html || sarif)
         try {
             // Place the report file near the project sources if possible to make absolute
             // paths (in HTML Reports etc, which are relative to the report) as close as
             // possible
             val root = task.dirToProjectDescription.keys.firstOrNull()?.parentFile
             val name = "test-lint"
-            val extension = if (html) ".html" else DOT_XML
+            val extension = if (html) ".html" else if (sarif) ".sarif" else DOT_XML
 
             val file =
                 if (root != null) {
@@ -614,16 +669,21 @@ class TestLintResult internal constructor(
                     getClientRevision() // force registry initialization
                 }
 
-            val reporter = if (html)
-                Reporter.createHtmlReporter(client, file, client.flags)
-            else
-                Reporter.createXmlReporter(client, file, false, includeFixes)
-            if (includeFixes) {
-                (reporter as XmlReporter).includeFixes = true
+            val reporter = when {
+                html -> Reporter.createHtmlReporter(client, file, client.flags)
+                xml -> {
+                    Reporter.createXmlReporter(client, file, false, includeFixes).also {
+                        if (includeFixes) {
+                            it.includeFixes = true
+                        }
+                        if (intendedForBaseline) {
+                            it.isIntendedForBaseline = true
+                        }
+                    }
+                }
+                else -> Reporter.createSarifReporter(client, file)
             }
-            if (intendedForBaseline) {
-                (reporter as XmlReporter).isIntendedForBaseline = true
-            }
+
             val oldFullPath = client.flags.isFullPath
             if (fullPaths) {
                 client.flags.isFullPath = true
@@ -632,12 +692,14 @@ class TestLintResult internal constructor(
             reporter.write(stats, incidents)
             val actual = Files.asCharSource(file, Charsets.UTF_8).read()
             val transformed = transformer.transform(actual)
+                .replace(rootDir.path, "TESTROOT")
+                .replace(rootDir.path.replace("\\", "/"), "TESTROOT")
             for (checker in checkers) {
                 checker.check(transformed)
             }
 
             // Make sure the XML is valid
-            if (!html) {
+            if (xml) {
                 try {
                     val document = PositionXmlParser.parse(actual)
                     assertNotNull(document)

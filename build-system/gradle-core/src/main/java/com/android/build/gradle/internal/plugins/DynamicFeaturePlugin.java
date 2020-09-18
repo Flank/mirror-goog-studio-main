@@ -18,11 +18,13 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
-import com.android.build.api.component.TestComponentProperties;
+import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension;
+import com.android.build.api.extension.impl.DynamicFeatureAndroidComponentsExtensionImpl;
+import com.android.build.api.extension.impl.OperationsRegistrar;
+import com.android.build.api.variant.impl.DynamicFeatureVariantBuilderImpl;
 import com.android.build.api.variant.impl.DynamicFeatureVariantImpl;
-import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
@@ -40,7 +42,6 @@ import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.DynamicFeatureVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.v2.ide.ProjectType;
-import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.util.List;
 import javax.inject.Inject;
@@ -52,7 +53,10 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects, applied on an optional APK module */
 public class DynamicFeaturePlugin
-        extends AbstractAppPlugin<DynamicFeatureVariantImpl, DynamicFeatureVariantPropertiesImpl> {
+        extends AbstractAppPlugin<
+                DynamicFeatureAndroidComponentsExtension,
+                DynamicFeatureVariantBuilderImpl,
+                DynamicFeatureVariantImpl> {
     @Inject
     public DynamicFeaturePlugin(
             ToolingModelBuilderRegistry registry,
@@ -120,19 +124,30 @@ public class DynamicFeaturePlugin
 
     @NonNull
     @Override
+    protected DynamicFeatureAndroidComponentsExtension createComponentExtension(
+            @NonNull DslServices dslServices,
+            @NonNull
+                    OperationsRegistrar<DynamicFeatureVariantBuilderImpl>
+                            variantBuilderOperationsRegistrar,
+            @NonNull OperationsRegistrar<DynamicFeatureVariantImpl> variantOperationsRegistrar) {
+        return project.getExtensions()
+                .create(
+                        DynamicFeatureAndroidComponentsExtension.class,
+                        "androidComponents",
+                        DynamicFeatureAndroidComponentsExtensionImpl.class,
+                        dslServices,
+                        variantBuilderOperationsRegistrar,
+                        variantOperationsRegistrar);
+    }
+
+    @NonNull
+    @Override
     protected DynamicFeatureTaskManager createTaskManager(
             @NonNull
-                    List<
-                                    ComponentInfo<
-                                            DynamicFeatureVariantImpl,
-                                            DynamicFeatureVariantPropertiesImpl>>
+                    List<ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>>
                             variants,
             @NonNull
-                    List<
-                                    ComponentInfo<
-                                            TestComponentImpl<? extends TestComponentProperties>,
-                                            TestComponentPropertiesImpl>>
-                            testComponents,
+                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension) {

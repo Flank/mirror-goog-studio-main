@@ -17,11 +17,13 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
-import com.android.build.api.component.TestComponentProperties;
+import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.extension.LibraryAndroidComponentsExtension;
+import com.android.build.api.extension.impl.LibraryAndroidComponentsExtensionImpl;
+import com.android.build.api.extension.impl.OperationsRegistrar;
+import com.android.build.api.variant.impl.LibraryVariantBuilderImpl;
 import com.android.build.api.variant.impl.LibraryVariantImpl;
-import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -39,7 +41,6 @@ import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.LibraryVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.v2.ide.ProjectType;
-import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.util.List;
 import javax.inject.Inject;
@@ -50,7 +51,9 @@ import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'library' projects. */
-public class LibraryPlugin extends BasePlugin<LibraryVariantImpl, LibraryVariantPropertiesImpl> {
+public class LibraryPlugin
+        extends BasePlugin<
+                LibraryAndroidComponentsExtension, LibraryVariantBuilderImpl, LibraryVariantImpl> {
 
     @Inject
     public LibraryPlugin(
@@ -98,6 +101,24 @@ public class LibraryPlugin extends BasePlugin<LibraryVariantImpl, LibraryVariant
 
     @NonNull
     @Override
+    protected LibraryAndroidComponentsExtension createComponentExtension(
+            @NonNull DslServices dslServices,
+            @NonNull
+                    OperationsRegistrar<LibraryVariantBuilderImpl>
+                            variantBuilderOperationsRegistrar,
+            @NonNull OperationsRegistrar<LibraryVariantImpl> variantOperationsRegistrar) {
+        return project.getExtensions()
+                .create(
+                        LibraryAndroidComponentsExtension.class,
+                        "androidComponents",
+                        LibraryAndroidComponentsExtensionImpl.class,
+                        dslServices,
+                        variantBuilderOperationsRegistrar,
+                        variantOperationsRegistrar);
+    }
+
+    @NonNull
+    @Override
     protected GradleBuildProject.PluginType getAnalyticsPluginType() {
         return GradleBuildProject.PluginType.LIBRARY;
     }
@@ -122,13 +143,9 @@ public class LibraryPlugin extends BasePlugin<LibraryVariantImpl, LibraryVariant
     @NonNull
     @Override
     protected LibraryTaskManager createTaskManager(
-            @NonNull List<ComponentInfo<LibraryVariantImpl, LibraryVariantPropertiesImpl>> variants,
+            @NonNull List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>> variants,
             @NonNull
-                    List<
-                                    ComponentInfo<
-                                            TestComponentImpl<? extends TestComponentProperties>,
-                                            TestComponentPropertiesImpl>>
-                            testComponents,
+                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension) {

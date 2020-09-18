@@ -18,7 +18,7 @@
 
 package com.android.build.gradle.internal.ide.dependencies
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.ide.DependencyFailureHandler
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -56,7 +56,7 @@ class ArtifactCollectionsInputs constructor(
     enum class RuntimeType { FULL, PARTIAL }
 
     constructor(
-        componentProperties: ComponentPropertiesImpl,
+        componentProperties: ComponentImpl,
         runtimeType: RuntimeType,
         buildMapping: ImmutableMap<String, String>
     ) : this(
@@ -150,7 +150,7 @@ class ArtifactCollections(
     val consumedConfigType: AndroidArtifacts.ConsumedConfigType
 ) {
     constructor(
-        componentProperties: ComponentPropertiesImpl,
+        componentProperties: ComponentImpl,
         consumedConfigType: AndroidArtifacts.ConsumedConfigType
     ) : this(
         componentProperties.variantDependencies, consumedConfigType
@@ -254,7 +254,7 @@ class ArtifactCollections(
  * @param buildMapping a build mapping from build name to root dir.
  */
 fun getAllArtifacts(
-    componentProperties: ComponentPropertiesImpl,
+    componentProperties: ComponentImpl,
     consumedConfigType: AndroidArtifacts.ConsumedConfigType,
     dependencyFailureHandler: DependencyFailureHandler?,
     buildMapping: ImmutableMap<String, String>

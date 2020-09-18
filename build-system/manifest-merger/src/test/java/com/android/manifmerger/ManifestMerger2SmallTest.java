@@ -20,8 +20,7 @@ import static com.android.SdkConstants.ATTR_ON_DEMAND;
 import static com.android.SdkConstants.DIST_URI;
 import static com.android.SdkConstants.MANIFEST_ATTR_TITLE;
 import static com.android.SdkConstants.TAG_MODULE;
-import static com.android.sdklib.AndroidVersion.VersionCodes.LOLLIPOP_MR1;
-import static com.android.sdklib.AndroidVersion.VersionCodes.M;
+import static com.android.manifmerger.ManifestMerger2.Invoker.Feature;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -126,7 +125,7 @@ public class ManifestMerger2SmallTest {
         try {
             MergingReport mergingReport = ManifestMerger2.newMerger(tmpFile, mockLog,
                     ManifestMerger2.MergeType.APPLICATION)
-                    .withFeatures(ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)
+                    .withFeatures(Feature.REMOVE_TOOLS_DECLARATIONS)
                     .merge();
             assertEquals(MergingReport.Result.WARNING, mergingReport.getResult());
             // ensure tools annotation removal.
@@ -186,7 +185,7 @@ public class ManifestMerger2SmallTest {
         try {
             MergingReport mergingReport =
                     ManifestMerger2.newMerger(libFile, mockLog, ManifestMerger2.MergeType.LIBRARY)
-                            .withFeatures(ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)
+                            .withFeatures(Feature.REMOVE_TOOLS_DECLARATIONS)
                             .addFlavorAndBuildTypeManifest(overlayFile)
                             .merge();
             assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
@@ -238,7 +237,7 @@ public class ManifestMerger2SmallTest {
             MergingReport mergingReport =
                     ManifestMerger2.newMerger(
                                     inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                            .withFeatures(ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)
+                            .withFeatures(Feature.REMOVE_TOOLS_DECLARATIONS)
                             .addLibraryManifest(libFile)
                             .merge();
             assertNotNull(mergingReport.getMergedDocument(MergedManifestKind.BLAME));
@@ -605,7 +604,7 @@ public class ManifestMerger2SmallTest {
         MockLog mockLog = new MockLog();
         MergingReport mergingReport = ManifestMerger2
                 .newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                .withFeatures(ManifestMerger2.Invoker.Feature.EXTRACT_FQCNS)
+                .withFeatures(Feature.EXTRACT_FQCNS)
                 .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
@@ -653,7 +652,7 @@ public class ManifestMerger2SmallTest {
         MockLog mockLog = new MockLog();
         MergingReport mergingReport = ManifestMerger2
                 .newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                .withFeatures(ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT)
+                .withFeatures(Feature.NO_PLACEHOLDER_REPLACEMENT)
                 .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
@@ -684,7 +683,7 @@ public class ManifestMerger2SmallTest {
         MockLog mockLog = new MockLog();
         MergingReport mergingReport = ManifestMerger2
                 .newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                .withFeatures(ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT)
+                .withFeatures(Feature.NO_PLACEHOLDER_REPLACEMENT)
                 .withFileStreamProvider(new ManifestMerger2.FileStreamProvider() {
                     @Override
                     protected InputStream getInputStream(@NonNull File file)
@@ -726,9 +725,7 @@ public class ManifestMerger2SmallTest {
         MockLog mockLog = new MockLog();
         MergingReport mergingReport =
                 ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .withFeatures(
-                                ManifestMerger2.Invoker.Feature.EXTRACT_FQCNS,
-                                ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT)
+                        .withFeatures(Feature.EXTRACT_FQCNS, Feature.NO_PLACEHOLDER_REPLACEMENT)
                         .addFlavorAndBuildTypeManifest(overlayFile)
                         .merge();
 
@@ -772,9 +769,7 @@ public class ManifestMerger2SmallTest {
         MockLog mockLog = new MockLog();
         MergingReport mergingReport =
                 ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .withFeatures(
-                                ManifestMerger2.Invoker.Feature.EXTRACT_FQCNS,
-                                ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT)
+                        .withFeatures(Feature.EXTRACT_FQCNS, Feature.NO_PLACEHOLDER_REPLACEMENT)
                         .addFlavorAndBuildTypeManifest(overlayFile)
                         .asType(XmlDocument.Type.OVERLAY)
                         .merge();
@@ -1084,7 +1079,7 @@ public class ManifestMerger2SmallTest {
         MockLog mockLog = new MockLog();
         MergingReport mergingReport = ManifestMerger2
                 .newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                .withFeatures(ManifestMerger2.Invoker.Feature.TEST_ONLY)
+                .withFeatures(Feature.TEST_ONLY)
                 .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
@@ -1114,7 +1109,7 @@ public class ManifestMerger2SmallTest {
         MockLog mockLog = new MockLog();
         MergingReport mergingReport =
                 ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.DEBUGGABLE)
+                        .withFeatures(Feature.DEBUGGABLE)
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
@@ -1154,10 +1149,8 @@ public class ManifestMerger2SmallTest {
                 ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
                         .withFeatures(
                                 useAndroidX
-                                        ? ManifestMerger2.Invoker.Feature
-                                                .ADD_ANDROIDX_MULTIDEX_APPLICATION_IF_NO_NAME
-                                        : ManifestMerger2.Invoker.Feature
-                                                .ADD_SUPPORT_MULTIDEX_APPLICATION_IF_NO_NAME)
+                                        ? Feature.ADD_ANDROIDX_MULTIDEX_APPLICATION_IF_NO_NAME
+                                        : Feature.ADD_SUPPORT_MULTIDEX_APPLICATION_IF_NO_NAME)
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
@@ -1192,9 +1185,7 @@ public class ManifestMerger2SmallTest {
         MockLog mockLog = new MockLog();
         MergingReport mergingReport =
                 ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .withFeatures(
-                                ManifestMerger2.Invoker.Feature
-                                        .ADD_ANDROIDX_MULTIDEX_APPLICATION_IF_NO_NAME)
+                        .withFeatures(Feature.ADD_ANDROIDX_MULTIDEX_APPLICATION_IF_NO_NAME)
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
@@ -1228,7 +1219,7 @@ public class ManifestMerger2SmallTest {
         MockLog mockLog = new MockLog();
         MergingReport mergingReport =
                 ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADVANCED_PROFILING)
+                        .withFeatures(Feature.ADVANCED_PROFILING)
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
@@ -1262,7 +1253,7 @@ public class ManifestMerger2SmallTest {
         MockLog mockLog = new MockLog();
         MergingReport mergingReport =
                 ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADVANCED_PROFILING)
+                        .withFeatures(Feature.ADVANCED_PROFILING)
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
@@ -1339,8 +1330,7 @@ public class ManifestMerger2SmallTest {
         MergingReport mergingReport =
                 ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
                         .setFeatureName("dynamic_split")
-                        .withFeatures(
-                                ManifestMerger2.Invoker.Feature.ADD_DYNAMIC_FEATURE_ATTRIBUTES)
+                        .withFeatures(Feature.ADD_DYNAMIC_FEATURE_ATTRIBUTES)
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
@@ -1528,9 +1518,7 @@ public class ManifestMerger2SmallTest {
         try {
             MergingReport mergingReport =
                     ManifestMerger2.newMerger(libFile, mockLog, ManifestMerger2.MergeType.LIBRARY)
-                            .withFeatures(
-                                    ManifestMerger2.Invoker.Feature
-                                            .HANDLE_VALUE_CONFLICTS_AUTOMATICALLY)
+                            .withFeatures(Feature.HANDLE_VALUE_CONFLICTS_AUTOMATICALLY)
                             .addFlavorAndBuildTypeManifest(overlayFile)
                             .merge();
             assertNotEquals(MergingReport.Result.ERROR, mergingReport.getResult());
@@ -1601,7 +1589,7 @@ public class ManifestMerger2SmallTest {
         try {
             MergingReport mergingReport =
                     ManifestMerger2.newMerger(libFile, mockLog, ManifestMerger2.MergeType.LIBRARY)
-                            .withFeatures(ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)
+                            .withFeatures(Feature.REMOVE_TOOLS_DECLARATIONS)
                             .addFlavorAndBuildTypeManifest(overlayFile)
                             .merge();
             assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
@@ -1743,9 +1731,6 @@ public class ManifestMerger2SmallTest {
             MergingReport mergingReport =
                     ManifestMerger2.newMerger(
                                     tmpFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                            .setOverride(
-                                    ManifestSystemProperty.MIN_SDK_VERSION,
-                                    Integer.toString(LOLLIPOP_MR1))
                             .merge();
             assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
             String mergedDocument = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
@@ -1771,8 +1756,7 @@ public class ManifestMerger2SmallTest {
         try {
             MergingReport mergingReport =
                     ManifestMerger2.newMerger(tmpFile, mockLog, ManifestMerger2.MergeType.LIBRARY)
-                            .setOverride(
-                                    ManifestSystemProperty.MIN_SDK_VERSION, Integer.toString(M))
+                            .withFeatures(Feature.DO_NOT_EXTRACT_NATIVE_LIBS)
                             .merge();
             assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
             String mergedDocument = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
@@ -1799,8 +1783,7 @@ public class ManifestMerger2SmallTest {
             MergingReport mergingReport =
                     ManifestMerger2.newMerger(
                                     tmpFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                            .setOverride(
-                                    ManifestSystemProperty.MIN_SDK_VERSION, Integer.toString(M))
+                            .withFeatures(Feature.DO_NOT_EXTRACT_NATIVE_LIBS)
                             .merge();
             assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
             String mergedDocument = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
@@ -1827,8 +1810,7 @@ public class ManifestMerger2SmallTest {
             MergingReport mergingReport =
                     ManifestMerger2.newMerger(
                                     tmpFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                            .setOverride(
-                                    ManifestSystemProperty.MIN_SDK_VERSION, Integer.toString(M))
+                            .withFeatures(Feature.DO_NOT_EXTRACT_NATIVE_LIBS)
                             .merge();
             assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
             String mergedDocument = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
@@ -2002,7 +1984,7 @@ public class ManifestMerger2SmallTest {
         try {
             MergingReport mergingReport =
                     ManifestMerger2.newMerger(libFile, mockLog, ManifestMerger2.MergeType.LIBRARY)
-                            .withFeatures(ManifestMerger2.Invoker.Feature.MAKE_AAPT_SAFE)
+                            .withFeatures(Feature.MAKE_AAPT_SAFE)
                             .merge();
             assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
             // check that MERGED manifest has <nav-graph> but AAPT_SAFE manifest doesn't

@@ -41,16 +41,17 @@ class ManifestTransformerTest: VariantApiBaseTest(TestType.Script, ScriptingLang
 
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
+            }
+            TaskProvider gitVersionProvider = tasks.register('gitVersionProvider', GitVersionTask) {
+                task ->
+                    task.gitVersionOutputFile.set(
+                        new File(project.buildDir, "intermediates/gitVersionProvider/output")
+                    )
+                    task.outputs.upToDateWhen { false }
+            }
 
-                TaskProvider gitVersionProvider = tasks.register('gitVersionProvider', GitVersionTask) {
-                    task ->
-                        task.gitVersionOutputFile.set(
-                            new File(project.buildDir, "intermediates/gitVersionProvider/output")
-                        )
-                        task.outputs.upToDateWhen { false }
-                }
-
-                onVariantProperties {
+            androidComponents {
+                onVariants(selector().all(), {
                     TaskProvider manifestUpdater = tasks.register(it.getName() + 'ManifestUpdater', ManifestTransformerTask) {
                         task ->
                             task.gitInfoFile.set(gitVersionProvider.flatMap { it.getGitVersionOutputFile() })
@@ -60,7 +61,7 @@ class ManifestTransformerTest: VariantApiBaseTest(TestType.Script, ScriptingLang
                             { it.mergedManifest },
                             { it.updatedManifest })
                         .toTransform(ArtifactType.MERGED_MANIFEST.INSTANCE)
-                }
+                })
             }
             """.trimIndent()
 

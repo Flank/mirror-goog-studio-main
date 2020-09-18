@@ -21,10 +21,10 @@
 // See b/147797511#9 for context and more info.
 // #define GTEST_INCLUDE_GTEST_INTERNAL_CUSTOM_GTEST_H_ ((void)0)
 
+#include "trace_processor_service.h"
+
 #include <grpc++/grpc++.h>
 #include <gtest/gtest.h>
-
-#include "trace_processor_service.h"
 
 namespace profiler {
 namespace perfetto {
@@ -124,23 +124,35 @@ TEST(TraceProcessorServiceImplTest, BatchQuery) {
   query_params->set_trace_id(7468186607525719778L);
   auto query = query_params->mutable_process_metadata_request();
   query->set_process_id(0);  // Returns all the info
+  auto cpu_core_params = batch_request.add_query();
+  cpu_core_params->set_trace_id(7468186607525719778L);
+  cpu_core_params->mutable_cpu_core_counters_request();
 
   proto::QueryBatchResponse batch_response;
   const grpc::Status rs =
       svc.QueryBatch(nullptr, &batch_request, &batch_response);
   EXPECT_TRUE(rs.ok());
 
-  EXPECT_EQ(batch_response.result_size(), 1);
-  auto result = batch_response.result(0);
-  EXPECT_TRUE(result.ok());
-  EXPECT_EQ(result.failure_reason(), proto::QueryResult::NONE);
-  EXPECT_EQ(result.error(), "");
-  EXPECT_TRUE(result.has_process_metadata_result());
+  EXPECT_EQ(batch_response.result_size(), 2);
 
-  auto metadata = result.process_metadata_result();
-
+  // Result from the first query.
+  auto process_metadata_result = batch_response.result(0);
+  EXPECT_TRUE(process_metadata_result.ok());
+  EXPECT_EQ(process_metadata_result.failure_reason(), proto::QueryResult::NONE);
+  EXPECT_EQ(process_metadata_result.error(), "");
+  EXPECT_TRUE(process_metadata_result.has_process_metadata_result());
+  auto metadata = process_metadata_result.process_metadata_result();
   // tank.trace has 240 process, but we discard the process with pid = 0.
   EXPECT_EQ(metadata.process_size(), 239);
+
+  // Result from the second query.
+  auto cpu_core_counters_result = batch_response.result(1);
+  EXPECT_TRUE(cpu_core_counters_result.ok());
+  EXPECT_EQ(cpu_core_counters_result.failure_reason(),
+            proto::QueryResult::NONE);
+  EXPECT_EQ(cpu_core_counters_result.error(), "");
+  EXPECT_TRUE(cpu_core_counters_result.has_cpu_core_counters_result());
+  EXPECT_EQ(cpu_core_counters_result.cpu_core_counters_result().num_cores(), 8);
 }
 
 TEST(TraceProcessorServiceImplTest, BatchQueryEmpty) {

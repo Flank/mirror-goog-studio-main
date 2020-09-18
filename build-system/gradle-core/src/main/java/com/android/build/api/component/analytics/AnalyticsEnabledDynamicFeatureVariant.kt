@@ -16,17 +16,50 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.ApplicationVariant
+import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.ApkPackagingOptions
 import com.android.build.api.variant.DynamicFeatureVariant
-import com.android.build.api.variant.DynamicFeatureVariantProperties
+import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.model.ObjectFactory
 import javax.inject.Inject
 
-/**
- * Shim object for [DynamicFeatureVariant] that records all mutating accesses to the analytics.
- */
-open class AnalyticsEnabledDynamicFeatureVariant<PropertiesT: DynamicFeatureVariantProperties> @Inject constructor(
-    delegate: DynamicFeatureVariant<PropertiesT>,
-    stats: GradleBuildVariant.Builder
-) : AnalyticsEnabledVariant<PropertiesT>(delegate, stats),
-    DynamicFeatureVariant<PropertiesT>
+open class AnalyticsEnabledDynamicFeatureVariant @Inject constructor(
+    override val delegate: DynamicFeatureVariant,
+    stats: GradleBuildVariant.Builder,
+    objectFactory: ObjectFactory
+) : AnalyticsEnabledVariant(delegate, stats, objectFactory), DynamicFeatureVariant {
+    override val aaptOptions: AaptOptions
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.AAPT_OPTIONS_VALUE
+            return delegate.aaptOptions
+        }
+
+    override fun aaptOptions(action: AaptOptions.() -> Unit) {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.AAPT_OPTIONS_ACTION_VALUE
+        delegate.aaptOptions(action)
+    }
+
+    private val userVisiblePackagingOptions: ApkPackagingOptions by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledApkPackagingOptions::class.java,
+            delegate.packagingOptions,
+            stats
+        )
+    }
+
+    override val packagingOptions: ApkPackagingOptions
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
+            return userVisiblePackagingOptions
+        }
+
+    override fun packagingOptions(action: ApkPackagingOptions.() -> Unit) {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
+        action.invoke(userVisiblePackagingOptions)
+    }
+}

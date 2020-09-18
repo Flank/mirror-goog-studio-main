@@ -16,8 +16,35 @@
 package com.android.build.api.variant
 
 import org.gradle.api.Incubating
+import org.gradle.api.provider.Provider
 
 @Incubating
-interface DynamicFeatureVariant<PropertiesT: DynamicFeatureVariantProperties> : Variant<PropertiesT> {
+interface DynamicFeatureVariant : Variant {
 
+    /**
+     * Variant's application ID as present in the final manifest file of the APK.
+     *
+     * This is a read-ony value in this type of project as this is fed by the base module
+     */
+    override val applicationId: Provider<String>
+
+    /**
+     * Variant's aaptOptions, initialized by the corresponding global DSL element.
+     */
+    val aaptOptions: AaptOptions
+
+    /**
+     * Variant's aaptOptions, initialized by the corresponding global DSL element.
+     */
+    fun aaptOptions(action: AaptOptions.() -> Unit)
+
+    /**
+     * Variant's packagingOptions, initialized by the corresponding global DSL element.
+     */
+    override val packagingOptions: ApkPackagingOptions
+
+    /**
+     * Variant's packagingOptions, initialized by the corresponding global DSL element.
+     */
+    fun packagingOptions(action: ApkPackagingOptions.() -> Unit)
 }

@@ -46,6 +46,11 @@ open class LintRequest(
     val files: List<File>
 ) {
 
+    /**
+     * The root directory containing all the projects
+     */
+    var srcRoot: File? = null
+
     @JvmField
     protected var scope: EnumSet<Scope>? = null
 

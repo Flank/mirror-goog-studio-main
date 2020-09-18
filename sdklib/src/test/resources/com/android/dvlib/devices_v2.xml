@@ -407,7 +407,7 @@
     </d:device>
 
     <d:device>
-        <d:name>Android Wear Round Chin</d:name>
+        <d:name>Wear OS Round Chin</d:name>
         <d:id>wear_round_chin</d:id>
         <d:manufacturer>Google</d:manufacturer>
         <d:meta/>

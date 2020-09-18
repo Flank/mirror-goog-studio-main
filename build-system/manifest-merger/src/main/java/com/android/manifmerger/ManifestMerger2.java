@@ -21,7 +21,6 @@ import static com.android.SdkConstants.ATTR_SPLIT;
 import static com.android.manifmerger.PlaceholderHandler.APPLICATION_ID;
 import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
 import static com.android.manifmerger.PlaceholderHandler.PACKAGE_NAME;
-import static com.android.sdklib.AndroidVersion.VersionCodes.M;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -412,11 +411,6 @@ public class ManifestMerger2 {
             extractFqcns(finalMergedDocument);
         }
 
-        String minSdkVersion = finalMergedDocument.getMinSdkVersion();
-        if (mMergeType == MergeType.APPLICATION && parseMinSdkVersion(minSdkVersion) >= M) {
-            maybeAddExtractNativeLibAttribute(finalMergedDocument.getXml());
-        }
-
         // handle optional features which don't need access to XmlDocument layer.
         processOptionalFeatures(finalMergedDocument.getXml(), mergingReportBuilder);
 
@@ -518,14 +512,6 @@ public class ManifestMerger2 {
         return dynamicFeatureManifest;
     }
 
-    private static int parseMinSdkVersion(@NonNull String minSdkVersion) {
-        try {
-            return Integer.parseInt(minSdkVersion);
-        } catch (NumberFormatException ex) {
-            return 1;
-        }
-    }
-
     /**
      * Processes optional features which are not already handled in merge()
      *
@@ -558,6 +544,11 @@ public class ManifestMerger2 {
 
         if (mMergeType == MergeType.APPLICATION) {
             optionalAddApplicationTagIfMissing(document);
+        }
+
+        if (mMergeType == MergeType.APPLICATION
+                && mOptionalFeatures.contains(Invoker.Feature.DO_NOT_EXTRACT_NATIVE_LIBS)) {
+            maybeAddExtractNativeLibAttribute(document);
         }
 
         if (mOptionalFeatures.contains(
@@ -647,7 +638,7 @@ public class ManifestMerger2 {
     }
 
     /**
-     * Set android:extractNativeLibs="false" by default is minSdkVersion is M+
+     * Set android:extractNativeLibs="false" unless it's already explicitly set.
      *
      * @param document the document for which the extractNativeLibs attribute should be set to
      *     false.
@@ -1567,6 +1558,12 @@ public class ManifestMerger2 {
 
             /** Enforce that dependencies manifests don't have duplicated package names. */
             ENFORCE_UNIQUE_PACKAGE_NAME,
+
+            /**
+             * Sets the application's android:extractNativeLibs attribute to false, unless it's
+             * already explicitly set to true.
+             */
+            DO_NOT_EXTRACT_NATIVE_LIBS,
         }
 
         /**

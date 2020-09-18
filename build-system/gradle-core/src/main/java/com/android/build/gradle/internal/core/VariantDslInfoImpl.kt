@@ -31,11 +31,9 @@ import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.manifest.ManifestDataProvider
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.DimensionCombination
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.AbstractProductFlavor
@@ -71,7 +69,7 @@ import java.util.concurrent.Callable
  *
  * This class allows querying for the values set via the DSL model.
  *
- * Use [VariantBuilder] to instantiate.
+ * Use [VariantDslInfoBuilder] to instantiate.
  *
  */
 open class VariantDslInfoImpl internal constructor(
@@ -139,7 +137,7 @@ open class VariantDslInfoImpl internal constructor(
      * @return a unique name made up of the variant and split names.
      */
     override fun computeFullNameWithSplits(splitName: String): String {
-        return VariantBuilder.computeFullNameWithSplits(
+        return VariantDslInfoBuilder.computeFullNameWithSplits(
             componentIdentity,
             variantType,
             splitName
@@ -153,7 +151,7 @@ open class VariantDslInfoImpl internal constructor(
      * @return the name of the variant
      */
     override val baseName: String by lazy {
-        VariantBuilder.computeBaseName(this, variantType)
+        VariantDslInfoBuilder.computeBaseName(this, variantType)
     }
 
     /**
@@ -589,20 +587,6 @@ open class VariantDslInfoImpl internal constructor(
 
             // there is actually no DSL value for this.
             return dataProvider.manifestData.map { it.testLabel }
-        }
-
-    val extractNativeLibs: Provider<Boolean?>
-        get() {
-            // there is actually no DSL value for this, also we should add one
-            // FIXME b/149770867
-            return dataProvider.manifestData.map { it.extractNativeLibs }
-        }
-
-    val useEmbeddedDex: Provider<Boolean?>
-        get() {
-            // there is actually no DSL value for this, also we should add one
-            // FIXME b/149770867
-            return dataProvider.manifestData.map { it.useEmbeddedDex }
         }
 
     /**

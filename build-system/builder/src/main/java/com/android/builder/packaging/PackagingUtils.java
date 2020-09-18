@@ -128,12 +128,8 @@ public class PackagingUtils {
     @NonNull
     public static Predicate<String> getNoCompressPredicate(
             @Nullable Collection<String> aaptOptionsNoCompress,
-            @NonNull ManifestAttributeSupplier manifest,
-            int minSdk) {
-        NativeLibrariesPackagingMode nativeLibsPackagingMode =
-                getNativeLibrariesLibrariesPackagingMode(manifest);
-        DexPackagingMode dexPackagingMode = getDexPackagingMode(manifest, minSdk);
-
+            @NonNull NativeLibrariesPackagingMode nativeLibsPackagingMode,
+            @NonNull DexPackagingMode dexPackagingMode) {
         return getNoCompressPredicateForExtensions(
                 getAllNoCompressExtensions(
                         aaptOptionsNoCompress, nativeLibsPackagingMode, dexPackagingMode));
@@ -231,11 +227,9 @@ public class PackagingUtils {
 
     @NonNull
     public static NativeLibrariesPackagingMode getNativeLibrariesLibrariesPackagingMode(
-            @NonNull ManifestAttributeSupplier manifest) {
-        Boolean extractNativeLibs = manifest.getExtractNativeLibs();
-
-        // The default is "true", so we only package *.so files differently if the user explicitly
-        // set this to "false".
+            @Nullable Boolean extractNativeLibs) {
+        // The default is "true", so we only package *.so files differently if
+        // android:extractNativeLibs is explicitly set to "false".
         if (Boolean.FALSE.equals(extractNativeLibs)) {
             return NativeLibrariesPackagingMode.UNCOMPRESSED_AND_ALIGNED;
         } else {
@@ -245,18 +239,14 @@ public class PackagingUtils {
 
     @NonNull
     public static DexPackagingMode getDexPackagingMode(
-            @NonNull ManifestAttributeSupplier manifest,
-            int minSdk) {
-        Boolean useEmbeddedDex = manifest.getUseEmbeddedDex();
+            @Nullable Boolean useEmbeddedDex, boolean useLegacyPackaging) {
         if (Boolean.TRUE.equals(useEmbeddedDex)) {
             // If useEmbeddedDex is true, dex files must be uncompressed.
             return DexPackagingMode.UNCOMPRESSED;
-        } else if (minSdk >= AndroidVersion.VersionCodes.P) {
-            // Even if useEmbeddedDex isn't true, uncompressed dex files yield smaller installation
-            // sizes on P+ because ART doesn't need to store an extra uncompressed copy on disk.
-            return DexPackagingMode.UNCOMPRESSED;
-        } else {
+        } else if (useLegacyPackaging) {
             return DexPackagingMode.COMPRESSED;
+        } else {
+            return DexPackagingMode.UNCOMPRESSED;
         }
     }
 

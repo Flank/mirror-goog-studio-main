@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.cxx.gradle.generator
 
+import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
-import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.api.variant.impl.toSharedAndroidVersion
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
@@ -223,8 +223,8 @@ fun CxxConfigurationModel.abiJsonFile(abi : Abi): File {
  * was deserialized from the task graph.
  */
 fun tryCreateCxxConfigurationModel(
-    variant: VariantImpl<VariantPropertiesImpl>,
-    componentProperties: VariantPropertiesImpl,
+    variant: VariantBuilderImpl,
+    componentProperties: VariantImpl,
     allDefaultAbis: Boolean = true
 ) : CxxConfigurationModel? {
     val global = componentProperties.globalScope
@@ -400,6 +400,10 @@ fun createCxxMetadataGenerator(
         NativeBuildSystem.CMAKE -> {
             val cmake =
                 Objects.requireNonNull(variant.module.cmake)!!
+            if (!cmake.isValidCmakeAvailable) {
+                errorln("No valid CMake executable was found.")
+                return CxxNopMetadataGenerator(variant, abis, variantBuilder)
+            }
             val cmakeRevision = cmake.minimumCmakeVersion
             variantBuilder.nativeCmakeVersion = cmakeRevision.toString()
             if (cmakeRevision.isCmakeForkVersion()) {
@@ -408,11 +412,8 @@ fun createCxxMetadataGenerator(
             if (cmakeRevision.major < 3
                 || cmakeRevision.major == 3 && cmakeRevision.minor <= 6
             ) {
-                throw RuntimeException(
-                    "Unexpected/unsupported CMake version "
-                            + cmakeRevision.toString()
-                            + ". Try 3.7.0 or later."
-                )
+                errorln("Unsupported CMake version $cmakeRevision. Try 3.7.0 or later.")
+                return CxxNopMetadataGenerator(variant, abis, variantBuilder)
             }
 
             val isPreCmakeFileApiVersion = cmakeRevision.major == 3 && cmakeRevision.minor < 15

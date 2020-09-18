@@ -20,11 +20,11 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
-import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.component.impl.ComponentImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
-import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.internal.BadPluginException;
 import com.android.build.gradle.internal.VariantManager;
@@ -84,7 +84,7 @@ public class AppPluginInternalTest {
         TestCase.assertNotNull(variantInputModel.getBuildTypes().get(BuilderConstants.RELEASE));
         TestCase.assertEquals(0, variantInputModel.getProductFlavors().size());
 
-        List<ComponentPropertiesImpl> components = getComponents(plugin.getVariantManager());
+        List<ComponentImpl> components = getComponents(plugin.getVariantManager());
 
         VariantCheckers.checkDefaultVariants(components);
 
@@ -164,7 +164,7 @@ public class AppPluginInternalTest {
 
         TestCase.assertEquals(3, plugin.getVariantInputModel().getBuildTypes().size());
 
-        List<ComponentPropertiesImpl> components = getComponents(plugin.getVariantManager());
+        List<ComponentImpl> components = getComponents(plugin.getVariantManager());
 
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 3);
@@ -178,8 +178,7 @@ public class AppPluginInternalTest {
             VariantCheckers.findComponent(components, variantName);
         }
 
-        ComponentPropertiesImpl testVariant =
-                VariantCheckers.findComponent(components, "stagingAndroidTest");
+        ComponentImpl testVariant = VariantCheckers.findComponent(components, "stagingAndroidTest");
         TestCase.assertEquals("staging", testVariant.getBuildType());
     }
     @Test
@@ -205,7 +204,7 @@ public class AppPluginInternalTest {
 
         TestCase.assertEquals(2, plugin.getVariantInputModel().getProductFlavors().size());
 
-        List<ComponentPropertiesImpl> components = getComponents(plugin.getVariantManager());
+        List<ComponentImpl> components = getComponents(plugin.getVariantManager());
 
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 4);
@@ -262,7 +261,7 @@ public class AppPluginInternalTest {
 
         TestCase.assertEquals(5, plugin.getVariantInputModel().getProductFlavors().size());
 
-        List<ComponentPropertiesImpl> components = getComponents(plugin.getVariantManager());
+        List<ComponentImpl> components = getComponents(plugin.getVariantManager());
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 12);
         map.put("unitTests", 12);
@@ -355,14 +354,14 @@ public class AppPluginInternalTest {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
         plugin.createAndroidTasks();
 
-        List<ComponentPropertiesImpl> components = getComponents(plugin.getVariantManager());
+        List<ComponentImpl> components = getComponents(plugin.getVariantManager());
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 6);
         map.put("unitTests", 6);
         map.put("androidTests", 2);
         TestCase.assertEquals(VariantCheckers.countVariants(map), components.size());
 
-        ComponentPropertiesImpl variant;
+        ComponentImpl variant;
         SigningConfig signingConfig;
 
         variant = VariantCheckers.findComponent(components, "flavor1Debug");
@@ -512,22 +511,22 @@ public class AppPluginInternalTest {
         assertThat(bootclasspath).containsExactlyElementsIn(android.getBootClasspath());
     }
 
-    public static List<ComponentPropertiesImpl> getComponents(
+    public static List<ComponentImpl> getComponents(
             @NonNull
-                    VariantManager<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>
+                    VariantManager<ApplicationVariantBuilderImpl, ApplicationVariantImpl>
                             variantManager) {
 
-        List<VariantPropertiesImpl> variants =
+        List<VariantImpl> variants =
                 variantManager.getMainComponents().stream()
                         .map(ComponentInfo::getProperties)
                         .collect(Collectors.toList());
 
-        List<TestComponentPropertiesImpl> testComponents =
+        List<TestComponentImpl> testComponents =
                 variantManager.getTestComponents().stream()
                         .map(ComponentInfo::getProperties)
                         .collect(Collectors.toList());
 
-        return ImmutableList.<ComponentPropertiesImpl>builder()
+        return ImmutableList.<ComponentImpl>builder()
                 .addAll(variants)
                 .addAll(testComponents)
                 .build();

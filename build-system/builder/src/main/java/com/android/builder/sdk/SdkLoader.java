@@ -22,7 +22,6 @@ import com.android.repository.Revision;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.util.List;
 
 /**
  * A loader for the SDK. It's able to provide general SDK information
@@ -79,4 +78,15 @@ public interface SdkLoader {
     @Nullable
     File installSdkTool(@NonNull SdkLibData sdkLibData, @NonNull String packageId)
             throws LicenceNotAcceptedException, InstallFailedException;
+
+    /**
+     * Retrieves the local emulator repository if it exists.
+     *
+     * <p>If the emulator is missing, null is returned. No effort is made to update or install the
+     * emulator as this can invalidate existing avd snapshots.
+     *
+     * @return The location of the emulator, or null if it is not installed.
+     */
+    @Nullable
+    File getLocalEmulator();
 }

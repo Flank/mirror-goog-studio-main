@@ -16,16 +16,58 @@
 
 package com.android.build.api.component.impl
 
-import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.TestComponent
-import com.android.build.api.component.TestComponentProperties
+import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.services.VariantApiServices
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.internal.variant.VariantPathHelper
+import javax.inject.Inject
 
-abstract class TestComponentImpl<PropertiesT : TestComponentProperties>(
+abstract class TestComponentImpl @Inject constructor(
+    componentIdentity: TestComponentBuilderImpl,
+    buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
-    variantConfiguration: ComponentIdentity,
-    variantApiServices: VariantApiServices
-) : ComponentImpl<PropertiesT>(variantDslInfo, variantConfiguration, variantApiServices),
-    TestComponent<PropertiesT> {
+    variantDependencies: VariantDependencies,
+    variantSources: VariantSources,
+    paths: VariantPathHelper,
+    artifacts: ArtifactsImpl,
+    variantScope: VariantScope,
+    variantData: BaseVariantData,
+    override val testedVariant: VariantImpl,
+    transformManager: TransformManager,
+    variantPropertiesApiServices: VariantPropertiesApiServices,
+    taskCreationServices: TaskCreationServices,
+    globalScope: GlobalScope
+) : ComponentImpl(
+    componentIdentity,
+    buildFeatureValues,
+    variantDslInfo,
+    variantDependencies,
+    variantSources,
+    paths,
+    artifacts,
+    variantScope,
+    variantData,
+    transformManager,
+    variantPropertiesApiServices,
+    taskCreationServices,
+    globalScope
+), TestComponent, TestComponentCreationConfig {
+
+    // map the internal getter to the impl of the external variant object
+    override val testedConfig: VariantCreationConfig
+        get() = testedVariant
 }
+
+

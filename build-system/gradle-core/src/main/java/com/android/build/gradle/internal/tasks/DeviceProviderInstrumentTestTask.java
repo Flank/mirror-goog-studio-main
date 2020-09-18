@@ -28,11 +28,12 @@ import static com.android.builder.model.TestOptions.Execution.ANDROIDX_TEST_ORCH
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
+import com.android.build.gradle.internal.dsl.FailureRetention;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -51,6 +52,7 @@ import com.android.build.gradle.internal.testing.SimpleTestRunnable;
 import com.android.build.gradle.internal.testing.SimpleTestRunner;
 import com.android.build.gradle.internal.testing.TestData;
 import com.android.build.gradle.internal.testing.TestRunner;
+import com.android.build.gradle.internal.testing.utp.RetentionConfig;
 import com.android.build.gradle.internal.testing.utp.UtpDependencies;
 import com.android.build.gradle.internal.testing.utp.UtpDependency;
 import com.android.build.gradle.internal.testing.utp.UtpDependencyUtilsKt;
@@ -116,9 +118,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         public abstract Property<Boolean> getUnifiedTestPlatform();
 
         @Input
-        public abstract Property<Boolean> getUsesRetention();
-
-        @Input
         public abstract Property<Boolean> getShardBetweenDevices();
 
         @Input
@@ -127,6 +126,9 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
         @Input
         public abstract Property<TestOptions.Execution> getExecutionEnum();
+
+        @Input
+        public abstract Property<RetentionConfig> getRetentionConfig();
 
         @Internal
         public abstract Property<SdkComponentsBuildService> getSdkBuildService();
@@ -160,7 +162,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         executorServiceAdapter,
                         getUtpDependencies(),
                         getSdkBuildService().get(),
-                        getUsesRetention().get());
+                        getRetentionConfig().get());
             } else {
                 switch (getExecutionEnum().get()) {
                     case ANDROID_TEST_ORCHESTRATOR:
@@ -536,7 +538,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         .on(InternalArtifactType.DEVICE_PROVIDER_CODE_COVERAGE.INSTANCE);
             }
 
-            if (creationConfig instanceof TestComponentPropertiesImpl) {
+            if (creationConfig instanceof TestComponentImpl) {
                 if (type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER) {
                     creationConfig.getTaskContainer().setConnectedTestTask(taskProvider);
                     // possible redundant with setConnectedTestTask?
@@ -602,9 +604,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                             BuildServicesKt.getBuildService(
                                     creationConfig.getServices().getBuildServiceRegistry(),
                                     SdkComponentsBuildService.class));
-            task.getTestRunnerFactory()
-                    .getUsesRetention()
-                    .set(projectOptions.getProvider(BooleanOption.ANDROID_TEST_USES_RETENTION));
 
             TestOptions.Execution executionEnum = extension.getTestOptions().getExecutionEnum();
             task.getTestRunnerFactory().getExecutionEnum().set(executionEnum);
@@ -672,7 +671,21 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                 configurations.getByName(
                                         UtpDependency.ANDROID_TEST_PLUGIN_HOST_RETENTION
                                                 .getConfigurationName()));
+
             }
+            FailureRetention failureRetention =
+                    (FailureRetention) extension.getTestOptions().getFailureRetention();
+            Preconditions.checkArgument(!failureRetention.getEnable() ||
+                                        failureRetention.getRetainAll() ||
+                                        failureRetention.getMaxSnapshots() > 0,
+                                        "android.testOptions.maxSnapshots should be >0, actual value "
+                                        + failureRetention.getMaxSnapshots());
+            task.getTestRunnerFactory().getRetentionConfig().set(new RetentionConfig(
+                    failureRetention.getEnable(),
+                    failureRetention.getRetainAll(),
+                    failureRetention.getCompressSnapshots(),
+                    failureRetention.getMaxSnapshots()
+            ));
 
             task.getCodeCoverageEnabled()
                     .set(creationConfig.getVariantDslInfo().isTestCoverageEnabled());

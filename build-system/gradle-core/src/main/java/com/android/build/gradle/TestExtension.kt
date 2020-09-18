@@ -1,39 +1,19 @@
 package com.android.build.gradle
 
 import com.android.build.api.dsl.TestBuildFeatures
+import com.android.build.api.variant.TestVariantBuilder
 import com.android.build.api.variant.TestVariant
-import com.android.build.api.variant.TestVariantProperties
-import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
-import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.services.DslServices
-import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
-import com.android.build.gradle.internal.dsl.AaptOptions
-import com.android.build.gradle.internal.dsl.AbiSplitOptions
 import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
-import com.android.build.gradle.internal.dsl.AdbOptions
-import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions
-import com.android.build.gradle.internal.dsl.BuildType
-import com.android.build.gradle.internal.dsl.DataBindingOptions
-import com.android.build.gradle.internal.dsl.CmakeOptions
-import com.android.build.gradle.internal.dsl.DefaultConfig
-import com.android.build.gradle.internal.dsl.DensitySplitOptions
-import com.android.build.gradle.internal.dsl.ExternalNativeBuild
 import com.android.build.gradle.internal.dsl.InternalTestExtension
-import com.android.build.gradle.internal.dsl.LintOptions
-import com.android.build.gradle.internal.dsl.NdkBuildOptions
-import com.android.build.gradle.internal.dsl.PackagingOptions
-import com.android.build.gradle.internal.dsl.ProductFlavor
-import com.android.build.gradle.internal.dsl.SigningConfig
-import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.dsl.TestExtensionImpl
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
-import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.builder.core.LibraryRequest
 import com.android.repository.Revision
@@ -59,7 +39,7 @@ open class TestExtension(
     false
 ), TestAndroidConfig,
     InternalTestExtension by publicExtensionImpl,
-    ActionableVariantObjectOperationsExecutor<TestVariant<TestVariantProperties>, TestVariantProperties> by publicExtensionImpl {
+    ActionableVariantObjectOperationsExecutor<TestVariantBuilder, TestVariant> by publicExtensionImpl {
 
     private val applicationVariantList: DomainObjectSet<ApplicationVariant> =
         dslServices.domainObjectSet(ApplicationVariant::class.java)

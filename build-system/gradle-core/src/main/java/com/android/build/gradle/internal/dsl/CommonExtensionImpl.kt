@@ -20,8 +20,8 @@ import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.ComposeOptions
 import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.SdkComponents
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.VariantOperations
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.CompileOptions
@@ -42,8 +42,8 @@ abstract class CommonExtensionImpl<
         BuildTypeT : com.android.build.api.dsl.BuildType,
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
-        VariantT : Variant<VariantPropertiesT>,
-        VariantPropertiesT : VariantProperties>(
+        VariantBuilderT : VariantBuilder,
+        VariantT : Variant>(
             protected val dslServices: DslServices,
             dslContainers: DslContainerProvider<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfig>
         ) : InternalCommonExtension<
@@ -51,8 +51,8 @@ abstract class CommonExtensionImpl<
         BuildTypeT,
         DefaultConfigT,
         ProductFlavorT,
-        VariantT,
-        VariantPropertiesT>, ActionableVariantObjectOperationsExecutor<VariantT, VariantPropertiesT> {
+        VariantBuilderT,
+        VariantT>, ActionableVariantObjectOperationsExecutor<VariantBuilderT, VariantT> {
 
     private val sourceSetManager = dslContainers.sourceSetManager
 
@@ -100,8 +100,8 @@ abstract class CommonExtensionImpl<
         action(buildFeatures)
     }
 
-    protected val variantOperations = VariantOperations<VariantT>()
-    protected val variantPropertiesOperations = VariantOperations<VariantPropertiesT>()
+    protected val variantOperations = VariantOperations<VariantBuilderT>()
+    protected val variantPropertiesOperations = VariantOperations<VariantT>()
 
     override val compileOptions: CompileOptions =
         dslServices.newInstance(CompileOptions::class.java)
@@ -222,27 +222,27 @@ abstract class CommonExtensionImpl<
         action.invoke(testOptions)
     }
 
-    override fun onVariants(action: Action<VariantT>) {
+    override fun onVariants(action: Action<VariantBuilderT>) {
         variantOperations.addAction(action)
     }
 
-    override fun onVariants(action: VariantT.() -> Unit) {
+    override fun onVariants(action: VariantBuilderT.() -> Unit) {
         variantOperations.addAction(Action { action.invoke(it) } )
     }
 
-    override fun onVariantProperties(action: Action<VariantPropertiesT>) {
+    override fun onVariantProperties(action: Action<VariantT>) {
         variantPropertiesOperations.addAction(action)
     }
 
-    override fun onVariantProperties(action: (VariantPropertiesT) -> Unit) {
+    override fun onVariantProperties(action: (VariantT) -> Unit) {
         variantPropertiesOperations.addAction(Action { action.invoke(it) })
     }
 
-    override fun executeVariantOperations(variant: VariantT) {
+    override fun executeVariantOperations(variant: VariantBuilderT) {
         variantOperations.executeActions(variant)
     }
 
-    override fun executeVariantPropertiesOperations(variant: VariantPropertiesT) {
+    override fun executeVariantPropertiesOperations(variant: VariantT) {
         variantPropertiesOperations.executeActions(variant)
     }
 

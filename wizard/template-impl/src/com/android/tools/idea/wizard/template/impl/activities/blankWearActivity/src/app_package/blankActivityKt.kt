@@ -17,22 +17,39 @@
 package com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.src.app_package
 
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
+import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
+import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
+import com.android.tools.idea.wizard.template.renderIf
 
 fun blankActivityKt(
   activityClass: String,
   layoutName: String,
-  packageName: String
-) = """
+  packageName: String,
+  isViewBindingSupported: Boolean
+): String {
+
+  val contentViewBlock = if (isViewBindingSupported) """
+     binding = ${layoutToViewBindingClass(layoutName)}.inflate(layoutInflater)
+     setContentView(binding.root)
+  """ else "setContentView(R.layout.$layoutName)"
+
+  return """
 package ${escapeKotlinIdentifier(packageName)}
 
 import android.app.Activity
 import android.os.Bundle
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
 
 class ${activityClass} : Activity() {
 
+${renderIf(isViewBindingSupported) {"""
+    private lateinit var binding: ${layoutToViewBindingClass(layoutName)}
+"""}}
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.${layoutName})
+        $contentViewBlock
     }
 }
 """
+}

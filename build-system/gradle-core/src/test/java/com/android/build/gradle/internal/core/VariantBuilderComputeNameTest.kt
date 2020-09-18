@@ -208,11 +208,11 @@ class VariantBuilderComputeNameTest :
         var flavorName: String = ""
 
         return ResultBuilder().also {
-            it.name = VariantBuilder.computeName(varCombo, given.variantType) {
+            it.name = VariantDslInfoBuilder.computeName(varCombo, given.variantType) {
                 flavorName = it
             }
-            it.baseName = VariantBuilder.computeBaseName(varCombo, given.variantType)
-            it.fullNameWithSplit = VariantBuilder.computeFullNameWithSplits(
+            it.baseName = VariantDslInfoBuilder.computeBaseName(varCombo, given.variantType)
+            it.fullNameWithSplit = VariantDslInfoBuilder.computeFullNameWithSplits(
                 ComponentIdentityImpl(
                     it.name,
                     flavorName,

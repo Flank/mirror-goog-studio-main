@@ -240,7 +240,7 @@ public class TestUtils {
 
     /**
      * @return a directory which tests can output data to. If running through Bazel's test runner,
-     *     this returns the directory as specified by the TEST_UNDECLARED_OUTPUT_DIR environment
+     *     this returns the directory as specified by the TEST_UNDECLARED_OUTPUTS_DIR environment
      *     variable. Data written to this directory will be zipped and made available under the
      *     WORKSPACE_ROOT/bazel-testlogs/ after the test completes. For non-Bazel runs, this
      *     currently returns a tmp directory that is deleted on exit.
@@ -308,6 +308,11 @@ public class TestUtils {
     @NonNull
     public static File getSdk() {
         return getWorkspaceFile(getRelativeSdk());
+    }
+
+    @NonNull
+    public static File getMockJdk() {
+        return getWorkspaceFile("prebuilts/studio/jdk/mock-jdk17");
     }
 
     /**

@@ -198,6 +198,7 @@ private fun CxxModuleModel.toData() = CxxModuleModelData(
 
 @VisibleForTesting
 data class CxxCmakeModuleModelData(
+    override val isValidCmakeAvailable: Boolean,
     override val cmakeExe: File,
     override val minimumCmakeVersion: Revision,
     override val ninjaExe: File?,
@@ -206,6 +207,7 @@ data class CxxCmakeModuleModelData(
 
 private fun CxxCmakeModuleModel.toData() =
     CxxCmakeModuleModelData(
+        isValidCmakeAvailable = isValidCmakeAvailable,
         cmakeExe = cmakeExe,
         minimumCmakeVersion = minimumCmakeVersion,
         ninjaExe = ninjaExe,

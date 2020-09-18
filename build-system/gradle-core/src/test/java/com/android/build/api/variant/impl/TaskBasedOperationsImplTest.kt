@@ -78,7 +78,7 @@ class TaskBasedOperationsImplTest {
     private lateinit var project: Project
     private lateinit var artifacts: ArtifactsImpl
     private val taskInitialized = AtomicBoolean(false)
-    private val component = Mockito.mock(VariantPropertiesImpl::class.java)
+    private val component = Mockito.mock(VariantImpl::class.java)
     private lateinit var profileDir: File
 
     @Before
@@ -120,7 +120,7 @@ class TaskBasedOperationsImplTest {
             }
         }
 
-        class CreationAction(val component: VariantPropertiesImpl): VariantTaskCreationAction<SynchronousTask, VariantPropertiesImpl>(component) {
+        class CreationAction(val component: VariantImpl): VariantTaskCreationAction<SynchronousTask, VariantImpl>(component) {
             override val name: String
                 get() = component.computeTaskName("foo", "bar")
             override val type: Class<SynchronousTask>
@@ -228,7 +228,7 @@ class TaskBasedOperationsImplTest {
             }
         }
 
-        class CreationAction(val component: VariantPropertiesImpl): VariantTaskCreationAction<InternalApiTask, VariantPropertiesImpl>(component) {
+        class CreationAction(val component: VariantImpl): VariantTaskCreationAction<InternalApiTask, VariantImpl>(component) {
             override val name: String
                 get() = component.computeTaskName("foo", "bar")
             override val type: Class<InternalApiTask>

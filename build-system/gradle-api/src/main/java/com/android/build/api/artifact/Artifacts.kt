@@ -27,7 +27,7 @@ import org.gradle.api.tasks.TaskProvider
  * Access to the artifacts on a Variant object.
  *
  * Artifacts are temporary or final files or directories that are produced by the Android Gradle
- * plugin during the build. Depending on its configuration, each [com.android.build.api.variant.Variant]
+ * plugin during the build. Depending on its configuration, each [com.android.build.api.variant.VariantBuilder]
  * produces different versions of some of the output artifacts.
  *
  * An example of temporary artifacts are .class files obtained from compiling source files that will
@@ -76,6 +76,4 @@ interface Artifacts {
      * @return A [TaskBasedOperation] object using the passed [TaskProvider] for all its operations.
      */
     fun <TaskT: Task> use(taskProvider: TaskProvider<TaskT>): TaskBasedOperation<TaskT>
-
-
 }

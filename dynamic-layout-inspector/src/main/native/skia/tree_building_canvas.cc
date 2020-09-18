@@ -342,19 +342,6 @@ void TreeBuildingCanvas::onDrawAnnotation(const SkRect&, const char* key,
       exitView(true);
     }
 
-    if (!surface) {
-      SkIRect rect = requested_nodes.find(id)->second;
-      SkImageInfo imageInfo =
-          SkImageInfo::Make(rect.width(), rect.height(), kBGRA_8888_SkColorType,
-                            kUnpremul_SkAlphaType, SkColorSpace::MakeSRGB());
-#ifdef TREEBUILDINGCANVAS_DEBUG
-      printDebug("Create surface: %i x %i\n", rect.width(), rect.height());
-#endif
-      surface = SkSurface::MakeRaster(
-          imageInfo, rect.width() * rect.height() * sizeof(int32_t), nullptr);
-      real_canvas = surface->getCanvas();
-    }
-
     addView(id);
     addView(id);
 

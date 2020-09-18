@@ -18,10 +18,10 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.ArtifactType;
-import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
+import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.testing.api.TestServer;
 import com.android.utils.StringHelper;
@@ -93,12 +93,12 @@ public abstract class TestServerTask extends NonIncrementalTask {
 
     /** Configuration Action for a TestServerTask. */
     public static class TestServerTaskCreationAction
-            extends VariantTaskCreationAction<TestServerTask, AndroidTestPropertiesImpl> {
+            extends VariantTaskCreationAction<TestServerTask, AndroidTestImpl> {
         private final TestServer testServer;
         private final boolean hasFlavors;
 
         public TestServerTaskCreationAction(
-                @NonNull AndroidTestPropertiesImpl androidTestProperties, TestServer testServer) {
+                @NonNull AndroidTestImpl androidTestProperties, TestServer testServer) {
             super(androidTestProperties);
             this.testServer = testServer;
             this.hasFlavors = androidTestProperties.getVariantDslInfo().hasFlavors();
@@ -122,7 +122,7 @@ public abstract class TestServerTask extends NonIncrementalTask {
         public void configure(
                 @NonNull TestServerTask task) {
             super.configure(task);
-            VariantPropertiesImpl testedVariant = creationConfig.getTestedVariant();
+            VariantImpl testedVariant = creationConfig.getTestedVariant();
 
             final String variantName = creationConfig.getName();
             task.setDescription(

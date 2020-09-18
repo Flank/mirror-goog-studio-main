@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.api.ApkVariant;
@@ -62,8 +62,8 @@ public class VariantCheckers {
         return variants.values().stream().mapToInt(Integer::intValue).sum();
     }
 
-    public static void checkDefaultVariants(List<ComponentPropertiesImpl> components) {
-        assertThat(Lists.transform(components, ComponentPropertiesImpl::getName))
+    public static void checkDefaultVariants(List<ComponentImpl> components) {
+        assertThat(Lists.transform(components, ComponentImpl::getName))
                 .containsExactly(
                         "release", "debug", "debugAndroidTest", "releaseUnitTest", "debugUnitTest");
     }
@@ -115,9 +115,9 @@ public class VariantCheckers {
      * @param name the name of the item to return
      * @return the found variant
      */
-    public static ComponentPropertiesImpl findComponent(
-            @NonNull Collection<ComponentPropertiesImpl> components, @NonNull String name) {
-        Optional<ComponentPropertiesImpl> result =
+    public static ComponentImpl findComponent(
+            @NonNull Collection<ComponentImpl> components, @NonNull String name) {
+        Optional<ComponentImpl> result =
                 components.stream().filter(t -> t.getName().equals(name)).findAny();
         return result.orElseThrow(
                 () -> new AssertionError("Component for " + name + " not found."));

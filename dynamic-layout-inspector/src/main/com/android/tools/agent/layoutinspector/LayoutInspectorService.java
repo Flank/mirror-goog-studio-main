@@ -42,6 +42,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * This (singleton) class can register a callback to, whenever a view is updated, send the current
@@ -55,7 +56,8 @@ public class LayoutInspectorService {
 
     private final Properties mProperties = new Properties();
     private final Object mLock = new Object();
-    private DetectRootViewChange mDetectRootChange = null;
+    private final AtomicReference<DetectRootViewChange> mDetectRootChange =
+            new AtomicReference<>(null);
     private final Map<View, AutoCloseable> mCaptureClosables = new HashMap<>();
 
     private boolean mShowComposeNodes = false;
@@ -96,7 +98,7 @@ public class LayoutInspectorService {
         for (View root : roots) {
             startLayoutInspector(root);
         }
-        mDetectRootChange = new DetectRootViewChange(this);
+        startRootViewDetector();
     }
 
     public void startLayoutInspector(@NonNull View root) {
@@ -134,10 +136,16 @@ public class LayoutInspectorService {
                                         if (mCaptureClosables.get(root) != null) {
                                             if (mCaptureOnlyOnce) {
                                                 stopCapturing(root);
+                                                stopRootViewDetector();
                                             } else {
                                                 mGeneration++;
                                             }
                                             captureAndSendComponentTree(arr, root);
+                                            if (mCaptureOnlyOnce) {
+                                                mProperties.saveAllViewProperties(
+                                                        Collections.singletonList(root),
+                                                        mGeneration);
+                                            }
                                         }
                                     }
                                 });
@@ -175,8 +183,7 @@ public class LayoutInspectorService {
     /** Stops the capture from sending more messages. */
     @SuppressWarnings("unused") // invoked via jni
     public void onStopLayoutInspectorCommand() {
-        mDetectRootChange.cancel();
-        mDetectRootChange = null;
+        stopRootViewDetector();
         stopCapturing();
         try {
             mProperties.saveAllViewProperties(getRootViews(), mGeneration);
@@ -188,14 +195,34 @@ public class LayoutInspectorService {
 
     /** Sends a single capture and properties. */
     @SuppressWarnings("unused") // invoked via jni
-    public void onRefreshLayoutInspectorCommand() {
+    public void onRefreshLayoutInspectorCommand(boolean showComposeNodes) {
         mCaptureOnlyOnce = true;
+        mShowComposeNodes = showComposeNodes;
         mGeneration++;
+
+        // Start the root view detector here because:
+        // - There may not be any visible root views yet (the app may be starting up)
+        // - The current root views may be in the process of shutting down
+        startRootViewDetector();
+
         List<View> roots = getRootViews();
         for (View root : roots) {
             startLayoutInspector(root);
         }
-        mProperties.saveAllViewProperties(getRootViews(), mGeneration);
+    }
+
+    private void startRootViewDetector() {
+        DetectRootViewChange old = mDetectRootChange.getAndSet(new DetectRootViewChange(this));
+        if (old != null) {
+            old.cancel();
+        }
+    }
+
+    private void stopRootViewDetector() {
+        DetectRootViewChange detector = mDetectRootChange.getAndSet(null);
+        if (detector != null) {
+            detector.cancel();
+        }
     }
 
     private void stopCapturing() {
@@ -271,7 +298,8 @@ public class LayoutInspectorService {
     private native long freeSendRequest(long request);
 
     /** Initializes the request as a ComponentTree and returns an event handle */
-    private native long initComponentTree(long request, @NonNull long[] allIds);
+    private native long initComponentTree(
+            long request, @NonNull long[] allIds, int rootOffsetX, int rootOffsetY);
 
     /** Sends a component tree to Android Studio. */
     private native long sendComponentTree(
@@ -298,7 +326,13 @@ public class LayoutInspectorService {
             for (int i = 0; i < rootViews.size(); i++) {
                 rootViewIds[i] = rootViews.get(i).getUniqueDrawingId();
             }
-            long event = initComponentTree(request, rootViewIds);
+            // The offset of the root view from the origin of the surface. Will always be 0,0 for
+            // the
+            // main window, but can be positive for floating windows (e.g. dialogs).
+            int[] rootOffset = new int[2];
+            root.getLocationInSurface(rootOffset);
+
+            long event = initComponentTree(request, rootViewIds, rootOffset[0], rootOffset[1]);
             if (root != null) {
                 // The compose API must run on the UI thread.
                 // For now: Build the entire component tree on the UI thread.

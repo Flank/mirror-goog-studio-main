@@ -88,6 +88,11 @@ public final class SdkConstants {
     public static final String AAR_METADATA_VERSION_PROPERTY = "aarMetadataVersion";
     public static final String MIN_COMPILE_SDK_PROPERTY = "minCompileSdk";
 
+    /** Properties in app-metadata.properties file */
+    public static final String APP_METADATA_VERSION_PROPERTY = "appMetadataVersion";
+    public static final String ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY =
+            "androidGradlePluginVersion";
+
     /**
      * The encoding we strive to use for all files we write.
      *
@@ -1747,6 +1752,7 @@ public final class SdkConstants {
     public static final String ATTR_CONSTRAINT_SET_START = "constraintSetStart";
     public static final String ATTR_CONSTRAINT_SET_END = "constraintSetEnd";
     public static final String ATTR_DERIVE_CONSTRAINTS_FROM = "deriveConstraintsFrom";
+    public static final String ATTR_LAYOUT_CONSTRAINT_TAG = "layout_constraintTag";
 
     public static final String ATTR_GUIDELINE_ORIENTATION_HORIZONTAL = "horizontal"; //$NON-NLS-1$
     public static final String ATTR_GUIDELINE_ORIENTATION_VERTICAL = "vertical"; //$NON-NLS-1$
@@ -2782,7 +2788,7 @@ public final class SdkConstants {
     public static final String GRADLE_ANDROID_TEST_API_CONFIGURATION = "androidTestApi";
 
     public static final String GRADLE_ANDROID_TEST_UTIL_CONFIGURATION = "androidTestUtil";
-    public static final String CURRENT_BUILD_TOOLS_VERSION = "29.0.2";
+    public static final String CURRENT_BUILD_TOOLS_VERSION = "30.0.0";
     public static final String SUPPORT_LIB_GROUP_ID = "com.android.support";
     public static final String SUPPORT_LIB_ARTIFACT = "com.android.support:support-v4";
     public static final String DESIGN_LIB_ARTIFACT = "com.android.support:design";

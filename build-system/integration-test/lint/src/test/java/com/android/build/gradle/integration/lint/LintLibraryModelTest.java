@@ -18,12 +18,14 @@ package com.android.build.gradle.integration.lint;
 
 import static com.android.testutils.truth.FileSubject.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.utils.FileUtils;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * Assemble tests for lintLibraryModel.
@@ -31,17 +33,26 @@ import org.junit.Test;
  * <p>To run just this test: ./gradlew :base:build-system:integration-test:application:test
  * -D:base:build-system:integration-test:application:test.single=LintLibraryModelTest
  */
+@RunWith(FilterableParameterized.class)
 public class LintLibraryModelTest {
+    @Parameterized.Parameters(name = "{0}")
+    public static LintInvocationType[] getParams() {
+        return LintInvocationType.values();
+    }
+
     @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestProject("lintLibraryModel")
-                    // http://b/146208910
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                    .create();
+    public final GradleTestProject project;
+
+    public LintLibraryModelTest(LintInvocationType lintInvocationType) {
+        this.project = lintInvocationType.testProjectBuilder()
+                .fromTestProject("lintLibraryModel")
+                .create();
+    }
 
     @Test
     public void checkLintLibraryModel() throws Exception {
+        // Run twice to catch issues with configuration caching
+        project.execute("clean", ":app:lintDebug");
         project.execute("clean", ":app:lintDebug");
         String expected =
                 FileUtils.join("src", "main", "java", "com", "android", "test", "lint", "lintmodel", "mylibrary", "MyLibrary.java") + ":5: Warning: Assertions are never enabled in Android. Use BuildConfig.DEBUG conditional checks instead [Assert]\n"

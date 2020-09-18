@@ -108,13 +108,16 @@ fun createCxxModuleModel(
                                 configurationModel.cmakeVersion,
                                 localPropertyFile(CMAKE_DIR_PROPERTY),
                                 sdkComponents.sdkDirectoryProvider.get().asFile,
-                                Consumer { sdkComponents.installCmake(it) })!!
+                                Consumer { sdkComponents.installCmake(it) })
                         }
+                        override val isValidCmakeAvailable = cmakeFolder != null
                         override val cmakeExe by lazy {
-                            join(cmakeFolder, "bin", "cmake$exe")
+                            if (cmakeFolder == null) error("Bug: should have called isValidCmakeInstall before this")
+                            join(cmakeFolder!!, "bin", "cmake$exe")
                         }
                         override val ninjaExe by lazy {
-                            join(cmakeFolder, "bin", "ninja$exe").takeIf { it.exists() }
+                            if (cmakeFolder == null) error("Bug: should have called isValidCmakeInstall before this")
+                            join(cmakeFolder!!, "bin", "ninja$exe").takeIf { it.exists() }
                         }
                         override val isPreferCmakeFileApiEnabled = configurationModel.isPreferCmakeFileApiEnabled
                     }

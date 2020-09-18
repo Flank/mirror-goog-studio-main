@@ -17,14 +17,12 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.UnitTest
-import com.android.build.api.component.UnitTestProperties
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.model.ObjectFactory
+import javax.inject.Inject
 
-/**
- * Shim object for [AnalyticsEnabledTestComponent] that records all mutating accesses to the analytics.
- */
-class AnalyticsEnabledUnitTest<PropertiesT: UnitTestProperties>(
-    delegate: UnitTest<PropertiesT>,
-    stats: GradleBuildVariant.Builder
-) : AnalyticsEnabledTestComponent<PropertiesT>(delegate, stats),
-    UnitTest<PropertiesT>
+open class AnalyticsEnabledUnitTest @Inject constructor(
+    override val delegate: UnitTest,
+    stats: GradleBuildVariant.Builder,
+    objectFactory: ObjectFactory
+) : AnalyticsEnabledTestComponent(delegate, stats, objectFactory), UnitTest

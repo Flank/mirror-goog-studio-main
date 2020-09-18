@@ -16,23 +16,110 @@
 
 package com.android.build.api.component.impl
 
-import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.UnitTest
-import com.android.build.api.component.UnitTestProperties
+import com.android.build.api.component.analytics.AnalyticsEnabledUnitTest
+import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.services.VariantApiServices
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.ProjectServices
+import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.google.common.collect.ImmutableList
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class UnitTestImpl @Inject constructor(
+    componentIdentity: UnitTestBuilderImpl,
+    buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
-    variantConfiguration: ComponentIdentity,
-    variantApiServices: VariantApiServices
-) : TestComponentImpl<UnitTestProperties>(
+    variantDependencies: VariantDependencies,
+    variantSources: VariantSources,
+    paths: VariantPathHelper,
+    artifacts: ArtifactsImpl,
+    variantScope: VariantScope,
+    variantData: BaseVariantData,
+    testedVariant: VariantImpl,
+    transformManager: TransformManager,
+    internalServices: VariantPropertiesApiServices,
+    taskCreationServices: TaskCreationServices,
+    globalScope: GlobalScope
+) : TestComponentImpl(
+    componentIdentity,
+    buildFeatureValues,
     variantDslInfo,
-    variantConfiguration,
-    variantApiServices
-), UnitTest<UnitTestProperties> {
-    override fun executePropertiesActions(target: UnitTestProperties) {
-        propertiesActions.executeActions(target)
-    }
+    variantDependencies,
+    variantSources,
+    paths,
+    artifacts,
+    variantScope,
+    variantData,
+    testedVariant,
+    transformManager,
+    internalServices,
+    taskCreationServices,
+    globalScope
+), UnitTest, UnitTestCreationConfig {
+
+    // ---------------------------------------------------------------------------------------------
+    // PUBLIC API
+    // ---------------------------------------------------------------------------------------------
+
+    // ---------------------------------------------------------------------------------------------
+    // INTERNAL API
+    // ---------------------------------------------------------------------------------------------
+    override val applicationId: Provider<String> =
+        internalServices.providerOf(String::class.java, variantDslInfo.applicationId)
+
+    override val testedApplicationId: Provider<String>
+        get() = testedConfig.applicationId
+
+    // these would normally be public but not for unit-test. They are there to feed the
+    // manifest but aren't actually used.
+    override val instrumentationRunner: Provider<String>
+        get() = variantDslInfo.getInstrumentationRunner(testedVariant.dexingType)
+    override val handleProfiling: Provider<Boolean>
+        get() = variantDslInfo.handleProfiling
+    override val functionalTest: Provider<Boolean>
+        get() = variantDslInfo.functionalTest
+    override val testLabel: Provider<String?>
+        get() = variantDslInfo.testLabel
+    override val instrumentationRunnerArguments: Map<String, String>
+        get() = variantDslInfo.instrumentationRunnerArguments
+    override val isTestCoverageEnabled: Boolean
+        get() = variantDslInfo.isTestCoverageEnabled
+
+    override fun addDataBindingSources(
+        sourceSets: ImmutableList.Builder<ConfigurableFileTree>) {}
+
+    override val minSdkVersion: AndroidVersion
+        get() = testedVariant.variant.minSdkVersion
+
+    override fun createUserVisibleVariantPropertiesObject(
+        projectServices: ProjectServices,
+        stats: GradleBuildVariant.Builder
+    ): AnalyticsEnabledUnitTest =
+        projectServices.objectFactory.newInstance(
+            AnalyticsEnabledUnitTest::class.java,
+            this,
+            stats
+        )
+
+    /**
+     * for unit tests, the placeholders are always empty.
+     */
+    override val manifestPlaceholders: MapProperty<String, String> =
+            internalServices.mapPropertyOf(String::class.java, String::class.java, mapOf())
 }

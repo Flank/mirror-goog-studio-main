@@ -16,6 +16,8 @@
 
 #include "tools/base/deploy/installer/server/install_client.h"
 
+#include <sys/wait.h>
+
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/utils.h"
 
@@ -45,6 +47,9 @@ bool InstallClient::KillServerAndWait(proto::InstallServerResponse* response) {
     return false;
   }
   output_.Close();
+
+  int status;
+  waitpid(server_pid_, &status, 0);
   return Read(response);
 }
 

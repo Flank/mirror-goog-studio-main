@@ -6,12 +6,22 @@ set PATH=c:\tools\msys64\usr\bin;%PATH%
 set OUTDIR=%1
 set DISTDIR=%2
 set BUILDNUMBER=%3
+@rem DETECT_FLAKES is an optional argument adding extra bazel arguments.
+set DETECT_FLAKES=%4
 
 @REM It is a post-submit build if the build number does not start with "P"
 IF "%BUILDNUMBER:~0,1%"=="P" (
   SET /A IS_POST_SUBMIT=0
 ) ELSE (
   SET /A IS_POST_SUBMIT=1
+)
+
+@REM Run tests multiple times to aid flake detection.
+IF "%DETECT_FLAKES%"=="--detect_flakes" (
+  set RUNS=--runs_per_test=5
+  set DETECT_FLAKES=--runs_per_test_detects_flakes
+  set NOCACHE=--nocache_test_results
+  set DETECT_FLAKE_ARGS=!RUNS! !DETECT_FLAKES! !NOCACHE!
 )
 
 set TESTTAGFILTERS=-no_windows,-no_test_windows,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate
@@ -54,6 +64,7 @@ CALL %SCRIPTDIR%bazel.cmd ^
  --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^
  --test_tag_filters=%TESTTAGFILTERS% ^
  --profile=%DISTDIR%\winprof%BUILDNUMBER%.json.gz ^
+ %DETECT_FLAKE_ARGS% ^
  -- ^
  //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar ^
  //tools/base/profiler/native/trace_processor_daemon ^

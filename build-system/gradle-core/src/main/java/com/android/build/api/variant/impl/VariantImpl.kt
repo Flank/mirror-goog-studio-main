@@ -13,86 +13,161 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.build.api.variant.impl
 
-import com.android.build.api.component.AndroidTest
-import com.android.build.api.component.AndroidTestProperties
-import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.component.UnitTest
-import com.android.build.api.component.UnitTestProperties
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledVariant
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.PackagingOptions
 import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
-import com.android.build.gradle.internal.services.VariantApiServices
+import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.android.builder.core.VariantType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.Action
+import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Provider
+import org.objectweb.asm.Type
+import java.io.Serializable
 
-abstract class VariantImpl<PropertiesT: VariantProperties>(
+abstract class VariantImpl(
+    override val variant: VariantBuilderImpl,
+    buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
-    componentIdentity: ComponentIdentity,
-    variantApiServices: VariantApiServices
-) :
-    ComponentImpl<PropertiesT>(variantDslInfo, componentIdentity, variantApiServices),
-    Variant<PropertiesT> {
+    variantDependencies: VariantDependencies,
+    variantSources: VariantSources,
+    paths: VariantPathHelper,
+    artifacts: ArtifactsImpl,
+    variantScope: VariantScope,
+    variantData: BaseVariantData,
+    transformManager: TransformManager,
+    variantPropertiesApiServices: VariantPropertiesApiServices,
+    taskCreationServices: TaskCreationServices,
+    globalScope: GlobalScope
+) : ComponentImpl(
+    variant,
+    buildFeatureValues,
+    variantDslInfo,
+    variantDependencies,
+    variantSources,
+    paths,
+    artifacts,
+    variantScope,
+    variantData,
+    transformManager,
+    variantPropertiesApiServices,
+    taskCreationServices,
+    globalScope
+), Variant, ConsumableCreationConfig {
 
-    private var _minSdkVersion= AndroidVersionImpl(
-        variantDslInfo.minSdkVersion.apiLevel,
-        variantDslInfo.minSdkVersion.codename)
+    // ---------------------------------------------------------------------------------------------
+    // PUBLIC API
+    // ---------------------------------------------------------------------------------------------
 
-    override var minSdkVersion: AndroidVersion
-        get() = _minSdkVersion
-        set(value) {
-            _minSdkVersion = AndroidVersionImpl(value.apiLevel, value.codename)
-        }
-
-    override fun unitTest(action: UnitTest<UnitTestProperties>.() -> Unit) {
-        throw RuntimeException("Actions can only be registered through DSL aware objects.")
+    override val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>> by lazy {
+        internalServices.mapPropertyOf(
+            String::class.java,
+            BuildConfigField::class.java,
+            variantDslInfo.getBuildConfigFields()
+        )
     }
 
-    fun unitTest(action: Action<UnitTest<UnitTestProperties>>) {
-        throw RuntimeException("Actions can only be registered through DSL aware objects.")
+    override fun addBuildConfigField(key: String, value: Serializable, comment: String?) {
+        val descriptor = Type.getDescriptor(value::class.java)
+                .removeSurrounding("Ljava/lang/", ";")
+        buildConfigFields.put(key, BuildConfigField(descriptor, value, comment))
     }
 
-    override fun unitTestProperties(action: UnitTestProperties.() -> Unit) {
-        throw RuntimeException("Actions can only be registered through DSL aware objects.")
+    /**
+     * Adds a ResValue element to the generated resources.
+     * @param name the resource name
+     * @param type the resource type like 'string'
+     * @param value the resource value
+     * @param comment optional comment to be added to the generated resource file for the field.
+     */
+    override fun addResValue(name: String, type: String, value: String, comment: String?) {
+        resValues.put(ResValue.Key(type, name), ResValue(value, comment))
     }
 
-    fun unitTestProperties(action: Action<UnitTestProperties>) {
-        throw RuntimeException("Actions can only be registered through DSL aware objects.")
+    /**
+     * Adds a ResValue element to the generated resources.
+     * @param name the resource name
+     * @param type the resource type like 'string'
+     * @param value a [Provider] for the value
+     * @param comment optional comment to be added to the generated resource file for the field.
+     */
+    override fun addResValue(name: String, type: String, value: Provider<String>, comment: String?) {
+        resValues.put(ResValue.Key(type, name), value.map { ResValue(it, comment) })
     }
 
-    override fun androidTest(action: AndroidTest<AndroidTestProperties>.() -> Unit) {
-        throw RuntimeException("Actions can only be registered through DSL aware objects.")
+    override val manifestPlaceholders: MapProperty<String, String> by lazy {
+        @Suppress("UNCHECKED_CAST")
+        internalServices.mapPropertyOf(
+            String::class.java,
+            String::class.java,
+            variantDslInfo.manifestPlaceholders
+        )
     }
 
-    fun androidTest(action: Action<AndroidTest<AndroidTestProperties>>) {
-        throw RuntimeException("Actions can only be registered through DSL aware objects.")
+    override val packagingOptions: PackagingOptions by lazy {
+        PackagingOptionsImpl(globalScope.extension.packagingOptions, internalServices)
     }
 
-    override fun androidTestProperties(action: AndroidTestProperties.() -> Unit) {
-        throw RuntimeException("Actions can only be registered through DSL aware objects.")
+    // ---------------------------------------------------------------------------------------------
+    // INTERNAL API
+    // ---------------------------------------------------------------------------------------------
+
+    val testComponents = mutableMapOf<VariantType, ComponentImpl>()
+
+    override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
+        internalServices.mapPropertyOf(
+            ResValue.Key::class.java,
+            ResValue::class.java,
+            variantDslInfo.getResValues()
+        )
     }
 
-    fun androidTestProperties(action: Action<AndroidTestProperties>) {
-        throw RuntimeException("Actions can only be registered through DSL aware objects.")
-    }
+    override val renderscriptTargetApi: Int
+        get() =  variant.renderscriptTargetApi
 
-    abstract fun createUserVisibleVariantObject(projectServices: ProjectServices, stats: GradleBuildVariant.Builder): AnalyticsEnabledVariant<in PropertiesT>
+    override val minSdkVersion: AndroidVersion
+        get() = variant.minSdkVersion
 
 
-    override var renderscriptTargetApi: Int = -1
+    override val maxSdkVersion: Int?
+        get() = variant.maxSdkVersion
+
+    private var _isMultiDexEnabled: Boolean? = variantDslInfo.isMultiDexEnabled
+    override val isMultiDexEnabled: Boolean
         get() {
-            // if the field has been set, always use  that value, otherwise, calculate it each
-            // time in case minSdkVersion changes.
-            if (field != -1) return field
-            val targetApi = variantDslInfo.renderscriptTarget
-            // default to -1 if not in build.gradle file.
-            val minSdk = minSdkVersion.getFeatureLevel()
-            return if (targetApi > minSdk) targetApi else minSdk
+            return _isMultiDexEnabled ?: (minSdkVersion.getFeatureLevel() >= 21)
         }
+
+    private val isBaseModule = variantDslInfo.variantType.isBaseModule
+
+    override val needsMainDexListForBundle: Boolean
+        get() = isBaseModule
+                && globalScope.hasDynamicFeatures()
+                && dexingType.needsMainDexList
+
+    // TODO: Move down to lower type and remove from VariantScope.
+    override val isCoreLibraryDesugaringEnabled: Boolean
+        get() = variantScope.isCoreLibraryDesugaringEnabled(this)
+
+    abstract override fun createUserVisibleVariantPropertiesObject(
+        projectServices: ProjectServices,
+        stats: GradleBuildVariant.Builder
+    ): AnalyticsEnabledVariant
 }

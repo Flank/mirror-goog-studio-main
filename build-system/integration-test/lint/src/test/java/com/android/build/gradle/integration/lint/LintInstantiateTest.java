@@ -18,23 +18,30 @@ package com.android.build.gradle.integration.lint;
 
 import static com.android.testutils.truth.FileSubject.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Integration test for lint analyzing Kotlin code from Gradle. */
+@RunWith(Parameterized.class)
 public class LintInstantiateTest {
 
+    @Parameterized.Parameters(name = "{0}")
+    public static LintInvocationType[] getParams() {
+        return LintInvocationType.values();
+    }
+
     @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestProject("lintInstantiate")
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-                    // b/158092419, b/146208910
-                    .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=49")
-                    .create();
+    public final GradleTestProject project;
+
+    public LintInstantiateTest(LintInvocationType lintInvocationType) {
+        this.project = lintInvocationType.testProjectBuilder()
+                .fromTestProject("lintInstantiate")
+                .create();
+    }
 
     @Test
     public void checkFindErrors() {

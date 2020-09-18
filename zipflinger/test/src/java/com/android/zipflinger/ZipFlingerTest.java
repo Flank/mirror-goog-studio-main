@@ -15,12 +15,14 @@
  */
 package com.android.zipflinger;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -908,5 +910,35 @@ public class ZipFlingerTest extends AbstractZipflingerTest {
         int indexOfParameter = ZipMap.LFH_LENGTH_ERROR.indexOf('%');
         String constantString = ZipMap.LFH_LENGTH_ERROR.substring(0, indexOfParameter);
         Assert.assertTrue(message.startsWith(constantString));
+    }
+
+    @Test
+    public void testTransferFromInputStream() throws Exception {
+        byte[] content1 = new byte[] {1, 2, 3, 4};
+        byte[] content2 = new byte[] {5, 6, 7, 8, 9, 10};
+        ByteArrayInputStream stream1 = new ByteArrayInputStream(content1);
+
+        File file = getTestFile("testTransferFromInputStream.zip");
+        try (ZipArchive archive = new ZipArchive(file)) {
+            archive.add(
+                    new BytesSource(content1, "file1.txt", Deflater.NO_COMPRESSION) {
+                        @Override
+                        public long writeTo(ZipWriter writer) throws IOException {
+                            writer.transferFrom(Channels.newChannel(stream1), content1.length);
+                            return content1.length;
+                        }
+                    });
+            archive.add(new BytesSource(content2, "file2.txt", Deflater.NO_COMPRESSION));
+        }
+
+        Map<String, Entry> entries = verifyArchive(file);
+        Assert.assertEquals("Num entries", 2, entries.size());
+        Assert.assertTrue("Entries contains file1.txt", entries.containsKey("file1.txt"));
+        Assert.assertTrue("Entries contains file2.txt", entries.containsKey("file2.txt"));
+
+        try (ZipArchive zip = new ZipArchive(file)) {
+            Assert.assertEquals(ByteBuffer.wrap(content1), zip.getContent("file1.txt"));
+            Assert.assertEquals(ByteBuffer.wrap(content2), zip.getContent("file2.txt"));
+        }
     }
 }

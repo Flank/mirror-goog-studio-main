@@ -39,9 +39,12 @@ import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.api.variant.impl.VariantOutputListKt;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
+import com.android.build.gradle.internal.component.ApplicationCreationConfig;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dependency.AndroidAttributes;
+import com.android.build.gradle.internal.manifest.ManifestData;
+import com.android.build.gradle.internal.manifest.ManifestDataKt;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -62,6 +65,8 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
+import com.android.builder.errors.EvalIssueException;
+import com.android.builder.errors.IssueReporter;
 import com.android.builder.files.IncrementalChanges;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.KeyedFileCache;
@@ -72,10 +77,12 @@ import com.android.builder.files.ZipCentralDirectory;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.model.CodeShrinker;
+import com.android.builder.packaging.DexPackagingMode;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.builder.utils.ZipEntryUtils;
 import com.android.ide.common.resources.FileStatus;
 import com.android.tools.build.apkzlib.utils.IOExceptionWrapper;
+import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.android.tools.build.apkzlib.zip.compress.Zip64NotSupportedException;
 import com.android.utils.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
@@ -156,7 +163,14 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     @InputFiles
     @PathSensitive(PathSensitivity.NAME_ONLY)
     @Optional
-    public abstract ConfigurableFileCollection getAppMetadata();
+    public abstract ConfigurableFileCollection getBaseModuleMetadata();
+
+    /** App metadata to be packaged in the APK. */
+    @InputFile
+    @Incremental
+    @PathSensitive(PathSensitivity.NAME_ONLY)
+    @Optional
+    public abstract RegularFileProperty getAppMetadata();
 
     @OutputDirectory
     public abstract DirectoryProperty getIncrementalFolder();
@@ -215,6 +229,14 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     @NonNull
     @Input
     public abstract ListProperty<String> getAaptOptionsNoCompress();
+
+    @NonNull
+    @Input
+    public abstract Property<Boolean> getJniLibsUseLegacyPackaging();
+
+    @NonNull
+    @Input
+    public abstract Property<Boolean> getDexUseLegacyPackaging();
 
     protected String projectBaseName;
 
@@ -287,18 +309,19 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         manifest -> {
                             if (manifest.isFile()
                                     && manifest.getName()
-                                            .equals(SdkConstants.ANDROID_MANIFEST_XML)) {
+                                    .equals(SdkConstants.ANDROID_MANIFEST_XML)) {
                                 ManifestAttributeSupplier parser =
                                         new DefaultManifestParser(manifest, () -> true, true, null);
                                 String nativeLibsPackagingMode =
                                         PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
-                                                        parser)
+                                                        parser.getExtractNativeLibs())
                                                 .toString();
                                 listBuilder.add(nativeLibsPackagingMode);
                                 String dexPackagingMode =
                                         PackagingUtils
                                                 .getDexPackagingMode(
-                                                        parser, getMinSdkVersion().get())
+                                                        parser.getUseEmbeddedDex(),
+                                                        getDexUseLegacyPackaging().get())
                                                 .toString();
                                 listBuilder.add(dexPackagingMode);
                             }
@@ -424,17 +447,29 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     .set(
                             IncrementalChangesUtils.getChangesInSerializableForm(
                                     changes, getJniFolders()));
+            if (getAppMetadata().isPresent()) {
+                parameter
+                        .getAppMetadataFiles()
+                        .set(
+                                IncrementalChangesUtils.getChangesInSerializableForm(
+                                        changes, getAppMetadata()));
+            } else {
+                parameter
+                        .getAppMetadataFiles()
+                        .set(new SerializableInputChanges(ImmutableList.of(), ImmutableSet.of()));
+            }
             parameter.getManifestType().set(manifestType);
             parameter.getSigningConfig().set(signingConfig.convertToParams());
 
-            if (getAppMetadata().isEmpty()) {
+            if (getBaseModuleMetadata().isEmpty()) {
                 parameter.getAbiFilters().set(getAbiFilters());
             } else {
                 // Dynamic feature
                 List<String> appAbiFilters;
                 try {
                     appAbiFilters =
-                            ModuleMetadata.load(getAppMetadata().getSingleFile()).getAbiFilters();
+                            ModuleMetadata.load(getBaseModuleMetadata().getSingleFile())
+                                    .getAbiFilters();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -452,6 +487,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             parameter.getJniFolders().set(getJniFolders().getFiles());
             parameter.getManifestDirectory().set(getManifests());
             parameter.getAaptOptionsNoCompress().set(getAaptOptionsNoCompress().get());
+            parameter.getJniLibsUseLegacyPackaging().set(getJniLibsUseLegacyPackaging().get());
+            parameter.getDexUseLegacyPackaging().set(getDexUseLegacyPackaging().get());
             parameter.getCreatedBy().set(getCreatedBy().get());
             parameter.getMinSdkVersion().set(getMinSdkVersion().get());
 
@@ -548,6 +585,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         public abstract Property<SerializableInputChanges> getJavaResourceFiles();
 
         @NonNull
+        public abstract Property<SerializableInputChanges> getAppMetadataFiles();
+
+        @NonNull
         public abstract Property<Artifact<Directory>> getManifestType();
 
         @Optional
@@ -563,9 +603,14 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @NonNull
         public abstract DirectoryProperty getManifestDirectory();
 
-        @Optional
         @NonNull
         public abstract ListProperty<String> getAaptOptionsNoCompress();
+
+        @NonNull
+        public abstract Property<Boolean> getJniLibsUseLegacyPackaging();
+
+        @NonNull
+        public abstract Property<Boolean> getDexUseLegacyPackaging();
 
         @Optional
         @NonNull
@@ -641,6 +686,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
      * @param changedAssets incremental assets
      * @param changedAndroidResources incremental Android resource
      * @param changedNLibs incremental native libraries changed
+     * @param changedAppMetadata incremental app metadata
      * @throws IOException failed to package the APK
      */
     private static void doTask(
@@ -653,6 +699,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             @NonNull Collection<SerializableChange> changedAssets,
             @NonNull Map<RelativeFile, FileStatus> changedAndroidResources,
             @NonNull Map<RelativeFile, FileStatus> changedNLibs,
+            @NonNull Collection<SerializableChange> changedAppMetadata,
             @NonNull SplitterParams params)
             throws IOException {
 
@@ -676,9 +723,52 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         FileUtils.mkdirs(outputFile.getParentFile());
 
         // In execution phase, so can parse the manifest.
-        ManifestAttributeSupplier manifest =
-                new DefaultManifestParser(
-                        new File(manifestForSplit.getOutputFile()), () -> true, true, null);
+        ManifestData manifestData =
+                ManifestDataKt.parseManifest(
+                        new File(manifestForSplit.getOutputFile()),
+                        true,
+                        () -> true,
+                        MANIFEST_DATA_ISSUE_REPORTER);
+
+        NativeLibrariesPackagingMode nativeLibsPackagingMode =
+                PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
+                        manifestData.getExtractNativeLibs());
+        // Warn if params.getJniLibsUseLegacyPackaging() is not compatible with
+        // nativeLibsPackagingMode. We currently fall back to what's specified in the manifest, but
+        // in future versions of AGP, we should use what's specified via
+        // params.getJniLibsUseLegacyPackaging().
+        LoggerWrapper logger = new LoggerWrapper(Logging.getLogger(PackageAndroidArtifact.class));
+        if (params.getJniLibsUseLegacyPackaging().get()) {
+            // TODO (b/149770867) make this an error in future AGP versions.
+            if (nativeLibsPackagingMode == NativeLibrariesPackagingMode.UNCOMPRESSED_AND_ALIGNED) {
+                logger.warning(
+                        "PackagingOptions.jniLibs.useLegacyPackaging should be set to false "
+                                + "because android:extractNativeLibs is set to \"false\" in "
+                                + "AndroidManifest.xml. Avoid setting "
+                                + "android:extractNativeLibs=\"false\" explicitly in "
+                                + "AndroidManifest.xml, and instead set "
+                                + "android.packagingOptions.jniLibs.useLegacyPackaging to false in "
+                                + "the build.gradle file.");
+            }
+        } else {
+            if (nativeLibsPackagingMode == NativeLibrariesPackagingMode.COMPRESSED) {
+                logger.warning(
+                        "PackagingOptions.jniLibs.useLegacyPackaging should be set to true "
+                                + "because android:extractNativeLibs is set to \"true\" in "
+                                + "AndroidManifest.xml.");
+            }
+        }
+
+        Boolean useEmbeddedDex = manifestData.getUseEmbeddedDex();
+        DexPackagingMode dexPackagingMode =
+                PackagingUtils.getDexPackagingMode(
+                        useEmbeddedDex, params.getDexUseLegacyPackaging().get());
+        if (params.getDexUseLegacyPackaging().get() && Boolean.TRUE.equals(useEmbeddedDex)) {
+            // TODO (b/149770867) make this an error in future AGP versions.
+            logger.warning(
+                    "PackagingOptions.dex.useLegacyPackaging should be set to false because "
+                            + "android:useEmbeddedDex is set to \"true\" in AndroidManifest.xml.");
+        }
 
         byte[] dependencyData =
                 params.getDependencyDataFile().isPresent()
@@ -694,16 +784,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                 params.getMinSdkVersion().get(),
                                 dependencyData)
                         .withCreatedBy(params.getCreatedBy().get())
-                        // TODO: allow extra metadata to be saved in the split scope to avoid
-                        // reparsing
-                        // these manifest files.
-                        .withNativeLibraryPackagingMode(
-                                PackagingUtils.getNativeLibrariesLibrariesPackagingMode(manifest))
+                        .withNativeLibraryPackagingMode(nativeLibsPackagingMode)
                         .withNoCompressPredicate(
                                 PackagingUtils.getNoCompressPredicate(
                                         params.getAaptOptionsNoCompress().get(),
-                                        manifest,
-                                        params.getMinSdkVersion().get()))
+                                        nativeLibsPackagingMode,
+                                        dexPackagingMode))
                         .withIntermediateDir(incrementalDirForSplit)
                         .withDebuggableBuild(params.getIsDebuggableBuild().get())
                         .withDeterministicEntryOrder(!params.getIsInvokedFromIde().get())
@@ -715,6 +801,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .withChangedAssets(changedAssets)
                         .withChangedAndroidResources(changedAndroidResources)
                         .withChangedNativeLibs(changedNLibs)
+                        .withChangedAppMetadata(changedAppMetadata)
                         .build()) {
             packager.updateFiles();
         }
@@ -740,6 +827,23 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             }
                         });
     }
+
+    private static final IssueReporter MANIFEST_DATA_ISSUE_REPORTER = new IssueReporter() {
+        @Override
+        protected void reportIssue(
+                @NonNull Type type,
+                @NonNull Severity severity,
+                @NonNull EvalIssueException exception) {
+            if (severity == Severity.ERROR) {
+                throw exception;
+            }
+        }
+
+        @Override
+        public boolean hasIssue(@NonNull Type type) {
+            return false;
+        }
+    };
 
     /**
      * Calculates the accepted ABIs based on the given {@link SplitterParams}. Also checks that the
@@ -873,6 +977,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         params.getAssetsFiles().get().getChanges(),
                         changedAndroidResources,
                         changedJniLibs,
+                        params.getAppMetadataFiles().get().getChanges(),
                         params);
 
                 /*
@@ -997,6 +1102,24 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                     .getNoCompress());
             packageAndroidArtifact.getAaptOptionsNoCompress().disallowChanges();
 
+            packageAndroidArtifact
+                    .getJniLibsUseLegacyPackaging()
+                    .set(
+                            creationConfig
+                                    .getPackagingOptions()
+                                    .getJniLibs()
+                                    .getUseLegacyPackaging());
+            packageAndroidArtifact.getJniLibsUseLegacyPackaging().disallowChanges();
+
+            packageAndroidArtifact
+                    .getDexUseLegacyPackaging()
+                    .set(
+                            creationConfig
+                                    .getPackagingOptions()
+                                    .getDex()
+                                    .getUseLegacyPackaging());
+            packageAndroidArtifact.getDexUseLegacyPackaging().disallowChanges();
+
             packageAndroidArtifact.getManifests().set(manifests);
 
             packageAndroidArtifact.getDexFolders().from(getDexFolders(creationConfig));
@@ -1008,6 +1131,11 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 packageAndroidArtifact.getFeatureDexFolder().from(featureDexFolder);
             }
             packageAndroidArtifact.getJavaResourceFiles().from(getJavaResources(creationConfig));
+            if (creationConfig instanceof ApplicationCreationConfig) {
+                creationConfig.getArtifacts().setTaskInputToFinalProduct(
+                        InternalArtifactType.APP_METADATA.INSTANCE,
+                        packageAndroidArtifact.getAppMetadata());
+            }
 
             packageAndroidArtifact
                     .getAssets()
@@ -1032,14 +1160,14 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             : null;
             if (creationConfig.getVariantType().isDynamicFeature()) {
                 packageAndroidArtifact
-                        .getAppMetadata()
+                        .getBaseModuleMetadata()
                         .from(
                                 creationConfig
                                         .getVariantDependencies()
                                         .getArtifactFileCollection(
                                                 COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA));
             }
-            packageAndroidArtifact.getAppMetadata().disallowChanges();
+            packageAndroidArtifact.getBaseModuleMetadata().disallowChanges();
             if (!variantDslInfo.getSupportedAbis().isEmpty()) {
                 // If the build author has set the supported Abis that is respected
                 packageAndroidArtifact.getAbiFilters().set(variantDslInfo.getSupportedAbis());

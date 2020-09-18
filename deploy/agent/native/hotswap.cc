@@ -37,124 +37,11 @@
 
 namespace deploy {
 
-jobject GetThreadClassLoader(JNIEnv* env) {
-  JniClass thread(env, "java/lang/Thread");
-  return thread
-      .CallStaticMethod<JniObject>({"currentThread", "()Ljava/lang/Thread;"})
-      .CallMethod<jobject>(
-          {"getContextClassLoader", "()Ljava/lang/ClassLoader;"});
-}
-
-jobject GetApplicationClassLoader(JNIEnv* env) {
-  JniClass activity_thread(env, "android/app/ActivityThread");
-  return activity_thread
-      .CallStaticMethod<JniObject>(
-          {"currentApplication", "()Landroid/app/Application;"})
-      .GetField<JniObject>({"mLoadedApk", "Landroid/app/LoadedApk;"})
-      .CallMethod<jobject>({"getClassLoader", "()Ljava/lang/ClassLoader;"});
-}
-
-jclass HotSwap::FindInClassLoader(jobject class_loader,
-                                  const std::string& name) const {
-  if (class_loader == nullptr) {
-    Log::E("Class loader was null.");
-    return nullptr;
-  }
-
-  jvalue java_name = {.l = jni_->NewStringUTF(name.c_str())};
-  jclass klass = static_cast<jclass>(
-      JniObject(jni_, class_loader)
-          .CallMethod<jobject>(
-              {"findClass", "(Ljava/lang/String;)Ljava/lang/Class;"},
-              &java_name));
-  jni_->DeleteLocalRef(java_name.l);
-  return klass;
-}
-
-jclass HotSwap::FindInLoadedClasses(const std::string& name) const {
-  jint class_count;
-  jclass* classes;
-  if (jvmti_->GetLoadedClasses(&class_count, &classes) != JVMTI_ERROR_NONE) {
-    Log::E("Could not enumerate loaded classes.");
-    return nullptr;
-  }
-
-  // Put the class name in the proper format.
-  std::string search_signature = "L" + name + ";";
-
-  jclass klass = nullptr;
-  for (int i = 0; i < class_count; ++i) {
-    char* signature_ptr;
-    jvmti_->GetClassSignature(classes[i], &signature_ptr,
-                              /* generic_ptr */ nullptr);
-
-    // Can't return early because we need to finish freeing the local
-    // references, so we use the time to check for erroneous duplicates.
-    if (search_signature != signature_ptr) {
-      jni_->DeleteLocalRef(classes[i]);
-    } else if (klass == nullptr) {
-      klass = classes[i];
-    } else {
-      jni_->DeleteLocalRef(classes[i]);
-      Log::E(
-          "The same class was found multiple times in the loaded classes list: "
-          "%s",
-          search_signature.c_str());
-    }
-
-    jvmti_->Deallocate((unsigned char*)signature_ptr);
-  }
-
-  jvmti_->Deallocate((unsigned char*)classes);
-  return klass;
-}
-
-jclass HotSwap::FindClass(const std::string& name) const {
-  Log::V("Searching for class '%s' in the thread context classloader.",
-         name.c_str());
-
-  jclass klass = FindInClassLoader(GetThreadClassLoader(jni_), name);
-  if (klass != nullptr) {
-    return klass;
-  }
-
-  jni_->ExceptionDescribe();
-  jni_->ExceptionClear();
-
-  Log::V("Searching for class '%s' in the application classloader.",
-         name.c_str());
-
-  klass = FindInClassLoader(GetApplicationClassLoader(jni_), name);
-  if (klass != nullptr) {
-    return klass;
-  }
-
-  jni_->ExceptionDescribe();
-  jni_->ExceptionClear();
-
-  Log::V("Searching for class '%s' in the system classloader.", name.c_str());
-
-  klass = jni_->FindClass(name.c_str());
-  if (klass != nullptr) {
-    return klass;
-  }
-
-  jni_->ExceptionDescribe();
-  jni_->ExceptionClear();
-
-  // Note that this search is for all *loaded* classes; it will not find a class
-  // that has not yet been loaded by the VM. Classes are typically loaded when
-  // they are first used by the application.
-  Log::V("Searching for class '%s' in all loaded classes.", name.c_str());
-
-  klass = FindInLoadedClasses(name);
-  return klass;
-}
-
 // Can be null if the application isn't a JetPack Compose application.
 jobject HotSwap::GetComposeHotReload() const {
-  jclass klass = FindInClassLoader(GetApplicationClassLoader(jni_),
-                                   "androidx/compose/HotReloader");
+  jclass klass =
+      class_finder_.FindInClassLoader(class_finder_.GetApplicationClassLoader(),
+                                      "androidx/compose/HotReloader");
   if (klass == nullptr) {
     jni_->ExceptionClear();
     return nullptr;
@@ -267,7 +154,7 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
     std::string name = class_def.name();
     std::replace(name.begin(), name.end(), '.', '/');
 
-    def[i].klass = FindClass(name);
+    def[i].klass = class_finder_.FindClass(name);
 
     if (def[i].klass == nullptr) {
       result.status = SwapResult::CLASS_NOT_FOUND;
@@ -370,7 +257,7 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
 }
 
 void HotSwap::DefineNewClasses(const proto::SwapRequest& swap_request) const {
-  JniObject thread_loader(jni_, GetApplicationClassLoader(jni_));
+  JniObject thread_loader(jni_, class_finder_.GetApplicationClassLoader());
 
   jobjectArray dex_bytes_array = jni_->NewObjectArray(
       swap_request.new_classes_size(), jni_->FindClass("[B"), nullptr);

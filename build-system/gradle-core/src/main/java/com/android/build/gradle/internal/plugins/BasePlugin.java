@@ -22,14 +22,16 @@ import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.TestComponentProperties;
+import com.android.build.api.component.ComponentBuilder;
+import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.dsl.CommonExtension;
-import com.android.build.api.variant.VariantProperties;
+import com.android.build.api.extension.AndroidComponentsExtension;
+import com.android.build.api.extension.impl.OperationsRegistrar;
+import com.android.build.api.variant.Variant;
 import com.android.build.api.variant.impl.GradleProperty;
+import com.android.build.api.variant.impl.VariantBuilderImpl;
 import com.android.build.api.variant.impl.VariantImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AndroidBasePlugin;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -134,13 +136,20 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Base class for all Android plugins */
 public abstract class BasePlugin<
-                VariantT extends VariantImpl<? extends VariantProperties>,
-                VariantPropertiesT extends VariantPropertiesImpl>
+                AndroidComponentsT extends
+                        AndroidComponentsExtension<? extends ComponentBuilder, ? extends Variant>,
+                VariantBuilderT extends VariantBuilderImpl,
+                VariantT extends VariantImpl>
         implements Plugin<Project>, LintModelModuleLoaderProvider {
 
     private BaseExtension extension;
+    private AndroidComponentsExtension<? extends ComponentBuilder, ? extends Variant>
+            androidComponentsExtension;
+    private final OperationsRegistrar<VariantBuilderT> variantBuilderOperations =
+            new OperationsRegistrar<>();
+    private final OperationsRegistrar<VariantT> variantOperations = new OperationsRegistrar<>();
 
-    private VariantManager<VariantT, VariantPropertiesT> variantManager;
+    private VariantManager<VariantBuilderT, VariantT> variantManager;
     private LegacyVariantInputManager variantInputModel;
 
     protected Project project;
@@ -150,7 +159,7 @@ public abstract class BasePlugin<
     protected GlobalScope globalScope;
     protected SyncIssueReporterImpl syncIssueReporter;
 
-    private VariantFactory<VariantT, VariantPropertiesT> variantFactory;
+    private VariantFactory<VariantBuilderT, VariantT> variantFactory;
 
     @NonNull private final ToolingModelBuilderRegistry registry;
     @NonNull private final LintModelModuleLoader lintModuleLoader;
@@ -192,21 +201,23 @@ public abstract class BasePlugin<
             @NonNull ExtraModelInfo extraModelInfo);
 
     @NonNull
+    protected abstract AndroidComponentsT createComponentExtension(
+            @NonNull DslServices dslServices,
+            @NonNull OperationsRegistrar<VariantBuilderT> variantBuilderOperationsRegistrar,
+            @NonNull OperationsRegistrar<VariantT> variantOperationsRegistrar);
+
+    @NonNull
     protected abstract GradleBuildProject.PluginType getAnalyticsPluginType();
 
     @NonNull
-    protected abstract VariantFactory<VariantT, VariantPropertiesT> createVariantFactory(
+    protected abstract VariantFactory<VariantBuilderT, VariantT> createVariantFactory(
             @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope);
 
     @NonNull
-    protected abstract TaskManager<VariantT, VariantPropertiesT> createTaskManager(
-            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> variants,
+    protected abstract TaskManager<VariantBuilderT, VariantT> createTaskManager(
+            @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull
-                    List<
-                                    ComponentInfo<
-                                            TestComponentImpl<? extends TestComponentProperties>,
-                                            TestComponentPropertiesImpl>>
-                            testComponents,
+                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension);
@@ -217,7 +228,7 @@ public abstract class BasePlugin<
     protected abstract ProjectType getProjectTypeV2();
 
     @VisibleForTesting
-    public VariantManager<VariantT, VariantPropertiesT> getVariantManager() {
+    public VariantManager<VariantBuilderT, VariantT> getVariantManager() {
         return variantManager;
     }
 
@@ -434,12 +445,17 @@ public abstract class BasePlugin<
 
         globalScope.setExtension(extension);
 
+        androidComponentsExtension =
+                createComponentExtension(dslServices, variantBuilderOperations, variantOperations);
+
         variantManager =
                 new VariantManager(
                         globalScope,
                         project,
                         projectServices.getProjectOptions(),
                         extension,
+                        variantBuilderOperations,
+                        variantOperations,
                         variantFactory,
                         variantInputModel,
                         projectServices);
@@ -637,10 +653,10 @@ public abstract class BasePlugin<
 
         variantManager.createVariants(buildFeatureValues);
 
-        List<ComponentInfo<VariantT, VariantPropertiesT>> variants =
+        List<ComponentInfo<VariantBuilderT, VariantT>> variants =
                 variantManager.getMainComponents();
 
-        TaskManager<VariantT, VariantPropertiesT> taskManager =
+        TaskManager<VariantBuilderT, VariantT> taskManager =
                 createTaskManager(
                         variants,
                         variantManager.getTestComponents(),
@@ -661,7 +677,7 @@ public abstract class BasePlugin<
         ApiObjectFactory apiObjectFactory =
                 new ApiObjectFactory(extension, variantFactory, globalScope);
 
-        for (ComponentInfo<VariantT, VariantPropertiesT> variant : variants) {
+        for (ComponentInfo<VariantBuilderT, VariantT> variant : variants) {
             apiObjectFactory.create(variant.getProperties());
         }
 
@@ -677,13 +693,13 @@ public abstract class BasePlugin<
 
         // now publish all variant artifacts for non test variants since
         // tests don't publish anything.
-        for (ComponentInfo<VariantT, VariantPropertiesT> component : variants) {
+        for (ComponentInfo<VariantBuilderT, VariantT> component : variants) {
             component.getProperties().publishBuildArtifacts();
         }
 
         checkSplitConfiguration();
         variantManager.setHasCreatedTasks(true);
-        for (ComponentInfo<VariantT, VariantPropertiesT> variant : variants) {
+        for (ComponentInfo<VariantBuilderT, VariantT> variant : variants) {
             variant.getProperties().getArtifacts().ensureAllOperationsAreSatisfied();
         }
         // notify our properties that configuration is over for us.

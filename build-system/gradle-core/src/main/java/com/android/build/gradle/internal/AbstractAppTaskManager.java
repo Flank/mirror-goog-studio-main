@@ -20,15 +20,13 @@ import static com.android.build.api.transform.QualifiedContent.DefaultContentTyp
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.component.TestComponentProperties;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.ComponentImpl;
+import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
-import com.android.build.api.variant.VariantProperties;
+import com.android.build.api.variant.impl.VariantBuilderImpl;
 import com.android.build.api.variant.impl.VariantImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ApplicationCreationConfig;
@@ -73,18 +71,13 @@ import org.gradle.api.tasks.compile.JavaCompile;
 
 /** TaskManager for creating tasks in an Android application project. */
 public abstract class AbstractAppTaskManager<
-                VariantT extends VariantImpl<? extends VariantProperties>,
-                VariantPropertiesT extends VariantPropertiesImpl>
-        extends TaskManager<VariantT, VariantPropertiesT> {
+                VariantBuilderT extends VariantBuilderImpl, VariantT extends VariantImpl>
+        extends TaskManager<VariantBuilderT, VariantT> {
 
     protected AbstractAppTaskManager(
-            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> variants,
+            @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull
-                    List<
-                                    ComponentInfo<
-                                            TestComponentImpl<? extends TestComponentProperties>,
-                                            TestComponentPropertiesImpl>>
-                            testComponents,
+                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
             boolean hasFlavors,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension) {
@@ -92,9 +85,9 @@ public abstract class AbstractAppTaskManager<
     }
 
     protected void createCommonTasks(
-            @NonNull ComponentInfo<VariantT, VariantPropertiesT> variant,
-            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> allComponentsWithLint) {
-        VariantPropertiesT appVariantProperties = variant.getProperties();
+            @NonNull ComponentInfo<VariantBuilderT, VariantT> variant,
+            @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> allComponentsWithLint) {
+        VariantT appVariantProperties = variant.getProperties();
         ApkCreationConfig apkCreationConfig = (ApkCreationConfig) appVariantProperties;
 
         createAnchorTasks(appVariantProperties);
@@ -182,7 +175,7 @@ public abstract class AbstractAppTaskManager<
         taskFactory.register(new ApkZipPackagingTask.CreationAction(appVariantProperties));
     }
 
-    private void createCompileTask(@NonNull VariantPropertiesImpl variantProperties) {
+    private void createCompileTask(@NonNull VariantImpl variantProperties) {
         ApkCreationConfig apkCreationConfig = (ApkCreationConfig) variantProperties;
 
         TaskProvider<? extends JavaCompile> javacTask = createJavacTask(variantProperties);
@@ -227,7 +220,7 @@ public abstract class AbstractAppTaskManager<
                 task =
                         taskFactory.register(
                                 new TestPreBuildTask.CreationAction(
-                                        (TestComponentPropertiesImpl) creationConfig));
+                                        (TestComponentImpl) creationConfig));
                 if (useDependencyConstraints) {
                     task.configure(t -> t.setEnabled(false));
                 }
@@ -289,11 +282,11 @@ public abstract class AbstractAppTaskManager<
 
         TextResourceFactory resources = project.getResources().getText();
         // this builds the dependencies from the task, and its output is the textResource.
-        ((ComponentPropertiesImpl) creationConfig).getVariantData().applicationIdTextResource =
+        ((ComponentImpl) creationConfig).getVariantData().applicationIdTextResource =
                 resources.fromFile(applicationIdWriterTask);
     }
 
-    private void createMergeResourcesTasks(@NonNull VariantPropertiesImpl variantProperties) {
+    private void createMergeResourcesTasks(@NonNull VariantImpl variantProperties) {
         // The "big merge" of all resources, will merge and compile resources that will later
         // be used for linking.
         createMergeResourcesTask(

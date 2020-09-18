@@ -24,6 +24,7 @@
 #include "tools/base/deploy/agent/native/instrumenter.h"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/jni/jni_util.h"
+#include "tools/base/deploy/agent/native/live_literal.h"
 #include "tools/base/deploy/agent/native/swapper.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
@@ -185,16 +186,12 @@ jint HandleAgentRequest(JavaVM* vm, char* socket_name) {
         Swapper::Instance().Swap(jvmti, jni, swap_request);
     SendResponse(socket, response);
   } else if (request.has_live_literal_request()) {
-    // TDOO: For now just do a printf and the test will verify if we get to this
-    // stage.
-    jclass syscls = jni->FindClass("java/lang/System");
-    jfieldID fid =
-        jni->GetStaticFieldID(syscls, "out", "Ljava/io/PrintStream;");
-    jobject out = jni->GetStaticObjectField(syscls, fid);
-    jclass pscls = jni->FindClass("java/io/PrintStream");
-    jmethodID mid = jni->GetMethodID(pscls, "println", "(Ljava/lang/String;)V");
-    jni->CallVoidMethod(out, mid,
-                        jni->NewStringUTF("Live Literal Update on VM"));
+    proto::LiveLiteralUpdateRequest live_literal_request =
+        request.live_literal_request();
+    LiveLiteral updater(jvmti, jni);
+    *response.mutable_live_literal_response() =
+        updater.Update(live_literal_request);
+    SendResponse(socket, response);
   } else {
     Log::E("Unknown / Empty Agent Request");
   }

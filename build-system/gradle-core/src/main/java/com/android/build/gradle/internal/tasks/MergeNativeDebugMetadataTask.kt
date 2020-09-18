@@ -18,8 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.DOT_DBG
 import com.android.SdkConstants.DOT_SYM
-import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
+import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -93,18 +92,18 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
         }
 
         fun getNativeDebugMetadataFiles(
-            componentProperties: ComponentPropertiesImpl
+            variant: ApplicationVariantImpl
         ): FileCollection {
-            val nativeDebugMetadataDirs = componentProperties.services.fileCollection()
-            when (componentProperties.variantDslInfo.ndkConfig.debugSymbolLevelEnum) {
+            val nativeDebugMetadataDirs = variant.services.fileCollection()
+            when (variant.nativeDebugSymbolLevel) {
                 DebugSymbolLevel.FULL -> {
                     nativeDebugMetadataDirs.from(
-                        componentProperties.artifacts.get(
+                        variant.artifacts.get(
                             InternalArtifactType.NATIVE_DEBUG_METADATA
                         )
                     )
                     nativeDebugMetadataDirs.from(
-                        componentProperties.variantDependencies.getArtifactFileCollection(
+                        variant.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                             AndroidArtifacts.ArtifactScope.PROJECT,
                             AndroidArtifacts.ArtifactType.REVERSE_METADATA_NATIVE_DEBUG_METADATA
@@ -113,12 +112,12 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
                 }
                 DebugSymbolLevel.SYMBOL_TABLE -> {
                     nativeDebugMetadataDirs.from(
-                        componentProperties.artifacts.get(
+                        variant.artifacts.get(
                             InternalArtifactType.NATIVE_SYMBOL_TABLES
                         )
                     )
                     nativeDebugMetadataDirs.from(
-                        componentProperties.variantDependencies.getArtifactFileCollection(
+                        variant.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                             AndroidArtifacts.ArtifactScope.PROJECT,
                             AndroidArtifacts.ArtifactType.REVERSE_METADATA_NATIVE_SYMBOL_TABLES
@@ -134,8 +133,8 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
         private val patternSet = PatternSet().include("**/*$DOT_DBG").include("**/*$DOT_SYM")
     }
 
-    class CreationAction(componentProperties: ApplicationVariantPropertiesImpl) :
-        VariantTaskCreationAction<MergeNativeDebugMetadataTask, ApplicationVariantPropertiesImpl>(
+    class CreationAction(componentProperties: ApplicationVariantImpl) :
+        VariantTaskCreationAction<MergeNativeDebugMetadataTask, ApplicationVariantImpl>(
             componentProperties
         ) {
         override val name: String

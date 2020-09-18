@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.CompileOptions as CompileOptionsImpl
 import com.android.build.gradle.internal.coverage.JacocoOptions as JacocoOptionsImpl
@@ -41,8 +41,8 @@ interface InternalCommonExtension<
         BuildTypeT : com.android.build.api.dsl.BuildType,
         DefaultConfigT : com.android.build.api.dsl.DefaultConfig,
         ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
-        VariantT : Variant<VariantPropertiesT>,
-        VariantPropertiesT : VariantProperties> :
+        VariantBuilderT : VariantBuilder,
+        VariantT : Variant> :
     CommonExtension<
         AndroidSourceSet,
         BuildFeaturesT,
@@ -50,8 +50,8 @@ interface InternalCommonExtension<
         DefaultConfigT,
         ProductFlavorT,
         SigningConfig,
-        VariantT,
-        VariantPropertiesT> {
+        VariantBuilderT,
+        VariantT> {
 
     override val aaptOptions: AaptOptionsImpl
 
