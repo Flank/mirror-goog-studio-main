@@ -64,6 +64,10 @@ class VariableReinitializer {
                            proto::ClassDef::FieldReInitState& state,
                            jfieldID fid, std::ostringstream& msg);
 
+  // Trigger class initialization if the class is not already initialized. Class
+  // initialization causes static variables to be initialized.
+  bool TriggerClassInitialize(jclass clazz);
+
   bool var_reinit;
   jvmtiEnv* jvmti_;
   JNIEnv* jni_;

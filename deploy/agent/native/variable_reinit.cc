@@ -14,11 +14,15 @@
  * limitations under the License.
  *
  */
+#include "tools/base/deploy/agent/native/variable_reinit.h"
+
 #include <string.h>
+
 #include <sstream>
 
 #include "tools/base/deploy/agent/native/capabilities.h"
-#include "tools/base/deploy/agent/native/variable_reinit.h"
+#include "tools/base/deploy/agent/native/jni/jni_class.h"
+#include "tools/base/deploy/common/log.h"
 
 namespace {
 template <class T>
@@ -112,6 +116,15 @@ SwapResult::Status VariableReinitializer::GatherPreviousState(
         const std::string& r_class_prefix = ".R$";
 
         if (def.name().find(r_class_prefix) != std::string::npos) {
+          // R classes are not initialized unless the application uses
+          // reflection. We need to ask the class to initialize in order to
+          // ensure we have the correct "before" values for all fields.
+          if (!TriggerClassInitialize(clz)) {
+            Log::W(
+                "Could not trigger initialize for class '%s'; if it was not "
+                "already initialized, stable-id errors may occur",
+                def.name().c_str());
+          }
           num_r_field_modified += initialValuesAltered(
               clz, def, state, (*fields)[i], r_class_errors);
         }
@@ -324,6 +337,43 @@ int VariableReinitializer::initialValuesAltered(
     total++;
   }
   return total;
+}
+
+bool VariableReinitializer::TriggerClassInitialize(jclass clazz) {
+  char* class_sig;
+  if (jvmti_->GetClassSignature(clazz, &class_sig, nullptr) !=
+      JVMTI_ERROR_NONE) {
+    return false;
+  }
+
+  std::string class_name(class_sig + 1);     // Trim the L
+  class_name.resize(class_name.size() - 1);  // Trim the ;
+  std::replace(class_name.begin(), class_name.end(), '/', '.');
+
+  jobject class_loader;
+  if (jvmti_->GetClassLoader(clazz, &class_loader) != JVMTI_ERROR_NONE) {
+    return false;
+  }
+
+  JniClass java_class(jni_, "java/lang/Class");
+  jvalue params[3];
+  params[0].l = jni_->NewStringUTF(class_name.c_str());
+  params[1].z = true;  // This parameter determines if the forName method tries
+                       // to initialize the class.
+  params[2].l = class_loader;
+
+  // The reflective method Class#forName() can be used to initialize the class.
+  java_class.CallStaticMethod<jobject>(
+      {"forName",
+       "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;"},
+      params);
+  jvmti_->Deallocate((unsigned char*)class_sig);
+  if (jni_->ExceptionCheck()) {
+    jni_->ExceptionDescribe();
+    jni_->ExceptionClear();
+    return false;
+  }
+  return true;
 }
 
 }  // namespace deploy
