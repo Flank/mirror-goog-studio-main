@@ -2551,7 +2551,13 @@ public abstract class TaskManager<
                         },
                         null);
 
-        TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), packageApp.getName());
+        taskContainer
+                .getAssembleTask()
+                .configure(
+                        task -> {
+                            task.dependsOn(
+                                    creationConfig.getArtifacts().get(ArtifactType.APK.INSTANCE));
+                        });
 
         // create install task for the variant Data. This will deal with finding the
         // right output if there are more than one.
