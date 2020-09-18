@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.profile
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.profile.AnalyticsService.Params
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
+import com.android.builder.profile.AnalyticsProfileWriter
 import com.android.builder.profile.Recorder
 import com.android.tools.analytics.AnalyticsSettings
 import com.android.tools.analytics.Environment
@@ -84,10 +85,13 @@ abstract class AnalyticsService :
     init {
         AnalyticsSettings.initialize(
             LoggerWrapper.getLogger(AnalyticsService::class.java), null, gradleEnvironment)
+        // Initialize UsageTracker because some tasks(e.g. lint) need to record analytics with
+        // UsageTracker.
+        AnalyticsProfileWriter().initializeUsageTracker()
     }
 
     override fun close() {
-        resourceManager.writeAndFinish(gradleEnvironment)
+        resourceManager.writeAndFinish()
     }
 
     override fun onFinish(finishEvent: FinishEvent?) {
