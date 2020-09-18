@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.plugins;
 
+import static com.android.build.gradle.internal.ManagedDeviceUtilsKt.getManagedDeviceAvdFolder;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.SdkConstants;
@@ -36,6 +37,7 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AndroidBasePlugin;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ApiObjectFactory;
+import com.android.build.gradle.internal.AvdComponentsBuildService;
 import com.android.build.gradle.internal.BadPluginException;
 import com.android.build.gradle.internal.ClasspathVerifier;
 import com.android.build.gradle.internal.DependencyConfigurator;
@@ -367,6 +369,13 @@ public abstract class BasePlugin<
                                 project.getProviders().provider(() -> extension.getNdkVersion()),
                                 project.getProviders().provider(() -> extension.getNdkPath()))
                         .execute();
+        Provider<AvdComponentsBuildService> avdComponentsBuildService =
+                new AvdComponentsBuildService.RegistrationAction(
+                                project,
+                                getManagedDeviceAvdFolder(
+                                        project.getObjects(), project.getProviders()),
+                                sdkComponentsBuildService)
+                        .execute();
 
         new SymbolTableBuildService.RegistrationAction(project, projectOptions).execute();
         new ClassesHierarchyBuildService.RegistrationAction(project).execute();
@@ -400,6 +409,7 @@ public abstract class BasePlugin<
                         creator,
                         dslServices,
                         sdkComponentsBuildService,
+                        avdComponentsBuildService,
                         registry,
                         messageReceiver,
                         componentFactory);

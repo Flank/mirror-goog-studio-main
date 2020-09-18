@@ -132,6 +132,19 @@ abstract class AvdComponentsBuildService @Inject constructor(
         return newInfo?.configFile ?: error("AVD could not be created.")
     }
 
+    /**
+     * Removes all avds in the shared avd folder.
+     *
+     * This will delete the avds in the shared avd folder and update the avd cache.
+     */
+    fun deleteAllAvds() {
+        avdManager.reloadAvds(logger)
+        val allAvds = avdManager.allAvds
+        for (avd in allAvds) {
+            avdManager.deleteAvd(avd, logger)
+        }
+    }
+
     private fun defaultHardwareConfig(): MutableMap<String, String> {
         // Get the defaults of all the user-modifiable properties.
         val emulatorProvider = parameters.sdkService.get().emulatorDirectoryProvider

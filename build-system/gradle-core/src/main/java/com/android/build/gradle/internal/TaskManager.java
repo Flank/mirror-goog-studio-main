@@ -133,6 +133,7 @@ import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.JacocoTask;
 import com.android.build.gradle.internal.tasks.L8DexDesugarLibTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
+import com.android.build.gradle.internal.tasks.ManagedDeviceCleanTask;
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesCreationAction;
 import com.android.build.gradle.internal.tasks.MergeClassesTask;
 import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction;
@@ -392,6 +393,9 @@ public abstract class TaskManager<
 
         // Create top level test tasks.
         createTopLevelTestTasks();
+
+        // Create tasks to manage test devices.
+        createTestDevicesTasks();
 
         // Create tasks for all variants (main and tests)
         for (ComponentInfo<VariantBuilderT, VariantT> variant : variants) {
@@ -1949,6 +1953,16 @@ public abstract class TaskManager<
                                 }
                             });
         }
+    }
+
+    protected void createTestDevicesTasks() {
+        if (!globalScope
+                .getProjectOptions()
+                .get(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM)) {
+            return;
+        }
+        taskFactory.register(
+                new ManagedDeviceCleanTask.CreationAction("cleanManagedDevices", globalScope));
     }
 
     protected void createConnectedTestForVariant(@NonNull AndroidTestImpl androidTestProperties) {

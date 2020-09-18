@@ -23,6 +23,7 @@ import com.android.build.api.variant.ApplicationVariantBuilder
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.ApplicationExtensionImpl
@@ -197,6 +198,10 @@ class ModelBuilderTest {
             sdkComponents = sdkComponentProvider
         )
 
+        val avdComponents = Mockito.mock(AvdComponentsBuildService::class.java)
+
+        val avdComponentsProvider = FakeGradleProvider(avdComponents)
+
         val variantInputModel = LegacyVariantInputManager(
             dslServices,
             VariantTypeImpl.BASE_APK,
@@ -226,6 +231,7 @@ class ModelBuilderTest {
                 "",
                 dslServices,
                 sdkComponentProvider,
+                avdComponentsProvider,
                 Mockito.mock(ToolingModelBuilderRegistry::class.java),
                 NoOpMessageReceiver(),
                 Mockito.mock(SoftwareComponentFactory::class.java)
