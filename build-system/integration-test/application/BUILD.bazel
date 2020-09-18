@@ -242,6 +242,7 @@ CHECK_ALL_SOURCES = ["src/test/java/**/CheckAll.java"]
 # Creates separate target for each source
 single_gradle_integration_test_per_source(
     name = "tests",
+    package_name = "tools/base/build-system/integration-test/application",
     srcs = glob(
         [
             "src/test/java/**/*.java",
@@ -260,7 +261,6 @@ single_gradle_integration_test_per_source(
         "//tools/base/build-system/previous-versions:3.5.0",
         "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
-    package_name = "tools/base/build-system/integration-test/application",
     resources = glob(["src/test/resources/**"]),
     deps = TEST_DEPS,
 )
@@ -366,8 +366,6 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/androidx/compose/ui/ui-util/1.0.0-alpha02:aar",
         "//prebuilts/tools/common/m2/repository/androidx/compose/ui/ui/1.0.0-alpha02:aar",
         "//prebuilts/tools/common/m2/repository/androidx/constraintlayout/constraintlayout-core/1.0.0-alpha1:jar",
-        "//prebuilts/tools/common/m2/repository/androidx/constraintlayout/constraintlayout-solver/2.0.0-beta4:jar",
-        "//prebuilts/tools/common/m2/repository/androidx/constraintlayout/constraintlayout/2.0.0-beta4:aar",
         "//prebuilts/tools/common/m2/repository/androidx/core/core-ktx/1.1.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/core/core/1.0.1:aar",
         "//prebuilts/tools/common/m2/repository/androidx/core/core/1.1.0:aar",

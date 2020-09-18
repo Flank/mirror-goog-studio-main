@@ -266,8 +266,6 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/androidx/compose/ui/ui-util/1.0.0-alpha02:aar",
         "//prebuilts/tools/common/m2/repository/androidx/compose/ui/ui/1.0.0-alpha02:aar",
         "//prebuilts/tools/common/m2/repository/androidx/constraintlayout/constraintlayout-core/1.0.0-alpha1:jar",
-        "//prebuilts/tools/common/m2/repository/androidx/constraintlayout/constraintlayout-solver/2.0.0-beta4:jar",
-        "//prebuilts/tools/common/m2/repository/androidx/constraintlayout/constraintlayout/2.0.0-beta4:aar",
         "//prebuilts/tools/common/m2/repository/androidx/core/core-ktx/1.1.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/core/core/1.1.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/core/core/1.2.0:aar",
