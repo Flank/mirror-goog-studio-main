@@ -109,7 +109,7 @@ class ${className} : IntentService("${className}") {
      * Handle action Foo in the provided background thread with the provided
      * parameters.
      */
-    private fun handleActionFoo(param1: String, param2: String) {
+    private fun handleActionFoo(param1: String?, param2: String?) {
         TODO("Handle action Foo")
     }
 
@@ -117,7 +117,7 @@ class ${className} : IntentService("${className}") {
      * Handle action Baz in the provided background thread with the provided
      * parameters.
      */
-    private fun handleActionBaz(param1: String, param2: String) {
+    private fun handleActionBaz(param1: String?, param2: String?) {
         TODO("Handle action Baz")
     }
 $companionObjectBlock
