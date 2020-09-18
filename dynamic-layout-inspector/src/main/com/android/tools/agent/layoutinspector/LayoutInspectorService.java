@@ -43,6 +43,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * This (singleton) class can register a callback to, whenever a view is updated, send the current
@@ -56,7 +57,8 @@ public class LayoutInspectorService {
 
     private final Properties mProperties = new Properties();
     private final Object mLock = new Object();
-    private DetectRootViewChange mDetectRootChange = null;
+    private final AtomicReference<DetectRootViewChange> mDetectRootChange =
+            new AtomicReference<>(null);
     private final Map<View, AutoCloseable> mCaptureClosables = new HashMap<>();
 
     private boolean mShowComposeNodes = false;
@@ -92,7 +94,7 @@ public class LayoutInspectorService {
         for (View root : roots) {
             startLayoutInspector(root);
         }
-        mDetectRootChange = new DetectRootViewChange(this);
+        startRootViewDetector();
     }
 
     public void startLayoutInspector(@NonNull View root) {
@@ -166,9 +168,22 @@ public class LayoutInspectorService {
     /** Stops the capture from sending more messages. */
     @SuppressWarnings("unused") // invoked via jni
     public void onStopLayoutInspectorCommand() {
-        mDetectRootChange.cancel();
-        mDetectRootChange = null;
+        stopRootViewDetector();
         stopCapturing();
+    }
+
+    private void startRootViewDetector() {
+        DetectRootViewChange old = mDetectRootChange.getAndSet(new DetectRootViewChange(this));
+        if (old != null) {
+            old.cancel();
+        }
+    }
+
+    private void stopRootViewDetector() {
+        DetectRootViewChange detector = mDetectRootChange.getAndSet(null);
+        if (detector != null) {
+            detector.cancel();
+        }
     }
 
     private void stopCapturing() {
