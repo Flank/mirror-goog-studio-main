@@ -463,20 +463,6 @@ protected constructor() {
         )
 
         /**
-         * Issue reported when lint is canceled
-         */
-        @JvmField // temporarily
-        val CANCELLED = Issue.create(
-            id = "LintCanceled",
-            briefDescription = "Lint Canceled",
-            explanation = "Lint canceled by user; the issue report may not be complete.",
-            category = Category.LINT,
-            priority = 0,
-            severity = Severity.INFORMATIONAL,
-            implementation = EMPTY_IMPLEMENTATION
-        )
-
-        /**
          * Issue reported by lint for various other issues which prevents lint from
          * running normally when it's not necessarily an error in the user's code base.
          */
