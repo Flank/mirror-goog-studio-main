@@ -204,8 +204,7 @@ public class ProjectOptionsTest {
                                                 ImmutableMap.of()))
                                 .getExtraInstrumentationTestRunnerArgs())
                 .isEmpty();
-        ImmutableMap<String, Object> gradleProperties =
-                ImmutableMap.of("android.testInstrumentationRunnerArguments.a", "b");
+        ImmutableMap<String, String> gradleProperties = ImmutableMap.of("a", "b");
         ProjectOptions options =
                 new ProjectOptions(
                         gradleProperties,
@@ -220,7 +219,7 @@ public class ProjectOptionsTest {
                 ImmutableMap.of("android.incrementalJavaCompile", "true");
         ProjectOptions projectOptions =
                 new ProjectOptions(
-                        gradleProperties,
+                        ImmutableMap.of(),
                         new FakeProviderFactory(
                                 FakeProviderFactory.getFactory(), gradleProperties));
 

@@ -91,6 +91,7 @@ import com.android.build.gradle.internal.variant.VariantInputModel;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.internal.variant.VariantModelImpl;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptionService;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.options.SyncOptions;
@@ -174,6 +175,8 @@ public abstract class BasePlugin<
     private boolean hasCreatedTasks = false;
 
     private AnalyticsConfiguratorService configuratorService;
+
+    private ProjectOptionService optionService;
 
     @NonNull private final BuildEventsListenerRegistry listenerRegistry;
 
@@ -269,6 +272,8 @@ public abstract class BasePlugin<
 
         configuratorService
                 = new AnalyticsConfiguratorService.RegistrationAction(project).execute().get();
+
+        optionService = new ProjectOptionService.RegistrationAction(project).execute().get();
 
         createProjectServices(project);
 
@@ -883,7 +888,7 @@ public abstract class BasePlugin<
         final Logger logger = project.getLogger();
         final String projectPath = project.getPath();
 
-        ProjectOptions projectOptions = new ProjectOptions(project);
+        ProjectOptions projectOptions = optionService.getProjectOptions();
 
         syncIssueReporter =
                 new SyncIssueReporterImpl(SyncOptions.getModelQueryMode(projectOptions), logger);

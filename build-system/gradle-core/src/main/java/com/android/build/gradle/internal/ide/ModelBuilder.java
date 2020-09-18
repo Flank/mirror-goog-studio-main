@@ -71,6 +71,7 @@ import com.android.build.gradle.internal.utils.DesugarLibUtils;
 import com.android.build.gradle.internal.variant.VariantInputModel;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptionService;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.compiling.BuildConfigType;
@@ -271,7 +272,11 @@ public class ModelBuilder<Extension extends BaseExtension>
     private Object buildAndroidProject(Project project, boolean shouldBuildVariant) {
         // Cannot be injected, as the project might not be the same as the project used to construct
         // the model builder e.g. when lint explicitly builds the model.
-        ProjectOptions projectOptions = new ProjectOptions(project);
+        ProjectOptionService optionService =
+                BuildServicesKt.getBuildService(
+                                project.getGradle().getSharedServices(), ProjectOptionService.class)
+                        .get();
+        ProjectOptions projectOptions = optionService.getProjectOptions();
         Integer modelLevelInt = SyncOptions.buildModelOnlyVersion(projectOptions, project);
         if (modelLevelInt != null) {
             modelLevel = modelLevelInt;

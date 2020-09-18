@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.services.DslServicesImpl
 import com.android.build.gradle.internal.services.LintClassLoaderBuildService
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.tasks.LintStandaloneTask
-import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.options.SyncOptions
 import org.gradle.api.Action
 import org.gradle.api.Plugin
@@ -139,7 +139,8 @@ open class LintPlugin : Plugin<Project> {
         val objectFactory = project.objects
         val logger = project.logger
         val projectPath = project.path
-        val projectOptions = ProjectOptions(project)
+        val projectOptions = ProjectOptionService.RegistrationAction(project).execute().get()
+            .projectOptions
         val syncIssueReporter =
             SyncIssueReporterImpl(SyncOptions.getModelQueryMode(projectOptions), logger)
         this.syncIssueReporter = syncIssueReporter

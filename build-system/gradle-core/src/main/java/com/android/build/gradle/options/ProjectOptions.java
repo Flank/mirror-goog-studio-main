@@ -16,25 +16,18 @@
 
 package com.android.build.gradle.options;
 
-import static com.android.build.gradle.options.TestRunnerArguments.TEST_RUNNER_ARGS_PREFIX;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
-import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.builder.model.OptionalCompilationStep;
-import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.stream.Collectors;
-import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 
@@ -53,78 +46,17 @@ public final class ProjectOptions {
     private final ImmutableMap<ReplacedOption, OptionValue<ReplacedOption, String>>
             replacedOptionValues;
     private final ImmutableMap<StringOption, OptionValue<StringOption, String>> stringOptionValues;
-    private static final ILogger logger = LoggerWrapper.getLogger(ProjectOptions.class);
 
     public ProjectOptions(
-            @NonNull ImmutableMap<String, Object> properties,
+            @NonNull ImmutableMap<String, String> customTestRunnerArgs,
             @NonNull ProviderFactory providerFactory) {
         this.providerFactory = providerFactory;
-        testRunnerArgs = readTestRunnerArgs(properties);
+        testRunnerArgs = readTestRunnerArgs(customTestRunnerArgs);
         booleanOptionValues = createOptionValues(BooleanOption.values());
         optionalBooleanOptionValues = createOptionValues(OptionalBooleanOption.values());
         integerOptionValues = createOptionValues(IntegerOption.values());
         replacedOptionValues = createOptionValues(ReplacedOption.values());
         stringOptionValues = createOptionValues(StringOption.values());
-    }
-
-    /**
-     * Constructor used to obtain Project Options from the project's properties.
-     *
-     * @param project the project containing the properties
-     */
-    public ProjectOptions(@NonNull Project project) {
-        this(copyProperties(project), project.getProviders());
-    }
-
-    /**
-     * Constructor used to obtain Project Options from the project's properties and modify them by
-     * applying all the flags from the given map.
-     *
-     * @param project the project containing the properties
-     * @param overwrites a map of flags overwriting project properties' values
-     */
-    public ProjectOptions(
-            @NonNull Project project, @NonNull ImmutableMap<String, Object> overwrites) {
-        this(copyAndModifyProperties(project, overwrites), project.getProviders());
-    }
-
-    @NonNull
-    private static ImmutableMap<String, Object> copyProperties(@NonNull Project project) {
-        return copyAndModifyProperties(project, ImmutableMap.of());
-    }
-
-    @NonNull
-    private static ImmutableMap<String, Object> copyAndModifyProperties(
-            @NonNull Project project, @NonNull ImmutableMap<String, Object> overwrites) {
-        ImmutableMap.Builder<String, Object> optionsBuilder = ImmutableMap.builder();
-        for (Map.Entry<String, ?> entry :
-                project.getExtensions().getExtraProperties().getProperties().entrySet()) {
-            Object value = entry.getValue();
-            if (value != null && !overwrites.containsKey(entry.getKey())) {
-                optionsBuilder.put(entry.getKey(), value);
-            }
-        }
-        for (Map.Entry<String, ?> overwrite : overwrites.entrySet()) {
-            optionsBuilder.put(overwrite.getKey(), overwrite.getValue());
-        }
-        return optionsBuilder.build();
-    }
-
-    @NonNull
-    private static <OptionT extends Option<ValueT>, ValueT>
-            ImmutableMap<OptionT, ValueT> readOptions(
-                    @NonNull OptionT[] values, @NonNull Map<String, ?> properties) {
-        Map<String, OptionT> optionLookup =
-                Arrays.stream(values).collect(Collectors.toMap(Option::getPropertyName, v -> v));
-        ImmutableMap.Builder<OptionT, ValueT> valuesBuilder = ImmutableMap.builder();
-        for (Map.Entry<String, ?> property : properties.entrySet()) {
-            OptionT option = optionLookup.get(property.getKey());
-            if (option != null) {
-                ValueT value = option.parse(property.getValue());
-                valuesBuilder.put(option, value);
-            }
-        }
-        return valuesBuilder.build();
     }
 
     @NonNull
@@ -139,7 +71,7 @@ public final class ProjectOptions {
     }
 
     @NonNull
-    private ImmutableMap<String, String> readTestRunnerArgs(@NonNull Map<String, ?> properties) {
+    private ImmutableMap<String, String> readTestRunnerArgs(Map<String, String> customArgs) {
         ImmutableMap.Builder<String, String> testRunnerArgsBuilder = ImmutableMap.builder();
         ImmutableSet.Builder<String> standardArgKeysBuilder = ImmutableSet.builder();
 
@@ -155,29 +87,7 @@ public final class ProjectOptions {
                 testRunnerArgsBuilder.put(arg.getShortKey(), argValue);
             }
         }
-        ImmutableSet standardArgKeys = standardArgKeysBuilder.build();
-
-        for (Map.Entry<String, ?> entry : properties.entrySet()) {
-            String name = entry.getKey();
-            if (name.startsWith(TEST_RUNNER_ARGS_PREFIX)) {
-                String argName = name.substring(TEST_RUNNER_ARGS_PREFIX.length());
-                if (standardArgKeys.contains(argName)) {
-                    continue;
-                }
-                // As we would ignore new custom arguments added as gradle properties in
-                // the following configuration-cached runs, we need to encourage users to specify
-                // custom arguments through dsl.
-                logger.warning(
-                        "Passing custom test runner argument %s from gradle.properties"
-                                + " or command line is not compatible with configuration caching. "
-                                + "Please specify this argument using android gradle dsl.",
-                        name);
-                String argValue = entry.getValue().toString();
-                testRunnerArgsBuilder.put(argName, argValue);
-                // Make sure we invalidate configuration cache if existing custom arguments change
-                providerFactory.gradleProperty(name).forUseAtConfigurationTime().get();
-            }
-        }
+        testRunnerArgsBuilder.putAll(customArgs);
         return testRunnerArgsBuilder.build();
     }
 
