@@ -44,5 +44,8 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" scope="TEST" name="layoutinspector-skia-proto" level="project" />
+    <orderEntry type="library" name="protobuf" level="project" />
+    <orderEntry type="module" module-name="layout-inspector-common" scope="TEST" />
   </component>
 </module>
