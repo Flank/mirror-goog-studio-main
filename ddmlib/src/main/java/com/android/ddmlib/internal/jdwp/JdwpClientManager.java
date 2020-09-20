@@ -23,12 +23,12 @@ import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AdbHelper;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.DdmPreferences;
+import com.android.ddmlib.JdwpHandshake;
 import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.internal.jdwp.chunkhandler.BadPacketException;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import com.android.ddmlib.internal.jdwp.interceptor.ClientInitializationInterceptor;
 import com.android.ddmlib.internal.jdwp.interceptor.DebuggerInterceptor;
-import com.android.ddmlib.internal.jdwp.interceptor.HandshakeInterceptor;
 import com.android.ddmlib.internal.jdwp.interceptor.Interceptor;
 import com.android.ddmlib.internal.jdwp.interceptor.NoReplyPacketInterceptor;
 import com.google.common.annotations.VisibleForTesting;
@@ -65,14 +65,31 @@ public class JdwpClientManager implements JdwpSocketHandler {
 
     public JdwpClientManager(@NonNull JdwpClientManagerId id, @NonNull Selector selector, @NonNull byte[] readBuffer)
       throws TimeoutException, AdbCommandRejectedException, IOException {
-        this.mBuffer = readBuffer;
-        mAdbSocket = AdbHelper.createPassThroughConnection(AndroidDebugBridge.getSocketAddress(), id.deviceSerial, id.pid);
+        this(
+                AdbHelper.createPassThroughConnection(
+                        AndroidDebugBridge.getSocketAddress(), id.deviceSerial, id.pid),
+                readBuffer);
         mAdbSocket.configureBlocking(false);
         mAdbSocket.register(selector, SelectionKey.OP_READ, this);
+    }
+
+    @VisibleForTesting
+    JdwpClientManager(@NonNull SocketChannel socket, @NonNull byte[] readBuffer)
+            throws TimeoutException, AdbCommandRejectedException, IOException {
+        this.mBuffer = readBuffer;
+        mAdbSocket = socket;
         mInterceptors.add(new NoReplyPacketInterceptor());
-        mInterceptors.add(new HandshakeInterceptor());
         mInterceptors.add(new ClientInitializationInterceptor());
         mInterceptors.add(new DebuggerInterceptor());
+        // Send handshake as soon as a connection has been established.
+        // Handshakes are a special packet that do not conform to the JDWP packet format.
+        sendHandshake();
+    }
+
+    private void sendHandshake() throws IOException, TimeoutException {
+        ByteBuffer handshake = ByteBuffer.wrap(mSendBuffer);
+        JdwpHandshake.putHandshake(handshake);
+        writeRaw(handshake);
     }
 
     void addListener(JdwpProxyClient client) {
@@ -128,45 +145,53 @@ public class JdwpClientManager implements JdwpSocketHandler {
             throw new EOFException("Client disconnected");
         }
         JdwpLoggingUtils.log("DEVICE", "READ", mBuffer, length);
-        // First determine if we have a jdwp packet
-        boolean isJdwpPacket = true;
-        for (JdwpProxyClient client : mClients) {
-            if (filterToClient(client, mBuffer, length)) {
-                continue;
-            }
 
-            try {
-                JdwpPacket packet;
-                buffer = ByteBuffer.wrap(mBuffer, 0, length);
-                buffer.position(length);
-                if (isJdwpPacket && length >= JDWP_HEADER_LEN && (packet = JdwpPacket.findPacket(buffer)) != null) {
-                    ByteBuffer sendBuffer = ByteBuffer.wrap(mSendBuffer);
-                    do {
-                        if (!filterToClient(client, packet)) {
-                            packet.move(sendBuffer);
+        List<JdwpProxyClient> clientsToSend = new ArrayList<>();
+        for (JdwpProxyClient client : mClients) {
+            if (!filterToClient(client, mBuffer, length)) {
+                clientsToSend.add(client);
+            }
+        }
+        boolean isJdwpPacket = true;
+        try {
+            JdwpPacket packet;
+            if (buffer.position() >= JDWP_HEADER_LEN) {
+                // Special case the handshake because it is not a valid JdwpPacket.
+                // Note: JdwpPacket.findPacket will modify original data. As such finding a packet a
+                // second time in the same buffer will fail. When a pack is found that packet is
+                // tested and sent as needed for each connected client.
+                while ((packet = JdwpPacket.findPacket(buffer)) != null
+                        || (JdwpHandshake.findHandshake(buffer) == JdwpHandshake.HANDSHAKE_GOOD)) {
+                    if (packet == null) {
+                        JdwpHandshake.consumeHandshake(buffer);
+                    } else {
+                        ByteBuffer sendBuffer = ByteBuffer.wrap(mSendBuffer);
+                        packet.move(sendBuffer);
+                        for (JdwpProxyClient client : clientsToSend) {
+                            if (!filterToClient(client, packet)) {
+                                // Send the data to the client.
+                                client.write(sendBuffer.array(), sendBuffer.position());
+                            }
                         }
                         packet.consume();
                     }
-                    while ((packet = JdwpPacket.findPacket(buffer)) != null);
-                    // We didn't loop through the entire buffer this is probably not a jdwp packet
-                    // buffer.
-                    // This can happen when the debugger is loading symbols as some symbols can look
-                    // like a packet.
-                    if (buffer.position() != 0) {
-                        isJdwpPacket = false;
-                    } else if (sendBuffer.position() != 0) {
-                        client.write(mSendBuffer, sendBuffer.position());
-                    }
                 }
-                else {
+                // We didn't loop through the entire buffer this is probably not a jdwp packet
+                // buffer.
+                // This can happen when the debugger is loading symbols as some symbols can look
+                // like a packet.
+                if (buffer.position() != 0) {
                     isJdwpPacket = false;
                 }
-            }
-            catch (BadPacketException ex) {
+            } else {
                 isJdwpPacket = false;
             }
-            if (!isJdwpPacket) {
-                client.write(mBuffer, length);
+        } catch (BadPacketException ex) {
+            isJdwpPacket = false;
+        }
+        if (!isJdwpPacket) {
+            for (JdwpProxyClient client : clientsToSend) {
+                client.write(buffer.array(), buffer.position());
             }
         }
     }
@@ -175,38 +200,43 @@ public class JdwpClientManager implements JdwpSocketHandler {
         if (mAdbSocket == null || filterToDevice(from, value, length)) {
             return;
         }
-
-        ByteBuffer buffer = ByteBuffer.wrap(value, 0, length);
+        ByteBuffer buffer = ByteBuffer.wrap(value);
         buffer.position(length);
-        boolean isJdwpPacket;
-        ByteBuffer sendBuffer = ByteBuffer.wrap(mSendBuffer);
+        boolean isJdwpPacket = true;
         try {
             JdwpPacket packet;
-            if ((packet = JdwpPacket.findPacket(buffer)) != null) {
-                isJdwpPacket = true;
-                do {
-                    if (!filterToDevice(from, packet)) {
+            if (buffer.position() >= JDWP_HEADER_LEN) {
+                // Special case the handshake.
+                // * The handshake is not a valid JdwpPacket.
+                // * The handshake may come bundled with valid jdwp packets in the buffer.
+                while ((packet = JdwpPacket.findPacket(buffer)) != null
+                        || (JdwpHandshake.findHandshake(buffer) == JdwpHandshake.HANDSHAKE_GOOD)) {
+                    if (packet == null) {
+                        JdwpHandshake.consumeHandshake(buffer);
+                    } else {
+                        ByteBuffer sendBuffer = ByteBuffer.wrap(mSendBuffer);
                         packet.move(sendBuffer);
+                        if (!filterToDevice(from, packet)) {
+                            writeRaw(sendBuffer);
+                        }
+                        packet.consume();
                     }
-                    // Consume packet and read next packet if one exists
-                    // We always read from end of buffer.
-                    packet.consume();
                 }
-                while ((packet = JdwpPacket.findPacket(buffer)) != null);
-            }
-            else {
+                // We didn't loop through the entire buffer this is probably not a jdwp packet
+                // buffer.
+                // This can happen when the debugger is loading symbols as some symbols can look
+                // like a packet.
+                if (buffer.position() != 0) {
+                    isJdwpPacket = false;
+                }
+            } else {
                 isJdwpPacket = false;
             }
-        }
-        catch (BadPacketException ex) {
+        } catch (BadPacketException ex) {
             isJdwpPacket = false;
         }
         if (!isJdwpPacket) {
-            // If we don't have a valid jdwp packet just send all the data.
-            sendBuffer.put(value, 0, length);
-        }
-        if (sendBuffer.position() != 0) {
-            writeRaw(sendBuffer);
+            writeRaw(buffer);
         }
     }
 

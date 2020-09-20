@@ -16,10 +16,15 @@
 
 package com.android.ddmlib.internal.jdwp;
 
+import static com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler.CHUNK_HEADER_LEN;
+import static com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler.CHUNK_ORDER;
+import static com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler.DDMS_CMD;
+import static com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler.DDMS_CMD_SET;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -28,14 +33,18 @@ import static org.mockito.Mockito.when;
 import com.android.annotations.NonNull;
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.DdmPreferences;
+import com.android.ddmlib.JdwpHandshake;
 import com.android.ddmlib.internal.FakeAdbTestRule;
 import com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import com.android.ddmlib.internal.jdwp.interceptor.Interceptor;
 import com.android.fakeadbserver.DeviceState;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -235,6 +244,86 @@ public class JdwpClientManagerTest {
         // Shutdown everything
         fakeAdb.after();
         server.stop();
+    }
+
+    @Test
+    public void handshakeSentOnCreation() throws Exception {
+        SimpleServer server = new SimpleServer();
+        Thread serverThread = new Thread(server);
+        serverThread.start();
+        SocketChannel channel = SocketChannel.open();
+        channel.connect(
+                new InetSocketAddress(InetAddress.getByName("localhost"), server.getPort()));
+        JdwpClientManager manager = new JdwpClientManager(channel, new byte[1024]);
+        serverThread.join();
+        assertThat(server.getData().position()).isEqualTo(JdwpHandshake.HANDSHAKE_LEN);
+        assertThat(JdwpHandshake.findHandshake(server.getData()))
+                .isEqualTo(JdwpHandshake.HANDSHAKE_GOOD);
+    }
+
+    @Test
+    public void eachClientGetsSameData() throws Exception {
+        ByteBuffer packetA = createPacket(ChunkHandler.type("TEST"));
+        ByteBuffer packetB = createPacket(ChunkHandler.type("TSET"));
+        byte[] data = new byte[packetA.position() + packetB.position()];
+        System.arraycopy(packetA.array(), 0, data, 0, packetA.position());
+        System.arraycopy(packetB.array(), 0, data, packetA.position(), packetB.position());
+        SimpleServer server = new SimpleServer(data);
+        Thread serverThread = new Thread(server);
+        serverThread.start();
+        SocketChannel channel = SocketChannel.open();
+        channel.connect(
+                new InetSocketAddress(InetAddress.getByName("localhost"), server.getPort()));
+        JdwpClientManager manager = new JdwpClientManager(channel, new byte[1024]);
+        List<byte[]> dataCapture = new ArrayList<>();
+
+        // Create multiple clients
+        JdwpProxyClient[] clients = new JdwpProxyClient[3];
+        for (int i = 0; i < clients.length; i++) {
+            clients[i] = Mockito.mock(JdwpProxyClient.class);
+            when(clients[i].isHandshakeComplete()).thenReturn(true);
+            // Due to https://code.google.com/archive/p/mockito/issues/126 we are unable to use
+            // an ArgumentCapture. Instead we grab a copy of the arguments using an Answer.
+            doAnswer(
+                            (invocation ->
+                                    dataCapture.add(
+                                            Arrays.copyOf(
+                                                    (byte[]) invocation.getArgument(0),
+                                                    (int) invocation.getArgument(1)))))
+                    .when(clients[i])
+                    .write(any(), anyInt());
+            manager.addListener(clients[i]);
+        }
+        // Read initial data from SimpleServer
+        manager.read();
+        // Verify each client was written to 2 times.
+        for (JdwpProxyClient client : clients) {
+            verify(client, times(2)).write(any(), anyInt());
+        }
+
+        for (int i = 0; i < clients.length; i++) {
+            int packetAIndex = i;
+            int packetBIndex = i + clients.length;
+            assertThat(dataCapture.get(packetAIndex)).hasLength(packetA.position());
+            assertThat(dataCapture.get(packetBIndex)).hasLength(packetB.position());
+            assertThat(dataCapture.get(packetAIndex)).isEqualTo(packetA.array());
+            assertThat(dataCapture.get(packetBIndex)).isEqualTo(packetB.array());
+        }
+    }
+
+    private static ByteBuffer createPacket(int type) {
+        ByteBuffer rawBuf = ByteBuffer.allocate(JdwpPacket.JDWP_HEADER_LEN + 8);
+        rawBuf.order(CHUNK_ORDER);
+        JdwpPacket packet = new JdwpPacket(rawBuf);
+        ByteBuffer buf = ChunkHandler.getChunkDataBuf(rawBuf);
+        int chunkLen = buf.position();
+        // no data
+        ByteBuffer payload = packet.getPayload();
+        payload.putInt(0x00, type);
+        payload.putInt(0x04, chunkLen);
+        packet.finishPacket(DDMS_CMD_SET, DDMS_CMD, CHUNK_HEADER_LEN + chunkLen);
+        rawBuf.put(0x08, (byte) 0x80 /* reply packet */);
+        return rawBuf;
     }
 
     private static class TestInterceptor implements Interceptor {
