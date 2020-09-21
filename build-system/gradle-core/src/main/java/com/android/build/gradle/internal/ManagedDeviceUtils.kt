@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal
 
+import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.prefs.AndroidLocation
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
@@ -33,3 +34,17 @@ fun getManagedDeviceAvdFolder(
     objectFactory.directoryProperty().fileProvider(providerFactory.provider {
         File(AndroidLocation.getFolder(), GRADLE_AVD_DIRECTORY_PATH)
     })
+
+fun computeAvdName(device: ManagedVirtualDevice): String =
+    computeAvdName(
+        device.apiLevel,
+        device.systemImageSource,
+        device.abi,
+        device.device)
+
+fun computeAvdName(
+    apiLevel: Int,
+    vendor: String,
+    abi: String,
+    hardwareProfile: String) =
+    "dev${apiLevel}_${vendor}_${abi}_${hardwareProfile.replace(' ', '_')}"

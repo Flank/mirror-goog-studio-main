@@ -89,6 +89,7 @@ import com.android.build.gradle.internal.dependency.AndroidXDependencySubstituti
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
+import com.android.build.gradle.internal.dsl.ManagedVirtualDevice;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.lint.LintModelDependenciesWriterTask;
@@ -1961,8 +1962,19 @@ public abstract class TaskManager<
                 .get(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM)) {
             return;
         }
+        List<ManagedVirtualDevice> managedDevices = Lists.newArrayList();
+        extension
+                .getTestOptions()
+                .getDevices()
+                .forEach(
+                        device -> {
+                            if (device instanceof ManagedVirtualDevice) {
+                                managedDevices.add((ManagedVirtualDevice) device);
+                            }
+                        });
         taskFactory.register(
-                new ManagedDeviceCleanTask.CreationAction("cleanManagedDevices", globalScope));
+                new ManagedDeviceCleanTask.CreationAction(
+                        "cleanManagedDevices", globalScope, managedDevices));
     }
 
     protected void createConnectedTestForVariant(@NonNull AndroidTestImpl androidTestProperties) {

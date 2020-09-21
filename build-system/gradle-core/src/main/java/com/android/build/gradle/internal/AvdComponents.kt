@@ -133,15 +133,31 @@ abstract class AvdComponentsBuildService @Inject constructor(
     }
 
     /**
-     * Removes all avds in the shared avd folder.
-     *
-     * This will delete the avds in the shared avd folder and update the avd cache.
+     * Returns the names of all avds currently in the shared avd folder.
      */
-    fun deleteAllAvds() {
+    fun allAvds(): List<String> {
         avdManager.reloadAvds(logger)
-        val allAvds = avdManager.allAvds
-        for (avd in allAvds) {
-            avdManager.deleteAvd(avd, logger)
+        return avdManager.allAvds.map {
+            it.name
+        }
+    }
+
+    /**
+     * Removes all the specified avds.
+     *
+     * This will delete the specified avds from the shared avd folder and update the avd cache.
+     *
+     * @param avds names of the avds to be deleted.
+     */
+    fun deleteAvds(avds: List<String>) {
+        avdManager.reloadAvds(logger)
+        for(avdName in avds) {
+            val avdInfo = avdManager.getAvd(avdName, false)
+            if (avdInfo != null) {
+                avdManager.deleteAvd(avdInfo, logger)
+            } else {
+                logger.warning("Failed to delete avd: $avdName.")
+            }
         }
     }
 

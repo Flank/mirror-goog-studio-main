@@ -20,6 +20,7 @@ import com.android.build.api.dsl.TestOptions
 import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.computeAvdName
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -35,8 +36,6 @@ import org.gradle.api.tasks.Internal
 import java.lang.Exception
 import java.util.concurrent.TimeUnit
 
-private const val DEVICE_PREFIX = "dev"
-private const val DEVICE_DEVIDER = "_"
 private const val SYSTEM_IMAGE_PREFIX = "system-images;"
 private const val HASH_DIVIDER = ";"
 private const val WAIT_AFTER_BOOT_MS = 5000L
@@ -80,7 +79,9 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
             it.sdkService.set(sdkService)
             it.avdService.set(avdService)
             it.imageHash.set(computeImageHash())
-            it.deviceName.set(computeDeviceName())
+            it.deviceName.set(
+                computeAvdName(
+                    apiLevel.get(), systemImageVendor.get(), abi.get(), hardwareProfile.get()))
             it.hardwareProfile.set(hardwareProfile)
         }
     }
@@ -166,14 +167,6 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
                 computeVersionString() + HASH_DIVIDER +
                 computeVendorString() + HASH_DIVIDER +
                 abi.get()
-    }
-
-    private fun computeDeviceName(): String {
-        return DEVICE_PREFIX +
-                apiLevel.get() + DEVICE_DEVIDER +
-                systemImageVendor.get() + DEVICE_DEVIDER +
-                abi.get() + DEVICE_DEVIDER +
-                hardwareProfile.get().replace(' ', '_')
     }
 
     private fun computeVersionString() = "android-${apiLevel.get()}"
