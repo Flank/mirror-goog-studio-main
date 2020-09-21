@@ -78,6 +78,9 @@ class MlModelBindingConnectedTest {
             ),
             objectDetectionModelFile
         )
+
+        // fail fast if no response
+        project.addAdbTimeOutInMs()
     }
 
     @Test

@@ -69,6 +69,8 @@ public class AndroidTestResourcesConnectedTest {
                         + "    androidTestImplementation \"com.android.support.test:runner:${project.testSupportLibVersion}\"\n"
                         + "    androidTestImplementation \"com.android.support.test:rules:${project.testSupportLibVersion}\"\n"
                         + "}\n");
+        // fail fast if no response
+        appProject.addAdbTimeOutInMs();
     }
 
     private static void setUpProject(GradleTestProject project) throws IOException {

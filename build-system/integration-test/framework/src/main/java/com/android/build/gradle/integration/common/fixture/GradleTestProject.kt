@@ -657,7 +657,7 @@ allprojects { proj ->
     val mainJniLibsDir: File
         get() = FileUtils.join(projectDir, "src", "main", "jniLibs")
 
-    /** Return the build.gradle of the test project.  */
+    /** Return the settings.gradle of the test project.  */
     val settingsFile: File
         get() = File(projectDir, "settings.gradle")
 
@@ -1413,6 +1413,24 @@ buildCache {
         TestFileUtils.appendToFile(
             gradlePropertiesFile,
             BooleanOption.USE_ANDROID_X.propertyName + "=true"
+        )
+    }
+
+    /**
+     * Adds an adb timeout (in milliseconds) to the build file, so that tests using adb will fail
+     * fast when there is no response.
+     */
+    @JvmOverloads
+    fun addAdbTimeOutInMs(timeOutInMs: Int = 30000) {
+        TestFileUtils.appendToFile(
+            buildFile,
+            """
+                android {
+                    adbOptions {
+                        timeOutInMs $timeOutInMs
+                    }
+                }
+            """.trimIndent()
         )
     }
 }

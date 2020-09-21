@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.connected.application
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.connected.utils.getEmulator
+import org.junit.Before
 import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
@@ -37,6 +38,12 @@ class ComposeHelloWorldConnectedTest {
         // b/146163513
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .create()
+
+    @Before
+    fun setUp() {
+        // fail fast if no response
+        project.getSubproject("app").addAdbTimeOutInMs()
+    }
 
     @Test
     fun connectedCheck() {

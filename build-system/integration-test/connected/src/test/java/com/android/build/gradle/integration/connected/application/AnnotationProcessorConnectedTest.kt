@@ -89,6 +89,8 @@ class AnnotationProcessorConnectedTest {
         Files.asCharSink(project.getSubproject(":app")
             .file("build.gradle"), Charsets.UTF_8)
             .write(buildScript)
+        // fail fast if no response
+        project.getSubproject(":app").addAdbTimeOutInMs()
     }
 
     @Test

@@ -19,6 +19,8 @@ package com.android.build.gradle.integration.connected.ndk;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import com.android.tools.bazel.avd.Emulator;
+import java.io.IOException;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,6 +34,13 @@ public class NdkJniLibConnectedTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("ndkJniLib").create();
+
+    @Before
+    public void setUp() throws IOException {
+        // fail fast if no response
+        project.getSubproject("app").addAdbTimeOutInMs();
+        project.getSubproject("lib").addAdbTimeOutInMs();
+    }
 
     @Test
     public void connectedCheck() throws Exception {
