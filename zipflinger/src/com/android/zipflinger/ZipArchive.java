@@ -19,6 +19,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
@@ -118,6 +119,19 @@ public class ZipArchive implements Archive {
         } else {
             return payloadByteBuffer;
         }
+    }
+
+    @Nullable
+    public InputStream getInputStream(@NonNull String name) throws IOException {
+        ExtractionInfo extractInfo = cd.getExtractionInfo(name);
+        if (extractInfo == null) {
+            return null;
+        }
+        InputStream in = new PayloadInputStream(reader.getChannel(), extractInfo.getLocation());
+        if (extractInfo.isCompressed()) {
+            return Compressor.wrapToInflate(in);
+        }
+        return in;
     }
 
     /** See Archive.add documentation */

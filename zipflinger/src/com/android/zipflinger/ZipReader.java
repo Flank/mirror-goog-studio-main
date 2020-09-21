@@ -56,4 +56,9 @@ public class ZipReader implements Closeable {
         }
         isOpen = true;
     }
+
+    FileChannel getChannel() throws IOException {
+        ensureOpen();
+        return channel;
+    }
 }
