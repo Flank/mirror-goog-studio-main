@@ -500,6 +500,10 @@ _iml_test_module_ = rule(
 #     # `tags`. For definitions of these attributes, see
 #     # https://docs.bazel.build/versions/master/be/common-definitions.html
 #     split_test_targets = {},
+#     # Designates the test target with the common Flaky attribute.
+#     # Tests marked Flaky will be attempted a total of 3 times, until a passing
+#     # run is achieved or fail.
+#     test_flaky = True,
 #     # Specifies the number of parallel shards to run the test.
 #     # See https://docs.bazel.build/versions/master/be/common-definitions.html#test.shard_count.
 #     # Mutually exclusive with test_target_shards.
@@ -548,6 +552,7 @@ def iml_module(
         plugins = [],
         javacopts = [],
         test_data = [],
+        test_flaky = False,
         test_timeout = "moderate",
         test_class = "com.android.testutils.JarTestSuite",
         test_shard_count = None,
@@ -666,6 +671,8 @@ def iml_module(
 
     if not test_srcs:
         return
+    if split_test_targets and test_flaky:
+        fail("must use the Flaky attribute per split_test_target")
     if split_test_targets and test_shard_count:
         fail("test_shard_count and split_test_targets should not both be specified")
     test_tags = tags + test_tags if tags and test_tags else (tags if tags else test_tags)
@@ -688,6 +695,7 @@ def iml_module(
             name = name + "_tests",
             tags = test_tags,
             runtime_deps = manual_test_runtime_deps + [":" + name + "_testlib"],
+            flaky = test_flaky,
             timeout = test_timeout,
             shard_count = test_shard_count,
             data = test_data,
