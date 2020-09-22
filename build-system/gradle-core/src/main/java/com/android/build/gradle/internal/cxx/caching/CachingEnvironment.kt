@@ -174,7 +174,10 @@ abstract class ThreadCachingEnvironment : CachingEnvironmentDefinition {
         /**
          * Pop the top logging environment.
          */
-        private fun pop() = stack.set(stack.get()?.next)
+        private fun pop() {
+            val next = stack.get()?.next
+            if (next != null) stack.set(next) else stack.remove()
+        }
 
         fun <TKey, TValue> readInCurrentEnvironment(
             key: TKey, baseName: String, valueType: Class<TValue>

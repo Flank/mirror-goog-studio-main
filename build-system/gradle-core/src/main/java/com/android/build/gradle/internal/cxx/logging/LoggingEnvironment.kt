@@ -156,7 +156,10 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
         /**
          * Pop the top logging environment.
          */
-        private fun pop() = loggerStack.set(loggerStack.get()?.next)
+        private fun pop() {
+            val next = loggerStack.get()?.next
+            if (next != null) loggerStack.set(next) else loggerStack.remove()
+        }
 
         /**
          * Get the parent of the current logger.
