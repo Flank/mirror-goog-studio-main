@@ -33,32 +33,31 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
         private val variantApiOperations: VariantApiOperationsRegistrar<VariantBuilderT, VariantT>
 ): AndroidComponentsExtension<VariantBuilderT, VariantT> {
 
-    override fun beforeVariants(selector: VariantSelector<VariantBuilderT>, callback: (VariantBuilderT) -> Unit) {
+    override fun beforeVariants(selector: VariantSelector, callback: (VariantBuilderT) -> Unit) {
         variantApiOperations.variantBuilderOperations.addOperation({
             callback.invoke(it)
         }, selector)
     }
 
-    override fun beforeVariants(selector: VariantSelector<VariantBuilderT>, callback: Action<VariantBuilderT>) {
+    override fun beforeVariants(selector: VariantSelector, callback: Action<VariantBuilderT>) {
         variantApiOperations.variantBuilderOperations.addOperation(callback, selector)
     }
 
-    override fun onVariants(selector: VariantSelector<VariantT>, callback: (VariantT) -> Unit) {
+    override fun onVariants(selector: VariantSelector, callback: (VariantT) -> Unit) {
         variantApiOperations.variantOperations.addOperation({
             callback.invoke(it)
         }, selector)
     }
 
-    override fun onVariants(selector: VariantSelector<VariantT>, callback: Action<VariantT>) {
+    override fun onVariants(selector: VariantSelector, callback: Action<VariantT>) {
         variantApiOperations.variantOperations.addOperation(callback, selector)
     }
 
-    @Suppress("UNCHECKED_CAST")
-    override fun <T: ComponentIdentity> selector(): VariantSelectorImpl<T> =
-            dslServices.newInstance(VariantSelectorImpl::class.java) as VariantSelectorImpl<T>
+    override fun selector(): VariantSelectorImpl =
+            dslServices.newInstance(VariantSelectorImpl::class.java) as VariantSelectorImpl
 
     override fun beforeUnitTest(
-            selector: VariantSelector<UnitTestBuilder>,
+            selector: VariantSelector,
             callback: Action<UnitTestBuilder>) {
         variantApiOperations.unitTestBuilderOperations.addOperation(
                 callback,
@@ -66,7 +65,7 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
     }
 
     override fun beforeUnitTest(
-            selector: VariantSelector<UnitTestBuilder>,
+            selector: VariantSelector,
             callback: (UnitTestBuilder) -> Unit) {
         variantApiOperations.unitTestBuilderOperations.addOperation(
                 {
@@ -77,7 +76,7 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
     }
 
     override fun beforeAndroidTest(
-            selector: VariantSelector<AndroidTestBuilder>,
+            selector: VariantSelector,
             callback: Action<AndroidTestBuilder>) {
         variantApiOperations.androidTestBuilderOperations.addOperation(
                 callback,
@@ -86,7 +85,7 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
     }
 
     override fun beforeAndroidTest(
-            selector: VariantSelector<AndroidTestBuilder>,
+            selector: VariantSelector,
             callback: (AndroidTestBuilder) -> Unit) {
         variantApiOperations.androidTestBuilderOperations.addOperation(
                 {
@@ -97,7 +96,7 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
     }
 
     override fun unitTest(
-            selector: VariantSelector<UnitTest>,
+            selector: VariantSelector,
             callback: Action<UnitTest>) {
         variantApiOperations.unitTestOperations.addOperation(
                 callback,
@@ -106,7 +105,7 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
     }
 
     override fun unitTest(
-            selector: VariantSelector<UnitTest>,
+            selector: VariantSelector,
             callback: (UnitTest) -> Unit) {
         variantApiOperations.unitTestOperations.addOperation(
                 {
@@ -117,7 +116,7 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
     }
 
     override fun androidTest(
-            selector: VariantSelector<AndroidTest>,
+            selector: VariantSelector,
             callback: Action<AndroidTest>) {
         variantApiOperations.androidTestOperations.addOperation(
                 callback,
@@ -126,7 +125,7 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
     }
 
     override fun androidTest(
-            selector: VariantSelector<AndroidTest>,
+            selector: VariantSelector,
             callback: (AndroidTest) -> Unit) {
         variantApiOperations.androidTestOperations.addOperation(
                 {

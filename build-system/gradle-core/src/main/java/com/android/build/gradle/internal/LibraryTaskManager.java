@@ -111,7 +111,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
     protected void doCreateTasksForVariant(
             @NonNull ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl> variantInfo,
             @NonNull
-                    List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>>
+                    List<? extends ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>>
                             allVariants) {
 
         LibraryVariantImpl libraryVariant = variantInfo.getVariant();

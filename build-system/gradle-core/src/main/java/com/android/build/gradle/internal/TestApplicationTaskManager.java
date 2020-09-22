@@ -47,6 +47,7 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * TaskManager for standalone test application that lives in a separate module from the tested
@@ -68,7 +69,9 @@ public class TestApplicationTaskManager
     @Override
     protected void doCreateTasksForVariant(
             @NonNull ComponentInfo<TestVariantBuilderImpl, TestVariantImpl> variantInfo,
-            @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> allVariants) {
+            @NonNull
+                    List<? extends ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>>
+                            allVariants) {
         createCommonTasks(variantInfo, allVariants);
 
         TestVariantImpl testVariantProperties = variantInfo.getVariant();
@@ -133,15 +136,19 @@ public class TestApplicationTaskManager
 
     @Override
     public void createLintTasks(
-            @NonNull TestVariantImpl testVariant,
-            @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> allVariants) {
+            @NotNull TestVariantImpl variantProperties,
+            @NotNull
+                    List<? extends ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>>
+                            allVariants) {
         // do nothing
     }
 
     @Override
     public void maybeCreateLintVitalTask(
             @NonNull TestVariantImpl variant,
-            @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> allVariants) {
+            @NonNull
+                    List<? extends ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>>
+                            allVariants) {
         // do nothing
     }
 

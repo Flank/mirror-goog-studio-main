@@ -19,7 +19,6 @@ package com.android.build.api.extension
 import com.android.build.api.component.AndroidTestBuilder
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.ComponentBuilder
-import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.UnitTestBuilder
 import com.android.build.api.component.UnitTest
 import com.android.build.api.variant.Variant
@@ -40,13 +39,13 @@ interface AndroidComponentsExtension<
         VariantBuilderT: VariantBuilder, VariantT: Variant> {
 
     /**
-     * Creates a [GenericVariantSelector] instance that can be configured
+     * Creates a [VariantSelector] instance that can be configured
      * to reduce the set of [ComponentBuilder] instances participating in the [beforeVariants]
      * and [onVariants] callback invocation.
      *
-     * @return [GenericVariantSelector] to select the variants of interest.
+     * @return [VariantSelector] to select the variants of interest.
      */
-    fun <T: ComponentIdentity> selector(): GenericVariantSelector<T>
+    fun selector(): VariantSelector
 
     /**
      * Method to register a [callback] to be called with [VariantBuilderT] instances that
@@ -76,19 +75,19 @@ interface AndroidComponentsExtension<
      *  }
      * '''
      *
-     * @param selector [GenericVariantSelector] instance to select which instance of [VariantBuilderT] are
+     * @param selector [VariantSelector] instance to select which instance of [VariantBuilderT] are
      * of interest. By default, all instances are of interest.
      * @param callback lambda to be called with each instance of [VariantBuilderT] of interest.
      */
     fun beforeVariants(
-            selector: VariantSelector<VariantBuilderT> = selector<VariantBuilderT>().all(),
+            selector: VariantSelector = selector().all(),
             callback: (VariantBuilderT) -> Unit)
 
     /**
      * [Action] based version of [beforeVariants] above.
      */
     fun beforeVariants(
-            selector: VariantSelector<VariantBuilderT> = selector<VariantBuilderT>().all(),
+            selector: VariantSelector = selector().all(),
             callback: Action<VariantBuilderT>)
 
     /**
@@ -109,7 +108,7 @@ interface AndroidComponentsExtension<
      * that all [org.gradle.api.Task]s created by the Android Gradle Plugin use the updated value.
      */
     fun onVariants(
-            selector: VariantSelector<VariantT> = selector<VariantT>().all(),
+            selector: VariantSelector = selector().all(),
             callback: (VariantT) -> Unit
     )
 
@@ -117,7 +116,7 @@ interface AndroidComponentsExtension<
      * [Action] based version of [onVariants] above.
      */
     fun onVariants(
-            selector: VariantSelector<VariantT> = selector<VariantT>().all(),
+            selector: VariantSelector = selector().all(),
             callback: Action<VariantT>
     )
 
@@ -133,14 +132,14 @@ interface AndroidComponentsExtension<
      * @param callback lambda to be called with each instance [UnitTestBuilder] of interest.
      */
     fun beforeUnitTest(
-            selector: VariantSelector<UnitTestBuilder> = selector<UnitTestBuilder>().all(),
+            selector: VariantSelector = selector().all(),
             callback: (UnitTestBuilder) -> Unit)
 
     /**
      * [Action] based version of [beforeUnitTest] above.
      */
     fun beforeUnitTest(
-            selector: VariantSelector<UnitTestBuilder> = selector<UnitTestBuilder>().all(),
+            selector: VariantSelector = selector().all(),
             callback: Action<UnitTestBuilder>)
 
     /**
@@ -155,14 +154,14 @@ interface AndroidComponentsExtension<
      * @param callback lambda to be called with each instance [AndroidTestBuilder] of interest.
      */
     fun beforeAndroidTest(
-            selector: VariantSelector<AndroidTestBuilder> = selector<AndroidTestBuilder>().all(),
+            selector: VariantSelector = selector().all(),
             callback: (AndroidTestBuilder) -> Unit)
 
     /**
      * [Action] based version of the [beforeAndroidTest] above.
      */
     fun beforeAndroidTest(
-            selector: VariantSelector<AndroidTestBuilder> = selector<AndroidTestBuilder>().all(),
+            selector: VariantSelector = selector().all(),
             callback: Action<AndroidTestBuilder>)
 
     /**
@@ -183,14 +182,14 @@ interface AndroidComponentsExtension<
      * [org.gradle.api.Task]s created by the Android Gradle Plugin use the updated value.
      */
     fun unitTest(
-            selector: VariantSelector<UnitTest> = selector<UnitTest>().all(),
+            selector: VariantSelector = selector().all(),
             callback: Action<UnitTest>)
 
     /**
      * [Action] based version of the [unitTest] above.
      */
     fun unitTest(
-            selector: VariantSelector<UnitTest> = selector<UnitTest>().all(),
+            selector: VariantSelector = selector().all(),
             callback: (UnitTest) -> Unit)
 
     /**
@@ -211,13 +210,13 @@ interface AndroidComponentsExtension<
      * [org.gradle.api.Task]s created by the Android Gradle Plugin use the updated value.
      */
     fun androidTest(
-            selector: VariantSelector<AndroidTest> = selector<AndroidTest>().all(),
+            selector: VariantSelector = selector().all(),
             callback: Action<AndroidTest>)
 
     /**
      * [Action] based version of the [AndroidTest] above.
      */
     fun androidTest(
-            selector: VariantSelector<AndroidTest> = selector<AndroidTest>().all(),
+            selector: VariantSelector = selector().all(),
             callback: (AndroidTest) -> Unit)
 }

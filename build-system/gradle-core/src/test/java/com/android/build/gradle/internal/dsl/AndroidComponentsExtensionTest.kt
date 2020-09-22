@@ -138,7 +138,7 @@ class AndroidComponentsExtensionTest {
             operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilderT, VariantT>,
             variantType: Class<VariantBuilderT>) {
         val visitedVariants = mutableListOf<VariantBuilderT>()
-        extension.beforeVariants(extension.selector<VariantBuilderT>().all()) {
+        extension.beforeVariants(extension.selector().all()) {
             visitedVariants.add(it)
         }
         @Suppress("UNCHECKED_CAST")
