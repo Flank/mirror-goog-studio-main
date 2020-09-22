@@ -16,8 +16,12 @@
 
 package com.android.build.api.extension
 
+import com.android.build.api.component.AndroidTestBuilder
+import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.ComponentBuilder
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.component.UnitTestBuilder
+import com.android.build.api.component.UnitTest
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import org.gradle.api.Action
@@ -101,9 +105,8 @@ interface AndroidComponentsExtension<
      *
      * Code executing in the [callback] also has access to the [VariantT] information which is used
      * to configure [org.gradle.api.Task] inputs (for example, the buildConfigFields). Such
-     * information is represented as [org.gradle.api.provider.Property] and can still be modified
-     * and have internal [org.gradle.api.Task] to the Android Gradle Plugin see and use the updated
-     * value.
+     * information represented as [org.gradle.api.provider.Property] can still be modified ensuring
+     * that all [org.gradle.api.Task]s created by the Android Gradle Plugin use the updated value.
      */
     fun onVariants(
             selector: VariantSelector<VariantT> = selector<VariantT>().all(),
@@ -117,4 +120,104 @@ interface AndroidComponentsExtension<
             selector: VariantSelector<VariantT> = selector<VariantT>().all(),
             callback: Action<VariantT>
     )
+
+    /**
+     * Allow for registration of a [callback] to be called with [UnitTestBuilder] that
+     * satisfies the [selector]. The [callback] will be called as soon as the [UnitTestBuilder]
+     * instance has been created but before any [com.android.build.api.artifact.Artifact] related to
+     * unit tests has been determined, therefore the build flow can still be changed when the
+     * [callback] is invoked.
+     *
+     * @param selector [VariantSelector] instance to select which instance of [UnitTestBuilder]
+     * are of interest. By default, all instances are of interest.
+     * @param callback lambda to be called with each instance [UnitTestBuilder] of interest.
+     */
+    fun beforeUnitTest(
+            selector: VariantSelector<UnitTestBuilder> = selector<UnitTestBuilder>().all(),
+            callback: (UnitTestBuilder) -> Unit)
+
+    /**
+     * [Action] based version of [beforeUnitTest] above.
+     */
+    fun beforeUnitTest(
+            selector: VariantSelector<UnitTestBuilder> = selector<UnitTestBuilder>().all(),
+            callback: Action<UnitTestBuilder>)
+
+    /**
+     * Allow for registration of a [callback] to be called with [AndroidTestBuilder] that
+     * satisfies the [selector]. The [callback] will be called as soon as the [AndroidTestBuilder]
+     * instance has been created but before any [com.android.build.api.artifact.Artifact] related to
+     * android tests has been determined, therefore the build flow can still be changed when the
+     * [callback] is invoked.
+     *
+     * @param selector [VariantSelector] instance to select which instance of [AndroidTestBuilder]
+     * are of interest. By default, all instances are of interest.
+     * @param callback lambda to be called with each instance [AndroidTestBuilder] of interest.
+     */
+    fun beforeAndroidTest(
+            selector: VariantSelector<AndroidTestBuilder> = selector<AndroidTestBuilder>().all(),
+            callback: (AndroidTestBuilder) -> Unit)
+
+    /**
+     * [Action] based version of the [beforeAndroidTest] above.
+     */
+    fun beforeAndroidTest(
+            selector: VariantSelector<AndroidTestBuilder> = selector<AndroidTestBuilder>().all(),
+            callback: Action<AndroidTestBuilder>)
+
+    /**
+     * Allow for registration of a [callback] to be called with instances of type [UnitTest]
+     * once the list of [com.android.build.api.artifact.Artifact] has been determined.
+     *
+     * At this stage, access to the DSL objects is disallowed and access to the [UnitTestBuilder]
+     * instance is limited to read-only access.
+     *
+     * Because the list of artifacts (including private ones) is final, one cannot change the build
+     * flow anymore as [org.gradle.api.Task]s are now expecting those artifacts as inputs. However
+     * users can modify such artifacts by replacing or transforming them, see [com.android.build.api.artifact.Artifacts]
+     * for details.
+     *
+     * Code executing in the [callback] also has access to the [UnitTest] information which is used
+     * to configure [org.gradle.api.Task] inputs. Such information represented as
+     * [org.gradle.api.provider.Property] can still be modified ensuring that all
+     * [org.gradle.api.Task]s created by the Android Gradle Plugin use the updated value.
+     */
+    fun unitTest(
+            selector: VariantSelector<UnitTest> = selector<UnitTest>().all(),
+            callback: Action<UnitTest>)
+
+    /**
+     * [Action] based version of the [unitTest] above.
+     */
+    fun unitTest(
+            selector: VariantSelector<UnitTest> = selector<UnitTest>().all(),
+            callback: (UnitTest) -> Unit)
+
+    /**
+     * Allow for registration of a [callback] to be called with instances of type [AndroidTest]
+     * once the list of [com.android.build.api.artifact.Artifact] has been determined.
+     *
+     * At this stage, access to the DSL objects is disallowed and access to the [AndroidTestBuilder]
+     * instance is limited to read-only access.
+     *
+     * Because the list of artifacts (including private ones) is final, one cannot change the build
+     * flow anymore as [org.gradle.api.Task]s are now expecting those artifacts as inputs. However
+     * users can modify such artifacts by replacing or transforming them, see [com.android.build.api.artifact.Artifacts]
+     * for details.
+     *
+     * Code executing in the [callback] also has access to the [AndroidTest] information which is used
+     * to configure [org.gradle.api.Task] inputs. Such information represented as
+     * [org.gradle.api.provider.Property] can still be modified ensuring that all
+     * [org.gradle.api.Task]s created by the Android Gradle Plugin use the updated value.
+     */
+    fun androidTest(
+            selector: VariantSelector<AndroidTest> = selector<AndroidTest>().all(),
+            callback: Action<AndroidTest>)
+
+    /**
+     * [Action] based version of the [AndroidTest] above.
+     */
+    fun androidTest(
+            selector: VariantSelector<AndroidTest> = selector<AndroidTest>().all(),
+            callback: (AndroidTest) -> Unit)
 }

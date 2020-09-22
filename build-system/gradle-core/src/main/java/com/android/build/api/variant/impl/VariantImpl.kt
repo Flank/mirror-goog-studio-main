@@ -16,12 +16,10 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.analytics.AnalyticsEnabledVariant
+import com.android.build.api.component.Component
 import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.PackagingOptions
-import com.android.build.api.variant.Variant
+import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
+import com.android.build.api.variant.*
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -166,8 +164,8 @@ abstract class VariantImpl(
     override val isCoreLibraryDesugaringEnabled: Boolean
         get() = variantScope.isCoreLibraryDesugaringEnabled(this)
 
-    abstract override fun createUserVisibleVariantObject(
-        projectServices: ProjectServices,
-        stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledVariant
+    abstract override fun <T : Component> createUserVisibleVariantObject(
+            projectServices: ProjectServices,
+            operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
+            stats: GradleBuildVariant.Builder): T
 }

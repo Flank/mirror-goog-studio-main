@@ -21,7 +21,6 @@ import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.UnitTestBuilder
 import com.android.build.api.component.UnitTest
-import com.android.build.api.component.analytics.AnalyticsEnabledVariantBuilder
 import com.android.build.api.component.impl.ComponentBuilderImpl
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.VariantBuilder
@@ -83,7 +82,9 @@ abstract class VariantBuilderImpl(
         throw RuntimeException("Actions can only be registered through DSL aware objects.")
     }
 
-    abstract fun createUserVisibleVariantObject(projectServices: ProjectServices, stats: GradleBuildVariant.Builder): AnalyticsEnabledVariantBuilder
+    abstract fun <T: VariantBuilder> createUserVisibleVariantObject(
+            projectServices: ProjectServices,
+            stats: GradleBuildVariant.Builder): T
 
 
     override var renderscriptTargetApi: Int = -1

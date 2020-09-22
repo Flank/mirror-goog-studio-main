@@ -37,7 +37,12 @@ class OperationsRegistrar<VariantBuilderT>
 
     private val operations= mutableListOf<Operation<VariantBuilderT>>()
 
-    fun addOperation(selector: VariantSelector<VariantBuilderT>, callback: Action<VariantBuilderT>) {
+    private val noSelector = VariantSelectorImpl<VariantBuilderT>().all()
+
+    fun addOperation(
+            callback: Action<VariantBuilderT>,
+            selector: VariantSelector<VariantBuilderT> = noSelector
+    ) {
         operations.add(Operation(selector as VariantSelectorImpl, callback))
     }
 

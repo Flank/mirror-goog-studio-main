@@ -17,13 +17,11 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledTestVariant
-import com.android.build.api.component.analytics.AnalyticsEnabledVariant
 import com.android.build.api.component.impl.TestVariantCreationConfigImpl
-import com.android.build.api.variant.AaptOptions
-import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.ApkPackagingOptions
-import com.android.build.api.variant.TestVariant
+import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
+import com.android.build.api.variant.*
 import com.android.build.gradle.internal.component.TestVariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -174,15 +172,17 @@ open class TestVariantImpl @Inject constructor(
     override val needsMainDexListForBundle: Boolean
         get() = false
 
-    override fun createUserVisibleVariantObject(
-        projectServices: ProjectServices,
-        stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledVariant =
-        projectServices.objectFactory.newInstance(
-            AnalyticsEnabledTestVariant::class.java,
-            this,
-            stats
-        )
+    override fun <T : Component> createUserVisibleVariantObject(
+            projectServices: ProjectServices,
+            operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
+            stats: GradleBuildVariant.Builder
+    ): T =
+            projectServices.objectFactory.newInstance(
+                    AnalyticsEnabledTestVariant::class.java,
+                    this,
+                    stats
+            ) as T
+
     override val minSdkVersionWithTargetDeviceApi: AndroidVersion
         get() = delegate.minSdkVersionWithTargetDeviceApi
 

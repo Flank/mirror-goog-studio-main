@@ -21,7 +21,7 @@ import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.extension.LibraryAndroidComponentsExtension;
 import com.android.build.api.extension.impl.LibraryAndroidComponentsExtensionImpl;
-import com.android.build.api.extension.impl.OperationsRegistrar;
+import com.android.build.api.extension.impl.VariantApiOperationsRegistrar;
 import com.android.build.api.variant.impl.LibraryVariantBuilderImpl;
 import com.android.build.api.variant.impl.LibraryVariantImpl;
 import com.android.build.gradle.BaseExtension;
@@ -104,17 +104,15 @@ public class LibraryPlugin
     protected LibraryAndroidComponentsExtension createComponentExtension(
             @NonNull DslServices dslServices,
             @NonNull
-                    OperationsRegistrar<LibraryVariantBuilderImpl>
-                            variantBuilderOperationsRegistrar,
-            @NonNull OperationsRegistrar<LibraryVariantImpl> variantOperationsRegistrar) {
+                    VariantApiOperationsRegistrar<LibraryVariantBuilderImpl, LibraryVariantImpl>
+                            variantApiOperationsRegistrar) {
         return project.getExtensions()
                 .create(
                         LibraryAndroidComponentsExtension.class,
                         "androidComponents",
                         LibraryAndroidComponentsExtensionImpl.class,
                         dslServices,
-                        variantBuilderOperationsRegistrar,
-                        variantOperationsRegistrar);
+                        variantApiOperationsRegistrar);
     }
 
     @NonNull

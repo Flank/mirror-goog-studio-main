@@ -17,12 +17,11 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariant
 import com.android.build.api.component.impl.ApkCreationConfigImpl
-import com.android.build.api.variant.AaptOptions
-import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.ApkPackagingOptions
-import com.android.build.api.variant.DynamicFeatureVariant
+import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
+import com.android.build.api.variant.*
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -241,15 +240,17 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     override val needsMainDexListForBundle: Boolean
         get() = false
 
-    override fun createUserVisibleVariantObject(
-        projectServices: ProjectServices,
-        stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledDynamicFeatureVariant =
-        projectServices.objectFactory.newInstance(
-            AnalyticsEnabledDynamicFeatureVariant::class.java,
-            this,
-            stats
-        )
+    override fun <T : Component> createUserVisibleVariantObject(
+            projectServices: ProjectServices,
+            operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
+            stats: GradleBuildVariant.Builder
+    ): T =
+            projectServices.objectFactory.newInstance(
+                    AnalyticsEnabledDynamicFeatureVariant::class.java,
+                    this,
+                    stats
+            ) as T
+
     override val minSdkVersionWithTargetDeviceApi: AndroidVersion
         get() = delegate.minSdkVersionWithTargetDeviceApi
 

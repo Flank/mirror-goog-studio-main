@@ -22,7 +22,7 @@ import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension;
 import com.android.build.api.extension.impl.DynamicFeatureAndroidComponentsExtensionImpl;
-import com.android.build.api.extension.impl.OperationsRegistrar;
+import com.android.build.api.extension.impl.VariantApiOperationsRegistrar;
 import com.android.build.api.variant.impl.DynamicFeatureVariantBuilderImpl;
 import com.android.build.api.variant.impl.DynamicFeatureVariantImpl;
 import com.android.build.gradle.BaseExtension;
@@ -127,17 +127,16 @@ public class DynamicFeaturePlugin
     protected DynamicFeatureAndroidComponentsExtension createComponentExtension(
             @NonNull DslServices dslServices,
             @NonNull
-                    OperationsRegistrar<DynamicFeatureVariantBuilderImpl>
-                            variantBuilderOperationsRegistrar,
-            @NonNull OperationsRegistrar<DynamicFeatureVariantImpl> variantOperationsRegistrar) {
+                    VariantApiOperationsRegistrar<
+                                    DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>
+                            variantApiOperationsRegistrar) {
         return project.getExtensions()
                 .create(
                         DynamicFeatureAndroidComponentsExtension.class,
                         "androidComponents",
                         DynamicFeatureAndroidComponentsExtensionImpl.class,
                         dslServices,
-                        variantBuilderOperationsRegistrar,
-                        variantOperationsRegistrar);
+                        variantApiOperationsRegistrar);
     }
 
     @NonNull

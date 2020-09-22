@@ -17,7 +17,10 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.dsl.DependenciesInfo
+import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.ApplicationVariantBuilder
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantBuilder
 import com.android.tools.build.gradle.internal.profile.VariantMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
@@ -26,8 +29,8 @@ import javax.inject.Inject
  * Shim object for [ApplicationVariantBuilder] that records all mutating accesses to the analytics.
  */
 open class AnalyticsEnabledApplicationVariantBuilder @Inject constructor(
-    override val delegate: ApplicationVariantBuilder,
-    stats: GradleBuildVariant.Builder
+        override val delegate: ApplicationVariantBuilder,
+        stats: GradleBuildVariant.Builder
 ) : AnalyticsEnabledVariantBuilder(delegate, stats),
     ApplicationVariantBuilder {
 

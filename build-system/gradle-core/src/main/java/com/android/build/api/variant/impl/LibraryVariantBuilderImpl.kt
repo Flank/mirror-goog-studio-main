@@ -18,9 +18,8 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariantBuilder
-import com.android.build.api.component.analytics.AnalyticsEnabledVariantBuilder
 import com.android.build.api.variant.LibraryVariantBuilder
-import com.android.build.api.variant.LibraryVariant
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices
@@ -37,14 +36,13 @@ open class LibraryVariantBuilderImpl @Inject constructor(
     variantApiServices
 ), LibraryVariantBuilder {
 
-    override fun createUserVisibleVariantObject(
-        projectServices: ProjectServices,
-        stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledVariantBuilder =
-        projectServices.objectFactory.newInstance(
-            AnalyticsEnabledLibraryVariantBuilder::class.java,
-            this,
-            stats
-        ) as AnalyticsEnabledVariantBuilder
-
+    override fun <T : VariantBuilder> createUserVisibleVariantObject(
+            projectServices: ProjectServices,
+            stats: GradleBuildVariant.Builder
+    ): T =
+            projectServices.objectFactory.newInstance(
+                    AnalyticsEnabledLibraryVariantBuilder::class.java,
+                    this,
+                    stats
+            ) as T
 }

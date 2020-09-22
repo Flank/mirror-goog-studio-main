@@ -22,7 +22,7 @@ import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.dsl.ApplicationExtension;
 import com.android.build.api.extension.ApplicationAndroidComponentsExtension;
 import com.android.build.api.extension.impl.ApplicationAndroidComponentsExtensionImpl;
-import com.android.build.api.extension.impl.OperationsRegistrar;
+import com.android.build.api.extension.impl.VariantApiOperationsRegistrar;
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.gradle.BaseExtension;
@@ -128,17 +128,16 @@ public class AppPlugin
     protected ApplicationAndroidComponentsExtension createComponentExtension(
             @NonNull DslServices dslServices,
             @NonNull
-                    OperationsRegistrar<ApplicationVariantBuilderImpl>
-                            variantBuilderOperationsRegistrar,
-            @NonNull OperationsRegistrar<ApplicationVariantImpl> variantOperationsRegistrar) {
+                    VariantApiOperationsRegistrar<
+                                    ApplicationVariantBuilderImpl, ApplicationVariantImpl>
+                            variantApiOperationsRegistrar) {
         return project.getExtensions()
                 .create(
                         ApplicationAndroidComponentsExtension.class,
                         "androidComponents",
                         ApplicationAndroidComponentsExtensionImpl.class,
                         dslServices,
-                        variantBuilderOperationsRegistrar,
-                        variantOperationsRegistrar);
+                        variantApiOperationsRegistrar);
     }
 
     @NonNull

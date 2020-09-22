@@ -24,11 +24,9 @@ import javax.inject.Inject
 
 open class ApplicationAndroidComponentsExtensionImpl @Inject constructor(
         dslServices: DslServices,
-        variantBuilderOperations: OperationsRegistrar<ApplicationVariantBuilder>,
-        variantOperations: OperationsRegistrar<ApplicationVariant>
+        variantApiOperations: VariantApiOperationsRegistrar<ApplicationVariantBuilder, ApplicationVariant>
 ): ApplicationAndroidComponentsExtension,
         AndroidComponentsExtensionImpl<ApplicationVariantBuilder, ApplicationVariant>(
                 dslServices,
-                variantBuilderOperations,
-                variantOperations
+                variantApiOperations
         )

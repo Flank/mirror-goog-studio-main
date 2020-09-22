@@ -776,11 +776,19 @@ com.android.build.api.dsl.VectorDrawables.getGeneratedDensities: java.util.Set<j
 com.android.build.api.dsl.VectorDrawables.getUseSupportLibrary: java.lang.Boolean ()
 com.android.build.api.dsl.VectorDrawables.setUseSupportLibrary: void (java.lang.Boolean)
 com.android.build.api.extension.AndroidComponentsExtension
+com.android.build.api.extension.AndroidComponentsExtension.androidTest: void (com.android.build.api.extension.VariantSelector<com.android.build.api.component.AndroidTest>, kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTest, kotlin.Unit>)
+com.android.build.api.extension.AndroidComponentsExtension.androidTest: void (com.android.build.api.extension.VariantSelector<com.android.build.api.component.AndroidTest>, org.gradle.api.Action<com.android.build.api.component.AndroidTest>)
+com.android.build.api.extension.AndroidComponentsExtension.beforeAndroidTest: void (com.android.build.api.extension.VariantSelector<com.android.build.api.component.AndroidTestBuilder>, kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTestBuilder, kotlin.Unit>)
+com.android.build.api.extension.AndroidComponentsExtension.beforeAndroidTest: void (com.android.build.api.extension.VariantSelector<com.android.build.api.component.AndroidTestBuilder>, org.gradle.api.Action<com.android.build.api.component.AndroidTestBuilder>)
+com.android.build.api.extension.AndroidComponentsExtension.beforeUnitTest: void (com.android.build.api.extension.VariantSelector<com.android.build.api.component.UnitTestBuilder>, kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTestBuilder, kotlin.Unit>)
+com.android.build.api.extension.AndroidComponentsExtension.beforeUnitTest: void (com.android.build.api.extension.VariantSelector<com.android.build.api.component.UnitTestBuilder>, org.gradle.api.Action<com.android.build.api.component.UnitTestBuilder>)
 com.android.build.api.extension.AndroidComponentsExtension.beforeVariants: void (com.android.build.api.extension.VariantSelector<VariantBuilderT>, kotlin.jvm.functions.Function1<? super VariantBuilderT, kotlin.Unit>)
 com.android.build.api.extension.AndroidComponentsExtension.beforeVariants: void (com.android.build.api.extension.VariantSelector<VariantBuilderT>, org.gradle.api.Action<VariantBuilderT>)
 com.android.build.api.extension.AndroidComponentsExtension.onVariants: void (com.android.build.api.extension.VariantSelector<VariantT>, kotlin.jvm.functions.Function1<? super VariantT, kotlin.Unit>)
 com.android.build.api.extension.AndroidComponentsExtension.onVariants: void (com.android.build.api.extension.VariantSelector<VariantT>, org.gradle.api.Action<VariantT>)
 com.android.build.api.extension.AndroidComponentsExtension.selector: com.android.build.api.extension.GenericVariantSelector<T> ()
+com.android.build.api.extension.AndroidComponentsExtension.unitTest: void (com.android.build.api.extension.VariantSelector<com.android.build.api.component.UnitTest>, kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTest, kotlin.Unit>)
+com.android.build.api.extension.AndroidComponentsExtension.unitTest: void (com.android.build.api.extension.VariantSelector<com.android.build.api.component.UnitTest>, org.gradle.api.Action<com.android.build.api.component.UnitTest>)
 com.android.build.api.extension.ApplicationAndroidComponentsExtension implements com.android.build.api.extension.AndroidComponentsExtension
 com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension implements com.android.build.api.extension.AndroidComponentsExtension
 com.android.build.api.extension.FilteredVariantSelector implements com.android.build.api.extension.VariantSelector

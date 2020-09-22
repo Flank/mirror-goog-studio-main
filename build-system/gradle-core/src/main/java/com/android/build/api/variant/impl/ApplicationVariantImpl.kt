@@ -16,14 +16,11 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariant
 import com.android.build.api.component.impl.ApkCreationConfigImpl
-import com.android.build.api.variant.AaptOptions
-import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.ApkPackagingOptions
-import com.android.build.api.variant.ApplicationVariant
-import com.android.build.api.variant.DependenciesInfo
-import com.android.build.api.variant.SigningConfig
+import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
+import com.android.build.api.variant.*
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -195,15 +192,17 @@ open class ApplicationVariantImpl @Inject constructor(
                     && globalScope.hasDynamicFeatures()
                     && dexingType.needsMainDexList)
 
-    override fun createUserVisibleVariantObject(
-        projectServices: ProjectServices,
-        stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledApplicationVariant =
-        projectServices.objectFactory.newInstance(
-            AnalyticsEnabledApplicationVariant::class.java,
-            this,
-            stats
-        )
+    override fun <T : Component> createUserVisibleVariantObject(
+            projectServices: ProjectServices,
+            operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
+            stats: GradleBuildVariant.Builder
+    ): T =
+            projectServices.objectFactory.newInstance(
+                    AnalyticsEnabledApplicationVariant::class.java,
+                    this,
+                    stats
+            ) as T
+
     override val minSdkVersionWithTargetDeviceApi: AndroidVersion
         get() = delegate.minSdkVersionWithTargetDeviceApi
 
