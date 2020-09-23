@@ -71,7 +71,9 @@ import android.view.MenuItem
 package ${escapeKotlinIdentifier(packageName)}
 
 import android.os.Bundle
+${renderIf(!isViewBindingSupported) {"""
 import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)}
+"""}}
 import ${getMaterialComponentName("android.support.design.widget.Snackbar", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
 import androidx.navigation.findNavController

@@ -44,6 +44,9 @@ fun drawerActivityKt(
 package ${escapeKotlinIdentifier(packageName)}
 import android.os.Bundle
 import android.view.Menu
+${renderIf(!isViewBindingSupported) {"""
+import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)}
+"""}}
 import ${getMaterialComponentName("android.support.design.widget.Snackbar", useAndroidX)}
 import ${getMaterialComponentName("android.support.design.widget.NavigationView", useAndroidX)}
 import androidx.navigation.findNavController
@@ -53,7 +56,6 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import ${getMaterialComponentName("android.support.v4.widget.DrawerLayout", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
-import ${getMaterialComponentName("android.support.v7.widget.Toolbar", useAndroidX)}
 ${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
 
 class ${activityClass} : AppCompatActivity() {
@@ -76,6 +78,7 @@ ${renderIf(isViewBindingSupported) {"""
           Language.Kotlin,
           isViewBindingSupported,
           id = "fab",
+          className = "FloatingActionButton",
           bindingName = "binding.${appBarMainBinding}")}.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()

@@ -54,7 +54,6 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 import ${getMaterialComponentName("android.support.v4.widget.DrawerLayout", useAndroidX)};
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)};
-import ${getMaterialComponentName("android.support.v7.widget.Toolbar", useAndroidX)};
 ${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
 
 public class ${activityClass} extends AppCompatActivity {
