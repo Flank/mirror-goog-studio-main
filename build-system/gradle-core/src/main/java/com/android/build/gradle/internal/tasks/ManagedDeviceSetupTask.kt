@@ -180,7 +180,6 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
 
     class CreationAction(
         override val name: String,
-        private val avdService: Provider<AvdComponentsBuildService>,
         private val systemImageSource: String,
         private val apiLevel: Int,
         private val abi: String,
@@ -190,12 +189,10 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
 
         constructor(
             name: String,
-            avdService: Provider<AvdComponentsBuildService>,
             managedDevice: ManagedVirtualDevice,
             globalScope: GlobalScope
         ): this(
             name,
-            avdService,
             managedDevice.systemImageSource,
             managedDevice.apiLevel,
             managedDevice.abi,
@@ -207,7 +204,7 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
 
         override fun configure(task: ManagedDeviceSetupTask) {
             task.sdkService.setDisallowChanges(globalScope.sdkComponents)
-            task.avdService.setDisallowChanges(avdService)
+            task.avdService.setDisallowChanges(globalScope.avdComponents)
 
             task.systemImageVendor.setDisallowChanges(systemImageSource)
             task.apiLevel.setDisallowChanges(apiLevel)
