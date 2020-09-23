@@ -49,7 +49,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
 $applicationPackageBlock
 
 /**

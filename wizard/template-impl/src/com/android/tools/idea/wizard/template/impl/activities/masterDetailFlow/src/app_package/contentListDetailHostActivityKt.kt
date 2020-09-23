@@ -15,6 +15,7 @@
  */
 package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
@@ -44,7 +45,7 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
 
 class ${collection}DetailHostActivity : AppCompatActivity() {
 

@@ -15,6 +15,7 @@
  */
 package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
 import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
@@ -42,7 +43,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
 
 public class ${collection}DetailHostActivity extends AppCompatActivity {
 

@@ -54,7 +54,7 @@ import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX
 import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)}
 import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)}
 import ${escapeKotlinIdentifier(packageName)}.R
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
 
 class ${firstFragmentClass} : Fragment() {
 

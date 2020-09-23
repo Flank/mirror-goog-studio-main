@@ -152,7 +152,7 @@ import ${superClassFqcn}
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
 
 // Remove the line below after defining your own ad unit ID.

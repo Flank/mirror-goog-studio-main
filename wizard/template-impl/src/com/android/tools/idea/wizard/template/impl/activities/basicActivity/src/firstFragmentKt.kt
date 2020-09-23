@@ -44,7 +44,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.fragment.findNavController
-${importViewBindingClass(isViewBindingSupported, packageName, firstFragmentLayoutName)}
+${importViewBindingClass(isViewBindingSupported, packageName, firstFragmentLayoutName, Language.Kotlin)}
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.

@@ -59,7 +59,7 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
 
 import ${packageName}.R;
 

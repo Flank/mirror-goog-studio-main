@@ -16,6 +16,7 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.modalBottomSheet.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
 import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
@@ -78,8 +79,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
-${importViewBindingClass(isViewBindingSupported, packageName, itemLayout)};
-${importViewBindingClass(isViewBindingSupported, packageName, listLayout)};
+${importViewBindingClass(isViewBindingSupported, packageName, itemLayout, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, listLayout, Language.Java)}
 
 /**
  * <p>A fragment that shows a list of items as a modal bottom sheet.</p>

@@ -16,6 +16,7 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
 import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
@@ -46,7 +47,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
 
 public class ${activityClass} extends FragmentActivity implements OnMapReadyCallback {
 

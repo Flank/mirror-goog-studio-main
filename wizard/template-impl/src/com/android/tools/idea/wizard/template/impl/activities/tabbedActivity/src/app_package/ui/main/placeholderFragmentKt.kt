@@ -49,7 +49,7 @@ import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX
 import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)}
 import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)}
 import ${packageName}.R
-${importViewBindingClass(isViewBindingSupported, packageName, fragmentLayoutName)}
+${importViewBindingClass(isViewBindingSupported, packageName, fragmentLayoutName, Language.Kotlin)}
 
 /**
  * A placeholder fragment containing a simple view.

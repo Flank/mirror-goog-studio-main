@@ -54,7 +54,7 @@ import android.view.WindowInsets;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 import ${getMaterialComponentName("android.support.wear.widget.SwipeDismissFrameLayout", useAndroidX)};
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
 
 public class ${activityClass} extends Activity implements OnMapReadyCallback {
 

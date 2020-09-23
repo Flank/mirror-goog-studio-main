@@ -44,7 +44,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.fragment.findNavController
-${importViewBindingClass(isViewBindingSupported, packageName, secondFragmentLayoutName)}
+${importViewBindingClass(isViewBindingSupported, packageName, secondFragmentLayoutName, Language.Kotlin)}
 
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.

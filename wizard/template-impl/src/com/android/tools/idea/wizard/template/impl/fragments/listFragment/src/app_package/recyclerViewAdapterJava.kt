@@ -16,6 +16,7 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.listFragment.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
 import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
@@ -58,7 +59,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import ${packageName}.placeholder.PlaceholderContent.PlaceholderItem;
-${importViewBindingClass(isViewBindingSupported, packageName, fragmentLayout)};
+${importViewBindingClass(isViewBindingSupported, packageName, fragmentLayout, Language.Java)}
 
 import java.util.List;
 

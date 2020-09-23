@@ -71,7 +71,7 @@ import ${getMaterialComponentName("android.support.design.widget.FloatingActionB
 import ${getMaterialComponentName("android.support.design.widget.Snackbar", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
 $newModuleImportBlock
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
 
 class ${activityClass} : AppCompatActivity() {
 

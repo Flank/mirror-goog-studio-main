@@ -54,7 +54,7 @@ import androidx.navigation.ui.setupWithNavController
 import ${getMaterialComponentName("android.support.v4.widget.DrawerLayout", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.widget.Toolbar", useAndroidX)}
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
 
 class ${activityClass} : AppCompatActivity() {
 

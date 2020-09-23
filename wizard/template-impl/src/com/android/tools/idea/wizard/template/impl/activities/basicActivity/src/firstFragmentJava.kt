@@ -45,7 +45,7 @@ import android.view.ViewGroup;
 import ${getMaterialComponentName("android.support.annotation.NonNull", useAndroidX)};
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)};
 import androidx.navigation.fragment.NavHostFragment;
-${importViewBindingClass(isViewBindingSupported, packageName, firstFragmentLayoutName)};
+${importViewBindingClass(isViewBindingSupported, packageName, firstFragmentLayoutName, Language.Java)}
 
 public class ${firstFragmentClass} extends Fragment {
 

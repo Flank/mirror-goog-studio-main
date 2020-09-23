@@ -80,7 +80,7 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 $newProjectImportBlock
 $applicationPackageBlock
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
 
 class $activityClass : AppCompatActivity() {
 

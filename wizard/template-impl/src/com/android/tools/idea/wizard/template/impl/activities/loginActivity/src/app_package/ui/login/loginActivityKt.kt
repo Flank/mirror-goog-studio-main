@@ -53,7 +53,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.Toast
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
 
 import ${escapeKotlinIdentifier(packageName)}.R
 
