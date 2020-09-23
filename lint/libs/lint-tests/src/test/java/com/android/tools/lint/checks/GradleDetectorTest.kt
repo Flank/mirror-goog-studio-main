@@ -2540,6 +2540,14 @@ class GradleDetectorTest : AbstractCheckTest() {
                     1 errors, 0 warnings
                     """
                 )
+                .expectFixDiffs(
+                    """
+                    Fix for build.gradle line 5: Update targetSdkVersion to 29:
+                    @@ -5 +5
+                    -         targetSdkVersion 17
+                    +         targetSdkVersion 29
+                    """
+                )
         } finally {
             GradleDetector.calendar = null
         }
@@ -2577,6 +2585,13 @@ class GradleDetectorTest : AbstractCheckTest() {
                     1 errors, 0 warnings
                     """
                 )
+                .expectFixDiffs(
+                    """
+                    Fix for build.gradle line 5: Update targetSdkVersion to 29:
+                    @@ -5 +5
+                    -         targetSdkVersion 28
+                    +         targetSdkVersion 29
+                    """)
         } finally {
             GradleDetector.calendar = null
         }
@@ -2613,6 +2628,56 @@ class GradleDetectorTest : AbstractCheckTest() {
                     1 errors, 0 warnings
                     """
                 )
+                .expectFixDiffs(
+                    """
+                    Fix for build.gradle line 5: Update targetSdkVersion to 29:
+                    @@ -5 +5
+                    -         targetSdkVersion 17
+                    +         targetSdkVersion 29
+                    """)
+        } finally {
+            GradleDetector.calendar = null
+        }
+    }
+
+    fun testExpired2() {
+        try {
+            val calendar = Calendar.getInstance()
+            GradleDetector.calendar = calendar
+            calendar.set(Calendar.YEAR, 2020)
+            calendar.set(Calendar.MONTH, 10)
+
+            lint().files(
+                gradle(
+                    "" +
+                            "apply plugin: 'com.android.application'\n" +
+                            "\n" +
+                            "android {\n" +
+                            "    defaultConfig {\n" +
+                            "        targetSdkVersion 'O'\n" +
+                            "    }\n" +
+                            "}\n"
+                )
+            )
+                .issues(EXPIRED_TARGET_SDK_VERSION, EXPIRING_TARGET_SDK_VERSION)
+                .sdkHome(mockSupportLibraryInstallation)
+                .run()
+                .expect(
+                    """
+                    build.gradle:5: Error: Google Play requires that apps target API level 29 or higher.
+                     [ExpiredTargetSdkVersion]
+                            targetSdkVersion 'O'
+                            ~~~~~~~~~~~~~~~~~~~~
+                    1 errors, 0 warnings
+                    """
+                )
+                .expectFixDiffs(
+                    """
+                    Fix for build.gradle line 5: Update targetSdkVersion to 29:
+                    @@ -5 +5
+                    -         targetSdkVersion 'O'
+                    +         targetSdkVersion 29
+                    """)
         } finally {
             GradleDetector.calendar = null
         }
