@@ -55,6 +55,7 @@ enum class FormFactor(val displayName: String) {
 
 enum class TemplateConstraint {
   AndroidX,
+  Jetifier,
   Kotlin
 }
 
