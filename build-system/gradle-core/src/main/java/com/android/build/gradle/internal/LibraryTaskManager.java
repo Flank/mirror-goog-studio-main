@@ -25,6 +25,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.dsl.PrefabPackagingOptions;
@@ -356,7 +357,12 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
         TaskProvider<BundleAar> bundle =
                 taskFactory.register(new BundleAar.CreationAction(variant));
 
-        TaskFactoryUtils.dependsOn(variant.getTaskContainer().getAssembleTask(), bundle);
+        variant.getTaskContainer()
+                .getAssembleTask()
+                .configure(
+                        task -> {
+                            task.dependsOn(variant.getArtifacts().get(ArtifactType.AAR.INSTANCE));
+                        });
 
         final VariantDependencies variantDependencies = variant.getVariantDependencies();
 
