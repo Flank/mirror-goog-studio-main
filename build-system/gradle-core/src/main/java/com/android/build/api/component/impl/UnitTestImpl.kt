@@ -90,6 +90,9 @@ open class UnitTestImpl @Inject constructor(
     override val testedApplicationId: Provider<String>
         get() = testedConfig.applicationId
 
+    override val debuggable: Boolean
+        get() = testedConfig.debuggable
+
     // these would normally be public but not for unit-test. They are there to feed the
     // manifest but aren't actually used.
     override val instrumentationRunner: Provider<String>

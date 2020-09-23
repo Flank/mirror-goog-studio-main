@@ -76,6 +76,8 @@ interface ComponentCreationConfig : ComponentIdentity {
     val registeredProjectClassesVisitors: List<AsmClassVisitorFactory<*>>
     val registeredDependenciesClassesVisitors: List<AsmClassVisitorFactory<*>>
     val allProjectClassesPostAsmInstrumentation: FileCollection
+    val debuggable: Boolean
+
 
     // ---------------------------------------------------------------------------------------------
     // TODO figure out whether these properties are needed by all

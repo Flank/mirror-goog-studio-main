@@ -324,7 +324,7 @@ public class TaskTestUtils {
         when(creationConfig.getVariantDslInfo()).thenReturn(variantDslInfo);
         when(creationConfig.getDirName()).thenReturn("config dir name");
         when(creationConfig.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
-        when(variantDslInfo.isDebuggable()).thenReturn(true);
+        when(creationConfig.getDebuggable()).thenReturn(true);
         return creationConfig;
     }
 

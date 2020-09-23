@@ -377,7 +377,7 @@ open class BasicModuleModelMock {
             doReturn(ndkInstallStatus).`when`(ndkHandler).ndkPlatform
             doReturn(ndkInstallStatus).`when`(ndkHandler).getNdkPlatform(true)
             doReturn(variantDslInfo).`when`(variantImpl).variantDslInfo
-            doReturn(true).`when`(variantDslInfo).isDebuggable
+            doReturn(true).`when`(variantImpl).debuggable
 
             val ndkInfo = NdkR19Info(ndkFolder)
             doReturn(ndkInfo).`when`(ndkInstallStatus.getOrThrow()).ndkInfo

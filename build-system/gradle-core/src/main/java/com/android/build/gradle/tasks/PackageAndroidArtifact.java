@@ -1141,9 +1141,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     .getAssets()
                     .set(creationConfig.getArtifacts().get(COMPRESSED_ASSETS.INSTANCE));
             packageAndroidArtifact.setJniDebugBuild(variantDslInfo.isJniDebuggable());
-            packageAndroidArtifact
-                    .getDebugBuild()
-                    .set(creationConfig.getVariantDslInfo().isDebuggable());
+            packageAndroidArtifact.getDebugBuild().set(creationConfig.getDebuggable());
             packageAndroidArtifact.getDebugBuild().disallowChanges();
 
             ProjectOptions projectOptions = creationConfig.getServices().getProjectOptions();

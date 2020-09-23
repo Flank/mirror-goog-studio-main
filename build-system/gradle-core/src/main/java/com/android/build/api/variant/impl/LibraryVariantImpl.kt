@@ -114,6 +114,9 @@ open class  LibraryVariantImpl @Inject constructor(
     override val dexingType: DexingType
         get() = delegate.dexingType
 
+    override val debuggable: Boolean
+        get() = variantDslInfo.isDebuggable
+
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,

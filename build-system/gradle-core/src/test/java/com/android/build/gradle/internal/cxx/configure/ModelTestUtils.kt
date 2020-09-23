@@ -114,7 +114,7 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(false).`when`(buildFeatures).prefab
     Mockito.doReturn(variantDslInfo).`when`(variantImpl).variantDslInfo
     Mockito.doReturn(variantBuilder).`when`(variantImpl).variantBuilder
-    Mockito.doReturn(true).`when`(variantDslInfo).isDebuggable
+    Mockito.doReturn(true).`when`(variantImpl).debuggable
     Mockito.doReturn(externalNativeBuildOptions).`when`(variantDslInfo).externalNativeBuildOptions
     Mockito.doReturn(externalNativeCmakeOptions).`when`(externalNativeBuildOptions).externalNativeCmakeOptions
     Mockito.doReturn(mergedNdkConfig).`when`(variantDslInfo).ndkConfig

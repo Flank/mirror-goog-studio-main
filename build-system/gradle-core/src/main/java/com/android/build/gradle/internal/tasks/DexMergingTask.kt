@@ -241,7 +241,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
             task.sharedParams.minSdkVersion.setDisallowChanges(
                 creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel()
             )
-            task.sharedParams.debuggable.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
+            task.sharedParams.debuggable.setDisallowChanges(creationConfig.debuggable)
             task.sharedParams.errorFormatMode.setDisallowChanges(
                 SyncOptions.getErrorFormatMode(projectOptions)
             )

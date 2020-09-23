@@ -31,8 +31,6 @@ interface ApkCreationConfig: ConsumableCreationConfig {
 
     val embedsMicroApp: Boolean
 
-    val debuggable: Boolean
-
     // TODO: move to a non variant object (GlobalTaskScope?)
     val testOnlyApk: Boolean
 

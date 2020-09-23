@@ -77,7 +77,7 @@ internal class DynamicFeatureTaskManager(
 
         taskFactory.register(PerModuleBundleTask.CreationAction(variantProperties))
 
-        if (!variantProperties.variantDslInfo.isDebuggable) {
+        if (!variantProperties.debuggable) {
             taskFactory.register(PerModuleReportDependenciesTask.CreationAction(variantProperties))
         }
     }

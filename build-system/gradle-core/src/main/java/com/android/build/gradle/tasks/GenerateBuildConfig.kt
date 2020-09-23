@@ -240,7 +240,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                 task.hasVersionInfo.setDisallowChanges(false)
             }
 
-            task.debuggable.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
+            task.debuggable.setDisallowChanges(creationConfig.debuggable)
 
             task.buildTypeName.setDisallowChanges(variantDslInfo.componentIdentity.buildType)
 

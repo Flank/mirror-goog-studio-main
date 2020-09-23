@@ -135,7 +135,7 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
 
             task.jarCreatorType = creationConfig.variantScope.jarCreatorType
             task.debuggable
-                .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
+                .setDisallowChanges(creationConfig.debuggable)
         }
     }
 }

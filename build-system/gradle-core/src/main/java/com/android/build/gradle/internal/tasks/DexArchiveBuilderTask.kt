@@ -552,7 +552,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 }
             )
             task.dexParams.debuggable.setDisallowChanges(
-                creationConfig.variantDslInfo.isDebuggable
+                creationConfig.debuggable
             )
             task.projectVariant.set(
                 "${task.project.name}:${creationConfig.name}"

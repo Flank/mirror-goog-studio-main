@@ -68,8 +68,8 @@ public class TestApplicationTaskManager
 
     @Override
     protected void doCreateTasksForVariant(
-            @NonNull ComponentInfo<TestVariantBuilderImpl, TestVariantImpl> variantInfo,
-            @NonNull
+            @NotNull ComponentInfo<TestVariantBuilderImpl, TestVariantImpl> variantInfo,
+            @NotNull
                     List<? extends ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>>
                             allVariants) {
         createCommonTasks(variantInfo, allVariants);

@@ -300,7 +300,7 @@ fun tryCreateCxxConfigurationModel(
         buildDir = global.project.buildDir,
         rootDir = global.project.rootDir,
         buildFile = global.project.buildFile,
-        isDebuggable = variant.variantDslInfo.isDebuggable,
+        isDebuggable = variant.debuggable,
         minSdkVersion = variant.variantBuilder.minSdkVersion.toSharedAndroidVersion(),
         cmakeVersion = global.extension.externalNativeBuild.cmake.version,
         splitsAbiFilterSet = global.extension.splits.abiFilters,

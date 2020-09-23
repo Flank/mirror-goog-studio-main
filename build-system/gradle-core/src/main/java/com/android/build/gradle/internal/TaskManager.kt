@@ -996,7 +996,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                 project.files(
                                         artifacts.get(
                                                 COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)))
-                if (!creationConfig.variantDslInfo.isDebuggable
+                if (!creationConfig.debuggable
                         && projectOptions[BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS]) {
                     taskFactory.register(OptimizeResourcesTask.CreateAction(creationConfig))
                 }
@@ -1419,7 +1419,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     open fun maybeCreateLintVitalTask(
             variant: VariantT,
             allVariants: List<ComponentInfo<VariantBuilderT, VariantT>>) {
-        if (variant.variantDslInfo.isDebuggable
+        if (variant.debuggable
                 || !extension.lintOptions.isCheckReleaseBuilds()) {
             return
         }
@@ -1877,7 +1877,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             taskFactory.register(configAction)
         } else {
             val produceSeparateOutputs = (dexingType === DexingType.NATIVE_MULTIDEX
-                    && creationConfig.variantDslInfo.isDebuggable)
+                    && creationConfig.debuggable)
             taskFactory.register(
                     DexMergingTask.CreationAction(
                             creationConfig,
