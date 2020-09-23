@@ -158,6 +158,8 @@ class OptimisticApkInstaller {
         }
 
         metrics.finish();
+        metrics.add(response.getAgentLogsList());
+
         return nextOverlayId;
     }
 

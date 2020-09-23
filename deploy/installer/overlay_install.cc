@@ -76,6 +76,7 @@ void OverlayInstallCommand::Run(proto::InstallerResponse* response) {
 
   SetUpAgent(agent, overlay_response);
   UpdateOverlay(overlay_response);
+  GetAgentLogs(overlay_response);
 
   proto::InstallServerResponse install_response;
   if (!client_->KillServerAndWait(&install_response)) {
@@ -225,6 +226,33 @@ bool OverlayInstallCommand::CheckFilesExist(
   missing_files->insert(response.check_response().missing_files().begin(),
                         response.check_response().missing_files().end());
   return true;
+}
+
+void OverlayInstallCommand::GetAgentLogs(
+    proto::OverlayInstallResponse* response) {
+  Phase p("GetAgentLogs");
+  proto::InstallServerRequest install_request;
+  install_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
+  install_request.mutable_log_request()->set_package_name(
+      request_.package_name());
+
+  // If this fails, we don't really care - it's a best-effort situation; don't
+  // break the deployment because of it. Just log and move on.
+  if (!client_->Write(install_request)) {
+    Log::W("Could not write to server to retrieve agent logs.");
+    return;
+  }
+
+  proto::InstallServerResponse install_response;
+  if (!client_->Read(&install_response)) {
+    Log::W("Could not read from server while retrieving agent logs.");
+    return;
+  }
+
+  for (const auto& log : install_response.log_response().logs()) {
+    auto added = response->add_agent_logs();
+    *added = log;
+  }
 }
 
 }  // namespace deploy
