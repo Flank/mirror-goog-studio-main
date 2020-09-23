@@ -193,7 +193,6 @@ class SdkDirectLoadingStrategyTest {
         ]
     """.trimIndent()
 
-    // TODO
     private fun getSystemImageXml(
         systemImageInfo: SystemImageInfo) =
     """
