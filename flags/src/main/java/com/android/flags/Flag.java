@@ -94,6 +94,7 @@ public final class Flag<T> {
 
     private final FlagGroup group;
     private final String name;
+    private final String id;
     private final String displayName;
     private final String description;
     private final ValueConverter<T> valueConverter;
@@ -110,6 +111,7 @@ public final class Flag<T> {
             @NonNull ValueConverter<T> valueConverter) {
         this.group = group;
         this.name = name;
+        this.id = group.getName() + "." + name;
         this.displayName = displayName;
         this.description = description;
         this.valueConverter = valueConverter;
@@ -161,7 +163,7 @@ public final class Flag<T> {
      */
     @NonNull
     public String getId() {
-        return group.getName() + "." + name;
+        return id;
     }
 
     @NonNull
