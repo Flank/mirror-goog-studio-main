@@ -19,12 +19,41 @@ package com.android.zipflinger;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.zip.Deflater;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class RepoTest extends AbstractZipflingerTest {
+
+    @Test
+    public void testGetInputStream() throws Exception {
+        byte[][] files = new byte[2][1024];
+
+        Random r = new Random(0);
+        for (byte[] bytes : files) {
+            r.nextBytes(bytes);
+        }
+
+        File file = getTestFile("testGetContent.zip");
+        try (ZipArchive archive = new ZipArchive(file)) {
+            for (int i = 0; i < files.length; i++) {
+                archive.add(
+                        new BytesSource(
+                                files[i], Integer.toString(i), Deflater.NO_COMPRESSION + i));
+            }
+        }
+
+        try (ZipRepo repo = new ZipRepo(file)) {
+            for (int i = 0; i < files.length; i++) {
+                String entryName = Integer.toString(i);
+                try (InputStream inputStream = repo.getInputStream(entryName)) {
+                    assertZipEntryMatch(inputStream, files[i]);
+                }
+            }
+        }
+    }
 
     @Test
     public void testGetContent() throws Exception {
@@ -47,9 +76,9 @@ public class RepoTest extends AbstractZipflingerTest {
         try (ZipRepo repo = new ZipRepo(file)) {
             for (int i = 0; i < files.length; i++) {
                 String entryName = Integer.toString(i);
-                try (InputStream inputStream = repo.getContent(entryName)) {
-                    assertZipEntryMatch(inputStream, files[i]);
-                }
+                ByteBuffer content = repo.getContent(entryName);
+                content.rewind();
+                Assert.assertArrayEquals("Content does not match", files[i], toByteArray(content));
             }
         }
     }

@@ -17,10 +17,12 @@
 package com.android.zipflinger;
 
 import com.android.annotations.NonNull;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -65,15 +67,20 @@ public class ZipRepo implements Closeable {
         channel.close();
     }
 
-    // Is it the caller's responsibility to close() the returned InputStream.
     @NonNull
-    public InputStream getContent(@NonNull String entryName) throws IOException {
+    private Entry getEntry(@NonNull String entryName) {
         Entry entry = zipMap.getEntries().get(entryName);
         if (entry == null) {
             String msg = String.format("No entry '%s' in file '%s'", entryName, file);
             throw new IllegalArgumentException(msg);
         }
+        return entry;
+    }
 
+    // Is it the caller's responsibility to close() the returned InputStream.
+    @NonNull
+    public InputStream getInputStream(@NonNull String entryName) throws IOException {
+        Entry entry = getEntry(entryName);
         Location payloadLocation = entry.getPayloadLocation();
         InputStream inputStream = new PayloadInputStream(channel, payloadLocation);
 
@@ -82,5 +89,18 @@ public class ZipRepo implements Closeable {
         }
 
         return Compressor.wrapToInflate(inputStream);
+    }
+
+    @NonNull
+    public ByteBuffer getContent(@NonNull String entryName) throws IOException {
+        Entry entry = getEntry(entryName);
+        Location payloadLocation = entry.getPayloadLocation();
+        ByteBuffer payloadByteBuffer = ByteBuffer.allocate(Math.toIntExact(payloadLocation.size()));
+        channel.read(payloadByteBuffer, payloadLocation.first);
+        if (entry.isCompressed()) {
+            return Compressor.inflate(payloadByteBuffer.array());
+        } else {
+            return payloadByteBuffer;
+        }
     }
 }
