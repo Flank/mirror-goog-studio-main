@@ -67,7 +67,7 @@ Parameters ParseArgs(int argc, char** argv) {
       parameters.cmd_path = strtok(nullptr, "=");
     } else if (!strncmp("-pm", argv[index], 3)) {
       parameters.pm_path = strtok(nullptr, "=");
-    } else if (!strncmp("-daemon", argv[index], 8)) {
+    } else if (!strncmp("-daemon", argv[index], 7)) {
       daemon_mode = true;
     } else if (!strncmp("-version", argv[index], 8)) {
       parameters.version = strtok(nullptr, "=");
