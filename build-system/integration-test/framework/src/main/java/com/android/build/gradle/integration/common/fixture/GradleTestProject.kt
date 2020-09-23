@@ -278,11 +278,17 @@ class GradleTestProject @JvmOverloads internal constructor(
         /** Returns a string that contains the gradle buildscript content  */
         @JvmStatic
         val gradleBuildscript: String
-            get() = """apply from: "../commonHeader.gradle"
-buildscript { apply from: "../commonBuildScript.gradle" }
+            get() =
+                """
+                apply from: "../commonHeader.gradle"
+                buildscript { apply from: "../commonBuildScript.gradle" }
+                apply from: "../commonLocalRepo.gradle"
 
-apply from: "../commonLocalRepo.gradle"
-"""
+                // Treat javac warnings as errors
+                tasks.withType(JavaCompile) {
+                    options.compilerArgs << "-Werror"
+                }
+                """.trimIndent()
 
         @JvmStatic
         val compileSdkHash: String

@@ -56,12 +56,12 @@ class CleanBuildCacheTest {
     @Test
     fun testConfigureOnDemand() {
         // force-configure all tasks
-        project.buildFile.appendText(
+        project.buildFile.appendText("\n" +
             """
             tasks.register("mytask") {
                 project.rootProject.subprojects { project.rootProject.evaluationDependsOn(it.path) }
             }
-        """.trimIndent()
+            """.trimIndent()
         )
         // running "tasks" is incompatible
         project.executor()
