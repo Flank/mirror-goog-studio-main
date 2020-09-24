@@ -119,22 +119,11 @@ cc_binary(
 flat_archive(
     name = "skiaparser",
     ext = "zip",
-    deps = select({
-        "windows": {
-            "files/version-map.xml": "skiaparser",
-            ":skia-grpc-server": "skiaparser",
-            "files/source.properties": "skiaparser",
-            "files/vcruntime140.dll": "skiaparser",
-            "files/vcruntime140_1.dll": "skiaparser",
-            "files/msvcp140.dll": "skiaparser",
-            "files/NOTICE.txt": "skiaparser",
-        },
-        "//conditions:default": {
-            "files/version-map.xml": "skiaparser",
-            ":skia-grpc-server": "skiaparser",
-            "files/source.properties": "skiaparser",
-        },
-    }),
+    deps = {
+        "files/version-map.xml": "skiaparser",
+        ":skia-grpc-server": "skiaparser",
+        "files/source.properties": "skiaparser",
+    },
 )
 
 cc_library(
