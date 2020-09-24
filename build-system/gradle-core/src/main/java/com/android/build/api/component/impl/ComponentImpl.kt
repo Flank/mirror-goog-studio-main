@@ -203,7 +203,7 @@ abstract class ComponentImpl(
      *
      * if there is no tested variant this does nothing and returns null.
      */
-    override fun <T> onTestedConfig(action: (VariantCreationConfig) -> T): T? {
+    override fun <T> onTestedConfig(action: (VariantCreationConfig) -> T?): T? {
         if (variantType.isTestComponent) {
             val tested = testedConfig ?: throw RuntimeException("testedVariant null with type $variantType")
             return action(tested)

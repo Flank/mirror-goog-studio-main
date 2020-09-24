@@ -127,7 +127,7 @@ interface ComponentCreationConfig : ComponentIdentity {
      *
      * if there is no tested variant this does nothing and returns null.
      */
-    fun <T> onTestedConfig(action: (VariantCreationConfig) -> T): T?
+    fun <T> onTestedConfig(action: (VariantCreationConfig) -> T? ): T?
 
     // TODO : Remove BaseVariantData.
     val variantData: BaseVariantData

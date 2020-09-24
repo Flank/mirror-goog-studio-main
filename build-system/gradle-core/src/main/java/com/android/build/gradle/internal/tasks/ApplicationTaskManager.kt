@@ -58,9 +58,9 @@ class ApplicationTaskManager(
 ) {
 
     override fun doCreateTasksForVariant(
-        variantInfo: ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>,
-        allVariants: MutableList<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>
-    ) {
+            variantInfo: ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>,
+            allVariants: List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>)
+    {
         createCommonTasks(variantInfo, allVariants)
 
         val variant = variantInfo.variant

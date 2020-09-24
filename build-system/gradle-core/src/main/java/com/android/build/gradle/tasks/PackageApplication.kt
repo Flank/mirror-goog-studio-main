@@ -50,7 +50,7 @@ abstract class PackageApplication : PackageAndroidArtifact() {
         creationConfig: ApkCreationConfig,
         private val outputDirectory: File,
         useResourceShrinker: Boolean,
-        manifests: Provider<Directory?>,
+        manifests: Provider<Directory>,
         manifestType: Artifact<Directory>
     ) : PackageAndroidArtifact.CreationAction<PackageApplication>(
         creationConfig,
