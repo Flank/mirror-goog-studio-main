@@ -60,6 +60,8 @@ class XmlStringBuilder(private val preserveSpaces: Boolean = false) {
     private set
   private var firstQuote = -1
   private var lastQuote = -1
+  private var firstChar = -1
+  private var lastChar = -1
   private var rawStringBuilder: StringBuilder = StringBuilder()
   private var textBuilder: StringBuilder = StringBuilder()
 
@@ -80,6 +82,8 @@ class XmlStringBuilder(private val preserveSpaces: Boolean = false) {
     lastCodepointWasSpace = false
     firstQuote = -1
     lastQuote = -1
+    firstChar = -1
+    lastChar = -1
     rawStringBuilder = StringBuilder()
     textBuilder = StringBuilder()
 
@@ -115,38 +119,51 @@ class XmlStringBuilder(private val preserveSpaces: Boolean = false) {
         continue
       }
 
+      if (firstChar == -1) {
+          firstChar = textBuilder.length
+      }
+
       lastCodepointWasSpace = false
-      if (codePoint == '\\'.toInt()) {
-        if (codePoints.hasNext()) {
-          codePoint = codePoints.nextInt()
-          when (codePoint) {
-            't'.toInt() -> textBuilder.append('\t')
-            'n'.toInt() -> textBuilder.append('\n')
-            '#'.toInt(), '@'.toInt(), '?'.toInt(), '"'.toInt(), '\''.toInt(), '\\'.toInt() ->
-              textBuilder.appendCodePoint(codePoint)
-            'u'.toInt() -> {
-              if (!appendUnicodeEscapeSequence(codePoints, textBuilder)) {
-                error = "Invalid unicode escape sequence in string\n\"$str\""
-                return this
+      when {
+        codePoint == '\\'.toInt() -> {
+          // if we encounter a single "\" at the end of the string, just ignore it.
+          if (codePoints.hasNext()) {
+              codePoint = codePoints.nextInt()
+              when (codePoint) {
+                  't'.toInt() -> textBuilder.append('\t')
+                  'n'.toInt() -> textBuilder.append('\n')
+                  '#'.toInt(), '@'.toInt(), '?'.toInt(), '"'.toInt(), '\''.toInt(), '\\'.toInt() ->
+                      textBuilder.appendCodePoint(codePoint)
+                  'u'.toInt() -> {
+                      if (!appendUnicodeEscapeSequence(codePoints, textBuilder)) {
+                          error = "Invalid unicode escape sequence in string\n\"$str\""
+                          return this
+                      }
+                  }
+                  // can ignore the escape character and just include the code point
+                  else -> textBuilder.appendCodePoint(codePoint)
               }
-            }
-            // can ignore the escape character and just include the code point
-            else -> textBuilder.append(codePoint)
+              lastChar = textBuilder.length
           }
         }
-      } else if (codePoint == '\"'.toInt() && !preserveSpaces) {
-        // only toggle quote when we are not preserving spaces.
-        inQuote = !inQuote
-        if (firstQuote == -1) {
-          firstQuote = textBuilder.length
+        codePoint == '\"'.toInt() && !preserveSpaces -> {
+          // only toggle quote when we are not preserving spaces.
+          inQuote = !inQuote
+          if (firstQuote == -1) {
+              firstQuote = textBuilder.length
+          }
+          lastQuote = textBuilder.length
+          lastChar = textBuilder.length
         }
-        lastQuote = textBuilder.length
-      } else if (codePoint == '\''.toInt() && !preserveSpaces && !inQuote){
-        // this should be escaped when we are not preserving spaces
-        error = "Invalid unicode escape sequence in string\n\"{str}\""
-        return this
-      } else {
-        textBuilder.appendCodePoint(codePoint)
+        codePoint == '\''.toInt() && !preserveSpaces && !inQuote -> {
+          // this should be escaped when we are not preserving spaces
+          error = "Invalid unicode escape sequence in string\n\"{str}\""
+          return this
+        }
+        else -> {
+          textBuilder.appendCodePoint(codePoint)
+          lastChar = textBuilder.length
+        }
       }
     }
 
@@ -255,7 +272,10 @@ class XmlStringBuilder(private val preserveSpaces: Boolean = false) {
       untranslatables = untranslatableSections.map {
         it.shift(-firstChar)
       }
-      text = textBuilder.substring(firstChar, lastChar)
+
+      // If we had a string made fully of whitespace, then firstChar > lastChar. Since we're
+      // removing leading and trailing whitespaces, handle this as an empty string.
+      text = if (firstChar >= lastChar) "" else textBuilder.substring(firstChar, lastChar)
     }
 
     val raw = rawStringBuilder.toString()
@@ -267,45 +287,34 @@ class XmlStringBuilder(private val preserveSpaces: Boolean = false) {
     // If there were no spans, we treat this string a little differently (according to AAPT).
     // We must strip the leading and trailing whitespace.
     if (firstQuote == -1) {
-      // If there are no quotes, just delete the whitespaces at the beginning of the string.
-      var index = 0
-      val iterator = textBuilder.codePoints().iterator()
-      while (iterator.hasNext() && Character.isWhitespace(iterator.nextInt())) {
-        ++index
+      if (firstChar != -1) {
+        // If there are no quotes, remove all whitespace before first character.
+        return firstChar
       }
-      return index
+      // If there are no characters in the string, it's just whitespaces, the resulting string
+      // string should be empty.
+      return textBuilder.length
     }
     // If there are quotes we need to check if there are any non-whitespace characters before
     // the quote. If there are any, the string should be preserved.
-    var index = 0
-    val iterator = textBuilder.codePoints().iterator()
-    while (iterator.hasNext() && index < firstQuote) {
-      if (!Character.isWhitespace(iterator.nextInt())) {
-        return 0
-      }
-      ++index
-    }
+    if (firstChar != -1 && firstChar < firstQuote)
+      return 0
     return firstQuote
   }
 
   private fun getLastChar(text: String): Int {
     if (lastQuote == -1) {
       // If we had no quotes then just trim the whitespace at the end of the string.
-      var index = text.length - 1
-      while (index > 0 && Character.isWhitespace(text.codePointAt(index))) {
-        --index
+      if (lastChar != -1) {
+          return lastChar
       }
-      return index+1
+      // If there were no characters, it's all whitespace, and the resulting string should be empty.
+      return 0
     }
     // If we had quotes, only trim the string if there are exclusively whitespaces after the
     // last quote.
-    var index = text.length -1
-    while (index >= lastQuote) {
-      if (!Character.isWhitespace(text.codePointAt(index))) {
-        return text.length
-      }
-      --index
-    }
+    if (lastChar != -1 && lastChar > lastQuote)
+      return text.length
     return lastQuote
   }
 
