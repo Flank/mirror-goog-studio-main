@@ -22,11 +22,18 @@ import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.warnln
-import com.android.build.gradle.internal.cxx.model.*
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.CxxVariantModel
+import com.android.build.gradle.internal.cxx.model.jsonFile
+import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
+import com.android.build.gradle.internal.cxx.model.metadataGenerationStderrFile
+import com.android.build.gradle.internal.cxx.model.metadataGenerationStdoutFile
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.settings.getFinalCmakeCommandLineArguments
 import com.android.ide.common.process.ProcessInfoBuilder
+import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_FEATURE_NOT_SUPPORTED_FOR_VERSION
+import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_VERSION_IS_UNSUPPORTED
 import com.android.utils.tokenizeCommandLineToEscaped
 import com.google.gson.GsonBuilder
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -51,7 +58,10 @@ internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
 
     override fun executeProcess(ops: ExecOperations, abi: CxxAbiModel) {
         if(abi.getBuildCommandArguments().isNotEmpty()){
-            warnln("buildCommandArgs from CMakeSettings.json is not supported for CMake version 3.6 and below.")
+            warnln(
+                CMAKE_FEATURE_NOT_SUPPORTED_FOR_VERSION,
+                "buildCommandArgs from CMakeSettings.json is not supported for CMake version 3.6 and below."
+            )
         }
         val logPrefix = "${variant.variantName}|${abi.abi.tag} :"
         createProcessOutputJunction(
@@ -110,6 +120,9 @@ internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
     }
 
     override fun checkPrefabConfig() {
-        errorln("Prefab cannot be used with CMake 3.6. Use CMake 3.7 or newer.")
+        errorln(
+            CMAKE_VERSION_IS_UNSUPPORTED,
+            "Prefab cannot be used with CMake 3.6. Use CMake 3.7 or newer."
+        )
     }
 }

@@ -28,12 +28,16 @@ data class LoggingMessage(
     val message: String,
     val file: File? = null,
     val tag: String? = null,
-    val diagnosticCode: CxxDiagnosticCode = CxxDiagnosticCode.UNKNOWN
+    val diagnosticCode: CxxDiagnosticCode? = null
 ) {
     override fun toString(): String {
         val codeHeader = when (diagnosticCode) {
-            CxxDiagnosticCode.UNKNOWN -> "C/C++"
-            else -> "CXX${diagnosticCode.code}"
+            null -> "C/C++"
+            else -> when (level) {
+                WARN -> "CXX${diagnosticCode.warningCode}"
+                ERROR -> "CXX${diagnosticCode.errorCode}"
+                else -> throw IllegalStateException("Message at $level should not have diagnostic code.")
+            }
         }
         return when {
             (file == null && tag == null) -> message
@@ -44,10 +48,14 @@ data class LoggingMessage(
     }
 }
 
-private fun LoggingLevel.recordOf(message: String, diagnosticCode: CxxDiagnosticCode = CxxDiagnosticCode.UNKNOWN) =
+private fun LoggingLevel.recordOf(message: String, diagnosticCode: CxxDiagnosticCode?) =
     LoggingMessage(this, message, diagnosticCode = diagnosticCode)
 
-fun errorRecordOf(message : String, diagnosticCode: CxxDiagnosticCode) = ERROR.recordOf(message, diagnosticCode)
-fun warnRecordOf(message : String, diagnosticCode: CxxDiagnosticCode) = WARN.recordOf(message, diagnosticCode)
-fun lifecycleRecordOf(message : String) = LIFECYCLE.recordOf(message)
-fun infoRecordOf(message : String) = INFO.recordOf(message)
+fun errorRecordOf(message: String, diagnosticCode: CxxDiagnosticCode?) =
+    ERROR.recordOf(message, diagnosticCode)
+
+fun warnRecordOf(message: String, diagnosticCode: CxxDiagnosticCode?) =
+    WARN.recordOf(message, diagnosticCode)
+
+fun lifecycleRecordOf(message: String) = LIFECYCLE.recordOf(message, null)
+fun infoRecordOf(message: String) = INFO.recordOf(message, null)

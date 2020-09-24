@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.ndk.AbiInfo
+import com.android.utils.cxx.CxxDiagnosticCode.NDK_CORRUPTED
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
@@ -69,7 +70,7 @@ class NdkAbiFile(abiFile: File) {
                     }
                 }
             } catch (e: Throwable) {
-                errorln("Could not parse '$abiFile'.")
+                errorln(NDK_CORRUPTED, "Could not parse '$abiFile'.")
                 fallbackAbis()
             }
 

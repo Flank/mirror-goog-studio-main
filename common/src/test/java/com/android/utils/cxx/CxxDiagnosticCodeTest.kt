@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.cxx.logging
+package com.android.utils.cxx
 
-enum class LoggingLevel {
-    INFO,
-    LIFECYCLE,
-    WARN,
-    ERROR;
+import com.google.common.truth.Truth
+import org.junit.Test
+
+class CxxDiagnosticCodeTest {
+    @Test
+    fun `CxxDiagnosticCode should not contain duplicates`() {
+        Truth.assertThat(CxxDiagnosticCode.values().map { it.errorCode }).containsNoDuplicates()
+    }
 }

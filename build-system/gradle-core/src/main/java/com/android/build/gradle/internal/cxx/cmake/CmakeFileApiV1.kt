@@ -15,12 +15,19 @@
  */
 package com.android.build.gradle.internal.cxx.cmake
 
-import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.*
+import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.Artifacts
+import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.CompileGroups
+import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.Dependencies
+import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.Link
+import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.Source
+import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.SourceGroups
+import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.Type
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValue
 import com.android.build.gradle.internal.cxx.json.NativeToolchainValue
 import com.android.build.gradle.internal.cxx.logging.errorln
+import com.android.utils.cxx.CxxDiagnosticCode.EXTRA_OUTPUT
 import com.google.gson.GsonBuilder
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
@@ -198,7 +205,9 @@ fun readCmakeFileApiReply(
     // Populate NativeLibraryValues#output
     targetIdToOutputs.forEach { (id, outputs) ->
         if (outputs.size > 1) {
-            errorln("Target $id produces multiple outputs ${outputs.joinToString(", ")}")
+            errorln(
+                EXTRA_OUTPUT, "Target $id produces multiple outputs ${outputs.joinToString(", ")}"
+            )
         }
         targetIdToNativeLibraryValue
                 .computeIfAbsent(id) { NativeLibraryValue() }

@@ -31,6 +31,8 @@ import com.android.build.gradle.internal.cxx.model.metadataGenerationStdoutFile
 import com.android.build.gradle.internal.cxx.model.prefabPackageDirectoryList
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.ide.common.process.ProcessInfoBuilder
+import com.android.utils.cxx.CxxDiagnosticCode.NDK_FEATURE_NOT_SUPPORTED_FOR_VERSION
+import com.android.utils.cxx.CxxDiagnosticCode.INVALID_EXTERNAL_NATIVE_BUILD_CONFIG
 import com.google.common.base.Charsets
 import com.google.common.collect.Lists
 import com.google.gson.GsonBuilder
@@ -208,7 +210,10 @@ internal class NdkBuildExternalNativeJsonGenerator(
                 // TODO(danalbert): Include a link to the docs page when it is published.
                 // This can be worked around on older NDKs, but it's too verbose to include in the
                 // warning message.
-                warnln("Prefab packages cannot be automatically imported until NDK r21.")
+                warnln(
+                    NDK_FEATURE_NOT_SUPPORTED_FOR_VERSION,
+                    "Prefab packages cannot be automatically imported until NDK r21."
+                )
             }
             result.add("NDK_GRADLE_INJECTED_IMPORT_PATH=" + abi.prefabFolder.toString())
         }
@@ -300,12 +305,14 @@ internal class NdkBuildExternalNativeJsonGenerator(
         // Do some basic sync time checks.
         if (this.variant.module.makeFile.isDirectory) {
             errorln(
+                INVALID_EXTERNAL_NATIVE_BUILD_CONFIG,
                 "Gradle project ndkBuild.path %s is a folder. "
                         + "Only files (like Android.mk) are allowed.",
                 this.variant.module.makeFile
             )
         } else if (!this.variant.module.makeFile.exists()) {
             errorln(
+                INVALID_EXTERNAL_NATIVE_BUILD_CONFIG,
                 "Gradle project ndkBuild.path is %s but that file doesn't exist",
                 this.variant.module.makeFile
             )
