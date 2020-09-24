@@ -16,15 +16,13 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deployer.model.Apk;
-import com.android.tools.deployer.model.ApkEntry;
-import com.android.tools.deployer.model.DexClass;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -44,69 +42,49 @@ public class OverlayId implements Serializable {
     // this differently. This is also strict string comparison with no backward capability.
     public static final String SCHEMA_VERSION = "1.0";
 
-    // overlay file to checksum map.
-    private final SortedMap<String, String> apks; // Intalled Apk -> Digest
-    private final SortedMap<String, String> deltas; // OverlayFile -> Checksum
-    private final String sha;
+    // A mapping from each fully installed APK to its computed digest.
+    private final SortedMap<String, String> apks;
 
-    // Maintain a list of the swapped dex in this overlay. This collection is not used when
-    // computing the SHA.
-    private final List<String> swappedDex;
+    // A mapping from each file in the overlay to its computed checksum. Each key value is the
+    // file's full path within the overlay.
+    private final SortedMap<String, String> overlayFiles;
+
+    // The set of overlay files that are swapped dex classes from Apply Changes or Apply Code
+    // Changes deployments. All files in this set are also keys in the overlayFiles map.
+    private final Set<String> swappedDex;
+
+    private final String sha;
 
     // Distinguish between a "true" base install and an install that has OID but zero overlay file.
     private final boolean baseInstall;
 
-    public OverlayId(
-            OverlayId prevOverlayId,
-            DexComparator.ChangedClasses dexOverlays,
-            Set<ApkEntry> fileOverlays)
-            throws DeployerException {
-        apks = prevOverlayId.apks;
-        deltas = new TreeMap<>(prevOverlayId.deltas);
-        swappedDex = new ArrayList<>(prevOverlayId.swappedDex);
-        for (DexClass cls : dexOverlays.newClasses) {
-            String name = String.format("%s.dex", cls.name);
-            deltas.put(name, String.format("%d", cls.checksum));
-            swappedDex.add(name);
-        }
-        for (DexClass cls : dexOverlays.modifiedClasses) {
-            String name = String.format("%s.dex", cls.name);
-            deltas.put(name, String.format("%d", cls.checksum));
-            swappedDex.add(name);
-        }
-        fileOverlays.forEach(
-                file ->
-                        deltas.put(
-                                file.getQualifiedPath(), String.format("%d", file.getChecksum())));
-        sha = computeShaHex(getRepresentation());
-        baseInstall = false;
-    }
-
-    public OverlayId(OverlayId prevOverlayId, Set<ApkEntry> fileOverlays) throws DeployerException {
-        apks = prevOverlayId.apks;
-        deltas = new TreeMap<>(prevOverlayId.deltas);
-        swappedDex = Collections.emptyList();
-        fileOverlays.forEach(
-                file -> deltas.put(file.getQualifiedPath(), format("%d", file.getChecksum())));
-        sha = computeShaHex(getRepresentation());
-        baseInstall = false;
-    }
-
     public OverlayId(List<Apk> installedApk) throws DeployerException {
         apks = new TreeMap<>();
-        deltas = ImmutableSortedMap.of();
-        swappedDex = Collections.emptyList();
+        overlayFiles = ImmutableSortedMap.of();
+        swappedDex = ImmutableSet.of();
         installedApk.forEach(apk -> apks.put(apk.name, apk.checksum));
-        this.sha = computeShaHex(getRepresentation());
-        this.baseInstall = true;
+        sha = computeShaHex(getRepresentation());
+        baseInstall = true;
     }
 
-    public List<String> getSwappedDex() {
-        return swappedDex;
+    private OverlayId(
+            SortedMap<String, String> apks,
+            SortedMap<String, String> overlayFiles,
+            Set<String> swappedDex)
+            throws DeployerException {
+        this.apks = apks;
+        this.overlayFiles = overlayFiles;
+        this.swappedDex = swappedDex;
+        sha = computeShaHex(getRepresentation());
+        baseInstall = false;
     }
 
     public Set<String> getOverlayFiles() {
-        return deltas.keySet();
+        return overlayFiles.keySet();
+    }
+
+    public Set<String> getSwappedDexFiles() {
+        return swappedDex;
     }
 
     public String getRepresentation() {
@@ -122,7 +100,7 @@ public class OverlayId implements Serializable {
                             "Real APK %s has checksum of %s\n", apk.getKey(), apk.getValue()));
         }
 
-        for (Map.Entry<String, String> delta : deltas.entrySet()) {
+        for (Map.Entry<String, String> delta : overlayFiles.entrySet()) {
             rep.append(
                     String.format(
                             " Has overlayfile %s with checksum %s\n",
@@ -154,7 +132,41 @@ public class OverlayId implements Serializable {
         return sb.toString();
     }
 
-    private static String format(String format, Object arg) {
-        return String.format(Locale.US, format, arg);
+    public static Builder builder(OverlayId prevOverlayId) {
+        return new Builder(prevOverlayId);
+    }
+
+    public static class Builder {
+        private final SortedMap<String, String> apks;
+        private final SortedMap<String, String> overlayFiles;
+        private final Set<String> swappedDex;
+
+        private Builder(OverlayId prevOverlayId) {
+            apks = prevOverlayId.apks;
+            overlayFiles = new TreeMap<>(prevOverlayId.overlayFiles);
+            swappedDex = new HashSet<>(prevOverlayId.swappedDex);
+        }
+
+        public Builder addOverlayFile(String file, long checksum) {
+            overlayFiles.put(file, String.format(Locale.US, "%d", checksum));
+            return this;
+        }
+
+        public Builder addSwappedDex(String name, long checksum) {
+            final String file = String.format(Locale.US, "%s.dex", name);
+            overlayFiles.put(file, String.format(Locale.US, "%d", checksum));
+            swappedDex.add(file);
+            return this;
+        }
+
+        public Builder removeOverlayFile(String file) {
+            overlayFiles.remove(file);
+            swappedDex.remove(file);
+            return this;
+        }
+
+        public OverlayId build() throws DeployerException {
+            return new OverlayId(apks, overlayFiles, swappedDex);
+        }
     }
 }
