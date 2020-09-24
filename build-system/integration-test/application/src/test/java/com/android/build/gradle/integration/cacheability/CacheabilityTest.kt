@@ -147,15 +147,13 @@ class CacheabilityTest {
                     ":app:writeReleaseSigningConfigVersions"
             ),
             DID_WORK to setOf(
-                    ":app:analyticsRecordingRelease",
                     ":app:collectReleaseDependencies",
                     ":app:desugarReleaseFileDependencies",
                     ":app:lintVitalRelease",
                     ":app:mergeReleaseResources",
                     ":app:packageRelease",
                     ":app:processReleaseResources",
-                    ":app:sdkReleaseDependencyData",
-                    ":app:writeReleaseApplicationId"
+                    ":app:sdkReleaseDependencyData"
             ),
             UP_TO_DATE to setOf(
                     ":app:clean",

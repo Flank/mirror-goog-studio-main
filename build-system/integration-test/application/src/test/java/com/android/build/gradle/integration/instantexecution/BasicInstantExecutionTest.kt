@@ -71,7 +71,7 @@ class BasicInstantExecutionTest {
         executor().run("assemble")
         assertThat(project.projectDir.resolve(".gradle/configuration-cache")).isDirectory()
         val result = executor().run("assemble")
-        Truth.assertThat(result.didWorkTasks).containsExactly(":app:analyticsRecordingRelease")
+        Truth.assertThat(result.didWorkTasks).isEmpty()
     }
 
     @Test

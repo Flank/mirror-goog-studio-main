@@ -26,6 +26,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleTransformExecution
 import org.gradle.tooling.events.FinishEvent
 import java.util.concurrent.ConcurrentHashMap
+import java.io.File
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
@@ -84,4 +85,6 @@ abstract class NoOpAnalyticsService : AnalyticsService() {
     override fun workerFinished(taskPath: String, workerKey: String) {}
 
     override fun workerStarted(taskPath: String, workerKey: String) {}
+
+    override fun recordApplicationId(metadataFile: File) {}
 }

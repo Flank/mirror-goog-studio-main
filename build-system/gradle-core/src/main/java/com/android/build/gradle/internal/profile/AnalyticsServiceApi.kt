@@ -23,6 +23,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import com.google.wireless.android.sdk.stats.GradleBuildProject
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleTransformExecution
+import java.io.File
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
@@ -104,4 +105,6 @@ interface AnalyticsServiceApi {
      * at the end of configuration when [AnalyticsService] is instantiated.
      */
     fun setInitialMemorySampleForConfiguration(sample: GradleBuildMemorySample)
+
+    fun recordApplicationId(metadataFile: File)
 }

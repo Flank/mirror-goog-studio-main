@@ -230,7 +230,9 @@ public abstract class AbstractAppTaskManager<
                 task = taskFactory.register(AppPreBuildTask.getCreationAction(creationConfig));
                 ApkCreationConfig config = (ApkCreationConfig) creationConfig;
                 // Only record application ids for release artifacts
-                if (!config.getDebuggable()) {
+                boolean analyticsEnabled =
+                        creationConfig.getServices().getProjectOptions().isAnalyticsEnabled();
+                if (!config.getDebuggable() && analyticsEnabled) {
                     TaskProvider<AnalyticsRecordingTask> recordTask =
                             taskFactory.register(new AnalyticsRecordingTask.CreationAction(config));
                     task.configure(it -> it.finalizedBy(recordTask));

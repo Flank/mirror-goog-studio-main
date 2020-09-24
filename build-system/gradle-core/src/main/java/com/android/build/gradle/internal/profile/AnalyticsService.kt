@@ -174,7 +174,7 @@ abstract class AnalyticsService :
         resourceManager.recordEvent(event)
     }
 
-    fun recordApplicationId(metadataFile: File) {
+    override fun recordApplicationId(metadataFile: File) {
         resourceManager.recordApplicationId(metadataFile)
     }
 

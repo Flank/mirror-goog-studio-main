@@ -71,12 +71,15 @@ import com.android.build.gradle.internal.ide.v2.NativeModelBuilder;
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService;
 import com.android.build.gradle.internal.profile.AnalyticsService;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
+import com.android.build.gradle.internal.profile.NoOpAnalyticsConfiguratorService;
+import com.android.build.gradle.internal.profile.NoOpAnalyticsService;
 import com.android.build.gradle.internal.res.Aapt2FromMaven;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService;
 import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService;
+import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.services.ClassesHierarchyBuildService;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.DslServicesImpl;
@@ -268,21 +271,33 @@ public abstract class BasePlugin<
 
         this.project = project;
 
-        new AnalyticsService.RegistrationAction(project).execute();
-
-        configuratorService
-                = new AnalyticsConfiguratorService.RegistrationAction(project).execute().get();
-
         optionService = new ProjectOptionService.RegistrationAction(project).execute().get();
 
         createProjectServices(project);
 
         ProjectOptions projectOptions = projectServices.getProjectOptions();
 
+        if (projectOptions.isAnalyticsEnabled()) {
+            new AnalyticsService.RegistrationAction(project).execute();
+
+            configuratorService
+                    = new AnalyticsConfiguratorService.RegistrationAction(project).execute().get();
+        } else {
+            project.getGradle().getSharedServices().registerIfAbsent(
+                    BuildServicesKt.getBuildServiceName(AnalyticsService.class),
+                    NoOpAnalyticsService.class,
+                    spec -> {}
+            );
+            configuratorService = project.getGradle().getSharedServices().registerIfAbsent(
+                    BuildServicesKt.getBuildServiceName(AnalyticsConfiguratorService.class),
+                    NoOpAnalyticsConfiguratorService.class,
+                    spec -> {}
+            ).get();
+        }
+
         DependencyResolutionChecks.registerDependencyCheck(project, projectOptions);
 
         project.getPluginManager().apply(AndroidBasePlugin.class);
-
 
         checkPathForErrors();
         checkModulesForErrors();
