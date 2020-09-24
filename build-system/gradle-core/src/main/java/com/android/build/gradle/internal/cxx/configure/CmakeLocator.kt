@@ -28,6 +28,7 @@ import com.android.repository.Revision
 import com.android.repository.api.LocalPackage
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.sdklib.repository.LoggerProgressIndicatorWrapper
+import com.android.utils.cxx.CxxDiagnosticCode
 import java.io.File
 import java.io.IOException
 import java.util.function.Consumer
@@ -173,7 +174,13 @@ private fun getSdkCmakePackages(
 ): List<LocalPackage> {
     val androidSdkHandler = AndroidSdkHandler.getInstance(sdkFolder)
     val sdkManager = androidSdkHandler.getSdkManager(
-        LoggerProgressIndicatorWrapper(ThreadLoggingEnvironment.getILogger()))
+        LoggerProgressIndicatorWrapper(
+            ThreadLoggingEnvironment.getILogger(
+                CxxDiagnosticCode.UNKNOWN,
+                CxxDiagnosticCode.UNKNOWN
+            )
+        )
+    )
     val packages = sdkManager.packages
     return packages.getLocalPackagesForPrefix(FD_CMAKE).toList()
 }
