@@ -14,7 +14,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `toUpperCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="src/main/java/com/android/tools/deployer/DeployRunnerParameters.java"
-            line="49"/>
+            line="52"/>
     </issue>
 
     <issue
@@ -22,47 +22,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="src/main/java/com/android/tools/deployer/DeployerRunner.java"
-            line="153"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
-        <location
-            file="src/main/java/com/android/tools/deployer/OverlayId.java"
-            line="62"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
-        <location
-            file="src/main/java/com/android/tools/deployer/OverlayId.java"
-            line="67"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
-        <location
-            file="src/main/java/com/android/tools/deployer/OverlayId.java"
-            line="71"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
-        <location
-            file="src/main/java/com/android/tools/deployer/SqlApkFileDatabase.java"
-            line="260"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
-        <location
-            file="src/main/java/com/android/tools/deployer/SqlApkFileDatabase.java"
-            line="278"/>
+            line="170"/>
     </issue>
 
     <issue
@@ -74,11 +34,27 @@
     </issue>
 
     <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="src/main/java/com/android/tools/deployer/SqlApkFileDatabase.java"
+            line="311"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="src/main/java/com/android/tools/deployer/SqlApkFileDatabase.java"
+            line="326"/>
+    </issue>
+
+    <issue
         id="VisibleForTests"
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/tools/deployer/model/Apk.java"
-            line="114"/>
+            line="127"/>
     </issue>
 
     <issue
@@ -86,7 +62,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/tools/deployer/SqlApkFileDatabase.java"
-            line="362"/>
+            line="397"/>
     </issue>
 
 </issues>

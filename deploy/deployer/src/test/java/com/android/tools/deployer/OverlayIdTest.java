@@ -16,14 +16,9 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deployer.model.Apk;
-import com.android.tools.deployer.model.ApkEntry;
-import com.android.tools.deployer.model.DexClass;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -62,11 +57,7 @@ public class OverlayIdTest {
         // First IWI Swap
         // Doing first IWI swap on a real APK, adding a class.
         // *****************************************************
-        DexComparator.ChangedClasses changes =
-                new DexComparator.ChangedClasses(
-                        Lists.newArrayList(new DexClass("dex1", 1l, null, null)),
-                        new ArrayList<>());
-        OverlayId firstSwap = new OverlayId(realInstall, changes, ImmutableSet.of());
+        OverlayId firstSwap = OverlayId.builder(realInstall).addSwappedDex("dex1", 1L).build();
         stringRep = firstSwap.getRepresentation();
         Assert.assertEquals(
                 getFileHeader()
@@ -83,11 +74,7 @@ public class OverlayIdTest {
         // Second IWI Swap
         // Doing a IWI swap on the previous IWI install, modifying an existing class.
         // *****************************************************
-        changes =
-                new DexComparator.ChangedClasses(
-                        new ArrayList<>(),
-                        Lists.newArrayList(new DexClass("dex2", 2l, null, null)));
-        OverlayId secondSwap = new OverlayId(firstSwap, changes, ImmutableSet.of());
+        OverlayId secondSwap = OverlayId.builder(firstSwap).addSwappedDex("dex2", 2L).build();
         stringRep = secondSwap.getRepresentation();
         Assert.assertEquals(
                 getFileHeader()
@@ -105,11 +92,7 @@ public class OverlayIdTest {
         // Third IWI Swap
         // Doing a IWI swap on the previous IWI install, modifying dex2 again.
         // *****************************************************
-        changes =
-                new DexComparator.ChangedClasses(
-                        new ArrayList<>(),
-                        Lists.newArrayList(new DexClass("dex2", 200l, null, null)));
-        OverlayId thirdSwap = new OverlayId(secondSwap, changes, ImmutableSet.of());
+        OverlayId thirdSwap = OverlayId.builder(secondSwap).addSwappedDex("dex2", 200L).build();
         stringRep = thirdSwap.getRepresentation();
         Assert.assertEquals(
                 getFileHeader()
@@ -145,11 +128,8 @@ public class OverlayIdTest {
         // First IWI Swap
         // Doing first IWI swap on a real APK, adding a resource.
         // *****************************************************
-        DexComparator.ChangedClasses dexChanges =
-                new DexComparator.ChangedClasses(ImmutableList.of(), ImmutableList.of());
-        Apk resApk = Apk.builder().setName("apk").build();
-        Set<ApkEntry> resChanges = ImmutableSet.of(new ApkEntry("res/1", 1, resApk));
-        OverlayId firstSwap = new OverlayId(realInstall, dexChanges, resChanges);
+        OverlayId firstSwap =
+                OverlayId.builder(realInstall).addOverlayFile("apk/res/1", 1L).build();
         stringRep = firstSwap.getRepresentation();
         Assert.assertEquals(
                 getFileHeader()
@@ -166,8 +146,8 @@ public class OverlayIdTest {
         // Second IWI Swap
         // Doing a IWI swap on the previous IWI install, modifying an existing resource.
         // *****************************************************
-        resChanges = ImmutableSet.of(new ApkEntry("res/1", 11, resApk));
-        OverlayId secondSwap = new OverlayId(firstSwap, dexChanges, resChanges);
+        OverlayId secondSwap =
+                OverlayId.builder(firstSwap).addOverlayFile("apk/res/1", 11L).build();
         stringRep = secondSwap.getRepresentation();
         Assert.assertEquals(
                 getFileHeader()
@@ -185,8 +165,7 @@ public class OverlayIdTest {
         // Doing a IWI swap on the previous IWI install, adding another resource.
         // *****************************************************
 
-        resChanges = ImmutableSet.of(new ApkEntry("res/2", 2, resApk));
-        OverlayId thirdSwap = new OverlayId(secondSwap, dexChanges, resChanges);
+        OverlayId thirdSwap = OverlayId.builder(secondSwap).addOverlayFile("apk/res/2", 2).build();
         stringRep = thirdSwap.getRepresentation();
         Assert.assertEquals(
                 getFileHeader()
@@ -199,6 +178,39 @@ public class OverlayIdTest {
         // SHA256 of the above string.
         Assert.assertEquals(
                 "633b0d701f88a7abe60abcdf12d542dba4930302d6106ba5a5687e1f79c50785", sha);
+    }
+
+    @Test
+    public void testRemoveFile() throws DeployerException {
+        OverlayId realInstall = new OverlayId(makeApks(2));
+        Assert.assertEquals(0, realInstall.getOverlayFiles().size());
+
+        OverlayId nextOverlayId =
+                OverlayId.builder(realInstall)
+                        .addOverlayFile("apk/res/1", 1L)
+                        .addOverlayFile("apk/res/2", 11L)
+                        .addSwappedDex("Class1", 2L)
+                        .addSwappedDex("Class2", 22L)
+                        .build();
+
+        Assert.assertThat(
+                nextOverlayId.getOverlayFiles(),
+                Matchers.containsInAnyOrder("apk/res/1", "apk/res/2", "Class1.dex", "Class2.dex"));
+        Assert.assertThat(
+                nextOverlayId.getSwappedDexFiles(),
+                Matchers.containsInAnyOrder("Class1.dex", "Class2.dex"));
+
+        nextOverlayId =
+                OverlayId.builder(nextOverlayId)
+                        .removeOverlayFile("apk/res/2")
+                        .removeOverlayFile("Class1.dex")
+                        .build();
+
+        Assert.assertThat(
+                nextOverlayId.getOverlayFiles(),
+                Matchers.containsInAnyOrder("apk/res/1", "Class2.dex"));
+        Assert.assertThat(
+                nextOverlayId.getSwappedDexFiles(), Matchers.containsInAnyOrder("Class2.dex"));
     }
 
     private List<Apk> makeApks(int size) {

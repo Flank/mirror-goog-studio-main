@@ -118,33 +118,38 @@ class OptimisticApkInstaller {
 
         metrics.start(UPDATE_METRIC);
         final OverlayId overlayId = entry.getOverlayId();
-        final OverlayId nextOverlayId = new OverlayId(overlayId, overlayFiles.keySet());
+        final OverlayId.Builder nextIdBuilder = OverlayId.builder(overlayId);
 
         Deploy.OverlayInstallRequest.Builder request =
                 Deploy.OverlayInstallRequest.newBuilder()
                         .setPackageName(packageName)
                         .setArch(targetArch)
-                        .setExpectedOverlayId(overlayId.isBaseInstall() ? "" : overlayId.getSha())
-                        .setOverlayId(nextOverlayId.getSha());
+                        .setExpectedOverlayId(overlayId.isBaseInstall() ? "" : overlayId.getSha());
 
         for (Map.Entry<ApkEntry, ByteString> file : overlayFiles.entrySet()) {
             request.addOverlayFiles(
                     Deploy.OverlayFile.newBuilder()
                             .setPath(file.getKey().getQualifiedPath())
                             .setContent(file.getValue()));
+            nextIdBuilder.addOverlayFile(
+                    file.getKey().getQualifiedPath(), file.getKey().getChecksum());
         }
 
         for (FileDiff diff : diffs) {
             if (diff.status == FileDiff.Status.DELETED) {
                 request.addDeletedFiles(diff.oldFile.getQualifiedPath());
+                nextIdBuilder.removeOverlayFile(diff.oldFile.getQualifiedPath());
             }
         }
 
         // Clear out any swapped dex from the overlay directory, since they will override the dex
         // inside the exploded APKs.
-        for (String dexFile : overlayId.getSwappedDex()) {
+        for (String dexFile : overlayId.getSwappedDexFiles()) {
             request.addDeletedFiles(dexFile);
         }
+
+        OverlayId nextOverlayId = nextIdBuilder.build();
+        request.setOverlayId(nextOverlayId.getSha());
 
         Deploy.OverlayInstallResponse response;
         try {
