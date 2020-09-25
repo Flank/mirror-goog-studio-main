@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import org.gradle.api.JavaVersion
 import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
@@ -119,10 +120,16 @@ class JavaCompileCreationAction(
         val javaSourcesFilter = PatternSet().include("**/*.java")
         task.source = task.project.files(sourcesToCompile).asFileTree.matching(javaSourcesFilter)
 
-        // Add this compiler argument to generate metadata for method parameters on class files,
-        // which Room annotation processor requires in order for it to be incremental (see bug
-        // 159501719).
-        task.options.compilerArgs.add(PARAMETERS)
+        // Add javac option `-parameters` to store parameter names of methods in the generated
+        // class files, which Room annotation processor requires in order for it to be incremental
+        // (see bug 159501719).
+        // Note that this option is only available on JDK version 8+ and for target Java version 8+
+        // (see bug 169252018).
+        if (JavaVersion.current().isJava8Compatible
+                && creationConfig.globalScope.extension.compileOptions.targetCompatibility.isJava8Compatible
+        ) {
+            task.options.compilerArgs.add(PARAMETERS)
+        }
 
         task.options.isIncremental = globalScope.extension.compileOptions.incremental
             ?: DEFAULT_INCREMENTAL_COMPILATION

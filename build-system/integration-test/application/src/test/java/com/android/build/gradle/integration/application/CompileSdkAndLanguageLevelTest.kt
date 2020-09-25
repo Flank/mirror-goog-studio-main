@@ -19,7 +19,9 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import org.gradle.api.JavaVersion
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -32,7 +34,7 @@ class CompileSdkAndLanguageLevelTest(
     private val compileSdkVersion: Int
 ) {
     companion object {
-        @Parameterized.Parameters
+        @Parameterized.Parameters(name = "javaVersion_{0}_compileSdkVersion_{1}")
         @JvmStatic
         fun getParams() =
             arrayOf(
@@ -54,16 +56,30 @@ class CompileSdkAndLanguageLevelTest(
         .fromTestApp(MinimalSubProject.app("com.example"))
         .create()
 
+    @Before
+    fun setUp() {
+        if (javaVersion.isJava6) {
+            // With target compatibility Java 6, javac generates the following warning:
+            // "warning: [options] target value 1.6 is obsolete and will be removed in a future release"
+            // By default, integration tests treat javac warnings as errors, but the above warning
+            // is expected so we can ignore it.
+            TestFileUtils.searchAndReplace(
+                    project.buildFile,
+                    "options.compilerArgs << \"-Werror\"",
+                    "")
+        }
+    }
+
     @Test
-    fun testWithCompileSdk24() {
+    fun `test build successfully`() {
         addJavaSources()
         project.buildFile.appendText(
             """
-            
+
             android.compileSdkVersion $compileSdkVersion
             android.compileOptions.sourceCompatibility $javaVersion
             android.compileOptions.targetCompatibility $javaVersion
-        """.trimIndent()
+            """.trimIndent()
         )
 
         project.executor().run("assembleDebug")
