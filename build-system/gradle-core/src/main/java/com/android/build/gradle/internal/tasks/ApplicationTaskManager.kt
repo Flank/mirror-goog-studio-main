@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask
@@ -274,9 +275,10 @@ class ApplicationTaskManager(
             taskFactory.register(BundleToStandaloneApkTask.CreationAction(variant))
             taskFactory.register(ExtractApksTask.CreationAction(variant))
 
-            val mergeNativeDebugMetadataTask =
-                taskFactory.register(MergeNativeDebugMetadataTask.CreationAction(variant))
-            variant.taskContainer.assembleTask.dependsOn(mergeNativeDebugMetadataTask)
+            taskFactory.register(MergeNativeDebugMetadataTask.CreationAction(variant))
+            variant.taskContainer.assembleTask.configure { task ->
+                task.dependsOn(variant.artifacts.get(InternalArtifactType.MERGED_NATIVE_DEBUG_METADATA))
+            }
         }
     }
 
